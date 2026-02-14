@@ -61,19 +61,19 @@ const design = {
     bgHover: '#334155',
     textPrimary: '#f8fafc',
     textSecondary: '#e2e8f0',
-    textMuted: '#94a3b8',
+    textMuted: '#cbd5e1',
     textDisabled: '#64748b',
-    accentPrimary: '#8b5cf6',
+    accentPrimary: '#a78bfa',
     accentSecondary: '#a78bfa',
     accentMuted: '#4c1d95',
     accentGlow: 'rgba(139, 92, 246, 0.4)',
     cyan: '#06b6d4',
     cyanMuted: 'rgba(6, 182, 212, 0.2)',
-    success: '#10b981',
+    success: '#86efac',
     successMuted: 'rgba(16, 185, 129, 0.15)',
     error: '#ef4444',
     errorMuted: 'rgba(239, 68, 68, 0.15)',
-    warning: '#f59e0b',
+    warning: '#fcd34d',
     warningLight: '#fbbf24',
     border: '#334155',
     borderLight: '#475569',
@@ -924,7 +924,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
               Explore Snell's Law
             </h2>
             <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '16px', fontWeight: 400, lineHeight: 1.6 }}>
-              Adjust the incident angle and observe how the refracted angle changes. Notice the relationship between them!
+              Adjust the incident angle and observe how the refracted angle changes. Notice the relationship between them! This principle is used in fiber optic technology, lens design, and everyday applications like cameras and glasses.
             </p>
 
             <div style={{
@@ -980,7 +980,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
                     setIncidentAngle(Number(e.target.value));
                     emitEvent('parameter_changed', { incidentAngle: Number(e.target.value) });
                   }}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  style={{ width: '100%', cursor: 'pointer', accentColor: design.colors.accentPrimary }}
                 />
               </div>
 
@@ -1050,7 +1050,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
               border: `1px solid ${predictionCorrect ? design.colors.success : design.colors.error}`
             }}>
               <p style={{ color: predictionCorrect ? design.colors.success : design.colors.error, fontSize: typo.bodyLarge, fontWeight: 600, margin: 0 }}>
-                {predictionCorrect ? 'Correct!' : 'Not quite!'} Steeper incident angles produce more bending toward the normal when entering a denser medium.
+                {predictionCorrect ? 'Your prediction was correct!' : 'Not quite what you predicted!'} As you observed in the experiment, steeper incident angles produce more bending toward the normal when entering a denser medium.
               </p>
             </div>
 

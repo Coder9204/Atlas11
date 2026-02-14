@@ -1158,7 +1158,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
             Reflection Playground
           </h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '24px', fontSize: typo.body }}>
-            Adjust the angle and observe how incidence always equals reflection
+            Adjust the angle and observe how incidence always equals reflection. When you increase the incident angle, the reflected angle increases equally - this is the fundamental law that makes mirrors, telescopes, and laser technology possible.
           </p>
 
           {renderReflectionVisualization()}
@@ -1170,6 +1170,10 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
             borderRadius: '12px',
             marginTop: '24px',
           }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.body }}>How Angle Changes Affect Reflection:</h3>
+            <p style={{ color: colors.textSecondary, marginBottom: '12px', fontSize: typo.body }}>
+              When you increase the slider, the light beam bends further from perpendicular. As the angle changes, notice how the reflection mirrors it exactly - this causes light to redirect predictably, which is why reflection is used in practical applications like vehicle mirrors, solar concentrators, and periscopes.
+            </p>
             <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.body }}>Experiments to Try:</h3>
             <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', fontSize: typo.body }}>
               <li>Set angle to <strong style={{ color: colors.textPrimary }}>0 degrees</strong> - light bounces straight back</li>
@@ -1177,6 +1181,19 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
               <li>Toggle <strong style={{ color: colors.textPrimary }}>Virtual Image</strong> - see where the reflection appears to come from</li>
               <li>Notice the angles are always <strong style={{ color: colors.textPrimary }}>equal</strong> on both sides of the normal</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(96, 165, 250, 0.1)',
+            padding: '16px',
+            borderRadius: '12px',
+            marginTop: '16px',
+            borderLeft: `4px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>Why This Matters</h4>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
+              Understanding reflection is important for engineers who design everything from car headlights to space telescopes. This practical principle enables technology we use everyday - from bathroom mirrors to fiber optic communications.
+            </p>
           </div>
         </div>
       </div>,
@@ -1204,7 +1221,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
               {wasCorrect ? 'Correct!' : "Let's explore this!"}
             </h3>
             <p style={{ fontSize: typo.body, lineHeight: 1.6, color: colors.textSecondary }}>
-              The light bounces at <strong style={{ color: colors.textPrimary }}>30 degrees on the opposite side</strong> of the normal. This is because the Law of Reflection states: the angle of incidence equals the angle of reflection, always measured from the normal (perpendicular line).
+              As you observed in the experiment, the light bounces at <strong style={{ color: colors.textPrimary }}>30 degrees on the opposite side</strong> of the normal. Your prediction was tested, and you saw that the Law of Reflection states: the angle of incidence equals the angle of reflection, always measured from the normal (perpendicular line).
             </p>
           </div>
 

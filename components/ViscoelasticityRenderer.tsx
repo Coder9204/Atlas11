@@ -965,43 +965,107 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
+  const phases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const currentPhaseIndex = phases.indexOf(phase);
+  const progressPercent = ((currentPhaseIndex + 1) / phases.length) * 100;
+
+  const renderNavBar = (showBack: boolean, canProceed: boolean, buttonText: string) => (
+    <nav
+      aria-label="Game navigation"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 24px',
+        background: colors.bgDark,
+        borderBottom: `1px solid rgba(255,255,255,0.1)`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1001,
+      }}
+    >
+      <button
+        onClick={() => {
+          // Go back by triggering a custom event or calling a back handler
+          if (currentPhaseIndex > 0 && onPhaseComplete) {
+            // Signal backward navigation through a custom event
+            window.dispatchEvent(new CustomEvent('gameNavigateBack'));
+          }
+        }}
+        disabled={!showBack || currentPhaseIndex === 0}
+        aria-label="Back"
+        style={{
+          padding: '12px 24px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: showBack && currentPhaseIndex > 0 ? colors.textPrimary : colors.textMuted,
+          fontWeight: 'bold',
+          cursor: showBack && currentPhaseIndex > 0 ? 'pointer' : 'not-allowed',
+          fontSize: '14px',
+          opacity: showBack && currentPhaseIndex > 0 ? 1 : 0.5,
+        }}
+      >
+        Back
+      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div
+          role="progressbar"
+          aria-valuenow={currentPhaseIndex + 1}
+          aria-valuemin={1}
+          aria-valuemax={phases.length}
+          aria-label={`Progress: phase ${currentPhaseIndex + 1} of ${phases.length}`}
+          style={{
+            width: '120px',
+            height: '8px',
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '4px',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              width: `${progressPercent}%`,
+              height: '100%',
+              background: colors.accent,
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
+        <span style={{ color: colors.textSecondary, fontSize: '12px' }}>
+          {currentPhaseIndex + 1}/{phases.length}
+        </span>
+      </div>
       <button
         onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        disabled={!canProceed}
+        aria-label="Next"
         style={{
-          padding: '12px 32px',
+          padding: '12px 24px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : colors.textMuted,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
+          fontSize: '14px',
         }}
       >
         {buttonText}
       </button>
-    </div>
+    </nav>
   );
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(false, true, 'Next')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Silly Putty Science
@@ -1042,7 +1106,6 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
       </div>
     );
   }
@@ -1051,7 +1114,8 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, !!prediction, 'Next')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
           {renderMaterialBlob(false)}
 
           <div style={{
@@ -1080,6 +1144,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
@@ -1095,7 +1160,6 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1104,11 +1168,24 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, true, 'Next')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Viscoelasticity</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust strain rate to see solid-like vs liquid-like behavior
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.15)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Watch how the material blob and stress-strain curve change as you adjust the strain rate slider. Notice the color shift between elastic (blue) and viscous (orange) behavior.
             </p>
           </div>
 
@@ -1130,7 +1207,6 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
       </div>
     );
   }
@@ -1141,7 +1217,8 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, true, 'Next')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1156,6 +1233,8 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
               The deformation rate determines behavior: fast = solid-like, slow = fluid-like!
             </p>
           </div>
+
+          {renderMaterialBlob(false)}
 
           <div style={{
             background: colors.bgCard,
@@ -1185,7 +1264,6 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -1194,7 +1272,8 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, !!twistPrediction, 'Next')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1229,6 +1308,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1244,7 +1324,6 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1253,11 +1332,24 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, true, 'Next')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Temperature Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Change temperature and observe how the same strain rate produces different behavior
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.15)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.warning}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Adjust the temperature slider and watch how the Deborah number changes even at the same strain rate. Notice the temperature indicator on the right side of the visualization.
             </p>
           </div>
 
@@ -1279,7 +1371,6 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
       </div>
     );
   }
@@ -1290,7 +1381,8 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, true, 'Next')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1305,6 +1397,8 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
               Chill it and it becomes more brittle; warm it and it flows more!
             </p>
           </div>
+
+          {renderMaterialBlob(false)}
 
           <div style={{
             background: colors.bgCard,
@@ -1332,63 +1426,143 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const [currentAppIndex, setCurrentAppIndex] = useState(0);
+    const currentApp = transferApplications[currentAppIndex];
+    const isCurrentCompleted = transferCompleted.has(currentAppIndex);
+    const allCompleted = transferCompleted.size >= transferApplications.length;
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, allCompleted, 'Next')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Viscoelasticity is everywhere in engineering and biology
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+              Application {currentAppIndex + 1} of {transferApplications.length} - Complete all to continue
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Done</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
+          {/* Progress dots */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
+            {transferApplications.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentAppIndex(index)}
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: transferCompleted.has(index)
+                    ? colors.success
+                    : index === currentAppIndex
+                    ? colors.accent
+                    : 'rgba(255,255,255,0.2)',
+                  cursor: 'pointer',
+                }}
+                aria-label={`Application ${index + 1}`}
+              />
+            ))}
+          </div>
+
+          <div
+            style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              border: isCurrentCompleted ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px' }}>{currentApp.title}</h3>
+              {isCurrentCompleted && <span style={{ color: colors.success, fontWeight: 'bold' }}>Completed</span>}
             </div>
-          ))}
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>{currentApp.description}</p>
+
+            <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+              <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{currentApp.question}</p>
+            </div>
+
+            {!isCurrentCompleted ? (
+              <button
+                onClick={() => setTransferCompleted(new Set([...transferCompleted, currentAppIndex]))}
+                style={{
+                  padding: '12px 24px',
+                  minHeight: '44px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.accent}`,
+                  background: 'transparent',
+                  color: colors.accent,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                }}
+              >
+                Reveal Answer
+              </button>
+            ) : (
+              <>
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '16px' }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>{currentApp.answer}</p>
+                </div>
+                {currentAppIndex < transferApplications.length - 1 ? (
+                  <button
+                    onClick={() => setCurrentAppIndex(currentAppIndex + 1)}
+                    style={{
+                      padding: '12px 24px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: colors.accent,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Next Application
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {}}
+                    style={{
+                      padding: '12px 24px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'default',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Got It - All Complete!
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Summary of completed apps */}
+          <div style={{ padding: '0 16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', textAlign: 'center' }}>
+              {transferCompleted.size} of {transferApplications.length} applications completed
+            </p>
+          </div>
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -1437,11 +1611,12 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, false, 'Submit')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1453,18 +1628,18 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', minHeight: '44px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
                   {opt.text}
                 </button>
               ))}
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
             )}
           </div>
         </div>

@@ -343,8 +343,8 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#9CA3AF',
     border: '#2a2a3a',
   };
 
@@ -403,7 +403,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     const voltages = calculateVoltages();
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="wireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#64748b" />
@@ -528,7 +528,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     const { i1, i2, iShared } = calculateMultiLoop();
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="wireGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#64748b" />
@@ -635,16 +635,37 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component with fixed position
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1000,
+    }}>
+      <span style={{ color: '#e2e8f0', fontWeight: 600 }}>Kirchhoff&apos;s Laws</span>
+      <span style={{ color: '#e2e8f0', fontSize: '14px' }}>{phaseLabels[phase]}</span>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '56px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 999,
     }}>
       <div style={{
         height: '100%',
@@ -682,7 +703,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     </div>
   );
 
-  // Primary button style
+  // Primary button style with minHeight for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
     color: 'white',
@@ -694,6 +715,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -711,8 +733,11 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -774,7 +799,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     );
   }
 
-  // PREDICT PHASE
+  // PREDICT PHASE - with progress indicator
   if (phase === 'predict') {
     const options = [
       { id: 'a', text: '3A - The difference between inputs' },
@@ -787,10 +812,24 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Progress indicator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+          }}>
+            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Prediction 1 of 1</span>
+            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Step 1 of 1</span>
+          </div>
+
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -858,6 +897,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -866,7 +906,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   height: '28px',
                   borderRadius: '50%',
                   background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  color: prediction === opt.id ? 'white' : '#e2e8f0',
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -874,7 +914,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                 }}>
                   {opt.id.toUpperCase()}
                 </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                <span style={{ color: '#e2e8f0', ...typo.body }}>
                   {opt.text}
                 </span>
               </button>
@@ -905,16 +945,45 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '8px', textAlign: 'center' }}>
             Interactive Circuit Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
             Adjust component values to see how KCL and KVL work in real circuits
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ color: '#e2e8f0', margin: 0, fontSize: '14px' }}>
+              Observe how current flows and voltage distributes as you change the circuit parameters. Try adjusting the sliders to see Kirchhoff&apos;s Laws in action.
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px' }}>
+              <strong style={{ color: colors.warning }}>Real-world relevance:</strong> Engineers at Tesla, SpaceX, and power utilities use these exact principles daily to design battery systems, solar arrays, and power grids that safely deliver electricity to billions of people.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -1004,9 +1073,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   borderRadius: '8px',
                   border: 'none',
                   background: showCurrentFlow ? colors.warning : colors.bgSecondary,
-                  color: showCurrentFlow ? 'white' : colors.textSecondary,
+                  color: showCurrentFlow ? 'white' : '#e2e8f0',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 {showCurrentFlow ? 'Hide Current Flow' : 'Show Current Flow'}
@@ -1023,7 +1093,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                 border: `1px solid ${colors.accent}`,
               }}>
                 <div style={{ ...typo.small, color: colors.accent, marginBottom: '4px' }}>KCL at Node A</div>
-                <div style={{ ...typo.body, color: colors.textPrimary }}>
+                <div style={{ ...typo.body, color: '#e2e8f0' }}>
                   I_total = I1 + I23 = {currents.totalCurrent.toFixed(3)}A
                 </div>
                 <div style={{ ...typo.small, color: colors.success }}>Current conserved!</div>
@@ -1036,7 +1106,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                 border: `1px solid ${colors.warning}`,
               }}>
                 <div style={{ ...typo.small, color: colors.warning, marginBottom: '4px' }}>KVL around Loop</div>
-                <div style={{ ...typo.body, color: colors.textPrimary }}>
+                <div style={{ ...typo.body, color: '#e2e8f0' }}>
                   V - V_R1 = {voltage}V - {voltage}V = 0
                 </div>
                 <div style={{ ...typo.small, color: colors.success }}>Voltage balanced!</div>
@@ -1064,13 +1134,33 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '24px', textAlign: 'center' }}>
             Understanding Kirchhoff&apos;s Laws
           </h2>
+
+          {/* Reference user's prediction */}
+          {prediction && (
+            <div style={{
+              background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}44`,
+            }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
+                {prediction === 'b'
+                  ? "Your prediction was correct! The currents do sum together (5A + 2A = 7A) because charge must be conserved at every junction."
+                  : "Your prediction showed common misconceptions. Actually, currents sum at junctions: 5A + 2A = 7A flows out. This is Kirchhoff's Current Law in action!"}
+              </p>
+            </div>
+          )}
 
           <div style={{ display: 'grid', gap: '20px', marginBottom: '32px' }}>
             {/* KCL */}
@@ -1163,10 +1253,13 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1256,10 +1349,13 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Multi-Loop Circuit Lab
           </h2>
@@ -1374,10 +1470,13 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Systematic Circuit Analysis
           </h2>
@@ -1464,13 +1563,21 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1577,6 +1684,27 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
             </div>
           </div>
 
+          {/* Got It button for within-phase navigation */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              if (selectedApp < realWorldApps.length - 1) {
+                setSelectedApp(selectedApp + 1);
+              }
+            }}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              marginBottom: '16px',
+              background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+            }}
+          >
+            {completedApps[selectedApp] ? 'Got It!' : 'Got It'}
+          </button>
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
@@ -1601,10 +1729,13 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🏆' : '📚'}
             </div>
@@ -1654,10 +1785,13 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1824,8 +1958,11 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{

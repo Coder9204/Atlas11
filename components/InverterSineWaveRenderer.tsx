@@ -366,8 +366,8 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#e2e8f0',
     border: '#2a2a3a',
     dc: '#3b82f6',
     ac: '#22c55e',
@@ -696,16 +696,42 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
+  // Navigation bar component with fixed position
+  const renderNavBar = () => (
     <div style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      borderBottom: `1px solid ${colors.border}`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>⚡</span>
+        <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Inverter Sine Wave</span>
+      </div>
+      <div style={{ color: colors.textSecondary, fontSize: '14px' }}>
+        {phaseLabels[phase]}
+      </div>
+    </div>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '56px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1001,
     }}>
       <div style={{
         height: '100%',
@@ -755,6 +781,21 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Secondary button style
+  const secondaryButtonStyle: React.CSSProperties = {
+    background: 'transparent',
+    color: colors.textSecondary,
+    border: `1px solid ${colors.border}`,
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -771,9 +812,11 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        padding: '80px 24px 24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -839,11 +882,13 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -860,7 +905,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             How does an inverter create a smooth sine wave from DC?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram for predict phase */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -868,37 +913,41 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{
-                background: `${colors.dc}33`,
-                padding: '16px 24px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.dc}`,
-              }}>
-                <div style={{ fontSize: '20px', color: colors.dc, fontWeight: 'bold' }}>DC</div>
-                <div style={{ fontSize: '12px', color: colors.textMuted }}>Battery/Solar</div>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>?</div>
-              <div style={{
-                background: `${colors.pwm}33`,
-                padding: '16px 24px',
-                borderRadius: '8px',
-                border: `2px dashed ${colors.pwm}`,
-              }}>
-                <div style={{ fontSize: '20px', color: colors.pwm, fontWeight: 'bold' }}>???</div>
-                <div style={{ fontSize: '12px', color: colors.textMuted }}>Magic Box</div>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>?</div>
-              <div style={{
-                background: `${colors.ac}33`,
-                padding: '16px 24px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.ac}`,
-              }}>
-                <div style={{ fontSize: '20px', color: colors.ac, fontWeight: 'bold' }}>AC~</div>
-                <div style={{ fontSize: '12px', color: colors.textMuted }}>Sine Wave</div>
-              </div>
-            </div>
+            <svg
+              width="100%"
+              height="180"
+              viewBox="0 0 400 180"
+              preserveAspectRatio="xMidYMid meet"
+              style={{ maxWidth: '400px' }}
+            >
+              {/* DC Source */}
+              <rect x="20" y="60" width="70" height="60" rx="8" fill={`${colors.dc}33`} stroke={colors.dc} strokeWidth="2" />
+              <text x="55" y="85" textAnchor="middle" fill={colors.dc} fontSize="16" fontWeight="bold">DC</text>
+              <text x="55" y="105" textAnchor="middle" fill={colors.textMuted} fontSize="11">Battery</text>
+
+              {/* Arrow 1 */}
+              <line x1="95" y1="90" x2="130" y2="90" stroke={colors.textMuted} strokeWidth="2" />
+              <polygon points="130,85 140,90 130,95" fill={colors.textMuted} />
+
+              {/* Mystery Box */}
+              <rect x="145" y="60" width="110" height="60" rx="8" fill={`${colors.pwm}33`} stroke={colors.pwm} strokeWidth="2" strokeDasharray="5,5" />
+              <text x="200" y="85" textAnchor="middle" fill={colors.pwm} fontSize="18" fontWeight="bold">???</text>
+              <text x="200" y="105" textAnchor="middle" fill={colors.textMuted} fontSize="11">Mystery</text>
+
+              {/* Arrow 2 */}
+              <line x1="260" y1="90" x2="295" y2="90" stroke={colors.textMuted} strokeWidth="2" />
+              <polygon points="295,85 305,90 295,95" fill={colors.textMuted} />
+
+              {/* AC Output with sine wave */}
+              <rect x="310" y="60" width="70" height="60" rx="8" fill={`${colors.ac}33`} stroke={colors.ac} strokeWidth="2" />
+              <text x="345" y="82" textAnchor="middle" fill={colors.ac} fontSize="14" fontWeight="bold">AC~</text>
+              {/* Mini sine wave */}
+              <path d="M320,95 Q330,80 340,95 Q350,110 360,95 Q370,80 375,95" fill="none" stroke={colors.ac} strokeWidth="2" />
+
+              {/* Question marks */}
+              <text x="117" y="55" fill={colors.warning} fontSize="20">?</text>
+              <text x="270" y="55" fill={colors.warning} fontSize="20">?</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -915,6 +964,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -959,17 +1009,33 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Inverter Waveform Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Compare square wave, modified sine, and PWM pure sine inverters
           </p>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Real-World Relevance:</strong> This exact technology powers solar inverters, electric vehicles, and UPS systems. Understanding waveform quality helps you choose the right inverter for your needs.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -1088,16 +1154,24 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'b';
+    const predictionLabels: Record<string, string> = {
+      'a': 'fast switching creates smooth waves automatically',
+      'b': 'PWM + LC filtering creates sine waves',
+      'c': 'resistors shape the waveform',
+      'd': 'capacitors alone convert DC to AC',
+    };
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
             borderRadius: '12px',
@@ -1106,8 +1180,11 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? 'Your Prediction Was Correct!' : 'Let\'s Review Your Prediction'}
             </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
+              You predicted that {prediction ? predictionLabels[prediction] : 'no answer was selected'}.
+            </p>
             <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
               <strong>PWM + LC filtering</strong> is the key! By switching at high frequency with a duty cycle that varies sinusoidally, then filtering out the high-frequency components, we get a clean sine wave.
             </p>
@@ -1191,11 +1268,13 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1279,11 +1358,13 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Motor Temperature vs Waveform Quality
           </h2>
@@ -1382,11 +1463,13 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
             borderRadius: '12px',
@@ -1485,19 +1568,25 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} - Explore all to continue
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1588,6 +1677,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1601,6 +1691,33 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
                 </div>
               ))}
             </div>
+
+            {/* Got It button for each application */}
+            {!completedApps[selectedApp] ? (
+              <button
+                onClick={() => {
+                  playSound('success');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Got It
+              </button>
+            ) : (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <span style={{ color: colors.success, fontWeight: 600 }}>
+                  Completed - {selectedApp < realWorldApps.length - 1 ? 'Select another application above' : 'All applications explored!'}
+                </span>
+              </div>
+            )}
           </div>
 
           {allAppsCompleted && (
@@ -1626,11 +1743,13 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          padding: '80px 24px 24px',
+          overflowY: 'auto',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1682,11 +1801,13 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1852,9 +1973,11 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        padding: '80px 24px 24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{

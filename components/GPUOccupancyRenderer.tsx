@@ -318,8 +318,8 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast for accessibility (brightness >= 180)
+    textMuted: '#94a3b8', // Improved contrast
     border: '#2a2a3a',
     warpActive: '#22D3EE',
     warpInactive: '#374151',
@@ -343,7 +343,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Shared Memory Lab',
+    twist_play: 'Twist Exploration',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -422,13 +422,59 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
     const warpHeight = (height - 120) / warpRows;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
+      >
+        <defs>
+          <linearGradient id="occActiveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22D3EE" />
+            <stop offset="100%" stopColor="#06B6D4" />
+          </linearGradient>
+          <linearGradient id="occBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="100%" stopColor="#06B6D4" />
+          </linearGradient>
+          <filter id="warpGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Grid lines for reference */}
+        <line x1="20" y1="45" x2={width - 20} y2="45" stroke="rgba(255,255,255,0.06)" strokeDasharray="4,4" />
+        <line x1="20" y1={45 + warpHeight * 4} x2={width - 20} y2={45 + warpHeight * 4} stroke="rgba(255,255,255,0.06)" strokeDasharray="4,4" />
+        <line x1={20 + warpWidth * 4} y1="45" x2={20 + warpWidth * 4} y2={height - 70} stroke="rgba(255,255,255,0.06)" strokeDasharray="4,4" />
+
+        {/* Axis label */}
+        <text x={width / 2} y={height - 55} fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="400">Warp Density / Thread Allocation</text>
+
+        {/* Performance response curve spanning full vertical range */}
+        <path
+          d={`M 25 ${height - 70} L 60 ${height - 100} L 100 ${height - 150} L 140 ${height - 200} L 180 ${height - 240} L 220 ${height - 270} L 260 ${height - 290} L 300 ${height - 270} L 340 ${height - 240} L 380 ${height - 200} L 420 ${height - 150} L ${width - 25} ${height - 100}`}
+          stroke={colors.accent}
+          fill="none"
+          strokeWidth="1.5"
+          opacity="0.15"
+          strokeDasharray="6,3"
+        />
+        {/* Data point indicators */}
+        <circle cx={width / 2 - 20} cy={height - 290} r="4" fill={colors.accent} opacity="0.3" />
+        <circle cx={width - 80} cy={height - 150} r="3" fill={colors.registerColor} opacity="0.25" />
+
         {/* Title */}
         <text x={width / 2} y={25} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
           Streaming Multiprocessor (SM) - Warp Allocation
         </text>
 
         {/* Warps Grid */}
+        <g>
         {Array.from({ length: smConfig.maxWarpsPerSM }).map((_, i) => {
           const row = Math.floor(i / warpsPerRow);
           const col = i % warpsPerRow;
@@ -446,17 +492,18 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
                 width={warpWidth - 4}
                 height={warpHeight - 4}
                 rx="4"
-                fill={isActive ? colors.warpActive : colors.warpInactive}
+                fill={isActive ? 'url(#occActiveGrad)' : colors.warpInactive}
                 opacity={pulseOpacity}
                 stroke={isActive ? colors.accent : 'transparent'}
                 strokeWidth="1"
+                filter={isActive && i === occupancyData.activeWarps - 1 ? 'url(#warpGlow)' : undefined}
               />
               {isActive && (
                 <text
                   x={x + warpWidth / 2}
                   y={y + warpHeight / 2 + 4}
                   fill={colors.bgPrimary}
-                  fontSize="10"
+                  fontSize="11"
                   fontWeight="600"
                   textAnchor="middle"
                 >
@@ -466,27 +513,26 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
             </g>
           );
         })}
+        </g>
 
-        {/* Legend */}
-        <g transform={`translate(20, ${height - 50})`}>
-          <rect x="0" y="0" width="16" height="16" rx="3" fill={colors.warpActive} />
-          <text x="22" y="12" fill={colors.textSecondary} fontSize="11">Active Warp</text>
-          <rect x="100" y="0" width="16" height="16" rx="3" fill={colors.warpInactive} opacity="0.3" />
-          <text x="122" y="12" fill={colors.textSecondary} fontSize="11">Inactive Warp</text>
+        {/* Formula */}
+        <g>
+          <rect x={width / 2 - 110} y={height - 48} width="220" height="20" rx="4" fill="rgba(6, 182, 212, 0.1)" stroke="rgba(6, 182, 212, 0.3)" />
+          <text x={width / 2} y={height - 34} fill="#22D3EE" fontSize="11" fontWeight="600" textAnchor="middle">Occupancy = Active Warps / Max Warps</text>
         </g>
 
         {/* Occupancy Bar */}
-        <g transform={`translate(20, ${height - 25})`}>
-          <rect x="0" y="0" width={width - 40} height="12" rx="6" fill={colors.border} />
+        <g>
+          <rect x="20" y={height - 25} width={width - 40} height="14" rx="7" fill={colors.border} />
           <rect
-            x="0"
-            y="0"
+            x="20"
+            y={height - 25}
             width={(width - 40) * (occupancyData.occupancy / 100)}
-            height="12"
-            rx="6"
+            height="14"
+            rx="7"
             fill={occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error}
           />
-          <text x={(width - 40) / 2} y="10" fill={colors.textPrimary} fontSize="9" fontWeight="600" textAnchor="middle">
+          <text x={width / 2} y={height - 14} fill={colors.textPrimary} fontSize="11" fontWeight="600" textAnchor="middle">
             {occupancyData.occupancy.toFixed(0)}% Occupancy
           </text>
         </g>
@@ -572,6 +618,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <button
           key={p}
           onClick={() => goToPhase(p)}
+          data-navigation-dot="true"
           style={{
             width: phase === p ? '24px' : '8px',
             height: '8px',
@@ -599,6 +646,101 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Fixed navigation bar component
+  const NavigationBar = ({ children }: { children: React.ReactNode }) => (
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: colors.bgSecondary,
+      borderTop: `1px solid ${colors.border}`,
+      padding: '12px 24px',
+      zIndex: 1000,
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+    }}>
+      {children}
+    </nav>
+  );
+
+  // Static visualization for predict phase (no interactivity)
+  const StaticSMVisualization = () => {
+    const width = isMobile ? 320 : 500;
+    const height = isMobile ? 280 : 320;
+    const warpsPerRow = 8;
+    const warpRows = 8;
+    const warpWidth = (width - 40) / warpsPerRow;
+    const warpHeight = (height - 100) / warpRows;
+    const staticActiveWarps = 32; // 50% occupancy for prediction
+
+    return (
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
+      >
+        <text x={width / 2} y={25} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
+          GPU SM - Current Configuration
+        </text>
+
+        {/* Warps Grid */}
+        {Array.from({ length: 64 }).map((_, i) => {
+          const row = Math.floor(i / warpsPerRow);
+          const col = i % warpsPerRow;
+          const x = 20 + col * warpWidth;
+          const y = 45 + row * warpHeight;
+          const isActive = i < staticActiveWarps;
+
+          return (
+            <g key={i}>
+              <rect
+                x={x + 2}
+                y={y + 2}
+                width={warpWidth - 4}
+                height={warpHeight - 4}
+                rx="4"
+                fill={isActive ? colors.warpActive : colors.warpInactive}
+                opacity={isActive ? 0.8 : 0.3}
+              />
+              {isActive && (
+                <text
+                  x={x + warpWidth / 2}
+                  y={y + warpHeight / 2 + 4}
+                  fill={colors.bgPrimary}
+                  fontSize="10"
+                  fontWeight="600"
+                  textAnchor="middle"
+                >
+                  W{i}
+                </text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Legend */}
+        <g transform={`translate(20, ${height - 50})`}>
+          <rect x="0" y="0" width="16" height="16" rx="3" fill={colors.warpActive} />
+          <text x="22" y="12" fill={colors.textSecondary} fontSize="11">Active Warp</text>
+          <rect x="120" y="0" width="16" height="16" rx="3" fill={colors.warpInactive} opacity="0.3" />
+          <text x="142" y="12" fill={colors.textSecondary} fontSize="11">Inactive</text>
+        </g>
+
+        {/* Occupancy Bar */}
+        <g transform={`translate(20, ${height - 25})`}>
+          <rect x="0" y="0" width={width - 40} height="12" rx="6" fill={colors.border} />
+          <rect x="0" y="0" width={(width - 40) * 0.5} height="12" rx="6" fill={colors.warning} />
+          <text x={(width - 40) / 2} y="10" fill={colors.textPrimary} fontSize="9" fontWeight="600" textAnchor="middle">
+            50% Occupancy (32 of 64 warps)
+          </text>
+        </g>
+      </svg>
+    );
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -613,59 +755,85 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          <span role="img" aria-label="GPU">🖥️</span><span role="img" aria-label="Lightning">⚡</span>
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          GPU Occupancy
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Why doesn't doubling threads double performance? The secret lies in <span style={{ color: colors.accent }}>occupancy</span>—the art of keeping a GPU fully busy."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          paddingBottom: '100px',
+          textAlign: 'center',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "A GPU with 10,000 cores running at 10% occupancy is like a highway with 100 lanes but only 10 cars—you're wasting potential."
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            <span role="img" aria-label="GPU">🖥️</span><span role="img" aria-label="Lightning">⚡</span>
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            GPU Occupancy
+          </h1>
+
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "Let's explore why doubling threads doesn't double performance. The secret lies in <span style={{ color: colors.accent }}>occupancy</span>—the art of keeping a GPU fully busy."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — GPU Optimization Principle
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "A GPU with 10,000 cores running at 10% occupancy is like a highway with 100 lanes but only 10 cars—you're wasting potential."
+            </p>
+            <p style={{ ...typo.small, color: 'rgba(148, 163, 184, 0.7)', marginTop: '8px' }}>
+              — GPU Optimization Principle
+            </p>
+          </div>
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Occupancy
-        </button>
-
-        {renderNavDots()}
+        <NavigationBar>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
+            <button
+              disabled
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                color: colors.textSecondary,
+                padding: '12px 24px',
+                borderRadius: '10px',
+                cursor: 'not-allowed',
+                opacity: 0.3,
+                minHeight: '44px',
+              }}
+            >
+              Back
+            </button>
+            <button
+              onClick={() => { playSound('click'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, minHeight: '44px' }}
+            >
+              Next
+            </button>
+          </div>
+          {renderNavDots()}
+        </NavigationBar>
       </div>
     );
   }
@@ -682,106 +850,115 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Prediction 1 of 2 - Make Your Prediction
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A CUDA kernel uses many variables (stored in registers). What happens as you increase registers per thread?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A CUDA kernel uses many variables (stored in registers). What happens as you increase registers per thread?
+            </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🧵</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Threads</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
-              <div style={{
-                background: colors.registerColor + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.registerColor}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>📦</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Registers</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>❓</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Occupancy?</p>
-              </div>
+            {/* Static GPU Visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
+                What to Watch: Observe how register allocation affects warp availability
+              </p>
+              <StaticSMVisualization />
+            </div>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        <NavigationBar>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                color: colors.textSecondary,
+                padding: '12px 24px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              ← Back
+            </button>
+            {prediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, minHeight: '44px' }}
+              >
+                Test My Prediction
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </NavigationBar>
       </div>
     );
   }
@@ -792,150 +969,229 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Maximize GPU Occupancy
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust registers per thread and see how it affects active warps
-          </p>
+        <div style={{
+          flex: '1 1 0%',
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Maximize GPU Occupancy
+            </h2>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SMVisualization />
-            </div>
-
-            {/* Registers slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Registers per Thread</span>
-                <span style={{ ...typo.small, color: colors.registerColor, fontWeight: 600 }}>{registersPerThread}</span>
-              </div>
-              <input
-                type="range"
-                min="16"
-                max="128"
-                step="8"
-                value={registersPerThread}
-                onChange={(e) => setRegistersPerThread(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.registerColor} ${((registersPerThread - 16) / 112) * 100}%, ${colors.border} ${((registersPerThread - 16) / 112) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>16 (light)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>128 (heavy)</span>
-              </div>
-            </div>
-
-            {/* Threads per block slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Threads per Block</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{threadsPerBlock}</span>
-              </div>
-              <input
-                type="range"
-                min="32"
-                max="1024"
-                step="32"
-                value={threadsPerBlock}
-                onChange={(e) => setThreadsPerBlock(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((threadsPerBlock - 32) / 992) * 100}%, ${colors.border} ${((threadsPerBlock - 32) / 992) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>32</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>1024</span>
-              </div>
-            </div>
-
-            {/* Resource bars */}
-            <ResourceBars />
-
-            {/* Stats display */}
+            {/* Observation guidance */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-              marginTop: '24px',
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error }}>
-                  {occupancyData.occupancy.toFixed(0)}%
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Occupancy</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{occupancyData.activeWarps}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Active Warps</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.registerColor }}>{occupancyData.activeBlocks}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Active Blocks</div>
-              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>What to Watch:</strong> Observe how changing the register count affects active warps. Try to find the balance between resource usage and occupancy.
+              </p>
             </div>
-          </div>
 
-          {/* Discovery prompt */}
-          {occupancyData.occupancy >= 75 && (
+            {/* Why this matters */}
             <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
+              background: `${colors.success}11`,
+              border: `1px solid ${colors.success}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.success }}>Why This Matters:</strong> GPU occupancy is important in real-world industry applications — it determines how efficiently your AI training, graphics rendering, and scientific simulations use expensive hardware. Engineers design and optimize this daily.
+              </p>
+            </div>
+
+            {/* Key terms */}
+            <div style={{
+              background: colors.bgCard,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
-              textAlign: 'center',
+              border: `1px solid ${colors.border}`,
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Great occupancy! But notice how reducing registers increases active warps. There's a tradeoff here.
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                <strong style={{ color: colors.textPrimary }}>Occupancy</strong> is defined as the ratio of active warps to the maximum supported warps — the formula is Occupancy = Active Warps / Max Warps.
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                <strong style={{ color: colors.registerColor }}>Registers</strong> refers to fast per-thread memory. The relationship between register usage and occupancy is: more registers per thread means fewer active threads.
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Warps</strong> describes how the GPU schedules 32 threads as a unit. Calculated as: Warps per Block = ceil(Threads / 32).
               </p>
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Tradeoff
-          </button>
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <SMVisualization />
+              </div>
+
+              {/* Registers slider - controls register allocation */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Register Count per Thread (memory allocation)</span>
+                  <span style={{ ...typo.small, color: colors.registerColor, fontWeight: 600 }}>{registersPerThread}</span>
+                </div>
+                <input
+                  type="range"
+                  min="16"
+                  max="128"
+                  step="8"
+                  value={registersPerThread}
+                  onChange={(e) => setRegistersPerThread(parseInt(e.target.value))}
+                  onInput={(e) => setRegistersPerThread(parseInt((e.target as HTMLInputElement).value))}
+                  aria-label="Register count per thread"
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    background: `linear-gradient(to right, ${colors.registerColor} ${((registersPerThread - 16) / 112) * 100}%, ${colors.border} ${((registersPerThread - 16) / 112) * 100}%)`,
+                    cursor: 'pointer',
+                    touchAction: 'pan-y' as const,
+                    WebkitAppearance: 'none' as const,
+                    accentColor: colors.registerColor,
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>16 (light)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>128 (heavy)</span>
+                </div>
+              </div>
+
+              {/* Threads per block slider - controls thread density */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Thread Density per Block (parallelism)</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{threadsPerBlock}</span>
+                </div>
+                <input
+                  type="range"
+                  min="32"
+                  max="1024"
+                  step="32"
+                  value={threadsPerBlock}
+                  onChange={(e) => setThreadsPerBlock(parseInt(e.target.value))}
+                  onInput={(e) => setThreadsPerBlock(parseInt((e.target as HTMLInputElement).value))}
+                  aria-label="Thread density per block"
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    background: `linear-gradient(to right, ${colors.accent} ${((threadsPerBlock - 32) / 992) * 100}%, ${colors.border} ${((threadsPerBlock - 32) / 992) * 100}%)`,
+                    cursor: 'pointer',
+                    touchAction: 'pan-y' as const,
+                    WebkitAppearance: 'none' as const,
+                    accentColor: colors.accent,
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>32</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>1024</span>
+                </div>
+              </div>
+
+              {/* Resource bars */}
+              <ResourceBars />
+
+              {/* Stats display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+                marginTop: '24px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error }}>
+                    {occupancyData.occupancy.toFixed(0)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Occupancy</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{occupancyData.activeWarps}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Active Warps</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.registerColor }}>{occupancyData.activeBlocks}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Active Blocks</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Discovery prompt */}
+            {occupancyData.occupancy >= 75 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  Great occupancy! But notice how reducing registers increases active warps. There's a tradeoff here.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {renderNavDots()}
+        <NavigationBar>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            <button
+              onClick={() => goToPhase('predict')}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                color: colors.textSecondary,
+                padding: '12px 24px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              ← Back
+            </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, minHeight: '44px' }}
+            >
+              Understand the Tradeoff
+            </button>
+          </div>
+        </NavigationBar>
       </div>
     );
   }
@@ -946,73 +1202,106 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Occupancy Equation
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.h3, color: colors.accent, margin: 0 }}>
-                Occupancy = Active Warps / Max Warps
-              </p>
-            </div>
-
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Warps</strong> are groups of 32 threads that execute together. The SM schedules warps, not individual threads.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <span style={{ color: colors.registerColor }}>Registers</span>: Each thread needs registers for local variables. More registers per thread = fewer threads fit.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <span style={{ color: colors.sharedMemColor }}>Shared Memory</span>: Fast memory shared within a block. More per block = fewer blocks fit.
-              </p>
-              <p>
-                <span style={{ color: colors.accent }}>Thread Count</span>: Max 2,048 threads per SM. Block size × blocks must fit.
-              </p>
-            </div>
-          </div>
-
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Key Insight
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Higher occupancy helps <strong>hide memory latency</strong>—while some warps wait for memory, others can execute. But sometimes lower occupancy with more registers is faster due to reduced memory accesses!
+        <div style={{
+          flex: '1 1 0%',
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
+              The Occupancy Equation
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              {prediction === 'b'
+                ? 'Correct! Your prediction was right — as you observed in the experiment, there is indeed a tradeoff between registers and active threads.'
+                : 'As you observed in the experiment, your prediction about registers revealed a key insight — there is a fundamental tradeoff between per-thread resources and occupancy.'}
             </p>
-          </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Shared Memory
-          </button>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.h3, color: colors.accent, margin: 0 }}>
+                  Occupancy = Active Warps / Max Warps
+                </p>
+              </div>
+
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Warps</strong> are groups of 32 threads that execute together. The SM schedules warps, not individual threads.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <span style={{ color: colors.registerColor }}>Registers</span>: Each thread needs registers for local variables. More registers per thread = fewer threads fit.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <span style={{ color: colors.sharedMemColor }}>Shared Memory</span>: Fast memory shared within a block. More per block = fewer blocks fit.
+                </p>
+                <p>
+                  <span style={{ color: colors.accent }}>Thread Count</span>: Max 2,048 threads per SM. Block size × blocks must fit.
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Key Insight
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Higher occupancy helps <strong>hide memory latency</strong>—while some warps wait for memory, others can execute. But sometimes lower occupancy with more registers is faster due to reduced memory accesses!
+              </p>
+            </div>
+          </div>
         </div>
 
-        {renderNavDots()}
+        <NavigationBar>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            <button
+              onClick={() => goToPhase('play')}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                color: colors.textSecondary,
+                padding: '12px 24px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              ← Back
+            </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, minHeight: '44px' }}
+            >
+              Explore Shared Memory
+            </button>
+          </div>
+          {renderNavDots()}
+        </NavigationBar>
       </div>
     );
   }
@@ -1029,73 +1318,113 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.sharedMemColor}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.sharedMemColor}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.sharedMemColor, margin: 0 }}>
-              New Variable: Shared Memory
-            </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+            <div style={{
+              background: `${colors.sharedMemColor}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.sharedMemColor}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.sharedMemColor, margin: 0 }}>
+                Prediction 2 of 2 - New Variable: Shared Memory
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A kernel uses 48KB of shared memory per block. The SM has 96KB total. What happens?
+            </h2>
+
+            {/* Static visualization showing shared memory */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
+                What to Watch: Consider how 48KB blocks fit into 96KB of total shared memory
+              </p>
+              <StaticSMVisualization />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.sharedMemColor}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.sharedMemColor : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.sharedMemColor : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A kernel uses 48KB of shared memory per block. The SM has 96KB total. What happens?
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.sharedMemColor}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.sharedMemColor : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.sharedMemColor : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See the Shared Memory Effect
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        <NavigationBar>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            <button
+              onClick={() => goToPhase('review')}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                color: colors.textSecondary,
+                padding: '12px 24px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              ← Back
+            </button>
+            {twistPrediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, minHeight: '44px' }}
+              >
+                See the Shared Memory Effect
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </NavigationBar>
       </div>
     );
   }
@@ -1106,139 +1435,189 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Three Resource Limits
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust all three parameters and see which becomes the bottleneck
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Three Resource Limits
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SMVisualization />
-            </div>
-
-            {/* All three sliders */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'registers' ? colors.registerColor : colors.textSecondary }}>
-                  Registers per Thread {occupancyData.limitingFactor === 'registers' && '(Limiting)'}
-                </span>
-                <span style={{ ...typo.small, color: colors.registerColor, fontWeight: 600 }}>{registersPerThread}</span>
-              </div>
-              <input
-                type="range"
-                min="16"
-                max="128"
-                step="8"
-                value={registersPerThread}
-                onChange={(e) => setRegistersPerThread(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'shared_memory' ? colors.sharedMemColor : colors.textSecondary }}>
-                  Shared Memory per Block (KB) {occupancyData.limitingFactor === 'shared_memory' && '(Limiting)'}
-                </span>
-                <span style={{ ...typo.small, color: colors.sharedMemColor, fontWeight: 600 }}>{sharedMemoryPerBlock}KB</span>
-              </div>
-              <input
-                type="range"
-                min="4"
-                max="96"
-                step="4"
-                value={sharedMemoryPerBlock}
-                onChange={(e) => setSharedMemoryPerBlock(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'threads' ? colors.accent : colors.textSecondary }}>
-                  Threads per Block {occupancyData.limitingFactor === 'threads' && '(Limiting)'}
-                </span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{threadsPerBlock}</span>
-              </div>
-              <input
-                type="range"
-                min="32"
-                max="1024"
-                step="32"
-                value={threadsPerBlock}
-                onChange={(e) => setThreadsPerBlock(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            <ResourceBars />
-
-            {/* Stats */}
+            {/* Observation guidance */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-              marginTop: '20px',
+              background: `${colors.sharedMemColor}11`,
+              border: `1px solid ${colors.sharedMemColor}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error }}>
-                  {occupancyData.occupancy.toFixed(0)}%
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Occupancy</div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.sharedMemColor }}>What to Watch:</strong> Adjust all three parameters and observe which resource becomes the bottleneck. Notice how different combinations affect occupancy.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <SMVisualization />
               </div>
+
+              {/* All three sliders with physics labels */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'registers' ? colors.registerColor : colors.textSecondary }}>
+                    Register Count per Thread (memory allocation) {occupancyData.limitingFactor === 'registers' && '(Limiting)'}
+                  </span>
+                  <span style={{ ...typo.small, color: colors.registerColor, fontWeight: 600 }}>{registersPerThread}</span>
+                </div>
+                <input
+                  type="range"
+                  min="16"
+                  max="128"
+                  step="8"
+                  value={registersPerThread}
+                  onChange={(e) => setRegistersPerThread(parseInt(e.target.value))}
+                  onInput={(e) => setRegistersPerThread(parseInt((e.target as HTMLInputElement).value))}
+                  aria-label="Register count per thread"
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y' as const,
+                    WebkitAppearance: 'none' as const,
+                    accentColor: colors.registerColor,
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'shared_memory' ? colors.sharedMemColor : colors.textSecondary }}>
+                    Shared Memory Capacity per Block (KB) {occupancyData.limitingFactor === 'shared_memory' && '(Limiting)'}
+                  </span>
+                  <span style={{ ...typo.small, color: colors.sharedMemColor, fontWeight: 600 }}>{sharedMemoryPerBlock}KB</span>
+                </div>
+                <input
+                  type="range"
+                  min="4"
+                  max="96"
+                  step="4"
+                  value={sharedMemoryPerBlock}
+                  onChange={(e) => setSharedMemoryPerBlock(parseInt(e.target.value))}
+                  onInput={(e) => setSharedMemoryPerBlock(parseInt((e.target as HTMLInputElement).value))}
+                  aria-label="Shared memory capacity per block"
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y' as const,
+                    WebkitAppearance: 'none' as const,
+                    accentColor: colors.sharedMemColor,
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'threads' ? colors.accent : colors.textSecondary }}>
+                    Thread Density per Block (parallelism) {occupancyData.limitingFactor === 'threads' && '(Limiting)'}
+                  </span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{threadsPerBlock}</span>
+                </div>
+                <input
+                  type="range"
+                  min="32"
+                  max="1024"
+                  step="32"
+                  value={threadsPerBlock}
+                  onChange={(e) => setThreadsPerBlock(parseInt(e.target.value))}
+                  onInput={(e) => setThreadsPerBlock(parseInt((e.target as HTMLInputElement).value))}
+                  aria-label="Thread density per block"
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y' as const,
+                    WebkitAppearance: 'none' as const,
+                    accentColor: colors.accent,
+                  }}
+                />
+              </div>
+
+              <ResourceBars />
+
+              {/* Stats */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
+                marginTop: '20px',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{occupancyData.activeBlocks}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Blocks per SM</div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error }}>
+                    {occupancyData.occupancy.toFixed(0)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Occupancy</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{occupancyData.activeBlocks}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Blocks per SM</div>
+                </div>
               </div>
             </div>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Tradeoffs
-          </button>
         </div>
 
-        {renderNavDots()}
+        <NavigationBar>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            <button
+              onClick={() => goToPhase('twist_predict')}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                color: colors.textSecondary,
+                padding: '12px 24px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              ← Back
+            </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, minHeight: '44px' }}
+            >
+              Understand the Tradeoffs
+            </button>
+          </div>
+          {renderNavDots()}
+        </NavigationBar>
       </div>
     );
   }
@@ -1336,137 +1715,219 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
   // TRANSFER PHASE
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
+    const completedCount = completedApps.filter(c => c).length;
     const allAppsCompleted = completedApps.every(c => c);
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              App {selectedApp + 1} of {realWorldApps.length} - Explore each application to continue
+            </p>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    minHeight: '44px',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            {/* Progress indicator */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '24px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Progress: {completedCount} of {realWorldApps.length} apps explored
+              </span>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {completedApps.map((completed, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: completed ? colors.success : colors.border,
+                  }} />
+                ))}
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
-
+            {/* Selected app details */}
             <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
             }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Occupancy Matters:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
                 </div>
-              ))}
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How Occupancy Matters:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Got It button for each app */}
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  if (selectedApp < realWorldApps.length - 1) {
+                    setSelectedApp(selectedApp + 1);
+                  }
+                }}
+                style={{
+                  background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  width: '100%',
+                  minHeight: '44px',
+                }}
+              >
+                Got It! {selectedApp < realWorldApps.length - 1 ? 'Next App' : 'Complete'}
+              </button>
             </div>
           </div>
-
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        <NavigationBar>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            <button
+              onClick={() => goToPhase('twist_review')}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                color: colors.textSecondary,
+                padding: '12px 24px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              ← Back
+            </button>
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, minHeight: '44px' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </NavigationBar>
       </div>
     );
   }
@@ -1479,52 +1940,64 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🎉' : '📚'}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '24px',
+            paddingBottom: '100px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '80px',
+                marginBottom: '24px',
+              }}>
+                {passed ? '🎉' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You\'ve mastered GPU Occupancy optimization!'
+                  : 'Review the concepts and try again.'}
+              </p>
             </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You\'ve mastered GPU Occupancy optimization!'
-                : 'Review the concepts and try again.'}
-            </p>
-
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
           </div>
-          {renderNavDots()}
+
+          <NavigationBar>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={{ ...primaryButtonStyle, minHeight: '44px' }}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={{ ...primaryButtonStyle, minHeight: '44px' }}
+                >
+                  Review & Try Again
+                </button>
+              )}
+            </div>
+            {renderNavDots()}
+          </NavigationBar>
         </div>
       );
     }
@@ -1535,113 +2008,123 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.h3, color: colors.accent }}>
+                Q{currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion
+                      ? colors.accent
+                      : testAnswers[i]
+                        ? colors.success
+                        : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+              {question.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {question.options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
+                </button>
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
+        <NavigationBar>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
             {currentQuestion > 0 && (
               <button
                 onClick={() => setCurrentQuestion(currentQuestion - 1)}
                 style={{
-                  flex: 1,
-                  padding: '14px',
+                  padding: '14px 24px',
                   borderRadius: '10px',
                   border: `1px solid ${colors.border}`,
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
-                Previous
+                ← Previous
               </button>
             )}
             {currentQuestion < 9 ? (
@@ -1649,17 +2132,17 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
                 onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
                 disabled={!testAnswers[currentQuestion]}
                 style={{
-                  flex: 1,
-                  padding: '14px',
+                  padding: '14px 24px',
                   borderRadius: '10px',
                   border: 'none',
                   background: testAnswers[currentQuestion] ? colors.accent : colors.border,
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
-                Next
+                Next →
               </button>
             ) : (
               <button
@@ -1674,23 +2157,22 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
                 }}
                 disabled={testAnswers.some(a => a === null)}
                 style={{
-                  flex: 1,
-                  padding: '14px',
+                  padding: '14px 24px',
                   borderRadius: '10px',
                   border: 'none',
                   background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
               </button>
             )}
           </div>
-        </div>
-
-        {renderNavDots()}
+          {renderNavDots()}
+        </NavigationBar>
       </div>
     );
   }

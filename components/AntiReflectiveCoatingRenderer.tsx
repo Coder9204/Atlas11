@@ -27,7 +27,7 @@ const phaseLabels: Record<Phase, string> = {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Use high contrast color (brightness >= 180)
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -127,6 +127,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentApp, setCurrentApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -232,24 +233,28 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     {
       title: 'Camera Lens Coatings',
       description: 'Multi-layer AR coatings on camera lenses reduce flare and increase contrast.',
+      stats: '99.9% transmission, 15+ layers, 0.1% reflection per surface',
       question: 'Why do expensive lenses have more coating layers?',
       answer: 'Single-layer AR works well at one wavelength but poorly at others. Multi-layer coatings stack different thicknesses to cancel reflections across the visible spectrum (400-700nm), reducing total reflection from ~4% to under 0.5%.',
     },
     {
       title: 'Eyeglasses',
       description: 'AR coatings on glasses reduce reflections that cause glare and "ghost" images.',
+      stats: '99.5% light transmission, 8x glare reduction, 7 coating layers',
       question: 'Why do AR-coated glasses sometimes look purple or green?',
       answer: 'The coating is optimized for the middle of the visible spectrum (green-yellow). Residual reflection at the blue and red ends creates a slight purple or green tint. Higher quality coatings have more layers to reduce this color.',
     },
     {
       title: 'PERC Solar Cells',
       description: 'Modern PERC cells use optimized SiNx coatings for both AR and passivation.',
+      stats: '30% power gain, 75nm optimal thickness, <5% reflection',
       question: 'Why is silicon nitride the dominant AR coating for solar cells?',
       answer: 'SiNx (n~2.0) provides excellent AR for silicon (n~3.5) with just one layer. It also passivates surface defects, reducing recombination. The coating serves dual optical and electrical purposes.',
     },
     {
       title: 'Stealth Technology',
       description: 'Radar-absorbing coatings use the same thin-film interference principles.',
+      stats: '90% radar absorption, cm-scale thickness, GHz frequency range',
       question: 'How do stealth aircraft use thin-film principles?',
       answer: 'Radar-absorbing materials (RAM) are designed as quarter-wave absorbers at radar frequencies. The coating thickness is matched to microwave wavelengths (cm scale), causing destructive interference of reflected radar signals.',
     },
@@ -475,7 +480,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
 
   const renderVisualization = () => {
     const width = 700;
-    const height = 520;
+    const height = 500;
     const result = calculateReflectivity();
     const coating = coatings[coatingMaterial];
 
@@ -695,7 +700,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
           <text x={width / 2} y={30} fill="#f8fafc" fontSize={18} fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
             Anti-Reflective Coating - Thin Film Interference
           </text>
-          <text x={width / 2} y={48} fill="#94a3b8" fontSize={11} textAnchor="middle">
+          <text x={width / 2} y={48} fill="#e2e8f0" fontSize={11} textAnchor="middle">
             Quarter-wave optical coating simulation
           </text>
 
@@ -736,7 +741,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             <line x1={graphX} y1={graphY} x2={graphX} y2={graphY + graphHeight} stroke="#475569" strokeWidth={2} />
 
             {/* Labels */}
-            <text x={graphX + graphWidth / 2} y={graphY + graphHeight + 35} fill="#94a3b8" fontSize={11} textAnchor="middle" fontWeight="600">Wavelength (nm)</text>
+            <text x={graphX + graphWidth / 2} y={graphY + graphHeight + 35} fill="#e2e8f0" fontSize={11} textAnchor="middle" fontWeight="600">Wavelength (nm)</text>
             <text x={graphX + 15} y={graphY + graphHeight + 25} fill="#a78bfa" fontSize={9} fontWeight="bold">UV</text>
             <text x={graphX + graphWidth - 15} y={graphY + graphHeight + 25} fill="#f87171" fontSize={9} fontWeight="bold">IR</text>
 
@@ -1044,8 +1049,8 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     );
   };
 
-  // Bottom bar with Back/Next navigation
-  const renderBottomBar = () => {
+  // Top navigation bar with Back/Next navigation
+  const renderNavBar = () => {
     const currentIdx = phaseOrder.indexOf(phase);
     const isFirst = currentIdx === 0;
     const isLast = currentIdx === phaseOrder.length - 1;
@@ -1053,12 +1058,12 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{
         position: 'fixed',
-        bottom: 0,
+        top: 0,
         left: 0,
         right: 0,
         padding: '12px 24px',
         background: colors.bgDark,
-        borderTop: `1px solid rgba(255,255,255,0.1)`,
+        borderBottom: `1px solid rgba(255,255,255,0.1)`,
         zIndex: 1000,
       }}>
         {renderProgressBar()}
@@ -1073,20 +1078,22 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             disabled={isFirst}
             style={{
               padding: '10px 24px',
+              minHeight: '44px',
               borderRadius: '8px',
               border: `1px solid ${isFirst ? 'transparent' : colors.accent}`,
-              background: 'transparent',
+              background: isFirst ? 'transparent' : 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1))',
               color: isFirst ? colors.textMuted : colors.accent,
               fontWeight: 'bold',
               cursor: isFirst ? 'not-allowed' : 'pointer',
               fontSize: '14px',
               opacity: isFirst ? 0.5 : 1,
+              transition: 'all 0.2s ease',
               WebkitTapHighlightColor: 'transparent',
             }}
           >
             Back
           </button>
-          <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>
             {phaseLabels[phase]}
           </span>
           <button
@@ -1094,13 +1101,15 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             disabled={isLast}
             style={{
               padding: '10px 24px',
+              minHeight: '44px',
               borderRadius: '8px',
               border: 'none',
-              background: isLast ? colors.success : colors.accent,
+              background: isLast ? `linear-gradient(135deg, ${colors.success}, #059669)` : `linear-gradient(135deg, ${colors.accent}, #d97706)`,
               color: 'white',
               fontWeight: 'bold',
               cursor: isLast ? 'default' : 'pointer',
               fontSize: '14px',
+              transition: 'all 0.2s ease',
               WebkitTapHighlightColor: 'transparent',
             }}
           >
@@ -1114,13 +1123,14 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 'bold' }}>
               Anti-Reflective Coatings
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               Can a thin layer increase light entering silicon?
             </p>
           </div>
@@ -1134,7 +1144,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 Bare silicon reflects over 30% of sunlight - a huge loss! But a thin coating
                 just 75nm thick (1000x thinner than paper) can reduce this to under 5%.
                 The magic? Thin-film interference!
@@ -1142,7 +1152,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </div>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1150,28 +1159,35 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Step 1 of 2</p>
+          </div>
           {renderVisualization()}
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>
               What happens when you add a thin coating to a solar cell?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
+              {predictions.map((p, idx) => (
                 <button
                   key={p.id}
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    background: prediction === p.id ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.1))' : 'linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5))',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontWeight: 400,
+                    transition: 'all 0.2s ease',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
@@ -1181,7 +1197,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </div>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1189,12 +1204,25 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore AR Coatings</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust coating material and thickness to minimize reflection
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.2)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.blue}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.blue }}>Observe:</strong> Watch how changing coating thickness affects the reflectivity spectrum and overall performance.
             </p>
           </div>
 
@@ -1215,8 +1243,22 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               <li>See why solar cells look blue (optimized for red)</li>
             </ul>
           </div>
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.1)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.success}`,
+          }}>
+            <h4 style={{ color: colors.success, marginBottom: '8px' }}>Why This Matters:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              AR coatings are used in important real-world applications every day. This technology enables solar panels
+              to capture 30% more sunlight, helps engineers design better camera lenses with near-perfect clarity,
+              and makes eyeglasses practically invisible. Understanding thin-film interference is essential for
+              the photovoltaics industry and modern optical design.
+            </p>
+          </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1226,8 +1268,9 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     const wasCorrect = prediction === 'increase';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1239,10 +1282,48 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               {wasCorrect ? 'Correct!' : 'Counterintuitive but true!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              A thin coating uses destructive interference to cancel reflections! Light reflected
+              As you predicted, a thin coating uses destructive interference to cancel reflections! Light reflected
               from the top and bottom of the coating can interfere destructively, allowing more
-              light to enter the silicon.
+              light to enter the silicon - just as you observed in the simulation.
             </p>
+          </div>
+
+          {/* Visual diagram for review */}
+          <div style={{ margin: '16px', display: 'flex', justifyContent: 'center' }}>
+            <svg width="300" height="200" viewBox="0 0 300 200">
+              <defs>
+                <linearGradient id="reviewCoatingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="100%" stopColor="#1e40af" />
+                </linearGradient>
+                <linearGradient id="reviewSiliconGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#475569" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="300" height="200" fill="#0f172a" rx="8" />
+              <text x="150" y="25" fill="#e2e8f0" fontSize="14" textAnchor="middle" fontWeight="bold">Destructive Interference</text>
+
+              {/* Air layer */}
+              <rect x="50" y="40" width="200" height="30" fill="transparent" stroke="#475569" strokeDasharray="4,3" />
+              <text x="150" y="58" fill="#94a3b8" fontSize="10" textAnchor="middle">Air (n=1.0)</text>
+
+              {/* Coating */}
+              <rect x="50" y="70" width="200" height="40" fill="url(#reviewCoatingGrad)" rx="2" />
+              <text x="150" y="95" fill="#fff" fontSize="10" textAnchor="middle">AR Coating (n=2.0)</text>
+
+              {/* Silicon */}
+              <rect x="50" y="110" width="200" height="50" fill="url(#reviewSiliconGrad)" rx="2" />
+              <text x="150" y="140" fill="#94a3b8" fontSize="10" textAnchor="middle">Silicon (n=3.5)</text>
+
+              {/* Light rays */}
+              <line x1="80" y1="35" x2="120" y2="70" stroke="#fbbf24" strokeWidth="3" />
+              <line x1="120" y1="70" x2="90" y2="35" stroke="#ef4444" strokeWidth="2" strokeDasharray="4,3" />
+              <line x1="160" y1="70" x2="160" y2="110" stroke="#fbbf24" strokeWidth="2" opacity="0.6" />
+              <line x1="160" y1="110" x2="130" y2="35" stroke="#ef4444" strokeWidth="2" strokeDasharray="4,3" />
+
+              <text x="150" y="180" fill="#10b981" fontSize="11" textAnchor="middle">R1 + R2 = Cancellation (180° phase shift)</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1271,7 +1352,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </div>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1279,9 +1359,11 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Step 2 of 2</p>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
               What if we want to optimize for different colors?
@@ -1308,15 +1390,16 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               How does coating thickness affect performance at different wavelengths?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
+              {twistPredictions.map((p, idx) => (
                 <button
                   key={p.id}
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    background: twistPrediction === p.id ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.1))' : 'linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5))',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
@@ -1330,7 +1413,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </div>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1338,12 +1420,25 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Tune for Different Colors</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust target wavelength and see how optimal thickness changes
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.2)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.blue}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.blue }}>Observe:</strong> Notice how the minimum point in the reflectivity spectrum shifts as you change the target wavelength.
             </p>
           </div>
 
@@ -1365,7 +1460,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </p>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1375,8 +1469,9 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     const wasCorrect = twistPrediction === 'tuned';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1392,6 +1487,39 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               won't work as well at 400nm or 700nm. This is why multi-layer coatings
               are used for broadband AR.
             </p>
+          </div>
+
+          {/* Visual diagram for twist review */}
+          <div style={{ margin: '16px', display: 'flex', justifyContent: 'center' }}>
+            <svg width="300" height="180" viewBox="0 0 300 180">
+              <defs>
+                <linearGradient id="twistSpectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#7c3aed" />
+                  <stop offset="25%" stopColor="#3b82f6" />
+                  <stop offset="50%" stopColor="#22c55e" />
+                  <stop offset="75%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="300" height="180" fill="#0f172a" rx="8" />
+              <text x="150" y="25" fill="#e2e8f0" fontSize="14" textAnchor="middle" fontWeight="bold">Multi-Layer AR Coating</text>
+
+              {/* Spectrum bar */}
+              <rect x="30" y="45" width="240" height="15" fill="url(#twistSpectrumGrad)" rx="4" />
+
+              {/* Multiple coating layers */}
+              <rect x="50" y="80" width="200" height="12" fill="#60a5fa" rx="2" />
+              <rect x="50" y="94" width="200" height="10" fill="#a855f7" rx="2" />
+              <rect x="50" y="106" width="200" height="8" fill="#22d3ee" rx="2" />
+              <rect x="50" y="116" width="200" height="40" fill="#475569" rx="2" />
+
+              <text x="150" y="88" fill="#fff" fontSize="9" textAnchor="middle">Layer 1 - Blue optimized</text>
+              <text x="150" y="102" fill="#fff" fontSize="9" textAnchor="middle">Layer 2 - Green</text>
+              <text x="150" y="112" fill="#fff" fontSize="8" textAnchor="middle">Layer 3 - Red</text>
+              <text x="150" y="140" fill="#94a3b8" fontSize="10" textAnchor="middle">Silicon</text>
+
+              <text x="150" y="170" fill="#10b981" fontSize="11" textAnchor="middle">Broadband AR: &lt;1% reflection across spectrum</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1420,7 +1548,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </div>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1428,14 +1555,18 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               AR coatings are everywhere!
+            </p>
+            <p style={{ color: colors.accent, textAlign: 'center', fontSize: '14px' }}>
+              App {currentApp + 1} of {transferApplications.length}
             </p>
           </div>
 
@@ -1452,37 +1583,106 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                {transferCompleted.has(index) && <span style={{ color: colors.success }}>✓ Complete</span>}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>{app.description}</p>
+              <p style={{ color: colors.blue, fontSize: '12px', marginBottom: '12px', fontWeight: 'bold' }}>Key Stats: {app.stats}</p>
+              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
               </div>
               {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => {
+                      setTransferCompleted(new Set([...transferCompleted, index]));
+                      setCurrentApp(Math.min(index + 1, transferApplications.length - 1));
+                    }}
+                    style={{
+                      padding: '12px 20px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.1))',
+                      color: colors.accent,
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Reveal Answer
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTransferCompleted(new Set([...transferCompleted, index]));
+                      if (index < transferApplications.length - 1) {
+                        setCurrentApp(index + 1);
+                      }
+                    }}
+                    style={{
+                      padding: '12px 20px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Got It
+                  </button>
+                </div>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  {index < transferApplications.length - 1 && (
+                    <button
+                      onClick={() => setCurrentApp(index + 1)}
+                      style={{
+                        padding: '12px 20px',
+                        minHeight: '44px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      Got It - Next App
+                    </button>
+                  )}
+                  {index === transferApplications.length - 1 && (
+                    <button
+                      onClick={goNext}
+                      style={{
+                        padding: '12px 20px',
+                        minHeight: '44px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      Got It - Continue
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           ))}
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1491,8 +1691,9 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderNavBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1510,36 +1711,56 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '20px' }}>{isCorrect ? '✓' : '✗'}</span>
+                    <p style={{ color: colors.textPrimary, fontWeight: 'bold', margin: 0 }}>Q{qIndex + 1} of {testQuestions.length}: {q.question}</p>
+                  </div>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+                      {opt.correct ? '✓ Correct: ' : userAnswer === oIndex ? '✗ Your answer: ' : ''} {opt.text}
                     </div>
                   ))}
                 </div>
               );
             })}
           </div>
-          {renderBottomBar()}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
               <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
             </div>
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.1)',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.blue}`,
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+                Test your understanding of anti-reflective coating principles. These questions cover thin-film interference,
+                quarter-wave conditions, coating materials, and real-world applications in solar cells, eyeglasses, and camera lenses.
+                Answer all {testQuestions.length} questions based on what you learned about how AR coatings reduce reflection through
+                destructive interference.
+              </p>
+            </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textSecondary : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+                Q{currentTestQuestion + 1} of {testQuestions.length}
+              </p>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1549,9 +1770,10 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
                   onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    background: testAnswers[currentTestQuestion] === oIndex ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.1))' : 'linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5))',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
@@ -1565,11 +1787,11 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: `1px solid ${colors.textSecondary}`, background: currentTestQuestion === 0 ? 'transparent' : 'linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5))', color: currentTestQuestion === 0 ? colors.textSecondary : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', opacity: currentTestQuestion === 0 ? 0.5 : 1, WebkitTapHighlightColor: 'transparent' }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textSecondary : 'linear-gradient(135deg, #10b981, #059669)', color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', opacity: testAnswers.includes(null) ? 0.5 : 1, WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
             )}
           </div>
         </div>
@@ -1580,10 +1802,11 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered AR coatings!</p>
           </div>
@@ -1599,7 +1822,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
           </div>
           {renderVisualization()}
         </div>
-        {renderBottomBar()}
       </div>
     );
   }

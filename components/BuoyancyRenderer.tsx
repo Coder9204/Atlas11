@@ -341,8 +341,8 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
     warning: '#F59E0B',
     water: '#3B82F6',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#D1D5DB',
+    textMuted: '#B8BFC8',
     border: '#2a2a3a',
   };
 
@@ -478,7 +478,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
     const objectColor = floats ? colors.success : colors.error;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
@@ -728,6 +728,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
@@ -779,7 +786,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
         >
           Discover Why Things Float
         </button>
-
+      </div>
         {renderBottomBar()}
       </div>
     );
@@ -798,6 +805,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
         padding: '24px',
       }}>
         {renderProgressBar()}
@@ -927,7 +941,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             </button>
           )}
         </div>
-
+      </div>
         {renderBottomBar()}
       </div>
     );
@@ -939,6 +953,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
         padding: '24px',
       }}>
         {renderProgressBar()}
@@ -948,7 +969,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             Buoyancy Lab
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust the object and fluid densities to see what floats and what sinks
+            The visualization shows an object dropping into a fluid. Adjust the densities to observe what floats and what sinks. When you increase object density, more of it sinks below the waterline. This demonstrates how ships and submarines use buoyancy in real-world engineering.
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Density is defined as mass divided by volume (calculated as ρ = m/V). The ratio of object density to fluid density determines whether an object floats or sinks.
           </p>
 
           {/* Main visualization */}
@@ -986,7 +1010,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
                   setHasDropped(false);
                   setAnimationProgress(0);
                 }}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ width: '100%', cursor: 'pointer', accentColor: colors.accent }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>Cork (0.3)</span>
@@ -1013,7 +1037,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
                   setHasDropped(false);
                   setAnimationProgress(0);
                 }}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ width: '100%', cursor: 'pointer', accentColor: colors.accent }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>Oil (0.8)</span>
@@ -1039,7 +1063,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
                   setHasDropped(false);
                   setAnimationProgress(0);
                 }}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ width: '100%', cursor: 'pointer', accentColor: colors.accent }}
               />
             </div>
 
@@ -1143,7 +1167,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             Understand the Physics
           </button>
         </div>
-
+      </div>
         {renderBottomBar()}
       </div>
     );
@@ -1157,6 +1181,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
         padding: '24px',
       }}>
         {renderProgressBar()}
@@ -1170,6 +1201,11 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             <h2 style={{ ...typo.h2, color: userWasCorrect ? colors.success : colors.accent }}>
               {userWasCorrect ? 'Exactly Right!' : 'The Key is Density!'}
             </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px' }}>
+              {userWasCorrect
+                ? 'Your prediction was correct! As you observed in the experiment, density comparison determines floating behavior.'
+                : 'You predicted something different, but as you saw in the experiment, density is the key factor that determines whether objects float or sink.'}
+            </p>
           </div>
 
           <div style={{
@@ -1236,7 +1272,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             Explore a Twist
           </button>
         </div>
-
+      </div>
         {renderBottomBar()}
       </div>
     );
@@ -1255,6 +1291,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
         padding: '24px',
       }}>
         {renderProgressBar()}
@@ -1366,7 +1409,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             </button>
           )}
         </div>
-
+      </div>
         {renderBottomBar()}
       </div>
     );
@@ -1383,6 +1426,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
         padding: '24px',
       }}>
         {renderProgressBar()}
@@ -1571,7 +1621,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             Understand the Insight
           </button>
         </div>
-
+      </div>
         {renderBottomBar()}
       </div>
     );
@@ -1585,6 +1635,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
         padding: '24px',
       }}>
         {renderProgressBar()}
@@ -1656,7 +1713,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             See Real-World Applications
           </button>
         </div>
-
+      </div>
         {renderBottomBar()}
       </div>
     );
@@ -1671,6 +1728,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
         padding: '24px',
       }}>
         {renderProgressBar()}
@@ -1847,20 +1911,37 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             </div>
           </div>
 
-          {allAppsCompleted ? (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          ) : (
-            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
-              Explore all 4 applications to continue ({completedApps.filter(c => c).length}/4 completed)
-            </p>
-          )}
-        </div>
+          {/* Next Application / Continue to Test button */}
+          <div style={{ marginBottom: '12px' }}>
+            {selectedApp < realWorldApps.length - 1 ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const nextIdx = selectedApp + 1;
+                  setSelectedApp(nextIdx);
+                  const newCompleted = [...completedApps];
+                  newCompleted[nextIdx] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Next Application →
+              </button>
+            ) : (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Continue to Test →
+              </button>
+            )}
+          </div>
 
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedApps.filter(c => c).length}/{realWorldApps.length} viewed)
+          </p>
+        </div>
+      </div>
         {renderBottomBar()}
       </div>
     );
@@ -1874,6 +1955,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
           padding: '24px',
         }}>
           {renderProgressBar()}
@@ -1920,6 +2008,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
               </button>
             )}
           </div>
+        </div>
           {renderBottomBar()}
         </div>
       );
@@ -1933,6 +2022,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
         padding: '24px',
       }}>
         {renderProgressBar()}
@@ -2157,7 +2253,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             )}
           </div>
         </div>
-
+      </div>
         {renderBottomBar()}
       </div>
     );
@@ -2169,6 +2265,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -2301,7 +2404,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             Return to Dashboard
           </a>
         </div>
-
+      </div>
         {renderBottomBar()}
       </div>
     );

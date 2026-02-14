@@ -543,8 +543,8 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
     const dampColor = airResistance > 0 ? colors.warning : colors.accent;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-        <svg width={svgW} height={svgH} style={{ borderRadius: '16px', border: `1px solid ${colors.border}` }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%', maxWidth: '420px' }}>
+        <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} preserveAspectRatio="xMidYMid meet" style={{ borderRadius: '16px', border: `1px solid ${colors.border}` }}>
           <defs>
             <linearGradient id="projBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
@@ -890,6 +890,20 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
         </div>
       </div>
 
+      {/* Observation guidance */}
+      <div style={{ padding: '14px', background: `${colors.accent}15`, borderRadius: '12px', border: `1px solid ${colors.accent}30`, marginBottom: '16px', maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+          <strong style={{ color: colors.accent }}>What to watch:</strong> Observe how both balls hit the ground at the same time regardless of horizontal speed. When you increase the horizontal speed, the thrown ball travels farther but the fall time stays constant because gravity affects both equally.
+        </p>
+      </div>
+
+      {/* Real-world relevance */}
+      <div style={{ padding: '14px', background: `${colors.primary}15`, borderRadius: '12px', border: `1px solid ${colors.primary}30`, marginBottom: '16px', maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+          <strong style={{ color: colors.primary }}>Why this matters:</strong> This principle is important in real-world applications from sports to engineering. Understanding motion independence allows us to calculate trajectories for everything from basketball shots to spacecraft navigation.
+        </p>
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
         {renderSimulation(true)}
       </div>
@@ -914,8 +928,11 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
         }}>
           <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎉' : '💡'}</span>
           <h3 style={{ fontSize: '22px', color: wasCorrect ? colors.success : colors.accent, marginTop: '12px', fontWeight: 700 }}>
-            {wasCorrect ? 'Correct! They hit at the same time!' : 'They hit at the same time!'}
+            {wasCorrect ? 'Correct! Your prediction was right!' : 'As you observed in the experiment, they hit at the same time!'}
           </h3>
+          <p style={{ fontSize: '15px', color: colors.textSecondary, marginTop: '8px' }}>
+            {wasCorrect ? 'You correctly predicted this result from the experiment.' : 'This is what happens when motion is truly independent.'}
+          </p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
@@ -1214,9 +1231,14 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           <span style={{ fontSize: '28px' }}>🌍</span>
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Real-World Applications</h2>
         </div>
-        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: '0 0 16px', lineHeight: 1.6 }}>
-          Projectile independence in engineering and science
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+            Projectile independence in engineering and science
+          </p>
+          <span style={{ fontSize: '14px', color: colors.primary, fontWeight: 600 }}>
+            App {activeApp + 1} of {realWorldApps.length}
+          </span>
+        </div>
 
         {/* Tab navigation */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
@@ -1328,7 +1350,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
                   position: 'relative' as const
                 }}
               >
-                Mark as Read
+                Got It
               </button>
             ) : (
               <div style={{ padding: '16px', background: `${colors.success}15`, borderRadius: '12px', border: `1px solid ${colors.success}40`, textAlign: 'center' }}>
@@ -1634,7 +1656,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto' }}>
         {renderPhase()}
       </div>
 

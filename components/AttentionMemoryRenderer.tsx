@@ -58,7 +58,7 @@ const testQuestions = [
     question: "Why does quadrupling the sequence length cause a memory crash, not just 4x more usage?",
     options: [
       { id: 'a', label: "The model weights get larger with longer sequences" },
-      { id: 'b', label: "Attention memory scales O(n^2), so 4x length means 16x memory for attention", correct: true },
+      { id: 'b', label: "Attention memory scales O(n²), so 4x length means 16x memory for attention", correct: true },
       { id: 'c', label: "Longer sequences require more model layers" },
       { id: 'd', label: "GPU memory fragmentation becomes worse with longer sequences" }
     ],
@@ -184,7 +184,7 @@ const realWorldApps = [
     ],
     examples: ['Contract analysis', 'Codebase Q&A', 'Research synthesis', 'Book summarization'],
     companies: ['Anthropic', 'OpenAI', 'Google DeepMind', 'Cohere'],
-    futureImpact: 'Future models may maintain million-token contexts, enabling AI assistants that remember your entire work history.',
+    futureImpact: 'Future models may maintain million-token contexts, enabling AI assistants that remember your entire work history and provide seamless document understanding across all your files.',
     color: '#8B5CF6'
   },
   {
@@ -202,7 +202,7 @@ const realWorldApps = [
     ],
     examples: ['Movie summarization', 'Sports analysis', 'Surveillance review', 'Tutorial understanding'],
     companies: ['Google', 'Meta', 'Runway', 'Twelve Labs'],
-    futureImpact: 'Real-time video understanding will enable AI directors, automated sports commentary, and continuous life-logging assistants.',
+    futureImpact: 'Real-time video understanding will enable AI directors, automated sports commentary, and continuous life-logging assistants that understand everything you see.',
     color: '#EC4899'
   },
   {
@@ -220,7 +220,7 @@ const realWorldApps = [
     ],
     examples: ['Variant effect prediction', 'Gene expression modeling', 'Protein structure', 'Drug target discovery'],
     companies: ['DeepMind', 'Insilico Medicine', 'Recursion', 'Genentech'],
-    futureImpact: 'Full-genome attention could enable personalized medicine based on your complete genetic context.',
+    futureImpact: 'Full-genome attention could enable personalized medicine based on your complete genetic context, revolutionizing how we treat diseases and develop targeted therapies.',
     color: '#10B981'
   },
   {
@@ -238,7 +238,7 @@ const realWorldApps = [
     ],
     examples: ['Personal AI assistants', 'Customer support continuity', 'Healthcare history', 'Educational tutoring'],
     companies: ['Anthropic', 'OpenAI', 'Inflection AI', 'Character.AI'],
-    futureImpact: 'AI companions with perfect memory of your preferences, projects, and conversations will transform personal productivity.',
+    futureImpact: 'AI companions with perfect memory of your preferences, projects, and conversations will transform personal productivity and enable truly personalized assistance across all domains.',
     color: '#F59E0B'
   }
 ];
@@ -309,8 +309,8 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
   };
 
@@ -352,24 +352,22 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     }
   }, [phase, goToPhase]);
 
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Calculate memory usage
   const calculateMemory = useCallback(() => {
-    // Attention matrix size: n^2 per head, but head_dim = embedding_dim / num_heads
-    // Total attention memory: n^2 * num_heads * (head_dim) for Q, K, V projections
-    // Simplified: attention scores are n^2, and we have num_heads of them
     const n = sequenceLength;
-    const attentionMatrixSize = n * n; // entries per head
+    const attentionMatrixSize = n * n;
     const totalAttentionEntries = attentionMatrixSize * numHeads;
-
-    // Memory in bytes (assuming FP16 = 2 bytes)
     const bytesPerEntry = 2;
     const attentionMemoryBytes = totalAttentionEntries * bytesPerEntry;
-
-    // KV cache memory: 2 * n * embedding_dim * num_layers (assume 12 layers)
     const numLayers = 12;
     const kvCacheBytes = 2 * n * embeddingDim * numLayers * bytesPerEntry;
-
-    // Flash Attention reduces peak memory by ~10x by not materializing full attention matrix
     const flashReduction = useFlashAttention ? 0.1 : 1;
     const peakAttentionMemory = attentionMemoryBytes * flashReduction;
 
@@ -378,11 +376,29 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
       kvCacheMB: (kvCacheBytes / (1024 * 1024)),
       totalMB: ((peakAttentionMemory + kvCacheBytes) / (1024 * 1024)),
       attentionEntries: totalAttentionEntries,
-      scalingFactor: n * n, // O(n^2)
+      scalingFactor: n * n,
     };
   }, [sequenceLength, numHeads, embeddingDim, useFlashAttention]);
 
   const memory = calculateMemory();
+
+  // Slider handler helper (responds to both onChange and onInput)
+  const handleSliderChange = (setter: (v: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setter(parseInt(e.target.value));
+  };
+
+  // Common slider style
+  const sliderStyle: React.CSSProperties = {
+    WebkitAppearance: 'none',
+    appearance: 'none' as any,
+    touchAction: 'pan-y',
+    width: '100%',
+    height: '20px',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    background: colors.border,
+    accentColor: colors.accent,
+  };
 
   // Progress bar component
   const renderProgressBar = () => (
@@ -393,7 +409,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -417,9 +433,9 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
           key={p}
           onClick={() => goToPhase(p)}
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
+            width: phase === p ? '32px' : '10px',
+            height: '10px',
+            borderRadius: '5px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
@@ -430,6 +446,58 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
       ))}
     </div>
   );
+
+  // Bottom navigation bar
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '12px 0',
+        marginTop: '16px',
+      }}>
+        <button
+          onClick={prevPhase}
+          disabled={currentIndex === 0}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: currentIndex === 0 ? colors.border : colors.textSecondary,
+            cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+            opacity: currentIndex === 0 ? 0.4 : 1,
+            fontWeight: 600,
+            minHeight: '44px',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          ← Back
+        </button>
+        <button
+          onClick={nextPhase}
+          disabled={currentIndex === phaseOrder.length - 1}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            border: 'none',
+            background: currentIndex === phaseOrder.length - 1 ? colors.border : colors.accent,
+            color: 'white',
+            cursor: currentIndex === phaseOrder.length - 1 ? 'not-allowed' : 'pointer',
+            opacity: currentIndex === phaseOrder.length - 1 ? 0.4 : 1,
+            fontWeight: 600,
+            minHeight: '44px',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -443,112 +511,72 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
-  // Attention Matrix Visualization Component
-  const AttentionMatrixVisualization = ({ size = 300, showAnimation = true }: { size?: number; showAnimation?: boolean }) => {
-    const gridSize = Math.min(sequenceLength, 32); // Cap visual grid at 32x32
-    const cellSize = size / gridSize;
-    const actualRatio = sequenceLength / gridSize;
-
-    // Generate attention pattern (simplified - diagonal dominant with some random attention)
-    const getAttentionValue = (i: number, j: number) => {
-      const distance = Math.abs(i - j);
-      const baseAttention = Math.exp(-distance * 0.3);
-      // Add some "interesting" attention patterns
-      const globalToken = (i === 0 || j === 0) ? 0.5 : 0;
-      const periodicAttention = Math.sin((i + j) * 0.5 + animationFrame * 0.05) * 0.2 + 0.2;
-      return Math.min(1, baseAttention + globalToken + (showAnimation ? periodicAttention : 0.2));
-    };
-
-    return (
-      <div style={{ textAlign: 'center' }}>
-        <svg width={size + 60} height={size + 60} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-          {/* Axis labels */}
-          <text x={size / 2 + 30} y={20} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
-            Keys (tokens to attend to)
-          </text>
-          <text x={15} y={size / 2 + 30} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${size / 2 + 30})`}>
-            Queries (tokens)
-          </text>
-
-          {/* Grid */}
-          <g transform="translate(30, 30)">
-            {Array.from({ length: gridSize }).map((_, i) => (
-              Array.from({ length: gridSize }).map((_, j) => {
-                const value = getAttentionValue(i, j);
-                const intensity = Math.floor(value * 255);
-                return (
-                  <rect
-                    key={`${i}-${j}`}
-                    x={j * cellSize}
-                    y={i * cellSize}
-                    width={cellSize - 1}
-                    height={cellSize - 1}
-                    fill={`rgb(${intensity * 0.55}, ${intensity * 0.36}, ${intensity})`}
-                    style={{ transition: 'fill 0.1s' }}
-                  />
-                );
-              })
-            ))}
-
-            {/* Grid border */}
-            <rect x={0} y={0} width={size} height={size} fill="none" stroke={colors.border} strokeWidth="2" />
-          </g>
-
-          {/* Scale indicator */}
-          {actualRatio > 1 && (
-            <text x={size / 2 + 30} y={size + 50} fill={colors.textMuted} fontSize="10" textAnchor="middle">
-              Showing {gridSize}x{gridSize} of {sequenceLength}x{sequenceLength} matrix
-            </text>
-          )}
-        </svg>
-
-        {/* Memory indicator */}
-        <div style={{
-          marginTop: '12px',
-          padding: '8px 16px',
-          background: colors.bgSecondary,
-          borderRadius: '8px',
-          display: 'inline-block',
-        }}>
-          <span style={{ ...typo.small, color: colors.textMuted }}>Matrix size: </span>
-          <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-            {sequenceLength.toLocaleString()} x {sequenceLength.toLocaleString()} = {(sequenceLength * sequenceLength).toLocaleString()} entries
-          </span>
-        </div>
-      </div>
-    );
-  };
-
-  // Memory Growth Chart
-  const MemoryGrowthChart = () => {
-    const width = isMobile ? 320 : 450;
-    const height = 200;
-    const padding = { top: 20, right: 20, bottom: 40, left: 60 };
+  // Memory Growth Chart - used in play phase
+  const MemoryGrowthChart = ({ chartWidth, chartHeight }: { chartWidth?: number; chartHeight?: number }) => {
+    const width = chartWidth || (isMobile ? 350 : 500);
+    const height = chartHeight || 280;
+    const padding = { top: 30, right: 30, bottom: 50, left: 70 };
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
 
-    // Generate data points for O(n^2) and O(n) scaling
+    // Generate data points for O(n²) and O(n) scaling - use log scale for Y
     const maxSeq = 4096;
     const dataPoints: { n: number; quadratic: number; linear: number }[] = [];
-    for (let n = 256; n <= maxSeq; n += 256) {
+    for (let n = 128; n <= maxSeq; n += 128) {
       dataPoints.push({
         n,
-        quadratic: (n * n) / (maxSeq * maxSeq), // Normalize to 0-1
-        linear: n / maxSeq
+        quadratic: Math.log10(n * n + 1) / Math.log10(maxSeq * maxSeq + 1),
+        linear: Math.log10(n + 1) / Math.log10(maxSeq + 1)
       });
     }
 
     const currentPoint = {
       n: sequenceLength,
-      quadratic: (sequenceLength * sequenceLength) / (maxSeq * maxSeq),
-      linear: sequenceLength / maxSeq
+      quadratic: Math.log10(sequenceLength * sequenceLength + 1) / Math.log10(maxSeq * maxSeq + 1),
+      linear: Math.log10(sequenceLength + 1) / Math.log10(maxSeq + 1)
     };
 
+    // Build path strings with space-separated coordinates
+    const quadraticPath = dataPoints.map((pt, i) =>
+      `${i === 0 ? 'M' : 'L'} ${(padding.left + (pt.n / maxSeq) * plotWidth).toFixed(1)} ${(padding.top + (1 - pt.quadratic) * plotHeight).toFixed(1)}`
+    ).join(' ');
+
+    const linearPath = dataPoints.map((pt, i) =>
+      `${i === 0 ? 'M' : 'L'} ${(padding.left + (pt.n / maxSeq) * plotWidth).toFixed(1)} ${(padding.top + (1 - pt.linear) * plotHeight).toFixed(1)}`
+    ).join(' ');
+
+    const markerCx = padding.left + (currentPoint.n / maxSeq) * plotWidth;
+    const markerCy = padding.top + (1 - currentPoint.quadratic) * plotHeight;
+
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        {/* Grid */}
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={colors.error} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={colors.error} stopOpacity="0.05" />
+          </linearGradient>
+          <filter id="markerGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={colors.error} />
+            <stop offset="100%" stopColor="#FF6B6B" />
+          </linearGradient>
+        </defs>
+
+        {/* Title */}
+        <text x={width / 2} y={18} fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
+          Memory Scaling: O(n²) vs O(n)
+        </text>
+
+        {/* Grid lines */}
         {[0.25, 0.5, 0.75, 1].map(frac => (
           <line
             key={frac}
@@ -557,7 +585,22 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             x2={padding.left + plotWidth}
             y2={padding.top + (1 - frac) * plotHeight}
             stroke={colors.border}
-            strokeDasharray="3,3"
+            strokeDasharray="4 4"
+            opacity={0.5}
+          />
+        ))}
+
+        {/* Vertical grid lines */}
+        {[0.25, 0.5, 0.75, 1].map(frac => (
+          <line
+            key={`v${frac}`}
+            x1={padding.left + frac * plotWidth}
+            y1={padding.top}
+            x2={padding.left + frac * plotWidth}
+            y2={padding.top + plotHeight}
+            stroke={colors.border}
+            strokeDasharray="4 4"
+            opacity={0.3}
           />
         ))}
 
@@ -566,50 +609,197 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
         <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
 
         {/* Axis labels */}
-        <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Sequence Length</text>
-        <text x={12} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 12, ${padding.top + plotHeight / 2})`}>Memory</text>
+        <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Sequence Length (tokens)</text>
+        <text x={15} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${padding.top + plotHeight / 2})`}>Memory (log scale)</text>
 
-        {/* Linear scaling line (O(n)) - dashed */}
+        {/* Fill area under quadratic curve */}
         <path
-          d={dataPoints.map((pt, i) =>
-            `${i === 0 ? 'M' : 'L'} ${padding.left + (pt.n / maxSeq) * plotWidth} ${padding.top + (1 - pt.linear) * plotHeight}`
-          ).join(' ')}
+          d={`${quadraticPath} L ${(padding.left + plotWidth).toFixed(1)} ${(padding.top + plotHeight).toFixed(1)} L ${padding.left.toFixed(1)} ${(padding.top + plotHeight).toFixed(1)} Z`}
+          fill="url(#chartGradient)"
+        />
+
+        {/* Linear scaling line (O(n)) - dashed green */}
+        <path
+          d={linearPath}
           fill="none"
           stroke={colors.success}
           strokeWidth="2"
-          strokeDasharray="5,5"
+          strokeDasharray="6 4"
         />
 
-        {/* Quadratic scaling line (O(n^2)) */}
+        {/* Quadratic scaling line (O(n²)) - red solid */}
         <path
-          d={dataPoints.map((pt, i) =>
-            `${i === 0 ? 'M' : 'L'} ${padding.left + (pt.n / maxSeq) * plotWidth} ${padding.top + (1 - pt.quadratic) * plotHeight}`
-          ).join(' ')}
+          d={quadraticPath}
           fill="none"
-          stroke={colors.error}
+          stroke="url(#lineGrad)"
           strokeWidth="3"
         />
 
-        {/* Current position marker */}
+        {/* Current position marker with glow */}
         <circle
-          cx={padding.left + (currentPoint.n / maxSeq) * plotWidth}
-          cy={padding.top + (1 - currentPoint.quadratic) * plotHeight}
-          r="8"
+          cx={markerCx}
+          cy={markerCy}
+          r="10"
           fill={colors.accent}
           stroke="white"
-          strokeWidth="2"
+          strokeWidth="3"
+          filter="url(#markerGlow)"
         />
 
-        {/* Legend */}
-        <g transform={`translate(${padding.left + 10}, ${padding.top + 10})`}>
-          <rect x="0" y="0" width="15" height="3" fill={colors.error} />
-          <text x="20" y="4" fill={colors.textSecondary} fontSize="10">O(n^2) Attention</text>
-          <rect x="0" y="14" width="15" height="3" fill={colors.success} strokeDasharray="3,3" />
-          <text x="20" y="18" fill={colors.textSecondary} fontSize="10">O(n) Linear</text>
+        {/* Current value label near marker */}
+        <text
+          x={markerCx}
+          y={markerCy - 18}
+          fill={colors.accent}
+          fontSize="11"
+          fontWeight="bold"
+          textAnchor="middle"
+        >
+          {sequenceLength} tokens
+        </text>
+
+        {/* Legend - positioned explicitly */}
+        <g>
+          <rect x={padding.left + 10} y={padding.top + 8} width="14" height="4" fill={colors.error} rx="2" />
+          <text x={padding.left + 30} y={padding.top + 14} fill={colors.textSecondary} fontSize="11">O(n²) Attention</text>
+          <rect x={padding.left + 10} y={padding.top + 24} width="14" height="4" fill={colors.success} rx="2" />
+          <text x={padding.left + 30} y={padding.top + 30} fill={colors.textSecondary} fontSize="11">O(n) Linear</text>
         </g>
+
+        {/* Tick labels */}
+        <text x={padding.left} y={padding.top + plotHeight + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">128</text>
+        <text x={padding.left + plotWidth} y={padding.top + plotHeight + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">4096</text>
       </svg>
     );
   };
+
+  // Multi-head chart for twist_play/twist_predict
+  const MultiHeadChart = () => {
+    const width = isMobile ? 350 : 500;
+    const height = 280;
+    const padding = { top: 30, right: 30, bottom: 50, left: 70 };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+
+    const headDim = embeddingDim / numHeads;
+    const maxSeq = 4096;
+
+    // Compute memory for different head counts at current sequence length
+    const dataPoints: { n: number; memStandard: number; memFlash: number }[] = [];
+    for (let n = 128; n <= maxSeq; n += 128) {
+      const mem = (n * n * numHeads * 2) / (1024 * 1024);
+      const memFlash = mem * 0.1;
+      dataPoints.push({
+        n,
+        memStandard: Math.log10(mem + 1),
+        memFlash: Math.log10(memFlash + 1),
+      });
+    }
+
+    const maxLogMem = Math.log10((maxSeq * maxSeq * numHeads * 2) / (1024 * 1024) + 1);
+
+    const standardPath = dataPoints.map((pt, i) =>
+      `${i === 0 ? 'M' : 'L'} ${(padding.left + (pt.n / maxSeq) * plotWidth).toFixed(1)} ${(padding.top + (1 - pt.memStandard / maxLogMem) * plotHeight).toFixed(1)}`
+    ).join(' ');
+
+    const flashPath = dataPoints.map((pt, i) =>
+      `${i === 0 ? 'M' : 'L'} ${(padding.left + (pt.n / maxSeq) * plotWidth).toFixed(1)} ${(padding.top + (1 - pt.memFlash / maxLogMem) * plotHeight).toFixed(1)}`
+    ).join(' ');
+
+    const currentMem = (sequenceLength * sequenceLength * numHeads * 2) / (1024 * 1024);
+    const currentLogMem = Math.log10(currentMem + 1);
+    const markerCx = padding.left + (sequenceLength / maxSeq) * plotWidth;
+    const markerCy = padding.top + (1 - (useFlashAttention
+      ? Math.log10(currentMem * 0.1 + 1) / maxLogMem
+      : currentLogMem / maxLogMem
+    )) * plotHeight;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="multiGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={colors.warning} stopOpacity="0.2" />
+            <stop offset="100%" stopColor={colors.warning} stopOpacity="0.02" />
+          </linearGradient>
+          <filter id="multiMarkerGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Title */}
+        <text x={width / 2} y={18} fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
+          Multi-Head Attention Memory ({numHeads} heads, d={headDim})
+        </text>
+
+        {/* Grid */}
+        {[0.25, 0.5, 0.75, 1].map(frac => (
+          <line key={frac} x1={padding.left} y1={padding.top + (1 - frac) * plotHeight} x2={padding.left + plotWidth} y2={padding.top + (1 - frac) * plotHeight} stroke={colors.border} strokeDasharray="4 4" opacity={0.5} />
+        ))}
+
+        {/* Axes */}
+        <line x1={padding.left} y1={padding.top + plotHeight} x2={padding.left + plotWidth} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
+
+        {/* Labels */}
+        <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Sequence Length (tokens)</text>
+        <text x={15} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${padding.top + plotHeight / 2})`}>Memory (log MB)</text>
+
+        {/* Standard attention curve */}
+        <path d={standardPath} fill="none" stroke={colors.warning} strokeWidth="3" />
+
+        {/* Flash attention curve - dashed */}
+        <path d={flashPath} fill="none" stroke={colors.success} strokeWidth="2" strokeDasharray="6 4" />
+
+        {/* Marker */}
+        <circle cx={markerCx} cy={markerCy} r="10" fill={useFlashAttention ? colors.success : colors.warning} stroke="white" strokeWidth="3" filter="url(#multiMarkerGlow)" />
+
+        {/* Value label */}
+        <text x={markerCx} y={markerCy - 18} fill={useFlashAttention ? colors.success : colors.warning} fontSize="11" fontWeight="bold" textAnchor="middle">
+          {(useFlashAttention ? currentMem * 0.1 : currentMem).toFixed(1)} MB
+        </text>
+
+        {/* Legend */}
+        <g>
+          <rect x={padding.left + 10} y={padding.top + 8} width="14" height="4" fill={colors.warning} rx="2" />
+          <text x={padding.left + 30} y={padding.top + 14} fill={colors.textSecondary} fontSize="11">Standard Attention</text>
+          <rect x={padding.left + 10} y={padding.top + 24} width="14" height="4" fill={colors.success} rx="2" />
+          <text x={padding.left + 30} y={padding.top + 30} fill={colors.textSecondary} fontSize="11">Flash Attention (10x reduction)</text>
+        </g>
+
+        {/* Tick labels */}
+        <text x={padding.left} y={padding.top + plotHeight + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">128</text>
+        <text x={padding.left + plotWidth} y={padding.top + plotHeight + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">4096</text>
+      </svg>
+    );
+  };
+
+  // Scroll wrapper for content-heavy phases
+  const ScrollWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div style={{
+      minHeight: '100vh',
+      background: colors.bgPrimary,
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      {renderProgressBar()}
+      <div style={{
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+      }}>
+        {children}
+        {renderNavDots()}
+        {renderBottomNav()}
+      </div>
+    </div>
+  );
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
@@ -661,7 +851,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "When sequence length doubles, attention memory doesn't just double—it quadruples. This O(n^2) scaling is the fundamental bottleneck of transformers."
+            "When sequence length doubles, attention memory doesn't just double—it quadruples. This O(n²) scaling is the fundamental bottleneck of transformers."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
             — Attention Is All You Need (Vaswani et al., 2017)
@@ -672,10 +862,11 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore the Memory Wall →
+          Start Exploring →
         </button>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -688,15 +879,24 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
       { id: 'c', text: 'Memory stays constant—only the weights need to be stored' },
     ];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
+    const PredictionGraphic = () => (
+      <svg width="280" height="120" viewBox="0 0 280 120" style={{ background: 'transparent' }}>
+        <rect x="10" y="30" width="80" height="60" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+        <text x="50" y="55" fill={colors.textPrimary} fontSize="12" textAnchor="middle">1,000</text>
+        <text x="50" y="72" fill={colors.textSecondary} fontSize="11" textAnchor="middle">tokens</text>
+        <text x="50" y="105" fill={colors.accent} fontSize="12" textAnchor="middle">100MB</text>
+        <path d="M 100 60 L 140 60" stroke={colors.textMuted} strokeWidth="2" fill="none" />
+        <path d="M 135 55 L 145 60 L 135 65" stroke={colors.textMuted} strokeWidth="2" fill="none" />
+        <rect x="155" y="20" width="100" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" strokeDasharray="4 4" />
+        <text x="205" y="50" fill={colors.textPrimary} fontSize="12" textAnchor="middle">2,000</text>
+        <text x="205" y="67" fill={colors.textSecondary} fontSize="11" textAnchor="middle">tokens</text>
+        <text x="205" y="90" fill={colors.warning} fontSize="14" textAnchor="middle" fontWeight="bold">???</text>
+      </svg>
+    );
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return (
+      <ScrollWrapper>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -713,7 +913,6 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             A transformer processes 1,000 tokens using 100MB for attention. If you double to 2,000 tokens, how much memory does attention need?
           </h2>
 
-          {/* Simple diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -721,22 +920,9 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📝</div>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>1,000 tokens</p>
-                <p style={{ ...typo.small, color: colors.accent }}>100MB</p>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📚</div>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>2,000 tokens</p>
-                <p style={{ ...typo.small, color: colors.warning }}>???</p>
-              </div>
-            </div>
+            <PredictionGraphic />
           </div>
 
-          {/* Options */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
               <button
@@ -750,6 +936,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -782,31 +969,23 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             </button>
           )}
         </div>
-
-        {renderNavDots()}
-      </div>
+      </ScrollWrapper>
     );
   }
 
-  // PLAY PHASE - Interactive Attention Matrix
+  // PLAY PHASE - Interactive Memory Growth Chart
   if (phase === 'play') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+      <ScrollWrapper>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Watch Attention Memory Explode
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust sequence length and watch the attention matrix—and memory usage—grow
+            Adjust the sequence length and watch how memory grows. When you increase tokens, the attention matrix grows quadratically because every token must attend to every other token. This is why context windows have limits in real-world AI systems.
           </p>
 
-          {/* Main visualization */}
+          {/* Main Chart */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -814,13 +993,13 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <AttentionMatrixVisualization size={isMobile ? 250 : 300} />
+              <MemoryGrowthChart />
             </div>
 
             {/* Sequence length slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length (tokens)</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sequenceLength.toLocaleString()} tokens</span>
               </div>
               <input
@@ -829,19 +1008,30 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                 max="4096"
                 step="128"
                 value={sequenceLength}
-                onChange={(e) => setSequenceLength(parseInt(e.target.value))}
+                onChange={handleSliderChange(setSequenceLength)}
+                onInput={handleSliderChange(setSequenceLength)}
                 style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  ...sliderStyle,
                   background: `linear-gradient(to right, ${colors.accent} ${((sequenceLength - 128) / (4096 - 128)) * 100}%, ${colors.border} ${((sequenceLength - 128) / (4096 - 128)) * 100}%)`,
-                  cursor: 'pointer',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>128</span>
                 <span style={{ ...typo.small, color: colors.textMuted }}>4096</span>
               </div>
+            </div>
+
+            {/* Formula display */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <span style={{ color: colors.textPrimary, fontWeight: 700, fontSize: '16px' }}>
+                Memory = n² × heads × 2 bytes = {sequenceLength}² × {numHeads} × 2 = {memory.attentionMemoryMB.toFixed(1)} MB
+              </span>
             </div>
 
             {/* Memory stats */}
@@ -856,8 +1046,10 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.error }}>{memory.attentionMemoryMB.toFixed(1)}MB</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Attention Memory</div>
+                <div style={{ ...typo.h3, color: sequenceLength > 2048 ? colors.error : sequenceLength > 1024 ? colors.warning : colors.success }}>
+                  {memory.attentionMemoryMB.toFixed(1)} MB
+                </div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Attention Memory</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -866,7 +1058,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                 textAlign: 'center',
               }}>
                 <div style={{ ...typo.h3, color: colors.accent }}>{(sequenceLength * sequenceLength / 1000000).toFixed(2)}M</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Matrix Entries</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Matrix Entries</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -874,13 +1066,10 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{
-                  ...typo.h3,
-                  color: sequenceLength > 2048 ? colors.error : sequenceLength > 1024 ? colors.warning : colors.success
-                }}>
-                  O(n^2)
+                <div style={{ ...typo.h3, color: colors.error }}>
+                  O(n²)
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Scaling</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Scaling Factor</div>
               </div>
             </div>
           </div>
@@ -896,7 +1085,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                Notice how doubling from 1024 to 2048 tokens quadrupled the matrix size!
+                💡 Notice how doubling from 1024 to 2048 tokens quadrupled the matrix size! This is why longer contexts are so expensive.
               </p>
             </div>
           )}
@@ -908,23 +1097,15 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             Understand the Math →
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
+      </ScrollWrapper>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+      <ScrollWrapper>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Attention Scales Quadratically
           </h2>
@@ -935,19 +1116,18 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MemoryGrowthChart />
-            </div>
-
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Self-attention computes: Attention(Q, K, V) = softmax(QK^T / sqrt(d_k))V</strong>
+                As you observed in the experiment, the attention matrix grows explosively with sequence length. Your prediction helped frame the key insight:
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Attention(Q, K, V) = softmax(QK^T / √d_k) × V</strong>
               </p>
               <p style={{ marginBottom: '16px' }}>
                 The <span style={{ color: colors.error }}>QK^T term</span> creates an n×n matrix where every token "looks at" every other token.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                With <span style={{ color: colors.accent }}>n tokens</span>, we compute n^2 attention scores.
+                With <span style={{ color: colors.accent }}>n tokens</span>, we compute n² attention scores.
               </p>
               <p>
                 Double the tokens? <span style={{ color: colors.error, fontWeight: 600 }}>Quadruple the memory.</span> This is why context windows have limits.
@@ -977,9 +1157,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             Explore Multi-Head Attention →
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
+      </ScrollWrapper>
     );
   }
 
@@ -992,14 +1170,8 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+      <ScrollWrapper>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1008,13 +1180,49 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Multi-Head Attention
+              New Variable: Watch how multi-head attention changes the memory picture
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             GPT-4 uses 96 attention heads. How does adding more heads affect memory usage?
           </h2>
+
+          {/* Static SVG chart for twist_predict - no sliders */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <svg width="350" height="200" viewBox="0 0 350 200" style={{ background: 'transparent' }}>
+              <defs>
+                <linearGradient id="twistPredGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor={colors.warning} />
+                  <stop offset="100%" stopColor={colors.accent} />
+                </linearGradient>
+              </defs>
+              <text x="175" y="20" fill={colors.textPrimary} fontSize="13" fontWeight="bold" textAnchor="middle">How Heads Affect Memory</text>
+              {/* 8 heads box */}
+              <rect x="20" y="50" width="90" height="80" rx="10" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" />
+              <text x="65" y="75" fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="bold">8 heads</text>
+              <text x="65" y="95" fill={colors.textSecondary} fontSize="11" textAnchor="middle">dim = 64</text>
+              <text x="65" y="120" fill={colors.warning} fontSize="12" textAnchor="middle">2 GB</text>
+              {/* Arrow */}
+              <line x1="120" y1="90" x2="150" y2="90" stroke={colors.textMuted} strokeWidth="2" />
+              <path d="M 145 85 L 155 90 L 145 95" stroke={colors.textMuted} strokeWidth="2" fill="none" />
+              {/* 32 heads box */}
+              <rect x="160" y="50" width="90" height="80" rx="10" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+              <text x="205" y="75" fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="bold">32 heads</text>
+              <text x="205" y="95" fill={colors.textSecondary} fontSize="11" textAnchor="middle">dim = 16</text>
+              <text x="205" y="120" fill={colors.accent} fontSize="14" textAnchor="middle" fontWeight="bold">???</text>
+              {/* Question */}
+              <text x="300" y="85" fill={colors.warning} fontSize="28" textAnchor="middle" fontWeight="bold">?</text>
+              <text x="175" y="170" fill={colors.textSecondary} fontSize="11" textAnchor="middle">d_model = 512 stays constant</text>
+              <text x="175" y="188" fill={colors.textMuted} fontSize="11" textAnchor="middle">head_dim = d_model / num_heads</text>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1060,9 +1268,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             </button>
           )}
         </div>
-
-        {renderNavDots()}
-      </div>
+      </ScrollWrapper>
     );
   }
 
@@ -1071,19 +1277,13 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     const headDim = embeddingDim / numHeads;
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+      <ScrollWrapper>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Multi-Head Attention Memory
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust heads and embedding dimension to see how memory changes
+            Adjust heads, sequence length, and embedding dimension. When you increase heads, the head dimension decreases proportionally, so total memory stays similar. Toggle Flash Attention to see how it causes a 10x memory reduction.
           </p>
 
           <div style={{
@@ -1092,10 +1292,15 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             padding: '24px',
             marginBottom: '24px',
           }}>
+            {/* Multi-head chart */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <MultiHeadChart />
+            </div>
+
             {/* Sliders */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length (tokens)</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sequenceLength} tokens</span>
               </div>
               <input
@@ -1104,8 +1309,9 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                 max="4096"
                 step="256"
                 value={sequenceLength}
-                onChange={(e) => setSequenceLength(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                onChange={handleSliderChange(setSequenceLength)}
+                onInput={handleSliderChange(setSequenceLength)}
+                style={sliderStyle}
               />
             </div>
 
@@ -1120,8 +1326,9 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                 max="32"
                 step="1"
                 value={numHeads}
-                onChange={(e) => setNumHeads(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                onChange={handleSliderChange(setNumHeads)}
+                onInput={handleSliderChange(setNumHeads)}
+                style={sliderStyle}
               />
             </div>
 
@@ -1136,8 +1343,9 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                 max="2048"
                 step="256"
                 value={embeddingDim}
-                onChange={(e) => setEmbeddingDim(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                onChange={handleSliderChange(setEmbeddingDim)}
+                onInput={handleSliderChange(setEmbeddingDim)}
+                style={sliderStyle}
               />
             </div>
 
@@ -1188,45 +1396,25 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
               gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
                 <div style={{ ...typo.h3, color: colors.accent }}>{headDim}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Head Dimension</div>
-                <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>(d_model / heads)</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Head Dimension</div>
+                <div style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>(d_model / heads)</div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
                 <div style={{ ...typo.h3, color: useFlashAttention ? colors.success : colors.error }}>
-                  {memory.attentionMemoryMB.toFixed(1)}MB
+                  {memory.attentionMemoryMB.toFixed(1)} MB
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Attention Memory</div>
-                {useFlashAttention && <div style={{ ...typo.small, color: colors.success, fontSize: '10px' }}>10x reduction!</div>}
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Attention Memory</div>
+                {useFlashAttention && <div style={{ ...typo.small, color: colors.success, fontSize: '11px' }}>10x reduction!</div>}
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{memory.kvCacheMB.toFixed(1)}MB</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>KV Cache</div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: colors.warning }}>{memory.kvCacheMB.toFixed(1)} MB</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>KV Cache</div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.textPrimary }}>{memory.totalMB.toFixed(1)}MB</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Total Memory</div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: colors.textPrimary }}>{memory.totalMB.toFixed(1)} MB</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Total Memory</div>
               </div>
             </div>
           </div>
@@ -1238,87 +1426,51 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             Understand Memory-Efficient Techniques →
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
+      </ScrollWrapper>
     );
   }
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+      <ScrollWrapper>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Breaking the Quadratic Barrier
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Flash Attention</h3>
+            {[
+              { icon: '⚡', title: 'Flash Attention', color: colors.success,
+                desc: <>
+                  <span style={{ color: colors.success }}>Exact attention</span>, but never materializes the full n×n matrix. Processes in tiles that fit in fast GPU SRAM cache. <span style={{ color: colors.success }}>10x memory reduction</span> with no accuracy loss.
+                </> },
+              { icon: '🪟', title: 'Sliding Window Attention', color: colors.accent,
+                desc: <>
+                  Each token only attends to nearby tokens (e.g., 4K window). Memory becomes <span style={{ color: colors.success }}>O(n × window_size)</span> = O(n). Trades long-range precision for linear scaling.
+                </> },
+              { icon: '🗜️', title: 'KV-Cache Compression', color: colors.warning,
+                desc: <>
+                  During generation, compress old keys/values or evict less important tokens. Enables <span style={{ color: colors.success }}>much longer contexts</span> at inference time with minor quality trade-offs.
+                </> },
+              { icon: '🔬', title: 'Linear Attention (Research)', color: colors.success,
+                desc: <>
+                  Replace softmax with kernel functions for true <span style={{ color: colors.success }}>O(n) memory</span>. Still an active research area—current methods trade 5-10% quality for linear scaling.
+                </> },
+            ].map((item, i) => (
+              <div key={i} style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>{item.icon}</span>
+                  <h3 style={{ ...typo.h3, color: item.color, margin: 0 }}>{item.title}</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>{item.desc}</p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                <span style={{ color: colors.success }}>Exact attention</span>, but never materializes the full n×n matrix. Processes in tiles that fit in fast GPU SRAM cache. <span style={{ color: colors.success }}>10x memory reduction</span> with no accuracy loss.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🪟</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Sliding Window Attention</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Each token only attends to nearby tokens (e.g., 4K window). Memory becomes <span style={{ color: colors.success }}>O(n × window_size)</span> = O(n). Trades long-range precision for linear scaling.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🗜️</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>KV-Cache Compression</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                During generation, compress old keys/values or evict less important tokens. Enables <span style={{ color: colors.success }}>much longer contexts</span> at inference time with minor quality trade-offs.
-              </p>
-            </div>
-
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔬</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Linear Attention (Research)</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Replace softmax with kernel functions for true <span style={{ color: colors.success }}>O(n) memory</span>. Still an active research area—current methods trade 5-10% quality for linear scaling.
-              </p>
-            </div>
+            ))}
           </div>
 
           <button
@@ -1328,9 +1480,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             See Real-World Impact →
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
+      </ScrollWrapper>
     );
   }
 
@@ -1338,19 +1488,17 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+      <ScrollWrapper>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} completed)
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1377,6 +1525,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1437,6 +1586,14 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
               </p>
             </div>
 
+            <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.howItWorks}
+            </p>
+
+            <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px', fontStyle: 'italic' }}>
+              {app.futureImpact}
+            </p>
+
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
@@ -1451,13 +1608,34 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
                   <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>{stat.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {allAppsCompleted && (
+          {!allAppsCompleted ? (
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                const nextUncompletedIndex = newCompleted.findIndex((c, i) => !c && i > selectedApp);
+                if (nextUncompletedIndex !== -1) {
+                  setSelectedApp(nextUncompletedIndex);
+                } else {
+                  const firstUncompleted = newCompleted.findIndex(c => !c);
+                  if (firstUncompleted !== -1) {
+                    setSelectedApp(firstUncompleted);
+                  }
+                }
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+            >
+              {completedApps[selectedApp] ? 'Next Application' : 'Got It'} ({completedCount}/{realWorldApps.length})
+            </button>
+          ) : (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
@@ -1466,9 +1644,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             </button>
           )}
         </div>
-
-        {renderNavDots()}
-      </div>
+      </ScrollWrapper>
     );
   }
 
@@ -1477,18 +1653,9 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
-          {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
+        <ScrollWrapper>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🧠' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1525,22 +1692,15 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
               </button>
             )}
           </div>
-          {renderNavDots()}
-        </div>
+        </ScrollWrapper>
       );
     }
 
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+      <ScrollWrapper>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1627,7 +1787,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             ))}
           </div>
 
-          {/* Navigation */}
+          {/* Quiz Navigation */}
           <div style={{ display: 'flex', gap: '12px' }}>
             {currentQuestion > 0 && (
               <button
@@ -1660,7 +1820,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
                   fontWeight: 600,
                 }}
               >
-                Next →
+                Next
               </button>
             ) : (
               <button
@@ -1690,9 +1850,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             )}
           </div>
         </div>
-
-        {renderNavDots()}
-      </div>
+      </ScrollWrapper>
     );
   }
 
@@ -1740,7 +1898,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'O(n^2) attention memory scaling',
+              'O(n²) attention memory scaling',
               'Why context windows have limits',
               'Multi-head attention memory breakdown',
               'Flash Attention and sparse patterns',
@@ -1781,6 +1939,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

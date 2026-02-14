@@ -309,8 +309,8 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
     hot: '#EF4444',
     cold: '#3B82F6',
@@ -434,7 +434,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
     });
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <g key={`grid-${frac}`}>
@@ -553,14 +553,14 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
 
   // Progress bar component
   const renderProgressBar = () => (
-    <div style={{
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -568,7 +568,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
         background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
         transition: 'width 0.3s ease',
       }} />
-    </div>
+    </nav>
   );
 
   // Navigation dots
@@ -610,6 +610,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -689,11 +690,37 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       { id: 'c', text: 'Power decreases—heat reduces voltage more than it helps current' },
     ];
 
+    // Static SVG for predict phase
+    const PredictVisualization = () => (
+      <svg width="320" height="180" viewBox="0 0 320 180" style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
+        {/* Cool panel (left) */}
+        <rect x="30" y="50" width="80" height="60" fill={colors.cold} opacity="0.3" rx="4" />
+        <rect x="35" y="55" width="70" height="50" fill={colors.cold} rx="2" />
+        <text x="70" y="135" fill={colors.textSecondary} fontSize="12" textAnchor="middle">25°C</text>
+        <text x="70" y="150" fill={colors.success} fontSize="14" fontWeight="bold" textAnchor="middle">400W</text>
+
+        {/* Arrow */}
+        <line x1="130" y1="80" x2="180" y2="80" stroke={colors.textMuted} strokeWidth="2" />
+        <polygon points="180,75 190,80 180,85" fill={colors.textMuted} />
+        <text x="160" y="65" fill={colors.warning} fontSize="14" textAnchor="middle">+40°C</text>
+
+        {/* Hot panel (right) */}
+        <rect x="210" y="50" width="80" height="60" fill={colors.hot} opacity="0.3" rx="4" />
+        <rect x="215" y="55" width="70" height="50" fill={colors.hot} rx="2" />
+        <text x="250" y="135" fill={colors.textSecondary} fontSize="12" textAnchor="middle">65°C</text>
+        <text x="250" y="150" fill={colors.textMuted} fontSize="14" fontWeight="bold" textAnchor="middle">???W</text>
+
+        {/* Title */}
+        <text x="160" y="25" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">Temperature Effect on Solar Panel</text>
+      </svg>
+    );
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -706,7 +733,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
@@ -714,7 +741,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
             A solar panel at 25°C produces 400W. What happens when the panel heats up to 65°C on a hot summer day?
           </h2>
 
-          {/* Visual diagram */}
+          {/* Visual diagram with SVG */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -722,21 +749,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>❄️</div>
-                <div style={{ ...typo.h3, color: colors.cold }}>25°C</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Cool Morning</p>
-                <div style={{ ...typo.body, color: colors.success, fontWeight: 600 }}>400W</div>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>→ 🔥 →</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🔥</div>
-                <div style={{ ...typo.h3, color: colors.hot }}>65°C</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Hot Afternoon</p>
-                <div style={{ ...typo.body, color: colors.textMuted, fontWeight: 600 }}>???W</div>
-              </div>
-            </div>
+            <PredictVisualization />
           </div>
 
           {/* Options */}
@@ -753,6 +766,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -781,7 +795,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test My Prediction →
+              Test My Prediction
             </button>
           )}
         </div>
@@ -798,6 +812,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -809,12 +824,26 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
             Drag the temperature slider and watch power output change
           </p>
 
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Observe how temperature affects the I-V curve and power output. Try moving the slider to see how voltage drops as temperature increases.
+            </p>
+          </div>
+
           {/* Main visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
+            overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <ThermalIVVisualization showComparison={true} />
@@ -1148,6 +1177,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -1159,11 +1189,25 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
             Adjust ambient temperature and cooling to see the effects
           </p>
 
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Observe how adding airflow cooling reduces panel temperature and increases power output. Compare the cooled vs uncooled power.
+            </p>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
+            overflowY: 'auto',
           }}>
             {/* Ambient temperature slider */}
             <div style={{ marginBottom: '20px' }}>
@@ -1392,19 +1436,24 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            App {selectedApp + 1} of {realWorldApps.length} ({completedCount} completed)
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1431,6 +1480,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1464,6 +1514,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
             padding: '24px',
             marginBottom: '24px',
             borderLeft: `4px solid ${app.color}`,
+            overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
               <span style={{ fontSize: '48px' }}>{app.icon}</span>
@@ -1511,12 +1562,40 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
             </div>
           </div>
 
+          {/* Got It / Next Application button */}
+          {selectedApp < realWorldApps.length - 1 ? (
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                setSelectedApp(selectedApp + 1);
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+            >
+              Next Application
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+            >
+              Got It
+            </button>
+          )}
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Take the Knowledge Test →
+              Take the Knowledge Test
             </button>
           )}
         </div>

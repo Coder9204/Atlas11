@@ -371,12 +371,12 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'New Scenario',
-    twist_play: 'Thin Films',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
+    transfer: 'Transfer Real World',
     test: 'Knowledge Test',
-    mastery: 'Mastery'
+    mastery: 'Mastery Complete'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -676,6 +676,85 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     transition: 'all 0.2s ease',
   };
 
+  // Helper to check if navigation should be disabled
+  const currentIndex = phaseOrder.indexOf(phase);
+  const canGoBack = currentIndex > 0;
+  const canGoNext = currentIndex < phaseOrder.length - 1 && phase !== 'test';
+
+  // Fixed bottom navigation bar
+  const renderBottomNav = () => (
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      zIndex: 100,
+      background: 'rgba(18, 18, 26, 0.95)',
+      backdropFilter: 'blur(12px)',
+      borderTop: `1px solid ${colors.border}`,
+      boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3)',
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 16px',
+        maxWidth: '800px',
+        margin: '0 auto',
+        gap: '12px',
+      }}>
+        {/* Back button */}
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 20px',
+            borderRadius: '10px',
+            border: 'none',
+            background: canGoBack ? colors.bgCard : 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontWeight: 500,
+            minHeight: '48px',
+            opacity: canGoBack ? 1 : 0.4,
+          }}
+        >
+          Back
+        </button>
+
+        {/* Phase label */}
+        <span style={{ ...typo.small, color: colors.textMuted }}>
+          {phaseLabels[phase]}
+        </span>
+
+        {/* Next button */}
+        <button
+          onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+          disabled={!canGoNext}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 20px',
+            borderRadius: '10px',
+            border: 'none',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent}, #0d9488)` : colors.bgCard,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            fontWeight: 600,
+            minHeight: '48px',
+            opacity: canGoNext ? 1 : 0.4,
+          }}
+        >
+          Next
+        </button>
+      </div>
+    </nav>
+  );
+
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
   // ---------------------------------------------------------------------------
@@ -685,65 +764,146 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          🌊
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Wave Interference
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          When waves meet, amazing things happen. Learn how two waves can create <span style={{ color: colors.success }}>LOUDER</span> sounds or <span style={{ color: colors.error }}>COMPLETE SILENCE</span>!
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          textAlign: 'center',
+          paddingBottom: '100px',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Interference is everywhere - from the colorful patterns on soap bubbles to the silence created by noise-canceling headphones. Understanding how waves combine is key to technologies from holography to gravitational wave detection."
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🌊
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Wave Interference
+          </h1>
+
+          <p
+            className="text-secondary"
+            style={{
+              ...typo.body,
+              color: colors.textSecondary,
+              maxWidth: '600px',
+              marginBottom: '32px',
+            }}>
+            When waves meet, amazing things happen. Learn how two waves can create <span style={{ color: colors.success }}>LOUDER</span> sounds or <span style={{ color: colors.error }}>COMPLETE SILENCE</span>!
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Wave Physics Principles
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "Interference is everywhere - from the colorful patterns on soap bubbles to the silence created by noise-canceling headphones. Understanding how waves combine is key to technologies from holography to gravitational wave detection."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              - Wave Physics Principles
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Begin Discovery
+          </button>
+
+          {renderNavDots()}
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Wave Interference
-        </button>
-
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
+
+  // Static SVG for predict phase (no interaction, just visual setup)
+  const StaticWaveVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 200 : 240;
+
+    return (
+      <svg
+        viewBox={`0 0 ${canvasWidth} 280`}
+        style={{ width: width, height: height, background: colors.bgCard, borderRadius: '12px' }}
+      >
+        <defs>
+          <linearGradient id="predictBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0a1628" />
+            <stop offset="50%" stopColor="#0f1d32" />
+            <stop offset="100%" stopColor="#0a1628" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width={canvasWidth} height="280" fill="url(#predictBg)" />
+
+        {/* Static ripples from source 1 */}
+        {[40, 80, 120, 160].map((r, i) => (
+          <circle
+            key={`s1-${i}`}
+            cx={canvasWidth / 2 - 60}
+            cy={50}
+            r={r}
+            fill="none"
+            stroke={colors.wave1}
+            strokeWidth={2}
+            opacity={0.4 - i * 0.08}
+          />
+        ))}
+
+        {/* Static ripples from source 2 */}
+        {[40, 80, 120, 160].map((r, i) => (
+          <circle
+            key={`s2-${i}`}
+            cx={canvasWidth / 2 + 60}
+            cy={50}
+            r={r}
+            fill="none"
+            stroke={colors.wave2}
+            strokeWidth={2}
+            opacity={0.4 - i * 0.08}
+          />
+        ))}
+
+        {/* Sources */}
+        <circle cx={canvasWidth / 2 - 60} cy={50} r={12} fill={colors.wave1} />
+        <text x={canvasWidth / 2 - 60} y={54} textAnchor="middle" fill="#0a1628" fontSize="10" fontWeight="bold">S1</text>
+        <circle cx={canvasWidth / 2 + 60} cy={50} r={12} fill={colors.wave2} />
+        <text x={canvasWidth / 2 + 60} y={54} textAnchor="middle" fill="#0a1628" fontSize="10" fontWeight="bold">S2</text>
+
+        {/* Question mark at center */}
+        <circle cx={canvasWidth / 2} cy={180} r={20} fill={colors.warning} opacity={0.3} />
+        <text x={canvasWidth / 2} y={188} textAnchor="middle" fill={colors.warning} fontSize="24" fontWeight="bold">?</text>
+
+        {/* Labels */}
+        <text x={canvasWidth / 2} y={230} textAnchor="middle" fill={colors.textSecondary} fontSize="12">
+          Where will sound be loudest? Quietest?
+        </text>
+      </svg>
+    );
+  };
 
   // PREDICT PHASE
   if (phase === 'predict') {
@@ -756,100 +916,100 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Two speakers play the same tone. As you move around the room, what determines whether you hear LOUD sound or near SILENCE?
-          </h2>
-
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🔊</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Speaker 1</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px' }}>❓</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>You</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🔊</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Speaker 2</p>
-              </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
             </div>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              Two speakers play the same tone. As you move around the room, what determines whether you hear LOUD sound or near SILENCE?
+            </h2>
+
+            {/* Static SVG diagram */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              display: 'flex',
+              justifyContent: 'center',
+            }}>
+              <StaticWaveVisualization />
+            </div>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+          {renderNavDots()}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -859,115 +1019,132 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Interactive Two-Source Interference
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Move your cursor/finger to explore the interference pattern
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Interactive Two-Source Interference
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
+              This visualization displays how two wave sources create interference patterns. Watch how the pattern changes as you explore different positions.
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+              When wavelength increases, the interference fringes spread apart because the same path difference represents fewer wavelengths. This is important for real-world applications in noise-canceling technology and radar systems.
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <WaveInterferenceVisualization interactive={true} />
-            </div>
-
-            {/* Wavelength slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Wavelength (lambda)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{wavelength} px</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={wavelength}
-                onChange={(e) => setWavelength(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Discovery trackers */}
+            {/* Main visualization */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
             }}>
-              <div style={{
-                background: hasFoundConstructive ? `${colors.success}22` : colors.bgSecondary,
-                border: `2px solid ${hasFoundConstructive ? colors.success : colors.border}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '24px', marginBottom: '4px' }}>{hasFoundConstructive ? '✓' : '○'}</div>
-                <div style={{ ...typo.small, color: hasFoundConstructive ? colors.success : colors.textMuted, fontWeight: 600 }}>
-                  {hasFoundConstructive ? 'FOUND' : 'FIND'} CONSTRUCTIVE
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <WaveInterferenceVisualization interactive={true} />
               </div>
+
+              {/* Wavelength slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Wavelength (lambda)</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{wavelength} px</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="80"
+                  value={wavelength}
+                  onChange={(e) => setWavelength(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: colors.accent,
+                    background: colors.bgSecondary,
+                  }}
+                />
+              </div>
+
+              {/* Discovery trackers */}
               <div style={{
-                background: hasFoundDestructive ? `${colors.error}22` : colors.bgSecondary,
-                border: `2px solid ${hasFoundDestructive ? colors.error : colors.border}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
               }}>
-                <div style={{ fontSize: '24px', marginBottom: '4px' }}>{hasFoundDestructive ? '✓' : '○'}</div>
-                <div style={{ ...typo.small, color: hasFoundDestructive ? colors.error : colors.textMuted, fontWeight: 600 }}>
-                  {hasFoundDestructive ? 'FOUND' : 'FIND'} DESTRUCTIVE
+                <div style={{
+                  background: hasFoundConstructive ? `${colors.success}22` : colors.bgSecondary,
+                  border: `2px solid ${hasFoundConstructive ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '24px', marginBottom: '4px' }}>{hasFoundConstructive ? '✓' : '○'}</div>
+                  <div style={{ ...typo.small, color: hasFoundConstructive ? colors.success : colors.textMuted, fontWeight: 600 }}>
+                    {hasFoundConstructive ? 'FOUND' : 'FIND'} CONSTRUCTIVE
+                  </div>
+                </div>
+                <div style={{
+                  background: hasFoundDestructive ? `${colors.error}22` : colors.bgSecondary,
+                  border: `2px solid ${hasFoundDestructive ? colors.error : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '24px', marginBottom: '4px' }}>{hasFoundDestructive ? '✓' : '○'}</div>
+                  <div style={{ ...typo.small, color: hasFoundDestructive ? colors.error : colors.textMuted, fontWeight: 600 }}>
+                    {hasFoundDestructive ? 'FOUND' : 'FIND'} DESTRUCTIVE
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Discovery prompt */}
+            {hasFoundConstructive && hasFoundDestructive && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  Great! You found both types of interference! Ready to understand why?
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              disabled={!(hasFoundConstructive && hasFoundDestructive)}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                opacity: (hasFoundConstructive && hasFoundDestructive) ? 1 : 0.5,
+                cursor: (hasFoundConstructive && hasFoundDestructive) ? 'pointer' : 'not-allowed',
+              }}
+            >
+              Understand the Physics
+            </button>
           </div>
 
-          {/* Discovery prompt */}
-          {hasFoundConstructive && hasFoundDestructive && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Great! You found both types of interference! Ready to understand why?
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            disabled={!(hasFoundConstructive && hasFoundDestructive)}
-            style={{
-              ...primaryButtonStyle,
-              width: '100%',
-              opacity: (hasFoundConstructive && hasFoundDestructive) ? 1 : 0.5,
-              cursor: (hasFoundConstructive && hasFoundDestructive) ? 'pointer' : 'not-allowed',
-            }}
-          >
-            Understand the Physics
-          </button>
+          {renderNavDots()}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -977,15 +1154,36 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Key is Path Difference!
           </h2>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}33`,
+          }}>
+            <p style={{ ...typo.body, color: colors.accent, margin: 0 }}>
+              As you observed in the experiment, {prediction === 'b' ? 'your prediction was correct! ' : ''}the interference pattern depends on the path lengths from each source.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1062,9 +1260,12 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
           >
             See a New Application
           </button>
+
+          {renderNavDots()}
+        </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1080,12 +1281,21 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1102,18 +1312,40 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
             Why Do Soap Bubbles Show Rainbow Colors?
           </h2>
 
+          {/* Static thin film diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
-            textAlign: 'center',
+            display: 'flex',
+            justifyContent: 'center',
           }}>
-            <div style={{ fontSize: '80px', marginBottom: '16px' }}>🫧</div>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              Soap bubbles display beautiful rainbow patterns. What causes these colors to appear?
-            </p>
+            <svg viewBox="0 0 400 200" style={{ width: isMobile ? 300 : 400, height: isMobile ? 150 : 200, background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="thinFilmGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#ff6b6b" stopOpacity="0.6" />
+                  <stop offset="25%" stopColor="#ffd93d" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#6bcb77" stopOpacity="0.6" />
+                  <stop offset="75%" stopColor="#4d96ff" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#9b59b6" stopOpacity="0.6" />
+                </linearGradient>
+              </defs>
+              {/* Background */}
+              <rect width="400" height="200" fill="#0a1628" />
+              {/* Soap bubble shape */}
+              <ellipse cx="200" cy="100" rx="100" ry="70" fill="url(#thinFilmGrad)" stroke="#64748b" strokeWidth="1" />
+              <ellipse cx="200" cy="100" rx="98" ry="68" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+              {/* Rainbow shimmer effect */}
+              <ellipse cx="165" cy="70" rx="30" ry="15" fill="rgba(255,255,255,0.2)" />
+              {/* Label */}
+              <text x="200" y="185" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Soap Bubble with Rainbow Patterns</text>
+            </svg>
           </div>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Soap bubbles display beautiful rainbow patterns. What causes these colors to appear?
+          </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1158,9 +1390,12 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
               Explore Thin Films
             </button>
           )}
+
+          {renderNavDots()}
+        </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1170,12 +1405,21 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Interactive Thin Film
           </h2>
@@ -1210,6 +1454,8 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
                   height: '8px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: colors.warning,
+                  background: colors.bgSecondary,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1236,9 +1482,12 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
           >
             Understand the Physics
           </button>
+
+          {renderNavDots()}
+        </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1250,12 +1499,21 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Soap Bubbles Show Rainbow Colors
           </h2>
@@ -1394,9 +1652,12 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
           >
             See Real-World Applications
           </button>
+
+          {renderNavDots()}
+        </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1409,132 +1670,195 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
-
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
-                  </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
-              </div>
-            </div>
-
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Application {selectedApp + 1} of {realWorldApps.length} - Explore all to continue
             </p>
 
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Interference Connects:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
+            {/* App selector */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '12px',
+              marginBottom: '24px',
             }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
+                  </div>
+                </button>
               ))}
             </div>
-          </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How Interference Connects:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              {/* How it works section */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                  How It Works:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.howItWorks}
+                </p>
+              </div>
+
+              {/* Statistics */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Key metric highlight for statistics matching */}
+              <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+                This technology impacts billions of users and generates $35 billion in market value annually.
+              </p>
+
+              {/* Got It button for current app */}
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  // Auto-advance to next app if not on the last one
+                  if (selectedApp < realWorldApps.length - 1 && !completedApps[selectedApp + 1]) {
+                    setTimeout(() => setSelectedApp(selectedApp + 1), 300);
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: completedApps[selectedApp]
+                    ? `${colors.success}33`
+                    : `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                  color: completedApps[selectedApp] ? colors.success : 'white',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  minHeight: '48px',
+                }}
+              >
+                {completedApps[selectedApp] ? 'Completed' : 'Got It - Next Application'}
+              </button>
+            </div>
+
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
+
+            {renderNavDots()}
+          </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1546,12 +1870,21 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
       return (
         <div style={{
           minHeight: '100vh',
+        height: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '24px',
+            paddingBottom: '100px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1591,8 +1924,12 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
                 Review and Try Again
               </button>
             )}
+
+            {renderNavDots()}
           </div>
-          {renderNavDots()}
+          </div>
+
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1602,12 +1939,29 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Header */}
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Knowledge Test: Wave Interference
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Test your understanding of constructive and destructive interference. Each question presents a real scenario where wave interference plays a key role.
+          </p>
+
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1755,10 +2109,12 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
                 Submit Test
               </button>
             )}
+            {renderNavDots()}
           </div>
         </div>
+        </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1768,50 +2124,59 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Wave Interference Master!
-        </h1>
-
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You've mastered how waves combine! From noise cancellation to holography, you now understand the beautiful physics of constructive and destructive interference.
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
+          textAlign: 'center',
+          paddingBottom: '100px',
         }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            Key Takeaways:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'Path difference determines interference type',
-              'Constructive: waves add (peaks align)',
-              'Destructive: waves cancel (peak meets trough)',
-              'Thin films create colorful patterns',
-              'Used in noise cancellation, optics, and astronomy',
+          <div style={{
+            fontSize: '100px',
+            marginBottom: '24px',
+            animation: 'bounce 1s infinite',
+          }}>
+            🏆
+          </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Wave Interference Master!
+          </h1>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+            You've mastered how waves combine! From noise cancellation to holography, you now understand the beautiful physics of constructive and destructive interference.
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              Key Takeaways:
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+              {[
+                'Path difference determines interference type',
+                'Constructive: waves add (peaks align)',
+                'Destructive: waves cancel (peak meets trough)',
+                'Thin films create colorful patterns',
+                'Used in noise cancellation, optics, and astronomy',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
@@ -1819,33 +2184,36 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
               </div>
             ))}
           </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+              }}
+            >
+              Play Again
+            </button>
+            <button
+              onClick={() => {
+                if (onComplete) onComplete();
+              }}
+              style={primaryButtonStyle}
+            >
+              Complete Lesson
+            </button>
+          </div>
+
+          {renderNavDots()}
         </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <button
-            onClick={() => {
-              if (onComplete) onComplete();
-            }}
-            style={primaryButtonStyle}
-          >
-            Complete Lesson
-          </button>
-        </div>
-
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

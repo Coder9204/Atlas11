@@ -309,8 +309,8 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // brightness >= 180 for contrast
+    textMuted: '#cbd5e1', // brightness >= 180 for contrast
     border: '#2a2a3a',
     register: '#10B981', // Green - lowest energy
     l1Cache: '#22D3EE', // Cyan
@@ -402,7 +402,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     const levelHeight = (height - 80) / 5;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* CPU at top */}
         <rect
           x={centerX - 40}
@@ -616,7 +616,34 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1000,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '20px' }}>🔌💾</span>
+        <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>Data Movement Energy</span>
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
+    </nav>
+  );
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
@@ -630,59 +657,67 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '80px 24px 24px',
+          textAlign: 'center',
         }}>
-          🔌💾
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🔌💾
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          The Hidden Cost of Data Movement
-        </h1>
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            The Hidden Cost of Data Movement
+          </h1>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "What if I told you that <span style={{ color: colors.accent }}>moving a number</span> from memory to the CPU uses 1000x more energy than actually <span style={{ color: colors.success }}>computing with it</span>?"
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "In modern computing, we don't have a compute problem—we have a data movement problem. Every byte we move costs precious energy."
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "What if I told you that <span style={{ color: colors.accent }}>moving a number</span> from memory to the CPU uses 1000x more energy than actually <span style={{ color: colors.success }}>computing with it</span>?"
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — The Memory Wall Problem
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "In modern computing, we don't have a compute problem—we have a data movement problem. Every byte we move costs precious energy."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              — The Memory Wall Problem
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Discover the Energy Cost
+          </button>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Discover the Energy Cost
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -699,106 +734,124 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            When a CPU multiplies two numbers, what uses more energy: the multiplication itself, or fetching those numbers from memory?
-          </h2>
-
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>💾</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Memory</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→ ???</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>⚙️</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>CPU</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>✖️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Multiply</p>
-              </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction - Step 1 of 3
+              </p>
             </div>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              When a CPU multiplies two numbers, what uses more energy: the multiplication itself, or fetching those numbers from memory?
+            </h2>
+
+            {/* SVG diagram for static graphic */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <svg width={isMobile ? 300 : 400} height={120} viewBox={`0 0 ${isMobile ? 300 : 400} 120`}>
+                {/* Memory box */}
+                <rect x={10} y={30} width={70} height={60} rx={6} fill={`${colors.dram}33`} stroke={colors.dram} strokeWidth={2} />
+                <text x={45} y={55} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Memory</text>
+                <text x={45} y={75} fill={colors.dram} fontSize="20" textAnchor="middle">💾</text>
+
+                {/* Arrow with ? */}
+                <line x1={90} y1={60} x2={140} y2={60} stroke={colors.textMuted} strokeWidth={2} markerEnd="url(#arrowhead)" />
+                <text x={115} y={50} fill={colors.warning} fontSize="14" fontWeight="bold" textAnchor="middle">???</text>
+
+                {/* CPU box */}
+                <rect x={150} y={30} width={80} height={60} rx={6} fill={`${colors.accent}33`} stroke={colors.accent} strokeWidth={2} />
+                <text x={190} y={55} fill={colors.textSecondary} fontSize="10" textAnchor="middle">CPU</text>
+                <text x={190} y={75} fill={colors.accent} fontSize="20" textAnchor="middle">⚙️</text>
+
+                {/* Arrow */}
+                <line x1={240} y1={60} x2={280} y2={60} stroke={colors.textMuted} strokeWidth={2} />
+
+                {/* Multiply box */}
+                <rect x={290} y={30} width={70} height={60} rx={6} fill={`${colors.success}33`} stroke={colors.success} strokeWidth={2} />
+                <text x={325} y={55} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Multiply</text>
+                <text x={325} y={75} fill={colors.success} fontSize="20" textAnchor="middle">✖️</text>
+
+                {/* Arrow marker definition */}
+                <defs>
+                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill={colors.textMuted} />
+                  </marker>
+                </defs>
+              </svg>
+            </div>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                See the Reality
               </button>
-            ))}
+            )}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See the Reality
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -809,157 +862,209 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Explore the Memory Hierarchy
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust where data comes from and see how energy cost explodes
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Explore the Memory Hierarchy
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Adjust where data comes from and see how energy cost explodes
+            </p>
 
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '24px' }}>
-            {/* Memory hierarchy visualization */}
+            {/* Observation guidance */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
-              flex: 1,
-            }}>
-              <MemoryHierarchyVisualization showDataFlow={true} highlightLevel={memoryLevel} />
-            </div>
-
-            {/* Controls */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              flex: 1,
-            }}>
-              {/* Memory level slider */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Memory Level</span>
-                  <span style={{
-                    ...typo.small,
-                    color: memoryHierarchy[memoryLevel].color,
-                    fontWeight: 600
-                  }}>
-                    {memoryHierarchy[memoryLevel].name}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="4"
-                  step="1"
-                  value={memoryLevel}
-                  onChange={(e) => setMemoryLevel(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.register }}>Register</span>
-                  <span style={{ ...typo.small, color: colors.dram }}>DRAM</span>
-                </div>
-              </div>
-
-              {/* Data volume slider */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Data Volume</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dataVolume} MB</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  step="1"
-                  value={dataVolume}
-                  onChange={(e) => setDataVolume(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
-                />
-              </div>
-
-              {/* Energy display */}
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
-                  Energy per Access
-                </div>
-                <div style={{
-                  ...typo.h2,
-                  color: memoryHierarchy[memoryLevel].color,
-                  marginBottom: '8px'
-                }}>
-                  {memoryHierarchy[memoryLevel].energy >= 1000
-                    ? `${(memoryHierarchy[memoryLevel].energy/1000).toFixed(0)}k pJ`
-                    : `${memoryHierarchy[memoryLevel].energy} pJ`}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>
-                  {memoryLevel === 0 ? 'Baseline' :
-                    `${(memoryHierarchy[memoryLevel].energy / memoryHierarchy[0].energy).toFixed(0)}x more than register`}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Key insight */}
-          {memoryLevel >= 4 && (
-            <div style={{
-              background: `${colors.warning}22`,
-              border: `1px solid ${colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginTop: '24px',
+              background: `${colors.accent}15`,
+              border: `1px solid ${colors.accent}44`,
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                DRAM access uses 100,000x more energy than a register access!
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Observe:</strong> Watch how energy per access changes as you move from Register to DRAM. Notice the exponential increase in energy cost with distance from the CPU.
               </p>
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%', marginTop: '24px' }}
-          >
-            Understand the Physics
-          </button>
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '24px' }}>
+              {/* Memory hierarchy visualization */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '16px',
+                flex: 1,
+              }}>
+                <MemoryHierarchyVisualization showDataFlow={true} highlightLevel={memoryLevel} />
+              </div>
+
+              {/* Controls */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                flex: 1,
+              }}>
+                {/* Memory level slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Memory Level</span>
+                    <span style={{
+                      ...typo.small,
+                      color: memoryHierarchy[memoryLevel].color,
+                      fontWeight: 600
+                    }}>
+                      {memoryHierarchy[memoryLevel].name}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="4"
+                    step="1"
+                    value={memoryLevel}
+                    onChange={(e) => setMemoryLevel(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '8px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.register }}>Register</span>
+                    <span style={{ ...typo.small, color: colors.dram }}>DRAM</span>
+                  </div>
+                </div>
+
+                {/* Data volume slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Data Volume</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dataVolume} MB</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="100"
+                    step="1"
+                    value={dataVolume}
+                    onChange={(e) => setDataVolume(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '8px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  />
+                </div>
+
+                {/* Energy display */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
+                    Energy per Access
+                  </div>
+                  <div style={{
+                    ...typo.h2,
+                    color: memoryHierarchy[memoryLevel].color,
+                    marginBottom: '8px'
+                  }}>
+                    {memoryHierarchy[memoryLevel].energy >= 1000
+                      ? `${(memoryHierarchy[memoryLevel].energy/1000).toFixed(0)}k pJ`
+                      : `${memoryHierarchy[memoryLevel].energy} pJ`}
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>
+                    {memoryLevel === 0 ? 'Baseline' :
+                      `${(memoryHierarchy[memoryLevel].energy / memoryHierarchy[0].energy).toFixed(0)}x more than register`}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Key insight */}
+            {memoryLevel >= 4 && (
+              <div style={{
+                background: `${colors.warning}22`,
+                border: `1px solid ${colors.warning}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginTop: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                  DRAM access uses 100,000x more energy than a register access!
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%', marginTop: '24px' }}
+            >
+              Understand the Physics
+            </button>
+          </div>
+
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionText = prediction === 'a' ? 'computing uses most energy' :
+                          prediction === 'b' ? 'moving data uses more energy' :
+                          prediction === 'c' ? 'they use about the same energy' : 'unknown';
+    const wasCorrect = prediction === 'b';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Reference user's prediction */}
+          {prediction && (
+            <div style={{
+              background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${wasCorrect ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
+                {wasCorrect
+                  ? `You predicted correctly that ${predictionText}!`
+                  : `You predicted that ${predictionText}. The reality is even more surprising!`}
+              </p>
+            </div>
+          )}
+
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Does Distance Cost So Much?
           </h2>
@@ -1011,9 +1116,10 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
           >
             Explore Data Reuse
           </button>
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
+        </div>
       </div>
     );
   }
@@ -1030,73 +1136,110 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Data Reuse
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                New Variable: Data Reuse - Step 1 of 3
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            If you need to use the same data 100 times, what's the most energy-efficient approach?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              If you need to use the same data 100 times, what's the most energy-efficient approach?
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            {/* Static SVG visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <svg width={isMobile ? 280 : 350} height={100} viewBox={`0 0 ${isMobile ? 280 : 350} 100`}>
+                {/* Data reuse scenario diagram */}
+                <rect x={10} y={20} width={60} height={60} rx={6} fill={`${colors.dram}33`} stroke={colors.dram} strokeWidth={2} />
+                <text x={40} y={45} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Data</text>
+                <text x={40} y={65} fill={colors.dram} fontSize="16" textAnchor="middle">📦</text>
+
+                <text x={100} y={55} fill={colors.textMuted} fontSize="12">→</text>
+
+                <rect x={120} y={20} width={80} height={60} rx={6} fill={`${colors.accent}33`} stroke={colors.accent} strokeWidth={2} />
+                <text x={160} y={45} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Use 100x</text>
+                <text x={160} y={65} fill={colors.accent} fontSize="16" textAnchor="middle">🔄</text>
+
+                <text x={220} y={55} fill={colors.textMuted} fontSize="12">→</text>
+
+                <rect x={240} y={20} width={70} height={60} rx={6} fill={`${colors.success}33`} stroke={colors.success} strokeWidth={2} />
+                <text x={275} y={45} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Result</text>
+                <text x={275} y={65} fill={colors.success} fontSize="16" textAnchor="middle">✓</text>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                See the Impact
               </button>
-            ))}
+            )}
+
+            {renderNavDots()}
           </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See the Impact
-            </button>
-          )}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1107,17 +1250,38 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Data Reuse Optimization
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Compare naive vs. optimized data access patterns
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Data Reuse Optimization
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Compare naive vs. optimized data access patterns
+            </p>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}15`,
+              border: `1px solid ${colors.accent}44`,
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Observe:</strong> Toggle between naive and optimized modes to see how data reuse dramatically reduces energy consumption. Try increasing the reuse factor and memory distance.
+              </p>
+            </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1262,9 +1426,10 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
           >
             Understand the Implications
           </button>
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1275,11 +1440,18 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Strategies to Beat the Memory Wall
           </h2>
@@ -1352,9 +1524,10 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
           >
             See Real-World Applications
           </button>
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1363,136 +1536,171 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Application {selectedApp + 1} of {realWorldApps.length} - Explore how data movement efficiency impacts real technology
+            </p>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    +
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    minHeight: '44px',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      +
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How Data Movement Efficiency Connects:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
+            {/* Got It button - always visible for within-app navigation */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginBottom: '16px',
+                background: completedApps[selectedApp] ? colors.bgCard : `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+                border: completedApps[selectedApp] ? `1px solid ${colors.border}` : 'none',
+              }}
+            >
+              {completedApps[selectedApp] ? 'Got It - Reviewed' : 'Got It'}
+            </button>
 
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Data Movement Efficiency Connects:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }

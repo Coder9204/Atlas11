@@ -311,8 +311,8 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast for accessibility (brightness >= 180)
+    textMuted: '#94a3b8', // Medium contrast
     border: '#2a2a3a',
     sun: '#FCD34D',
     earth: '#3B82F6',

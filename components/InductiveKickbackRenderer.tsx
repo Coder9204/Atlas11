@@ -415,7 +415,17 @@ export default function InductiveKickbackRenderer({
   // ──────────────────────────────────────────────────────────────────────────
 
   const renderProgressBar = () => (
-    <div className="fixed top-0 left-0 right-0 h-1 bg-slate-800 z-50">
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 4,
+        backgroundColor: '#1e293b',
+        zIndex: 1001,
+      }}
+    >
       <div
         className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
         style={{ width: `${((PHASES.indexOf(phase) + 1) / PHASES.length) * 100}%` }}
@@ -698,6 +708,7 @@ export default function InductiveKickbackRenderer({
       {/* CTA button */}
       <button
         onClick={() => { playSound('click'); nextPhase(); }}
+        style={{ minHeight: '44px' }}
         className="group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -713,7 +724,7 @@ export default function InductiveKickbackRenderer({
   );
 
   const renderPredict = () => (
-    <div className="py-6 px-4">
+    <div className="py-6 px-4" style={{ overflowY: 'auto' }}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
           <span className="text-xl">&#129300;</span>
@@ -728,20 +739,40 @@ export default function InductiveKickbackRenderer({
         </p>
       </div>
 
-      {/* Circuit preview */}
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 text-center">
-        <div className="flex items-center justify-center gap-4 text-slate-400">
-          <span>12V Battery</span>
-          <span>&#8594;</span>
-          <span className="px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-lg text-indigo-300">Switch OFF</span>
-          <span>&#8594;</span>
-          <span>Coil</span>
-          <span>&#8594;</span>
-          <span className="text-2xl">???</span>
-        </div>
+      {/* Static circuit preview SVG */}
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
+        <svg viewBox="0 0 400 150" className="w-full h-36">
+          {/* Battery */}
+          <rect x="30" y="50" width="40" height="50" fill="#374151" rx="4" />
+          <text x="50" y="80" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">12V</text>
+
+          {/* Wire from battery */}
+          <path d="M 70 70 L 120 70" stroke="#6B7280" strokeWidth="3" fill="none" />
+
+          {/* Switch (open) */}
+          <circle cx="140" cy="70" r="6" fill="#F3F4F6" stroke="#374151" strokeWidth="2" />
+          <line x1="140" y1="70" x2="160" y2="50" stroke="#374151" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="170" cy="70" r="5" fill="#F3F4F6" stroke="#374151" strokeWidth="2" />
+          <text x="155" y="40" textAnchor="middle" fill="#e2e8f0" fontSize="10">OPEN</text>
+
+          {/* Wire to coil */}
+          <path d="M 180 70 L 220 70" stroke="#6B7280" strokeWidth="3" fill="none" />
+
+          {/* Inductor coil */}
+          <rect x="220" y="45" width="80" height="50" fill="none" stroke="#6366F1" strokeWidth="2" rx="6" />
+          <path d="M 235 70 C 240 55, 250 55, 255 70 C 260 85, 270 85, 275 70 C 280 55, 290 55, 295 70" fill="none" stroke="#6366F1" strokeWidth="2" />
+          <text x="260" y="110" textAnchor="middle" fill="#e2e8f0" fontSize="10">COIL</text>
+
+          {/* Question mark */}
+          <text x="340" y="75" textAnchor="middle" fill="#f59e0b" fontSize="28" fontWeight="bold">?</text>
+          <text x="340" y="95" textAnchor="middle" fill="#e2e8f0" fontSize="10">Voltage</text>
+
+          {/* Return wire */}
+          <path d="M 300 70 L 330 70 L 330 120 L 50 120 L 50 100" stroke="#6B7280" strokeWidth="3" fill="none" />
+        </svg>
       </div>
 
-      <div className="space-y-3 mb-6">
+      <div className="space-y-3 mb-6" style={{ marginBottom: '24px' }}>
         {[
           { id: 'zero', label: 'Drops to 0V immediately', icon: '&#128201;' },
           { id: 'gradual', label: 'Gradually decreases from 12V to 0V', icon: '&#128202;' },
@@ -751,6 +782,7 @@ export default function InductiveKickbackRenderer({
             key={option.id}
             onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
+            style={{ minHeight: '44px' }}
             className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
               prediction === option.id
                 ? option.id === 'spike'
@@ -760,7 +792,7 @@ export default function InductiveKickbackRenderer({
             } ${showPredictionFeedback ? 'cursor-default' : 'cursor-pointer'}`}
           >
             <span className="text-2xl" dangerouslySetInnerHTML={{ __html: option.icon }} />
-            <span className="font-medium text-slate-200">{option.label}</span>
+            <span className="font-medium" style={{ color: '#e2e8f0' }}>{option.label}</span>
           </button>
         ))}
       </div>
@@ -768,7 +800,7 @@ export default function InductiveKickbackRenderer({
       {showPredictionFeedback && (
         <div className={`p-5 rounded-2xl mb-6 ${
           prediction === 'spike' ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-amber-500/10 border border-amber-500/30'
-        }`}>
+        }`} style={{ borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
           <p className={`leading-relaxed ${prediction === 'spike' ? 'text-emerald-300' : 'text-amber-300'}`}>
             {prediction === 'spike' ? (
               <><strong>Exactly right!</strong> The collapsing magnetic field induces a huge voltage spike - often 10-100x the supply voltage. This is inductive kickback!</>
@@ -782,6 +814,7 @@ export default function InductiveKickbackRenderer({
       {showPredictionFeedback && (
         <button
           onClick={() => { playSound('success'); nextPhase(); }}
+          style={{ minHeight: '44px' }}
           className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-xl transition-all duration-200"
         >
           See It Happen &#8594;
@@ -793,22 +826,46 @@ export default function InductiveKickbackRenderer({
   );
 
   const renderPlay = () => (
-    <div className="py-6 px-4">
+    <div className="py-6 px-4" style={{ overflowY: 'auto' }}>
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
           <span className="text-xl">&#128300;</span>
         </div>
         <div>
           <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-white`}>Relay Circuit Simulator</h2>
-          <p className="text-sm text-slate-400">Toggle switch and observe kickback</p>
+          <p className="text-sm" style={{ color: '#e2e8f0' }}>Toggle switch and observe kickback</p>
         </div>
+      </div>
+
+      {/* Real-world relevance */}
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-4" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: '16px', padding: '16px' }}>
+        <p style={{ color: '#e2e8f0' }} className="text-sm leading-relaxed">
+          <strong>Real-world relevance:</strong> This same phenomenon occurs in car ignition systems, industrial motors, and household appliances. Understanding kickback helps engineers design safer circuits.
+        </p>
       </div>
 
       {renderRelayCircuit()}
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      {/* Inductance slider control */}
+      <div className="mb-4" style={{ marginBottom: '16px' }}>
+        <div className="flex justify-between mb-2">
+          <span className="text-sm" style={{ color: '#e2e8f0' }}>Coil Inductance</span>
+          <span className="text-sm font-medium text-amber-400">100mH</span>
+        </div>
+        <input
+          type="range"
+          min="10"
+          max="500"
+          defaultValue="100"
+          className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer"
+          aria-label="Adjust inductance"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-4" style={{ gap: '12px', marginBottom: '16px' }}>
         <button
           onClick={handleSwitchToggle}
+          style={{ minHeight: '44px' }}
           className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 ${
             switchOn
               ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
@@ -819,6 +876,7 @@ export default function InductiveKickbackRenderer({
         </button>
         <button
           onClick={handleToggleDiode}
+          style={{ minHeight: '44px' }}
           className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 ${
             hasFlybackDiode
               ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
@@ -829,7 +887,7 @@ export default function InductiveKickbackRenderer({
         </button>
       </div>
 
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-6">
+      <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
         <p className="text-amber-300 text-sm leading-relaxed">
           <strong>Try this:</strong> Toggle the switch OFF without the diode to see the spark.
           Then add the diode and notice how it clamps the voltage spike!
@@ -839,6 +897,7 @@ export default function InductiveKickbackRenderer({
       <button
         onClick={() => { playSound('success'); nextPhase(); }}
         disabled={!hasExperimented}
+        style={{ minHeight: '44px' }}
         className={`w-full py-4 rounded-2xl font-semibold transition-all duration-200 ${
           hasExperimented
             ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
@@ -853,7 +912,7 @@ export default function InductiveKickbackRenderer({
   );
 
   const renderReview = () => (
-    <div className="py-6 px-4">
+    <div className="py-6 px-4" style={{ overflowY: 'auto' }}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
           <span className="text-xl">&#128214;</span>
@@ -861,7 +920,22 @@ export default function InductiveKickbackRenderer({
         <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-white`}>Understanding Inductive Kickback</h2>
       </div>
 
-      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 mb-6 text-center text-white">
+      {/* Reference user's prediction */}
+      <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+        <p style={{ color: '#e2e8f0' }} className="text-sm leading-relaxed">
+          {prediction === 'spike' ? (
+            <>Your prediction was correct! You anticipated that the voltage would spike when the switch opened.</>
+          ) : prediction === 'gradual' ? (
+            <>You predicted a gradual decrease, but the voltage actually spiked dramatically - this surprised many engineers when first discovered!</>
+          ) : prediction === 'zero' ? (
+            <>You predicted an immediate drop to zero, but the inductor resisted this change by creating a massive voltage spike.</>
+          ) : (
+            <>As you observed, the voltage spikes dramatically when the switch opens - this is inductive kickback in action.</>
+          )}
+        </p>
+      </div>
+
+      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 mb-6 text-center text-white" style={{ borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
         <p className="text-indigo-200 text-sm mb-2">The Inductor Equation</p>
         <div className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold mb-2`}>V = -L x (di/dt)</div>
         <p className="text-indigo-200 text-sm">
@@ -869,7 +943,7 @@ export default function InductiveKickbackRenderer({
         </p>
       </div>
 
-      <div className="space-y-4 mb-6">
+      <div className="space-y-4 mb-6" style={{ marginBottom: '24px' }}>
         {[
           {
             icon: '&#129522;',
@@ -887,12 +961,12 @@ export default function InductiveKickbackRenderer({
             desc: 'A diode across the coil provides a path for the current to continue flowing, safely clamping the voltage spike.',
           },
         ].map((item, i) => (
-          <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4">
+          <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
             <div className="flex items-start gap-3">
               <span className="text-2xl" dangerouslySetInnerHTML={{ __html: item.icon }} />
               <div>
                 <h3 className="font-bold text-white mb-1">{item.title}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                <p style={{ color: '#e2e8f0' }} className="text-sm leading-relaxed">{item.desc}</p>
               </div>
             </div>
           </div>
@@ -901,6 +975,7 @@ export default function InductiveKickbackRenderer({
 
       <button
         onClick={() => { playSound('success'); nextPhase(); }}
+        style={{ minHeight: '44px' }}
         className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-xl transition-all duration-200"
       >
         Now for a Twist... &#8594;
@@ -911,7 +986,7 @@ export default function InductiveKickbackRenderer({
   );
 
   const renderTwistPredict = () => (
-    <div className="py-6 px-4">
+    <div className="py-6 px-4" style={{ overflowY: 'auto' }}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
           <span className="text-xl">&#128260;</span>
@@ -919,14 +994,14 @@ export default function InductiveKickbackRenderer({
         <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-white`}>The Useful Side of Kickback</h2>
       </div>
 
-      <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 mb-6">
+      <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 mb-6" style={{ borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
         <p className="text-purple-200 leading-relaxed">
           Inductive kickback seems destructive. But engineers have found ways to
           <strong className="text-purple-300"> harness it constructively</strong>. How might they use it?
         </p>
       </div>
 
-      <div className="space-y-3 mb-6">
+      <div className="space-y-3 mb-6" style={{ marginBottom: '24px' }}>
         {[
           { id: 'nothing', label: "It's only a problem to be prevented", icon: '&#128683;' },
           { id: 'spark', label: 'To create sparks in spark plugs', icon: '&#128293;' },
@@ -936,6 +1011,7 @@ export default function InductiveKickbackRenderer({
             key={option.id}
             onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
+            style={{ minHeight: '44px' }}
             className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
               twistPrediction === option.id
                 ? option.id === 'both'
@@ -945,7 +1021,7 @@ export default function InductiveKickbackRenderer({
             } ${showTwistFeedback ? 'cursor-default' : 'cursor-pointer'}`}
           >
             <span className="text-2xl" dangerouslySetInnerHTML={{ __html: option.icon }} />
-            <span className="font-medium text-slate-200">{option.label}</span>
+            <span className="font-medium" style={{ color: '#e2e8f0' }}>{option.label}</span>
           </button>
         ))}
       </div>
@@ -953,7 +1029,7 @@ export default function InductiveKickbackRenderer({
       {showTwistFeedback && (
         <div className={`p-5 rounded-2xl mb-6 ${
           twistPrediction === 'both' ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-amber-500/10 border border-amber-500/30'
-        }`}>
+        }`} style={{ borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
           <p className={`leading-relaxed ${twistPrediction === 'both' ? 'text-emerald-300' : 'text-amber-300'}`}>
             {twistPrediction === 'both' ? (
               <><strong>Perfect!</strong> Ignition coils use it for spark plugs (40,000V from 12V!), and boost converters use controlled kickback to increase voltage efficiently.</>
@@ -967,6 +1043,7 @@ export default function InductiveKickbackRenderer({
       {showTwistFeedback && (
         <button
           onClick={() => { playSound('success'); nextPhase(); }}
+          style={{ minHeight: '44px' }}
           className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-xl transition-all duration-200"
         >
           Explore Boost Converters &#8594;
@@ -978,23 +1055,23 @@ export default function InductiveKickbackRenderer({
   );
 
   const renderTwistPlay = () => (
-    <div className="py-6 px-4">
+    <div className="py-6 px-4" style={{ overflowY: 'auto' }}>
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
           <span className="text-xl">&#128267;</span>
         </div>
         <div>
           <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-white`}>Boost Converter Demo</h2>
-          <p className="text-sm text-slate-400">See how kickback steps up voltage</p>
+          <p className="text-sm" style={{ color: '#e2e8f0' }}>See how kickback steps up voltage</p>
         </div>
       </div>
 
       {renderBoostConverter()}
 
       {/* Input voltage slider */}
-      <div className="mb-4">
+      <div className="mb-4" style={{ marginBottom: '16px' }}>
         <div className="flex justify-between mb-2">
-          <span className="text-sm text-slate-400">Input Voltage</span>
+          <span className="text-sm" style={{ color: '#e2e8f0' }}>Input Voltage</span>
           <span className="text-sm font-medium text-amber-400">{inputVoltage}V</span>
         </div>
         <input
@@ -1008,9 +1085,9 @@ export default function InductiveKickbackRenderer({
       </div>
 
       {/* Duty cycle slider */}
-      <div className="mb-6">
+      <div className="mb-6" style={{ marginBottom: '24px' }}>
         <div className="flex justify-between mb-2">
-          <span className="text-sm text-slate-400">Duty Cycle</span>
+          <span className="text-sm" style={{ color: '#e2e8f0' }}>Duty Cycle</span>
           <span className="text-sm font-medium text-amber-400">{boostDutyCycle}%</span>
         </div>
         <input
@@ -1025,6 +1102,7 @@ export default function InductiveKickbackRenderer({
 
       <button
         onClick={handleBoostToggle}
+        style={{ minHeight: '44px' }}
         className={`w-full py-4 rounded-2xl font-semibold mb-4 transition-all duration-200 ${
           boostActive
             ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
@@ -1034,7 +1112,7 @@ export default function InductiveKickbackRenderer({
         {boostActive ? '&#9889; Boost Active - Click to Stop' : '&#9654; Activate Boost Converter'}
       </button>
 
-      <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6">
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
         <p className="text-blue-300 text-sm leading-relaxed">
           <strong>How it works:</strong> A switch rapidly turns on/off (100kHz).
           Each time it opens, the inductor&apos;s kickback adds to the input voltage,
@@ -1045,6 +1123,7 @@ export default function InductiveKickbackRenderer({
       <button
         onClick={() => { playSound('success'); nextPhase(); }}
         disabled={!hasExploredTwist}
+        style={{ minHeight: '44px' }}
         className={`w-full py-4 rounded-2xl font-semibold transition-all duration-200 ${
           hasExploredTwist
             ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
@@ -1059,7 +1138,7 @@ export default function InductiveKickbackRenderer({
   );
 
   const renderTwistReview = () => (
-    <div className="py-6 px-4">
+    <div className="py-6 px-4" style={{ overflowY: 'auto' }}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center">
           <span className="text-xl">&#128161;</span>
@@ -1067,33 +1146,33 @@ export default function InductiveKickbackRenderer({
         <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-white`}>Harnessing the Kickback</h2>
       </div>
 
-      <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-6 mb-6">
+      <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-6 mb-6" style={{ borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
         <h3 className="font-bold text-white mb-4 text-center">Controlled Kickback Applications</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center bg-slate-800/50 rounded-xl p-4">
+        <div className="grid grid-cols-2 gap-4" style={{ gap: '16px' }}>
+          <div className="text-center bg-slate-800/50 rounded-xl p-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div className="text-3xl mb-2">&#128663;</div>
-            <div className="text-sm text-slate-200 font-medium">Ignition Coils</div>
+            <div className="text-sm font-medium" style={{ color: '#e2e8f0' }}>Ignition Coils</div>
             <div className="text-xs text-emerald-400 font-semibold">12V &#8594; 40,000V!</div>
           </div>
-          <div className="text-center bg-slate-800/50 rounded-xl p-4">
+          <div className="text-center bg-slate-800/50 rounded-xl p-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div className="text-3xl mb-2">&#128267;</div>
-            <div className="text-sm text-slate-200 font-medium">Boost Converters</div>
+            <div className="text-sm font-medium" style={{ color: '#e2e8f0' }}>Boost Converters</div>
             <div className="text-xs text-emerald-400 font-semibold">Step up DC voltage</div>
           </div>
         </div>
       </div>
 
-      <div className="space-y-3 mb-6">
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4">
+      <div className="space-y-3 mb-6" style={{ marginBottom: '24px' }}>
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
           <h4 className="font-bold text-white mb-1">&#127919; Key Insight</h4>
-          <p className="text-slate-400 text-sm leading-relaxed">
+          <p style={{ color: '#e2e8f0' }} className="text-sm leading-relaxed">
             The same physics that can destroy circuits is harnessed to generate high voltages and
             efficient power conversion - it&apos;s all about control!
           </p>
         </div>
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4">
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
           <h4 className="font-bold text-white mb-1">&#128202; Switching Frequency</h4>
-          <p className="text-slate-400 text-sm leading-relaxed">
+          <p style={{ color: '#e2e8f0' }} className="text-sm leading-relaxed">
             Boost converters switch at 10kHz-1MHz. Each cycle captures a bit of kickback energy,
             accumulating it in a capacitor.
           </p>
@@ -1102,6 +1181,7 @@ export default function InductiveKickbackRenderer({
 
       <button
         onClick={() => { playSound('success'); nextPhase(); }}
+        style={{ minHeight: '44px' }}
         className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-xl transition-all duration-200"
       >
         See Real-World Applications &#8594;
@@ -1115,19 +1195,19 @@ export default function InductiveKickbackRenderer({
     const app = realWorldApps[selectedApp];
 
     return (
-      <div className="py-6 px-4">
+      <div className="py-6 px-4" style={{ overflowY: 'auto' }}>
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
             <span className="text-xl">&#127758;</span>
           </div>
           <div>
             <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-white`}>Real-World Applications</h2>
-            <p className="text-sm text-slate-400">Complete all 4 to unlock assessment</p>
+            <p className="text-sm" style={{ color: '#e2e8f0' }}>Application {selectedApp + 1} of {realWorldApps.length}</p>
           </div>
         </div>
 
         {/* App selector tabs */}
-        <div className="grid grid-cols-4 gap-2 mb-6">
+        <div className="grid grid-cols-4 gap-2 mb-6" style={{ gap: '8px', marginBottom: '24px' }}>
           {realWorldApps.map((a, i) => (
             <button
               key={i}
@@ -1136,6 +1216,7 @@ export default function InductiveKickbackRenderer({
                 setSelectedApp(i);
                 if (!completedApps[i]) handleCompleteApp(i);
               }}
+              style={{ minHeight: '44px' }}
               className={`p-3 rounded-xl text-center transition-all duration-200 relative ${
                 selectedApp === i
                   ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-2 border-amber-500/50'
@@ -1150,13 +1231,13 @@ export default function InductiveKickbackRenderer({
                 </div>
               )}
               <div className="text-2xl mb-1">{a.icon}</div>
-              <div className="text-xs text-slate-300 truncate">{a.title.split(' ')[0]}</div>
+              <div className="text-xs" style={{ color: '#e2e8f0' }}>{a.title.split(' ')[0]}</div>
             </button>
           ))}
         </div>
 
         {/* Selected app details */}
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 mb-6">
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 mb-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
           <div className="flex items-center gap-4 mb-4">
             <span className="text-4xl">{app.icon}</span>
             <div>
@@ -1165,24 +1246,35 @@ export default function InductiveKickbackRenderer({
             </div>
           </div>
 
-          <p className="text-slate-300 text-sm leading-relaxed mb-4">
+          <p style={{ color: '#e2e8f0' }} className="text-sm leading-relaxed mb-4">
             {app.description}
           </p>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-3" style={{ gap: '12px' }}>
             {app.stats.map((stat, i) => (
-              <div key={i} className="bg-slate-900/50 rounded-xl p-3 text-center">
+              <div key={i} className="bg-slate-900/50 rounded-xl p-3 text-center" style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '12px' }}>
                 <div className="text-lg font-bold" style={{ color: app.color }}>{stat.value}</div>
-                <div className="text-xs text-slate-500">{stat.label}</div>
+                <div className="text-xs" style={{ color: '#e2e8f0' }}>{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
 
+        {/* Got It button for current application */}
+        {!completedApps[selectedApp] && (
+          <button
+            onClick={() => handleCompleteApp(selectedApp)}
+            style={{ minHeight: '44px', marginBottom: '16px' }}
+            className="w-full py-4 bg-emerald-500 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-500/25 hover:bg-emerald-600 transition-all duration-200"
+          >
+            Got It
+          </button>
+        )}
+
         {/* Progress */}
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-6">
+        <div className="bg-slate-800/50 rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-slate-300">Progress</span>
+            <span className="text-sm font-medium" style={{ color: '#e2e8f0' }}>Progress</span>
             <span className="text-sm font-bold text-amber-400">{completedApps.filter(c => c).length}/4 Complete</span>
           </div>
           <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
@@ -1196,6 +1288,7 @@ export default function InductiveKickbackRenderer({
         <button
           onClick={() => { playSound('success'); nextPhase(); }}
           disabled={!allAppsCompleted}
+          style={{ minHeight: '44px' }}
           className={`w-full py-4 rounded-2xl font-semibold transition-all duration-200 ${
             allAppsCompleted
               ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
@@ -1286,22 +1379,22 @@ export default function InductiveKickbackRenderer({
     }
 
     return (
-      <div className="py-6 px-4">
+      <div className="py-6 px-4" style={{ overflowY: 'auto' }}>
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
             <span className="text-xl">&#128221;</span>
           </div>
           <div>
             <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-white`}>Knowledge Assessment</h2>
-            <p className="text-sm text-slate-400">10 questions - 70% to pass</p>
+            <p className="text-sm" style={{ color: '#e2e8f0' }}>Question {currentQuestion + 1} of {testQuestions.length}</p>
           </div>
         </div>
 
         {/* Progress */}
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-6">
+        <div className="bg-slate-800/50 rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-slate-300">Question {currentQuestion + 1} of 10</span>
-            <span className="text-sm font-bold text-violet-400">{answeredCount}/10 answered</span>
+            <span className="text-sm font-medium" style={{ color: '#e2e8f0' }}>Question {currentQuestion + 1} of {testQuestions.length}</span>
+            <span className="text-sm font-bold text-violet-400">{answeredCount}/{testQuestions.length} answered</span>
           </div>
           <div className="flex gap-1">
             {testQuestions.map((_, i) => (
@@ -1320,24 +1413,29 @@ export default function InductiveKickbackRenderer({
         </div>
 
         {/* Scenario */}
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 mb-4">
-          <p className="text-sm text-slate-400 mb-2">Scenario:</p>
-          <p className="text-slate-200 text-sm leading-relaxed">{question.scenario}</p>
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 mb-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+          <p className="text-sm mb-2" style={{ color: '#e2e8f0' }}>Scenario:</p>
+          <p style={{ color: '#e2e8f0' }} className="text-sm leading-relaxed">{question.scenario}</p>
         </div>
 
         {/* Question */}
-        <h3 className="font-bold text-white mb-4">{question.question}</h3>
+        <h3 className="font-bold text-white mb-4" style={{ marginBottom: '16px' }}>{question.question}</h3>
 
         {/* Options */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-3 mb-6" style={{ marginBottom: '24px' }}>
           {question.options.map(opt => (
             <button
               key={opt.id}
               onClick={() => handleTestAnswer(opt.id)}
+              style={{
+                minHeight: '44px',
+                border: testAnswers[currentQuestion] === opt.id ? '2px solid #8b5cf6' : '1px solid rgba(71, 85, 105, 0.5)',
+                transform: testAnswers[currentQuestion] === opt.id ? 'scale(1.02)' : 'scale(1)',
+              }}
               className={`w-full p-4 rounded-xl text-left transition-all duration-200 flex items-center gap-3 ${
                 testAnswers[currentQuestion] === opt.id
                   ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30'
-                  : 'bg-slate-800/50 text-slate-300 border border-slate-700/50 hover:border-violet-500/50'
+                  : 'bg-slate-800/50 text-slate-300 hover:border-violet-500/50'
               }`}
             >
               <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
@@ -1353,10 +1451,11 @@ export default function InductiveKickbackRenderer({
         </div>
 
         {/* Navigation */}
-        <div className="flex gap-3">
+        <div className="flex gap-3" style={{ gap: '12px' }}>
           {currentQuestion > 0 && (
             <button
               onClick={() => setCurrentQuestion(currentQuestion - 1)}
+              style={{ minHeight: '44px' }}
               className="flex-1 py-4 bg-slate-700 text-slate-200 font-semibold rounded-2xl"
             >
               &#8592; Previous
@@ -1366,6 +1465,7 @@ export default function InductiveKickbackRenderer({
             <button
               onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
               disabled={!testAnswers[currentQuestion]}
+              style={{ minHeight: '44px' }}
               className={`flex-1 py-4 rounded-2xl font-semibold transition-all ${
                 testAnswers[currentQuestion]
                   ? 'bg-violet-500 text-white'
@@ -1378,6 +1478,7 @@ export default function InductiveKickbackRenderer({
             <button
               onClick={handleSubmitTest}
               disabled={!allAnswered}
+              style={{ minHeight: '44px' }}
               className={`flex-1 py-4 rounded-2xl font-semibold transition-all ${
                 allAnswered
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
@@ -1485,18 +1586,28 @@ export default function InductiveKickbackRenderer({
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
 
       {/* Header */}
-      <div className="fixed top-1 left-0 right-0 z-40">
-        <div className="flex items-center justify-between px-4 py-2 max-w-2xl mx-auto">
+      <nav
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          backgroundColor: 'rgba(10, 15, 26, 0.95)',
+        }}
+        aria-label="Game navigation"
+      >
+        <div className="flex items-center justify-between px-4 py-2 max-w-2xl mx-auto" style={{ minHeight: '44px' }}>
           <span className="text-xs font-semibold text-white/70 tracking-wide">Inductive Kickback</span>
           <span className="text-xs font-medium text-amber-400 capitalize">
             {phase.replace('_', ' ')}
           </span>
         </div>
-      </div>
+      </nav>
 
       {/* Main content */}
-      <div className="relative pt-12 pb-8">
-        <div className="max-w-2xl mx-auto">
+      <div className="relative pt-16 pb-8" style={{ overflowY: 'auto', maxHeight: '100vh' }}>
+        <div className="max-w-2xl mx-auto" style={{ overflowY: 'auto' }}>
           {renderContent()}
         </div>
       </div>

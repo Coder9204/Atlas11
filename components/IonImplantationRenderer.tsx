@@ -37,7 +37,7 @@ interface IonImplantationRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -86,6 +86,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Transfer app state
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   // --- INTERNAL PHASE STATE MANAGEMENT ---
   type IonPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const validPhases: IonPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -115,7 +117,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Channeling',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -521,6 +523,11 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -528,7 +535,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
         borderBottom: `1px solid ${colors.border}`,
         backgroundColor: colors.bgCard,
         gap: isMobile ? '8px' : '12px',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
       }}>
         {/* Back button */}
         <button
@@ -536,6 +544,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           disabled={currentIdx === 0}
           style={{
             padding: '6px 12px',
+            minHeight: '44px',
             borderRadius: '6px',
             border: `1px solid ${colors.border}`,
             background: currentIdx > 0 ? colors.bgDark : 'transparent',
@@ -543,7 +552,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
             opacity: currentIdx > 0 ? 1 : 0.4,
             fontSize: '12px',
-            fontWeight: 600
+            fontWeight: 600,
+            transition: 'all 0.2s ease',
           }}
         >
           Back
@@ -551,24 +561,29 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
         {/* Progress dots */}
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '8px' }}>
-          <div style={{ display: 'flex', gap: isMobile ? '3px' : '4px' }}>
+          <div style={{ display: 'flex', gap: isMobile ? '3px' : '4px' }} role="tablist" aria-label="Phase navigation">
             {phaseOrder.map((p, i) => (
               <div
                 key={p}
+                role="tab"
+                aria-selected={i === currentIdx}
+                aria-label={`Phase ${i + 1}: ${phaseLabels[p]}`}
+                data-phase={p}
+                data-nav-dot="true"
                 onClick={() => i <= currentIdx && goToPhase(p)}
                 style={{
                   height: isMobile ? '8px' : '8px',
                   width: i === currentIdx ? (isMobile ? '16px' : '20px') : (isMobile ? '8px' : '8px'),
-                  borderRadius: '4px',
+                  borderRadius: '50%',
                   backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
                   cursor: i <= currentIdx ? 'pointer' : 'default',
-                  transition: 'all 0.3s',
+                  transition: 'all 0.3s ease',
                 }}
                 title={phaseLabels[p]}
               />
             ))}
           </div>
-          <span style={{ fontSize: '11px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '11px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1}/{phaseOrder.length}
           </span>
         </div>
@@ -595,6 +610,11 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -602,12 +622,14 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
         borderTop: `1px solid ${colors.border}`,
         backgroundColor: colors.bgDark,
         gap: '12px',
+        boxShadow: '0 -2px 8px rgba(0,0,0,0.3)',
       }}>
         <button
           onClick={goBack}
           disabled={!canBack}
           style={{
             padding: isMobile ? '10px 16px' : '12px 20px',
+            minHeight: '44px',
             borderRadius: '8px',
             fontWeight: 600,
             fontSize: isMobile ? '13px' : '14px',
@@ -616,12 +638,13 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             border: `1px solid ${colors.border}`,
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.4,
+            transition: 'all 0.2s ease',
           }}
         >
           Back
         </button>
 
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
           {phaseLabels[phase]}
         </span>
 
@@ -630,14 +653,16 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           disabled={!canGoNext}
           style={{
             padding: isMobile ? '10px 20px' : '12px 24px',
+            minHeight: '44px',
             borderRadius: '8px',
             fontWeight: 700,
             fontSize: isMobile ? '13px' : '14px',
-            background: canGoNext ? colors.accent : colors.bgCard,
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent}, ${colors.warning})` : colors.bgCard,
             color: canGoNext ? 'white' : colors.textMuted,
             border: 'none',
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.5,
+            transition: 'all 0.2s ease',
           }}
         >
           {nextLabel}
@@ -712,113 +737,142 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
               <stop offset="0%" stopColor={colors.dopant} />
               <stop offset="100%" stopColor={colors.ion} />
             </linearGradient>
+            <radialGradient id="ionGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={colors.ion} stopOpacity="1" />
+              <stop offset="100%" stopColor={colors.ion} stopOpacity="0" />
+            </radialGradient>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.3" />
+            </filter>
           </defs>
 
-          {/* Ion beam source */}
-          <rect x={200} y={5} width={100} height={30} fill="#4b5563" rx={4} />
-          <text x={250} y={22} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-            Ion Beam ({ionEnergy} keV)
-          </text>
+          {/* Background layer group */}
+          <g id="backgroundLayer">
+            {/* Ion beam source */}
+            <rect x={200} y={5} width={100} height={30} fill="#4b5563" rx={4} filter="url(#softShadow)" />
+            <text x={250} y={22} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
+              Ion Beam ({ionEnergy} keV)
+            </text>
 
-          {/* Ion beam cone */}
-          <polygon points="220,35 280,35 300,80 200,80" fill="rgba(139, 92, 246, 0.3)" />
+            {/* Ion beam cone */}
+            <polygon points="220,35 280,35 300,80 200,80" fill="rgba(139, 92, 246, 0.3)" />
+          </g>
 
-          {/* Ion particles */}
-          {ions}
+          {/* Ion particles layer group */}
+          <g id="ionLayer" filter="url(#glow)">
+            {ions}
+          </g>
 
-          {/* Silicon wafer cross-section */}
-          <rect x={50} y={80} width={400} height={220} fill="url(#siliconGrad)" stroke={colors.silicon} strokeWidth={2} />
+          {/* Silicon wafer layer group */}
+          <g id="waferLayer">
+            {/* Silicon wafer cross-section */}
+            <rect x={50} y={80} width={400} height={220} fill="url(#siliconGrad)" stroke={colors.silicon} strokeWidth={2} />
 
-          {/* Crystal lattice pattern (if showing channeling) */}
-          {showChannelingEffect && (
-            <g opacity={0.3}>
-              {Array.from({ length: 20 }).map((_, i) =>
-                Array.from({ length: 11 }).map((_, j) => (
-                  <circle
-                    key={`atom${i}${j}`}
-                    cx={60 + i * 20}
-                    cy={85 + j * 20}
-                    r={3}
-                    fill={colors.crystal}
-                  />
-                ))
-              )}
-              {crystalOrientation === '110' && (
-                <line x1={250} y1={80} x2={250} y2={300} stroke={colors.accent} strokeWidth={2} strokeDasharray="5,5" />
-              )}
-            </g>
-          )}
+            {/* Crystal lattice pattern (if showing channeling) */}
+            {showChannelingEffect && (
+              <g opacity={0.3}>
+                {Array.from({ length: 20 }).map((_, i) =>
+                  Array.from({ length: 11 }).map((_, j) => (
+                    <circle
+                      key={`atom${i}${j}`}
+                      cx={60 + i * 20}
+                      cy={85 + j * 20}
+                      r={3}
+                      fill={colors.crystal}
+                    />
+                  ))
+                )}
+                {crystalOrientation === '110' && (
+                  <line x1={250} y1={80} x2={250} y2={300} stroke={colors.accent} strokeWidth={2} strokeDasharray="5,5" />
+                )}
+              </g>
+            )}
+          </g>
 
-          {/* Implant profile plot */}
-          <text x={250} y={330} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
-            Depth (nm) - {Math.round(profile.junctionDepth)} nm junction
-          </text>
+          {/* Profile layer group */}
+          <g id="profileLayer">
+            {/* Implant profile plot */}
+            <text x={250} y={330} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+              Depth (nm) - {Math.round(profile.junctionDepth)} nm junction
+            </text>
 
-          {/* Profile background */}
-          <rect x={50} y={100} width={350} height={200} fill="rgba(0,0,0,0.4)" rx={4} />
+            {/* Profile background */}
+            <rect x={50} y={100} width={350} height={200} fill="rgba(0,0,0,0.4)" rx={4} />
 
-          {/* Concentration scale */}
-          <text x={45} y={110} fill={colors.textSecondary} fontSize={9} textAnchor="end">High</text>
-          <text x={45} y={290} fill={colors.textSecondary} fontSize={9} textAnchor="end">Low</text>
+            {/* Concentration scale */}
+            <text x={45} y={110} fill={colors.textSecondary} fontSize={9} textAnchor="end">High</text>
+            <text x={45} y={290} fill={colors.textSecondary} fontSize={9} textAnchor="end">Low</text>
 
-          {/* Profile curve */}
-          <path
-            d={profilePath}
-            fill="none"
-            stroke="url(#profileGrad)"
-            strokeWidth={3}
-          />
+            {/* Profile curve */}
+            <path
+              d={profilePath}
+              fill="none"
+              stroke="url(#profileGrad)"
+              strokeWidth={3}
+              filter="url(#glow)"
+            />
 
-          {/* Fill under curve */}
-          <path
-            d={`${profilePath} L 400 300 L 50 300 Z`}
-            fill={isAnnealing ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.2)'}
-          />
+            {/* Fill under curve */}
+            <path
+              d={`${profilePath} L 400 300 L 50 300 Z`}
+              fill={isAnnealing ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.2)'}
+            />
 
-          {/* Peak marker */}
-          <circle
-            cx={50 + (profile.projectedRange / 300) * 350}
-            cy={100}
-            r={5}
-            fill={colors.accent}
-          />
-          <text
-            x={50 + (profile.projectedRange / 300) * 350}
-            y={95}
-            fill={colors.accent}
-            fontSize={10}
-            textAnchor="middle"
-          >
-            Rp={Math.round(profile.projectedRange)}nm
-          </text>
+            {/* Peak marker */}
+            <circle
+              cx={50 + (profile.projectedRange / 300) * 350}
+              cy={100}
+              r={5}
+              fill={colors.accent}
+              filter="url(#glow)"
+            />
+            <text
+              x={50 + (profile.projectedRange / 300) * 350}
+              y={95}
+              fill={colors.accent}
+              fontSize={10}
+              textAnchor="middle"
+            >
+              Rp={Math.round(profile.projectedRange)}nm
+            </text>
+          </g>
 
-          {/* Info panel */}
-          <rect x={10} y={340} width={200} height={55} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} />
-          <text x={20} y={355} fill={colors.textSecondary} fontSize={10}>
-            Dose: 10^{doseExponent} ions/cm2
-          </text>
-          <text x={20} y={370} fill={colors.textSecondary} fontSize={10}>
-            Damage: {Math.round(profile.damageLevel)}%
-          </text>
-          <text x={20} y={385} fill={colors.success} fontSize={10}>
-            Activation: {Math.round(profile.activation)}%
-          </text>
+          {/* Info panel layer group */}
+          <g id="infoLayer">
+            <rect x={10} y={340} width={200} height={55} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} />
+            <text x={20} y={355} fill={colors.textSecondary} fontSize={10}>
+              Dose: 10^{doseExponent} ions/cm2
+            </text>
+            <text x={20} y={370} fill={colors.textSecondary} fontSize={10}>
+              Damage: {Math.round(profile.damageLevel)}%
+            </text>
+            <text x={20} y={385} fill={colors.success} fontSize={10}>
+              Activation: {Math.round(profile.activation)}%
+            </text>
 
-          {/* Anneal status */}
-          {isAnnealing && (
-            <rect x={290} y={340} width={150} height={55} fill="rgba(16, 185, 129, 0.2)" rx={8} stroke={colors.success} strokeWidth={1}>
-              <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
-            </rect>
-          )}
-          <text x={300} y={355} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
-            Anneal: {annealTemp}C
-          </text>
-          <text x={300} y={370} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
-            Time: {annealTime}s
-          </text>
-          <text x={300} y={385} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
-            Diffusion: {profile.diffusionLength.toFixed(1)}nm
-          </text>
+            {/* Anneal status */}
+            {isAnnealing && (
+              <rect x={290} y={340} width={150} height={55} fill="rgba(16, 185, 129, 0.2)" rx={8} stroke={colors.success} strokeWidth={1}>
+                <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
+              </rect>
+            )}
+            <text x={300} y={355} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
+              Anneal: {annealTemp}C
+            </text>
+            <text x={300} y={370} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
+              Time: {annealTime}s
+            </text>
+            <text x={300} y={385} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
+              Diffusion: {profile.diffusionLength.toFixed(1)}nm
+            </text>
+          </g>
         </svg>
 
         {interactive && (
@@ -874,11 +928,23 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     );
   };
 
+  // Slider styling for visibility
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '8px',
+    borderRadius: '4px',
+    background: `linear-gradient(90deg, ${colors.accent} 0%, ${colors.primary} 100%)`,
+    appearance: 'none' as const,
+    WebkitAppearance: 'none' as const,
+    cursor: 'pointer',
+    accentColor: colors.accent,
+  };
+
   const renderControls = (showChannelingControls: boolean = false) => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Ion Energy: {ionEnergy} keV
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
+          Ion Energy: <span style={{ color: colors.accent, fontWeight: 700 }}>{ionEnergy} keV</span>
         </label>
         <input
           type="range"
@@ -887,13 +953,13 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           step="5"
           value={ionEnergy}
           onChange={(e) => setIonEnergy(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Dose: 10^{doseExponent} ions/cm2
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
+          Dose: <span style={{ color: colors.accent, fontWeight: 700 }}>10^{doseExponent} ions/cm2</span>
         </label>
         <input
           type="range"
@@ -902,13 +968,13 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           step="0.5"
           value={doseExponent}
           onChange={(e) => setDoseExponent(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Anneal Temperature: {annealTemp}C
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
+          Anneal Temperature: <span style={{ color: colors.accent, fontWeight: 700 }}>{annealTemp}C</span>
         </label>
         <input
           type="range"
@@ -917,13 +983,13 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           step="50"
           value={annealTemp}
           onChange={(e) => setAnnealTemp(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Anneal Time: {annealTime} seconds
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
+          Anneal Time: <span style={{ color: colors.accent, fontWeight: 700 }}>{annealTime} seconds</span>
         </label>
         <input
           type="range"
@@ -932,7 +998,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           step="1"
           value={annealTime}
           onChange={(e) => setAnnealTime(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
         />
       </div>
 
@@ -1017,14 +1083,14 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
               Ion Implantation
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               How do you add dopants precisely without ruining the crystal?
             </p>
           </div>
@@ -1038,7 +1104,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 Creating a transistor requires placing precise amounts of dopant atoms at exact depths
                 in the silicon crystal. Ion implantation shoots high-energy ions into the wafer,
                 but how do you control where they stop? And how do you fix the damage they cause?
@@ -1051,7 +1117,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
                 Try adjusting the ion energy and watch how the implant depth changes!
               </p>
             </div>
@@ -1064,10 +1130,11 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
   // PREDICT PHASE
   if (phase === 'predict') {
+    const selectedCount = prediction ? 1 : 0;
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1084,6 +1151,13 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             </p>
           </div>
 
+          {/* Progress indicator */}
+          <div style={{ padding: '0 16px 8px 16px', textAlign: 'center' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Progress: {selectedCount} of 1 selection made
+            </span>
+          </div>
+
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
               How does ion energy affect implant depth?
@@ -1095,9 +1169,10 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    background: prediction === p.id ? `linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.1))` : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
@@ -1118,12 +1193,12 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Ion Implantation</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Explore Ion Implantation</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
               Adjust energy, dose, and anneal parameters to shape the dopant profile
             </p>
           </div>
@@ -1131,14 +1206,46 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           {renderVisualization(true)}
           {renderControls()}
 
+          {/* Real-world relevance */}
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `4px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Real-World Application:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, fontWeight: 400 }}>
+              This exact simulation models how engineers at Intel, TSMC, and Samsung design transistors.
+              Every smartphone and computer chip relies on precise ion implantation to create billions of transistors.
+              The parameters you are adjusting determine transistor speed, power consumption, and reliability.
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(6, 182, 212, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `4px solid ${colors.primary}`,
+          }}>
+            <h4 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Observation Guide:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, fontWeight: 400 }}>
+              Watch how the dopant concentration profile changes as you adjust parameters.
+              Notice the relationship between ion energy and implant depth.
+              Observe how annealing affects the profile width and junction depth.
+            </p>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Try These Experiments:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
               <li>Increase energy from 10 to 200 keV - how does the profile shift?</li>
               <li>Try annealing at 600C vs 1000C - watch the profile broaden</li>
               <li>Compare short (10s) vs long (120s) anneal times</li>
@@ -1151,14 +1258,62 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     );
   }
 
+  // Review phase SVG diagram
+  const renderReviewDiagram = () => (
+    <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+      <defs>
+        <linearGradient id="reviewGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={colors.dopant} />
+          <stop offset="100%" stopColor={colors.ion} />
+        </linearGradient>
+        <filter id="reviewGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <g id="reviewDiagramLayer">
+        {/* Energy axis */}
+        <line x1="50" y1="170" x2="350" y2="170" stroke={colors.textSecondary} strokeWidth="2" />
+        <text x="200" y="195" fill={colors.textSecondary} fontSize="12" textAnchor="middle" style={{ fontWeight: 400 }}>Ion Energy (keV)</text>
+
+        {/* Depth axis */}
+        <line x1="50" y1="170" x2="50" y2="30" stroke={colors.textSecondary} strokeWidth="2" />
+        <text x="25" y="100" fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform="rotate(-90, 25, 100)" style={{ fontWeight: 400 }}>Depth (nm)</text>
+
+        {/* E^0.7 curve */}
+        <path
+          d="M 60 160 Q 150 100, 200 80 Q 280 50, 340 40"
+          fill="none"
+          stroke="url(#reviewGrad)"
+          strokeWidth="3"
+          filter="url(#reviewGlow)"
+        />
+
+        {/* Data points */}
+        <circle cx="100" cy="130" r="5" fill={colors.accent} />
+        <circle cx="150" cy="100" r="5" fill={colors.accent} />
+        <circle cx="200" cy="80" r="5" fill={colors.accent} />
+        <circle cx="250" cy="65" r="5" fill={colors.accent} />
+        <circle cx="300" cy="50" r="5" fill={colors.accent} />
+
+        {/* Label */}
+        <text x="280" y="90" fill={colors.accent} fontSize="11" style={{ fontWeight: 700 }}>Rp ~ E^0.7</text>
+      </g>
+    </svg>
+  );
+
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'sqrt';
+    const userPredictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1166,13 +1321,22 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 700 }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px', fontWeight: 400 }}>
+              Your prediction: {userPredictionLabel}
+            </p>
+            <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
               Implant depth (projected range) increases with energy, but follows a sub-linear relationship.
               According to LSS theory, Rp scales roughly as E^0.7 for typical dopants in silicon.
             </p>
+          </div>
+
+          {/* Visual diagram for review */}
+          <div style={{ margin: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px' }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px', textAlign: 'center', fontWeight: 700 }}>Energy vs Depth Relationship</h4>
+            {renderReviewDiagram()}
           </div>
 
           <div style={{
@@ -1181,23 +1345,23 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Ion Implantation</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>The Physics of Ion Implantation</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>LSS Theory:</strong> The Lindhard-Scharff-Schiott
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>LSS Theory:</strong> The Lindhard-Scharff-Schiott
                 model predicts ion stopping in solids. Ions lose energy through nuclear (collisions) and
                 electronic (ionization) stopping.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Gaussian Profile:</strong> The implant distribution
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Gaussian Profile:</strong> The implant distribution
                 is roughly Gaussian with mean Rp (projected range) and standard deviation Delta Rp (straggle).
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Crystal Damage:</strong> Each ion creates a cascade
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Crystal Damage:</strong> Each ion creates a cascade
                 of displaced silicon atoms. Higher doses create more damage that must be repaired.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Annealing:</strong> Thermal treatment repairs the
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Annealing:</strong> Thermal treatment repairs the
                 crystal and "activates" dopants by moving them to substitutional lattice sites. But diffusion
                 also broadens the profile!
               </p>
@@ -1304,14 +1468,68 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     );
   }
 
+  // Twist review SVG diagram
+  const renderTwistReviewDiagram = () => (
+    <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+      <defs>
+        <linearGradient id="channelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={colors.warning} />
+          <stop offset="100%" stopColor={colors.accent} />
+        </linearGradient>
+        <filter id="channelGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <g id="twistDiagramLayer">
+        {/* Crystal lattice representation */}
+        {Array.from({ length: 8 }).map((_, i) =>
+          Array.from({ length: 6 }).map((_, j) => (
+            <circle
+              key={`latom${i}${j}`}
+              cx={50 + i * 25}
+              cy={30 + j * 25}
+              r={6}
+              fill={colors.crystal}
+              opacity={0.6}
+            />
+          ))
+        )}
+
+        {/* Channel path */}
+        <path
+          d="M 125 10 L 125 170"
+          stroke="url(#channelGrad)"
+          strokeWidth="4"
+          strokeDasharray="8,4"
+          filter="url(#channelGlow)"
+        />
+
+        {/* Ion arrow */}
+        <polygon points="125,15 120,30 125,25 130,30" fill={colors.ion} />
+
+        {/* Labels */}
+        <text x="280" y="50" fill={colors.textPrimary} fontSize="12" style={{ fontWeight: 700 }}>(110) Channel</text>
+        <text x="280" y="70" fill={colors.textSecondary} fontSize="11" style={{ fontWeight: 400 }}>Ions travel 2-3x deeper</text>
+        <text x="280" y="110" fill={colors.warning} fontSize="12" style={{ fontWeight: 700 }}>Channeling Effect</text>
+        <text x="280" y="130" fill={colors.textSecondary} fontSize="11" style={{ fontWeight: 400 }}>Less scattering in</text>
+        <text x="280" y="148" fill={colors.textSecondary} fontSize="11" style={{ fontWeight: 400 }}>aligned directions</text>
+      </g>
+    </svg>
+  );
+
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'channeling';
+    const userTwistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1319,13 +1537,22 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 700 }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px', fontWeight: 400 }}>
+              Your prediction: {userTwistPredictionLabel}
+            </p>
+            <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
               Channeling allows ions to penetrate much deeper when aligned with crystal channels.
               The (110) direction in silicon has the most open channels.
             </p>
+          </div>
+
+          {/* Visual diagram for twist review */}
+          <div style={{ margin: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px' }}>
+            <h4 style={{ color: colors.warning, marginBottom: '12px', textAlign: 'center', fontWeight: 700 }}>Crystal Channeling Mechanism</h4>
+            {renderTwistReviewDiagram()}
           </div>
 
           <div style={{
@@ -1334,20 +1561,20 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Channeling in Practice</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.warning, marginBottom: '12px', fontWeight: 700 }}>Channeling in Practice</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Channel Structure:</strong> Silicon's diamond
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Channel Structure:</strong> Silicon's diamond
                 lattice has open channels along certain crystallographic directions. Ions traveling down
                 these channels experience only glancing collisions, losing energy slowly.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Preventing Channeling:</strong> For controlled
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Preventing Channeling:</strong> For controlled
                 implants, wafers are tilted 7 degrees off-axis and rotated. This ensures ions hit atoms early,
                 preventing deep channeling tails.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Pre-Amorphization:</strong> For ultra-shallow
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Pre-Amorphization:</strong> For ultra-shallow
                 junctions, a silicon or germanium implant first destroys the crystal structure, eliminating
                 channels before the dopant implant.
               </p>
@@ -1361,65 +1588,124 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const currentApp = realWorldApps[currentTransferApp];
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: 700 }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
               Ion implantation is essential for semiconductor manufacturing
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
+              Application {currentTransferApp + 1} of {realWorldApps.length}
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
+          {/* Current application card */}
+          <div
+            style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              border: `2px solid ${currentApp.color}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
                 borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                background: `${currentApp.color}20`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: currentApp.color,
+                fontWeight: 700,
+                fontSize: '20px',
+              }}>
+                {currentTransferApp + 1}
+              </div>
+              <div>
+                <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700 }}>{currentApp.title}</h3>
+                <p style={{ color: currentApp.color, fontSize: '12px', fontWeight: 600 }}>{currentApp.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6, fontWeight: 400 }}>
+              {currentApp.description}
+            </p>
+
+            <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 700 }}>Connection to what you learned:</p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', fontWeight: 400 }}>{currentApp.connection}</p>
+            </div>
+
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px', borderLeft: `3px solid ${colors.success}` }}>
+              <p style={{ color: colors.success, fontSize: '13px', fontWeight: 700 }}>How it works:</p>
+              <p style={{ color: colors.textPrimary, fontSize: '13px', marginTop: '8px', fontWeight: 400 }}>{currentApp.howItWorks}</p>
+            </div>
+
+            {/* Stats */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+              {currentApp.stats.map((stat, i) => (
+                <div key={i} style={{ flex: '1 1 80px', background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
+                  <div style={{ color: currentApp.color, fontSize: '16px', fontWeight: 700 }}>{stat.value}</div>
+                  <div style={{ color: colors.textSecondary, fontSize: '10px', fontWeight: 400 }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Got It button */}
+            <button
+              onClick={() => {
+                setTransferCompleted(new Set([...transferCompleted, currentTransferApp]));
+                if (currentTransferApp < realWorldApps.length - 1) {
+                  setCurrentTransferApp(currentTransferApp + 1);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${currentApp.color}, ${colors.accent})`,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: 700,
+                transition: 'all 0.2s ease',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
+              {currentTransferApp < realWorldApps.length - 1 ? 'Got It - Next Application' : 'Got It - Complete'}
+            </button>
+          </div>
+
+          {/* Progress dots */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '16px' }}>
+            {realWorldApps.map((_, i) => (
+              <div
+                key={i}
+                onClick={() => setCurrentTransferApp(i)}
+                style={{
+                  width: i === currentTransferApp ? '24px' : '10px',
+                  height: '10px',
+                  borderRadius: '5px',
+                  background: transferCompleted.has(i) ? colors.success : i === currentTransferApp ? colors.accent : colors.border,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+              />
+            ))}
+          </div>
         </div>
-        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(transferCompleted.size >= realWorldApps.length, 'Take the Test')}
       </div>
     );
   }
@@ -1467,14 +1753,27 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     }
 
     const currentQ = testQuestions[currentTestQuestion];
+    // Quiz context scenarios for each question - detailed real-world scenarios
+    const quizScenarios = [
+      'You are designing a transistor for a new smartphone processor at a leading semiconductor fab. The source and drain regions need to be precisely doped at specific depths to achieve the target switching speed and minimize leakage current. Understanding what controls implant depth is fundamental to your design success.',
+      'A semiconductor process engineer is analyzing the implant profile of a batch of 300mm silicon wafers using secondary ion mass spectrometry (SIMS). The quality control team needs to verify that the dopant distribution matches specifications and understand what parameters define the profile shape.',
+      'Your team is troubleshooting unexpectedly deep implant profiles in production wafers at a major fab. The dopants are appearing much deeper than the calculated projected range would predict. You need to understand the phenomenon causing ions to travel beyond their expected stopping depth.',
+      'After ion implantation at 50 keV with a dose of 10^15 ions/cm^2, wafers are sent to the anneal furnace. The process engineer needs to determine the optimal thermal treatment to repair crystal damage and activate the dopants while maintaining the desired profile.',
+      'A new high-temperature rapid thermal anneal recipe is being tested as part of process development. You need to predict how the dopant profile will change compared to the standard furnace anneal, considering the physics of dopant diffusion at elevated temperatures.',
+      'Modern FinFET transistors at the 5nm node require ultra-shallow junctions with depths below 10nm to prevent short-channel effects. The process integration team needs to select the optimal combination of implant parameters to achieve these aggressive depth targets.',
+      'During transistor electrical testing at wafer probe, the threshold voltage varies more than expected across the wafer. Engineers are investigating whether variations in junction depth from the implant process are contributing to the Vth variation.',
+      'A new pre-amorphization implant step using silicon or germanium ions is being added to the process flow before the dopant implant. This technique deliberately damages the crystal structure to achieve a specific goal in the subsequent dopant implant step.',
+      'The fab is measuring electrical activation of implanted phosphorus dopants using four-point probe sheet resistance measurements. Only activated dopants that occupy specific lattice positions contribute to electrical conduction, making this measurement critical.',
+      'Process engineers are optimizing the trade-off between dopant activation and profile broadening in the thermal anneal step. Higher activation improves transistor performance, but the anneal recipe must carefully balance multiple competing requirements.'
+    ];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary, fontWeight: 400 }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1491,8 +1790,14 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                 />
               ))}
             </div>
+            {/* Scenario context */}
+            <div style={{ background: 'rgba(6, 182, 212, 0.15)', padding: '16px', borderRadius: '12px', marginBottom: '16px', borderLeft: `4px solid ${colors.primary}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, fontWeight: 400, fontStyle: 'italic' }}>
+                {quizScenarios[currentTestQuestion]}
+              </p>
+            </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 700 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
@@ -1501,6 +1806,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                   onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1508,6 +1814,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontWeight: 400,
                   }}
                 >
                   {opt.text}
@@ -1573,8 +1880,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>&#127942;</div>
+            <h1 style={{ color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered ion implantation physics</p>
           </div>
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>

@@ -68,10 +68,10 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   'hook': 'Hook',
   'predict': 'Predict',
-  'play': 'Lab',
+  'play': 'Experiment',
   'review': 'Review',
   'twist_predict': 'Twist Predict',
-  'twist_play': 'Twist Lab',
+  'twist_play': 'Twist Experiment',
   'twist_review': 'Twist Review',
   'transfer': 'Transfer',
   'test': 'Test',
@@ -631,71 +631,139 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
   // Phase Renderers
   function renderHookPhase() {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '600px',
+        padding: '48px 24px',
+        textAlign: 'center',
+      }}>
         {/* Premium badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full mb-8">
-          <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-          <span className="text-sm font-medium text-amber-400 tracking-wide">PHYSICS EXPLORATION</span>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 16px',
+          background: 'rgba(245, 158, 11, 0.1)',
+          border: '1px solid rgba(245, 158, 11, 0.2)',
+          borderRadius: '9999px',
+          marginBottom: '32px',
+        }}>
+          <span style={{
+            width: '8px',
+            height: '8px',
+            background: '#F59E0B',
+            borderRadius: '50%',
+          }} />
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#F59E0B', letterSpacing: '0.05em' }}>
+            PHYSICS EXPLORATION
+          </span>
         </div>
 
-        {/* Main title with gradient */}
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-amber-100 to-yellow-200 bg-clip-text text-transparent">
+        {/* Main title */}
+        <h1 style={{
+          fontSize: isMobile ? '32px' : '42px',
+          fontWeight: 700,
+          marginBottom: '16px',
+          background: 'linear-gradient(90deg, #FFFFFF 0%, #FEF3C7 50%, #FDE68A 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          lineHeight: 1.2,
+        }}>
           Circuits & Ohm's Law
         </h1>
 
-        <p className="text-lg text-slate-400 max-w-md mb-10">
+        <p style={{
+          fontSize: '18px',
+          color: '#94A3B8',
+          maxWidth: '400px',
+          marginBottom: '40px',
+          lineHeight: 1.6,
+        }}>
           Discover the fundamental relationship between voltage, current, and resistance
         </p>
 
         {/* Premium card with content */}
-        <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
-          {/* Subtle glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-yellow-500/5 rounded-3xl" />
+        <div style={{
+          position: 'relative',
+          background: 'linear-gradient(135deg, rgba(51, 65, 85, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%)',
+          borderRadius: '24px',
+          padding: '32px',
+          maxWidth: '520px',
+          width: '100%',
+          border: '1px solid rgba(51, 65, 85, 0.5)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '24px' }}>⚡</div>
 
-          <div className="relative">
-            <div className="text-6xl mb-6">⚡</div>
-
-            <div className="space-y-4">
-              <p className="text-xl text-white/90 font-medium leading-relaxed">
-                Every time you flip a light switch, electricity flows through circuits.
-              </p>
-              <p className="text-lg text-slate-400 leading-relaxed">
-                But what controls how much electricity flows? What happens when you add more devices?
-              </p>
-              <div className="pt-2">
-                <p className="text-base text-amber-400 font-semibold">
-                  Discover the law that governs all electronics!
-                </p>
-              </div>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <p style={{
+              fontSize: '20px',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontWeight: 500,
+              lineHeight: 1.6,
+            }}>
+              Every time you flip a light switch, electricity flows through circuits.
+            </p>
+            <p style={{
+              fontSize: '18px',
+              color: '#94A3B8',
+              lineHeight: 1.6,
+            }}>
+              But what controls how much electricity flows? What happens when you add more devices?
+            </p>
+            <p style={{
+              fontSize: '16px',
+              color: '#F59E0B',
+              fontWeight: 600,
+              paddingTop: '8px',
+            }}>
+              Discover the law that governs all electronics!
+            </p>
           </div>
         </div>
 
         {/* Premium CTA button */}
         <button
           onClick={() => { goToPhase('predict'); }}
-          className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            marginTop: '40px',
+            padding: '20px 40px',
+            background: 'linear-gradient(90deg, #F59E0B 0%, #CA8A04 100%)',
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: 600,
+            borderRadius: '16px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 10px 25px -5px rgba(245, 158, 11, 0.4)',
+          }}
         >
-          <span className="relative z-10 flex items-center gap-3">
-            Explore Ohm's Law
-            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </span>
+          Start Exploring →
         </button>
 
         {/* Feature hints */}
-        <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-          <div className="flex items-center gap-2">
-            <span className="text-amber-400">✦</span>
+        <div style={{
+          marginTop: '48px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '32px',
+          fontSize: '14px',
+          color: '#64748B',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#F59E0B' }}>✦</span>
             Interactive Lab
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-amber-400">✦</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#F59E0B' }}>✦</span>
             Real-World Examples
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-amber-400">✦</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#F59E0B' }}>✦</span>
             Knowledge Test
           </div>
         </div>
@@ -722,13 +790,75 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.md,
           }}>
-            🤔 Make Your Prediction
+            Make Your Prediction
           </h2>
           <p style={{
             color: premiumDesign.colors.text.secondary,
             fontSize: '16px',
           }}>
             How does increasing voltage affect the current flowing through a resistor?
+          </p>
+        </div>
+
+        {/* Static SVG diagram showing the circuit scenario */}
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.lg,
+          marginBottom: premiumDesign.spacing.lg,
+          border: '1px solid rgba(255,255,255,0.1)',
+          maxWidth: 500,
+          margin: '0 auto 24px',
+        }}>
+          <svg viewBox="0 0 300 180" style={{ width: '100%', maxHeight: 200, display: 'block' }}>
+            <defs>
+              <linearGradient id="predCopperWire" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#CD7F32" />
+                <stop offset="50%" stopColor="#FFE4B5" />
+                <stop offset="100%" stopColor="#CD7F32" />
+              </linearGradient>
+            </defs>
+            {/* Background */}
+            <rect width="100%" height="100%" fill="#1a1a2e" rx="8" />
+            {/* Circuit wires */}
+            <rect x="40" y="40" width="220" height="100" fill="none" stroke="url(#predCopperWire)" strokeWidth="3" rx="8" />
+            {/* Battery */}
+            <g transform="translate(25, 70)">
+              <rect x="0" y="0" width="15" height="40" fill="#3A3A4A" stroke="#555" strokeWidth="1" rx="2" />
+              <rect x="4" y="-3" width="7" height="4" fill="#FFD700" rx="1" />
+              <text x="7" y="16" fill="#FFD700" fontSize="8" textAnchor="middle" fontWeight="bold">+</text>
+              <text x="7" y="32" fill="#888" fontSize="8" textAnchor="middle">-</text>
+            </g>
+            {/* Battery label */}
+            <text x="32" y="125" fill={premiumDesign.colors.voltage} fontSize="11" textAnchor="middle" fontWeight="bold">Battery</text>
+            {/* Resistor */}
+            <g transform="translate(115, 25)">
+              <rect x="0" y="0" width="70" height="20" fill="#5A4A3A" stroke="#8B4513" strokeWidth="1" rx="3" />
+              <rect x="10" y="2" width="5" height="16" fill="#8B4513" />
+              <rect x="18" y="2" width="5" height="16" fill="#000" />
+              <rect x="26" y="2" width="5" height="16" fill="#FF0000" />
+              <rect x="34" y="2" width="5" height="16" fill="#FFD700" />
+            </g>
+            {/* Resistor label */}
+            <text x="150" y="60" fill={premiumDesign.colors.resistance} fontSize="11" textAnchor="middle" fontWeight="bold">Resistor</text>
+            {/* Light bulb */}
+            <g transform="translate(140, 135)">
+              <circle cx="10" cy="0" r="12" fill="rgba(200,200,200,0.3)" stroke="#888" strokeWidth="1" />
+              <rect x="6" y="10" width="8" height="6" fill="#666" rx="1" />
+            </g>
+            {/* Bulb label */}
+            <text x="150" y="165" fill={premiumDesign.colors.text.secondary} fontSize="10" textAnchor="middle">Bulb</text>
+            {/* Question mark - what happens to current? */}
+            <text x="240" y="95" fill={premiumDesign.colors.warning} fontSize="24" fontWeight="bold">?</text>
+            <text x="240" y="110" fill={premiumDesign.colors.text.muted} fontSize="8" textAnchor="middle">Current</text>
+            {/* Voltage label */}
+            <text x="60" y="20" fill={premiumDesign.colors.voltage} fontSize="10" fontWeight="600">V = Voltage</text>
+            {/* Current direction arrow */}
+            <polygon points="200,38 210,42 200,46" fill={premiumDesign.colors.current} />
+            <text x="195" y="55" fill={premiumDesign.colors.current} fontSize="9">I = ?</text>
+          </svg>
+          <p style={{ color: premiumDesign.colors.text.muted, fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
+            Observe: A simple circuit with battery, resistor, and bulb
           </p>
         </div>
 
@@ -793,8 +923,8 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
           }}>
             Ohm's Law Circuit Simulator
           </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
-            Adjust voltage and resistance to see how current changes
+          <p style={{ color: premiumDesign.colors.text.secondary, lineHeight: 1.6 }}>
+            Adjust voltage and resistance to see how current changes. This is important because Ohm's Law governs all electrical devices from smartphones to power grids, helping engineers design safe and efficient circuits.
           </p>
         </div>
 
@@ -1012,6 +1142,19 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                   </g>
                 );
               })}
+
+              {/* Component Labels */}
+              <text x="40" y="168" fill={premiumDesign.colors.voltage} fontSize="11" fontWeight="bold">Battery</text>
+              <text x="40" y="180" fill={premiumDesign.colors.voltage} fontSize="9">{voltage}V</text>
+              <text x="130" y="52" fill={premiumDesign.colors.resistance} fontSize="11" fontWeight="bold">Resistor</text>
+              <text x="150" y="40" fill={premiumDesign.colors.resistance} fontSize="9">{resistance}Ohm</text>
+              <text x="135" y="265" fill={premiumDesign.colors.text.secondary} fontSize="10">Light Bulb</text>
+              <text x="235" y="120" fill={premiumDesign.colors.success} fontSize="10">Switch</text>
+              {isCircuitOn && <text x="100" y="135" fill={premiumDesign.colors.current} fontSize="10">Electrons</text>}
+              {/* Dynamic current display */}
+              <text x="150" y="285" fill={premiumDesign.colors.current} fontSize="10" textAnchor="middle">
+                Current: {current.toFixed(2)}A
+              </text>
             </svg>
 
             {/* Voltage/Current indicators moved outside SVG using typo system */}
@@ -1163,7 +1306,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
     const reviewContent = [
       {
         title: "Ohm's Law: V = IR",
-        content: "Ohm's Law states that Voltage (V) equals Current (I) times Resistance (R). This simple equation governs all electrical circuits and lets us predict how much current will flow.",
+        content: "As you observed in your experiment, Ohm's Law states that Voltage (V) equals Current (I) times Resistance (R). You saw how changing voltage and resistance affects current flow - this simple equation governs all electrical circuits.",
         formula: "V = I × R, or I = V/R, or R = V/I",
       },
       {
@@ -1177,10 +1320,10 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
         formula: "I ∝ 1/R (when V is constant)",
       },
       {
-        title: "Your Prediction",
+        title: "Your Prediction & Observation",
         content: prediction === 'direct'
-          ? "Excellent! You correctly predicted that voltage and current are directly proportional. This is the core insight of Ohm's Law!"
-          : "The correct answer is that voltage and current are directly proportional (when resistance is constant). Higher voltage pushes more current through the circuit.",
+          ? "Excellent! As you predicted and observed in the simulation, voltage and current are directly proportional. You saw that when you increased the voltage, the current increased proportionally - confirming your prediction was correct!"
+          : "As you observed during your experiment, voltage and current are directly proportional (when resistance is constant). You saw that higher voltage pushes more current through the circuit. The result of your observation matches what Ohm's Law predicts!",
         formula: "I = V/R ⟹ More V = More I",
       },
     ];
@@ -1298,13 +1441,56 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.md,
           }}>
-            🔄 The Twist: Series vs Parallel
+            The Twist: Series vs Parallel
           </h2>
           <p style={{
             color: premiumDesign.colors.text.secondary,
             fontSize: '16px',
           }}>
             What happens when you connect two resistors in series vs parallel?
+          </p>
+        </div>
+
+        {/* Static SVG diagram showing series vs parallel */}
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.lg,
+          marginBottom: premiumDesign.spacing.lg,
+          border: '1px solid rgba(255,255,255,0.1)',
+          maxWidth: 600,
+          margin: '0 auto 24px',
+        }}>
+          <svg viewBox="0 0 400 140" style={{ width: '100%', maxHeight: 160, display: 'block' }}>
+            <rect width="100%" height="100%" fill="#1a1a2e" rx="8" />
+            {/* Series circuit on left */}
+            <text x="100" y="20" fill={premiumDesign.colors.text.primary} fontSize="12" textAnchor="middle" fontWeight="bold">SERIES</text>
+            <rect x="20" y="40" width="160" height="60" fill="none" stroke="#CD7F32" strokeWidth="2" rx="4" />
+            <rect x="50" y="55" width="30" height="15" fill="#5A4A3A" stroke="#8B4513" strokeWidth="1" />
+            <text x="65" y="85" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R1</text>
+            <rect x="110" y="55" width="30" height="15" fill="#5A4A3A" stroke="#8B4513" strokeWidth="1" />
+            <text x="125" y="85" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R2</text>
+            <text x="100" y="115" fill={premiumDesign.colors.text.muted} fontSize="10" textAnchor="middle">R_total = R1 + R2</text>
+
+            {/* Parallel circuit on right */}
+            <text x="300" y="20" fill={premiumDesign.colors.text.primary} fontSize="12" textAnchor="middle" fontWeight="bold">PARALLEL</text>
+            <line x1="220" y1="50" x2="220" y2="90" stroke="#CD7F32" strokeWidth="2" />
+            <line x1="380" y1="50" x2="380" y2="90" stroke="#CD7F32" strokeWidth="2" />
+            <line x1="220" y1="50" x2="380" y2="50" stroke="#CD7F32" strokeWidth="2" />
+            <line x1="220" y1="90" x2="380" y2="90" stroke="#CD7F32" strokeWidth="2" />
+            <line x1="270" y1="50" x2="270" y2="90" stroke="#CD7F32" strokeWidth="1" />
+            <line x1="330" y1="50" x2="330" y2="90" stroke="#CD7F32" strokeWidth="1" />
+            <rect x="255" y="60" width="30" height="12" fill="#5A4A3A" stroke="#8B4513" strokeWidth="1" />
+            <text x="270" y="85" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R1</text>
+            <rect x="315" y="60" width="30" height="12" fill="#5A4A3A" stroke="#8B4513" strokeWidth="1" />
+            <text x="330" y="85" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R2</text>
+            <text x="300" y="115" fill={premiumDesign.colors.text.muted} fontSize="9" textAnchor="middle">1/R_total = 1/R1 + 1/R2</text>
+
+            {/* Question mark */}
+            <text x="200" y="75" fill={premiumDesign.colors.warning} fontSize="20" textAnchor="middle" fontWeight="bold">?</text>
+          </svg>
+          <p style={{ color: premiumDesign.colors.text.muted, fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
+            Compare how resistors combine in different circuit configurations
           </p>
         </div>
 
@@ -1582,6 +1768,24 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                   <polygon points="195,155 200,165 205,155" fill={premiumDesign.colors.current} opacity="0.8">
                     <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1s" repeatCount="indefinite" begin="0.7s" />
                   </polygon>
+
+                  {/* Dynamic labels inside SVG */}
+                  <text x="100" y="115" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R1: {r1}Ohm</text>
+                  <text x="200" y="115" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R2: {r2}Ohm</text>
+                  <text x="150" y="200" fill={premiumDesign.colors.current} fontSize="10" textAnchor="middle">
+                    Total: {parallelVals.totalR.toFixed(2)}Ohm
+                  </text>
+                </g>
+              )}
+
+              {/* Common dynamic labels for both circuit types */}
+              {circuitType === 'series' && (
+                <g>
+                  <text x="105" y="55" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R1: {r1}Ohm</text>
+                  <text x="195" y="55" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R2: {r2}Ohm</text>
+                  <text x="150" y="195" fill={premiumDesign.colors.current} fontSize="10" textAnchor="middle">
+                    Total: {seriesVals.totalR}Ohm
+                  </text>
                 </g>
               )}
             </svg>
@@ -1922,23 +2126,23 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
     const applications = [
       {
         title: "🏠 Home Electrical Systems",
-        description: "Your home uses parallel circuits so each outlet operates independently at 120V (or 240V in some countries). If one light burns out, others stay on. Circuit breakers protect against too much current.",
-        fact: "A typical US home has 100-200 amp service - enough to power everything from lights to air conditioners simultaneously!",
+        description: "Your home uses parallel circuits so each outlet operates independently at 120V (or 240V in some countries). This is why when one light burns out, the others stay on - current has multiple paths to flow through. Circuit breakers protect against excessive current by automatically disconnecting when current exceeds safe levels, preventing wire overheating and fires. The same Ohm's Law principles you explored in the simulation govern every electrical device in your home, from your refrigerator to your phone charger. Understanding these concepts helps electricians safely design home wiring systems.",
+        fact: "A typical US home has 100-200 amp service capacity. Using Ohm's Law (P = VI), a 200A service at 240V provides up to 48,000 watts - enough to power everything from lights to air conditioners simultaneously!",
       },
       {
         title: "🔋 Electric Vehicles",
-        description: "EV batteries combine thousands of cells in series and parallel. Series increases voltage (for power), parallel increases capacity (for range). Battery management systems monitor each cell using Ohm's Law principles.",
-        fact: "A Tesla Model S battery has over 7,000 individual cells arranged in a complex series-parallel configuration!",
+        description: "EV batteries combine thousands of individual lithium cells in both series and parallel configurations. Series connections increase voltage (for power delivery), while parallel connections increase capacity (for driving range). Battery management systems continuously monitor voltage, current, and temperature of each cell using Ohm's Law principles to balance charging and prevent dangerous conditions. The same relationship between voltage, current, and resistance you explored in our simulation is critical for designing efficient and safe EV powertrains.",
+        fact: "A Tesla Model S battery pack contains over 7,000 individual lithium cells arranged in a complex series-parallel configuration. The pack operates at 400V and can deliver over 500 amps during acceleration!",
       },
       {
         title: "💻 Computer Processors",
-        description: "Computer chips contain billions of tiny transistors (essentially switches). Each transistor's behavior follows Ohm's Law. Engineers must carefully manage current flow to prevent overheating.",
-        fact: "A modern CPU can have over 50 billion transistors, each switching billions of times per second!",
+        description: "Modern computer chips contain billions of tiny transistors - essentially microscopic switches that follow Ohm's Law. Each transistor controls current flow through tiny channels, representing binary data (1s and 0s). Engineers must carefully manage power delivery because excessive current causes overheating. The same V = IR relationship you explored governs chip design: lower resistance means higher current and more heat. Advanced processors use multiple voltage domains and dynamic frequency scaling to balance performance and power consumption.",
+        fact: "A modern CPU can have over 50 billion transistors, each switching billions of times per second. Despite this, power consumption stays manageable because each transistor operates at very low voltages (0.5-1.2V) with minimal current.",
       },
       {
         title: "🔌 USB & Charging",
-        description: "USB chargers must provide specific voltages and currents. Fast charging works by increasing current (more amps) or voltage. Ohm's Law determines how quickly energy transfers to your device.",
-        fact: "USB-C Power Delivery can supply up to 240W - enough to charge laptops at 48V × 5A!",
+        description: "USB chargers must provide specific voltages and currents to safely charge your devices. Fast charging technology works by either increasing current (more amps through the cable) or increasing voltage (Power Delivery). The same Ohm's Law principles you explored determine how quickly energy transfers from the charger to your device's battery. Higher voltage means lower current for the same power, which reduces cable heating. Modern USB-C Power Delivery negotiates the optimal voltage and current between charger and device automatically.",
+        fact: "USB-C Power Delivery can supply up to 240W of power - enough to charge laptops! At 48V × 5A, this is a direct application of P = VI, the power formula derived from Ohm's Law.",
       },
     ];
 
@@ -2035,7 +2239,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             </p>
           </div>
 
-          {!completedApps.has(activeApp) && (
+          {!completedApps.has(activeApp) ? (
             <button
               style={{
                 display: 'block',
@@ -2059,7 +2263,30 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                 }
               }}
             >
-              ✓ Mark as Read
+              Got It - Continue →
+            </button>
+          ) : (
+            <button
+              style={{
+                display: 'block',
+                width: '100%',
+                marginTop: premiumDesign.spacing.lg,
+                padding: premiumDesign.spacing.md,
+                borderRadius: premiumDesign.radius.md,
+                border: 'none',
+                background: premiumDesign.colors.gradient.primary,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                if (activeApp < applications.length - 1) {
+                  setActiveApp(activeApp + 1);
+                }
+              }}
+            >
+              Next Application →
             </button>
           )}
         </div>
@@ -2137,20 +2364,42 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                 : 'Review the material and try again.'}
             </p>
 
-            {renderButton(
-              passed ? 'Continue to Mastery →' : 'Review Material',
-              () => {
-                if (passed) {
-                  goNext();
-                } else {
-                  setTestComplete(false);
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('review');
-                }
-              },
-              passed ? 'success' : 'primary'
-            )}
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+              {!passed && (
+                <button
+                  onClick={() => {
+                    setTestComplete(false);
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    setSelectedAnswer(null);
+                    setShowExplanation(false);
+                  }}
+                  style={{
+                    padding: '16px 32px',
+                    borderRadius: premiumDesign.radius.lg,
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    background: premiumDesign.colors.background.tertiary,
+                    color: premiumDesign.colors.text.primary,
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Replay Quiz
+                </button>
+              )}
+              {renderButton(
+                passed ? 'Complete Lesson →' : 'Return to Dashboard',
+                () => {
+                  if (passed) {
+                    goNext();
+                  } else {
+                    goToPhase('review');
+                  }
+                },
+                passed ? 'success' : 'primary'
+              )}
+            </div>
           </div>
         </div>
       );
@@ -2181,6 +2430,24 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
           border: '1px solid rgba(255,255,255,0.1)',
           flex: 1,
         }}>
+          {/* Scenario context */}
+          <div style={{
+            background: 'rgba(99, 102, 241, 0.1)',
+            borderRadius: premiumDesign.radius.md,
+            padding: premiumDesign.spacing.md,
+            marginBottom: premiumDesign.spacing.lg,
+            border: '1px solid rgba(99, 102, 241, 0.2)',
+          }}>
+            <p style={{
+              color: premiumDesign.colors.text.secondary,
+              fontSize: '14px',
+              margin: 0,
+              lineHeight: 1.6,
+            }}>
+              {question.scenario}
+            </p>
+          </div>
+
           <h3 style={{
             fontSize: isMobile ? '18px' : '22px',
             color: premiumDesign.colors.text.primary,
@@ -2196,30 +2463,36 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             gap: premiumDesign.spacing.md,
           }}>
             {question.options.map((option, index) => {
-              let buttonStyle: React.CSSProperties = {
+              // Determine the border color based on state
+              let borderColor = 'rgba(255,255,255,0.1)';
+              let background = premiumDesign.colors.background.tertiary;
+
+              if (showExplanation) {
+                if (option.correct) {
+                  background = 'rgba(16, 185, 129, 0.2)';
+                  borderColor = premiumDesign.colors.success;
+                } else if (index === selectedAnswer && !option.correct) {
+                  background = 'rgba(239, 68, 68, 0.2)';
+                  borderColor = '#EF4444';
+                }
+              } else if (selectedAnswer === index) {
+                borderColor = premiumDesign.colors.voltage;
+                background = 'rgba(251, 191, 36, 0.2)';
+              }
+
+              const buttonStyle: React.CSSProperties = {
                 padding: premiumDesign.spacing.lg,
                 borderRadius: premiumDesign.radius.lg,
-                border: '2px solid rgba(255,255,255,0.1)',
-                background: premiumDesign.colors.background.tertiary,
+                borderWidth: '2px',
+                borderStyle: 'solid',
+                borderColor: borderColor,
+                background: background,
                 color: premiumDesign.colors.text.primary,
                 fontSize: '16px',
                 cursor: showExplanation ? 'default' : 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
               };
-
-              if (showExplanation) {
-                if (option.correct) {
-                  buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
-                  buttonStyle.borderColor = premiumDesign.colors.success;
-                } else if (index === selectedAnswer && !option.correct) {
-                  buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
-                  buttonStyle.borderColor = '#EF4444';
-                }
-              } else if (selectedAnswer === index) {
-                buttonStyle.borderColor = premiumDesign.colors.voltage;
-                buttonStyle.background = 'rgba(251, 191, 36, 0.2)';
-              }
 
               return (
                 <button
@@ -2232,7 +2505,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                   }}
                   disabled={showExplanation}
                 >
-                  {option.text}
+                  {String.fromCharCode(65 + index)}) {option.label}
                 </button>
               );
             })}
@@ -2362,39 +2635,80 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
 
   // Main render
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{
+      minHeight: '100vh',
+      background: '#0a0f1a',
+      color: 'white',
+      position: 'relative',
+      overflowY: 'auto',
+      overflowX: 'hidden',
+    }}>
       {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-500/3 rounded-full blur-3xl" />
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(135deg, #0f172a 0%, #0a1628 50%, #0f172a 100%)',
+        zIndex: 0,
+      }} />
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Circuits & Ohm's Law</span>
-          <div className="flex items-center gap-1.5">
+      {/* Header - Fixed Navigation */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        background: 'rgba(15, 23, 42, 0.9)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(51, 65, 85, 0.5)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 24px',
+          maxWidth: '900px',
+          margin: '0 auto',
+        }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>Circuits & Ohm's Law</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {phaseOrder.map((p) => (
               <button
                 key={p}
                 onClick={() => { goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
+                style={{
+                  height: '8px',
+                  width: phase === p ? '24px' : '8px',
+                  borderRadius: '9999px',
+                  border: 'none',
+                  background: phase === p
+                    ? '#F59E0B'
                     : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
+                      ? '#10B981'
+                      : '#334155',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: phase === p ? '0 0 12px rgba(245, 158, 11, 0.4)' : 'none',
+                }}
                 title={phaseLabels[p]}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-amber-400">{phaseLabels[phase]}</span>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#F59E0B' }}>{phaseLabels[phase]}</span>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12 max-w-4xl mx-auto px-4">
+      <div style={{
+        position: 'relative',
+        paddingTop: '64px',
+        paddingBottom: '48px',
+        maxWidth: '900px',
+        margin: '0 auto',
+        padding: '64px 16px 48px',
+        overflowY: 'auto',
+        zIndex: 1,
+      }}>
         {phase === 'hook' && renderHookPhase()}
         {phase === 'predict' && renderPredictPhase()}
         {phase === 'play' && renderPlayPhase()}

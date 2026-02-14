@@ -1031,6 +1031,19 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
       <div style={containerStyle}>
         {renderProgressBar()}
         <div style={{ ...scrollContentStyle, paddingTop: '80px' }}>
+          {/* Educational intro */}
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px 24px' }}>
+            <p style={{ fontSize: '15px', color: '#e2e8f0', lineHeight: 1.6, marginBottom: '8px' }}>
+              This visualization demonstrates how a mass-spring system responds to an external driving force.
+              Observe how the amplitude changes as you adjust the driving frequency.
+            </p>
+            <p style={{ fontSize: '14px', color: '#94a3b8', lineHeight: 1.6 }}>
+              Resonance is defined as the condition where the driving frequency matches the natural frequency,
+              causing maximum energy transfer. When you increase the frequency toward resonance, the amplitude grows dramatically.
+              This is important for engineering - bridges and buildings must avoid resonance to prevent catastrophic failure.
+            </p>
+          </div>
+
           {/* Visualization */}
           <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {renderResonanceVisualization()}
@@ -1095,6 +1108,10 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
               <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#f8fafc', lineHeight: 1.3 }}>
                 The Physics of Resonance
               </h2>
+              <p style={{ fontSize: '15px', color: '#94a3b8', lineHeight: 1.6, marginTop: '12px' }}>
+                As you observed in the experiment, when the driving frequency matched the natural frequency,
+                the amplitude increased dramatically. Your prediction helped you understand this key concept.
+              </p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '32px' }}>

@@ -2,1705 +2,1765 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://atlascoach-5e3af.web.app/</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://atlascoach-5e3af.web.app/games/a-i-inference-latency</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/a-s-i-cvs-g-p-u</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://atlascoach-5e3af.web.app/games/adiabatic-heating</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/a-i-inference-latency</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/angular-momentum</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/angular-momentum-transfer</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/antenna-gain</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/antenna-polarization</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/anti-reflective-coating</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/arrhenius</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/a-s-i-cvs-g-p-u</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/attention-loves-bandwidth</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/attention-memory</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/ballistic-pendulum</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/batching-latency</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/battery-internal-resistance</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/beats</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/bernoulli</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/bifacial-albedo</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/bimetal-thermostat</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/boiling-pressure</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/bottle-tornado</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/brachistochrone</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/brewster-angle</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/brownian-motion</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/buckling</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/buoyancy</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/bypass-diodes</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/c-m-p-planarization</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/cable-sizing</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/camera-obscura</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/capacitive-touch</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/capillary-action</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/carnot-cycle</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/cartesian-diver</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/cavitation</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/cell-to-module-losses</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/center-of-mass</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/centripetal-force</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/chain-fountain</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/chiller-c-o-p</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/chiplet-architecture</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/chiplets-vs-monoliths</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/chladni-patterns</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/chromatic-aberration</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/circuits</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/classic-d-c-motor</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/cleanroom-yield</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/clock-distribution</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/clock-jitter</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/cloud-in-bottle</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/c-m-p-planarization</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/convection-currents</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/convection</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/coriolis-effect</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/coulombs-law</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/coupled-pendulums</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/crosstalk</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/cycloid-motion</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/d-c-d-c-converter</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/d-r-a-m-refresh</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/damped-oscillations</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/damping</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/data-movement-energy</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/d-c-d-c-converter</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/decoupling-capacitor</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/deposition-types</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/depth-of-field</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/design-to-fab-translation</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/diffraction</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/diffusion-convection</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/direction-finding</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/dispersion</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/doping-diffusion</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/doppler-effect</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/drag-force</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/d-r-a-m-refresh</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/droplet-breakup</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/d-v-f-s</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/e-c-c-memory</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/e-m-i-shielding</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/e-s-d-protection</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/echo-time-of-flight</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/eddy-current-pendulum</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/eddy-currents</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/egg-drop</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/elastic-potential-energy</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/electric-field-mapping</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/electric-field</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/electric-potential</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/electromagnet</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/electromagnetic-induction</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/electromagnet</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/electromigration</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/e-m-i-shielding</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/encapsulation-u-v-aging</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/endothermic-exothermic</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/energy-conservation</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/energy-per-token</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/entropy</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/e-s-d-protection</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/etch-anisotropy</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/evaporative-cooling</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/fan-laws</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/faraday-cage</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/fiber-signal-loss</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/fill-factor</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/flip-chip-wirebond</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/floating-paperclip</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/fluid-inertia</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/fluorescence</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/forced-oscillations</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/fracture-mechanics</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/fresnel-zones</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/g-p-u-memory-bandwidth</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/g-p-u-occupancy</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/g-p-u-power-states</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/galvanic-corrosion</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/gas-laws</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/generator-startup</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/g-p-u-memory-bandwidth</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/g-p-u-occupancy</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/g-p-u-power-states</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/grid-frequency</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/ground-bounce</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/ground-fault</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/gyroscope-stability</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/gyroscopic-precession</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/h-d-d-physics</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/hand-warmer</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/h-d-d-physics</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/heat-sink-thermal</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/heat-transfer-capacity</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/helium-balloon-car</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/homopolar-motor</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/hookes-law</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/hotspots</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/humidity-e-s-d</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/hydraulic-jump</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/hydrostatic-pressure</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/i-r-drop</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/inclined-plane</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/induction-heating</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/inductive-kickback</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/inelastic-collisions</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/inertia</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/infrared-emissivity</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/interconnect-topology</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/inverter-sine-wave</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/ion-implantation</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/i-r-drop</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/jar-lid-expansion</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/k-v-cache</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/karman-vortex</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/kinetic-theory-gases</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/kirchhoffs-laws</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://atlascoach-5e3af.web.app/games/l-c-resonance</loc>
-    <lastmod>2026-02-01</lastmod>
+    <loc>https://atlascoach-5e3af.web.app/games/k-v-cache</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://atlascoach-5e3af.web.app/games/l-e-d-as-solar-cell</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/l-l-m-to-s-p-i-c-e</loc>
-    <lastmod>2026-02-01</lastmod>
+    <loc>https://atlascoach-5e3af.web.app/games/laminar-flow</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/laminar-turbulent</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/latent-heat</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/law-of-reflection</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/l-c-resonance</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/leakage-current</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/leakage-power</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/l-e-d-as-solar-cell</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/leidenfrost</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/lens-focusing</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/lift-force</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/link-budget</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/liquid-cooling</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/litho-focus-dose</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://atlascoach-5e3af.web.app/games/m-o-s-f-e-t-switching</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/m-p-p-t</loc>
-    <lastmod>2026-02-01</lastmod>
+    <loc>https://atlascoach-5e3af.web.app/games/l-l-m-to-s-p-i-c-e</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/magnetic-field</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/magnetic-mapping</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/magnus-effect</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/make-microphone</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/manufacturing-drives-architecture</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/marangoni-tears</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/memory-hierarchy</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/metastability</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/metronome-sync</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/microphone</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/microwave-standing-wave</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/minimal-surfaces</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/moire-patterns</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/molecular-orbitals</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/moment-of-inertia</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/momentum-conservation</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/m-o-s-f-e-t-switching</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/m-p-p-t</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/network-congestion</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/network-latency</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/newton-cooling</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/newtons-third-law</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/noise-margin</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/non-newtonian-armor</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/oersted-experiment</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/orbital-mechanics-basics</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/orbital-mechanics</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/p-c-ie-bandwidth</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/p-u-e-calculator</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/p-v-i-v-curve</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/p-waves-s-waves</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/pascal-law</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/passivation-recombination</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/p-c-ie-bandwidth</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/pendulum-period</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/phase-change-energy</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/phone-seismometer</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/photoelasticity</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/photoelectric-effect</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/photolithography</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/poisson-ratio</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/polarization</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/polarized-sky</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/power-delivery-network</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/power-factor</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/power-loss</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/precession-nutation</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/pressure-drop</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/process-variation</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/projectile-independence</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/p-u-e-calculator</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/p-v-i-v-curve</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/p-waves-s-waves</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/quantization-precision</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/r-c-delay-interconnect</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/r-c-time-constant</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/radiation-effects</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/rattleback</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/rayleigh-mie-scattering</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/r-c-delay-interconnect</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/r-c-delay</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/r-c-time-constant</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/reaction-time</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/reflection</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/refraction</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/resonance</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/retroreflection</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/reverberation</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/rolling-race</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/rolling-shutter</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/rolling-vs-sliding</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/s-r-a-m-cell</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/s-r-a-m-yield-redundancy</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/satellite-doppler</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/satellite-solar-angle</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/satellite-thermal</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/screen-printing-metallization</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/series-parallel-p-v</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/server-airflow</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/shear-thinning</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/shower-curtain</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/shunt-series-defects</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/silicon-texturing</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/siphon</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/sleeping-top</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/snells-law</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/soap-boat</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/solar-cell</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/solar-temp-coefficient</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/solar-thermal-derating</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/solar-vs-i-c-purity</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/solar-yield-prediction</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/sound-interference</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/space-radiation</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/sparsity</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/speaker-principle</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/speed-of-sound</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/s-r-a-m-cell</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/s-r-a-m-yield-redundancy</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/stable-levitation</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/standing-waves</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/static-electricity</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/static-kinetic-friction</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/stick-slip</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/straw-instrument</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/string-sizing</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/supercooling</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/superhydrophobic</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/swing-pumping</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/systolic-array</loc>
-    <lastmod>2026-02-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://atlascoach-5e3af.web.app/games/t-p-uvs-g-p-u</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/tape-birefringence</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/tensor-core</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/terminal-velocity</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/texturing-vs-lithography</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/thermal-contact</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/thermal-expansion</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/thermal-interface</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/thermal-throttling</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/thin-film-interference</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/tidal-forces</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/tidal-locking</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/tipping-point</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/torque</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/total-internal-reflection</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/t-p-uvs-g-p-u</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/transformer</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/transmission-line</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/tuned-mass-damper</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/two-ball-collision</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/u-p-s-battery-sizing</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/u-p-s-efficiency</loc>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/venturi-effect</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/viscoelasticity</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/viscosity-temperature</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/vortex-rings</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/wagon-wheel-aliasing</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/water-hammer</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/wave-interference</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/wave-particle-duality</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/wave-speed-tension</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/wireless-charging</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/work-power</loc>
-    <lastmod>2026-02-01</lastmod>
+    <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

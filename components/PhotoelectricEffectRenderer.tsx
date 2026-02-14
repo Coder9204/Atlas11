@@ -145,8 +145,18 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 type PEPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = ({ onGameEvent, gamePhase }) => {
+  // ============ PHASE MANAGEMENT ============
+  const validPhases: PEPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): PEPhase => {
+    if (gamePhase && validPhases.includes(gamePhase as PEPhase)) {
+      return gamePhase as PEPhase;
+    }
+    return 'hook';
+  };
+
   // ============ STATE ============
-  const [phase, setPhase] = useState<PEPhase>('hook');
+  const [phase, setPhase] = useState<PEPhase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [wavelength, setWavelength] = useState(400);
@@ -183,7 +193,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
     review: 'Understanding',
     twist_predict: 'New Variable',
     twist_play: 'Intensity Test',
-    twist_review: 'Quantum Truth',
+    twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
     mastery: 'Mastery'
@@ -224,20 +234,20 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
 
   // ============ DESIGN SYSTEM ============
   const colors = {
-    primary: '#f59e0b',      // amber-500
-    primaryDark: '#d97706',  // amber-600
-    accent: '#8b5cf6',       // violet-500
-    accentDark: '#7c3aed',   // violet-600
-    warning: '#f59e0b',      // amber-500
-    success: '#10b981',      // emerald-500
-    danger: '#ef4444',       // red-500
+    primary: '#fbbf24',      // amber-400 (brighter)
+    primaryDark: '#f59e0b',  // amber-500
+    accent: '#a78bfa',       // violet-400 (brighter)
+    accentDark: '#8b5cf6',   // violet-500
+    warning: '#fbbf24',      // amber-400 (brighter)
+    success: '#34d399',      // emerald-400 (brighter)
+    danger: '#f87171',       // red-400 (brighter)
     bgDark: '#0a0f1a',       // custom dark
     bgCard: '#0f172a',       // slate-900
     bgCardLight: '#1e293b',  // slate-800
     border: '#334155',       // slate-700
     textPrimary: '#f8fafc',  // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',    // slate-500
+    textSecondary: '#e2e8f0', // slate-200 (brighter for better contrast)
+    textMuted: '#cbd5e1',    // slate-300 (brighter than before)
   };
 
   const typo = {
@@ -260,6 +270,13 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Sync with external gamePhase prop
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as PEPhase) && gamePhase !== phase) {
+      setPhase(gamePhase as PEPhase);
+    }
+  }, [gamePhase]);
 
   // Animation loop
   useEffect(() => {
@@ -453,6 +470,8 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
             {phaseOrder.map((p, i) => (
               <button
                 key={p}
+                aria-label={`Go to ${phaseLabels[p]} phase (${i + 1} of 10)`}
+                title={phaseLabels[p]}
                 onPointerDown={(e) => { e.preventDefault(); if (i <= idx) goToPhase(p); }}
                 style={{
                   width: phase === p ? '24px' : '8px',
@@ -522,6 +541,117 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
   ];
 
   // ============ VISUALIZATION ============
+  // Static preview SVG for predict phases (no animation, no sliders)
+  const renderStaticPreview = () => {
+    return (
+      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '360px', height: 'auto' }}>
+        {/* Background */}
+        <rect width="400" height="200" fill="#0a0f1a" rx="8" />
+
+        {/* Vacuum chamber */}
+        <rect x="30" y="40" width="340" height="120" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="2" />
+
+        {/* Light source */}
+        <circle cx="70" cy="100" r="25" fill="#f59e0b" opacity="0.8" />
+        <circle cx="70" cy="100" r="15" fill="#fbbf24" />
+        <text x="70" y="140" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600">Light Source</text>
+
+        {/* Photon wave indicators */}
+        <g opacity="0.6">
+          <path d="M100 90 Q115 85 130 90 T160 90" stroke="#f59e0b" strokeWidth="2" fill="none" />
+          <path d="M100 100 Q115 95 130 100 T160 100" stroke="#f59e0b" strokeWidth="2" fill="none" />
+          <path d="M100 110 Q115 105 130 110 T160 110" stroke="#f59e0b" strokeWidth="2" fill="none" />
+        </g>
+
+        {/* Photons traveling */}
+        <circle cx="170" cy="95" r="6" fill="#fbbf24" />
+        <circle cx="200" cy="100" r="6" fill="#fbbf24" />
+        <circle cx="230" cy="105" r="6" fill="#fbbf24" />
+        <text x="200" y="75" textAnchor="middle" fill="#f59e0b" fontSize="9">Photons (E=hf)</text>
+
+        {/* Metal plate */}
+        <rect x="270" y="55" width="25" height="90" rx="4" fill="#9ca3af" stroke="#6b7280" strokeWidth="1" />
+        <text x="282" y="160" textAnchor="middle" fill="#94a3b8" fontSize="10">Metal</text>
+
+        {/* Electron ejection (question mark for prediction) */}
+        <g transform="translate(320, 100)">
+          <circle cx="0" cy="0" r="10" fill="#1e293b" stroke="#38bdf8" strokeWidth="2" strokeDasharray="3,2" />
+          <text x="0" y="5" textAnchor="middle" fill="#38bdf8" fontSize="12" fontWeight="700">?</text>
+        </g>
+        <text x="340" y="125" textAnchor="middle" fill="#38bdf8" fontSize="9">Electrons?</text>
+
+        {/* Title */}
+        <text x="200" y="22" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="700">What happens when light hits metal?</text>
+
+        {/* Legend */}
+        <g transform="translate(30, 170)">
+          <circle cx="5" cy="0" r="4" fill="#fbbf24" />
+          <text x="14" y="4" fill="#94a3b8" fontSize="8">Photon</text>
+          <rect x="65" y="-4" width="8" height="8" fill="#9ca3af" />
+          <text x="78" y="4" fill="#94a3b8" fontSize="8">Metal</text>
+          <circle cx="125" cy="0" r="4" fill="#38bdf8" opacity="0.6" />
+          <text x="134" y="4" fill="#94a3b8" fontSize="8">Electron</text>
+        </g>
+      </svg>
+    );
+  };
+
+  // Static preview for twist_predict (intensity focus)
+  const renderIntensityPreview = () => {
+    return (
+      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '360px', height: 'auto' }}>
+        {/* Background */}
+        <rect width="400" height="200" fill="#0a0f1a" rx="8" />
+
+        {/* Title */}
+        <text x="200" y="22" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="700">What if we make the light BRIGHTER?</text>
+
+        {/* Vacuum chamber */}
+        <rect x="30" y="40" width="340" height="120" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="2" />
+
+        {/* Bright light source (many photons) */}
+        <circle cx="70" cy="100" r="30" fill="#f59e0b" opacity="0.9" />
+        <circle cx="70" cy="100" r="20" fill="#fbbf24" />
+        <circle cx="70" cy="100" r="10" fill="#ffffff" opacity="0.8" />
+        <text x="70" y="145" textAnchor="middle" fill="#f59e0b" fontSize="9" fontWeight="600">BRIGHT Light</text>
+
+        {/* Many photons */}
+        <g>
+          <circle cx="120" cy="85" r="5" fill="#fbbf24" />
+          <circle cx="140" cy="95" r="5" fill="#fbbf24" />
+          <circle cx="135" cy="75" r="5" fill="#fbbf24" />
+          <circle cx="160" cy="90" r="5" fill="#fbbf24" />
+          <circle cx="155" cy="105" r="5" fill="#fbbf24" />
+          <circle cx="180" cy="85" r="5" fill="#fbbf24" />
+          <circle cx="175" cy="100" r="5" fill="#fbbf24" />
+          <circle cx="200" cy="95" r="5" fill="#fbbf24" />
+          <circle cx="195" cy="110" r="5" fill="#fbbf24" />
+          <circle cx="220" cy="100" r="5" fill="#fbbf24" />
+        </g>
+        <text x="170" y="125" textAnchor="middle" fill="#f59e0b" fontSize="9">More photons!</text>
+
+        {/* Metal plate */}
+        <rect x="270" y="55" width="25" height="90" rx="4" fill="#9ca3af" stroke="#6b7280" strokeWidth="1" />
+
+        {/* Question marks for electrons */}
+        <g transform="translate(320, 85)">
+          <circle cx="0" cy="0" r="8" fill="#1e293b" stroke="#38bdf8" strokeWidth="2" strokeDasharray="3,2" />
+          <text x="0" y="4" textAnchor="middle" fill="#38bdf8" fontSize="10" fontWeight="700">?</text>
+        </g>
+        <g transform="translate(340, 105)">
+          <circle cx="0" cy="0" r="8" fill="#1e293b" stroke="#38bdf8" strokeWidth="2" strokeDasharray="3,2" />
+          <text x="0" y="4" textAnchor="middle" fill="#38bdf8" fontSize="10" fontWeight="700">?</text>
+        </g>
+        <text x="330" y="135" textAnchor="middle" fill="#38bdf8" fontSize="9">Faster electrons?</text>
+
+        {/* Legend */}
+        <g transform="translate(30, 175)">
+          <text x="0" y="0" fill="#8b5cf6" fontSize="8" fontWeight="600">Classical prediction: Brighter = Faster electrons?</text>
+        </g>
+      </svg>
+    );
+  };
+
   const renderPhotoelectricLab = () => {
     const lightColor = wavelengthToColor(wavelength);
     const numPhotons = Math.floor(intensity / 12);
@@ -835,6 +965,26 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
               <rect x="-50" y="-13" width="100" height="45" rx="8" fill="#10b981" opacity="0.1" />
             </g>
           )}
+
+          {/* SVG text labels for educational clarity */}
+          <text x="300" y="25" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="700">Photoelectric Effect</text>
+          <text x="300" y="42" textAnchor="middle" fill="#94a3b8" fontSize="10">Vacuum Chamber Experiment</text>
+          <text x="100" y="260" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">Light Source</text>
+          <text x="405" y="248" textAnchor="middle" fill="#94a3b8" fontSize="10">Metal</text>
+          <text x="405" y="262" textAnchor="middle" fill="#94a3b8" fontSize="10">Plate</text>
+          <text x="520" y="145" textAnchor="middle" fill="#38bdf8" fontSize="10">Electrons</text>
+          <text x="200" y="145" textAnchor="middle" fill="#f59e0b" fontSize="10">Photons</text>
+
+          {/* Legend */}
+          <g transform="translate(20, 55)">
+            <text x="0" y="0" fill="#94a3b8" fontSize="9" fontWeight="600">LEGEND:</text>
+            <circle cx="8" cy="14" r="5" fill="#f59e0b" />
+            <text x="18" y="18" fill="#94a3b8" fontSize="9">Photon (E=hf)</text>
+            <circle cx="8" cy="32" r="5" fill="#38bdf8" />
+            <text x="18" y="36" fill="#94a3b8" fontSize="9">Electron (e-)</text>
+            <rect x="3" y="44" width="10" height="10" fill="url(#photoMetalGrad)" />
+            <text x="18" y="52" fill="#94a3b8" fontSize="9">Metal surface</text>
+          </g>
         </svg>
 
         {/* Text labels outside SVG using typo system */}
@@ -912,11 +1062,11 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
           The Photoelectric Effect
         </h1>
 
-        <p style={{ fontSize: typo.bodyLarge, color: colors.textSecondary, marginBottom: '8px', maxWidth: '400px' }}>
+        <p style={{ fontSize: typo.bodyLarge, fontWeight: 400, color: colors.textSecondary, marginBottom: '8px', maxWidth: '400px', lineHeight: 1.5 }}>
           Einstein called it <span style={{ color: colors.primary, fontWeight: 700 }}>"the most revolutionary discovery in physics"</span>
         </p>
 
-        <p style={{ fontSize: typo.body, color: colors.textMuted, marginBottom: '32px', maxWidth: '350px' }}>
+        <p style={{ fontSize: typo.body, fontWeight: 400, color: colors.textSecondary, marginBottom: '32px', maxWidth: '350px', lineHeight: 1.6 }}>
           Discover why light knocking electrons off metal proved that light is made of particles...
         </p>
 
@@ -960,7 +1110,12 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
 
     return renderPremiumWrapper(
       <div style={{ padding: typo.pagePadding }}>
-        {renderSectionHeader('Step 2 • Make Your Prediction', 'What makes electrons fly out faster?', 'When light hits a metal surface, electrons can be knocked free. What determines how fast they fly out?')}
+        {renderSectionHeader('Step 2 • Make Your Prediction', 'What makes electrons fly out faster?', 'When light hits a metal surface, electrons can be knocked free. What determines how fast they fly out? Think about what you expect to observe in the experiment.')}
+
+        {/* Static preview graphic */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          {renderStaticPreview()}
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap, marginTop: '20px' }}>
           {options.map(opt => (
@@ -1010,6 +1165,12 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
         {/* Controls */}
         <div style={{ flex: isMobile ? 1 : 'none', width: isMobile ? '100%' : '280px', padding: typo.pagePadding, background: `${colors.bgCard}80`, borderTop: isMobile ? `1px solid ${colors.border}` : 'none', borderLeft: isMobile ? 'none' : `1px solid ${colors.border}`, overflowY: 'auto' }}>
           {renderSectionHeader('Step 3 • Experiment', 'Adjust the controls')}
+
+          {/* What visualization shows */}
+          <p style={{ fontSize: typo.small, fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5, marginBottom: '16px' }}>
+            This visualization shows how light interacts with a metal surface. Watch how changing the wavelength affects whether electrons are emitted.
+            This is important because the photoelectric effect is used in everyday technology like solar cells and digital cameras. Notice how when photon energy increases, more electrons escape with higher kinetic energy.
+          </p>
 
           {/* Wavelength */}
           <div style={{ marginBottom: '20px' }}>
@@ -1093,6 +1254,18 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
       <div style={{ padding: typo.pagePadding }}>
         {renderSectionHeader('Step 4 • What You Discovered', "Einstein's Key Insight")}
 
+        {/* Connection to prediction */}
+        <div style={{ padding: '12px 16px', borderRadius: '12px', background: `${colors.accent}10`, border: `1px solid ${colors.accent}30`, marginBottom: '16px' }}>
+          <p style={{ fontSize: typo.small, fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5 }}>
+            {prediction === 'color' ?
+              'As you predicted correctly, the result of your experiment shows that light COLOR (frequency) determines electron speed!' :
+              prediction === 'brighter' ?
+              'As you observed in the experiment, your prediction was incorrect - brighter light does NOT make electrons faster. The result shows it\'s actually the color (frequency) that matters!' :
+              'As you saw in the experiment, the observation reveals that only light color (frequency) determines how fast electrons move. Your prediction helped you understand this key insight!'
+            }
+          </p>
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap }}>
           {concepts.map((c, i) => (
             <div key={i} style={{ display: 'flex', gap: '12px', padding: typo.cardPadding, borderRadius: '16px', background: `${c.color}10`, border: `1px solid ${c.color}30` }}>
@@ -1133,7 +1306,12 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
 
     return renderPremiumWrapper(
       <div style={{ padding: typo.pagePadding }}>
-        {renderSectionHeader('Step 5 • The Paradox', 'Classical Physics Got It Wrong!', 'Before Einstein, physicists expected brighter light would make electrons fly faster. What do YOU predict?')}
+        {renderSectionHeader('Step 5 • The Paradox', 'Classical Physics Got It Wrong!', 'Before Einstein, physicists expected brighter light would make electrons fly faster. Watch and observe what really happens when we change the intensity. What do YOU predict?')}
+
+        {/* Static intensity preview graphic */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          {renderIntensityPreview()}
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap, marginTop: '20px' }}>
           {options.map(opt => (
@@ -1361,10 +1539,34 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
           {/* How it works */}
           <div style={{ padding: typo.cardPadding, borderRadius: '16px', background: colors.bgCardLight, border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
             <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Connection to Photoelectric Effect</p>
-            <p style={{ fontSize: typo.small, color: colors.textSecondary, lineHeight: 1.5 }}>{app.connection}</p>
+            <p style={{ fontSize: typo.small, fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5 }}>{app.connection}</p>
           </div>
 
-          {/* Continue button at end of content - handles app progression */}
+          {/* Examples */}
+          <div style={{ padding: typo.cardPadding, borderRadius: '16px', background: colors.bgCardLight, border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+            <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Examples in the Real World</p>
+            <p style={{ fontSize: typo.small, fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5 }}>{app.examples.join(', ')}</p>
+          </div>
+
+          {/* Companies */}
+          <div style={{ padding: typo.cardPadding, borderRadius: '16px', background: colors.bgCardLight, border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+            <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Industry Leaders</p>
+            <p style={{ fontSize: typo.small, fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5 }}>Companies using this technology: {app.companies.join(', ')}</p>
+          </div>
+
+          {/* Future Impact */}
+          <div style={{ padding: typo.cardPadding, borderRadius: '16px', background: `${colors.accent}10`, border: `1px solid ${colors.accent}30`, marginBottom: '16px' }}>
+            <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.accent, marginBottom: '8px', textTransform: 'uppercase' }}>Future Impact</p>
+            <p style={{ fontSize: typo.small, fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5 }}>{app.futureImpact}</p>
+          </div>
+
+          {/* Real-world application header */}
+          <div style={{ padding: '12px', background: `${colors.primary}10`, borderRadius: '12px', marginBottom: '16px', border: `1px solid ${colors.primary}30` }}>
+            <p style={{ fontSize: typo.small, fontWeight: 600, color: colors.primary }}>
+              Real-World Application {activeApp + 1}/4: See how the photoelectric effect powers real-world technology used by engineers and industry leaders.
+            </p>
+          </div>
+
           <button
             onClick={() => {
               // Mark current app as complete
@@ -1404,11 +1606,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
           </button>
         </div>
       </div>,
-      'Step 8 of 10 • Transfer',
-      'Real-World Applications',
-      `See how the photoelectric effect powers modern technology`,
-      null,
-      renderBottomBar(true, false, 'Scroll to Continue')
+      renderBottomBar(true, allComplete, 'Take the Test')
     );
   }
 
@@ -1437,7 +1635,10 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
 
         {/* Scenario */}
         <div style={{ padding: '12px 16px', borderRadius: '12px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}30`, marginBottom: '16px' }}>
-          <p style={{ fontSize: typo.small, color: colors.primary, fontWeight: 600 }}>📍 {q.scenario}</p>
+          <p style={{ fontSize: typo.small, color: colors.primary, fontWeight: 600 }}>📍 Scenario Context: {q.scenario}</p>
+          <p style={{ fontSize: typo.small, fontWeight: 400, color: colors.textPrimary, marginTop: '8px', lineHeight: 1.5 }}>
+            Think about what you learned in the experiment. Apply your understanding of how photon energy (E=hf) relates to electron emission.
+          </p>
         </div>
 
         {/* Question */}

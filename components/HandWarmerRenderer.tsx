@@ -528,24 +528,45 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     setEnergyRemaining(100);
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component - fixed position at top with z-index
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
-      height: '4px',
-      background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
+      background: colors.bgPrimary,
+      borderBottom: `1px solid ${colors.border}`,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
     }}>
+      {/* Progress bar */}
       <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.warning})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
+        height: '4px',
+        background: colors.bgSecondary,
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+          background: `linear-gradient(90deg, ${colors.accent}, ${colors.warning})`,
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+      {/* Phase info */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '8px 16px',
+      }}>
+        <span style={{ ...typo.small, color: '#e2e8f0' }}>
+          {phaseLabels[phase]}
+        </span>
+        <span style={{ ...typo.small, color: '#e2e8f0' }}>
+          Phase {phaseOrder.indexOf(phase) + 1} of {phaseOrder.length}
+        </span>
+      </div>
+    </nav>
   );
 
   // Navigation dots
@@ -575,7 +596,66 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     </div>
   );
 
-  // Primary button style
+  // Bottom navigation bar with Back and Next buttons
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: colors.bgPrimary,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '12px 16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontWeight: 600,
+            minHeight: '44px',
+            opacity: canGoBack ? 1 : 0.5,
+          }}
+        >
+          Back
+        </button>
+        {renderNavDots()}
+        <button
+          onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+          disabled={!canGoNext}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            border: 'none',
+            background: canGoNext ? colors.accent : colors.border,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            fontWeight: 600,
+            minHeight: '44px',
+            opacity: canGoNext ? 1 : 0.5,
+          }}
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
+  // Primary button style - with minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #ea580c)`,
     color: 'white',
@@ -587,6 +667,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // Slider component
@@ -625,7 +706,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const isSolid = warmerState === 'solid';
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <radialGradient id="liquidGrad" cx="40%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
@@ -751,7 +832,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const height = isMobile ? 180 : 200;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <radialGradient id="ironGrad" cx="40%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#94a3b8" />
@@ -857,9 +938,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingBottom: '80px',
         textAlign: 'center',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'pulse 2s infinite' }}>
           🧤🔥
@@ -870,7 +952,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           The Magic Hand Warmer
         </h1>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '600px', marginBottom: '32px' }}>
+        <p style={{ ...typo.body, color: '#e2e8f0', maxWidth: '600px', marginBottom: '32px' }}>
           "A clear liquid pouch at room temperature. Click a tiny metal disc, and INSTANT heat - warm enough to hold for an hour. Where does all that <span style={{ color: colors.accent }}>thermal energy</span> come from?"
         </p>
 
@@ -882,10 +964,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           maxWidth: '500px',
           border: `1px solid ${colors.border}`,
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+          <p style={{ ...typo.small, color: '#e2e8f0', fontStyle: 'italic' }}>
             "The energy was there all along - stored invisibly in the liquid's molecular structure. Crystallization releases 264 kJ per kilogram of stored thermal energy."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: '#e2e8f0', marginTop: '8px' }}>
             — Thermodynamics of Phase Change Materials
           </p>
         </div>
@@ -897,7 +979,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           Discover Phase Change Energy
         </button>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -910,11 +992,14 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
       { id: 'c', text: 'Latent heat released when supercooled liquid crystallizes', correct: true },
     ];
 
-    return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+    const predictWidth = isMobile ? 320 : 400;
+    const predictHeight = isMobile ? 180 : 200;
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingBottom: '80px' }}>
+        {renderNavBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0', overflowY: 'auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -936,19 +1021,39 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>💧</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Clear Liquid</p>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>20C</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.accent }}>→ CLICK →</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🔥</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Hot Solid</p>
-                <p style={{ ...typo.small, color: colors.warning }}>54C</p>
-              </div>
-            </div>
+            <svg width={predictWidth} height={predictHeight} viewBox={`0 0 ${predictWidth} ${predictHeight}`} style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
+              <defs>
+                <radialGradient id="predictLiquidGrad" cx="40%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
+                  <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.8" />
+                </radialGradient>
+                <radialGradient id="predictHotGrad" cx="45%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.9" />
+                  <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.85" />
+                  <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.75" />
+                </radialGradient>
+              </defs>
+              {/* Before state - liquid */}
+              <ellipse cx={predictWidth * 0.25} cy={predictHeight * 0.5} rx="60" ry="40" fill="url(#predictLiquidGrad)" stroke="#475569" strokeWidth="2" />
+              <circle cx={predictWidth * 0.25} cy={predictHeight * 0.5 - 5} r="8" fill="#64748b" stroke="#94a3b8" strokeWidth="1" />
+              <text x={predictWidth * 0.25} y={predictHeight * 0.85} textAnchor="middle" fill="#e2e8f0" fontSize="12">Liquid (20C)</text>
+              {/* Arrow */}
+              <text x={predictWidth * 0.5} y={predictHeight * 0.5} textAnchor="middle" fill={colors.accent} fontSize="20">Click Disc</text>
+              <path d={`M ${predictWidth * 0.37} ${predictHeight * 0.5} L ${predictWidth * 0.63} ${predictHeight * 0.5}`} stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)" />
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
+                </marker>
+              </defs>
+              {/* After state - solid/hot */}
+              <ellipse cx={predictWidth * 0.75} cy={predictHeight * 0.5} rx="60" ry="40" fill="url(#predictHotGrad)" stroke="#f59e0b" strokeWidth="2" />
+              <text x={predictWidth * 0.75} y={predictHeight * 0.85} textAnchor="middle" fill="#fcd34d" fontSize="12">Hot Solid (54C)</text>
+              <text x={predictWidth * 0.75} y={predictHeight * 0.3} textAnchor="middle" fill="#ef4444" fontSize="14">?</text>
+            </svg>
+            <p style={{ ...typo.small, color: '#e2e8f0', marginTop: '12px' }}>
+              Where does the heat energy come from?
+            </p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -964,6 +1069,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -972,7 +1078,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
                   height: '28px',
                   borderRadius: '50%',
                   background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  color: prediction === opt.id ? 'white' : '#e2e8f0',
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -992,7 +1098,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1000,15 +1106,15 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingBottom: '80px' }}>
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Phase Change Hand Warmer Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Click the metal disc to trigger crystallization and release latent heat
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '24px' }}>
+            Click the metal disc to trigger crystallization and release latent heat. Watch how the temperature changes when the reaction is triggered.
           </p>
 
           <div style={{
@@ -1060,12 +1166,25 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Key Physics</h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Latent Heat of Fusion:</strong> 264 kJ/kg released during crystallization.
+            <p style={{ ...typo.body, color: '#e2e8f0', margin: 0 }}>
+              <strong>Latent Heat of Fusion:</strong> 264 kJ/kg is released during crystallization. This energy = mass x latent heat.
               <br />
-              <strong>Supercooling:</strong> Liquid below freezing point (54C) without crystals.
+              <strong>Supercooling:</strong> Liquid below freezing point (54C) without crystals. When you increase the temperature, this causes the crystallization to start.
               <br />
               <strong>Nucleation:</strong> Metal disc provides seed for crystal formation.
+            </p>
+          </div>
+
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>Real-World Relevance</h3>
+            <p style={{ ...typo.body, color: '#e2e8f0', margin: 0 }}>
+              This same phase-change technology is important in industry. It powers emergency thermal packs in hospitals, heat storage systems for solar energy, and battery thermal management in electric vehicles. Understanding latent heat helps engineers design more efficient heating and cooling solutions.
             </p>
           </div>
 
@@ -1077,21 +1196,64 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
-    return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+    const predictionOptions: Record<string, string> = {
+      a: 'A hidden battery inside the pouch powers a heating element',
+      b: 'Chemical reaction permanently consumes the liquid',
+      c: 'Latent heat released when supercooled liquid crystallizes',
+    };
+    const userPrediction = prediction ? predictionOptions[prediction] : null;
+    const wasCorrect = prediction === 'c';
+    const reviewWidth = isMobile ? 320 : 400;
+    const reviewHeight = isMobile ? 150 : 180;
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingBottom: '80px' }}>
+        {renderNavBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0', overflowY: 'auto' }}>
+          {userPrediction && (
+            <div style={{
+              background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${wasCorrect ? colors.success : colors.warning}44`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
+                {wasCorrect ? '✓ Your prediction was correct!' : '○ Your prediction:'} {userPrediction}
+              </p>
+            </div>
+          )}
+
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Phase Change
           </h2>
+
+          {/* Review SVG visualization */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width={reviewWidth} height={reviewHeight} viewBox={`0 0 ${reviewWidth} ${reviewHeight}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="reviewEnergyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#f97316" />
+                </linearGradient>
+              </defs>
+              {/* Energy diagram */}
+              <text x={reviewWidth / 2} y="25" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="bold">Latent Heat Release</text>
+              <rect x="50" y="40" width={reviewWidth - 100} height="30" fill="url(#reviewEnergyGrad)" rx="4" />
+              <text x="50" y="90" fill="#3b82f6" fontSize="11">Liquid (20C)</text>
+              <text x={reviewWidth - 120} y="90" fill="#f97316" fontSize="11">Solid (54C)</text>
+              <text x={reviewWidth / 2} y="115" textAnchor="middle" fill="#e2e8f0" fontSize="12">Energy = 264 kJ/kg</text>
+              <text x={reviewWidth / 2} y="135" textAnchor="middle" fill="#e2e8f0" fontSize="10">Phase change releases stored thermal energy</text>
+            </svg>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1099,7 +1261,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
+            <div style={{ ...typo.body, color: '#e2e8f0' }}>
               <p style={{ marginBottom: '16px' }}>
                 <strong style={{ color: colors.textPrimary }}>Latent Heat of Fusion</strong> - Energy stored/released during phase change without temperature change.
               </p>
@@ -1125,13 +1287,13 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
               Energy Calculation
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+            <p style={{ ...typo.body, color: '#e2e8f0', marginBottom: '8px' }}>
               For a 100g sodium acetate warmer:
             </p>
             <p style={{ ...typo.h3, color: colors.textPrimary, fontFamily: 'monospace' }}>
               E = m x Lf = 0.1 kg x 264 kJ/kg = 26.4 kJ
             </p>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', marginTop: '8px' }}>
               Enough to heat 100g of water by 63C, or keep hands warm for 30-60 minutes.
             </p>
           </div>
@@ -1144,7 +1306,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1157,11 +1319,14 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
       { id: 'c', text: 'Both last about the same time' },
     ];
 
-    return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+    const twistPredictWidth = isMobile ? 320 : 400;
+    const twistPredictHeight = isMobile ? 150 : 180;
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingBottom: '80px' }}>
+        {renderNavBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0', overflowY: 'auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1178,24 +1343,21 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             Which type of hand warmer provides heat for LONGER?
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div style={{ textAlign: 'center', padding: '16px', background: colors.bgSecondary, borderRadius: '8px' }}>
-                <div style={{ fontSize: '36px', marginBottom: '8px' }}>💧→❄️</div>
-                <div style={{ ...typo.small, color: '#3b82f6', fontWeight: 600 }}>Phase-Change</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Sodium acetate crystallization</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: '16px', background: colors.bgSecondary, borderRadius: '8px' }}>
-                <div style={{ fontSize: '36px', marginBottom: '8px' }}>⚙️+💨</div>
-                <div style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>Chemical</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Iron oxidation (rusting)</div>
-              </div>
-            </div>
+          {/* SVG comparison graphic */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width={twistPredictWidth} height={twistPredictHeight} viewBox={`0 0 ${twistPredictWidth} ${twistPredictHeight}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              {/* Phase change warmer */}
+              <ellipse cx={twistPredictWidth * 0.25} cy={twistPredictHeight * 0.4} rx="50" ry="35" fill="#38bdf8" stroke="#0ea5e9" strokeWidth="2" />
+              <text x={twistPredictWidth * 0.25} y={twistPredictHeight * 0.7} textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="bold">Phase-Change</text>
+              <text x={twistPredictWidth * 0.25} y={twistPredictHeight * 0.85} textAnchor="middle" fill="#e2e8f0" fontSize="9">30-60 min?</text>
+              {/* vs */}
+              <text x={twistPredictWidth * 0.5} y={twistPredictHeight * 0.45} textAnchor="middle" fill={colors.warning} fontSize="16" fontWeight="bold">VS</text>
+              {/* Chemical warmer */}
+              <rect x={twistPredictWidth * 0.75 - 50} y={twistPredictHeight * 0.4 - 30} width="100" height="60" fill="#475569" stroke="#64748b" strokeWidth="2" rx="8" />
+              <circle cx={twistPredictWidth * 0.75} cy={twistPredictHeight * 0.4} r="8" fill="#f97316" />
+              <text x={twistPredictWidth * 0.75} y={twistPredictHeight * 0.7} textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">Chemical</text>
+              <text x={twistPredictWidth * 0.75} y={twistPredictHeight * 0.85} textAnchor="middle" fill="#e2e8f0" fontSize="9">6-12 hours?</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1210,6 +1372,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1218,7 +1381,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
                   height: '28px',
                   borderRadius: '50%',
                   background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  color: twistPrediction === opt.id ? 'white' : '#e2e8f0',
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -1238,7 +1401,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1247,7 +1410,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   if (phase === 'twist_play') {
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1412,7 +1575,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   if (phase === 'twist_review') {
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1502,7 +1665,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1614,12 +1777,24 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             </div>
           </div>
 
-          {allAppsCompleted && (
+          {allAppsCompleted ? (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
               Take the Knowledge Test
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Got It
             </button>
           )}
         </div>
@@ -1635,7 +1810,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
       const passed = testScore >= 7;
       return (
         <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-          {renderProgressBar()}
+          {renderNavBar()}
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
@@ -1684,7 +1859,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
@@ -1855,7 +2030,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
         padding: '24px',
         textAlign: 'center',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
           🏆

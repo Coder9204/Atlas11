@@ -398,6 +398,11 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -418,13 +423,14 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
                   borderRadius: '4px',
                   backgroundColor: i < currentIdx ? '#22c55e' : i === currentIdx ? '#3b82f6' : '#334155',
                   cursor: i <= currentIdx ? 'pointer' : 'default',
-                  transition: 'all 0.3s'
+                  transition: 'all 0.3s ease'
                 }}
                 title={phaseLabels[p]}
+                aria-label={phaseLabels[p]}
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b' }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#e2e8f0' }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -450,19 +456,24 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
 
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '16px 24px',
         borderTop: '1px solid #334155',
         backgroundColor: '#0f172a',
-        marginTop: 'auto'
       }}>
         <button
           onClick={goBack}
           disabled={!canBack}
           style={{
             padding: '12px 24px',
+            minHeight: '44px',
             borderRadius: '10px',
             fontWeight: 600,
             fontSize: '14px',
@@ -470,13 +481,14 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
             color: canBack ? '#e2e8f0' : '#475569',
             border: '1px solid #334155',
             cursor: canBack ? 'pointer' : 'not-allowed',
-            opacity: canBack ? 1 : 0.5
+            opacity: canBack ? 1 : 0.5,
+            transition: 'all 0.2s ease'
           }}
         >
           Back
         </button>
 
-        <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+        <span style={{ fontSize: '12px', color: '#e2e8f0', fontWeight: 600 }}>
           {phaseLabels[phase]}
         </span>
 
@@ -486,6 +498,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
             disabled={!canGoNext}
             style={{
               padding: '12px 24px',
+              minHeight: '44px',
               borderRadius: '10px',
               fontWeight: 700,
               fontSize: '14px',
@@ -494,7 +507,8 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
               border: 'none',
               cursor: canGoNext ? 'pointer' : 'not-allowed',
               opacity: canGoNext ? 1 : 0.5,
-              boxShadow: canGoNext ? '0 2px 12px rgba(59, 130, 246, 0.3)' : 'none'
+              boxShadow: canGoNext ? '0 2px 12px rgba(59, 130, 246, 0.3)' : 'none',
+              transition: 'all 0.2s ease'
             }}
           >
             {nextLabel}
@@ -505,6 +519,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
             onClick={() => goToPhase('hook')}
             style={{
               padding: '12px 24px',
+              minHeight: '44px',
               borderRadius: '10px',
               fontWeight: 700,
               fontSize: '14px',
@@ -512,7 +527,8 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
               color: '#ffffff',
               border: 'none',
               cursor: 'pointer',
-              boxShadow: '0 2px 12px rgba(34, 197, 94, 0.3)'
+              boxShadow: '0 2px 12px rgba(34, 197, 94, 0.3)',
+              transition: 'all 0.2s ease'
             }}
           >
             Start Over
@@ -807,14 +823,14 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     return (
       <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '70px', paddingBottom: '90px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{ marginBottom: '24px' }}>
               <span style={{ color: '#3b82f6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>Space Physics</span>
               <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 Orbital Mechanics Basics
               </h1>
-              <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '18px', marginTop: '8px' }}>
                 Why don't satellites just fall down?
               </p>
             </div>
@@ -822,11 +838,11 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
             {renderVisualization()}
 
             <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', borderLeft: '4px solid #3b82f6' }}>
-              <p style={{ fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ fontSize: '16px', lineHeight: 1.6, color: '#e2e8f0' }}>
                 The International Space Station zooms around Earth at 7.7 km/s, completing an orbit every 90 minutes.
                 But gravity at ISS altitude is still 90% of surface gravity. So why doesn't it fall?
               </p>
-              <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', marginTop: '12px' }}>
                 The answer is one of physics' most beautiful insights.
               </p>
             </div>
@@ -837,17 +853,71 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     );
   }
 
+  // Static visualization for predict phase
+  const renderStaticVisualization = () => {
+    const centerX = 250;
+    const centerY = 200;
+    const earthRadius = 70;
+    const orbitRadius = 120;
+
+    return (
+      <svg width="100%" height="300" viewBox="0 0 500 400" style={{ maxWidth: '500px', margin: '0 auto', display: 'block' }}>
+        <defs>
+          <radialGradient id="earthGradPredict" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#1e40af" />
+          </radialGradient>
+        </defs>
+        <rect width="500" height="400" fill="#0a0a1a" rx="12" />
+        {/* Stars */}
+        {[...Array(30)].map((_, i) => (
+          <circle
+            key={i}
+            cx={50 + (i * 37) % 400}
+            cy={30 + (i * 53) % 340}
+            r={1}
+            fill="#fff"
+            opacity={0.5}
+          />
+        ))}
+        {/* Orbit path */}
+        <circle cx={centerX} cy={centerY} r={orbitRadius} fill="none" stroke="#475569" strokeWidth="2" strokeDasharray="8,4" />
+        {/* Earth */}
+        <circle cx={centerX} cy={centerY} r={earthRadius} fill="url(#earthGradPredict)" />
+        {/* ISS at top of orbit */}
+        <g transform={`translate(${centerX}, ${centerY - orbitRadius})`}>
+          <rect x="-20" y="-3" width="15" height="6" fill="#1e3a8a" stroke="#3b82f6" />
+          <rect x="5" y="-3" width="15" height="6" fill="#1e3a8a" stroke="#3b82f6" />
+          <rect x="-4" y="-4" width="8" height="8" fill="#f8fafc" stroke="#94a3b8" />
+        </g>
+        {/* Labels */}
+        <text x={centerX} y={centerY + 10} textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="bold">Earth</text>
+        <text x={centerX} y={centerY - orbitRadius - 20} textAnchor="middle" fill="#e2e8f0" fontSize="12">ISS (400 km)</text>
+        {/* Question mark */}
+        <text x={centerX + orbitRadius + 30} y={centerY} fill="#f59e0b" fontSize="32" fontWeight="bold">?</text>
+        <text x={centerX + orbitRadius + 10} y={centerY + 30} fill="#e2e8f0" fontSize="11">Why doesn't</text>
+        <text x={centerX + orbitRadius + 10} y={centerY + 45} fill="#e2e8f0" fontSize="11">it fall?</text>
+      </svg>
+    );
+  };
+
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
       <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '70px', paddingBottom: '90px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
+            <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Make Your Prediction</h2>
+            <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
+              Step 1 of 2: Select your prediction below
+            </p>
 
-            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-              <p style={{ fontSize: '16px', marginBottom: '8px' }}>
+            {renderStaticVisualization()}
+
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px', marginTop: '16px' }}>
+              <p style={{ fontSize: '16px', marginBottom: '8px', color: '#e2e8f0' }}>
                 At the ISS altitude (400 km), gravity is still about 8.7 m/s2 - about 89% of surface gravity.
                 Yet astronauts float weightlessly. Why don't they and the station fall to Earth?
               </p>
@@ -860,14 +930,16 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '12px',
                     border: prediction === p.id ? '2px solid #3b82f6' : '1px solid #475569',
                     background: prediction === p.id ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                    color: '#f8fafc',
+                    color: '#e2e8f0',
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '15px',
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   {p.label}

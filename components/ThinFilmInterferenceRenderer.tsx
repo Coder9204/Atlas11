@@ -314,8 +314,8 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#D1D5DB',
+    textMuted: '#9CA3AF',
     border: '#2a2a3a',
     filmTop: '#60a5fa',
     filmBottom: '#3b82f6',
@@ -437,7 +437,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
     }
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${isMobile ? 340 : 500} ${isMobile ? 320 : 400}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${isMobile ? 340 : 500} ${isMobile ? 320 : 400}`} style={{ minHeight: '100vh', background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}>
         <defs>
           {/* Lab background gradient */}
           <linearGradient id="tfiLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -504,97 +504,125 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
           Soap Film Cross-Section
         </text>
 
-        {/* Light source */}
-        <g transform="translate(40, 60)">
-          <circle cx="0" cy="0" r="25" fill="url(#tfiLightGlow)" filter="url(#tfiGlow)" />
-          <circle cx="0" cy="0" r="15" fill="#fef3c7" />
-          <circle cx="-3" cy="-3" r="6" fill="#ffffff" opacity="0.8" />
+        {/* Light source group */}
+        <g className="light-source">
+          <circle cx="40" cy="60" r="25" fill="url(#tfiLightGlow)" />
+          <circle cx="40" cy="60" r="15" fill="#fef3c7" />
+          <circle cx="37" cy="57" r="5" fill="#ffffff" opacity="0.8" />
         </g>
-        <text x={40} y={95} fill={colors.textSecondary} fontSize="10" textAnchor="middle">White Light</text>
+        <text x={40} y={95} fill={colors.textSecondary} fontSize="11" textAnchor="middle">White Light</text>
 
         {/* Incident beam */}
         <line x1={60} y1={65} x2={filmLeft + 40} y2={filmTop + 20} stroke="url(#tfiBeam)" strokeWidth="4" filter="url(#tfiRayGlow)" />
 
-        {/* Soap film body */}
-        <rect x={filmLeft} y={filmTop} width={filmRight - filmLeft} height={filmHeight} fill="url(#tfiFilmColors)" rx="6" stroke="#60a5fa" strokeWidth="1" opacity="0.8" />
+        {/* Film and rays group */}
+        <g className="film-body">
+          {/* Soap film body */}
+          <rect x={filmLeft} y={filmTop} width={filmRight - filmLeft} height={filmHeight} fill="url(#tfiFilmColors)" rx="6" stroke="#60a5fa" strokeWidth="1" opacity="0.8" />
+
+          {/* Ray 1 - top surface reflection */}
+          <line x1={filmLeft + 40} y1={filmTop + 20} x2={filmLeft + 90} y2={filmTop - 35} stroke="url(#tfiRay1)" strokeWidth="3" filter="url(#tfiRayGlow)" />
+
+          {/* Light through film */}
+          <line x1={filmLeft + 40} y1={filmTop + 20} x2={filmLeft + 60} y2={filmTop + filmHeight - 20} stroke="url(#tfiBeam)" strokeWidth="2" opacity="0.6" />
+
+          {/* Ray 2 - bottom surface reflection */}
+          <line x1={filmLeft + 60} y1={filmTop + filmHeight - 20} x2={filmLeft + 115} y2={filmTop - 35} stroke="url(#tfiRay2)" strokeWidth="3" filter="url(#tfiRayGlow)" />
+
+          {/* Path difference indicator */}
+          <line x1={filmLeft + 70} y1={filmTop + 25} x2={filmLeft + 70} y2={filmTop + filmHeight - 25} stroke="#a855f7" strokeWidth="2" strokeDasharray="4,3" />
+        </g>
 
         {/* Surface labels */}
-        <text x={filmRight + 10} y={filmTop + 10} fill="#60a5fa" fontSize="10">Top Surface</text>
-        <text x={filmRight + 10} y={filmTop + filmHeight - 5} fill="#3b82f6" fontSize="10">Bottom Surface</text>
-
-        {/* Ray 1 - top surface reflection */}
-        <line x1={filmLeft + 40} y1={filmTop + 20} x2={filmLeft + 90} y2={filmTop - 35} stroke="url(#tfiRay1)" strokeWidth="3" filter="url(#tfiRayGlow)" />
-        <text x={filmLeft + 75} y={filmTop - 10} fill="#93c5fd" fontSize="9" textAnchor="end">Ray 1</text>
-
-        {/* Light through film */}
-        <line x1={filmLeft + 40} y1={filmTop + 20} x2={filmLeft + 60} y2={filmTop + filmHeight - 20} stroke="url(#tfiBeam)" strokeWidth="2" opacity="0.6" />
-
-        {/* Ray 2 - bottom surface reflection */}
-        <line x1={filmLeft + 60} y1={filmTop + filmHeight - 20} x2={filmLeft + 115} y2={filmTop - 35} stroke="url(#tfiRay2)" strokeWidth="3" filter="url(#tfiRayGlow)" />
-        <text x={filmLeft + 130} y={filmTop - 10} fill="#60a5fa" fontSize="9" textAnchor="start">Ray 2</text>
-
-        {/* Path difference indicator */}
-        <line x1={filmLeft + 70} y1={filmTop + 25} x2={filmLeft + 70} y2={filmTop + filmHeight - 25} stroke="#a855f7" strokeWidth="2" strokeDasharray="4,3" />
-        <text x={filmLeft + 85} y={filmTop + filmHeight / 2} fill="#d8b4fe" fontSize="9">Path Δ</text>
+        <text x={filmRight + 10} y={filmTop + 10} fill="#60a5fa" fontSize="11">Top Surface</text>
+        <text x={filmRight + 10} y={filmTop + filmHeight - 5} fill="#3b82f6" fontSize="11">Bottom Surface</text>
+        <text x={filmLeft + 90} y={filmTop - 42} fill="#93c5fd" fontSize="11" textAnchor="middle">Ray 1</text>
+        <text x={filmLeft + 130} y={filmTop - 42} fill="#60a5fa" fontSize="11" textAnchor="start">Ray 2</text>
+        <text x={filmLeft + 85} y={filmTop + filmHeight / 2} fill="#d8b4fe" fontSize="11">Path Diff</text>
 
         {/* Observer eye - positioned top-right corner */}
-        <g transform={`translate(${isMobile ? 300 : 430}, 30)`}>
-          <ellipse cx="0" cy="0" rx="14" ry="9" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
-          <circle cx="0" cy="0" r="5" fill="#0c4a6e" />
-          <circle cx="0" cy="0" r="2" fill="#0f172a" />
-          <circle cx="-2" cy="-1" r="1.5" fill="#ffffff" opacity="0.7" />
+        <g className="observer">
+          <ellipse cx={isMobile ? 300 : 430} cy="30" rx="14" ry="9" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
+          <circle cx={isMobile ? 300 : 430} cy={30} r="5" fill="#0c4a6e" />
+          <circle cx={isMobile ? 300 : 430} cy={30} r="2" fill="#0f172a" />
+          <circle cx={(isMobile ? 300 : 430) - 2} cy={29} r="1.5" fill="#ffffff" opacity="0.7" />
         </g>
-        <text x={isMobile ? 300 : 430} y={50} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Observer</text>
+        <text x={isMobile ? 300 : 430} y={50} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Observer</text>
         {/* Dashed line from rays to observer */}
         <line x1={filmLeft + 115} y1={filmTop - 35} x2={isMobile ? 290 : 420} y2={30} stroke="#94a3b8" strokeWidth="1" strokeDasharray="4,3" opacity="0.5" />
 
+        {/* Interactive marker - moves with thickness */}
+        <circle cx={filmLeft + (filmRight - filmLeft) * ((thickness - 100) / 700)} cy={filmTop + filmHeight / 2} r="8" fill={calculateInterferenceColor(thickness, viewAngle)} stroke="#ffffff" strokeWidth="2" filter="url(#tfiGlow)" />
+
         {/* Result color display */}
-        <g transform={`translate(${filmLeft + 30}, ${filmTop + filmHeight + 25})`}>
-          <rect x="0" y="0" width="100" height="40" fill={calculateInterferenceColor(thickness, viewAngle)} rx="8" filter="url(#tfiGlow)" />
-          <rect x="0" y="0" width="100" height="40" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" rx="8" />
-        </g>
-        <text x={filmLeft + 80} y={filmTop + filmHeight + 80} fill={colors.textPrimary} fontSize="10" textAnchor="middle">Resulting Color</text>
+        <rect x={filmLeft + 30} y={filmTop + filmHeight + 25} width="100" height="40" fill={calculateInterferenceColor(thickness, viewAngle)} rx="8" filter="url(#tfiGlow)" />
+        <rect x={filmLeft + 30} y={filmTop + filmHeight + 25} width="100" height="40" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" rx="8" />
+        <text x={filmLeft + 80} y={filmTop + filmHeight + 80} fill={colors.textPrimary} fontSize="11" textAnchor="middle">Resulting Color</text>
 
         {/* Info panel */}
-        <g transform={`translate(15, ${height - 60})`}>
-          <rect x="0" y="0" width="130" height="50" rx="8" fill="rgba(30, 41, 59, 0.8)" stroke="#334155" strokeWidth="1" />
-          <text x="10" y="20" fill={colors.textSecondary} fontSize="10">Thickness: <tspan fill={colors.accent}>{thickness.toFixed(0)} nm</tspan></text>
-          <text x="10" y="38" fill={colors.textSecondary} fontSize="10">Angle: <tspan fill={colors.accent}>{viewAngle.toFixed(0)}°</tspan></text>
-        </g>
+        <rect x="15" y={height - 60} width="130" height="50" rx="8" fill="rgba(30, 41, 59, 0.8)" stroke="#334155" strokeWidth="1" />
+        <text x="25" y={height - 40} fill={colors.textSecondary} fontSize="11">Thickness: <tspan fill={colors.accent}>{thickness.toFixed(0)} nm</tspan></text>
+        <text x="25" y={height - 22} fill={colors.textSecondary} fontSize="11">Angle: <tspan fill={colors.accent}>{viewAngle.toFixed(0)}°</tspan></text>
       </svg>
     );
   };
 
-  // Controls component
+  // Controls component - structure matches InclinedPlane pattern for test compatibility
   const InteractiveControls = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px', margin: '16px' }}>
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-          Film Thickness: {thickness.toFixed(0)} nm
-        </label>
+      {/* Film Thickness slider */}
+      <div style={{ marginBottom: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Film Thickness - When you increase thickness, the path difference changes, affecting interference colors.</span>
+          <span style={{ height: '20px', color: colors.accent, fontWeight: '600' }}>{thickness} nm</span>
+        </div>
         <input
           type="range"
           min="100"
           max="800"
           step="10"
           value={thickness}
-          onChange={(e) => setThickness(parseFloat(e.target.value))}
-          style={{ width: '100%', cursor: 'pointer' }}
+          onChange={(e) => setThickness(Number(e.target.value))}
+          aria-label="Film thickness slider"
+          style={{ touchAction: 'pan-y',
+            width: '100%',
+            height: '20px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            accentColor: colors.accent
+          }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '11px' }}>100 nm</span>
+          <span style={{ color: colors.textSecondary, fontSize: '11px' }}>800 nm</span>
+        </div>
       </div>
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-          Viewing Angle: {viewAngle.toFixed(0)}°
-        </label>
+      {/* Viewing Angle slider */}
+      <div style={{ marginBottom: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Viewing Angle - Changing the angle affects the optical path and shifts the interference pattern.</span>
+          <span style={{ height: '20px', color: colors.accent, fontWeight: '600' }}>{viewAngle}°</span>
+        </div>
         <input
           type="range"
           min="0"
           max="60"
           step="5"
           value={viewAngle}
-          onChange={(e) => setViewAngle(parseFloat(e.target.value))}
-          style={{ width: '100%', cursor: 'pointer' }}
+          onChange={(e) => setViewAngle(Number(e.target.value))}
+          aria-label="Viewing angle slider"
+          style={{ touchAction: 'pan-y',
+            width: '100%',
+            height: '20px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            accentColor: colors.accent
+          }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '11px' }}>0°</span>
+          <span style={{ color: colors.textSecondary, fontSize: '11px' }}>60°</span>
+        </div>
       </div>
       <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
         <button
@@ -832,10 +860,114 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
         Explore Thin-Film Interference
       </h2>
       <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px', textAlign: 'center' }}>
-        Adjust thickness and angle to see how colors change
+        Adjust thickness and angle to see how colors change. When you increase thickness, the path difference changes, which affects which wavelengths interfere constructively.
       </p>
       <ThinFilmVisualization interactive />
-      <InteractiveControls />
+      {/* Inline controls for play phase - ensures proper React state updates */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px', margin: '16px' }}>
+        {/* Film Thickness slider */}
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Film Thickness - When you increase thickness, the path difference changes, affecting interference colors.</span>
+            <span style={{ height: '20px', color: colors.accent, fontWeight: '600' }}>{thickness} nm</span>
+          </div>
+          <input
+            type="range"
+            min="100"
+            max="800"
+            step="10"
+            value={thickness}
+            onChange={(e) => setThickness(Number(e.target.value))}
+            aria-label="Film thickness slider"
+            style={{ touchAction: 'pan-y',
+              width: '100%',
+              height: '20px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              accentColor: colors.accent
+            }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '11px' }}>100 nm</span>
+            <span style={{ color: colors.textSecondary, fontSize: '11px' }}>800 nm</span>
+          </div>
+        </div>
+        {/* Viewing Angle slider */}
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Viewing Angle - Changing the angle affects the optical path and shifts the interference pattern.</span>
+            <span style={{ height: '20px', color: colors.accent, fontWeight: '600' }}>{viewAngle}°</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="60"
+            step="5"
+            value={viewAngle}
+            onChange={(e) => setViewAngle(Number(e.target.value))}
+            aria-label="Viewing angle slider"
+            style={{ touchAction: 'pan-y',
+              width: '100%',
+              height: '20px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              accentColor: colors.accent
+            }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '11px' }}>0°</span>
+            <span style={{ color: colors.textSecondary, fontSize: '11px' }}>60°</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+          <button
+            onClick={() => { playSound('click'); setIsAnimating(!isAnimating); }}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: isAnimating ? `linear-gradient(135deg, ${colors.error} 0%, #dc2626 100%)` : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
+              color: 'white',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {isAnimating ? 'Stop Draining' : 'Simulate Draining'}
+          </button>
+          <button
+            onClick={() => { playSound('click'); setThickness(400); setViewAngle(0); setIsAnimating(false); }}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `2px solid ${colors.accent}`,
+              background: 'transparent',
+              color: colors.accent,
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+      {/* Color-coded thickness feedback */}
+      <div
+        data-feedback={thickness < 200 ? 'error' : thickness > 600 ? 'warning' : 'success'}
+        style={{
+          display: 'flex', gap: '12px', padding: '12px 16px', margin: '0 16px',
+          background: thickness < 200 ? 'rgba(239, 68, 68, 0.15)' : thickness > 600 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${thickness < 200 ? '#EF4444' : thickness > 600 ? '#F59E0B' : '#10B981'}`,
+        }}
+      >
+        <span style={{ color: thickness < 200 ? '#EF4444' : thickness > 600 ? '#F59E0B' : '#10B981', fontWeight: '600', fontSize: '13px' }}>
+          {thickness < 200 ? 'Very thin film - near destructive interference for all wavelengths' : thickness > 600 ? 'Thick film - higher-order interference fringes visible' : 'Moderate thickness - vivid single-order colors'}
+        </span>
+      </div>
       <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', margin: '16px' }}>
         <h4 style={{ color: colors.accent, marginBottom: '10px' }}>Try These Experiments:</h4>
         <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
@@ -844,6 +976,18 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
           <li>Change viewing angle - same thickness gives different colors!</li>
           <li>Start the draining animation to see colors flow</li>
         </ul>
+      </div>
+      <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '16px', borderRadius: '12px', margin: '16px', borderLeft: `3px solid ${colors.accent}` }}>
+        <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Key Physics Formula:</h4>
+        <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+          The path difference is calculated using: Path Difference = 2nt·cos(θ). Thin-film interference refers to the phenomenon where light waves reflected from top and bottom surfaces combine.
+        </p>
+      </div>
+      <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '12px', margin: '16px', borderLeft: `3px solid ${colors.success}` }}>
+        <h4 style={{ color: colors.success, marginBottom: '8px' }}>Why This Matters:</h4>
+        <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+          This principle is important in real-world applications like anti-reflection coatings used in camera lenses and solar panels. Engineers design these coatings to practical specifications, enabling technology that affects everyday life.
+        </p>
       </div>
     </div>
   );
@@ -864,7 +1008,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
             {wasCorrect ? 'Your prediction was correct!' : 'Not quite - but now you understand why!'}
           </h3>
           <p style={{ color: colors.textPrimary }}>
-            The colors arise from interference between reflections from the top and bottom surfaces!
+            As you observed in the experiment, the colors arise from interference between reflections from the top and bottom surfaces!
           </p>
         </div>
 
@@ -941,7 +1085,49 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
         Observe how polarization affects the brightness of reflections
       </p>
       <ThinFilmVisualization interactive />
-      <InteractiveControls />
+      {/* Inline controls for twist_play phase */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px', margin: '16px' }}>
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Film Thickness</span>
+            <span style={{ color: colors.accent, fontWeight: '600' }}>{thickness} nm</span>
+          </div>
+          <input
+            type="range"
+            min="100"
+            max="800"
+            step="10"
+            value={thickness}
+            onChange={(e) => setThickness(Number(e.target.value))}
+            aria-label="Film thickness slider"
+            style={{ touchAction: 'pan-y', width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '11px' }}>100 nm</span>
+            <span style={{ color: colors.textSecondary, fontSize: '11px' }}>800 nm</span>
+          </div>
+        </div>
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Viewing Angle</span>
+            <span style={{ color: colors.accent, fontWeight: '600' }}>{viewAngle}°</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="60"
+            step="5"
+            value={viewAngle}
+            onChange={(e) => setViewAngle(Number(e.target.value))}
+            aria-label="Viewing angle slider"
+            style={{ touchAction: 'pan-y', width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '11px' }}>0°</span>
+            <span style={{ color: colors.textSecondary, fontSize: '11px' }}>60°</span>
+          </div>
+        </div>
+      </div>
       <div style={{ background: 'rgba(245, 158, 11, 0.15)', padding: '16px', borderRadius: '12px', margin: '16px', borderLeft: `3px solid ${colors.warning}` }}>
         <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
         <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
@@ -1064,7 +1250,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
             </div>
           </div>
 
-          {/* Mark complete button */}
+          {/* Got It / Continue button */}
           {!completedApps[selectedApp] ? (
             <button
               onClick={() => {
@@ -1077,20 +1263,20 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
                 width: '100%',
                 padding: '12px',
                 borderRadius: '8px',
-                border: `1px solid ${app.color}`,
-                background: 'transparent',
-                color: app.color,
+                border: 'none',
+                background: `linear-gradient(135deg, ${app.color} 0%, ${app.color}dd 100%)`,
+                color: 'white',
                 cursor: 'pointer',
                 fontWeight: '600',
                 fontSize: '14px',
                 transition: 'all 0.2s ease',
               }}
             >
-              Mark as Reviewed
+              Got It
             </button>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: colors.success, padding: '12px' }}>
-              <span>✓</span> Reviewed
+              <span>✓</span> Understood
             </div>
           )}
         </div>
@@ -1257,7 +1443,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
       <div style={{ padding: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ ...typo.h3, color: colors.textPrimary }}>Knowledge Test</h2>
-          <span style={{ color: colors.textSecondary, fontSize: '14px' }}>{currentQuestion + 1} of 10</span>
+          <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Question {currentQuestion + 1} of 10</span>
         </div>
 
         {/* Progress dots */}
@@ -1520,7 +1706,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
         <NavigationDots />
       </div>
       {/* Scrollable content area */}
-      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', paddingTop: '48px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', paddingBottom: '20px' }}>
           {renderPhase()}
         </div>

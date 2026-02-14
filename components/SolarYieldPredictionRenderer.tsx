@@ -200,7 +200,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
     bgCard: '#1e293b',
     border: '#475569',
     textPrimary: '#f8fafc',
-    textSecondary: '#94a3b8',
+    textSecondary: '#e2e8f0',
     textMuted: '#64748b', // slate-500
   };
 
@@ -439,6 +439,11 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -489,6 +494,11 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -508,6 +518,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.5,
             fontWeight: 600,
+            minHeight: '44px',
           }}
         >
           Back
@@ -527,6 +538,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.5,
             fontWeight: 700,
+            minHeight: '44px',
           }}
         >
           {nextLabel}
@@ -1180,6 +1192,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           color: 'white',
           fontWeight: 'bold',
           cursor: 'pointer',
+          minHeight: '44px',
         }}
       >
         {showUncertainty ? 'Hide Uncertainty Bands' : 'Show Uncertainty Bands'}
@@ -1191,7 +1204,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
   const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string = 'Next') => (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
         {content}
       </div>
       {renderBottomBar(canGoNext, nextLabel)}
@@ -1208,7 +1221,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #f59e0b, #22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Solar Yield Prediction
             </h1>
-            <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '18px', marginTop: '8px' }}>
               Can you predict annual kWh from a few physical parameters?
             </p>
           </div>
@@ -1220,7 +1233,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
               Solar installations cost thousands of dollars. Investors need to know: how much energy will this system produce?
               Do you need complex software, or can simple physics get you surprisingly close?
             </p>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '12px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginTop: '12px' }}>
               Spoiler: A handful of factors capture most of the physics.
             </p>
           </div>
@@ -1237,6 +1250,32 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
       <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
+
+          {/* Static SVG for predict phase */}
+          <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px', display: 'block', margin: '0 auto 24px' }}>
+            <defs>
+              <linearGradient id="predictSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#0c4a6e" />
+                <stop offset="100%" stopColor="#38bdf8" />
+              </linearGradient>
+              <linearGradient id="predictPanelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#1e3a5f" />
+                <stop offset="100%" stopColor="#2563eb" />
+              </linearGradient>
+              <radialGradient id="predictSunGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#fef08a" />
+                <stop offset="100%" stopColor="#eab308" />
+              </radialGradient>
+            </defs>
+            <rect width="400" height="150" fill="url(#predictSkyGrad)" rx="8" />
+            <rect y="130" width="400" height="70" fill="#166534" />
+            <circle cx="320" cy="50" r="30" fill="url(#predictSunGrad)" />
+            <g transform="translate(80, 90) rotate(-30, 80, 30)">
+              <rect width="160" height="50" rx="4" fill="url(#predictPanelGrad)" stroke="#64748b" strokeWidth="2" />
+              <text x="80" y="30" textAnchor="middle" fill="#e2e8f0" fontSize="12">Solar Panel</text>
+            </g>
+            <text x="200" y="185" textAnchor="middle" fill="#e2e8f0" fontSize="14">How do we predict annual output?</text>
+          </svg>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
             <p style={{ fontSize: '16px', marginBottom: '8px' }}>
@@ -1258,6 +1297,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '15px',
+                  minHeight: '44px',
                 }}
               >
                 {p.label}
@@ -1277,9 +1317,15 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
       <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Build Your Yield Model</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
             Adjust parameters and see how each factor affects annual production
           </p>
+
+          <div style={{ background: 'rgba(245, 158, 11, 0.15)', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #f59e0b' }}>
+            <p style={{ color: '#f59e0b', fontSize: '14px', margin: 0 }}>
+              Observe: Watch how the annual yield changes as you adjust each parameter. Notice which factor has the biggest impact on output.
+            </p>
+          </div>
 
           {renderVisualization()}
           {renderControls()}
@@ -1327,28 +1373,28 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ color: '#22c55e', marginBottom: '8px' }}>1. Irradiance Dominates</h4>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 Solar irradiance (measured in kWh/m2/day or Peak Sun Hours) is the single biggest factor. A location with 6 PSH produces 50% more than one with 4 PSH - this alone sets the baseline.
               </p>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ color: '#ef4444', marginBottom: '8px' }}>2. Temperature Derating</h4>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 Silicon cells lose ~0.4% output per degree C above 25 C. A panel at 45 C produces 8% less power. Hot desert locations face this penalty despite high irradiance.
               </p>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ color: '#8b5cf6', marginBottom: '8px' }}>3. Multiplicative Losses</h4>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 Soiling, inverter efficiency, wiring losses, and mismatch multiply together. Each 3% loss compounds: 0.97 x 0.96 x 0.97 x 0.98 = 0.88 (12% total loss).
               </p>
             </div>
 
             <div>
               <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>4. Simple Model, Good Results</h4>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 Annual kWh = Irradiance x Size x 365 x Cosine x TempDerate x Soiling x Inverter x SystemLosses. This captures 90-95% of the physics!
               </p>
             </div>
@@ -1387,6 +1433,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '15px',
+                  minHeight: '44px',
                 }}
               >
                 {p.label}
@@ -1406,9 +1453,15 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
       <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Uncertainty</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
             Enable uncertainty bands and see how confidence changes with parameters
           </p>
+
+          <div style={{ background: 'rgba(139, 92, 246, 0.15)', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #8b5cf6' }}>
+            <p style={{ color: '#a78bfa', fontSize: '14px', margin: 0 }}>
+              Observe: Click "Show Uncertainty Bands" to see the range of possible outcomes. Notice how the P90 (low) estimate is what banks use for financing.
+            </p>
+          </div>
 
           {renderVisualization()}
           {renderControls()}
@@ -1454,13 +1507,13 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
             <h3 style={{ color: '#8b5cf6', marginBottom: '16px' }}>Understanding Solar Uncertainty</h3>
 
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '16px' }}>
               For project financing, uncertainty matters as much as the prediction. Banks use statistical analysis to determine P50 (median), P90 (conservative), and P99 (worst case) scenarios.
             </p>
 
             <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '16px', borderRadius: '8px' }}>
               <p style={{ color: '#f8fafc', marginBottom: '8px' }}><strong>Example for 15,000 kWh/yr P50 prediction:</strong></p>
-              <ul style={{ color: '#94a3b8', fontSize: '14px', paddingLeft: '20px' }}>
+              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '20px' }}>
                 <li>P50 (median): 15,000 kWh - 50% chance of exceeding</li>
                 <li>P90: ~13,500 kWh - 90% chance of exceeding (used for debt sizing)</li>
                 <li>P99: ~12,500 kWh - 99% chance of exceeding (worst case)</li>
@@ -1480,7 +1533,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
       <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
             Solar yield prediction powers billion-dollar decisions
           </p>
 
@@ -1499,7 +1552,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                 <h3 style={{ color: '#f8fafc' }}>{app.title}</h3>
                 {transferCompleted.has(index) && <span style={{ color: '#22c55e' }}>Complete</span>}
               </div>
-              <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
               <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
                 <p style={{ color: '#f59e0b', fontSize: '14px' }}>{app.question}</p>
               </div>
@@ -1513,13 +1566,34 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                     background: 'transparent',
                     color: '#f59e0b',
                     cursor: 'pointer',
+                    minHeight: '44px',
                   }}
                 >
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
-                  <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e', marginBottom: '12px' }}>
+                    <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (index < transferApplications.length - 1) {
+                        // Mark next one as ready to view
+                      }
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: colors.success,
+                      color: '#fff',
+                      cursor: 'pointer',
+                      minHeight: '44px',
+                    }}
+                  >
+                    {index < transferApplications.length - 1 ? 'Next Application' : 'Got It'}
+                  </button>
                 </div>
               )}
             </div>
@@ -1548,7 +1622,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                 {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
               </h2>
               <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: '#94a3b8', marginTop: '8px' }}>
+              <p style={{ color: '#e2e8f0', marginTop: '8px' }}>
                 {testScore >= 8 ? 'You have mastered solar yield prediction!' : 'Review the material and try again.'}
               </p>
             </div>
@@ -1594,7 +1668,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2>Knowledge Test</h2>
-            <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            <span style={{ color: '#e2e8f0' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
@@ -1630,6 +1704,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                   color: '#f8fafc',
                   cursor: 'pointer',
                   textAlign: 'left',
+                  minHeight: '44px',
                 }}
               >
                 {opt.text}
@@ -1648,6 +1723,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                 background: 'transparent',
                 color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                minHeight: '44px',
               }}
             >
               Previous
@@ -1663,6 +1739,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                   background: '#f59e0b',
                   color: 'white',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Next
@@ -1678,6 +1755,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                   background: allAnswered ? '#22c55e' : '#475569',
                   color: 'white',
                   cursor: allAnswered ? 'pointer' : 'not-allowed',
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1697,7 +1775,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
           <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Mastery Achieved!</h1>
-          <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
+          <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>
             You have mastered solar yield prediction physics
           </p>
 
@@ -1715,7 +1793,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
           <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '20px', borderRadius: '12px', textAlign: 'left' }}>
             <h3 style={{ color: '#22c55e', marginBottom: '12px' }}>Connection to AI/Compute:</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
               The same principle applies: a few key parameters often dominate complex systems. Just as solar yield is ~90% determined by irradiance, temperature, and basic losses, AI inference latency is dominated by memory bandwidth and model size. Simple models reveal the physics before you need complexity.
             </p>
           </div>

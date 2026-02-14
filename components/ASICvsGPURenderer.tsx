@@ -23,6 +23,207 @@ interface ASICvsGPURendererProps {
   gamePhase?: string;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SVG VISUALIZATION COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+interface HardwareVisualizationProps {
+  workloadVolume: number;
+  algorithmStability: number;
+  powerBudget: number;
+  selectedHardware: 'asic' | 'gpu' | 'fpga';
+  showControls?: boolean;
+  animationFrame: number;
+}
+
+const HardwareVisualization: React.FC<HardwareVisualizationProps> = ({
+  workloadVolume,
+  algorithmStability,
+  powerBudget,
+  selectedHardware,
+  showControls = false,
+  animationFrame,
+}) => {
+  // Calculate metrics for visualization
+  const asicEfficiency = Math.min(100, (workloadVolume / 100) * (algorithmStability / 100) * 100 + 20);
+  const gpuEfficiency = Math.max(20, 100 - workloadVolume * 0.6);
+  const fpgaEfficiency = Math.min(80, 40 + (workloadVolume / 100) * 30);
+
+  const asicPower = 100 - powerBudget * 0.3;
+  const gpuPower = 30 + powerBudget * 0.2;
+  const fpgaPower = 60;
+
+  // Animation offset for subtle movement
+  const animOffset = Math.sin(animationFrame * 0.05) * 2;
+
+  return (
+    <svg
+      viewBox="0 0 500 350"
+      style={{ width: '100%', maxWidth: '500px', height: 'auto' }}
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <defs>
+        <linearGradient id="asicGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#10B981" />
+          <stop offset="100%" stopColor="#059669" />
+        </linearGradient>
+        <linearGradient id="gpuGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8B5CF6" />
+          <stop offset="100%" stopColor="#7C3AED" />
+        </linearGradient>
+        <linearGradient id="fpgaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#F59E0B" />
+          <stop offset="100%" stopColor="#D97706" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="shadow">
+          <feDropShadow dx="2" dy="2" stdDeviation="3" floodOpacity="0.3"/>
+        </filter>
+      </defs>
+
+      {/* Background */}
+      <rect x="0" y="0" width="500" height="350" fill="#0a0a0f" rx="8"/>
+
+      {/* Grid lines */}
+      <g stroke="#1a1a24" strokeWidth="1" opacity="0.6">
+        {[50, 100, 150, 200, 250, 300].map(y => (
+          <line key={y} x1="60" y1={y} x2="480" y2={y} strokeDasharray="4,4" />
+        ))}
+        {[60, 160, 260, 360, 460].map(x => (
+          <line key={x} x1={x} y1="50" x2={x} y2="300" strokeDasharray="4,4" />
+        ))}
+      </g>
+
+      {/* Title */}
+      <text x="250" y="30" textAnchor="middle" fill="#e2e8f0" fontSize="16" fontWeight="bold">
+        Hardware Performance Comparison
+      </text>
+
+      {/* Y-axis label */}
+      <text x="25" y="175" textAnchor="middle" fill="#e2e8f0" fontSize="12" transform="rotate(-90, 25, 175)">
+        Efficiency Score
+      </text>
+
+      {/* X-axis labels */}
+      <text x="120" y="325" textAnchor="middle" fill="#10B981" fontSize="13" fontWeight="600">ASIC</text>
+      <text x="260" y="325" textAnchor="middle" fill="#8B5CF6" fontSize="13" fontWeight="600">GPU</text>
+      <text x="400" y="325" textAnchor="middle" fill="#F59E0B" fontSize="13" fontWeight="600">FPGA</text>
+
+      {/* ASIC Chip visualization */}
+      <g transform={`translate(80, ${150 - asicEfficiency + animOffset})`} filter="url(#shadow)">
+        <rect x="0" y="0" width="80" height="80" fill="url(#asicGradient)" rx="4"
+              stroke={selectedHardware === 'asic' ? '#fff' : 'none'} strokeWidth="2"/>
+        {/* Chip die pattern */}
+        <g fill="#0a0a0f" opacity="0.3">
+          {[10, 30, 50].map(x => [10, 30, 50].map(y => (
+            <rect key={`${x}-${y}`} x={x} y={y} width="15" height="15" rx="2"/>
+          )))}
+        </g>
+        {/* Pins */}
+        {[0, 20, 40, 60].map(pos => (
+          <g key={pos}>
+            <rect x={pos + 5} y="-8" width="10" height="8" fill="#94a3b8"/>
+            <rect x={pos + 5} y="80" width="10" height="8" fill="#94a3b8"/>
+          </g>
+        ))}
+      </g>
+      <text x="120" y={150 - asicEfficiency + animOffset + 95} textAnchor="middle" fill="#e2e8f0" fontSize="11">
+        {asicEfficiency.toFixed(0)}%
+      </text>
+
+      {/* GPU visualization */}
+      <g transform={`translate(220, ${150 - gpuEfficiency * 0.8 + animOffset})`} filter="url(#shadow)">
+        <rect x="0" y="0" width="80" height="100" fill="url(#gpuGradient)" rx="4"
+              stroke={selectedHardware === 'gpu' ? '#fff' : 'none'} strokeWidth="2"/>
+        {/* GPU cores grid */}
+        <g fill="#0a0a0f" opacity="0.3">
+          {[8, 28, 48, 68].map(x => [8, 28, 48, 68, 88].map(y => (
+            y < 90 && <rect key={`${x}-${y}`} x={x} y={y} width="12" height="12" rx="1"/>
+          )))}
+        </g>
+        {/* Fan */}
+        <circle cx="40" cy="50" r="25" fill="none" stroke="#c4b5fd" strokeWidth="2"/>
+        <polygon points="40,30 55,50 40,70 25,50" fill="#c4b5fd" opacity="0.5"/>
+      </g>
+      <text x="260" y={150 - gpuEfficiency * 0.8 + animOffset + 115} textAnchor="middle" fill="#e2e8f0" fontSize="11">
+        {gpuEfficiency.toFixed(0)}%
+      </text>
+
+      {/* FPGA visualization */}
+      <g transform={`translate(360, ${150 - fpgaEfficiency * 0.9 + animOffset})`} filter="url(#shadow)">
+        <rect x="0" y="0" width="80" height="80" fill="url(#fpgaGradient)" rx="4"
+              stroke={selectedHardware === 'fpga' ? '#fff' : 'none'} strokeWidth="2"/>
+        {/* Configurable logic blocks */}
+        <g fill="#fcd34d" opacity="0.4">
+          {[5, 25, 45, 65].map(x => [5, 25, 45, 65].map(y => (
+            <rect key={`${x}-${y}`} x={x} y={y} width="10" height="10" rx="1"/>
+          )))}
+        </g>
+        {/* Interconnect lines */}
+        <g stroke="#fcd34d" strokeWidth="1" opacity="0.6">
+          <line x1="10" y1="40" x2="70" y2="40"/>
+          <line x1="40" y1="10" x2="40" y2="70"/>
+        </g>
+      </g>
+      <text x="400" y={150 - fpgaEfficiency * 0.9 + animOffset + 95} textAnchor="middle" fill="#e2e8f0" fontSize="11">
+        {fpgaEfficiency.toFixed(0)}%
+      </text>
+
+      {/* Performance bars */}
+      <text x="60" y="260" fill="#94a3b8" fontSize="11">Performance</text>
+      <rect x="120" y="250" width={asicEfficiency * 1.2} height="12" fill="url(#asicGradient)" rx="2"/>
+      <rect x="260" y="250" width={gpuEfficiency * 0.8} height="12" fill="url(#gpuGradient)" rx="2"/>
+      <rect x="400" y="250" width={fpgaEfficiency * 0.9} height="12" fill="url(#fpgaGradient)" rx="2"/>
+
+      {/* Power consumption indicators */}
+      <text x="60" y="285" fill="#94a3b8" fontSize="11">Power Draw</text>
+      <rect x="120" y="275" width={asicPower * 0.6} height="12" fill="#10B981" opacity="0.6" rx="2"/>
+      <rect x="260" y="275" width={gpuPower * 1.2} height="12" fill="#8B5CF6" opacity="0.6" rx="2"/>
+      <rect x="400" y="275" width={fpgaPower} height="12" fill="#F59E0B" opacity="0.6" rx="2"/>
+
+      {/* Legend */}
+      <rect x="380" y="30" width="110" height="80" fill="#12121a" rx="4" stroke="#2a2a3a"/>
+      <text x="440" y="45" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">Legend</text>
+      <circle cx="395" cy="60" r="5" fill="#10B981"/>
+      <text x="405" y="64" fill="#e2e8f0" fontSize="11">ASIC</text>
+      <circle cx="395" cy="78" r="5" fill="#8B5CF6"/>
+      <text x="405" y="82" fill="#e2e8f0" fontSize="11">GPU</text>
+      <circle cx="395" cy="96" r="5" fill="#F59E0B"/>
+      <text x="405" y="100" fill="#e2e8f0" fontSize="11">FPGA</text>
+
+      {/* Control indicator when showing interactive mode */}
+      {/* ASIC efficiency curve (reference) */}
+      <path
+        d="M60 290 L100 280 L140 265 L180 245 L220 220 L260 190 L300 155 L340 120 L380 90 L420 65 L460 50"
+        fill="none"
+        stroke="rgba(16, 185, 129, 0.2)"
+        strokeWidth="2"
+        strokeDasharray="6,3"
+      />
+
+      {/* Formula: Efficiency = f(Volume, Stability, Power) */}
+      <rect x="120" y="330" width="260" height="18" rx="4" fill="rgba(139, 92, 246, 0.1)" stroke="rgba(139, 92, 246, 0.3)" strokeWidth="1" />
+      <text x="250" y="343" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">
+        Efficiency = f(Volume × Stability / Power)
+      </text>
+
+      {showControls && (
+        <g>
+          <rect x="10" y="310" width="100" height="20" fill="#3B82F6" opacity="0.2" rx="4"/>
+          <text x="60" y="324" textAnchor="middle" fill="#3B82F6" fontSize="11">
+            Interactive
+          </text>
+        </g>
+      )}
+    </svg>
+  );
+};
+
 // Sound utility
 const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   if (typeof window === 'undefined') return;
@@ -263,9 +464,9 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [workloadVolume, setWorkloadVolume] = useState(50); // Production volume (thousands)
-  const [algorithmStability, setAlgorithmStability] = useState(80); // Years until change (0-100 scale)
-  const [powerBudget, setPowerBudget] = useState(50); // Power constraint strictness
+  const [workloadVolume, setWorkloadVolume] = useState(30); // Production volume (thousands)
+  const [algorithmStability, setAlgorithmStability] = useState(70); // Years until change (0-100 scale)
+  const [powerBudget, setPowerBudget] = useState(40); // Power constraint strictness
   const [selectedHardware, setSelectedHardware] = useState<'asic' | 'gpu' | 'fpga'>('gpu');
   const [animationFrame, setAnimationFrame] = useState(0);
 
@@ -298,7 +499,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
     return () => clearInterval(timer);
   }, []);
 
-  // Premium design colors
+  // Premium design colors - using bright text for accessibility
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -309,8 +510,8 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // Bright secondary text for contrast (brightness ~230)
+    textMuted: '#cbd5e1', // Brighter muted text (brightness ~200)
     border: '#2a2a3a',
     asic: '#10B981', // Green for ASIC
     gpu: '#8B5CF6', // Purple for GPU
@@ -333,7 +534,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Economics Lab',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -479,7 +680,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
     </div>
   );
 
-  // Primary button style
+  // Primary button style - minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
     color: 'white',
@@ -491,7 +692,74 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Secondary button style
+  const secondaryButtonStyle: React.CSSProperties = {
+    background: 'transparent',
+    color: colors.textSecondary,
+    border: `1px solid ${colors.border}`,
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Fixed navigation bar component
+  const NavigationBar: React.FC<{ showBack?: boolean; onBack?: () => void; onNext?: () => void; nextLabel?: string; nextDisabled?: boolean }> = ({
+    showBack = true,
+    onBack,
+    onNext,
+    nextLabel = 'Next',
+    nextDisabled = false,
+  }) => (
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: colors.bgSecondary,
+      borderTop: `1px solid ${colors.border}`,
+      padding: '12px 24px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: '12px',
+      zIndex: 1000,
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+    }}>
+      {showBack ? (
+        <button
+          onClick={onBack}
+          style={{
+            ...secondaryButtonStyle,
+            flex: 1,
+            maxWidth: '150px',
+          }}
+        >
+          ← Back
+        </button>
+      ) : <div style={{ flex: 1, maxWidth: '150px' }} />}
+      {onNext && (
+        <button
+          onClick={onNext}
+          disabled={nextDisabled}
+          style={{
+            ...primaryButtonStyle,
+            flex: 2,
+            opacity: nextDisabled ? 0.5 : 1,
+            cursor: nextDisabled ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {nextLabel}
+        </button>
+      )}
+    </nav>
+  );
 
   // Comparison visualization component
   const ComparisonVisualization = () => {
@@ -676,22 +944,23 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
         padding: '24px',
+        paddingBottom: '100px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          <span style={{ marginRight: '16px' }}>🎮</span>
-          <span style={{ fontSize: '40px' }}>vs</span>
-          <span style={{ marginLeft: '16px' }}>🔧</span>
+        <div style={{ marginTop: '40px', marginBottom: '24px' }}>
+          <HardwareVisualization
+            workloadVolume={50}
+            algorithmStability={80}
+            powerBudget={50}
+            selectedHardware="gpu"
+            showControls={false}
+            animationFrame={animationFrame}
+          />
         </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
           ASIC vs GPU: The Great Tradeoff
@@ -701,9 +970,9 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
           ...typo.body,
           color: colors.textSecondary,
           maxWidth: '600px',
-          marginBottom: '32px',
+          marginBottom: '24px',
         }}>
-          "Why can a $500 Bitcoin mining chip outperform a $10,000 GPU? The answer reveals the fundamental tradeoff between <span style={{ color: colors.asic }}>specialization</span> and <span style={{ color: colors.gpu }}>flexibility</span>."
+          Why can a $500 Bitcoin mining chip outperform a $10,000 GPU? The answer reveals the fundamental tradeoff between <span style={{ color: colors.asic }}>specialization</span> and <span style={{ color: colors.gpu }}>flexibility</span>.
         </p>
 
         <div style={{
@@ -722,14 +991,13 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
           </p>
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore the Tradeoff →
-        </button>
-
         {renderNavDots()}
+
+        <NavigationBar
+          showBack={false}
+          onNext={() => { playSound('click'); nextPhase(); }}
+          nextLabel="Start Exploring →"
+        />
       </div>
     );
   }
@@ -747,10 +1015,12 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '40px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -759,53 +1029,35 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              🤔 Make Your Prediction - Step 1 of 3
             </p>
           </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px' }}>
             A company needs to process a specific computation 24/7. Should they use an ASIC (custom chip) or a GPU (graphics card)?
           </h2>
 
-          {/* Simple diagram */}
+          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            Look at the hardware comparison below. Consider what factors might affect the choice between specialized and general-purpose hardware.
+          </p>
+
+          {/* SVG Visualization - static for predict phase */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '24px',
-            textAlign: 'center',
+            display: 'flex',
+            justifyContent: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  background: `${colors.asic}22`,
-                  padding: '20px',
-                  borderRadius: '12px',
-                  border: `2px solid ${colors.asic}`,
-                  marginBottom: '8px',
-                }}>
-                  <div style={{ fontSize: '36px' }}>🔧</div>
-                </div>
-                <p style={{ ...typo.small, color: colors.asic, fontWeight: 600 }}>ASIC</p>
-                <p style={{ ...typo.small, color: colors.textMuted }}>One job, maximum speed</p>
-              </div>
-
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>?</div>
-
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  background: `${colors.gpu}22`,
-                  padding: '20px',
-                  borderRadius: '12px',
-                  border: `2px solid ${colors.gpu}`,
-                  marginBottom: '8px',
-                }}>
-                  <div style={{ fontSize: '36px' }}>🎮</div>
-                </div>
-                <p style={{ ...typo.small, color: colors.gpu, fontWeight: 600 }}>GPU</p>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Many jobs, flexible</p>
-              </div>
-            </div>
+            <HardwareVisualization
+              workloadVolume={50}
+              algorithmStability={80}
+              powerBudget={50}
+              selectedHardware="gpu"
+              showControls={false}
+              animationFrame={0}
+            />
           </div>
 
           {/* Options */}
@@ -822,6 +1074,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -844,18 +1097,17 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               </button>
             ))}
           </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction →
-            </button>
-          )}
         </div>
 
         {renderNavDots()}
+
+        <NavigationBar
+          showBack={true}
+          onBack={() => goToPhase('hook')}
+          onNext={prediction ? () => { playSound('success'); nextPhase(); } : undefined}
+          nextLabel="Test My Prediction →"
+          nextDisabled={!prediction}
+        />
       </div>
     );
   }
@@ -865,21 +1117,53 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
     return (
       <div style={{
         minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Explore ASIC vs GPU Tradeoffs
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust the sliders to see how different factors affect the optimal choice
-          </p>
 
-          {/* Comparison visualization */}
-          <ComparisonVisualization />
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.success}15`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.success }}>What to Watch:</strong> Adjust the sliders below and observe how the efficiency scores change. Notice how high volume and algorithm stability increase ASIC advantage, while flexibility needs favor GPUs.
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px', margin: 0 }}>
+              <strong>Performance per Watt</strong> is defined as the ratio of computational output to energy consumed. This is why engineers design ASICs for power-critical applications used in data centers and mobile devices.
+            </p>
+          </div>
+
+          {/* SVG Visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}>
+            <HardwareVisualization
+              workloadVolume={workloadVolume}
+              algorithmStability={algorithmStability}
+              powerBudget={powerBudget}
+              selectedHardware={selectedHardware}
+              showControls={true}
+              animationFrame={animationFrame}
+            />
+          </div>
 
           {/* Sliders */}
           <div style={{
@@ -892,22 +1176,27 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>📦 Production Volume</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                  {workloadVolume < 10 ? '<10K units' : workloadVolume < 50 ? `${workloadVolume}K units` : workloadVolume < 100 ? `${workloadVolume}K units` : '>100K units'}
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }} data-slider-value="true">
+                  {workloadVolume}K units
                 </span>
               </div>
               <input
                 type="range"
-                min="1"
+                min="0"
                 max="100"
                 value={workloadVolume}
-                onChange={(e) => setWorkloadVolume(parseInt(e.target.value))}
+                onChange={(e) => setWorkloadVolume(Math.round(parseFloat(e.target.value)))}
+                onInput={(e) => setWorkloadVolume(Math.round(parseFloat((e.target as HTMLInputElement).value)))}
+                data-testid="production-slider"
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${workloadVolume}%, ${colors.border} ${workloadVolume}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.accent,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -929,13 +1218,17 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                 min="0"
                 max="100"
                 value={algorithmStability}
-                onChange={(e) => setAlgorithmStability(parseInt(e.target.value))}
+                onChange={(e) => setAlgorithmStability(Math.round(parseFloat(e.target.value)))}
+                onInput={(e) => setAlgorithmStability(Math.round(parseFloat((e.target as HTMLInputElement).value)))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.warning} ${algorithmStability}%, ${colors.border} ${algorithmStability}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.warning,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -957,13 +1250,17 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                 min="0"
                 max="100"
                 value={powerBudget}
-                onChange={(e) => setPowerBudget(parseInt(e.target.value))}
+                onChange={(e) => setPowerBudget(Math.round(parseFloat(e.target.value)))}
+                onInput={(e) => setPowerBudget(Math.round(parseFloat((e.target as HTMLInputElement).value)))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.success} ${powerBudget}%, ${colors.border} ${powerBudget}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.success,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -995,16 +1292,17 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                   : 'Low volume or changing algorithms favor general-purpose flexibility'}
             </p>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Economics →
-          </button>
         </div>
 
         {renderNavDots()}
+        </div>{/* scroll wrapper */}
+
+        <NavigationBar
+          showBack={true}
+          onBack={() => goToPhase('predict')}
+          onNext={() => { playSound('success'); nextPhase(); }}
+          nextLabel="Understand the Economics →"
+        />
       </div>
     );
   }
@@ -1016,13 +1314,34 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '40px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Specialization Wins (Sometimes)
           </h2>
+
+          {/* SVG visualization for review */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}>
+            <HardwareVisualization
+              workloadVolume={80}
+              algorithmStability={90}
+              powerBudget={70}
+              selectedHardware="asic"
+              showControls={false}
+              animationFrame={0}
+            />
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1032,7 +1351,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
           }}>
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>The Efficiency Spectrum:</strong>
+                <strong style={{ color: colors.textPrimary }}>The Efficiency Spectrum:</strong> As you observed in the experiment, the optimal hardware choice depends on your specific situation.
               </p>
               <p style={{ marginBottom: '16px' }}>
                 <span style={{ color: colors.gpu }}>GPUs</span> are like Swiss Army knives—they can do many things reasonably well, but they carry overhead for every capability they might need.
@@ -1057,7 +1376,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               💡 Key Insight: NRE Economics
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>NRE (Non-Recurring Engineering)</strong> costs for ASIC development can be $50-500 million. This only makes sense if you can spread that cost across millions of chips AND your algorithm won't change for years.
+              <strong>NRE (Non-Recurring Engineering)</strong> costs for ASIC development = $50-500 million. This only makes sense if you can spread that cost across millions of chips AND your algorithm won't change for years.
             </p>
           </div>
 
@@ -1102,16 +1421,16 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               <div style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>Mask + fab + design</div>
             </div>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Algorithm Risk →
-          </button>
         </div>
 
         {renderNavDots()}
+
+        <NavigationBar
+          showBack={true}
+          onBack={() => goToPhase('play')}
+          onNext={() => { playSound('success'); nextPhase(); }}
+          nextLabel="Explore Algorithm Risk →"
+        />
       </div>
     );
   }
@@ -1129,10 +1448,12 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '40px auto 0' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1141,13 +1462,32 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              ⚠️ New Variable: Algorithm Changes
+              ⚠️ New Variable: Algorithm Changes - Step 1 of 2
             </p>
           </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px' }}>
             A company built a $100M ASIC for their AI algorithm. Two years later, researchers discover a fundamentally better approach. What happens to their ASIC investment?
           </h2>
+
+          {/* SVG Visualization - static for twist_predict phase */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}>
+            <HardwareVisualization
+              workloadVolume={90}
+              algorithmStability={20}
+              powerBudget={50}
+              selectedHardware="asic"
+              showControls={false}
+              animationFrame={0}
+            />
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1161,6 +1501,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1183,18 +1524,17 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               </button>
             ))}
           </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See the Impact →
-            </button>
-          )}
         </div>
 
         {renderNavDots()}
+
+        <NavigationBar
+          showBack={true}
+          onBack={() => goToPhase('review')}
+          onNext={twistPrediction ? () => { playSound('success'); nextPhase(); } : undefined}
+          nextLabel="See the Impact →"
+          nextDisabled={!twistPrediction}
+        />
       </div>
     );
   }
@@ -1206,16 +1546,47 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '40px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             The Economics Decision Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Explore how volume and stability affect your investment decision
-          </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.success}15`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.success }}>What to Watch:</strong> Explore how volume and stability affect your investment decision. Try adjusting the sliders to see when ASIC investment becomes risky.
+            </p>
+          </div>
+
+          {/* SVG Visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}>
+            <HardwareVisualization
+              workloadVolume={workloadVolume}
+              algorithmStability={algorithmStability}
+              powerBudget={powerBudget}
+              selectedHardware={selectedHardware}
+              showControls={true}
+              animationFrame={animationFrame}
+            />
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1300,15 +1671,19 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               </div>
               <input
                 type="range"
-                min="1"
+                min="0"
                 max="100"
                 value={workloadVolume}
-                onChange={(e) => setWorkloadVolume(parseInt(e.target.value))}
+                onChange={(e) => setWorkloadVolume(Math.round(parseFloat(e.target.value)))}
+                onInput={(e) => setWorkloadVolume(Math.round(parseFloat((e.target as HTMLInputElement).value)))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.accent,
                 }}
               />
             </div>
@@ -1326,12 +1701,16 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                 min="0"
                 max="100"
                 value={algorithmStability}
-                onChange={(e) => setAlgorithmStability(parseInt(e.target.value))}
+                onChange={(e) => setAlgorithmStability(Math.round(parseFloat(e.target.value)))}
+                onInput={(e) => setAlgorithmStability(Math.round(parseFloat((e.target as HTMLInputElement).value)))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.accent,
                 }}
               />
             </div>
@@ -1374,16 +1753,16 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               </div>
             </div>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Strategy →
-          </button>
         </div>
 
         {renderNavDots()}
+
+        <NavigationBar
+          showBack={true}
+          onBack={() => goToPhase('twist_predict')}
+          onNext={() => { playSound('success'); nextPhase(); }}
+          nextLabel="Understand the Strategy →"
+        />
       </div>
     );
   }
@@ -1395,13 +1774,34 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '40px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Strategic ASIC Design
           </h2>
+
+          {/* SVG visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}>
+            <HardwareVisualization
+              workloadVolume={70}
+              algorithmStability={85}
+              powerBudget={60}
+              selectedHardware="fpga"
+              showControls={false}
+              animationFrame={0}
+            />
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
             <div style={{
@@ -1430,7 +1830,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Volume Thresholds</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                General rule: ASICs need <span style={{ color: colors.warning }}>100K+ units</span> to justify NRE costs. FPGAs work well for 1K-100K units. GPUs are ideal for prototyping and low-volume production.
+                General rule: ASICs need <span style={{ color: colors.warning }}>100K+ units</span> to justify NRE costs. FPGAs work well for 1K-100K units. GPUs are ideal for prototyping and low-volume production. The formula: Total Cost = NRE / Volume + Unit Cost
               </p>
             </div>
 
@@ -1449,16 +1849,16 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               </p>
             </div>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications →
-          </button>
         </div>
 
         {renderNavDots()}
+
+        <NavigationBar
+          showBack={true}
+          onBack={() => goToPhase('twist_play')}
+          onNext={() => { playSound('success'); nextPhase(); }}
+          nextLabel="See Real-World Applications →"
+        />
       </div>
     );
   }
@@ -1466,20 +1866,40 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
   // TRANSFER PHASE
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
+    const completedCount = completedApps.filter(c => c).length;
     const allAppsCompleted = completedApps.every(c => c);
+
+    const handleGotIt = () => {
+      playSound('click');
+      const newCompleted = [...completedApps];
+      newCompleted[selectedApp] = true;
+      setCompletedApps(newCompleted);
+      // Auto-advance to next incomplete app
+      const nextIncomplete = completedApps.findIndex((c, i) => !c && i !== selectedApp);
+      if (nextIncomplete !== -1) {
+        setSelectedApp(nextIncomplete);
+      }
+    };
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '40px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} — {completedCount} of {realWorldApps.length} completed
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1506,6 +1926,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1570,6 +1991,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1584,19 +2006,37 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                 </div>
               ))}
             </div>
-          </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test →
-            </button>
-          )}
+            {/* Got It button for current app */}
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={handleGotIt}
+                style={{
+                  ...primaryButtonStyle,
+                  width: '100%',
+                  background: `linear-gradient(135deg, ${app.color}, ${app.color}88)`,
+                }}
+              >
+                Got It! Continue →
+              </button>
+            )}
+            {completedApps[selectedApp] && !allAppsCompleted && (
+              <p style={{ ...typo.small, color: colors.success, textAlign: 'center', margin: 0 }}>
+                ✓ Completed — Select another application above
+              </p>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
+
+        <NavigationBar
+          showBack={true}
+          onBack={() => goToPhase('twist_review')}
+          onNext={allAppsCompleted ? () => { playSound('success'); nextPhase(); } : undefined}
+          nextLabel="Take the Knowledge Test →"
+          nextDisabled={!allAppsCompleted}
+        />
       </div>
     );
   }
@@ -1610,10 +2050,12 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingBottom: '100px',
+          overflowY: 'auto',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '40px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1631,30 +2073,21 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                 ? 'You\'ve mastered ASIC vs GPU tradeoffs!'
                 : 'Review the concepts and try again.'}
             </p>
-
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
           </div>
           {renderNavDots()}
+
+          <NavigationBar
+            showBack={!passed}
+            onBack={() => {
+              setTestSubmitted(false);
+              setTestAnswers(Array(10).fill(null));
+              setCurrentQuestion(0);
+              setTestScore(0);
+              goToPhase('hook');
+            }}
+            onNext={passed ? () => { playSound('complete'); nextPhase(); } : undefined}
+            nextLabel={passed ? "Complete Lesson →" : "Review & Try Again"}
+          />
         </div>
       );
     }
@@ -1666,19 +2099,21 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
+        <div style={{ maxWidth: '700px', margin: '40px auto 0' }}>
+          {/* Progress with Q number */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '24px',
           }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
+            <span style={{ ...typo.h3, color: colors.accent, fontWeight: 700 }}>
+              Q{currentQuestion + 1} of 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
@@ -1732,6 +2167,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1769,6 +2205,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 ← Previous
@@ -1787,9 +2224,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
-                Next →
+                Next Question
               </button>
             ) : (
               <button
@@ -1812,6 +2250,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1834,14 +2273,16 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
         padding: '24px',
+        paddingBottom: '100px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
         <div style={{
           fontSize: '100px',
+          marginTop: '40px',
           marginBottom: '24px',
           animation: 'bounce 1s infinite',
         }}>
@@ -1883,33 +2324,14 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
         {renderNavDots()}
+
+        <NavigationBar
+          showBack={true}
+          onBack={() => goToPhase('hook')}
+          onNext={() => { window.location.href = '/'; }}
+          nextLabel="Return to Dashboard"
+        />
       </div>
     );
   }

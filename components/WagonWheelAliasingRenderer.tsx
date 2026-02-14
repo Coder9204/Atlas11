@@ -85,7 +85,7 @@ interface WagonWheelAliasingRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -98,6 +98,8 @@ const colors = {
   spoke: '#64748b',
   sample: '#ef4444',
 };
+
+const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
 
 const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   phase,
@@ -903,6 +905,117 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     </div>
   );
 
+  const currentPhaseIndex = phaseOrder.indexOf(phase as typeof phaseOrder[number]);
+
+  const renderNavBar = () => (
+    <nav
+      aria-label="Game navigation"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 24px',
+        background: colors.bgDark,
+        borderBottom: `1px solid rgba(255,255,255,0.1)`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 1001,
+      }}
+    >
+      <button
+        onClick={() => {
+          if (currentPhaseIndex > 0) {
+            // Navigate back - this would need parent handling
+          }
+        }}
+        aria-label="Back"
+        style={{
+          padding: '8px 16px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: currentPhaseIndex === 0 ? 'rgba(255,255,255,0.3)' : colors.textPrimary,
+          cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
+          fontSize: '14px',
+        }}
+        disabled={currentPhaseIndex === 0}
+      >
+        Back
+      </button>
+
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        {phaseOrder.map((p, i) => (
+          <button
+            key={p}
+            aria-label={`Phase ${i + 1}: ${p}`}
+            onClick={() => {
+              // Navigation dot click - would need parent handling
+            }}
+            style={{
+              width: '10px',
+              height: '10px',
+              minHeight: '10px',
+              borderRadius: '50%',
+              border: 'none',
+              background: i === currentPhaseIndex ? colors.accent : i < currentPhaseIndex ? colors.success : 'rgba(255,255,255,0.3)',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={onPhaseComplete}
+        aria-label="Next"
+        style={{
+          padding: '8px 16px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: 'none',
+          background: colors.accent,
+          color: 'white',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: 'bold',
+        }}
+      >
+        Next
+      </button>
+    </nav>
+  );
+
+  const renderProgressBar = () => (
+    <div
+      role="progressbar"
+      aria-valuenow={currentPhaseIndex + 1}
+      aria-valuemin={1}
+      aria-valuemax={phaseOrder.length}
+      aria-label={`Progress: phase ${currentPhaseIndex + 1} of ${phaseOrder.length}`}
+      style={{
+        position: 'fixed',
+        top: '68px',
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: 'rgba(255,255,255,0.1)',
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`,
+          height: '100%',
+          background: colors.accent,
+          transition: 'width 0.3s ease',
+        }}
+      />
+    </div>
+  );
+
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed',
@@ -914,13 +1027,14 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
       justifyContent: 'flex-end',
-      zIndex: 1000,
+      zIndex: 1001,
     }}>
       <button
         onClick={onPhaseComplete}
         disabled={disabled && !canProceed}
         style={{
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',

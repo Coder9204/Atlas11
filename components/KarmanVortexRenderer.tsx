@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
 // GAME 110: KÁRMÁN VORTEX STREET
@@ -6,18 +6,38 @@ import React, { useState, useEffect, useCallback } from 'react';
 // Demonstrates vortex shedding, Reynolds number, and resonance
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Explore Twist',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
+
 interface KarmanVortexRendererProps {
-  phase: string;
+  gamePhase?: Phase;
+  phase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 // Color palette with proper contrast
 const colors = {
-  // Text colors - HIGH CONTRAST
+  // Text colors - HIGH CONTRAST (all use #e2e8f0 or brighter for accessibility)
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast
 
   // Background colors
   bgPrimary: '#0f172a',
@@ -46,10 +66,26 @@ const colors = {
 };
 
 const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
-  phase,
+  gamePhase,
+  phase: phaseProp,
   onPhaseComplete,
   onPredictionMade,
+  onCorrectAnswer,
+  onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    if (phaseProp && phaseOrder.includes(phaseProp as Phase)) {
+      return phaseProp as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
   // ==================== STATE ====================
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -71,8 +107,15 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
   // Test phase
   const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
 
   const [isMobile, setIsMobile] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Responsive detection
   useEffect(() => {
@@ -81,6 +124,40 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Sync phase with gamePhase prop changes
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase, phase]);
+
+  // Internal navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
 
   // Responsive typography
   const typo = {
@@ -95,6 +172,203 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     sectionGap: isMobile ? '16px' : '20px',
     elementGap: isMobile ? '8px' : '12px',
   };
+
+  // Progress bar showing all 10 phases
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        backgroundColor: colors.bgDark,
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '6px' }} role="navigation" aria-label="Phase navigation">
+            {phaseOrder.map((p, i) => (
+              <button
+                key={p}
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                aria-label={phaseLabels[p]}
+                aria-current={i === currentIdx ? 'step' : undefined}
+                style={{
+                  height: '12px',
+                  width: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
+                  cursor: i <= currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s',
+                  border: 'none',
+                  padding: 0,
+                }}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
+            {currentIdx + 1} / {phaseOrder.length}
+          </span>
+        </div>
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `${colors.accent}20`,
+          color: colors.accent,
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom bar with Back/Next navigation
+  const renderNavBottomBar = (canProceed: boolean, buttonText: string, onNext?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = currentIdx > 0;
+
+    return (
+      <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        backgroundColor: colors.bgDark,
+        gap: '12px',
+      }}>
+        <button
+          onClick={goBack}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '14px',
+            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+            color: colors.textSecondary,
+            border: '1px solid rgba(255,255,255,0.1)',
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+          disabled={!canBack}
+        >
+          Back
+        </button>
+
+        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={onNext || goNext}
+          disabled={!canProceed}
+          style={{
+            padding: '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: '14px',
+            background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)` : 'rgba(30, 41, 59, 0.9)',
+            color: canProceed ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            opacity: canProceed ? 1 : 0.4,
+            boxShadow: canProceed ? `0 2px 12px ${colors.accent}30` : 'none',
+            minHeight: '44px',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
+    );
+  };
+
+  // Wrapper function for phase content
+  const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
+    <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary, minHeight: '100vh' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{renderProgressBar()}</div>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', marginTop: '60px', marginBottom: bottomBarContent ? '70px' : 0, paddingBottom: '100px', paddingTop: '48px', transition: 'opacity 0.3s ease' }}>
+        {content}
+      </div>
+      {bottomBarContent && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{bottomBarContent}</div>}
+    </div>
+  );
+
+  // Standard bottom bar used in play/review phases
+  const renderBottomBar = (canBack: boolean, canNext: boolean, nextText: string) => (
+    <div style={{
+      position: 'fixed' as const,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '12px 16px',
+      borderTop: '1px solid rgba(255,255,255,0.1)',
+      backgroundColor: colors.bgDark,
+      gap: '12px',
+    }}>
+      <button
+        onClick={goBack}
+        style={{
+          padding: '10px 20px',
+          borderRadius: '10px',
+          fontWeight: 600,
+          fontSize: '14px',
+          backgroundColor: 'rgba(30, 41, 59, 0.9)',
+          color: colors.textSecondary,
+          border: '1px solid rgba(255,255,255,0.1)',
+          cursor: canBack ? 'pointer' : 'not-allowed',
+          opacity: canBack ? 1 : 0.3,
+          minHeight: '44px',
+          WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.2s ease',
+        }}
+        disabled={!canBack}
+      >
+        Back
+      </button>
+
+      <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
+        {phaseLabels[phase]}
+      </span>
+
+      <button
+        onClick={goNext}
+        disabled={!canNext}
+        style={{
+          padding: '10px 24px',
+          borderRadius: '10px',
+          fontWeight: 700,
+          fontSize: '14px',
+          background: canNext ? `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)` : 'rgba(30, 41, 59, 0.9)',
+          color: canNext ? colors.textPrimary : colors.textMuted,
+          border: 'none',
+          cursor: canNext ? 'pointer' : 'not-allowed',
+          opacity: canNext ? 1 : 0.4,
+          boxShadow: canNext ? `0 2px 12px ${colors.accent}30` : 'none',
+          minHeight: '44px',
+          WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        {nextText}
+      </button>
+    </div>
+  );
 
   // ==================== PHYSICS CALCULATIONS ====================
   const calculateReynoldsNumber = useCallback(() => {
@@ -374,9 +648,6 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
           <text x="200" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold" filter="url(#karvTextGlow)">
             Karman Vortex Street
           </text>
-          <text x="200" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
-            Karman Vortex Street
-          </text>
 
           {/* Flow field background with premium gradient */}
           <rect x="0" y="50" width="400" height="250" fill="url(#karvFlowField)" />
@@ -526,7 +797,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                     });
                   }
                   const pathD = spiralPoints.map((p, idx) =>
-                    `${idx === 0 ? 'M' : 'L'} ${p.x},${p.y}`
+                    `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
                   ).join(' ');
 
                   return (
@@ -652,38 +923,58 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                 strokeWidth="1.5"
                 strokeDasharray="6,4"
               />
-              <text x={obsX + obsSize + 70} y={obsY - 32} fill="#94a3b8" fontSize="8" fontStyle="italic">
+              <text x={obsX + obsSize + 70} y={obsY - 32} fill="#94a3b8" fontSize="11" fontStyle="italic">
                 Wake boundary
               </text>
             </g>
           )}
 
-          {/* Legend - premium card style */}
-          <g transform="translate(10, 290)">
-            <rect x="0" y="0" width="180" height="50" fill={colors.bgCard} rx="8" stroke="#334155" strokeWidth="1" />
-            <text x="90" y="14" textAnchor="middle" fill={colors.textMuted} fontSize="9" fontWeight="bold">VORTEX ROTATION</text>
-            <circle cx="40" cy="34" r="12" fill="url(#karvVortexCW)" filter="url(#karvVortexGlow)" />
-            <text x="60" y="38" fill={colors.vortexCW} fontSize="10" fontWeight="bold">CW</text>
-            <circle cx="120" cy="34" r="12" fill="url(#karvVortexCCW)" filter="url(#karvVortexGlow)" />
-            <text x="142" y="38" fill={colors.vortexCCW} fontSize="10" fontWeight="bold">CCW</text>
-          </g>
+          {/* Legend - premium card style (absolute coordinates) */}
+          <rect x="10" y="290" width="180" height="50" fill={colors.bgCard} rx="8" stroke="#334155" strokeWidth="1" />
+          <text x="100" y="304" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="bold">VORTEX ROTATION</text>
+          <circle cx="50" cy="324" r="12" fill="url(#karvVortexCW)" />
+          <text x="70" y="328" fill={colors.vortexCW} fontSize="11" fontWeight="bold">CW</text>
+          <circle cx="130" cy="324" r="12" fill="url(#karvVortexCCW)" />
+          <text x="152" y="328" fill={colors.vortexCCW} fontSize="11" fontWeight="bold">CCW</text>
 
-          {/* Flow regime info - premium card style */}
-          <g transform="translate(200, 290)">
-            <rect x="0" y="0" width="190" height="50" fill={colors.bgCard} rx="8" stroke="#334155" strokeWidth="1" />
-            <text x="10" y="14" fill={colors.textMuted} fontSize="8">Reynolds Number</text>
-            <text x="100" y="14" fill={colors.textPrimary} fontSize="10" fontWeight="bold">
-              Re = {Math.round(Re).toLocaleString()}
-            </text>
-            <text x="10" y="30" fill={colors.textMuted} fontSize="8">Flow Regime</text>
-            <text x="70" y="30" fill={colors.accent} fontSize="10" fontWeight="bold">
-              {regime.replace('_', ' ').toUpperCase()}
-            </text>
-            <text x="10" y="45" fill={colors.textMuted} fontSize="8">Shedding Frequency</text>
-            <text x="100" y="45" fill="#22d3ee" fontSize="10" fontWeight="bold">
-              {freq.toFixed(1)} Hz
-            </text>
-          </g>
+          {/* Flow regime info - premium card style (absolute coordinates) */}
+          <rect x="200" y="290" width="190" height="50" fill={colors.bgCard} rx="8" stroke="#334155" strokeWidth="1" />
+          <text x="210" y="304" fill={colors.textMuted} fontSize="11">Reynolds Number</text>
+          <text x="310" y="304" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
+            Re = {Math.round(Re).toLocaleString()}
+          </text>
+          <text x="210" y="318" fill={colors.textMuted} fontSize="11">Flow Regime</text>
+          <text x="310" y="318" fill={colors.accent} fontSize="11" fontWeight="bold">
+            {regime.replace('_', ' ').toUpperCase()}
+          </text>
+          <text x="210" y="334" fill={colors.textMuted} fontSize="11">Frequency</text>
+          <text x="310" y="334" fill="#22d3ee" fontSize="11" fontWeight="bold">
+            {freq.toFixed(1)} Hz
+          </text>
+
+          {/* Interactive marker - circle that moves with flow speed */}
+          <circle
+            cx={100 + (flowSpeed / 100) * 250}
+            cy={175 - (flowSpeed / 100) * 80}
+            r="8"
+            fill="#f59e0b"
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#karvTextGlow)"
+            data-testid="interactive-marker"
+          />
+          {/* Reference baseline marker */}
+          <circle
+            cx={100}
+            cy={175}
+            r="5"
+            fill="none"
+            stroke="#94a3b8"
+            strokeWidth="1.5"
+            strokeDasharray="3,3"
+            data-testid="reference-marker"
+          />
+          <text x="100" y="210" textAnchor="middle" fill="#94a3b8" fontSize="11">reference</text>
         </svg>
       </div>
     );
@@ -701,60 +992,66 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
       margin: '16px',
     }}>
       <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold' }}>
-        🎮 Control the Flow:
+        Control the Flow:
       </div>
 
       {/* Flow Speed Control */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          💨 Flow Speed: {flowSpeed}%
+        <label htmlFor="flow-speed-slider" style={{ color: colors.textSecondary, fontSize: '13px' }}>
+          Flow Speed: {flowSpeed}%
         </label>
         <input
+          id="flow-speed-slider"
           type="range"
           min="5"
           max="100"
           value={flowSpeed}
           onChange={(e) => setFlowSpeed(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          aria-label="Flow Speed"
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent, minHeight: '44px' }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-          <span>Slow (no vortices)</span>
-          <span>Fast (vortex street)</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textSecondary, fontSize: '11px' }}>
+          <span>5 (Min)</span>
+          <span>100 (Max)</span>
         </div>
       </div>
 
       {/* Obstacle Size Control */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          📏 Obstacle Size: {obstacleSize}%
+        <label htmlFor="obstacle-size-slider" style={{ color: colors.textSecondary, fontSize: '13px' }}>
+          Obstacle Size: {obstacleSize}%
         </label>
         <input
+          id="obstacle-size-slider"
           type="range"
           min="20"
           max="100"
           value={obstacleSize}
           onChange={(e) => setObstacleSize(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          aria-label="Obstacle Size"
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent, minHeight: '44px' }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-          <span>Small</span>
-          <span>Large</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textSecondary, fontSize: '11px' }}>
+          <span>20 (Min)</span>
+          <span>100 (Max)</span>
         </div>
       </div>
 
       {/* Obstacle Shape Selection */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          🔷 Obstacle Shape:
+          Obstacle Shape:
         </label>
         <div style={{ display: 'flex', gap: '8px' }}>
           {(['cylinder', 'square', 'triangle'] as const).map((shape) => (
             <button
               key={shape}
               onClick={() => setObstacleShape(shape)}
+              aria-label={`Select ${shape} shape`}
               style={{
                 flex: 1,
                 padding: '10px',
+                minHeight: '44px',
                 background: obstacleShape === shape ? colors.accent : 'rgba(71, 85, 105, 0.5)',
                 border: 'none',
                 borderRadius: '8px',
@@ -763,11 +1060,35 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                 cursor: 'pointer',
                 textTransform: 'capitalize',
                 fontSize: '12px',
+                transition: 'all 0.2s ease',
               }}
             >
-              {shape === 'cylinder' ? '⚪' : shape === 'square' ? '⬜' : '🔺'} {shape}
+              {shape}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Comparison display - current vs baseline */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '8px',
+        padding: '12px',
+        background: 'rgba(15, 23, 42, 0.5)',
+        borderRadius: '8px',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ color: colors.textMuted, fontSize: '10px', marginBottom: '4px' }}>Current Re</div>
+          <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold' }}>
+            {Math.round(calculateReynoldsNumber()).toLocaleString()}
+          </div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ color: colors.textMuted, fontSize: '10px', marginBottom: '4px' }}>Reference baseline</div>
+          <div style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 'bold' }}>
+            100,000
+          </div>
         </div>
       </div>
 
@@ -776,9 +1097,13 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
         padding: '12px',
         background: 'rgba(15, 23, 42, 0.5)',
         borderRadius: '8px',
+        marginTop: '8px',
       }}>
-        <p style={{ color: colors.textMuted, fontSize: '11px', margin: '0 0 4px 0' }}>
-          💡 The Strouhal number (St ≈ {calculateStrouhalNumber().toFixed(2)}) relates
+        <p style={{ color: colors.textSecondary, fontSize: '11px', margin: '0 0 4px 0' }}>
+          F = St x V / D (shedding frequency formula)
+        </p>
+        <p style={{ color: colors.textSecondary, fontSize: '11px', margin: '0 0 4px 0' }}>
+          The Strouhal number (St is approximately {calculateStrouhalNumber().toFixed(2)}) relates
           vortex shedding frequency to flow speed and obstacle size.
         </p>
       </div>
@@ -909,26 +1234,26 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     {
       id: 0,
       title: '🌉 Bridge Design',
-      description: 'The Tacoma Narrows Bridge collapse (1940) dramatically demonstrated vortex-induced vibration. Modern bridges use aerodynamic deck shapes and tuned mass dampers to prevent resonance with vortex shedding frequencies.',
+      description: 'The Tacoma Narrows Bridge collapse (1940) demonstrated vortex-induced vibration at just 65 km wind speed. Modern bridges spanning over 2000 m use aerodynamic deck shapes and tuned mass dampers weighing up to 730000 kg to prevent resonance.',
       insight: 'Engineers now routinely test bridge models in wind tunnels specifically to identify and avoid dangerous vortex shedding frequencies.',
     },
     {
       id: 1,
       title: '🏙️ Skyscraper Aerodynamics',
-      description: 'Tall buildings can sway dangerously when vortex shedding frequency matches structural resonance. The Burj Khalifa\'s stepped, asymmetric shape prevents synchronized vortex shedding.',
-      insight: 'The 101-floor Taipei 101 has a 730-ton tuned mass damper to counteract wind-induced vibrations - visitors can watch it swing!',
+      description: 'Tall buildings over 300 m can sway dangerously when vortex shedding frequency matches structural resonance. The 828 m Burj Khalifa\'s stepped, asymmetric shape prevents synchronized vortex shedding.',
+      insight: 'The 101-floor Taipei 101 has a 730000 kg tuned mass damper to counteract wind-induced vibrations - visitors can watch it swing!',
     },
     {
       id: 2,
       title: '🔌 Power Line Design',
-      description: 'Power lines "sing" in the wind due to vortex shedding. Engineers install spiral spoilers or dampers to disrupt the regular vortex pattern and prevent resonant vibrations that could damage lines.',
+      description: 'Power lines "sing" in the wind due to vortex shedding at 80-500 Hz. Engineers install spiral spoilers or dampers every 30 m to disrupt the regular vortex pattern and prevent resonant vibrations that could damage lines.',
       insight: 'The "aeolian tones" from power lines are the same physics that makes wind instruments work - but engineers want to silence them!',
     },
     {
       id: 3,
       title: '☁️ Cloud Patterns',
-      description: 'Kármán vortex streets appear in nature when wind flows past islands! Satellite photos show beautiful alternating vortex patterns in clouds downstream of mountainous islands.',
-      insight: 'The Canary Islands and Madeira regularly create textbook Kármán vortex streets visible from space - some stretching hundreds of kilometers.',
+      description: 'Karman vortex streets appear in nature when wind flows past islands! Satellite photos show beautiful alternating vortex patterns in clouds downstream of mountainous islands stretching over 400 km.',
+      insight: 'The Canary Islands and Madeira regularly create textbook Karman vortex streets visible from space - some stretching hundreds of kilometers.',
     },
   ];
 
@@ -1050,177 +1375,144 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     },
   ];
 
-  // ==================== BOTTOM BAR RENDERER ====================
-  const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 20px',
-      background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
-      borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-      zIndex: 1000,
-    }}>
-      {showButton && (
-        <button
-          onClick={() => onPhaseComplete?.()}
-          disabled={!buttonEnabled}
-          style={{
-            width: '100%',
-            padding: '14px 24px',
-            background: buttonEnabled
-              ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-              : 'rgba(71, 85, 105, 0.5)',
-            border: 'none',
-            borderRadius: '12px',
-            color: buttonEnabled ? colors.textPrimary : colors.textMuted,
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: buttonEnabled ? 'pointer' : 'not-allowed',
-            opacity: buttonEnabled ? 1 : 0.5,
-          }}
-        >
-          {buttonText}
-        </button>
-      )}
-    </div>
-  );
-
   // ==================== PHASE RENDERERS ====================
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
-              🌊 Streets in the Wind
-            </h1>
-            <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px' }}>
-              Game 110: Kármán Vortex Street
-            </p>
-          </div>
-
-          {renderVisualization(false)}
-
-          <div style={{ padding: '20px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '16px',
-            }}>
-              <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px' }}>
-                🤯 The Bridge That Danced to Death
-              </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6' }}>
-                In 1940, the Tacoma Narrows Bridge twisted and collapsed in 40 mph winds - not
-                even a strong storm! The culprit? A beautiful pattern of spinning air called a
-                <strong style={{ color: colors.vortexCW }}> Kármán Vortex Street</strong>.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-            }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-                From Disasters to <span style={{ color: colors.accent }}>Discovery</span>
-              </h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
-                These same vortex patterns appear in clouds behind islands, make power lines
-                "sing" in the wind, and guide the design of every modern skyscraper. Understanding
-                them saves lives!
-              </p>
-            </div>
-          </div>
+    return wrapPhaseContent(
+      <div style={{ padding: '20px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
+            Streets in the Wind
+          </h1>
+          <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px' }}>
+            Game 110: Karman Vortex Street
+          </p>
         </div>
-        {renderBottomBar(true, true, "Let's Explore! →")}
-      </div>
+
+        {renderVisualization(false)}
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '16px',
+          marginTop: '16px',
+        }}>
+          <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px' }}>
+            The Bridge That Danced to Death
+          </h2>
+          <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6', fontWeight: 400 }}>
+            In 1940, the Tacoma Narrows Bridge twisted and collapsed in 40 mph winds - not
+            even a strong storm! The culprit? A beautiful pattern of spinning air called a
+            <strong style={{ color: colors.vortexCW }}> Karman Vortex Street</strong>.
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '12px',
+          padding: '20px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
+            From Disasters to <span style={{ color: colors.accent }}>Discovery</span>
+          </h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
+            These same vortex patterns appear in clouds behind islands, make power lines
+            "sing" in the wind, and guide the design of every modern skyscraper. Understanding
+            them saves lives!
+          </p>
+        </div>
+      </div>,
+      renderNavBottomBar(true, "Next")
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {/* 1. STATIC GRAPHIC FIRST */}
-          {renderVisualization(false)}
+    return wrapPhaseContent(
+      <div style={{ padding: '16px' }}>
+        {/* Progress indicator */}
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Step 1 of 2: Make your prediction
+          </span>
+        </div>
 
-          {/* 2. WHAT YOU'RE LOOKING AT */}
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📋 What You're Looking At:
-            </h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
-              Fluid (air or water) flows from <strong>left to right</strong> past an obstacle.
-              Behind the obstacle, you can see spinning vortices forming. The
-              <span style={{ color: colors.vortexCW }}> orange vortices</span> spin clockwise,
-              while <span style={{ color: colors.vortexCCW }}>purple vortices</span> spin
-              counter-clockwise.
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '8px' }}>
-              The <strong>Reynolds number (Re)</strong> determines whether vortices form at all -
-              it combines flow speed, obstacle size, and fluid properties.
-            </p>
-          </div>
+        {/* 1. STATIC GRAPHIC FIRST */}
+        {renderVisualization(false)}
 
-          {/* 3. PREDICTION QUESTION BELOW */}
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
-              🤔 How do the vortices arrange themselves behind the obstacle?
-            </h3>
+        {/* 2. WHAT YOU'RE LOOKING AT */}
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px 0',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
+            What You're Looking At:
+          </h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
+            Fluid (air or water) flows from <strong>left to right</strong> past an obstacle.
+            Behind the obstacle, you can see spinning vortices forming. The
+            <span style={{ color: colors.vortexCW }}> orange vortices</span> spin clockwise,
+            while <span style={{ color: colors.vortexCCW }}>purple vortices</span> spin
+            counter-clockwise.
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px' }}>
+            The <strong>Reynolds number (Re)</strong> determines whether vortices form at all -
+            it combines flow speed, obstacle size, and fluid properties.
+          </p>
+        </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => {
-                    setPrediction(p.id);
-                    onPredictionMade?.(p.id);
-                  }}
-                  style={{
-                    padding: '16px',
-                    background: prediction === p.id
-                      ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-                      : 'rgba(51, 65, 85, 0.7)',
-                    border: prediction === p.id ? '2px solid #fbbf24' : '2px solid transparent',
-                    borderRadius: '12px',
-                    color: colors.textPrimary,
-                    fontSize: '14px',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  {p.text}
-                </button>
-              ))}
-            </div>
+        {/* 3. PREDICTION QUESTION BELOW */}
+        <div style={{ padding: '0 0 16px 0' }}>
+          <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
+            How do the vortices arrange themselves behind the obstacle?
+          </h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {predictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setPrediction(p.id);
+                  onPredictionMade?.(p.id);
+                }}
+                style={{
+                  padding: '16px',
+                  minHeight: '44px',
+                  background: prediction === p.id
+                    ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+                    : 'rgba(51, 65, 85, 0.7)',
+                  border: prediction === p.id ? '2px solid #fbbf24' : '2px solid transparent',
+                  borderRadius: '12px',
+                  color: colors.textPrimary,
+                  fontSize: '14px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {p.text}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
-      </div>
+      </div>,
+      renderNavBottomBar(!!prediction, 'Next')
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px' }}>
-              🔬 Create Your Vortex Street!
+              Create Your Vortex Street!
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust flow speed and obstacle size to see different regimes
@@ -1230,6 +1522,59 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
           {renderVisualization(true)}
           {renderControls()}
 
+          {/* Dynamic discovery insight based on flow regime */}
+          {flowSpeed > 30 && flowSpeed < 70 && (
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.15)',
+              margin: '16px',
+              padding: '14px',
+              borderRadius: '12px',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              transition: 'all 0.3s ease',
+            }}>
+              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
+                Did you notice?
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+                At this flow speed, vortices form a regular alternating pattern - this is the classic Karman vortex street!
+              </p>
+            </div>
+          )}
+          {flowSpeed >= 70 && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              margin: '16px',
+              padding: '14px',
+              borderRadius: '12px',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              transition: 'all 0.3s ease',
+            }}>
+              <p style={{ color: colors.error, fontSize: '13px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
+                Key insight!
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+                High speed creates turbulent vortex shedding. This is the regime that can cause structural resonance!
+              </p>
+            </div>
+          )}
+          {flowSpeed <= 30 && (
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.15)',
+              margin: '16px',
+              padding: '14px',
+              borderRadius: '12px',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              transition: 'all 0.3s ease',
+            }}>
+              <p style={{ color: colors.flowFast, fontSize: '13px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
+                Observe carefully!
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+                At low speeds, the flow is smooth and steady. No vortex street forms below a critical Reynolds number.
+              </p>
+            </div>
+          )}
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
@@ -1237,17 +1582,34 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
-              🎯 Try These Experiments:
+              Try These Experiments:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
-              <li>Low speed → smooth flow, no vortices</li>
-              <li>Medium speed → beautiful alternating pattern</li>
-              <li>High speed → turbulent, chaotic vortices</li>
+              <li>When you increase flow speed, the Reynolds number rises and causes vortex shedding to begin</li>
+              <li>Higher speed leads to turbulent, chaotic vortices</li>
+              <li>As obstacle size changes, the shedding frequency shifts because f = St x V / D</li>
               <li>Try different shapes - which sheds most?</li>
             </ul>
           </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.1)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+          }}>
+            <h3 style={{ color: colors.flowFast, fontSize: '14px', marginBottom: '8px' }}>
+              Real-World Relevance:
+            </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
+              This same physics caused the Tacoma Narrows Bridge collapse, makes power lines sing in the wind,
+              and guides the design of every modern skyscraper. Engineers use these principles to design safer
+              bridges, quieter vehicles, and more efficient energy harvesting systems.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(true, true, 'See What I Learned →')}
+        {renderBottomBar(true, true, 'Next')}
       </div>
     );
   }
@@ -1258,11 +1620,12 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     const isCorrect = selectedPrediction?.correct === true;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {isCorrect ? '🎯' : '💡'}
+              {isCorrect ? '\u2713' : '!'}
             </div>
             <h2 style={{
               color: isCorrect ? colors.success : colors.warning,
@@ -1273,6 +1636,57 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             </h2>
           </div>
 
+          {/* Reference to user's prediction */}
+          <div style={{
+            background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: `1px solid ${isCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Your prediction:</strong> "{selectedPrediction?.text}"
+            </p>
+            {!isCorrect && (
+              <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', marginBottom: 0 }}>
+                The correct answer: Vortices alternate - top spins one way, bottom spins opposite.
+              </p>
+            )}
+          </div>
+
+          {/* Visual diagram showing alternating vortices */}
+          <div style={{ margin: '16px', borderRadius: '12px', overflow: 'hidden' }}>
+            <svg viewBox="0 0 300 120" style={{ width: '100%', background: colors.bgDark, borderRadius: '12px' }}>
+              <defs>
+                <radialGradient id="reviewVortexCW" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+                  <stop offset="50%" stopColor="#f97316" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#ea580c" stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="reviewVortexCCW" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+                  <stop offset="50%" stopColor="#a855f7" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#9333ea" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              {/* Flow arrow */}
+              <polygon points="10,60 30,50 30,55 50,55 50,65 30,65 30,70" fill="#60a5fa" />
+              {/* Obstacle */}
+              <circle cx="70" cy="60" r="15" fill="#64748b" stroke="#94a3b8" strokeWidth="2" />
+              {/* Alternating vortices */}
+              <circle cx="120" cy="35" r="15" fill="url(#reviewVortexCW)" />
+              <text x="120" y="38" textAnchor="middle" fill="#f97316" fontSize="11" fontWeight="bold">CW</text>
+              <circle cx="160" cy="85" r="15" fill="url(#reviewVortexCCW)" />
+              <text x="160" y="88" textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="bold">CCW</text>
+              <circle cx="200" cy="35" r="15" fill="url(#reviewVortexCW)" />
+              <text x="200" y="38" textAnchor="middle" fill="#f97316" fontSize="11" fontWeight="bold">CW</text>
+              <circle cx="240" cy="85" r="15" fill="url(#reviewVortexCCW)" />
+              <text x="240" y="88" textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="bold">CCW</text>
+              {/* Label */}
+              <text x="150" y="115" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Alternating vortex pattern (Karman Street)</text>
+            </svg>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
@@ -1280,7 +1694,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📚 The Physics Explained:
+              The Physics Explained:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
               Vortices <strong style={{ color: colors.accent }}>alternate</strong> because of a
@@ -1317,16 +1731,16 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🔢 The Strouhal Number:
+              The Strouhal Number:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
-              <strong>St = f × D / v</strong> where f is shedding frequency, D is obstacle size,
-              and v is flow velocity. For a cylinder, St ≈ 0.21 - remarkably constant across
+              <strong>St = f x D / v</strong> where f is shedding frequency, D is obstacle size,
+              and v is flow velocity. For a cylinder, St is approximately 0.21 - remarkably constant across
               a wide range of conditions!
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Ready for a Challenge →')}
+        {renderBottomBar(true, true, 'Next')}
       </div>
     );
   }
@@ -1334,11 +1748,12 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
   // TWIST_PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px', marginBottom: '8px' }}>
-              🌀 Plot Twist!
+              Plot Twist!
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               The Tacoma Narrows Disaster
@@ -1354,7 +1769,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🌉 The Dancing Bridge:
+              The Dancing Bridge:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               On November 7, 1940, the Tacoma Narrows Bridge collapsed in relatively mild winds
@@ -1368,7 +1783,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
 
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
-              🤔 What destroyed the Tacoma Narrows Bridge?
+              What destroyed the Tacoma Narrows Bridge?
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1380,6 +1795,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                   }}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     background: twistPrediction === p.id
                       ? 'linear-gradient(135deg, #ef4444, #dc2626)'
                       : 'rgba(51, 65, 85, 0.7)',
@@ -1398,7 +1814,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Learn The Truth →')}
+        {renderBottomBar(true, !!twistPrediction, 'Next')}
       </div>
     );
   }
@@ -1406,11 +1822,12 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
   // TWIST_PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px' }}>
-              🔬 The Resonance Problem
+              The Resonance Problem
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               See how shedding frequency can match structural frequency
@@ -1427,7 +1844,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
-              💡 Key Observations:
+              Key Observations:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
               <li>Vortex shedding creates periodic forces</li>
@@ -1437,7 +1854,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(true, true, 'See The Full Story →')}
+        {renderBottomBar(true, true, 'Next')}
       </div>
     );
   }
@@ -1448,11 +1865,12 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     const isCorrect = selectedTwist?.correct === true;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {isCorrect ? '🎯' : '🤯'}
+              {isCorrect ? '\u2713' : '!'}
             </div>
             <h2 style={{
               color: isCorrect ? colors.success : colors.accent,
@@ -1463,6 +1881,37 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             </h2>
           </div>
 
+          {/* Visual diagram showing resonance concept */}
+          <div style={{ margin: '16px', borderRadius: '12px', overflow: 'hidden' }}>
+            <svg viewBox="0 0 300 140" style={{ width: '100%', background: colors.bgDark, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="bridgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#64748b" />
+                  <stop offset="50%" stopColor="#94a3b8" />
+                  <stop offset="100%" stopColor="#64748b" />
+                </linearGradient>
+              </defs>
+              {/* Bridge towers */}
+              <rect x="50" y="30" width="8" height="60" fill="#475569" />
+              <rect x="242" y="30" width="8" height="60" fill="#475569" />
+              {/* Bridge deck - shown oscillating */}
+              <path d="M 54,55 Q 150,35 246,55" fill="none" stroke="url(#bridgeGrad)" strokeWidth="4" strokeDasharray="4,2" />
+              <path d="M 54,65 Q 150,85 246,65" fill="none" stroke="url(#bridgeGrad)" strokeWidth="4" />
+              {/* Oscillation arrows */}
+              <path d="M 150,45 L 150,30 L 145,35 M 150,30 L 155,35" fill="none" stroke="#ef4444" strokeWidth="2" />
+              <path d="M 150,75 L 150,90 L 145,85 M 150,90 L 155,85" fill="none" stroke="#ef4444" strokeWidth="2" />
+              {/* Wind arrows */}
+              <polygon points="10,60 25,55 25,58 40,58 40,62 25,62 25,65" fill="#60a5fa" />
+              <polygon points="10,75 25,70 25,73 40,73 40,77 25,77 25,80" fill="#60a5fa" />
+              {/* Vortices */}
+              <circle cx="60" cy="50" r="8" fill="none" stroke="#f97316" strokeWidth="2" />
+              <circle cx="75" cy="75" r="8" fill="none" stroke="#a855f7" strokeWidth="2" />
+              {/* Labels */}
+              <text x="150" y="110" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Vortex frequency = Bridge natural frequency</text>
+              <text x="150" y="125" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">RESONANCE = AMPLIFIED OSCILLATION</text>
+            </svg>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
@@ -1470,7 +1919,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🌉 Resonance Destroyed the Bridge:
+              Resonance Destroyed the Bridge:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
               The Tacoma Narrows Bridge's deck was unusually flexible, with a natural frequency
@@ -1491,7 +1940,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🏗️ Engineering Solutions:
+              Engineering Solutions:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
               Modern bridges avoid this by: (1) making decks more rigid, (2) using aerodynamic
@@ -1500,24 +1949,23 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'See Real Applications →')}
+        {renderBottomBar(true, true, 'Next')}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    const allCompleted = transferCompleted.size >= 4;
-
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
-              🌍 Real-World Applications
+              Real-World Applications
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Explore all {transferApplications.length} applications to continue
+              Explore how Karman vortex streets impact engineering
             </p>
             <div style={{
               display: 'flex',
@@ -1533,6 +1981,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                     height: '12px',
                     borderRadius: '50%',
                     background: transferCompleted.has(i) ? colors.success : 'rgba(71, 85, 105, 0.5)',
+                    transition: 'all 0.2s ease',
                   }}
                 />
               ))}
@@ -1542,9 +1991,6 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
           {transferApplications.map((app) => (
             <div
               key={app.id}
-              onClick={() => {
-                setTransferCompleted(prev => new Set([...prev, app.id]));
-              }}
               style={{
                 background: transferCompleted.has(app.id)
                   ? 'rgba(16, 185, 129, 0.1)'
@@ -1555,7 +2001,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                 margin: '12px 16px',
                 padding: '16px',
                 borderRadius: '12px',
-                cursor: 'pointer',
+                transition: 'all 0.2s ease',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1563,26 +2009,49 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                   {app.title}
                 </h3>
                 {transferCompleted.has(app.id) && (
-                  <span style={{ color: colors.success, fontSize: '18px' }}>✓</span>
+                  <span style={{ color: colors.success, fontSize: '14px' }}>Completed</span>
                 )}
               </div>
               <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginTop: '8px' }}>
                 {app.description}
               </p>
+
               <div style={{
                 background: 'rgba(245, 158, 11, 0.1)',
                 borderRadius: '6px',
                 padding: '10px',
-                marginTop: '10px',
+                marginTop: '12px',
               }}>
                 <p style={{ color: colors.accent, fontSize: '12px', margin: 0 }}>
-                  💡 {app.insight}
+                  Insight: {app.insight}
                 </p>
               </div>
+
+              {!transferCompleted.has(app.id) && (
+                <button
+                  onClick={() => setTransferCompleted(prev => new Set([...prev, app.id]))}
+                  style={{
+                    width: '100%',
+                    marginTop: '12px',
+                    padding: '12px',
+                    minHeight: '44px',
+                    background: `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)`,
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: colors.textPrimary,
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  Got It
+                </button>
+              )}
             </div>
           ))}
         </div>
-        {renderBottomBar(true, allCompleted, allCompleted ? 'Take the Test →' : `Explore ${4 - transferCompleted.size} More`)}
+        {renderBottomBar(true, transferCompleted.size >= transferApplications.length, transferCompleted.size >= transferApplications.length ? 'Next' : `Explore ${transferApplications.length - transferCompleted.size} More`)}
       </div>
     );
   }
@@ -1600,11 +2069,12 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
       const score = Math.round((correctCount / testQuestions.length) * 100);
 
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-                {score >= 80 ? '🏆' : score >= 60 ? '📚' : '💪'}
+                {score >= 80 ? '🏆' : score >= 60 ? 'Good' : 'Try Again'}
               </div>
               <h2 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
                 {score}% Score
@@ -1612,6 +2082,13 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
               <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
                 {correctCount} of {testQuestions.length} correct
               </p>
+            </div>
+
+            {/* Answer Review Section */}
+            <div style={{ margin: '0 16px 16px 16px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
+                Answer Review:
+              </h3>
             </div>
 
             {testQuestions.map((q, idx) => {
@@ -1628,14 +2105,19 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                     margin: '12px 16px',
                     padding: '14px',
                     borderRadius: '10px',
+                    transition: 'all 0.2s ease',
                   }}
                 >
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '16px' }}>
-                      {isCorrect ? '✓' : '✗'}
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
+                    <span style={{
+                      color: isCorrect ? colors.success : colors.error,
+                      fontSize: '20px',
+                      fontWeight: 'bold',
+                    }}>
+                      {isCorrect ? '\u2713' : '\u2717'}
                     </span>
                     <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold' }}>
-                      Q{idx + 1}
+                      Question {idx + 1} of {testQuestions.length}
                     </span>
                   </div>
                   <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>
@@ -1643,33 +2125,99 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                   </p>
                   {!isCorrect && (
                     <p style={{ color: colors.success, fontSize: '11px', margin: 0 }}>
-                      Correct: {correctOption?.text}
+                      Correct answer: {correctOption?.text}
                     </p>
                   )}
                 </div>
               );
             })}
           </div>
-          {renderBottomBar(true, true, score >= 70 ? 'Complete! 🎉' : 'Review & Continue →')}
+          {renderBottomBar(true, true, 'Next')}
         </div>
       );
     }
 
+    // Show confirm dialog
+    if (showConfirm) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', marginTop: '60px' }}>
+            <div style={{
+              background: colors.bgCard,
+              padding: '24px',
+              borderRadius: '16px',
+              textAlign: 'center',
+              maxWidth: '400px',
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px' }}>
+                Submit Quiz?
+              </h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '20px' }}>
+                You have answered {answeredCount} of {testQuestions.length} questions.
+                Are you sure you want to submit?
+              </p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    minHeight: '44px',
+                    background: 'rgba(51, 65, 85, 0.7)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: colors.textSecondary,
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Review Answers
+                </button>
+                <button
+                  onClick={() => setTestSubmitted(true)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    minHeight: '44px',
+                    background: `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)`,
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: colors.textPrimary,
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Submit Quiz
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const currentQ = testQuestions[currentQuestion];
+    const currentAnswered = currentQ ? !!testAnswers[currentQ.id] : false;
+    const isLastQuestion = currentQuestion >= testQuestions.length - 1;
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
-              📝 Knowledge Check
+              Knowledge Check
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              {answeredCount} of {testQuestions.length} answered
+              Question {currentQuestion + 1} of {testQuestions.length}
             </p>
           </div>
 
-          {testQuestions.map((q, idx) => (
+          {currentQ && (
             <div
-              key={q.id}
               style={{
                 background: colors.bgCard,
                 margin: '12px 16px',
@@ -1678,19 +2226,23 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
               }}
             >
               <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>
-                {idx + 1}. {q.question}
+                Question {currentQuestion + 1} of {testQuestions.length}: {currentQ.question}
+              </p>
+              <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '12px', fontWeight: 400 }}>
+                Consider what you learned about Karman vortex streets, the Reynolds number, Strouhal number relationships, and how vortex shedding frequency relates to flow velocity and obstacle geometry. Think about the real-world engineering implications of vortex-induced vibration and resonance phenomena.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {q.options.map((option) => (
+                {currentQ.options.map((option) => (
                   <button
                     key={option.id}
-                    onClick={() => setTestAnswers(prev => ({ ...prev, [q.id]: option.id }))}
+                    onClick={() => setTestAnswers(prev => ({ ...prev, [currentQ.id]: option.id }))}
                     style={{
                       padding: '10px 14px',
-                      background: testAnswers[q.id] === option.id
+                      minHeight: '44px',
+                      background: testAnswers[currentQ.id] === option.id
                         ? 'rgba(245, 158, 11, 0.3)'
                         : 'rgba(51, 65, 85, 0.5)',
-                      border: testAnswers[q.id] === option.id
+                      border: testAnswers[currentQ.id] === option.id
                         ? '1px solid rgba(245, 158, 11, 0.5)'
                         : '1px solid transparent',
                       borderRadius: '8px',
@@ -1698,6 +2250,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                       fontSize: '13px',
                       textAlign: 'left',
                       cursor: 'pointer',
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     {option.text}
@@ -1705,39 +2258,83 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                 ))}
               </div>
             </div>
-          ))}
+          )}
         </div>
-        {allAnswered ? (
-          <div style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '16px 20px',
-            background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
-            borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-            zIndex: 1000,
-          }}>
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '12px 16px',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          backgroundColor: colors.bgDark,
+          gap: '12px',
+        }}>
+          <button
+            onClick={() => currentQuestion > 0 ? setCurrentQuestion(currentQuestion - 1) : goBack()}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '10px',
+              fontWeight: 600,
+              fontSize: '14px',
+              backgroundColor: 'rgba(30, 41, 59, 0.9)',
+              color: colors.textSecondary,
+              border: '1px solid rgba(255,255,255,0.1)',
+              cursor: 'pointer',
+              minHeight: '44px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Back
+          </button>
+          <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
+            {currentQuestion + 1} / {testQuestions.length}
+          </span>
+          {isLastQuestion && currentAnswered ? (
             <button
               onClick={() => setTestSubmitted(true)}
               style={{
-                width: '100%',
-                padding: '14px 24px',
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                border: 'none',
-                borderRadius: '12px',
+                padding: '10px 24px',
+                borderRadius: '10px',
+                fontWeight: 700,
+                fontSize: '14px',
+                background: `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)`,
                 color: colors.textPrimary,
-                fontSize: '16px',
-                fontWeight: 'bold',
+                border: 'none',
                 cursor: 'pointer',
+                minHeight: '44px',
+                boxShadow: `0 2px 12px ${colors.accent}30`,
+                transition: 'all 0.2s ease',
               }}
             >
-              Submit Answers
+              Submit
             </button>
-          </div>
-        ) : (
-          renderBottomBar(false, false, '')
-        )}
+          ) : (
+            <button
+              onClick={() => setCurrentQuestion(Math.min(currentQuestion + 1, testQuestions.length - 1))}
+              disabled={!currentAnswered}
+              style={{
+                padding: '10px 24px',
+                borderRadius: '10px',
+                fontWeight: 700,
+                fontSize: '14px',
+                background: currentAnswered ? `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)` : 'rgba(30, 41, 59, 0.9)',
+                color: currentAnswered ? colors.textPrimary : colors.textMuted,
+                border: 'none',
+                cursor: currentAnswered ? 'pointer' : 'not-allowed',
+                opacity: currentAnswered ? 1 : 0.4,
+                minHeight: '44px',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Next
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -1745,15 +2342,16 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '72px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
               Vortex Street Master!
             </h1>
             <p style={{ color: colors.accent, fontSize: '16px' }}>
-              You've mastered fluid dynamics & resonance
+              You've mastered fluid dynamics and resonance
             </p>
           </div>
 
@@ -1764,7 +2362,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>
-              🎓 What You've Learned:
+              What You've Learned:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '2', paddingLeft: '20px', margin: 0 }}>
               <li>Vortices shed alternately from obstacles in flow</li>
@@ -1783,17 +2381,17 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
             border: '1px solid rgba(245, 158, 11, 0.3)',
           }}>
             <h3 style={{ color: colors.accent, fontSize: '16px', marginBottom: '12px' }}>
-              🚀 Spot Them In Nature:
+              Spot Them In Nature:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               Look at satellite images of cloud patterns around islands - you'll see beautiful
-              Kármán vortex streets! Listen to power lines humming in the wind. Notice how
+              Karman vortex streets! Listen to power lines humming in the wind. Notice how
               flag poles have spiral wrapping near the top. You now understand the physics
               behind all of it!
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Complete Game →')}
+        {renderBottomBar(true, true, 'Complete Game')}
       </div>
     );
   }

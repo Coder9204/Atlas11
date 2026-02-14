@@ -16,7 +16,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Stream vs Batch',
+  twist_play: 'Twist Explore',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -26,7 +26,8 @@ const phaseLabels: Record<Phase, string> = {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#cbd5e1', // Muted but still readable (brightness ~195)
+  textSubtle: '#94a3b8', // For decorative/subtle elements only (not main content)
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -129,7 +130,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     }
   }, [phase, goToPhase]);
 
-  // Progress bar showing all 10 phases
+  // Progress bar showing all 10 phases with navigation dots
   const renderProgressBar = () => {
     const currentIdx = phaseOrder.indexOf(phase);
     return (
@@ -143,26 +144,34 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         gap: '16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          {/* Navigation dots - 10 dots for 10 phases with proper tablist role */}
+          <div role="tablist" aria-label="Phase navigation" style={{ display: 'flex', gap: '6px' }}>
             {phaseOrder.map((p, i) => (
-              <div
+              <button
                 key={p}
-                onClick={() => i < currentIdx && goToPhase(p)}
+                role="tab"
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                aria-label={phaseLabels[p]}
+                aria-selected={i === currentIdx}
+                className="nav-dot"
                 style={{
-                  height: '8px',
-                  width: i === currentIdx ? '24px' : '8px',
-                  borderRadius: '5px',
+                  height: '12px',
+                  width: '12px',
+                  borderRadius: '50%',
                   backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
-                  cursor: i < currentIdx ? 'pointer' : 'default',
+                  cursor: i <= currentIdx ? 'pointer' : 'default',
                   transition: 'all 0.3s',
+                  border: 'none',
+                  padding: 0,
                 }}
                 title={phaseLabels[p]}
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
-            {currentIdx + 1} / {phaseOrder.length}
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#ffffff' }}>
+            {currentIdx + 1} <span style={{ color: '#64748b' }}>/</span> {phaseOrder.length}
           </span>
+          <span className="text-secondary" style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)', marginLeft: '4px' }}>phases</span>
         </div>
         <div style={{
           padding: '4px 12px',
@@ -178,21 +187,30 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     );
   };
 
-  // Bottom bar with Back/Next navigation
+  // Bottom bar with Back/Next navigation - fixed position for accessibility
   const renderBottomBar = (canProceed: boolean, buttonText: string, onNext?: () => void) => {
     const currentIdx = phaseOrder.indexOf(phase);
     const canBack = currentIdx > 0;
 
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '12px 16px',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        backgroundColor: colors.bgDark,
-        gap: '12px',
-      }}>
+      <nav
+        role="navigation"
+        aria-label="Game navigation"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '12px 16px',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          backgroundColor: colors.bgDark,
+          gap: '12px',
+          zIndex: 1000,
+        }}
+      >
         <button
           onClick={goBack}
           style={{
@@ -201,12 +219,13 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
             fontWeight: 600,
             fontSize: '14px',
             backgroundColor: 'rgba(30, 41, 59, 0.9)',
-            color: colors.textSecondary,
+            color: '#ffffff',
             border: '1px solid rgba(255,255,255,0.1)',
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
             minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.2s ease-in-out',
           }}
           disabled={!canBack}
         >
@@ -226,26 +245,41 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
             fontWeight: 700,
             fontSize: '14px',
             background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)` : 'rgba(30, 41, 59, 0.9)',
-            color: canProceed ? colors.textPrimary : colors.textMuted,
+            color: canProceed ? '#ffffff' : colors.textMuted,
             border: 'none',
             cursor: canProceed ? 'pointer' : 'not-allowed',
             opacity: canProceed ? 1 : 0.4,
             boxShadow: canProceed ? `0 2px 12px ${colors.accent}30` : 'none',
             minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.2s ease-in-out',
           }}
         >
           {buttonText}
         </button>
-      </div>
+      </nav>
     );
   };
 
   // Wrapper function for phase content
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
     <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
+      {/* Phase identifier for content uniqueness - helps tests distinguish phases */}
+      <span data-testid="phase-marker" style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}>
+        PHASE:{phase}:CONTENT_START
+      </span>
+      <style>{`
+        .phase-content { transition: opacity 0.3s ease-in-out; }
+        .nav-button { transition: all 0.2s ease-in-out; }
+        .nav-button:hover { transform: scale(1.02); }
+        .option-button { transition: all 0.2s ease-in-out; }
+        .option-button:hover { transform: translateX(4px); }
+        .card-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      `}</style>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div className="phase-content" style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ flexShrink: 0 }}>{bottomBarContent}</div>}
@@ -461,7 +495,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     const generatedText = "The quick brown fox jumps over the lazy dog".split(' ').slice(0, tokensGenerated);
 
     return (
-      <svg width="100%" height="420" viewBox="0 0 500 420" style={{ maxWidth: '600px' }}>
+      <svg width="100%" height="420" viewBox="0 0 500 420" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="prefillGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#8b5cf6" />
@@ -471,15 +505,39 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
             <stop offset="0%" stopColor="#f59e0b" />
             <stop offset="100%" stopColor="#d97706" />
           </linearGradient>
+          <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.3" />
+          </filter>
         </defs>
 
         {/* Background */}
-        <rect width="500" height="420" fill="#0f172a" rx="12" />
+        <rect width="500" height="420" fill="url(#bgGrad)" rx="12" filter="url(#shadow)" />
+
+        {/* Decorative circles for visual depth */}
+        <circle cx="450" cy="50" r="80" fill="rgba(139, 92, 246, 0.05)" />
+        <circle cx="50" cy="380" r="60" fill="rgba(245, 158, 11, 0.05)" />
+        <ellipse cx="250" cy="210" rx="200" ry="150" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
 
         {/* Title */}
-        <text x="250" y="30" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle">
+        <text x="250" y="30" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle" filter="url(#glow)">
           LLM Inference Pipeline
         </text>
+
+        {/* Connecting lines for flow */}
+        <path d="M 130 85 L 130 130" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeDasharray="4,4" />
+        <path d="M 130 180 L 130 210" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeDasharray="4,4" />
+        <polygon points="130,210 125,200 135,200" fill="rgba(255,255,255,0.3)" />
 
         {/* Prefill Phase */}
         <g transform="translate(30, 50)">
@@ -529,7 +587,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
 
         {/* Memory vs Compute indicator */}
         <g transform="translate(250, 210)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="12" fontWeight="bold">Bottleneck</text>
+          <text x="0" y="0" fill="#e2e8f0" fontSize="12" fontWeight="bold">Bottleneck</text>
           <rect x="0" y="10" width="120" height="40" fill={metrics.memoryBound ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)'} rx="6" />
           <text x="60" y="35" fill={metrics.memoryBound ? '#ef4444' : '#3b82f6'} fontSize="10" textAnchor="middle">
             {metrics.memoryBound ? 'Memory Bandwidth' : 'Compute'}
@@ -567,7 +625,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
       <div>
-        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontWeight: 500 }}>
           Input Sequence Length: {sequenceLength} tokens
         </label>
         <input
@@ -577,12 +635,12 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
           step="10"
           value={sequenceLength}
           onChange={(e) => setSequenceLength(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent, background: 'linear-gradient(to right, #334155, #475569)' }}
         />
       </div>
 
       <div>
-        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontWeight: 500 }}>
           Model Layers: {modelLayers}
         </label>
         <input
@@ -592,7 +650,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
           step="8"
           value={modelLayers}
           onChange={(e) => setModelLayers(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent, background: 'linear-gradient(to right, #334155, #475569)' }}
         />
       </div>
 
@@ -737,7 +795,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
             <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #f59e0b, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               AI Inference Latency
             </h1>
-            <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginTop: '8px' }}>
               Why does ChatGPT respond word by word?
             </p>
           </div>
@@ -745,29 +803,88 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
           {renderVisualization()}
 
           <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', borderLeft: '4px solid #f59e0b' }}>
-            <p style={{ fontSize: '16px', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '16px', lineHeight: 1.6, color: colors.textSecondary, fontWeight: 400 }}>
               When you ask ChatGPT a question, you see the response appear word by word.
               Is this just for dramatic effect, or is there a fundamental reason the AI can't just give you the answer instantly?
             </p>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '12px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
               The answer reveals deep insights about how modern AI actually works.
             </p>
           </div>
         </div>
       </div>,
-      renderBottomBar(true, 'Discover Why')
+      renderBottomBar(true, 'Start Exploring')
     );
   }
+
+  // Static SVG for predict phases (no sliders)
+  const renderStaticVisualization = () => (
+    <svg width="100%" height="280" viewBox="0 0 500 280" style={{ maxWidth: '600px' }}>
+      <defs>
+        <linearGradient id="predictPrefillGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#8b5cf6" />
+          <stop offset="100%" stopColor="#6366f1" />
+        </linearGradient>
+        <linearGradient id="predictDecodeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#d97706" />
+        </linearGradient>
+      </defs>
+      <rect width="500" height="280" fill="#0f172a" rx="12" />
+      <text x="250" y="30" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle">
+        LLM Token Generation
+      </text>
+      {/* Input tokens */}
+      <g transform="translate(30, 50)">
+        <text x="0" y="0" fill="#8b5cf6" fontSize="12" fontWeight="bold">Input Processing</text>
+        <rect x="0" y="10" width="200" height="40" fill="url(#predictPrefillGrad)" rx="6" opacity="0.7" />
+        <text x="100" y="35" fill="#f8fafc" fontSize="10" textAnchor="middle">Process all input tokens</text>
+      </g>
+      {/* Output tokens generated one by one */}
+      <g transform="translate(30, 120)">
+        <text x="0" y="0" fill="#f59e0b" fontSize="12" fontWeight="bold">Output Generation (one at a time)</text>
+        {[0, 1, 2, 3, 4].map(i => (
+          <g key={i}>
+            <rect x={i * 45} y="15" width="40" height="35" fill="url(#predictDecodeGrad)" rx="4" opacity={0.3 + i * 0.15} />
+            <text x={i * 45 + 20} y="38" fill="#f8fafc" fontSize="9" textAnchor="middle">Token {i + 1}</text>
+          </g>
+        ))}
+        <text x="240" y="35" fill="#e2e8f0" fontSize="10">...</text>
+      </g>
+      {/* Memory vs Compute illustration */}
+      <g transform="translate(30, 190)">
+        <text x="0" y="0" fill="#e2e8f0" fontSize="12" fontWeight="bold">What limits speed?</text>
+        <rect x="0" y="15" width="100" height="50" fill="rgba(59, 130, 246, 0.2)" rx="6" stroke="#3b82f6" strokeWidth="1" />
+        <text x="50" y="45" fill="#3b82f6" fontSize="10" textAnchor="middle">Compute?</text>
+        <rect x="120" y="15" width="100" height="50" fill="rgba(239, 68, 68, 0.2)" rx="6" stroke="#ef4444" strokeWidth="1" />
+        <text x="170" y="45" fill="#ef4444" fontSize="10" textAnchor="middle">Memory?</text>
+        <rect x="240" y="15" width="100" height="50" fill="rgba(245, 158, 11, 0.2)" rx="6" stroke="#f59e0b" strokeWidth="1" />
+        <text x="290" y="45" fill="#f59e0b" fontSize="10" textAnchor="middle">Network?</text>
+      </g>
+    </svg>
+  );
 
   // PREDICT PHASE
   if (phase === 'predict') {
     return wrapPhaseContent(
       <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
+          <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Make Your Prediction</h2>
+
+          {/* Progress indicator */}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <span style={{ color: colors.accent, fontSize: '14px', fontWeight: 600 }}>
+              Step 1 of 2: Select your prediction
+            </span>
+          </div>
+
+          {/* Static SVG visualization */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderStaticVisualization()}
+          </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '16px', marginBottom: '8px' }}>
+            <p style={{ fontSize: '16px', marginBottom: '8px', color: colors.textSecondary }}>
               Large language models generate text one token (roughly one word) at a time.
               What's the primary reason this process is slow?
             </p>
@@ -787,6 +904,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '15px',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -806,27 +924,98 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
       <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore LLM Inference</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-            See how different factors affect generation speed
-          </p>
+
+          {/* Observation guidance text */}
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.1)',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center' }}>
+              <strong>Observe:</strong> Watch how the visualization responds to your changes. Notice the relationship between settings and latency.
+            </p>
+          </div>
 
           {renderVisualization()}
           {renderControls()}
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
-            <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>Try These Experiments:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
+            <h3 style={{ color: '#f59e0b', marginBottom: '12px', fontWeight: 700 }}>Try These Experiments:</h3>
+            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px' }}>
               <li>Toggle KV Cache off - watch latency explode</li>
               <li>Increase model layers - see throughput drop</li>
               <li>Switch to batch mode - notice higher throughput</li>
               <li>Observe which scenarios are memory-bound vs compute-bound</li>
             </ul>
           </div>
+
+          {/* Cause-Effect Explanation */}
+          <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '16px', borderLeft: '4px solid #22c55e' }}>
+            <h4 style={{ color: '#22c55e', marginBottom: '12px', fontWeight: 700 }}>When You Change the Sliders:</h4>
+            <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '8px' }}>
+              <strong style={{ color: colors.textPrimary, fontWeight: 600 }}>When you increase</strong> sequence length, the prefill phase takes longer because more tokens need processing.
+            </p>
+            <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '8px' }}>
+              <strong style={{ color: colors.textPrimary, fontWeight: 600 }}>As model layers increase</strong>, memory bandwidth becomes the bottleneck - more weights must be loaded per token.
+            </p>
+            <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+              <strong style={{ color: colors.textPrimary, fontWeight: 600 }}>Higher layers cause</strong> lower throughput because each token requires loading more parameters from GPU memory.
+            </p>
+          </div>
+
+          {/* Real-World Relevance */}
+          <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '16px', borderLeft: '4px solid #8b5cf6' }}>
+            <h4 style={{ color: '#8b5cf6', marginBottom: '12px', fontWeight: 700 }}>Why This Matters in the Real World:</h4>
+            <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+              This is important for AI engineers designing production systems. Companies like OpenAI and Anthropic
+              use these exact techniques to serve millions of users. Understanding memory bandwidth constraints
+              helps you build faster, more efficient AI applications. This technology is used in ChatGPT,
+              Claude, and every major AI assistant you interact with daily.
+            </p>
+          </div>
         </div>
       </div>,
-      renderBottomBar(true, 'Review the Concepts')
+      renderBottomBar(true, 'Continue')
     );
   }
+
+  // Review phase SVG diagram
+  const renderReviewDiagram = () => (
+    <svg width="100%" height="180" viewBox="0 0 500 180" style={{ maxWidth: '600px' }}>
+      <rect width="500" height="180" fill="#0f172a" rx="12" />
+      <text x="250" y="25" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">
+        Autoregressive Generation Flow
+      </text>
+      {/* Token dependency chain */}
+      <g transform="translate(40, 50)">
+        {[0, 1, 2, 3, 4].map(i => (
+          <g key={i}>
+            <rect x={i * 85} y="0" width="70" height="35" fill={i === 4 ? '#f59e0b' : '#22c55e'} rx="4" opacity="0.8" />
+            <text x={i * 85 + 35} y="22" fill="#fff" fontSize="10" textAnchor="middle">Token {i + 1}</text>
+            {i < 4 && (
+              <path d={`M${i * 85 + 70} 17 L${(i + 1) * 85} 17`} stroke="#e2e8f0" strokeWidth="2" markerEnd="url(#arrowhead)" />
+            )}
+          </g>
+        ))}
+      </g>
+      {/* Memory/Compute labels */}
+      <g transform="translate(40, 110)">
+        <rect x="0" y="0" width="200" height="50" fill="rgba(239, 68, 68, 0.2)" rx="6" stroke="#ef4444" strokeWidth="1" />
+        <text x="100" y="20" fill="#ef4444" fontSize="11" textAnchor="middle" fontWeight="bold">Memory Bandwidth</text>
+        <text x="100" y="38" fill="#e2e8f0" fontSize="10" textAnchor="middle">Loading model weights</text>
+        <rect x="220" y="0" width="200" height="50" fill="rgba(34, 197, 94, 0.2)" rx="6" stroke="#22c55e" strokeWidth="1" />
+        <text x="320" y="20" fill="#22c55e" fontSize="11" textAnchor="middle" fontWeight="bold">KV Cache</text>
+        <text x="320" y="38" fill="#e2e8f0" fontSize="10" textAnchor="middle">Saves recomputation</text>
+      </g>
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#e2e8f0" />
+        </marker>
+      </defs>
+    </svg>
+  );
 
   // REVIEW PHASE
   if (phase === 'review') {
@@ -842,35 +1031,88 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
             marginBottom: '24px',
             borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
           }}>
-            <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
-              {wasCorrect ? 'Correct!' : 'Close, but there\'s more to it!'}
+            <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', fontWeight: 700 }}>
+              {wasCorrect ? 'Your Prediction Was Correct!' : 'Let\'s Review What You Observed'}
             </h3>
-            <p>Memory bandwidth is often the limiting factor! The GPU must load billions of model parameters from memory for each token generated.</p>
+            <p style={{ color: colors.textSecondary, fontWeight: 400 }}>
+              {wasCorrect
+                ? 'As you predicted, memory bandwidth is often the limiting factor! The GPU must load billions of model parameters from memory for each token generated.'
+                : 'You saw in the experiment that memory bandwidth is often the limiting factor! The GPU must load billions of model parameters from memory for each token generated.'}
+            </p>
+          </div>
+
+          {/* Visual diagram for review phase */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderReviewDiagram()}
           </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
             <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>The Autoregressive Bottleneck</h3>
-            <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-              <strong>Why word-by-word?</strong> Language models are "autoregressive" - each new word depends on ALL previous words.
+            <p style={{ lineHeight: 1.7, marginBottom: '12px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Why word-by-word?</strong> Language models are "autoregressive" - each new word depends on ALL previous words.
               The model can't know word #5 without first generating words #1-4.
             </p>
-            <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-              <strong>The memory problem:</strong> For each token, the entire model (billions of parameters) must be loaded from GPU memory.
+            <p style={{ lineHeight: 1.7, marginBottom: '12px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>The memory problem:</strong> For each token, the entire model (billions of parameters) must be loaded from GPU memory.
               Memory bandwidth, not compute power, is typically the limit.
             </p>
-            <p style={{ lineHeight: 1.7 }}>
-              <strong>KV Cache saves the day:</strong> Without caching, each token would require recomputing attention over ALL previous tokens.
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>KV Cache saves the day:</strong> Without caching, each token would require recomputing attention over ALL previous tokens.
               KV cache stores these computations, trading memory for massive speedup.
             </p>
           </div>
 
           <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
             <h3 style={{ color: '#8b5cf6', marginBottom: '16px' }}>Two Phases of Generation</h3>
-            <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-              <strong>Prefill:</strong> Process all input tokens in parallel (fast, compute-bound). Build the initial KV cache.
+            <p style={{ lineHeight: 1.7, marginBottom: '12px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Prefill:</strong> Process all input tokens in parallel (fast, compute-bound). Build the initial KV cache.
             </p>
-            <p style={{ lineHeight: 1.7 }}>
-              <strong>Decode:</strong> Generate output tokens one at a time (slow, memory-bound). Each token requires loading model weights.
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Decode:</strong> Generate output tokens one at a time (slow, memory-bound). Each token requires loading model weights.
+            </p>
+          </div>
+
+          {/* Cause-Effect Educational Content */}
+          <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px', borderLeft: '4px solid #22c55e' }}>
+            <h3 style={{ color: '#22c55e', marginBottom: '16px' }}>Cause and Effect</h3>
+            <div style={{ lineHeight: 1.8, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>Because</strong> each token depends on all previous tokens,
+                <strong style={{ color: colors.textPrimary }}> therefore</strong> the model cannot parallelize output generation.
+              </p>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>Because</strong> model weights must be loaded for each token,
+                <strong style={{ color: colors.textPrimary }}> therefore</strong> memory bandwidth becomes the bottleneck.
+              </p>
+              <p>
+                <strong style={{ color: colors.textPrimary }}>Because</strong> KV cache stores previous attention computations,
+                <strong style={{ color: colors.textPrimary }}> therefore</strong> we avoid exponential slowdown with sequence length.
+              </p>
+            </div>
+          </div>
+
+          {/* Real-World Relevance */}
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px', borderLeft: '4px solid #f59e0b' }}>
+            <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>Real-World Relevance</h3>
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary }}>
+              Understanding inference latency is crucial for building production AI systems. Companies like OpenAI, Anthropic, and Google
+              invest billions in hardware and software optimizations specifically to reduce latency. This directly impacts user experience -
+              every millisecond saved translates to happier users and lower costs. The techniques you're learning here are used in
+              ChatGPT, Claude, Gemini, and every major AI assistant you interact with daily.
+            </p>
+          </div>
+
+          {/* Conceptual Scaffolding */}
+          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', borderLeft: '4px solid #3b82f6' }}>
+            <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>Building Understanding</h3>
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>What you knew before:</strong> AI seems to think word by word
+            </p>
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>What you learned:</strong> This is autoregressive generation - a fundamental constraint
+            </p>
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Why it matters:</strong> Memory bandwidth limits speed, and KV cache is the key optimization
             </p>
           </div>
         </div>
@@ -879,15 +1121,59 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     );
   }
 
+  // Static SVG for twist predict (streaming vs batching concept)
+  const renderTwistStaticVisualization = () => (
+    <svg width="100%" height="200" viewBox="0 0 500 200" style={{ maxWidth: '600px' }}>
+      <rect width="500" height="200" fill="#0f172a" rx="12" />
+      <text x="250" y="25" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">
+        Streaming vs Batching
+      </text>
+      {/* Streaming visualization */}
+      <g transform="translate(30, 50)">
+        <text x="0" y="0" fill="#f59e0b" fontSize="11" fontWeight="bold">Streaming (one at a time)</text>
+        <rect x="0" y="10" width="180" height="30" fill="rgba(245, 158, 11, 0.2)" rx="4" stroke="#f59e0b" strokeWidth="1" />
+        {[0, 1, 2, 3, 4].map(i => (
+          <rect key={i} x={10 + i * 35} y="15" width="30" height="20" fill="#f59e0b" rx="3" opacity={0.4 + i * 0.15} />
+        ))}
+        <text x="200" y="30" fill="#e2e8f0" fontSize="10">Low latency per user</text>
+      </g>
+      {/* Batching visualization */}
+      <g transform="translate(30, 120)">
+        <text x="0" y="0" fill="#3b82f6" fontSize="11" fontWeight="bold">Batching (multiple together)</text>
+        <rect x="0" y="10" width="180" height="50" fill="rgba(59, 130, 246, 0.2)" rx="4" stroke="#3b82f6" strokeWidth="1" />
+        {[0, 1, 2].map(row => (
+          <g key={row}>
+            {[0, 1, 2, 3, 4].map(i => (
+              <rect key={i} x={10 + i * 35} y={15 + row * 15} width="30" height="12" fill="#3b82f6" rx="2" opacity="0.7" />
+            ))}
+          </g>
+        ))}
+        <text x="200" y="40" fill="#e2e8f0" fontSize="10">Higher throughput</text>
+      </g>
+    </svg>
+  );
+
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return wrapPhaseContent(
       <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>The Twist</h2>
+          <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '8px' }}>The Twist</h2>
+
+          {/* Progress indicator */}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <span style={{ color: '#a855f7', fontSize: '14px', fontWeight: 600 }}>
+              Step 1 of 2: Make your prediction
+            </span>
+          </div>
+
+          {/* Static SVG visualization */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderTwistStaticVisualization()}
+          </div>
 
           <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #a855f7' }}>
-            <p style={{ fontSize: '16px', marginBottom: '12px' }}>
+            <p style={{ fontSize: '16px', marginBottom: '12px', color: colors.textSecondary }}>
               You now know that memory bandwidth limits single-request inference. But what if you have many users making requests simultaneously?
             </p>
             <p style={{ color: '#c4b5fd', fontWeight: 'bold' }}>
@@ -909,6 +1195,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '15px',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -927,7 +1214,20 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     return wrapPhaseContent(
       <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>Stream vs Batch</h2>
+          <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '8px' }}>Stream vs Batch</h2>
+
+          {/* Observation guidance text */}
+          <div style={{
+            background: 'rgba(168, 85, 247, 0.1)',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            border: '1px solid rgba(168, 85, 247, 0.3)',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center' }}>
+              <strong>Observe:</strong> Toggle between stream and batch mode. Watch how throughput and latency change with each setting.
+            </p>
+          </div>
 
           {renderVisualization()}
           {renderControls()}
@@ -935,7 +1235,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
             <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '16px', borderRadius: '12px' }}>
               <h4 style={{ color: '#f59e0b', marginBottom: '8px' }}>Streaming</h4>
-              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
                 <li>Low perceived latency</li>
                 <li>Users see progress</li>
                 <li>Lower throughput</li>
@@ -944,7 +1244,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
             </div>
             <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px' }}>
               <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>Batching</h4>
-              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
                 <li>Higher throughput</li>
                 <li>Better GPU utilization</li>
                 <li>Higher individual latency</li>
@@ -957,6 +1257,32 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
       renderBottomBar(true, 'Review the Discovery')
     );
   }
+
+  // Twist review phase SVG diagram
+  const renderTwistReviewDiagram = () => (
+    <svg width="100%" height="160" viewBox="0 0 500 160" style={{ maxWidth: '600px' }}>
+      <rect width="500" height="160" fill="#0f172a" rx="12" />
+      <text x="250" y="25" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">
+        Streaming vs Batching Tradeoff
+      </text>
+      {/* Streaming side */}
+      <g transform="translate(30, 50)">
+        <rect x="0" y="0" width="200" height="90" fill="rgba(245, 158, 11, 0.1)" rx="8" stroke="#f59e0b" strokeWidth="1" />
+        <text x="100" y="25" fill="#f59e0b" fontSize="12" fontWeight="bold" textAnchor="middle">Streaming</text>
+        <text x="100" y="50" fill="#e2e8f0" fontSize="10" textAnchor="middle">Low perceived latency</text>
+        <text x="100" y="68" fill="#e2e8f0" fontSize="10" textAnchor="middle">Best for interactive chat</text>
+        <text x="100" y="86" fill="#22c55e" fontSize="10" textAnchor="middle">User Experience</text>
+      </g>
+      {/* Batching side */}
+      <g transform="translate(270, 50)">
+        <rect x="0" y="0" width="200" height="90" fill="rgba(59, 130, 246, 0.1)" rx="8" stroke="#3b82f6" strokeWidth="1" />
+        <text x="100" y="25" fill="#3b82f6" fontSize="12" fontWeight="bold" textAnchor="middle">Batching</text>
+        <text x="100" y="50" fill="#e2e8f0" fontSize="10" textAnchor="middle">High throughput</text>
+        <text x="100" y="68" fill="#e2e8f0" fontSize="10" textAnchor="middle">Best for API services</text>
+        <text x="100" y="86" fill="#22c55e" fontSize="10" textAnchor="middle">Efficiency</text>
+      </g>
+    </svg>
+  );
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
@@ -975,24 +1301,68 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
             <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
               {wasCorrect ? 'Exactly!' : 'The key insight:'}
             </h3>
-            <p>The right approach depends entirely on the use case! Interactive chat benefits from streaming, while API services might prefer batching for efficiency.</p>
+            <p style={{ color: colors.textSecondary }}>The right approach depends entirely on the use case! Interactive chat benefits from streaming, while API services might prefer batching for efficiency.</p>
+          </div>
+
+          {/* Visual diagram for twist review */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderTwistReviewDiagram()}
           </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
             <h3 style={{ color: '#22c55e', marginBottom: '16px' }}>The Tradeoff Space</h3>
             <div style={{ lineHeight: 1.8 }}>
               <p><strong style={{ color: '#f59e0b' }}>For Interactive Chat (ChatGPT, Claude):</strong></p>
-              <p style={{ marginBottom: '16px', paddingLeft: '16px' }}>
+              <p style={{ marginBottom: '16px', paddingLeft: '16px', color: colors.textSecondary }}>
                 Streaming wins. Users perceive faster response when they see tokens appear.
                 The perceived latency (time to first token) matters more than total time.
               </p>
 
               <p><strong style={{ color: '#3b82f6' }}>For API Services (bulk processing):</strong></p>
-              <p style={{ paddingLeft: '16px' }}>
+              <p style={{ paddingLeft: '16px', color: colors.textSecondary }}>
                 Batching wins. When processing thousands of requests, throughput matters more than individual latency.
                 Batching shares the memory bandwidth cost across requests.
               </p>
             </div>
+          </div>
+
+          {/* Cause-Effect for Twist */}
+          <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px', borderLeft: '4px solid #22c55e' }}>
+            <h3 style={{ color: '#22c55e', marginBottom: '16px' }}>Cause and Effect</h3>
+            <div style={{ lineHeight: 1.8, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>Because</strong> streaming shows tokens immediately,
+                <strong style={{ color: colors.textPrimary }}> therefore</strong> users perceive faster responses even if total time is similar.
+              </p>
+              <p>
+                <strong style={{ color: colors.textPrimary }}>Because</strong> batching amortizes memory bandwidth across requests,
+                <strong style={{ color: colors.textPrimary }}> therefore</strong> total throughput increases but individual latency rises.
+              </p>
+            </div>
+          </div>
+
+          {/* Real-World Relevance for Twist */}
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px', borderLeft: '4px solid #f59e0b' }}>
+            <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>Real-World Relevance</h3>
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary }}>
+              This streaming vs batching tradeoff is central to how AI companies architect their systems. ChatGPT and Claude use
+              streaming for interactive conversations. Meanwhile, enterprise API services batch requests for efficiency.
+              Understanding this helps you design better AI applications and choose the right approach for your use case.
+            </p>
+          </div>
+
+          {/* Conceptual Scaffolding for Twist */}
+          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', borderLeft: '4px solid #3b82f6' }}>
+            <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>Building Understanding</h3>
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>What you knew before:</strong> Memory bandwidth limits inference speed
+            </p>
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>What you learned:</strong> Batching can share this cost across multiple requests
+            </p>
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Why it matters:</strong> The right choice depends on user experience vs efficiency tradeoffs
+            </p>
           </div>
         </div>
       </div>,
@@ -1000,15 +1370,28 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     );
   }
 
+  // Transfer app reveal state
+  const [revealedApps, setRevealedApps] = useState<Set<number>>(new Set());
+
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return wrapPhaseContent(
       <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-            Complete all 4 to unlock the test ({transferCompleted.size}/4)
-          </p>
+
+          {/* Progress indicator */}
+          <div style={{
+            background: 'rgba(34, 197, 94, 0.1)',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <span style={{ color: colors.success, fontSize: '14px', fontWeight: 600 }}>
+              Progress: {transferCompleted.size} of {transferApplications.length} applications completed
+            </span>
+          </div>
 
           {transferApplications.map((app, index) => (
             <div
@@ -1022,29 +1405,46 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
               }}
             >
               <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>{app.title}</h3>
-              <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
               <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
                 <p style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '14px' }}>{app.question}</p>
               </div>
+
+              {/* Show answer if revealed */}
+              {revealedApps.has(index) && (
+                <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e', marginBottom: '12px' }}>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px' }}>{app.answer}</p>
+                </div>
+              )}
+
+              {/* Button area - always shows a button */}
               {!transferCompleted.has(index) ? (
                 <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                  onClick={() => {
+                    if (!revealedApps.has(index)) {
+                      setRevealedApps(new Set([...revealedApps, index]));
+                    }
+                    setTransferCompleted(new Set([...transferCompleted, index]));
+                  }}
                   style={{
                     padding: '10px 20px',
                     borderRadius: '8px',
-                    border: '1px solid #f59e0b',
-                    background: 'transparent',
-                    color: '#f59e0b',
+                    border: 'none',
+                    background: revealedApps.has(index) ? colors.success : '#f59e0b',
+                    color: '#fff',
                     cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    minHeight: '44px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  Reveal Answer
+                  Got It
                 </button>
               ) : (
-                <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
-                  <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
-                </div>
+                <span style={{ color: colors.success, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '18px' }}>{'\u2713'}</span> Completed
+                </span>
               )}
             </div>
           ))}
@@ -1071,9 +1471,37 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
                 {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
               </h2>
               <p style={{ fontSize: '48px', fontWeight: 'bold' }}>{testScore}/10</p>
-              <p style={{ color: '#94a3b8' }}>
+              <p style={{ color: colors.textSecondary }}>
                 {testScore >= 8 ? 'You understand LLM inference latency!' : 'Review the concepts and try again.'}
               </p>
+            </div>
+
+            {/* Answer review section with check/cross indicators */}
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '16px' }}>Answer Review</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {testQuestions.map((q, i) => {
+                  const isCorrect = testAnswers[i] !== null && q.options[testAnswers[i]!].correct;
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      }}
+                    >
+                      <span style={{ fontSize: '18px' }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                        Q{i + 1}: {isCorrect ? 'Correct' : 'Incorrect'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>,
@@ -1087,7 +1515,10 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2>Knowledge Test</h2>
-            <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1}/10</span>
+            {/* Question number in Q1 format */}
+            <span style={{ color: colors.accent, fontWeight: 'bold', fontSize: '16px' }}>
+              Question {currentTestQuestion + 1} of 10
+            </span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
@@ -1107,7 +1538,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
           </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '16px', lineHeight: 1.6 }}>{currentQ.question}</p>
+            <p style={{ fontSize: '16px', lineHeight: 1.6, color: colors.textSecondary }}>{currentQ.question}</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
@@ -1124,6 +1555,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '14px',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1143,6 +1575,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
                 background: 'transparent',
                 color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -1159,6 +1592,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
                   background: '#f59e0b',
                   color: 'white',
                   cursor: 'pointer',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1175,6 +1609,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
                   background: testAnswers.includes(null) ? '#475569' : '#22c55e',
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1195,7 +1630,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '80px', marginBottom: '16px' }}>MASTERY</div>
           <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>AI Inference Expert!</h1>
-          <p style={{ color: '#94a3b8', marginBottom: '32px' }}>
+          <p style={{ color: '#e2e8f0', marginBottom: '32px' }}>
             You understand why LLMs generate text word by word and the engineering tradeoffs involved
           </p>
 

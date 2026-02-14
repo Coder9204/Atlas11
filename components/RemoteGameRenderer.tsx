@@ -1,98 +1,54 @@
 /**
- * Remote Game Renderer - Thin Client for Server-Side Games
+ * Remote Game Renderer - Game Networking Concepts
  *
- * THIS IS ALL THE CLIENT CODE - NO GAME LOGIC.
- *
- * This component:
- * 1. Connects to the game server via WebSocket
- * 2. Receives draw commands (shapes, positions, colors)
- * 3. Renders them to canvas/SVG
- * 4. Sends user input back to server
- *
- * What an attacker sees in this file: Generic rendering code.
- * What they DON'T see: Game logic, physics, formulas, scoring.
+ * Educational game teaching:
+ * - Client-server architecture
+ * - Network latency and its impact
+ * - Tick rate and game responsiveness
+ * - Lag compensation techniques
+ * - Rollback netcode
+ * - NAT traversal
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// === TYPES (matching server types) ===
-
-interface DrawCommand {
-  type: string;
-  id: string;
-  props: Record<string, any>;
-}
-
-interface SliderState {
-  id: string;
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step?: number;
-  disabled?: boolean;
-  color?: string;
-}
-
-interface ButtonState {
-  id: string;
-  label: string;
-  disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
-  icon?: string;
-}
-
-interface ToggleState {
-  id: string;
-  label: string;
-  value: boolean;
-  disabled?: boolean;
-  onLabel?: string;
-  offLabel?: string;
-}
-
-interface ProgressState {
-  id: string;
-  current: number;
-  total: number;
-  labels?: string[];
-  color?: string;
-}
-
-interface UIState {
-  sliders?: SliderState[];
-  buttons?: ButtonState[];
-  toggles?: ToggleState[];
-  progress?: ProgressState;
-  header?: { title: string; subtitle?: string };
-  footer?: { text: string; icon?: string };
-  coachMessage?: string;
-}
-
-interface GameFrame {
-  commands: DrawCommand[];
-  defs?: DrawCommand[];
-  ui: UIState;
-  sounds?: Array<'click' | 'success' | 'failure' | 'transition' | 'complete'>;
+// --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
+    'coach_prompt' | 'guide_paused' | 'guide_resumed';
+  gameType: string;
+  gameTitle: string;
+  details: {
+    currentScreen?: number;
+    totalScreens?: number;
+    phase?: string;
+    phaseLabel?: string;
+    prediction?: string;
+    answer?: string;
+    isCorrect?: boolean;
+    score?: number;
+    maxScore?: number;
+    message?: string;
+    coachMessage?: string;
+    needsHelp?: boolean;
+    [key: string]: any;
+  };
   timestamp: number;
-  frameNumber: number;
-  viewport: { width: number; height: number };
 }
 
-interface UserInput {
-  type: string;
-  id?: string;
-  value?: any;
-  timestamp: number;
-  [key: string]: any;
+interface RemoteGameRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
 }
 
-// === SOUND UTILITY (client-side only) ===
-
+// --- GLOBAL SOUND UTILITY ---
 const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   if (typeof window === 'undefined') return;
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     oscillator.connect(gainNode);
@@ -102,7 +58,7 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
       success: { freq: 800, duration: 0.2, type: 'sine' },
       failure: { freq: 300, duration: 0.3, type: 'sine' },
       transition: { freq: 500, duration: 0.15, type: 'sine' },
-      complete: { freq: 900, duration: 0.4, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
     };
     const sound = sounds[type];
     oscillator.frequency.value = sound.freq;
@@ -111,31 +67,10 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
     oscillator.start();
     oscillator.stop(audioContext.currentTime + sound.duration);
-  } catch {
-    /* Audio not available */
-  }
+  } catch { /* Audio not available */ }
 };
 
-// === COLOR PALETTE ===
-
-const colors = {
-  primary: '#06b6d4',
-  primaryDark: '#0891b2',
-  accent: '#a855f7',
-  success: '#10b981',
-  danger: '#ef4444',
-  warning: '#f59e0b',
-  bgDark: '#020617',
-  bgCard: '#0f172a',
-  bgCardLight: '#1e293b',
-  border: '#334155',
-  textPrimary: '#f8fafc',
-  textSecondary: '#94a3b8',
-  textMuted: '#64748b',
-};
-
-// === TEST QUESTIONS ===
-
+// --- TEST QUESTIONS ---
 const testQuestions = [
   {
     scenario: "You're playing an online shooter and notice your character seems to teleport or stutter when moving. Your internet speed test shows 100 Mbps download but 85ms ping to the game server.",
@@ -157,7 +92,7 @@ const testQuestions = [
       { id: 'c', label: "P2P requires each player to have a static IP address" },
       { id: 'd', label: "Client-server games always have lower latency than P2P" }
     ],
-    explanation: "Client-server architecture maintains a single authoritative game state on the server, making cheating much harder since clients cannot directly manipulate other players' data. With 100 players, P2P would require each client to maintain connections with all others (creating O(n^2) connections), while client-server only needs n connections to the central server."
+    explanation: "Client-server architecture maintains a single authoritative game state on the server, making cheating much harder since clients cannot directly manipulate other players' data. With 100 players, P2P would require each client to maintain connections with all others (creating O(n²) connections), while client-server only needs n connections to the central server."
   },
   {
     scenario: "A competitive fighting game advertises a '128 tick rate server' while another game runs at '30 tick rate.' During gameplay, players notice the 128-tick game feels more responsive to quick inputs.",
@@ -249,36 +184,76 @@ const testQuestions = [
   }
 ];
 
-// === PROPS ===
+// --- TRANSFER APPLICATIONS ---
+const transferApplications = [
+  {
+    title: "Competitive Esports",
+    icon: "🎮",
+    industry: "Gaming",
+    description: "Professional esports tournaments use dedicated servers with high tick rates (128Hz) and custom lag compensation to ensure fair competition. Games like CS2 and Valorant invest heavily in server infrastructure to minimize latency advantages.",
+    principle: "High tick rate + lag compensation = fair competitive play"
+  },
+  {
+    title: "Cloud Gaming Services",
+    icon: "☁️",
+    industry: "Technology",
+    description: "Services like GeForce NOW and Xbox Cloud Gaming stream games from powerful servers to any device. They use predictive input handling and adaptive bitrate streaming to minimize the feel of latency while delivering AAA gaming to smartphones.",
+    principle: "Client-side prediction + video streaming optimization"
+  },
+  {
+    title: "MMO Game Worlds",
+    icon: "🌍",
+    industry: "Entertainment",
+    description: "Games like World of Warcraft support millions of players using interest management - your client only receives data about nearby players and relevant events, dramatically reducing bandwidth while maintaining immersion.",
+    principle: "Interest management + delta compression = massive scale"
+  },
+  {
+    title: "Real-Time Strategy",
+    icon: "⚔️",
+    industry: "Gaming",
+    description: "RTS games use deterministic lockstep: all clients run the same simulation from the same inputs, only synchronizing player commands. This enables hundreds of units with minimal bandwidth but requires all players wait for the slowest connection.",
+    principle: "Deterministic lockstep = minimal bandwidth for complex state"
+  }
+];
 
-interface RemoteGameRendererProps {
-  gameType: string;
-  serverUrl?: string;
-  onGameEvent?: (event: any) => void;
-  userId?: string;
-  resumePhase?: string;
-}
+// --- REMOTE GAME RENDERER ---
+const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type RGPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: RGPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-// === MAIN COMPONENT ===
+  // Use gamePhase from props if valid, otherwise default to 'hook'
+  const getInitialPhase = (): RGPhase => {
+    if (gamePhase && validPhases.includes(gamePhase as RGPhase)) {
+      return gamePhase as RGPhase;
+    }
+    return 'hook';
+  };
 
-export const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({
-  gameType,
-  serverUrl = 'wss://game.yourapp.com',
-  onGameEvent,
-  userId = 'anonymous',
-  resumePhase,
-}) => {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [ui, setUi] = useState<UIState>({});
-  const [connected, setConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [viewport, setViewport] = useState({ width: 700, height: 350 });
+  const [phase, setPhase] = useState<RGPhase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as RGPhase) && gamePhase !== phase) {
+      setPhase(gamePhase as RGPhase);
+    }
+  }, [gamePhase]);
+
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [latency, setLatency] = useState(50);
+  const [tickRate, setTickRate] = useState(60);
+  const [packetLoss, setPacketLoss] = useState(0);
+  const [time, setTime] = useState(0);
+  const [testQuestion, setTestQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+  const [showQuizConfirm, setShowQuizConfirm] = useState(false);
+  const [confetti, setConfetti] = useState<Array<{ x: number; y: number; color: string; delay: number }>>([]);
+
+  // --- RESPONSIVE DESIGN ---
   const [isMobile, setIsMobile] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
-  const frameRef = useRef<GameFrame | null>(null);
-  const defsRef = useRef<DrawCommand[]>([]);
-
-  // Responsive detection
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -286,1010 +261,1376 @@ export const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  // Emit events to AI coach
+  const emitGameEvent = useCallback((
+    eventType: GameEvent['eventType'],
+    details: GameEvent['details']
+  ) => {
+    if (onGameEvent) {
+      onGameEvent({
+        eventType,
+        gameType: 'remote_game',
+        gameTitle: 'Game Networking Concepts',
+        details,
+        timestamp: Date.now()
+      });
+    }
+  }, [onGameEvent]);
+
+  // Phase order for navigation
+  const phaseOrder: RGPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<RGPhase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Observer Effect',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
   };
 
-  // === WEBSOCKET CONNECTION ===
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
 
-  useEffect(() => {
-    // For development/demo, use HTTP polling instead of WebSocket
-    // In production, this would be a real WebSocket connection
-    const connectToServer = async () => {
-      try {
-        // In production: const ws = new WebSocket(`${serverUrl}/play/${gameType}`);
+  const goToPhase = useCallback((p: RGPhase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
 
-        // For demo purposes, we'll simulate the connection
-        console.log(`[RemoteGame] Connecting to ${gameType}...`);
-        setConnected(true);
+    lastClickRef.current = now;
+    isNavigating.current = true;
 
-        // Simulate initial frame
-        // In production, this would come from the WebSocket
-      } catch (err) {
-        setError('Failed to connect to game server');
-        console.error('[RemoteGame] Connection error:', err);
-      }
-    };
+    setPhase(p);
+    playSound('transition');
 
-    connectToServer();
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
-  }, [gameType, serverUrl, userId, resumePhase]);
-
-  // === INPUT SENDING ===
-
-  const sendInput = useCallback((input: Omit<UserInput, 'timestamp'>) => {
-    const fullInput: UserInput = {
-      ...input,
-      timestamp: Date.now(),
-    };
-
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(fullInput));
-    } else {
-      // For demo, log the input
-      console.log('[RemoteGame] Input:', fullInput);
-    }
-
-    // Play click sound locally for responsiveness
-    playSound('click');
-  }, []);
-
-  // === FRAME RENDERING ===
-
-  const renderFrame = useCallback((frame: GameFrame) => {
-    frameRef.current = frame;
-
-    // Store defs for reuse
-    if (frame.defs) {
-      defsRef.current = frame.defs;
-    }
-
-    // Update UI state
-    setUi(frame.ui);
-
-    // Update viewport
-    setViewport(frame.viewport);
-
-    // Play sounds
-    if (frame.sounds) {
-      frame.sounds.forEach((sound) => playSound(sound));
-    }
-
-    // Render SVG commands
-    renderSVG(frame.commands);
-  }, []);
-
-  // === SVG RENDERING ===
-
-  const renderSVG = useCallback((commands: DrawCommand[]) => {
-    const svg = svgRef.current;
-    if (!svg) return;
-
-    // Clear existing content (except defs)
-    const existingDefs = svg.querySelector('defs');
-    svg.innerHTML = '';
-    if (existingDefs) {
-      svg.appendChild(existingDefs);
-    }
-
-    // Render each command
-    commands.forEach((cmd) => {
-      const element = createSVGElement(cmd);
-      if (element) {
-        svg.appendChild(element);
-      }
+    const idx = phaseOrder.indexOf(p);
+    emitGameEvent('phase_changed', {
+      phase: p,
+      phaseLabel: phaseLabels[p],
+      currentScreen: idx + 1,
+      totalScreens: phaseOrder.length,
+      message: `Navigated to ${phaseLabels[p]}`
     });
+
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent]);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) goToPhase(phaseOrder[idx - 1]);
+  }, [phase, goToPhase]);
+
+  // Premium color palette
+  const colors = {
+    primary: '#06b6d4',
+    primaryDark: '#0891b2',
+    accent: '#a855f7',
+    accentDark: '#9333ea',
+    warning: '#f59e0b',
+    success: '#10b981',
+    danger: '#ef4444',
+    bgDark: '#020617',
+    bgCard: '#0f172a',
+    bgCardLight: '#1e293b',
+    border: '#334155',
+    textPrimary: '#f8fafc',
+    textSecondary: '#e2e8f0',
+    textMuted: '#94a3b8',
+  };
+
+  // Typography
+  const typo = {
+    label: isMobile ? '9px' : '10px',
+    small: isMobile ? '11px' : '12px',
+    body: isMobile ? '12px' : '13px',
+    bodyLarge: isMobile ? '13px' : '14px',
+    heading: isMobile ? '18px' : '22px',
+    title: isMobile ? '24px' : '32px',
+    pagePadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '12px' : '14px',
+    cardPadding: isMobile ? '10px' : '14px',
+    elementGap: isMobile ? '8px' : '10px',
+  };
+
+  // Emit initial game_started event on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      emitGameEvent('game_started', {
+        phase: 'hook',
+        phaseLabel: 'Introduction',
+        currentScreen: 1,
+        totalScreens: phaseOrder.length,
+        message: 'Game started - Game Networking Concepts'
+      });
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
-  const createSVGElement = (cmd: DrawCommand): SVGElement | null => {
-    const { type, props } = cmd;
+  // Animation loop
+  useEffect(() => {
+    const interval = setInterval(() => setTime(t => t + 0.02), 30);
+    return () => clearInterval(interval);
+  }, []);
 
-    switch (type) {
-      case 'clear':
-        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        bg.setAttribute('width', String(props.width || viewport.width));
-        bg.setAttribute('height', String(props.height || viewport.height));
-        bg.setAttribute('fill', props.color);
-        return bg;
-
-      case 'rect':
-        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rect.setAttribute('x', String(props.x));
-        rect.setAttribute('y', String(props.y));
-        rect.setAttribute('width', String(props.width));
-        rect.setAttribute('height', String(props.height));
-        if (props.fill) rect.setAttribute('fill', props.fill);
-        if (props.stroke) rect.setAttribute('stroke', props.stroke);
-        if (props.strokeWidth) rect.setAttribute('stroke-width', String(props.strokeWidth));
-        if (props.rx) rect.setAttribute('rx', String(props.rx));
-        if (props.ry) rect.setAttribute('ry', String(props.ry));
-        if (props.opacity !== undefined) rect.setAttribute('opacity', String(props.opacity));
-        return rect;
-
-      case 'circle':
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', String(props.cx));
-        circle.setAttribute('cy', String(props.cy));
-        circle.setAttribute('r', String(props.r));
-        if (props.fill) circle.setAttribute('fill', props.fill);
-        if (props.stroke) circle.setAttribute('stroke', props.stroke);
-        if (props.strokeWidth) circle.setAttribute('stroke-width', String(props.strokeWidth));
-        if (props.opacity !== undefined) circle.setAttribute('opacity', String(props.opacity));
-        return circle;
-
-      case 'ellipse':
-        const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-        ellipse.setAttribute('cx', String(props.cx));
-        ellipse.setAttribute('cy', String(props.cy));
-        ellipse.setAttribute('rx', String(props.rx));
-        ellipse.setAttribute('ry', String(props.ry));
-        if (props.fill) ellipse.setAttribute('fill', props.fill);
-        if (props.stroke) ellipse.setAttribute('stroke', props.stroke);
-        if (props.opacity !== undefined) ellipse.setAttribute('opacity', String(props.opacity));
-        return ellipse;
-
-      case 'line':
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', String(props.x1));
-        line.setAttribute('y1', String(props.y1));
-        line.setAttribute('x2', String(props.x2));
-        line.setAttribute('y2', String(props.y2));
-        line.setAttribute('stroke', props.stroke);
-        if (props.strokeWidth) line.setAttribute('stroke-width', String(props.strokeWidth));
-        if (props.strokeDasharray) line.setAttribute('stroke-dasharray', props.strokeDasharray);
-        if (props.opacity !== undefined) line.setAttribute('opacity', String(props.opacity));
-        return line;
-
-      case 'path':
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', props.d);
-        if (props.fill) path.setAttribute('fill', props.fill);
-        if (props.stroke) path.setAttribute('stroke', props.stroke);
-        if (props.strokeWidth) path.setAttribute('stroke-width', String(props.strokeWidth));
-        if (props.opacity !== undefined) path.setAttribute('opacity', String(props.opacity));
-        return path;
-
-      case 'text':
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', String(props.x));
-        text.setAttribute('y', String(props.y));
-        text.textContent = props.text;
-        if (props.fill) text.setAttribute('fill', props.fill);
-        if (props.fontSize) text.setAttribute('font-size', String(props.fontSize));
-        if (props.fontWeight) text.setAttribute('font-weight', String(props.fontWeight));
-        if (props.fontFamily) text.setAttribute('font-family', props.fontFamily);
-        if (props.textAnchor) text.setAttribute('text-anchor', props.textAnchor);
-        if (props.opacity !== undefined) text.setAttribute('opacity', String(props.opacity));
-        return text;
-
-      case 'group':
-        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        if (props.transform) group.setAttribute('transform', props.transform);
-        if (props.opacity !== undefined) group.setAttribute('opacity', String(props.opacity));
-        if (props.children) {
-          props.children.forEach((child: DrawCommand) => {
-            const childElement = createSVGElement(child);
-            if (childElement) {
-              group.appendChild(childElement);
-            }
-          });
-        }
-        return group;
-
-      default:
-        console.warn(`Unknown draw command type: ${type}`);
-        return null;
+  // Confetti for mastery
+  useEffect(() => {
+    if (phase === 'mastery') {
+      const confettiColors = ['#06b6d4', '#a855f7', '#ec4899', '#10b981', '#f59e0b', '#3b82f6'];
+      setConfetti(Array.from({ length: 60 }, (_, i) => ({
+        x: Math.random() * 100, y: Math.random() * 100,
+        color: confettiColors[i % confettiColors.length], delay: Math.random() * 2
+      })));
     }
-  };
+  }, [phase]);
 
-  // === UI RENDERING ===
+  const currentIdx = phaseOrder.indexOf(phase);
 
-  const renderButton = (btn: ButtonState) => {
-    const variantStyles: Record<string, React.CSSProperties> = {
-      primary: {
-        background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-        color: colors.textPrimary,
-        boxShadow: `0 4px 20px ${colors.primary}40`,
-      },
-      secondary: {
-        background: colors.bgCardLight,
-        color: colors.textSecondary,
-        border: `1px solid ${colors.border}`,
-      },
-      success: {
-        background: `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
-        color: colors.textPrimary,
-        boxShadow: `0 4px 20px ${colors.success}40`,
-      },
-      danger: {
-        background: `linear-gradient(135deg, ${colors.danger} 0%, #dc2626 100%)`,
-        color: colors.textPrimary,
-      },
-      ghost: {
-        background: 'transparent',
-        color: colors.textSecondary,
-      },
-    };
+  // Request to go home
+  const requestGoHome = useCallback(() => {
+    emitGameEvent('button_clicked', {
+      phase,
+      phaseLabel: phaseLabels[phase],
+      action: 'go_home',
+      message: 'User requested to exit game and return home'
+    });
+  }, [phase, emitGameEvent]);
+
+  // --- NETWORK VISUALIZATION SVG ---
+  const renderNetworkVisualization = (interactive: boolean = false, showLagCompensation: boolean = false) => {
+    const actualLatency = interactive ? latency : 50;
+    const actualTickRate = interactive ? tickRate : 60;
+    const packetDelay = actualLatency / 1000;
+    const tickInterval = 1000 / actualTickRate;
 
     return (
-      <button
-        key={btn.id}
-        onClick={() => sendInput({ type: 'button_click', id: btn.id })}
-        disabled={btn.disabled}
-        style={{
-          padding: '12px 24px',
-          borderRadius: '12px',
-          fontWeight: 700,
-          fontSize: '14px',
-          border: 'none',
-          cursor: btn.disabled ? 'not-allowed' : 'pointer',
-          opacity: btn.disabled ? 0.5 : 1,
-          transition: 'all 0.2s ease',
-          ...variantStyles[btn.variant || 'primary'],
-        }}
-      >
-        {btn.icon && <span style={{ marginRight: '8px' }}>{btn.icon}</span>}
-        {btn.label}
-      </button>
-    );
-  };
-
-  const renderSlider = (slider: SliderState) => (
-    <div key={slider.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-      <label style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
-        {slider.label}: {slider.value}
-      </label>
-      <input
-        type="range"
-        min={slider.min}
-        max={slider.max}
-        step={slider.step || 1}
-        value={slider.value}
-        disabled={slider.disabled}
-        onChange={(e) =>
-          sendInput({ type: 'slider_change', id: slider.id, value: Number(e.target.value) })
-        }
-        style={{
-          width: '150px',
-          accentColor: slider.color || colors.primary,
-        }}
-      />
-    </div>
-  );
-
-  const renderToggle = (toggle: ToggleState) => (
-    <div key={toggle.id} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-      <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
-        {toggle.label}
-      </span>
-      <button
-        onClick={() => sendInput({ type: 'toggle_change', id: toggle.id, value: !toggle.value })}
-        disabled={toggle.disabled}
-        style={{
-          padding: '8px 16px',
-          borderRadius: '20px',
-          border: 'none',
-          background: toggle.value ? colors.success : colors.bgCardLight,
-          color: colors.textPrimary,
-          fontWeight: 600,
-          fontSize: '12px',
-          cursor: toggle.disabled ? 'not-allowed' : 'pointer',
-          transition: 'all 0.2s ease',
-        }}
-      >
-        {toggle.value ? toggle.onLabel || 'ON' : toggle.offLabel || 'OFF'}
-      </button>
-    </div>
-  );
-
-  const renderProgress = (progress: ProgressState) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      {Array.from({ length: progress.total }).map((_, i) => (
-        <div
-          key={i}
-          onClick={() => i < progress.current - 1 && sendInput({ type: 'progress_click', index: i })}
-          style={{
-            width: i === progress.current - 1 ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            backgroundColor:
-              i < progress.current - 1
-                ? colors.success
-                : i === progress.current - 1
-                ? progress.color || colors.primary
-                : colors.border,
-            cursor: i < progress.current - 1 ? 'pointer' : 'default',
-            transition: 'all 0.3s ease',
-          }}
-          title={progress.labels?.[i]}
-        />
-      ))}
-      <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
-        {progress.current} / {progress.total}
-      </span>
-    </div>
-  );
-
-  // === LOADING/ERROR STATES ===
-
-  if (error) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          backgroundColor: colors.bgDark,
-          color: colors.danger,
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
-          <div style={{ fontSize: '18px', fontWeight: 600 }}>{error}</div>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              marginTop: '16px',
-              padding: '12px 24px',
-              borderRadius: '12px',
-              border: 'none',
-              background: colors.primary,
-              color: colors.textPrimary,
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!connected) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          backgroundColor: colors.bgDark,
-          color: colors.textSecondary,
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              border: `3px solid ${colors.border}`,
-              borderTopColor: colors.primary,
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 16px',
-            }}
-          />
-          <div>Connecting to game server...</div>
-        </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
-  }
-
-  // === MAIN RENDER ===
-
-  return (
-    <div
-      className="remote-game-renderer"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        backgroundColor: colors.bgDark,
-        color: colors.textPrimary,
-        fontFamily: 'Inter, system-ui, sans-serif',
-      }}
-    >
-      {/* Header */}
-      {ui.header && (
-        <div
-          style={{
-            padding: '12px 16px',
-            borderBottom: `1px solid ${colors.border}`,
-            backgroundColor: colors.bgCard,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div>
-            <span style={{ fontWeight: 600, fontSize: '14px' }}>{ui.header.title}</span>
-            {ui.header.subtitle && (
-              <span
-                style={{
-                  marginLeft: '12px',
-                  padding: '4px 12px',
-                  borderRadius: '12px',
-                  background: `${colors.primary}20`,
-                  color: colors.primary,
-                  fontSize: '11px',
-                  fontWeight: 700,
-                }}
-              >
-                {ui.header.subtitle}
-              </span>
-            )}
-          </div>
-          {ui.progress && renderProgress(ui.progress)}
-        </div>
-      )}
-
-      {/* Coach Message */}
-      {ui.coachMessage && (
-        <div
-          style={{
-            padding: '12px 16px',
-            backgroundColor: `${colors.primary}10`,
-            borderBottom: `1px solid ${colors.border}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-          }}
-        >
-          <span style={{ fontSize: '20px' }}>🤖</span>
-          <span style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: 1.5 }}>
-            {ui.coachMessage}
-          </span>
-        </div>
-      )}
-
-      {/* Game Canvas */}
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          overflow: 'hidden',
-        }}
-      >
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${viewport.width} ${viewport.height}`}
-          style={{
-            width: '100%',
-            maxHeight: '100%',
-            borderRadius: '12px',
-            backgroundColor: colors.bgCard,
-          }}
-        >
-          {/* Premium SVG Definitions */}
-          <defs>
-            {/* === LINEAR GRADIENTS FOR DEVICE VISUALIZATION === */}
-
-            {/* Client device metallic body gradient */}
-            <linearGradient id="rmtgClientDevice" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="20%" stopColor="#475569" />
-              <stop offset="50%" stopColor="#334155" />
-              <stop offset="75%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-
-            {/* Server chassis gradient with depth */}
-            <linearGradient id="rmtgServerChassis" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1f2937" />
-              <stop offset="15%" stopColor="#374151" />
-              <stop offset="40%" stopColor="#1f2937" />
-              <stop offset="60%" stopColor="#374151" />
-              <stop offset="85%" stopColor="#1f2937" />
-              <stop offset="100%" stopColor="#111827" />
-            </linearGradient>
-
-            {/* Server rack front panel */}
-            <linearGradient id="rmtgServerPanel" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="10%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#334155" />
-              <stop offset="90%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-
-            {/* Screen display gradient */}
-            <linearGradient id="rmtgScreenGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#020617" />
-              <stop offset="20%" stopColor="#0f172a" />
-              <stop offset="80%" stopColor="#0a0f1a" />
-              <stop offset="100%" stopColor="#020617" />
-            </linearGradient>
-
-            {/* Data packet gradient (cyan to purple) */}
-            <linearGradient id="rmtgDataPacket" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
-              <stop offset="20%" stopColor="#22d3ee" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
-              <stop offset="80%" stopColor="#a855f7" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#9333ea" stopOpacity="0" />
-            </linearGradient>
-
-            {/* Network cable gradient */}
-            <linearGradient id="rmtgNetworkCable" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0891b2" />
-              <stop offset="25%" stopColor="#06b6d4" />
-              <stop offset="50%" stopColor="#22d3ee" />
-              <stop offset="75%" stopColor="#06b6d4" />
-              <stop offset="100%" stopColor="#0891b2" />
-            </linearGradient>
-
-            {/* === RADIAL GRADIENTS FOR NETWORK/SIGNAL EFFECTS === */}
-
-            {/* WiFi/signal emanation */}
-            <radialGradient id="rmtgSignalWave" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6" />
-              <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.3" />
-              <stop offset="70%" stopColor="#67e8f9" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Server activity glow */}
-            <radialGradient id="rmtgServerGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="1" />
-              <stop offset="30%" stopColor="#059669" stopOpacity="0.7" />
-              <stop offset="60%" stopColor="#047857" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#065f46" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Latency indicator glow (good - green) */}
-            <radialGradient id="rmtgLatencyGood" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
-              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Latency indicator glow (warning - amber) */}
-            <radialGradient id="rmtgLatencyWarn" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
-              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Latency indicator glow (poor - red) */}
-            <radialGradient id="rmtgLatencyPoor" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
-              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Data center ambient glow */}
-            <radialGradient id="rmtgDataCenterGlow" cx="50%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.15" />
-              <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Connection node pulse */}
-            <radialGradient id="rmtgNodePulse" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
-              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
-            </radialGradient>
-
-            {/* === GLOW FILTERS USING feGaussianBlur + feMerge === */}
-
-            {/* Standard element glow */}
-            <filter id="rmtgGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Soft glow for status indicators */}
-            <filter id="rmtgSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Intense glow for active connections */}
-            <filter id="rmtgIntenseGlow" x="-150%" y="-150%" width="400%" height="400%">
-              <feGaussianBlur stdDeviation="5" result="blur1" />
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur2" />
-              <feMerge>
-                <feMergeNode in="blur1" />
-                <feMergeNode in="blur2" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Data packet trail effect */}
-            <filter id="rmtgPacketTrail" x="-100%" y="-50%" width="300%" height="200%">
-              <feGaussianBlur stdDeviation="4 1" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Server LED glow */}
-            <filter id="rmtgLedGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Network wave pulse effect */}
-            <filter id="rmtgWavePulse" x="-200%" y="-200%" width="500%" height="500%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Drop shadow for depth */}
-            <filter id="rmtgDropShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000000" floodOpacity="0.5" />
-            </filter>
-
-            {/* Inner glow effect */}
-            <filter id="rmtgInnerGlow">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-
-            {/* === BACKGROUND PATTERNS === */}
-
-            {/* Grid pattern for background */}
-            <pattern id="rmtgBackgroundGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-            </pattern>
-
-            {/* Circuit board pattern */}
-            <pattern id="rmtgCircuitPattern" width="40" height="40" patternUnits="userSpaceOnUse">
-              <rect width="40" height="40" fill="none" />
-              <line x1="0" y1="20" x2="15" y2="20" stroke="#334155" strokeWidth="1" strokeOpacity="0.2" />
-              <line x1="25" y1="20" x2="40" y2="20" stroke="#334155" strokeWidth="1" strokeOpacity="0.2" />
-              <line x1="20" y1="0" x2="20" y2="15" stroke="#334155" strokeWidth="1" strokeOpacity="0.2" />
-              <line x1="20" y1="25" x2="20" y2="40" stroke="#334155" strokeWidth="1" strokeOpacity="0.2" />
-              <circle cx="20" cy="20" r="2" fill="#334155" fillOpacity="0.3" />
-            </pattern>
-
-            {/* === BACKGROUND GRADIENT === */}
-            <linearGradient id="rmtgLabBackground" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="30%" stopColor="#0a0f1a" />
-              <stop offset="70%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
-          </defs>
-
-          {/* Background Layer */}
-          <rect width={viewport.width} height={viewport.height} fill="url(#rmtgLabBackground)" />
-          <rect width={viewport.width} height={viewport.height} fill="url(#rmtgBackgroundGrid)" />
-          <rect width={viewport.width} height={viewport.height} fill="url(#rmtgDataCenterGlow)" />
-
-          {/* === CLIENT DEVICE (Left Side) === */}
-          <g transform="translate(40, 100)">
-            {/* Device shadow */}
-            <rect x="-5" y="5" width="130" height="150" rx="12" fill="#000" opacity="0.3" filter="url(#rmtgDropShadow)" />
-
-            {/* Device body */}
-            <rect x="0" y="0" width="120" height="140" rx="10" fill="url(#rmtgClientDevice)" stroke="#475569" strokeWidth="1.5" />
-
-            {/* Screen bezel */}
-            <rect x="8" y="8" width="104" height="85" rx="5" fill="#111827" stroke="#1f2937" strokeWidth="1" />
-
-            {/* Screen display */}
-            <rect x="12" y="12" width="96" height="77" rx="3" fill="url(#rmtgScreenGradient)" />
-
-            {/* Screen content - game frame indicator */}
-            <rect x="18" y="18" width="84" height="65" rx="2" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
-
-            {/* Screen game elements */}
-            <rect x="25" y="28" width="30" height="20" rx="3" fill="#06b6d4" opacity="0.6" />
-            <rect x="62" y="35" width="25" height="15" rx="2" fill="#a855f7" opacity="0.5" />
-            <circle cx="45" cy="60" r="8" fill="#10b981" opacity="0.4" />
-
-            {/* WiFi signal emanating from device */}
-            <g transform="translate(60, -15)">
-              <circle r="25" fill="url(#rmtgSignalWave)" opacity="0.4">
-                <animate attributeName="r" values="15;35;15" dur="2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite" />
-              </circle>
-              <circle r="18" fill="url(#rmtgSignalWave)" opacity="0.6">
-                <animate attributeName="r" values="10;25;10" dur="2s" repeatCount="indefinite" begin="0.5s" />
-                <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite" begin="0.5s" />
-              </circle>
-            </g>
-
-            {/* Keyboard area */}
-            <rect x="10" y="100" width="100" height="32" rx="5" fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
-            {/* Key rows */}
-            {[0, 1, 2].map((row) => (
-              <g key={`keyrow-${row}`}>
-                {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((key) => (
-                  <rect
-                    key={`key-${row}-${key}`}
-                    x={15 + key * 10}
-                    y={105 + row * 10}
-                    width="8"
-                    height="7"
-                    rx="1"
-                    fill="#334155"
-                    stroke="#475569"
-                    strokeWidth="0.3"
-                  />
-                ))}
-              </g>
-            ))}
-
-            {/* Touchpad */}
-            <rect x="40" y="135" width="40" height="3" rx="1" fill="#334155" />
-
-            {/* Status LED */}
-            <circle cx="15" cy="97" r="3" fill="#10b981" filter="url(#rmtgLedGlow)">
-              <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
-            </circle>
-
-            {/* Label */}
-            <text x="60" y="160" textAnchor="middle" fontSize="10" fill="#94a3b8" fontWeight="600">Client Device</text>
-          </g>
-
-          {/* === NETWORK CONNECTION VISUALIZATION (Center) === */}
-          <g transform="translate(180, 170)">
-            {/* Connection path with animated data packets */}
-            <path
-              d="M 0,0 C 80,-30 160,-30 240,0 C 320,30 280,30 340,0"
-              fill="none"
-              stroke="url(#rmtgNetworkCable)"
-              strokeWidth="3"
-              strokeOpacity="0.4"
-              strokeDasharray="8 4"
-            />
-
-            {/* Main connection line */}
-            <path
-              d="M 0,0 C 80,-30 160,-30 240,0 C 320,30 280,30 340,0"
-              fill="none"
-              stroke="url(#rmtgNetworkCable)"
-              strokeWidth="1.5"
-              strokeOpacity="0.8"
-            />
-
-            {/* Animated data packets traveling to server */}
-            <circle r="4" fill="url(#rmtgNodePulse)" filter="url(#rmtgPacketTrail)">
-              <animateMotion dur="1.5s" repeatCount="indefinite" path="M 0,0 C 80,-30 160,-30 240,0 C 320,30 280,30 340,0" />
-            </circle>
-            <circle r="4" fill="url(#rmtgNodePulse)" filter="url(#rmtgPacketTrail)">
-              <animateMotion dur="1.5s" repeatCount="indefinite" begin="0.5s" path="M 0,0 C 80,-30 160,-30 240,0 C 320,30 280,30 340,0" />
-            </circle>
-            <circle r="4" fill="url(#rmtgNodePulse)" filter="url(#rmtgPacketTrail)">
-              <animateMotion dur="1.5s" repeatCount="indefinite" begin="1s" path="M 0,0 C 80,-30 160,-30 240,0 C 320,30 280,30 340,0" />
-            </circle>
-
-            {/* Animated data packets traveling to client (return path) */}
-            <circle r="3" fill="#a855f7" filter="url(#rmtgPacketTrail)">
-              <animateMotion dur="1.2s" repeatCount="indefinite" path="M 340,0 C 280,30 320,30 240,0 C 160,-30 80,-30 0,0" />
-            </circle>
-            <circle r="3" fill="#a855f7" filter="url(#rmtgPacketTrail)">
-              <animateMotion dur="1.2s" repeatCount="indefinite" begin="0.4s" path="M 340,0 C 280,30 320,30 240,0 C 160,-30 80,-30 0,0" />
-            </circle>
-            <circle r="3" fill="#a855f7" filter="url(#rmtgPacketTrail)">
-              <animateMotion dur="1.2s" repeatCount="indefinite" begin="0.8s" path="M 340,0 C 280,30 320,30 240,0 C 160,-30 80,-30 0,0" />
-            </circle>
-
-            {/* Network hop nodes */}
-            <g transform="translate(85, -20)">
-              <circle r="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-              <circle r="5" fill="url(#rmtgNodePulse)" filter="url(#rmtgSoftGlow)">
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="0.8s" repeatCount="indefinite" />
-              </circle>
-              <text x="0" y="22" textAnchor="middle" fontSize="8" fill="#64748b">Router</text>
-            </g>
-
-            <g transform="translate(170, 0)">
-              <circle r="10" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-              <circle r="6" fill="url(#rmtgNodePulse)" filter="url(#rmtgSoftGlow)">
-                <animate attributeName="opacity" values="0.6;1;0.6" dur="0.6s" repeatCount="indefinite" />
-              </circle>
-              <text x="0" y="25" textAnchor="middle" fontSize="8" fill="#64748b">Cloud</text>
-            </g>
-
-            <g transform="translate(255, -15)">
-              <circle r="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-              <circle r="5" fill="url(#rmtgNodePulse)" filter="url(#rmtgSoftGlow)">
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="0.7s" repeatCount="indefinite" />
-              </circle>
-              <text x="0" y="22" textAnchor="middle" fontSize="8" fill="#64748b">CDN</text>
-            </g>
-
-            {/* Data flow labels */}
-            <g transform="translate(50, -50)">
-              <rect x="-35" y="-10" width="70" height="18" rx="4" fill="#06b6d4" fillOpacity="0.15" stroke="#06b6d4" strokeWidth="0.5" />
-              <text x="0" y="3" textAnchor="middle" fontSize="9" fill="#22d3ee" fontWeight="600">Input Data</text>
-            </g>
-
-            <g transform="translate(290, 40)">
-              <rect x="-40" y="-10" width="80" height="18" rx="4" fill="#a855f7" fillOpacity="0.15" stroke="#a855f7" strokeWidth="0.5" />
-              <text x="0" y="3" textAnchor="middle" fontSize="9" fill="#c084fc" fontWeight="600">Render Frames</text>
-            </g>
-          </g>
-
-          {/* === SERVER RACK (Right Side) === */}
-          <g transform="translate(520, 60)">
-            {/* Rack shadow */}
-            <rect x="5" y="8" width="140" height="220" rx="8" fill="#000" opacity="0.4" />
-
-            {/* Rack frame */}
-            <rect x="0" y="0" width="135" height="210" rx="6" fill="url(#rmtgServerChassis)" stroke="#374151" strokeWidth="1.5" />
-
-            {/* Rack mounting rails */}
-            <rect x="5" y="0" width="4" height="210" fill="#111827" />
-            <rect x="126" y="0" width="4" height="210" fill="#111827" />
-
-            {/* Server units */}
-            {[0, 1, 2, 3, 4].map((unit) => (
-              <g key={`server-${unit}`} transform={`translate(12, ${15 + unit * 38})`}>
-                {/* Server unit body */}
-                <rect x="0" y="0" width="110" height="32" rx="3" fill="url(#rmtgServerPanel)" stroke="#475569" strokeWidth="0.5" />
-
-                {/* Front panel details */}
-                <rect x="5" y="5" width="60" height="22" rx="2" fill="#0f172a" stroke="#1f2937" strokeWidth="0.5" />
-
-                {/* Ventilation slots */}
-                {[0, 1, 2, 3, 4, 5].map((slot) => (
-                  <rect key={`vent-${unit}-${slot}`} x={8 + slot * 9} y="10" width="6" height="12" rx="1" fill="#030712" />
-                ))}
-
-                {/* Status LEDs */}
-                <circle cx="75" cy="10" r="3" fill={unit === 0 ? "#10b981" : unit === 3 ? "#f59e0b" : "#10b981"} filter="url(#rmtgLedGlow)">
-                  <animate attributeName="opacity" values="0.6;1;0.6" dur={`${1 + unit * 0.2}s`} repeatCount="indefinite" />
-                </circle>
-                <circle cx="85" cy="10" r="3" fill="#06b6d4" filter="url(#rmtgLedGlow)">
-                  <animate attributeName="opacity" values="0.4;1;0.4" dur="0.3s" repeatCount="indefinite" />
-                </circle>
-
-                {/* Drive activity */}
-                <rect x="75" y="18" width="30" height="8" rx="2" fill="#111827" stroke="#1f2937" strokeWidth="0.3" />
-                <rect x="77" y="20" width={12 + (unit % 3) * 5} height="4" rx="1" fill="#06b6d4" opacity="0.7" />
-              </g>
-            ))}
-
-            {/* Server glow effect */}
-            <ellipse cx="67" cy="105" rx="80" ry="120" fill="url(#rmtgServerGlow)" opacity="0.15" filter="url(#rmtgWavePulse)" />
-
-            {/* Label */}
-            <text x="67" y="225" textAnchor="middle" fontSize="10" fill="#94a3b8" fontWeight="600">Game Server</text>
-          </g>
-
-          {/* === LATENCY/PERFORMANCE INDICATORS (Bottom) === */}
-          <g transform="translate(200, 305)">
-            {/* Metrics panel background */}
-            <rect x="0" y="0" width="300" height="35" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-
-            {/* Latency indicator */}
-            <g transform="translate(25, 17)">
-              <circle r="8" fill="url(#rmtgLatencyGood)" filter="url(#rmtgSoftGlow)" />
-              <text x="15" y="4" fontSize="10" fill="#94a3b8" fontWeight="500">Latency:</text>
-              <text x="60" y="4" fontSize="10" fill="#4ade80" fontWeight="700">12ms</text>
-            </g>
-
-            {/* FPS indicator */}
-            <g transform="translate(120, 17)">
-              <circle r="8" fill="url(#rmtgLatencyGood)" filter="url(#rmtgSoftGlow)" />
-              <text x="15" y="4" fontSize="10" fill="#94a3b8" fontWeight="500">FPS:</text>
-              <text x="42" y="4" fontSize="10" fill="#4ade80" fontWeight="700">60</text>
-            </g>
-
-            {/* Connection quality */}
-            <g transform="translate(195, 17)">
-              <circle r="8" fill="url(#rmtgLatencyGood)" filter="url(#rmtgSoftGlow)" />
-              <text x="15" y="4" fontSize="10" fill="#94a3b8" fontWeight="500">Quality:</text>
-              <text x="58" y="4" fontSize="10" fill="#4ade80" fontWeight="700">Excellent</text>
-            </g>
-
-            {/* Signal bars */}
-            <g transform="translate(275, 10)">
-              {[0, 1, 2, 3].map((bar) => (
-                <rect
-                  key={`signal-${bar}`}
-                  x={bar * 5}
-                  y={14 - bar * 4}
-                  width="3"
-                  height={6 + bar * 4}
-                  rx="1"
-                  fill="#10b981"
-                  filter="url(#rmtgLedGlow)"
-                />
+      <svg viewBox="0 0 700 350" style={{ width: '100%', maxHeight: '100%', borderRadius: '12px' }}>
+        <defs>
+          {/* Gradients */}
+          <linearGradient id="rgClientDevice" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="50%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+          <linearGradient id="rgServerChassis" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1f2937" />
+            <stop offset="50%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#111827" />
+          </linearGradient>
+          <linearGradient id="rgNetworkCable" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#0891b2" />
+            <stop offset="50%" stopColor="#22d3ee" />
+            <stop offset="100%" stopColor="#0891b2" />
+          </linearGradient>
+          <radialGradient id="rgNodePulse" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+            <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="rgLatencyGood" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+            <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="rgLatencyWarn" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="rgLatencyPoor" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="rgLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+          <filter id="rgGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="rgPacketTrail" x="-100%" y="-50%" width="300%" height="200%">
+            <feGaussianBlur stdDeviation="4 1" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Background */}
+        <rect width="700" height="350" fill="url(#rgLabBg)" />
+
+        {/* Grid pattern */}
+        <pattern id="rgGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+          <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+        </pattern>
+        <rect width="700" height="350" fill="url(#rgGrid)" />
+
+        {/* Title */}
+        <text x="350" y="25" textAnchor="middle" fontSize="16" fill="#f8fafc" fontWeight="700">
+          {showLagCompensation ? 'Lag Compensation in Action' : 'Client-Server Network Architecture'}
+        </text>
+        <text x="350" y="42" textAnchor="middle" fontSize="10" fill="#64748b">
+          {showLagCompensation ? 'Server rewinds time to verify hits' : 'Data flow between player and game server'}
+        </text>
+
+        {/* Client Device */}
+        <g transform="translate(50, 100)">
+          <rect x="0" y="0" width="120" height="140" rx="10" fill="url(#rgClientDevice)" stroke="#475569" strokeWidth="1.5" />
+          <rect x="8" y="8" width="104" height="75" rx="5" fill="#111827" />
+          <rect x="12" y="12" width="96" height="67" rx="3" fill="#0f172a" />
+
+          {/* Screen content */}
+          <rect x="20" y="25" width="40" height="30" rx="3" fill="#06b6d4" opacity="0.5" />
+          <circle cx="80" cy="45" r="15" fill="#a855f7" opacity="0.4" />
+
+          {/* Keyboard */}
+          <rect x="10" y="95" width="100" height="35" rx="5" fill="#1e293b" />
+          {[0, 1, 2].map((row) => (
+            <g key={`keyrow-${row}`}>
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((key) => (
+                <rect key={`key-${row}-${key}`} x={15 + key * 12} y={100 + row * 10} width="10" height="7" rx="1" fill="#334155" />
               ))}
             </g>
+          ))}
+
+          {/* Status LED */}
+          <circle cx="15" cy="88" r="3" fill="#10b981" filter="url(#rgGlow)">
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+
+          <text x="60" y="155" textAnchor="middle" fontSize="10" fill="#e2e8f0" fontWeight="600">Player Client</text>
+        </g>
+
+        {/* Network Connection */}
+        <g transform="translate(180, 170)">
+          <path d="M 0,0 C 80,-30 160,-30 240,0 C 280,15 300,15 340,0" fill="none" stroke="url(#rgNetworkCable)" strokeWidth="2" strokeOpacity="0.6" strokeDasharray="8 4" />
+          <path d="M 0,0 C 80,-30 160,-30 240,0 C 280,15 300,15 340,0" fill="none" stroke="url(#rgNetworkCable)" strokeWidth="1.5" strokeOpacity="0.8" />
+
+          {/* Animated packets to server */}
+          <circle r="4" fill="url(#rgNodePulse)" filter="url(#rgPacketTrail)">
+            <animateMotion dur={`${1 + packetDelay}s`} repeatCount="indefinite" path="M 0,0 C 80,-30 160,-30 240,0 C 280,15 300,15 340,0" />
+          </circle>
+          <circle r="4" fill="url(#rgNodePulse)" filter="url(#rgPacketTrail)">
+            <animateMotion dur={`${1 + packetDelay}s`} repeatCount="indefinite" begin="0.33s" path="M 0,0 C 80,-30 160,-30 240,0 C 280,15 300,15 340,0" />
+          </circle>
+
+          {/* Animated packets to client */}
+          <circle r="3" fill="#a855f7" filter="url(#rgPacketTrail)">
+            <animateMotion dur={`${0.8 + packetDelay}s`} repeatCount="indefinite" path="M 340,0 C 300,15 280,15 240,0 C 160,-30 80,-30 0,0" />
+          </circle>
+          <circle r="3" fill="#a855f7" filter="url(#rgPacketTrail)">
+            <animateMotion dur={`${0.8 + packetDelay}s`} repeatCount="indefinite" begin="0.4s" path="M 340,0 C 300,15 280,15 240,0 C 160,-30 80,-30 0,0" />
+          </circle>
+
+          {/* Network nodes */}
+          <g transform="translate(85, -20)">
+            <circle r="8" fill="#0f172a" stroke="#334155" />
+            <circle r="5" fill="url(#rgNodePulse)" filter="url(#rgGlow)">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.8s" repeatCount="indefinite" />
+            </circle>
+            <text x="0" y="22" textAnchor="middle" fontSize="8" fill="#64748b">Router</text>
           </g>
 
-          {/* === TITLE AND LABELS === */}
-          <g transform="translate(350, 25)">
-            <text textAnchor="middle" fontSize="16" fill="#f8fafc" fontWeight="700">Remote Game Streaming Architecture</text>
-            <text y="18" textAnchor="middle" fontSize="10" fill="#64748b">Thin Client - Server-Side Rendering</text>
+          <g transform="translate(170, 0)">
+            <circle r="10" fill="#0f172a" stroke="#334155" />
+            <circle r="6" fill="url(#rgNodePulse)" filter="url(#rgGlow)">
+              <animate attributeName="opacity" values="0.6;1;0.6" dur="0.6s" repeatCount="indefinite" />
+            </circle>
+            <text x="0" y="25" textAnchor="middle" fontSize="8" fill="#64748b">Internet</text>
           </g>
 
-          {/* Commands rendered here dynamically (overlaid on top) */}
-        </svg>
-      </div>
+          <g transform="translate(255, -15)">
+            <circle r="8" fill="#0f172a" stroke="#334155" />
+            <circle r="5" fill="url(#rgNodePulse)" filter="url(#rgGlow)">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.7s" repeatCount="indefinite" />
+            </circle>
+            <text x="0" y="22" textAnchor="middle" fontSize="8" fill="#64748b">CDN</text>
+          </g>
 
-      {/* Controls */}
-      <div
-        style={{
-          padding: '16px',
-          borderTop: `1px solid ${colors.border}`,
-          backgroundColor: colors.bgCard,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
-        }}
-      >
-        {/* Sliders */}
-        <div style={{ display: 'flex', gap: '24px' }}>
-          {ui.sliders?.map((s) => renderSlider(s))}
+          {/* Data labels */}
+          <g transform="translate(50, -50)">
+            <rect x="-30" y="-10" width="60" height="18" rx="4" fill="#06b6d4" fillOpacity="0.15" stroke="#06b6d4" strokeWidth="0.5" />
+            <text x="0" y="3" textAnchor="middle" fontSize="9" fill="#22d3ee" fontWeight="600">Input Data</text>
+          </g>
+          <g transform="translate(290, 40)">
+            <rect x="-35" y="-10" width="70" height="18" rx="4" fill="#a855f7" fillOpacity="0.15" stroke="#a855f7" strokeWidth="0.5" />
+            <text x="0" y="3" textAnchor="middle" fontSize="9" fill="#c084fc" fontWeight="600">Game State</text>
+          </g>
+        </g>
+
+        {/* Server */}
+        <g transform="translate(520, 70)">
+          <rect x="0" y="0" width="135" height="190" rx="6" fill="url(#rgServerChassis)" stroke="#374151" strokeWidth="1.5" />
+
+          {/* Server units */}
+          {[0, 1, 2, 3, 4].map((unit) => (
+            <g key={`server-${unit}`} transform={`translate(10, ${12 + unit * 35})`}>
+              <rect x="0" y="0" width="115" height="28" rx="3" fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
+              <rect x="5" y="5" width="65" height="18" rx="2" fill="#0f172a" />
+              {[0, 1, 2, 3, 4, 5].map((slot) => (
+                <rect key={`vent-${unit}-${slot}`} x={8 + slot * 10} y="8" width="7" height="12" rx="1" fill="#030712" />
+              ))}
+              <circle cx="80" cy="9" r="3" fill={unit === 0 ? '#10b981' : '#10b981'} filter="url(#rgGlow)">
+                <animate attributeName="opacity" values="0.6;1;0.6" dur={`${1 + unit * 0.2}s`} repeatCount="indefinite" />
+              </circle>
+              <circle cx="90" cy="9" r="3" fill="#06b6d4" filter="url(#rgGlow)">
+                <animate attributeName="opacity" values="0.4;1;0.4" dur="0.3s" repeatCount="indefinite" />
+              </circle>
+              <rect x="80" y="15" width="30" height="6" rx="2" fill="#111827" />
+              <rect x="82" y="17" width={12 + (unit % 3) * 5} height="2" rx="1" fill="#06b6d4" opacity="0.7" />
+            </g>
+          ))}
+
+          <text x="67" y="205" textAnchor="middle" fontSize="10" fill="#e2e8f0" fontWeight="600">Game Server</text>
+        </g>
+
+        {/* Metrics Panel */}
+        <g transform="translate(200, 300)">
+          <rect x="0" y="0" width="300" height="35" rx="6" fill="#0f172a" stroke="#334155" />
+
+          <g transform="translate(25, 17)">
+            <circle r="8" fill={actualLatency < 50 ? 'url(#rgLatencyGood)' : actualLatency < 100 ? 'url(#rgLatencyWarn)' : 'url(#rgLatencyPoor)'} filter="url(#rgGlow)" />
+            <text x="15" y="4" fontSize="10" fill="#e2e8f0" fontWeight="500">Latency:</text>
+            <text x="60" y="4" fontSize="10" fill={actualLatency < 50 ? '#4ade80' : actualLatency < 100 ? '#fbbf24' : '#f87171'} fontWeight="700">{actualLatency}ms</text>
+          </g>
+
+          <g transform="translate(120, 17)">
+            <circle r="8" fill="url(#rgLatencyGood)" filter="url(#rgGlow)" />
+            <text x="15" y="4" fontSize="10" fill="#e2e8f0" fontWeight="500">Tick Rate:</text>
+            <text x="65" y="4" fontSize="10" fill="#4ade80" fontWeight="700">{actualTickRate}Hz</text>
+          </g>
+
+          <g transform="translate(210, 17)">
+            <circle r="8" fill="url(#rgLatencyGood)" filter="url(#rgGlow)" />
+            <text x="15" y="4" fontSize="10" fill="#e2e8f0" fontWeight="500">Update:</text>
+            <text x="55" y="4" fontSize="10" fill="#4ade80" fontWeight="700">{tickInterval.toFixed(1)}ms</text>
+          </g>
+        </g>
+
+        {/* Lag Compensation Visualization */}
+        {showLagCompensation && (
+          <g transform="translate(350, 85)">
+            <rect x="-60" y="-15" width="120" height="50" rx="6" fill="#0f172a" stroke="#a855f7" strokeWidth="1" />
+            <text x="0" y="3" textAnchor="middle" fontSize="10" fill="#c084fc" fontWeight="600">Server Rewind</text>
+            <text x="0" y="18" textAnchor="middle" fontSize="9" fill="#e2e8f0">Checks hit at t-{actualLatency}ms</text>
+            <circle cx="-40" cy="0" r="3" fill="#ef4444">
+              <animate attributeName="cx" values="-40;40;-40" dur="2s" repeatCount="indefinite" />
+            </circle>
+          </g>
+        )}
+      </svg>
+    );
+  };
+
+  // --- RENDER FUNCTIONS ---
+  const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
+    const canBack = canGoBack && currentIdx > 0;
+
+    const handleBack = () => {
+      if (canBack) goToPhase(phaseOrder[currentIdx - 1]);
+    };
+
+    const handleNext = () => {
+      if (!canGoNext) return;
+      if (onNext) onNext();
+      else if (currentIdx < phaseOrder.length - 1) goToPhase(phaseOrder[currentIdx + 1]);
+    };
+
+    return (
+      <nav style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px',
+        flexShrink: 0,
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000
+      }}>
+        <button
+          onClick={handleBack}
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px'
+          }}
+        >
+          ← Back
+        </button>
+        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>{phaseLabels[phase]}</span>
+        <button
+          onClick={handleNext}
+          style={{
+            padding: isMobile ? '10px 20px' : '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: isMobile ? '13px' : '14px',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            boxShadow: canGoNext ? `0 2px 12px ${colors.primary}30` : 'none',
+            minHeight: '44px'
+          }}
+        >
+          {nextLabel} →
+        </button>
+      </nav>
+    );
+  };
+
+  const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: colors.bgDark, color: colors.textPrimary, overflow: 'hidden' }}>
+      {/* Header */}
+      <nav style={{
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isMobile ? '8px 12px' : '10px 16px',
+        backgroundColor: colors.bgCard,
+        borderBottom: `1px solid ${colors.border}`,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000
+      }}>
+        {/* Back + Home buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            onClick={() => currentIdx > 0 && goToPhase(phaseOrder[currentIdx - 1])}
+            style={{
+              width: '36px', height: '36px', borderRadius: '8px',
+              backgroundColor: currentIdx > 0 ? colors.bgCardLight : 'transparent',
+              border: currentIdx > 0 ? `1px solid ${colors.border}` : '1px solid transparent',
+              color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+              cursor: currentIdx > 0 ? 'pointer' : 'default',
+              opacity: currentIdx > 0 ? 1 : 0.4,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              minHeight: '44px'
+            }}
+            aria-label={currentIdx > 0 ? `Back to ${phaseLabels[phaseOrder[currentIdx - 1]]}` : 'No previous step'}
+          >
+            ←
+          </button>
+          <button
+            onClick={requestGoHome}
+            style={{
+              width: '36px', height: '36px', borderRadius: '8px',
+              backgroundColor: colors.bgCardLight,
+              border: `1px solid ${colors.border}`,
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              minHeight: '44px'
+            }}
+            aria-label="Exit to Home"
+          >
+            🏠
+          </button>
         </div>
 
-        {/* Toggles */}
-        <div style={{ display: 'flex', gap: '16px' }}>
-          {ui.toggles?.map((t) => renderToggle(t))}
+        {/* Progress dots */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => i <= currentIdx && goToPhase(p)}
+              style={{
+                width: i === currentIdx ? '20px' : '10px',
+                height: '10px',
+                borderRadius: '5px',
+                border: 'none',
+                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
+                cursor: i <= currentIdx ? 'pointer' : 'default',
+                opacity: i > currentIdx ? 0.5 : 1,
+                minHeight: '10px'
+              }}
+              title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
+              aria-label={phaseLabels[p]}
+            />
+          ))}
         </div>
 
-        {/* Buttons */}
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {ui.buttons?.map((b) => renderButton(b))}
-        </div>
+        {/* Phase label */}
+        <span style={{
+          fontSize: '11px', fontWeight: 700, color: colors.primary,
+          padding: '4px 8px', borderRadius: '6px', backgroundColor: `${colors.primary}15`
+        }}>
+          {currentIdx + 1}/{phaseOrder.length}
+        </span>
+      </nav>
+
+      {/* Main content */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        marginTop: '56px',
+        marginBottom: footer ? '68px' : '0',
+        WebkitOverflowScrolling: 'touch'
+      }}>
+        {children}
       </div>
 
       {/* Footer */}
-      {ui.footer && (
-        <div
-          style={{
-            padding: '8px 16px',
-            borderTop: `1px solid ${colors.border}`,
-            backgroundColor: colors.bgCard,
+      {footer}
+    </div>
+  );
+
+  const renderSectionHeader = (phaseName: string, title: string, subtitle?: string) => (
+    <div style={{ marginBottom: typo.sectionGap }}>
+      <p style={{ fontSize: typo.label, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '3px', color: colors.primary }}>{phaseName}</p>
+      <h2 style={{ fontSize: typo.heading, fontWeight: 800, color: colors.textPrimary, lineHeight: 1.2, margin: 0 }}>{title}</h2>
+      {subtitle && <p style={{ fontSize: typo.small, marginTop: '4px', color: colors.textSecondary, lineHeight: 1.4, margin: 0 }}>{subtitle}</p>}
+    </div>
+  );
+
+  // --- PHASE RENDERS ---
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap }}>
+        {renderSectionHeader('Introduction', 'How Games Talk Across the Internet', 'Discover the hidden world of game networking')}
+
+        <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
+          {renderNetworkVisualization(false, false)}
+        </div>
+
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+          border: `1px solid ${colors.border}`
+        }}>
+          <p style={{ fontSize: typo.bodyLarge, lineHeight: 1.6, color: colors.textSecondary, margin: 0 }}>
+            Every time you play an online game, your device is having a rapid conversation with servers
+            potentially thousands of miles away. How do games feel instant when data takes time to travel?
+            Let's explore the clever tricks that make multiplayer gaming possible!
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          {[
+            { icon: '🎮', label: 'Client-Server' },
+            { icon: '⚡', label: 'Latency' },
+            { icon: '🔄', label: 'Tick Rate' },
+            { icon: '🎯', label: 'Lag Compensation' }
+          ].map((item, i) => (
+            <div key={i} style={{
+              flex: '1 1 calc(50% - 6px)',
+              padding: '12px',
+              borderRadius: '12px',
+              backgroundColor: colors.bgCard,
+              border: `1px solid ${colors.border}`,
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '24px', marginBottom: '4px' }}>{item.icon}</div>
+              <div style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>,
+      renderBottomBar(false, true, 'Begin Discovery')
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap }}>
+        {renderSectionHeader('Predict', 'What Happens When You Press a Button?', 'Think about what you expect')}
+
+        <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
+          {renderNetworkVisualization(false, false)}
+        </div>
+
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          backgroundColor: `${colors.accent}15`,
+          border: `1px solid ${colors.accent}40`
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0, marginBottom: '12px' }}>
+            <strong style={{ color: colors.accent }}>Scenario:</strong> You're playing an online shooter.
+            You press the fire button while aiming at an enemy 50 meters away. The server is 100ms (0.1 seconds) away.
+          </p>
+          <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+            When should your shot be calculated - on your device or the server?
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[
+            { id: 'client', label: 'On my device (client) for instant feedback', icon: '💻' },
+            { id: 'server', label: 'On the server for fair, authoritative results', icon: '🖥️' },
+            { id: 'both', label: 'Both work together - predict locally, verify server-side', icon: '🤝' }
+          ].map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => { setPrediction(opt.id); playSound('click'); }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '14px',
+                borderRadius: '12px',
+                backgroundColor: prediction === opt.id ? `${colors.primary}20` : colors.bgCard,
+                border: `2px solid ${prediction === opt.id ? colors.primary : colors.border}`,
+                color: colors.textPrimary,
+                cursor: 'pointer',
+                textAlign: 'left',
+                minHeight: '44px'
+              }}
+            >
+              <span style={{ fontSize: '20px' }}>{opt.icon}</span>
+              <span style={{ fontSize: typo.body, fontWeight: prediction === opt.id ? 700 : 500 }}>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>,
+      renderBottomBar(true, !!prediction, 'See What Happens')
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap }}>
+        {renderSectionHeader('Experiment', 'Explore Network Parameters', 'Adjust latency and tick rate to see their effects')}
+
+        <div style={{
+          padding: '8px 12px',
+          borderRadius: '8px',
+          backgroundColor: `${colors.primary}15`,
+          border: `1px solid ${colors.primary}40`,
+          marginBottom: '8px'
+        }}>
+          <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
+            👁️ <strong>Observe:</strong> Watch how data packets move between client and server. Higher latency = longer travel time!
+          </p>
+        </div>
+
+        <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
+          {renderNetworkVisualization(true, false)}
+        </div>
+
+        {/* Controls */}
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          backgroundColor: colors.bgCard,
+          border: `1px solid ${colors.border}`
+        }}>
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <label style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Network Latency (Ping)</label>
+              <span style={{ fontSize: typo.small, color: latency < 50 ? colors.success : latency < 100 ? colors.warning : colors.danger, fontWeight: 700 }}>{latency}ms</span>
+            </div>
+            <input
+              type="range"
+              min="10"
+              max="200"
+              value={latency}
+              onChange={(e) => setLatency(Number(e.target.value))}
+              style={{ width: '100%', accentColor: colors.primary }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
+              <span>10ms (Excellent)</span>
+              <span>200ms (Poor)</span>
+            </div>
+          </div>
+
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <label style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Server Tick Rate</label>
+              <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 700 }}>{tickRate}Hz</span>
+            </div>
+            <input
+              type="range"
+              min="20"
+              max="128"
+              value={tickRate}
+              onChange={(e) => setTickRate(Number(e.target.value))}
+              style={{ width: '100%', accentColor: colors.accent }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
+              <span>20Hz (Sluggish)</span>
+              <span>128Hz (Responsive)</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+          border: `1px solid ${colors.border}`
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>
+            <strong style={{ color: colors.primary }}>What you're seeing:</strong> With {latency}ms latency,
+            your inputs take {latency}ms to reach the server, plus another {latency}ms for the response.
+            Total round-trip: <strong>{latency * 2}ms</strong>. At {tickRate}Hz, the server updates
+            every <strong>{(1000/tickRate).toFixed(1)}ms</strong>.
+          </p>
+        </div>
+      </div>,
+      renderBottomBar(true, true, 'Understand Results')
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap }}>
+        {renderSectionHeader('Understanding', 'Client-Server Architecture Explained', 'Why games use this model')}
+
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          background: prediction === 'both' ? `linear-gradient(135deg, ${colors.success}20 0%, ${colors.bgCard} 100%)` : colors.bgCard,
+          border: `1px solid ${prediction === 'both' ? colors.success : colors.border}`
+        }}>
+          {prediction === 'both' ? (
+            <p style={{ fontSize: typo.bodyLarge, color: colors.success, margin: 0, fontWeight: 700 }}>
+              ✅ Correct! Modern games use BOTH client prediction AND server authority.
+            </p>
+          ) : (
+            <p style={{ fontSize: typo.bodyLarge, color: colors.warning, margin: 0 }}>
+              The best answer is: Both work together! Here's why...
+            </p>
+          )}
+        </div>
+
+        {[
+          { icon: '💻', title: 'Client Prediction', desc: 'Your device immediately shows the result of your action for instant feedback. This makes the game feel responsive.' },
+          { icon: '🖥️', title: 'Server Authority', desc: 'The server has the final say on what actually happened. This prevents cheating and ensures fairness for all players.' },
+          { icon: '🔄', title: 'Reconciliation', desc: 'When server results differ from your prediction, the game smoothly corrects your view. You might see slight "rubber-banding" corrections.' }
+        ].map((item, i) => (
+          <div key={i} style={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            fontSize: '10px',
-            color: colors.textMuted,
+            gap: '16px',
+            padding: '16px',
+            borderRadius: '16px',
+            backgroundColor: colors.bgCard,
+            border: `1px solid ${colors.border}`
+          }}>
+            <div style={{ fontSize: '28px', flexShrink: 0 }}>{item.icon}</div>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: typo.bodyLarge, marginBottom: '4px', color: colors.textPrimary, margin: 0 }}>{item.title}</p>
+              <p style={{ fontSize: typo.body, lineHeight: 1.6, color: colors.textSecondary, margin: 0 }}>{item.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>,
+      renderBottomBar(true, true, 'Next Challenge')
+    );
+  }
+
+  // TWIST_PREDICT PHASE
+  if (phase === 'twist_predict') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap }}>
+        {renderSectionHeader('New Variable', 'What About Lag Compensation?', 'A new twist to consider')}
+
+        <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
+          {renderNetworkVisualization(false, true)}
+        </div>
+
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          backgroundColor: `${colors.accent}15`,
+          border: `1px solid ${colors.accent}40`
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0, marginBottom: '12px' }}>
+            <strong style={{ color: colors.accent }}>New Scenario:</strong> You fire at an enemy who's running.
+            On YOUR screen, you hit them perfectly. But by the time your shot reaches the server (100ms later),
+            the enemy has moved!
+          </p>
+          <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+            Should the server count this as a hit or a miss?
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[
+            { id: 'miss', label: 'Miss - the enemy moved, too bad for the shooter', icon: '❌' },
+            { id: 'hit', label: 'Hit - the server should "rewind time" to check what the shooter saw', icon: '⏪' },
+            { id: 'random', label: 'Random - flip a coin for fairness', icon: '🎲' }
+          ].map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => { setTwistPrediction(opt.id); playSound('click'); }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '14px',
+                borderRadius: '12px',
+                backgroundColor: twistPrediction === opt.id ? `${colors.accent}20` : colors.bgCard,
+                border: `2px solid ${twistPrediction === opt.id ? colors.accent : colors.border}`,
+                color: colors.textPrimary,
+                cursor: 'pointer',
+                textAlign: 'left',
+                minHeight: '44px'
+              }}
+            >
+              <span style={{ fontSize: '20px' }}>{opt.icon}</span>
+              <span style={{ fontSize: typo.body, fontWeight: twistPrediction === opt.id ? 700 : 500 }}>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>,
+      renderBottomBar(true, !!twistPrediction, 'See How It Works')
+    );
+  }
+
+  // TWIST_PLAY PHASE
+  if (phase === 'twist_play') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap }}>
+        {renderSectionHeader('Observer Effect', 'Lag Compensation in Action', 'Watch how servers handle latency')}
+
+        <div style={{
+          padding: '8px 12px',
+          borderRadius: '8px',
+          backgroundColor: `${colors.accent}15`,
+          border: `1px solid ${colors.accent}40`,
+          marginBottom: '8px'
+        }}>
+          <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
+            👁️ <strong>Observe:</strong> The server "rewinds" time to check where the target was when the shooter fired!
+          </p>
+        </div>
+
+        <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
+          {renderNetworkVisualization(true, true)}
+        </div>
+
+        {/* Interactive controls */}
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          backgroundColor: colors.bgCard,
+          border: `1px solid ${colors.border}`
+        }}>
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <label style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Shooter's Latency</label>
+              <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 700 }}>{latency}ms</span>
+            </div>
+            <input
+              type="range"
+              min="10"
+              max="200"
+              value={latency}
+              onChange={(e) => setLatency(Number(e.target.value))}
+              style={{ width: '100%', accentColor: colors.primary }}
+            />
+          </div>
+
+          <div style={{
+            padding: '12px',
+            borderRadius: '8px',
+            backgroundColor: colors.bgCardLight,
+            border: `1px solid ${colors.border}`
+          }}>
+            <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>How it works:</strong> When a shot arrives at the server,
+              it includes a timestamp. The server "rewinds" the game state by {latency}ms to see exactly what
+              the shooter saw when they pulled the trigger. This makes hits feel fair even with high latency!
+            </p>
+          </div>
+        </div>
+      </div>,
+      renderBottomBar(true, true, 'Deep Understanding')
+    );
+  }
+
+  // TWIST_REVIEW PHASE
+  if (phase === 'twist_review') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap }}>
+        {renderSectionHeader('Deep Insight', 'The Art of Lag Compensation', 'Balancing fairness across connections')}
+
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          background: twistPrediction === 'hit' ? `linear-gradient(135deg, ${colors.success}20 0%, ${colors.bgCard} 100%)` : colors.bgCard,
+          border: `1px solid ${twistPrediction === 'hit' ? colors.success : colors.border}`
+        }}>
+          {twistPrediction === 'hit' ? (
+            <p style={{ fontSize: typo.bodyLarge, color: colors.success, margin: 0, fontWeight: 700 }}>
+              ✅ Correct! Servers use "lag compensation" to rewind time and verify hits.
+            </p>
+          ) : (
+            <p style={{ fontSize: typo.bodyLarge, color: colors.warning, margin: 0 }}>
+              The answer is: Hit! The server rewinds time. Here's the deeper insight...
+            </p>
+          )}
+        </div>
+
+        {[
+          { icon: '⏪', title: 'Server-Side Rewind', desc: 'The server stores recent game states in a buffer. When a shot arrives, it checks where everyone WAS at the time of firing.' },
+          { icon: '⚖️', title: 'Favor the Shooter', desc: 'This system "favors the shooter" - if it looked like a hit on your screen, it probably counts. This makes aiming feel responsive.' },
+          { icon: '👀', title: 'Peekers Advantage', desc: 'High-ping players get a slight advantage when "peeking" corners - they see enemies before enemies see them. This is a known trade-off.' }
+        ].map((item, i) => (
+          <div key={i} style={{
+            display: 'flex',
+            gap: '16px',
+            padding: '16px',
+            borderRadius: '16px',
+            backgroundColor: colors.bgCard,
+            border: `1px solid ${colors.border}`
+          }}>
+            <div style={{ fontSize: '28px', flexShrink: 0 }}>{item.icon}</div>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: typo.bodyLarge, marginBottom: '4px', color: colors.textPrimary, margin: 0 }}>{item.title}</p>
+              <p style={{ fontSize: typo.body, lineHeight: 1.6, color: colors.textSecondary, margin: 0 }}>{item.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>,
+      renderBottomBar(true, true, 'Real Applications')
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = transferApplications[selectedApp];
+    const allCompleted = completedApps.every(Boolean);
+
+    const handleGotIt = () => {
+      const newCompleted = [...completedApps];
+      newCompleted[selectedApp] = true;
+      setCompletedApps(newCompleted);
+      playSound('success');
+    };
+
+    const handleNextApp = () => {
+      const nextIdx = (selectedApp + 1) % transferApplications.length;
+      setSelectedApp(nextIdx);
+      playSound('click');
+    };
+
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap }}>
+        {renderSectionHeader('Real World', 'Game Networking in Practice', 'See how these concepts power real games')}
+
+        {/* App selector */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {transferApplications.map((a, i) => (
+            <button
+              key={i}
+              onClick={() => { setSelectedApp(i); playSound('click'); }}
+              style={{
+                flex: '1 1 calc(25% - 6px)',
+                padding: '10px',
+                borderRadius: '10px',
+                backgroundColor: selectedApp === i ? `${colors.primary}20` : colors.bgCard,
+                border: `2px solid ${selectedApp === i ? colors.primary : completedApps[i] ? colors.success : colors.border}`,
+                cursor: 'pointer',
+                textAlign: 'center',
+                minHeight: '44px'
+              }}
+            >
+              <div style={{ fontSize: '20px' }}>{a.icon}</div>
+              <div style={{ fontSize: typo.label, color: colors.textSecondary, marginTop: '4px' }}>{a.title.split(' ')[0]}</div>
+              {completedApps[i] && <div style={{ color: colors.success, fontSize: '10px' }}>✓</div>}
+            </button>
+          ))}
+        </div>
+
+        {/* Selected app details */}
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '16px',
+          backgroundColor: colors.bgCard,
+          border: `1px solid ${colors.border}`
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <span style={{ fontSize: '32px' }}>{app.icon}</span>
+            <div>
+              <h3 style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+              <span style={{ fontSize: typo.label, color: colors.primary, fontWeight: 600 }}>{app.industry}</span>
+            </div>
+          </div>
+          <p style={{ fontSize: typo.body, lineHeight: 1.6, color: colors.textSecondary, margin: 0, marginBottom: '12px' }}>{app.description}</p>
+          <div style={{
+            padding: '10px',
+            borderRadius: '8px',
+            backgroundColor: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}40`
+          }}>
+            <p style={{ fontSize: typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+              Key Principle: {app.principle}
+            </p>
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={handleGotIt}
+            disabled={completedApps[selectedApp]}
+            style={{
+              flex: 1,
+              padding: '14px',
+              borderRadius: '12px',
+              backgroundColor: completedApps[selectedApp] ? colors.bgCardLight : colors.success,
+              color: completedApps[selectedApp] ? colors.textMuted : colors.textPrimary,
+              border: 'none',
+              fontWeight: 700,
+              fontSize: typo.body,
+              cursor: completedApps[selectedApp] ? 'default' : 'pointer',
+              minHeight: '44px'
+            }}
+          >
+            {completedApps[selectedApp] ? '✓ Completed' : 'Got It'}
+          </button>
+          <button
+            onClick={handleNextApp}
+            style={{
+              flex: 1,
+              padding: '14px',
+              borderRadius: '12px',
+              backgroundColor: colors.bgCardLight,
+              color: colors.textSecondary,
+              border: `1px solid ${colors.border}`,
+              fontWeight: 600,
+              fontSize: typo.body,
+              cursor: 'pointer',
+              minHeight: '44px'
+            }}
+          >
+            Next Application →
+          </button>
+        </div>
+
+        <div style={{ textAlign: 'center', fontSize: typo.small, color: colors.textMuted }}>
+          Progress: {completedApps.filter(Boolean).length}/{transferApplications.length} applications explored
+        </div>
+      </div>,
+      renderBottomBar(true, allCompleted, 'Take the Test')
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    const q = testQuestions[testQuestion];
+    const selectedAnswer = testAnswers[testQuestion];
+    const isAnswered = selectedAnswer !== null;
+
+    if (testSubmitted) {
+      const correctCount = testAnswers.filter((ans, i) =>
+        testQuestions[i].options.find(o => o.id === ans)?.correct
+      ).length;
+      const score = Math.round((correctCount / testQuestions.length) * 100);
+
+      return renderPremiumWrapper(
+        <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap }}>
+          {renderSectionHeader('Results', 'Test Complete!', `You scored ${score}%`)}
+
+          <div style={{
+            padding: '24px',
+            borderRadius: '16px',
+            backgroundColor: score >= 70 ? `${colors.success}20` : `${colors.warning}20`,
+            border: `1px solid ${score >= 70 ? colors.success : colors.warning}`,
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>{score >= 70 ? '🎉' : '📚'}</div>
+            <p style={{ fontSize: typo.heading, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+              {correctCount} / {testQuestions.length} Correct
+            </p>
+            <p style={{ fontSize: typo.body, color: colors.textSecondary, marginTop: '8px' }}>
+              {score >= 90 ? 'Outstanding! You\'ve mastered game networking!' :
+               score >= 70 ? 'Great job! You understand the core concepts.' :
+               'Keep learning! Review the concepts and try again.'}
+            </p>
+          </div>
+        </div>,
+        renderBottomBar(true, true, 'Complete')
+      );
+    }
+
+    const handleAnswerSelect = (answerId: string) => {
+      const newAnswers = [...testAnswers];
+      newAnswers[testQuestion] = answerId;
+      setTestAnswers(newAnswers);
+      playSound('click');
+    };
+
+    const handleNextQuestion = () => {
+      if (testQuestion < testQuestions.length - 1) {
+        setTestQuestion(testQuestion + 1);
+        playSound('transition');
+      }
+    };
+
+    const handleSubmit = () => {
+      if (!showQuizConfirm) {
+        setShowQuizConfirm(true);
+        return;
+      }
+      setTestSubmitted(true);
+      playSound('complete');
+      emitGameEvent('game_completed', {
+        phase: 'test',
+        score: testAnswers.filter((ans, i) => testQuestions[i].options.find(o => o.id === ans)?.correct).length,
+        maxScore: testQuestions.length
+      });
+    };
+
+    const allAnswered = testAnswers.every(a => a !== null);
+    const isLastQuestion = testQuestion === testQuestions.length - 1;
+
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap }}>
+        {renderSectionHeader('Knowledge Test', `Question ${testQuestion + 1} of ${testQuestions.length}`, q.scenario)}
+
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          backgroundColor: `${colors.accent}15`,
+          border: `1px solid ${colors.accent}40`
+        }}>
+          <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>{q.question}</p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {q.options.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => handleAnswerSelect(opt.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+                padding: '14px',
+                borderRadius: '12px',
+                backgroundColor: selectedAnswer === opt.id ? `${colors.primary}20` : colors.bgCard,
+                border: `2px solid ${selectedAnswer === opt.id ? colors.primary : colors.border}`,
+                color: colors.textPrimary,
+                cursor: 'pointer',
+                textAlign: 'left',
+                minHeight: '44px'
+              }}
+            >
+              <span style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                backgroundColor: selectedAnswer === opt.id ? colors.primary : colors.bgCardLight,
+                color: selectedAnswer === opt.id ? colors.textPrimary : colors.textSecondary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: typo.small,
+                fontWeight: 700,
+                flexShrink: 0
+              }}>
+                {opt.id.toUpperCase()}
+              </span>
+              <span style={{ fontSize: typo.body, lineHeight: 1.5 }}>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Quiz progress */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }}>
+          {testQuestions.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: i === testQuestion ? '20px' : '10px',
+                height: '10px',
+                borderRadius: '5px',
+                backgroundColor: testAnswers[i] !== null ? colors.success : i === testQuestion ? colors.primary : colors.border
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Confirm dialog */}
+        {showQuizConfirm && (
+          <div style={{
+            padding: typo.cardPadding,
+            borderRadius: '12px',
+            backgroundColor: `${colors.warning}20`,
+            border: `1px solid ${colors.warning}`
+          }}>
+            <p style={{ fontSize: typo.body, color: colors.textPrimary, margin: 0, marginBottom: '12px' }}>
+              Are you sure you want to submit? You've answered {testAnswers.filter(a => a !== null).length}/{testQuestions.length} questions.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setShowQuizConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '8px',
+                  backgroundColor: colors.bgCardLight,
+                  color: colors.textSecondary,
+                  border: `1px solid ${colors.border}`,
+                  cursor: 'pointer',
+                  minHeight: '44px'
+                }}
+              >
+                Review Answers
+              </button>
+              <button
+                onClick={handleSubmit}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '8px',
+                  backgroundColor: colors.success,
+                  color: colors.textPrimary,
+                  border: 'none',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  minHeight: '44px'
+                }}
+              >
+                Submit Test
+              </button>
+            </div>
+          </div>
+        )}
+      </div>,
+      renderBottomBar(
+        true,
+        isAnswered,
+        isLastQuestion ? (allAnswered ? 'Submit Test' : 'Answer All Questions') : 'Next Question',
+        isLastQuestion ? handleSubmit : handleNextQuestion
+      )
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap, position: 'relative' }}>
+        {/* Confetti */}
+        {confetti.map((c, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${c.x}%`,
+              top: `${c.y}%`,
+              width: '8px',
+              height: '8px',
+              backgroundColor: c.color,
+              borderRadius: '50%',
+              animation: `fall 3s ease-in-out ${c.delay}s infinite`,
+              pointerEvents: 'none'
+            }}
+          />
+        ))}
+        <style>{`@keyframes fall { 0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; } 50% { transform: translateY(20px) rotate(180deg); opacity: 0.5; } }`}</style>
+
+        {renderSectionHeader('Mastery', 'Congratulations! 🎉', 'You\'ve mastered game networking concepts')}
+
+        <div style={{
+          padding: '24px',
+          borderRadius: '16px',
+          background: `linear-gradient(135deg, ${colors.success}20 0%, ${colors.accent}20 100%)`,
+          border: `1px solid ${colors.success}`,
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '12px' }}>🏆</div>
+          <h3 style={{ fontSize: typo.heading, fontWeight: 800, color: colors.textPrimary, margin: 0 }}>
+            Network Architecture Expert
+          </h3>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, marginTop: '8px' }}>
+            You now understand how multiplayer games communicate across the internet!
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h4 style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>Key Concepts Mastered:</h4>
+          {[
+            { icon: '🖥️', text: 'Client-Server Architecture' },
+            { icon: '⚡', text: 'Network Latency & Tick Rate' },
+            { icon: '⏪', text: 'Lag Compensation & Server Rewind' },
+            { icon: '🔄', text: 'Interpolation & Extrapolation' },
+            { icon: '🛡️', text: 'Authoritative Servers & Anti-Cheat' }
+          ].map((item, i) => (
+            <div key={i} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px',
+              borderRadius: '10px',
+              backgroundColor: colors.bgCard,
+              border: `1px solid ${colors.border}`
+            }}>
+              <span style={{ fontSize: '20px' }}>{item.icon}</span>
+              <span style={{ fontSize: typo.body, color: colors.textSecondary }}>{item.text}</span>
+              <span style={{ marginLeft: 'auto', color: colors.success }}>✓</span>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={() => goToPhase('hook')}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: '12px',
+            background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+            color: colors.textPrimary,
+            border: 'none',
+            fontWeight: 700,
+            fontSize: typo.bodyLarge,
+            cursor: 'pointer',
+            minHeight: '44px'
           }}
         >
-          {ui.footer.icon && <span>{ui.footer.icon}</span>}
-          <span style={{ fontStyle: 'italic' }}>{ui.footer.text}</span>
-        </div>
-      )}
-    </div>
+          Explore Again
+        </button>
+      </div>,
+      null
+    );
+  }
+
+  // Default fallback to hook
+  return renderPremiumWrapper(
+    <div style={{ padding: typo.pagePadding }}>
+      <p style={{ color: colors.textSecondary }}>Loading...</p>
+    </div>,
+    renderBottomBar(false, true, 'Start')
   );
 };
 

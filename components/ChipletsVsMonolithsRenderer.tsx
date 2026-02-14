@@ -1,16 +1,33 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 
 interface ChipletsVsMonolithsRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
+const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+type Phase = typeof PHASES[number];
+
+const PHASE_LABELS: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Play',
+  review: 'Review',
+  twist_predict: 'Twist',
+  twist_play: 'Explore',
+  twist_review: 'Deep Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery',
+};
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#cbd5e1', // Brightened from #94a3b8 for better contrast
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -19,12 +36,21 @@ const colors = {
   success: '#10b981',
   warning: '#f59e0b',
   error: '#ef4444',
-  monolithic: '#ef4444',
-  chiplet: '#3b82f6',
-  interconnect: '#8b5cf6',
-  good: '#10b981',
-  defect: '#ef4444',
-  cost: '#f59e0b',
+  monolithic: '#f87171', // Brightened from #ef4444 for better contrast
+  chiplet: '#60a5fa', // Brightened from #3b82f6 for better contrast
+  interconnect: '#a78bfa', // Brightened from #8b5cf6 for better contrast
+  good: '#34d399', // Brightened from #10b981 for better contrast
+  defect: '#f87171', // Brightened from #ef4444 for better contrast
+  cost: '#fbbf24', // Brightened from #f59e0b for better contrast
+};
+
+// Format cost values to prevent excessively long text
+const formatCost = (val: number): string => {
+  if (!isFinite(val)) return 'N/A';
+  if (val >= 1e9) return `${(val / 1e9).toFixed(0)}B`;
+  if (val >= 1e6) return `${(val / 1e6).toFixed(0)}M`;
+  if (val >= 1e3) return `${(val / 1e3).toFixed(0)}K`;
+  return val.toFixed(0);
 };
 
 // Seeded random for reproducibility
@@ -34,12 +60,33 @@ const seededRandom = (seed: number) => {
 };
 
 const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = ({
-  phase,
+  phase: phaseProp,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
   const [isMobile, setIsMobile] = useState(false);
+  const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+
+  // Use gamePhase or phase prop, or internal state for self-managed navigation
+  // Validate phase and default to 'hook' for invalid values
+  const rawPhase = gamePhase || phaseProp || internalPhase;
+  const phase = PHASES.includes(rawPhase as Phase) ? rawPhase : 'hook';
+
+  // Navigation functions
+  const goToPhase = (p: Phase) => setInternalPhase(p);
+  const goBack = () => {
+    const currentIdx = PHASES.indexOf(phase);
+    if (currentIdx > 0) setInternalPhase(PHASES[currentIdx - 1]);
+  };
+  const goNext = () => {
+    const currentIdx = PHASES.indexOf(phase);
+    if (currentIdx < PHASES.length - 1) {
+      setInternalPhase(PHASES[currentIdx + 1]);
+      onPhaseComplete?.();
+    }
+  };
 
   // Responsive detection
   useEffect(() => {
@@ -84,7 +131,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   const [testScore, setTestScore] = useState(0);
 
   // Physics/economics calculations
-  const calculateYieldAndCost = useCallback(() => {
+  const calculateYieldAndCost = useMemo(() => {
     // Monolithic die
     const monoArea = totalDieArea;
     // Poisson yield model: Y = exp(-D * A)
@@ -320,8 +367,11 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
 
   const renderVisualization = (interactive: boolean, showAdvanced: boolean = false) => {
     const width = 700;
-    const height = 520;
-    const calc = calculateYieldAndCost();
+    const height = 500;
+    const calc = calculateYieldAndCost;
+
+    // Create a unique key based on state for SVG reactivity tracking
+    const svgKey = `${totalDieArea}-${numChiplets}-${defectDensity}-${interconnectCost}-${advancedPackaging}-${simulationSeed}`;
 
     // Generate wafer visualizations
     const monoWafer = generateWaferData(calc.monolithic.area, calc.monolithic.yield);
@@ -341,6 +391,9 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '750px' }}
+          data-testid="main-svg"
+          data-state={svgKey}
+          aria-label="Chiplets vs Monolithic visualization"
         >
           {/* Premium Defs Section */}
           <defs>
@@ -466,14 +519,20 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             {/* Circuit pattern for die surface */}
             <pattern id="cvmCircuitPattern" patternUnits="userSpaceOnUse" width="8" height="8">
               <rect width="8" height="8" fill="transparent" />
-              <path d="M0,4 L3,4 L3,0 M5,4 L8,4 M4,5 L4,8" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" fill="none" />
+              <line x1="0" y1="4" x2="3" y2="4" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
+              <line x1="3" y1="4" x2="3" y2="0" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
+              <line x1="5" y1="4" x2="8" y2="4" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
+              <line x1="4" y1="5" x2="4" y2="8" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
               <circle cx="4" cy="4" r="0.8" fill="rgba(255,255,255,0.2)" />
             </pattern>
 
             {/* Fine circuit pattern for chiplets */}
             <pattern id="cvmFineCircuit" patternUnits="userSpaceOnUse" width="4" height="4">
               <rect width="4" height="4" fill="transparent" />
-              <path d="M0,2 L2,2 L2,0 M2,2 L4,2 M2,2 L2,4" stroke="rgba(255,255,255,0.12)" strokeWidth="0.3" fill="none" />
+              <line x1="0" y1="2" x2="2" y2="2" stroke="rgba(255,255,255,0.12)" strokeWidth="0.3" />
+              <line x1="2" y1="2" x2="2" y2="0" stroke="rgba(255,255,255,0.12)" strokeWidth="0.3" />
+              <line x1="2" y1="2" x2="4" y2="2" stroke="rgba(255,255,255,0.12)" strokeWidth="0.3" />
+              <line x1="2" y1="2" x2="2" y2="4" stroke="rgba(255,255,255,0.12)" strokeWidth="0.3" />
               <circle cx="2" cy="2" r="0.4" fill="rgba(255,255,255,0.15)" />
             </pattern>
 
@@ -532,12 +591,12 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           </defs>
 
           {/* Premium lab background */}
-          <rect width="700" height="520" fill="url(#cvmLabBg)" />
+          <rect width="700" height="500" fill="url(#cvmLabBg)" />
 
           {/* Subtle grid pattern overlay */}
           <g opacity="0.03">
             {Array.from({ length: 35 }).map((_, i) => (
-              <line key={`vg-${i}`} x1={i * 20} y1="0" x2={i * 20} y2="520" stroke="#fff" strokeWidth="0.5" />
+              <line key={`vg-${i}`} x1={i * 20} y1="0" x2={i * 20} y2="500" stroke="#fff" strokeWidth="0.5" />
             ))}
             {Array.from({ length: 26 }).map((_, i) => (
               <line key={`hg-${i}`} x1="0" y1={i * 20} x2="700" y2={i * 20} stroke="#fff" strokeWidth="0.5" />
@@ -545,19 +604,19 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           </g>
 
           {/* Title with premium styling */}
-          <text x={350} y={28} fill={colors.textPrimary} fontSize={16} textAnchor="middle" fontWeight="bold" filter="url(#cvmTextShadow)">
+          <text x={350} y={28} fill={colors.textPrimary} fontSize={16} textAnchor="middle" fontWeight="bold" filter="url(#cvmTextShadow)" className="svg-label">
             Chiplets vs Monolithic: {totalDieArea}mm Total Area
           </text>
-          <text x={350} y={48} fill={colors.textSecondary} fontSize={12} textAnchor="middle">
+          <text x={350} y={48} fill={colors.textSecondary} fontSize={12} textAnchor="middle" className="svg-label">
             Defect Density: {defectDensity.toFixed(2)} /mm | {showLatencyMode ? 'Performance Analysis' : 'Cost Analysis'}
           </text>
 
-          {/* Section labels */}
-          <text x={monoWaferX} y={60} fill={colors.monolithic} fontSize={13} textAnchor="middle" fontWeight="bold" filter="url(#cvmTextShadow)">
-            Monolithic Die ({calc.monolithic.area}mm)
+          {/* Section labels - below subtitle to avoid overlap */}
+          <text x={monoWaferX} y={66} fill={colors.monolithic} fontSize={11} textAnchor="middle" fontWeight="bold" filter="url(#cvmTextShadow)" className="svg-label" data-label="monolithic">
+            Mono ({calc.monolithic.area}mm)
           </text>
-          <text x={chipletWaferX + 80} y={60} fill={colors.chiplet} fontSize={13} textAnchor="middle" fontWeight="bold" filter="url(#cvmTextShadow)">
-            Chiplet Array ({numChiplets} x {calc.chiplet.areaEach.toFixed(0)}mm)
+          <text x={chipletWaferX + 80} y={66} fill={colors.chiplet} fontSize={11} textAnchor="middle" fontWeight="bold" filter="url(#cvmTextShadow)" className="svg-label" data-label="chiplet">
+            {numChiplets}x{calc.chiplet.areaEach.toFixed(0)}mm Chiplets
           </text>
 
           {/* Monolithic wafer with premium styling */}
@@ -591,16 +650,6 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
                       height={dieSize - 2}
                       fill={isGood ? 'url(#cvmGoodDie)' : 'url(#cvmDefectDie)'}
                       rx={2}
-                      filter={isGood ? 'url(#cvmGoodGlow)' : 'url(#cvmDefectGlow)'}
-                    />
-                    {/* Circuit pattern overlay */}
-                    <rect
-                      x={x}
-                      y={y}
-                      width={dieSize - 2}
-                      height={dieSize - 2}
-                      fill="url(#cvmCircuitPattern)"
-                      rx={2}
                     />
                     {/* Die edge highlight */}
                     <rect
@@ -631,142 +680,125 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             <path d={`M${waferRadius - 5},8 L${waferRadius},0 L${waferRadius - 5},-8`} fill="#1f2937" />
 
             {/* Die grid on wafer */}
-            {Array.from({ length: Math.min(chipletWafer.dicePerRow, 10) }).map((_, row) =>
-              Array.from({ length: Math.min(chipletWafer.dicePerRow, 10) }).map((_, col) => {
-                const dieSize = (waferRadius * 1.6) / Math.min(chipletWafer.dicePerRow, 10);
-                const x = -(Math.min(chipletWafer.dicePerRow, 10) * dieSize) / 2 + col * dieSize;
-                const y = -(Math.min(chipletWafer.dicePerRow, 10) * dieSize) / 2 + row * dieSize;
+            {Array.from({ length: Math.min(chipletWafer.dicePerRow, 8) }).map((_, row) =>
+              Array.from({ length: Math.min(chipletWafer.dicePerRow, 8) }).map((_, col) => {
+                const dieSize = (waferRadius * 1.6) / Math.min(chipletWafer.dicePerRow, 8);
+                const x = -(Math.min(chipletWafer.dicePerRow, 8) * dieSize) / 2 + col * dieSize;
+                const y = -(Math.min(chipletWafer.dicePerRow, 8) * dieSize) / 2 + row * dieSize;
                 const idx = row * chipletWafer.dicePerRow + col;
                 const isGood = chipletWafer.dice[idx] ?? false;
                 const dx = x + dieSize/2;
                 const dy = y + dieSize/2;
                 if (Math.sqrt(dx*dx + dy*dy) > waferRadius - 8) return null;
                 return (
-                  <g key={`chip-${row}-${col}`}>
-                    <rect
-                      x={x}
-                      y={y}
-                      width={dieSize - 1}
-                      height={dieSize - 1}
-                      fill={isGood ? 'url(#cvmGoodDie)' : 'url(#cvmDefectDie)'}
-                      rx={1}
-                      filter={isGood ? 'url(#cvmGoodGlow)' : 'url(#cvmDefectGlow)'}
-                    />
-                    {/* Fine circuit pattern */}
-                    <rect
-                      x={x}
-                      y={y}
-                      width={dieSize - 1}
-                      height={dieSize - 1}
-                      fill="url(#cvmFineCircuit)"
-                      rx={1}
-                    />
-                  </g>
+                  <rect
+                    key={`chip-${row}-${col}`}
+                    x={x}
+                    y={y}
+                    width={dieSize - 1}
+                    height={dieSize - 1}
+                    fill={isGood ? 'url(#cvmGoodDie)' : 'url(#cvmDefectDie)'}
+                    rx={1}
+                  />
                 );
               })
             )}
           </g>
 
           {/* Yield statistics with premium styling */}
-          <g transform={`translate(${monoWaferX}, ${waferY + waferRadius + 20})`}>
-            <rect x={-55} y={-5} width={110} height={40} rx={6} fill="rgba(0,0,0,0.5)" />
-            <text x={0} y={10} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="bold">
-              Yield: {calc.monolithic.yield.toFixed(1)}%
-            </text>
-            <text x={0} y={28} fill={colors.textMuted} fontSize={10} textAnchor="middle">
-              {calc.monolithic.goodPerWafer.toFixed(0)} good/wafer
-            </text>
-          </g>
+          <rect x={monoWaferX - 55} y={waferY + waferRadius + 15} width={110} height={40} rx={6} fill="rgba(0,0,0,0.5)" />
+          <text x={monoWaferX} y={waferY + waferRadius + 30} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="bold">
+            Yield: {calc.monolithic.yield.toFixed(1)}%
+          </text>
+          <text x={monoWaferX} y={waferY + waferRadius + 48} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            {calc.monolithic.goodPerWafer.toFixed(0)} good/wafer
+          </text>
 
-          <g transform={`translate(${chipletWaferX}, ${waferY + waferRadius + 20})`}>
-            <rect x={-55} y={-5} width={110} height={40} rx={6} fill="rgba(0,0,0,0.5)" />
-            <text x={0} y={10} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="bold">
-              Per-die: {calc.chiplet.yieldEach.toFixed(1)}%
-            </text>
-            <text x={0} y={28} fill={colors.textMuted} fontSize={10} textAnchor="middle">
-              System: {calc.chiplet.systemYield.toFixed(1)}%
-            </text>
-          </g>
+          <rect x={chipletWaferX - 55} y={waferY + waferRadius + 15} width={110} height={40} rx={6} fill="rgba(0,0,0,0.5)" />
+          <text x={chipletWaferX} y={waferY + waferRadius + 30} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="bold">
+            Per-die: {calc.chiplet.yieldEach.toFixed(1)}%
+          </text>
+          <text x={chipletWaferX} y={waferY + waferRadius + 48} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            System: {calc.chiplet.systemYield.toFixed(1)}%
+          </text>
 
           {/* Package Assembly Visualization */}
-          <g transform={`translate(${chipletWaferX + 70}, ${packageY})`} filter="url(#cvmPackageShadow)">
-            {/* Package substrate */}
-            <rect x={0} y={0} width={100} height={70} rx={6} fill="url(#cvmPackageSubstrate)" />
-            <rect x={0} y={0} width={100} height={70} rx={6} fill="none" stroke="#78716c" strokeWidth="2" />
+          {(() => {
+            const pkgX = chipletWaferX + 70;
+            const pkgY = packageY;
+            return (
+              <g filter="url(#cvmPackageShadow)">
+                {/* Package substrate */}
+                <rect x={pkgX} y={pkgY} width={100} height={70} rx={6} fill="url(#cvmPackageSubstrate)" />
+                <rect x={pkgX} y={pkgY} width={100} height={70} rx={6} fill="none" stroke="#78716c" strokeWidth="2" />
 
-            {/* Interposer layer (if advanced packaging) */}
-            {advancedPackaging && showAdvanced && (
-              <rect x={5} y={5} width={90} height={60} rx={4} fill="url(#cvmInterposer)" opacity="0.8" />
-            )}
-
-            {/* Chiplet arrangement inside package */}
-            {Array.from({ length: Math.min(numChiplets, 4) }).map((_, i) => {
-              const cols = Math.min(numChiplets, 2);
-              const rows = Math.ceil(Math.min(numChiplets, 4) / cols);
-              const chipW = 35;
-              const chipH = 22;
-              const gapX = (90 - cols * chipW) / (cols + 1);
-              const gapY = (60 - rows * chipH) / (rows + 1);
-              const px = 5 + gapX + (i % cols) * (chipW + gapX);
-              const py = 5 + gapY + Math.floor(i / cols) * (chipH + gapY);
-              return (
-                <g key={`pkg-${i}`}>
-                  {/* Chiplet glow effect */}
-                  <rect x={px - 2} y={py - 2} width={chipW + 4} height={chipH + 4} rx={3} fill="url(#cvmChipletGlow)" />
-                  {/* Chiplet die */}
-                  <rect x={px} y={py} width={chipW} height={chipH} rx={2} fill="url(#cvmChipletSilicon)" />
-                  {/* Circuit pattern */}
-                  <rect x={px} y={py} width={chipW} height={chipH} rx={2} fill="url(#cvmFineCircuit)" />
-                  {/* Chiplet border */}
-                  <rect x={px} y={py} width={chipW} height={chipH} rx={2} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-                </g>
-              );
-            })}
-
-            {/* Interconnect traces between chiplets */}
-            {advancedPackaging && showAdvanced && numChiplets >= 2 && (
-              <g filter="url(#cvmInterconnectGlow)">
-                {/* Horizontal traces */}
-                <line x1={42} y1={25} x2={58} y2={25} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
-                <line x1={42} y1={30} x2={58} y2={30} stroke="url(#cvmHBMTrace)" strokeWidth="2" />
-                {numChiplets >= 3 && (
-                  <>
-                    <line x1={42} y1={48} x2={58} y2={48} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
-                    <line x1={42} y1={53} x2={58} y2={53} stroke="url(#cvmHBMTrace)" strokeWidth="2" />
-                  </>
+                {/* Interposer layer (if advanced packaging) */}
+                {advancedPackaging && showAdvanced && (
+                  <rect x={pkgX + 5} y={pkgY + 5} width={90} height={60} rx={4} fill="url(#cvmInterposer)" opacity="0.8" />
                 )}
-                {/* Vertical traces */}
-                {numChiplets >= 3 && (
-                  <>
-                    <line x1={25} y1={33} x2={25} y2={42} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
-                    <line x1={75} y1={33} x2={75} y2={42} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
-                  </>
+
+                {/* Chiplet arrangement inside package */}
+                {Array.from({ length: Math.min(numChiplets, 4) }).map((_, i) => {
+                  const cols = Math.min(numChiplets, 2);
+                  const rows = Math.ceil(Math.min(numChiplets, 4) / cols);
+                  const chipW = 35;
+                  const chipH = 22;
+                  const gapX = (90 - cols * chipW) / (cols + 1);
+                  const gapY = (60 - rows * chipH) / (rows + 1);
+                  const px = pkgX + 5 + gapX + (i % cols) * (chipW + gapX);
+                  const py = pkgY + 5 + gapY + Math.floor(i / cols) * (chipH + gapY);
+                  return (
+                    <g key={`pkg-${i}`}>
+                      <rect x={px - 2} y={py - 2} width={chipW + 4} height={chipH + 4} rx={3} fill="url(#cvmChipletGlow)" />
+                      <rect x={px} y={py} width={chipW} height={chipH} rx={2} fill="url(#cvmChipletSilicon)" />
+                      <rect x={px} y={py} width={chipW} height={chipH} rx={2} fill="url(#cvmFineCircuit)" />
+                      <rect x={px} y={py} width={chipW} height={chipH} rx={2} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+                    </g>
+                  );
+                })}
+
+                {/* Interconnect traces between chiplets */}
+                {advancedPackaging && showAdvanced && numChiplets >= 2 && (
+                  <g filter="url(#cvmInterconnectGlow)">
+                    <line x1={pkgX + 42} y1={pkgY + 25} x2={pkgX + 58} y2={pkgY + 25} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
+                    <line x1={pkgX + 42} y1={pkgY + 30} x2={pkgX + 58} y2={pkgY + 30} stroke="url(#cvmHBMTrace)" strokeWidth="2" />
+                    {numChiplets >= 3 && (
+                      <>
+                        <line x1={pkgX + 42} y1={pkgY + 48} x2={pkgX + 58} y2={pkgY + 48} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
+                        <line x1={pkgX + 42} y1={pkgY + 53} x2={pkgX + 58} y2={pkgY + 53} stroke="url(#cvmHBMTrace)" strokeWidth="2" />
+                      </>
+                    )}
+                    {numChiplets >= 3 && (
+                      <>
+                        <line x1={pkgX + 25} y1={pkgY + 33} x2={pkgX + 25} y2={pkgY + 42} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
+                        <line x1={pkgX + 75} y1={pkgY + 33} x2={pkgX + 75} y2={pkgY + 42} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
+                      </>
+                    )}
+                  </g>
                 )}
+
+                {/* Standard interconnect (when not advanced) */}
+                {!advancedPackaging && numChiplets >= 2 && (
+                  <g opacity="0.5">
+                    <line x1={pkgX + 42} y1={pkgY + 27} x2={pkgX + 58} y2={pkgY + 27} stroke="url(#cvmMetalTrace)" strokeWidth="1.5" />
+                    {numChiplets >= 3 && (
+                      <line x1={pkgX + 25} y1={pkgY + 33} x2={pkgX + 25} y2={pkgY + 42} stroke="url(#cvmMetalTrace)" strokeWidth="1.5" />
+                    )}
+                  </g>
+                )}
+
+                {/* Package label */}
+                <text x={pkgX + 50} y={pkgY - 8} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="bold">
+                  {advancedPackaging && showAdvanced ? '2.5D/3D Package' : 'Standard Package'}
+                </text>
+
+                {/* Ball grid array (BGA) indicators at bottom */}
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <circle key={`bga-${i}`} cx={pkgX + 12 + i * 11} cy={pkgY + 77} r={3} fill="#c9b037" stroke="#a08c2e" strokeWidth="0.5" />
+                ))}
               </g>
-            )}
-
-            {/* Standard interconnect (when not advanced) */}
-            {!advancedPackaging && numChiplets >= 2 && (
-              <g opacity="0.5">
-                <line x1={42} y1={27} x2={58} y2={27} stroke="url(#cvmMetalTrace)" strokeWidth="1.5" />
-                {numChiplets >= 3 && (
-                  <line x1={25} y1={33} x2={25} y2={42} stroke="url(#cvmMetalTrace)" strokeWidth="1.5" />
-                )}
-              </g>
-            )}
-
-            {/* Package label */}
-            <text x={50} y={-8} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="bold">
-              {advancedPackaging && showAdvanced ? '2.5D/3D Package' : 'Standard Package'}
-            </text>
-
-            {/* Ball grid array (BGA) indicators at bottom */}
-            <g transform="translate(0, 72)">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <circle key={`bga-${i}`} cx={12 + i * 11} cy={5} r={3} fill="#c9b037" stroke="#a08c2e" strokeWidth="0.5" />
-              ))}
-            </g>
-          </g>
+            );
+          })()}
 
           {/* Arrow from wafer to package */}
           <g opacity="0.6">
@@ -780,86 +812,80 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           </defs>
 
           {/* Cost comparison panel with premium styling */}
-          <g transform="translate(10, 400)">
-            <rect width={220} height={110} rx={10} fill="url(#cvmCostPanel)" filter="url(#cvmInnerGlow)" />
-            <rect width={220} height={110} rx={10} fill="none" stroke={colors.cost} strokeWidth="1.5" opacity="0.8" />
+          <rect x={10} y={400} width={220} height={96} rx={10} fill="url(#cvmCostPanel)" filter="url(#cvmInnerGlow)" />
+          <rect x={10} y={400} width={220} height={96} rx={10} fill="none" stroke={colors.cost} strokeWidth="1.5" opacity="0.8" />
 
-            <text x={15} y={22} fill={colors.cost} fontSize={13} fontWeight="bold">Cost Analysis</text>
-            <line x1={15} y1={30} x2={205} y2={30} stroke={colors.cost} strokeWidth="0.5" opacity="0.5" />
+          <text x={25} y={416} fill={colors.cost} fontSize={13} fontWeight="bold">Cost Analysis</text>
+          <line x1={25} y1={422} x2={215} y2={422} stroke={colors.cost} strokeWidth="0.5" opacity="0.5" />
 
-            <text x={15} y={48} fill={colors.monolithic} fontSize={11} fontWeight="bold">
-              Monolithic: ${calc.monolithic.costPerGood.toFixed(0)}/die
-            </text>
-            <text x={15} y={66} fill={colors.chiplet} fontSize={11} fontWeight="bold">
-              Chiplets: ${calc.chiplet.totalCost.toFixed(0)}/system
-            </text>
-            <text x={25} y={80} fill={colors.textMuted} fontSize={9}>
-              (${calc.chiplet.costPerGood.toFixed(0)} x {numChiplets} + ${calc.chiplet.packagingCost.toFixed(0)} pkg)
-            </text>
+          <text x={25} y={438} fill={colors.monolithic} fontSize={11} fontWeight="bold">
+            Mono: ${formatCost(calc.monolithic.costPerGood)}/die
+          </text>
+          <text x={25} y={454} fill={colors.chiplet} fontSize={11} fontWeight="bold">
+            Chiplets: ${formatCost(calc.chiplet.totalCost)}/sys
+          </text>
+          <text x={25} y={470} fill={colors.textMuted} fontSize={11}>
+            ({numChiplets} chiplets + pkg)
+          </text>
 
-            <rect x={15} y={88} width={190} height={18} rx={4} fill={calc.comparison.chipletsWin ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'} />
-            <text x={110} y={101} fill={calc.comparison.chipletsWin ? colors.success : colors.error} fontSize={11} textAnchor="middle" fontWeight="bold">
-              Winner: {calc.comparison.chipletsWin ? 'Chiplets' : 'Monolithic'} ({calc.comparison.costRatio.toFixed(2)}x)
-            </text>
-          </g>
+          <rect x={25} y={478} width={190} height={16} rx={4} fill={calc.comparison.chipletsWin ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'} />
+          <text x={120} y={491} fill={calc.comparison.chipletsWin ? colors.success : colors.error} fontSize={11} textAnchor="middle" fontWeight="bold">
+            {calc.comparison.chipletsWin ? 'Chiplets win' : 'Mono wins'}
+          </text>
 
           {/* Performance panel with premium styling */}
-          <g transform="translate(250, 400)">
-            <rect width={230} height={110} rx={10} fill="url(#cvmPerfPanel)" filter="url(#cvmInnerGlow)" />
-            <rect width={230} height={110} rx={10} fill="none" stroke={colors.textSecondary} strokeWidth="1.5" opacity="0.6" />
+          <rect x={250} y={400} width={230} height={96} rx={10} fill="url(#cvmPerfPanel)" filter="url(#cvmInnerGlow)" />
+          <rect x={250} y={400} width={230} height={96} rx={10} fill="none" stroke={colors.textSecondary} strokeWidth="1.5" opacity="0.6" />
 
-            <text x={15} y={22} fill={colors.textSecondary} fontSize={13} fontWeight="bold">Performance Trade-offs</text>
-            <line x1={15} y1={30} x2={215} y2={30} stroke={colors.textSecondary} strokeWidth="0.5" opacity="0.5" />
+          <text x={265} y={416} fill={colors.textSecondary} fontSize={13} fontWeight="bold">Performance</text>
+          <line x1={265} y1={422} x2={465} y2={422} stroke={colors.textSecondary} strokeWidth="0.5" opacity="0.5" />
 
-            <text x={15} y={48} fill={colors.monolithic} fontSize={11}>
-              Monolithic Latency: {calc.monolithic.latency} ns
-            </text>
-            <text x={15} y={66} fill={colors.chiplet} fontSize={11}>
-              Chiplet Latency: {calc.chiplet.latency.toFixed(1)} ns (worst)
-            </text>
-            <text x={15} y={84} fill={colors.textMuted} fontSize={10}>
-              Penalty: +{calc.comparison.latencyPenalty.toFixed(1)} ns | Power: {calc.chiplet.power} pJ/bit
-            </text>
+          <text x={265} y={438} fill={colors.monolithic} fontSize={11}>
+            Mono: {calc.monolithic.latency} ns
+          </text>
+          <text x={265} y={454} fill={colors.chiplet} fontSize={11}>
+            Chiplet: {calc.chiplet.latency.toFixed(1)} ns
+          </text>
+          <text x={265} y={470} fill={colors.textMuted} fontSize={11}>
+            +{calc.comparison.latencyPenalty.toFixed(1)} ns penalty
+          </text>
 
-            {showAdvanced && (
-              <text x={15} y={100} fill={advancedPackaging ? colors.interconnect : colors.textMuted} fontSize={10} fontWeight={advancedPackaging ? 'bold' : 'normal'}>
-                {advancedPackaging ? 'Adv Pkg: ON - Reduced penalty' : 'Standard packaging'}
-              </text>
-            )}
-          </g>
+          {showAdvanced && (
+            <text x={265} y={486} fill={advancedPackaging ? colors.interconnect : colors.textMuted} fontSize={11} fontWeight={advancedPackaging ? 'bold' : 'normal'}>
+              {advancedPackaging ? 'Adv Pkg: ON' : 'Standard pkg'}
+            </text>
+          )}
 
           {/* Legend */}
-          <g transform="translate(500, 400)">
-            <rect width={190} height={110} rx={10} fill="rgba(0,0,0,0.4)" />
-            <text x={15} y={22} fill={colors.textSecondary} fontSize={12} fontWeight="bold">Legend</text>
-            <line x1={15} y1={30} x2={175} y2={30} stroke={colors.textSecondary} strokeWidth="0.5" opacity="0.5" />
+          <rect x={500} y={400} width={190} height={96} rx={10} fill="rgba(0,0,0,0.4)" />
+          <text x={515} y={422} fill={colors.textSecondary} fontSize={12} fontWeight="bold">Legend</text>
+          <line x1={515} y1={430} x2={675} y2={430} stroke={colors.textSecondary} strokeWidth="0.5" opacity="0.5" />
 
-            <rect x={15} y={40} width={16} height={12} rx={2} fill="url(#cvmGoodDie)" />
-            <text x={38} y={50} fill={colors.textSecondary} fontSize={10}>Good Die</text>
+          <rect x={515} y={440} width={16} height={12} rx={2} fill="url(#cvmGoodDie)" />
+          <text x={538} y={450} fill={colors.textSecondary} fontSize={11}>Good Die</text>
 
-            <rect x={100} y={40} width={16} height={12} rx={2} fill="url(#cvmDefectDie)" />
-            <text x={123} y={50} fill={colors.textSecondary} fontSize={10}>Defective</text>
+          <rect x={600} y={440} width={16} height={12} rx={2} fill="url(#cvmDefectDie)" />
+          <text x={623} y={450} fill={colors.textSecondary} fontSize={11}>Defective</text>
 
-            <rect x={15} y={60} width={16} height={12} rx={2} fill="url(#cvmChipletSilicon)" />
-            <text x={38} y={70} fill={colors.textSecondary} fontSize={10}>Chiplet</text>
+          <rect x={515} y={460} width={16} height={12} rx={2} fill="url(#cvmChipletSilicon)" />
+          <text x={538} y={470} fill={colors.textSecondary} fontSize={11}>Chiplet</text>
 
-            {showAdvanced && (
-              <>
-                <rect x={100} y={60} width={16} height={12} rx={2} fill="url(#cvmInterposer)" />
-                <text x={123} y={70} fill={colors.textSecondary} fontSize={10}>Interposer</text>
-              </>
-            )}
+          {showAdvanced && (
+            <>
+              <rect x={600} y={460} width={16} height={12} rx={2} fill="url(#cvmInterposer)" />
+              <text x={623} y={470} fill={colors.textSecondary} fontSize={11}>Interposer</text>
+            </>
+          )}
 
-            <line x1={15} y1={86} x2={30} y2={86} stroke="url(#cvmMetalTrace)" strokeWidth="2" />
-            <text x={38} y={90} fill={colors.textSecondary} fontSize={10}>Interconnect</text>
+          <line x1={515} y1={486} x2={530} y2={486} stroke="url(#cvmMetalTrace)" strokeWidth="2" />
+          <text x={538} y={490} fill={colors.textSecondary} fontSize={11}>Interconnect</text>
 
-            {showAdvanced && advancedPackaging && (
-              <>
-                <line x1={100} y1={86} x2={115} y2={86} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
-                <text x={123} y={90} fill={colors.textSecondary} fontSize={10}>HBM Link</text>
-              </>
-            )}
-          </g>
+          {showAdvanced && advancedPackaging && (
+            <>
+              <line x1={600} y1={486} x2={615} y2={486} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
+              <text x={623} y={490} fill={colors.textSecondary} fontSize={11}>HBM Link</text>
+            </>
+          )}
         </svg>
 
         {interactive && (
@@ -868,6 +894,8 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
               onClick={() => setSimulationSeed(Math.random() * 10000)}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
+                minWidth: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: colors.defect,
@@ -876,7 +904,9 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
                 cursor: 'pointer',
                 fontSize: '14px',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
+              aria-label="Generate new defect pattern"
             >
               New Defects
             </button>
@@ -884,6 +914,8 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
               onClick={() => setShowLatencyMode(!showLatencyMode)}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
+                minWidth: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: showLatencyMode ? colors.interconnect : colors.cost,
@@ -892,7 +924,9 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
                 cursor: 'pointer',
                 fontSize: '14px',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
+              aria-label={showLatencyMode ? 'Switch to cost analysis' : 'Switch to latency analysis'}
             >
               {showLatencyMode ? 'Show Cost' : 'Show Latency'}
             </button>
@@ -900,6 +934,8 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
               onClick={() => { setTotalDieArea(400); setNumChiplets(4); setDefectDensity(0.1); setInterconnectCost(20); setAdvancedPackaging(false); }}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
+                minWidth: '44px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
                 background: 'transparent',
@@ -908,7 +944,9 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
                 cursor: 'pointer',
                 fontSize: '14px',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
+              aria-label="Reset all parameters to defaults"
             >
               Reset
             </button>
@@ -918,11 +956,29 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
     );
   };
 
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '44px',
+    cursor: 'pointer',
+    accentColor: colors.accent,
+    WebkitAppearance: 'none',
+    background: 'rgba(255,255,255,0.1)',
+    borderRadius: '8px',
+    touchAction: 'pan-y',
+  };
+
+  const sliderContainerStyle: React.CSSProperties = {
+    background: 'rgba(30, 41, 59, 0.6)',
+    padding: '12px 16px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.1)',
+  };
+
   const renderControls = (showAdvancedControls: boolean = false) => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Total Die Area: {totalDieArea} mm²
+      <div style={sliderContainerStyle}>
+        <label style={{ touchAction: 'pan-y', color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          Total Die Area: <span style={{ height: '20px', color: colors.accent, fontWeight: 'bold' }}>{totalDieArea} mm²</span>
         </label>
         <input
           type="range"
@@ -931,13 +987,21 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           step="50"
           value={totalDieArea}
           onChange={(e) => setTotalDieArea(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
+          aria-label="Total Die Area slider"
+          aria-valuemin={100}
+          aria-valuemax={800}
+          aria-valuenow={totalDieArea}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ color: colors.textMuted, fontSize: '11px' }}>100 mm²</span>
+          <span style={{ color: colors.textMuted, fontSize: '11px' }}>800 mm²</span>
+        </div>
       </div>
 
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Number of Chiplets: {numChiplets}
+      <div style={sliderContainerStyle}>
+        <label style={{ touchAction: 'pan-y', color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          Number of Chiplets: <span style={{ height: '20px', color: colors.accent, fontWeight: 'bold' }}>{numChiplets}</span>
         </label>
         <input
           type="range"
@@ -946,13 +1010,21 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           step="1"
           value={numChiplets}
           onChange={(e) => setNumChiplets(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
+          aria-label="Number of Chiplets slider"
+          aria-valuemin={2}
+          aria-valuemax={16}
+          aria-valuenow={numChiplets}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ color: colors.textMuted, fontSize: '11px' }}>2</span>
+          <span style={{ color: colors.textMuted, fontSize: '11px' }}>16</span>
+        </div>
       </div>
 
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Defect Density: {defectDensity} /mm²
+      <div style={sliderContainerStyle}>
+        <label style={{ touchAction: 'pan-y', color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          Defect Density: <span style={{ height: '20px', color: colors.accent, fontWeight: 'bold' }}>{defectDensity.toFixed(2)} /mm²</span>
         </label>
         <input
           type="range"
@@ -961,13 +1033,21 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           step="0.01"
           value={defectDensity}
           onChange={(e) => setDefectDensity(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
+          aria-label="Defect Density slider"
+          aria-valuemin={0.01}
+          aria-valuemax={0.5}
+          aria-valuenow={defectDensity}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ color: colors.textMuted, fontSize: '11px' }}>0.01 /mm²</span>
+          <span style={{ color: colors.textMuted, fontSize: '11px' }}>0.5 /mm²</span>
+        </div>
       </div>
 
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Packaging Cost: ${interconnectCost}/chiplet
+      <div style={sliderContainerStyle}>
+        <label style={{ touchAction: 'pan-y', color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          Packaging Cost: <span style={{ height: '20px', color: colors.accent, fontWeight: 'bold' }}>${interconnectCost}/chiplet</span>
         </label>
         <input
           type="range"
@@ -976,25 +1056,35 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           step="5"
           value={interconnectCost}
           onChange={(e) => setInterconnectCost(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
+          aria-label="Packaging Cost slider"
+          aria-valuemin={5}
+          aria-valuemax={100}
+          aria-valuenow={interconnectCost}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ color: colors.textMuted, fontSize: '11px' }}>$5</span>
+          <span style={{ color: colors.textMuted, fontSize: '11px' }}>$100</span>
+        </div>
       </div>
 
       {showAdvancedControls && (
         <>
-          <div>
+          <div style={sliderContainerStyle}>
             <label style={{
               color: colors.textSecondary,
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
               cursor: 'pointer',
+              minHeight: '44px',
             }}>
               <input
                 type="checkbox"
                 checked={advancedPackaging}
                 onChange={(e) => setAdvancedPackaging(e.target.checked)}
-                style={{ width: '20px', height: '20px' }}
+                style={{ width: '24px', height: '24px', accentColor: colors.accent }}
+                aria-label="Enable Advanced Packaging"
               />
               Enable Advanced Packaging (2.5D/3D)
             </label>
@@ -1002,9 +1092,9 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
 
           {advancedPackaging && (
             <>
-              <div>
-                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                  Advanced Package Cost Multiplier: {advPackagingCostMult}x
+              <div style={sliderContainerStyle}>
+                <label style={{ touchAction: 'pan-y', color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Advanced Package Cost Multiplier: <span style={{ height: '20px', color: colors.accent, fontWeight: 'bold' }}>{advPackagingCostMult}x</span>
                 </label>
                 <input
                   type="range"
@@ -1013,13 +1103,21 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
                   step="0.5"
                   value={advPackagingCostMult}
                   onChange={(e) => setAdvPackagingCostMult(parseFloat(e.target.value))}
-                  style={{ width: '100%' }}
+                  style={sliderStyle}
+                  aria-label="Advanced Package Cost Multiplier slider"
+                  aria-valuemin={1.5}
+                  aria-valuemax={5}
+                  aria-valuenow={advPackagingCostMult}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ color: colors.textMuted, fontSize: '11px' }}>1.5x</span>
+                  <span style={{ color: colors.textMuted, fontSize: '11px' }}>5x</span>
+                </div>
               </div>
 
-              <div>
-                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                  Base Latency Penalty: {latencyPenalty} ns/hop
+              <div style={sliderContainerStyle}>
+                <label style={{ touchAction: 'pan-y', color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Base Latency Penalty: <span style={{ height: '20px', color: colors.accent, fontWeight: 'bold' }}>{latencyPenalty} ns/hop</span>
                 </label>
                 <input
                   type="range"
@@ -1028,8 +1126,16 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
                   step="1"
                   value={latencyPenalty}
                   onChange={(e) => setLatencyPenalty(parseInt(e.target.value))}
-                  style={{ width: '100%' }}
+                  style={sliderStyle}
+                  aria-label="Base Latency Penalty slider"
+                  aria-valuemin={1}
+                  aria-valuemax={20}
+                  aria-valuenow={latencyPenalty}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ color: colors.textMuted, fontSize: '11px' }}>1 ns</span>
+                  <span style={{ color: colors.textMuted, fontSize: '11px' }}>20 ns</span>
+                </div>
               </div>
             </>
           )}
@@ -1043,47 +1149,187 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
         borderLeft: `3px solid ${colors.accent}`,
       }}>
         <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          Yield = exp(-D × A) | Mono: {calculateYieldAndCost().monolithic.yield.toFixed(1)}% | Chiplet: {calculateYieldAndCost().chiplet.yieldEach.toFixed(1)}%
+          Yield = exp(-D × A) | Mono: {calculateYieldAndCost.monolithic.yield.toFixed(1)}% | Chiplet: {calculateYieldAndCost.chiplet.yieldEach.toFixed(1)}%
         </div>
         <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
-          Cost advantage: {calculateYieldAndCost().comparison.chipletsWin ? 'Chiplets' : 'Monolithic'} by {Math.abs(1 - calculateYieldAndCost().comparison.costRatio).toFixed(0)}%
+          Cost advantage: {calculateYieldAndCost.comparison.chipletsWin ? 'Chiplets' : 'Monolithic'} by {Math.abs(1 - calculateYieldAndCost.comparison.costRatio).toFixed(0)}%
         </div>
       </div>
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+  // Top navigation bar with progress and phase dots
+  const renderTopNav = () => {
+    const currentIdx = PHASES.indexOf(phase);
+    const progressPercent = ((currentIdx + 1) / PHASES.length) * 100;
+    return (
+      <nav
         style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          background: 'rgba(15, 23, 42, 0.95)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
         }}
+        role="navigation"
+        aria-label="Phase navigation"
       >
-        {buttonText}
-      </button>
-    </div>
-  );
+        {/* Progress bar */}
+        <div
+          style={{ height: '4px', background: 'rgba(255,255,255,0.1)', width: '100%' }}
+          role="progressbar"
+          aria-valuenow={progressPercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Progress: ${currentIdx + 1} of ${PHASES.length} phases`}
+        >
+          <div
+            style={{
+              height: '100%',
+              background: `linear-gradient(to right, ${colors.accent}, #f97316)`,
+              width: `${progressPercent}%`,
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+          <button
+            onClick={goBack}
+            disabled={currentIdx === 0}
+            aria-label="Go to previous phase"
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              padding: '8px',
+              borderRadius: '8px',
+              border: 'none',
+              background: 'transparent',
+              color: currentIdx === 0 ? colors.textMuted : colors.textSecondary,
+              cursor: currentIdx === 0 ? 'not-allowed' : 'pointer',
+              opacity: currentIdx === 0 ? 0.3 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span style={{ fontSize: '20px' }} aria-hidden="true">&larr;</span>
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '4px' }} role="tablist" aria-label="Phase dots">
+              {PHASES.map((p, i) => (
+                <button
+                  key={p}
+                  onClick={() => goToPhase(p)}
+                  role="tab"
+                  aria-selected={i === currentIdx}
+                  aria-label={`${PHASE_LABELS[p]}${i < currentIdx ? ' (completed)' : i === currentIdx ? ' (current)' : ''}`}
+                  style={{
+                    minHeight: '44px',
+                    minWidth: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '0',
+                  }}
+                >
+                  <span style={{
+                    display: 'block',
+                    height: '8px',
+                    borderRadius: '4px',
+                    transition: 'all 0.2s',
+                    width: i === currentIdx ? '24px' : '8px',
+                    background: i === currentIdx ? colors.accent : i < currentIdx ? colors.success : 'rgba(255,255,255,0.2)',
+                  }} />
+                </button>
+              ))}
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: 500, marginLeft: '8px', color: colors.textSecondary }}>
+              {currentIdx + 1}/{PHASES.length}
+            </span>
+          </div>
+
+          <div style={{
+            padding: '4px 12px',
+            borderRadius: '12px',
+            background: 'rgba(245, 158, 11, 0.2)',
+            color: colors.accent,
+            fontSize: '12px',
+            fontWeight: 600,
+          }}>
+            {PHASE_LABELS[phase]}
+          </div>
+        </div>
+      </nav>
+    );
+  };
+
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => {
+    const currentIdx = PHASES.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 24px',
+        background: colors.bgDark,
+        borderTop: `1px solid rgba(255,255,255,0.1)`,
+      }}>
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          aria-label="Go to previous phase"
+          style={{
+            padding: '12px 20px',
+            minHeight: '44px',
+            minWidth: '44px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`,
+            background: 'transparent',
+            color: currentIdx === 0 ? colors.textMuted : colors.textSecondary,
+            fontWeight: 500,
+            cursor: currentIdx === 0 ? 'not-allowed' : 'pointer',
+            opacity: currentIdx === 0 ? 0.3 : 1,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Back
+        </button>
+
+        <span style={{ fontSize: '14px', fontWeight: 500, color: colors.textSecondary }}>
+          {PHASE_LABELS[phase]}
+        </span>
+
+        <button
+          onClick={goNext}
+          disabled={disabled && !canProceed}
+          aria-label={buttonText}
+          style={{
+            padding: '12px 24px',
+            minHeight: '44px',
+            minWidth: '44px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed ? `linear-gradient(to right, ${colors.accent}, #f97316)` : 'rgba(255,255,255,0.1)',
+            color: canProceed ? 'white' : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            fontSize: '16px',
+            WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
+    );
+  };
 
   // Real-world applications data for chiplets vs monolithic
   const realWorldApps = [
@@ -1184,14 +1430,18 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderTopNav()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Chiplets vs Monolithic
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Why not make one giant die for everything?
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '8px' }}>
+              Welcome! Discover how semiconductor economics work
+            </p>
+            <p style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '24px' }}>
+              Let's explore why not make one giant die for everything
             </p>
           </div>
 
@@ -1223,7 +1473,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Exploring')}
       </div>
     );
   }
@@ -1231,8 +1481,16 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderTopNav()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
+          {/* Progress indicator */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Step 1 of 2: Make your prediction
+            </p>
+          </div>
+
           {renderVisualization(false)}
 
           <div style={{
@@ -1253,13 +1511,17 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
               How do chiplets compare to monolithic for large designs?
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} aria-label="Prediction options">
               {predictions.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => setPrediction(p.id)}
+                  aria-pressed={prediction === p.id}
+                  aria-label={p.label}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
+                    minWidth: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1268,6 +1530,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
                     textAlign: 'left',
                     fontSize: '14px',
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   {p.label}
@@ -1284,12 +1547,26 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderTopNav()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the Trade-offs</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Find the break-even point between chiplets and monolithic
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '0 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.chiplet}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.chiplet }}>Observe:</strong> Watch how the visualization changes as you adjust the sliders. Notice the relationship between die area and yield.
             </p>
           </div>
 
@@ -1304,11 +1581,23 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           }}>
             <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Start small (100mm²) - monolithic usually wins</li>
-              <li>Go large (600mm²) - watch chiplets take over</li>
+              <li>Start small (100mm) - monolithic usually wins</li>
+              <li>Go large (600mm) - watch chiplets take over</li>
               <li>Increase defect density - chiplet advantage grows</li>
               <li>Increase packaging cost - monolithic becomes competitive</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '0 16px 16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h4 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Understanding the Physics</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+              When you increase die area, yield decreases exponentially because larger dice are more likely to contain a defect. The yield is calculated as Y = exp(-D x A) where D is defect density and A is area. This relationship means that as area doubles, yield drops much more than half. When you increase the number of chiplets, each individual chiplet has higher yield because it is smaller. This is important in semiconductor industry design because it directly affects manufacturing cost and determines whether a product is economically viable. Companies like AMD and Intel use this technology to build high-performance processors.
+            </p>
           </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review')}
@@ -1321,8 +1610,9 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
     const wasCorrect = prediction === 'chiplet_better';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderTopNav()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1334,10 +1624,30 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              Chiplets can win on yield and cost for large designs. The exponential yield drop
-              with area (Y = exp(-D×A)) means large monolithic dice have terrible yield.
-              Chiplets avoid this, but add packaging costs that must be overcome.
+              As you observed in the simulation, chiplets can win on yield and cost for large designs.
+              This is because the exponential yield drop with area (Y = exp(-D x A)) means large monolithic
+              dice have terrible yield. Therefore, chiplets avoid this problem, and the reason packaging costs must be overcome
+              demonstrates how the economics work in practice.
             </p>
+          </div>
+
+          {/* Review SVG diagram */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <svg width="100%" height="150" viewBox="0 0 400 150" style={{ maxWidth: '400px' }}>
+              <defs>
+                <linearGradient id="reviewYieldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={colors.success} />
+                  <stop offset="100%" stopColor={colors.error} />
+                </linearGradient>
+              </defs>
+              <rect x="20" y="20" width="360" height="110" fill="rgba(30, 41, 59, 0.8)" rx="8" />
+              <text x="200" y="45" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">Yield vs Die Area</text>
+              <path d="M50,110 Q150,105 200,80 T350,40" stroke="url(#reviewYieldGrad)" strokeWidth="3" fill="none" />
+              <text x="60" y="125" fill={colors.textSecondary} fontSize="11">Small Die</text>
+              <text x="300" y="125" fill={colors.textSecondary} fontSize="11">Large Die</text>
+              <circle cx="100" cy="105" r="5" fill={colors.success} />
+              <circle cx="300" cy="50" r="5" fill={colors.error} />
+            </svg>
           </div>
 
           <div style={{
@@ -1349,8 +1659,8 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Economics of Chiplets</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Exponential Yield:</strong> A 400mm² die
-                at 0.1 defects/mm² has only 1.8% yield! Four 100mm² chiplets each have 36% yield.
+                <strong style={{ color: colors.textPrimary }}>Exponential Yield:</strong> A 400mm die
+                at 0.1 defects/mm has only 1.8% yield! Four 100mm chiplets each have 36% yield.
               </p>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>System Yield:</strong> To build a system,
@@ -1363,7 +1673,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
               </p>
               <p>
                 <strong style={{ color: colors.textPrimary }}>Break-Even:</strong> The crossover point
-                depends on area, defect density, and packaging costs. Typically {'>'} 300mm² favors chiplets.
+                depends on area, defect density, and packaging costs. Typically greater than 300mm favors chiplets.
               </p>
             </div>
           </div>
@@ -1376,12 +1686,16 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderTopNav()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
               What about advanced packaging technologies?
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
+              Step 1 of 2: Make your prediction
             </p>
           </div>
 
@@ -1405,13 +1719,17 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
               How does advanced packaging affect the chiplet vs monolithic trade-off?
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} aria-label="Twist prediction options">
               {twistPredictions.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => setTwistPrediction(p.id)}
+                  aria-pressed={twistPrediction === p.id}
+                  aria-label={p.label}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
+                    minWidth: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1420,6 +1738,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
                     textAlign: 'left',
                     fontSize: '14px',
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   {p.label}
@@ -1436,12 +1755,26 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderTopNav()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Explore Advanced Packaging</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Enable advanced packaging and observe the cost-performance shift
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.15)',
+            margin: '0 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.interconnect}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.interconnect }}>Observe:</strong> Toggle advanced packaging on and off. Watch how latency and cost trade-offs shift between chiplets and monolithic.
             </p>
           </div>
 
@@ -1473,8 +1806,9 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
     const wasCorrect = twistPrediction === 'breakeven';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderTopNav()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1490,6 +1824,23 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
               penalties. For performance-critical applications, the higher cost is justified by
               narrowing the gap with monolithic performance.
             </p>
+          </div>
+
+          {/* Twist review SVG diagram */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <svg width="100%" height="150" viewBox="0 0 400 150" style={{ maxWidth: '400px' }}>
+              <rect x="20" y="20" width="360" height="110" fill="rgba(30, 41, 59, 0.8)" rx="8" />
+              <text x="200" y="45" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">Advanced Packaging Trade-off</text>
+              <rect x="50" y="60" width="80" height="50" fill={colors.chiplet} rx="4" opacity="0.7" />
+              <text x="90" y="90" fill="white" fontSize="11" textAnchor="middle">Standard</text>
+              <rect x="160" y="55" width="80" height="55" fill={colors.interconnect} rx="4" opacity="0.8" />
+              <text x="200" y="88" fill="white" fontSize="11" textAnchor="middle">Advanced</text>
+              <rect x="270" y="70" width="80" height="40" fill={colors.monolithic} rx="4" opacity="0.7" />
+              <text x="310" y="95" fill="white" fontSize="11" textAnchor="middle">Monolithic</text>
+              <text x="90" y="125" fill={colors.textSecondary} fontSize="11">Low Cost</text>
+              <text x="200" y="125" fill={colors.textSecondary} fontSize="11">Best Perf</text>
+              <text x="310" y="125" fill={colors.textSecondary} fontSize="11">Low Latency</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1528,8 +1879,9 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderTopNav()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1537,8 +1889,15 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               Chiplets are transforming the semiconductor industry
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '8px' }}>
+              <span style={{ color: colors.chiplet, fontSize: '13px' }}>85% chiplet yield</span>
+              <span style={{ color: colors.monolithic, fontSize: '13px' }}>800 mm total area</span>
+              <span style={{ color: colors.cost, fontSize: '13px' }}>$5000 per wafer</span>
+              <span style={{ color: colors.success, fontSize: '13px' }}>3nm process node</span>
+            </div>
+            {/* Progress indicator */}
+            <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+              Application {transferCompleted.size + 1} of {transferApplications.length}
             </p>
           </div>
 
@@ -1564,22 +1923,54 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                  aria-label={`Continue to reveal answer for ${app.title}`}
                   style={{
-                    padding: '8px 16px',
+                    padding: '12px 20px',
+                    minHeight: '44px',
+                    minWidth: '44px',
                     borderRadius: '6px',
                     border: `1px solid ${colors.accent}`,
                     background: 'transparent',
                     color: colors.accent,
                     cursor: 'pointer',
-                    fontSize: '13px',
+                    fontSize: '14px',
+                    fontWeight: 500,
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s ease',
                   }}
                 >
-                  Reveal Answer
+                  Continue - Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      // Advance to next incomplete app or do nothing if all done
+                      const nextIndex = transferApplications.findIndex((_, i) => !transferCompleted.has(i) && i > index);
+                      if (nextIndex !== -1) {
+                        // Could scroll to next
+                      }
+                    }}
+                    aria-label={`Got it - ${app.title} complete`}
+                    style={{
+                      padding: '10px 16px',
+                      minHeight: '44px',
+                      minWidth: '44px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
@@ -1594,8 +1985,9 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderTopNav()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1616,7 +2008,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>Q{qIndex + 1} of {testQuestions.length}: {q.question}</p>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
                       {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
@@ -1633,38 +2025,65 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderTopNav()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
-                <div
+                <button
                   key={i}
                   onClick={() => setCurrentTestQuestion(i)}
                   style={{
                     flex: 1,
-                    height: '4px',
-                    borderRadius: '2px',
-                    background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)',
+                    height: '8px',
+                    borderRadius: '4px',
+                    background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textSecondary : 'rgba(255,255,255,0.1)',
                     cursor: 'pointer',
+                    border: 'none',
+                    padding: 0,
+                    minHeight: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
-                />
+                  aria-label={`Go to question ${i + 1}`}
+                >
+                  <span style={{
+                    display: 'block',
+                    height: '8px',
+                    width: '100%',
+                    borderRadius: '4px',
+                    background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textSecondary : 'rgba(255,255,255,0.1)',
+                  }} />
+                </button>
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</p>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, marginBottom: '12px' }}>{currentQ.question}</p>
+              <p style={{ color: colors.textMuted, fontSize: '13px', lineHeight: 1.4 }}>
+                Consider what you learned about semiconductor manufacturing yield, defect density,
+                packaging overhead, and the economic trade-offs between monolithic and chiplet architectures.
+                Think about how the exponential yield relationship Y = exp(-D x A) affects larger dies,
+                and how advanced packaging technologies like 2.5D interposers and 3D stacking change the equation.
+              </p>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} aria-label="Answer options">
               {currentQ.options.map((opt, oIndex) => (
                 <button
                   key={oIndex}
                   onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+                  aria-pressed={testAnswers[currentTestQuestion] === oIndex}
+                  aria-label={`Answer option ${String.fromCharCode(65 + oIndex)}: ${opt.text}`}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
+                    minWidth: '44px',
                     borderRadius: '8px',
                     border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1673,8 +2092,10 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
                     textAlign: 'left',
                     fontSize: '14px',
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s ease',
                   }}
                 >
+                  <span style={{ fontWeight: 'bold', marginRight: '8px', color: colors.accent }}>{String.fromCharCode(65 + oIndex)}.</span>
                   {opt.text}
                 </button>
               ))}
@@ -1684,14 +2105,18 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             <button
               onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
               disabled={currentTestQuestion === 0}
+              aria-label="Previous question"
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
+                minWidth: '44px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.textMuted}`,
                 background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+                color: currentTestQuestion === 0 ? colors.textMuted : colors.textSecondary,
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
               Previous
@@ -1699,14 +2124,18 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             {currentTestQuestion < testQuestions.length - 1 ? (
               <button
                 onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                aria-label="Next question"
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
+                  minWidth: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: colors.accent,
                   color: 'white',
                   cursor: 'pointer',
                   WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 Next
@@ -1715,14 +2144,18 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
               <button
                 onClick={submitTest}
                 disabled={testAnswers.includes(null)}
+                aria-label="Submit your answers"
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
+                  minWidth: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
                   WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 Submit Test
@@ -1737,10 +2170,11 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderTopNav()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }} aria-label="Trophy">&#127942;</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered chiplet vs monolithic trade-offs</p>
           </div>

@@ -11,7 +11,7 @@ interface HotspotsRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -1032,6 +1032,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
               onClick={() => { setIsAnimating(!isAnimating); }}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: isAnimating
@@ -1053,6 +1054,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
               onClick={() => { setShadingLevel(0); setIsAnimating(false); }}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: `2px solid ${colors.accent}`,
                 background: 'transparent',
@@ -1227,13 +1229,14 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 1000,
+        zIndex: 1001,
         gap: '12px'
       }}>
         <button
           onClick={goBack}
           style={{
             padding: '12px 24px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: `1px solid ${colors.textMuted}`,
             background: 'transparent',
@@ -1254,6 +1257,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
           onClick={handleNext}
           style={{
             padding: '12px 32px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: 'none',
             background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
@@ -1354,6 +1358,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1385,6 +1390,12 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Hotspot Physics</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust shading and current to see how hotspots form
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontStyle: 'italic', marginTop: '8px' }}>
+              Observe how the thermal display changes as you adjust the sliders below.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
+              This is important because solar panel engineers use these principles to design safer, more reliable systems.
             </p>
           </div>
 
@@ -1429,6 +1440,9 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
+              You predicted: {predictions.find(p => p.id === prediction)?.label || 'No selection'}
+            </p>
             <p style={{ color: colors.textPrimary }}>
               The shaded cell becomes a hotspot! It goes into reverse bias and dissipates power as heat,
               potentially reaching temperatures that can damage the cell and surrounding materials.
@@ -1507,6 +1521,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1538,6 +1553,9 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Bypass Diodes</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Toggle the bypass diode and compare temperatures
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontStyle: 'italic', marginTop: '8px' }}>
+              Observe how the bypass diode affects the thermal output as you experiment.
             </p>
           </div>
 
@@ -1654,6 +1672,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
                   style={{
                     padding: '8px 16px',
+                    minHeight: '44px',
                     borderRadius: '6px',
                     border: `1px solid ${colors.accent}`,
                     background: 'transparent',
@@ -1667,7 +1686,30 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', marginBottom: '12px' }}>{app.answer}</p>
+                  <button
+                    onClick={() => {
+                      // Move to next application or continue
+                      const nextIndex = index + 1;
+                      if (nextIndex < transferApplications.length && !transferCompleted.has(nextIndex)) {
+                        // Scroll to next application
+                      }
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      minHeight: '44px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
@@ -1728,7 +1770,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1755,6 +1797,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
                   onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent',

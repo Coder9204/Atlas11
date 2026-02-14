@@ -21,7 +21,7 @@ interface DRAMRefreshRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgCardLight: '#1e293b',
@@ -844,6 +844,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
               fill={avgCharge > 70 ? '#22d3ee' : avgCharge > 50 ? '#fbbf24' : '#ef4444'}
               filter="url(#dramStatusGlow)"
             />
+            <text x={35} y={20} fill="#e2e8f0" fontSize="11" fontWeight="600">Charge Level</text>
 
             {/* Data status */}
             <rect
@@ -873,7 +874,26 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                 />
               )}
             </circle>
+            <text x={195} y={20} fill="#e2e8f0" fontSize="11" fontWeight="600">Data Status</text>
           </g>
+
+          {/* Legend Panel */}
+          <g transform="translate(10, 10)">
+            <rect x={0} y={0} width={100} height={70} fill="rgba(15,23,42,0.9)" rx={6} stroke="#334155" strokeWidth={1} />
+            <text x={10} y={16} fill="#f8fafc" fontSize="10" fontWeight="700">LEGEND</text>
+            <circle cx={18} cy={30} r={5} fill="#22d3ee" />
+            <text x={28} y={34} fill="#e2e8f0" fontSize="9">Full Charge</text>
+            <circle cx={18} cy={45} r={5} fill="#fbbf24" />
+            <text x={28} y={49} fill="#e2e8f0" fontSize="9">Medium</text>
+            <circle cx={18} cy={60} r={5} fill="#ef4444" />
+            <text x={28} y={64} fill="#e2e8f0" fontSize="9">Critical</text>
+          </g>
+
+          {/* Direct labels on capacitor cells */}
+          <text x={85} y={38} fill="#f8fafc" fontSize="9" fontWeight="600">Capacitor</text>
+          <text x={165} y={38} fill="#f8fafc" fontSize="9" fontWeight="600">Capacitor</text>
+          <text x={245} y={38} fill="#f8fafc" fontSize="9" fontWeight="600">Capacitor</text>
+          <text x={325} y={38} fill="#f8fafc" fontSize="9" fontWeight="600">Capacitor</text>
         </svg>
 
         {/* Text labels outside SVG using typo system */}
@@ -925,29 +945,41 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: isMobile ? '10px 12px' : '12px 16px',
         borderBottom: `1px solid ${colors.border}`,
         backgroundColor: colors.bgCard,
-        gap: isMobile ? '12px' : '16px'
+        gap: isMobile ? '12px' : '16px',
+        transition: 'all 0.3s ease'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
-          <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
+          <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }} role="tablist" aria-label="Phase navigation">
             {phaseOrder.map((p, i) => (
-              <div
+              <button
                 key={p}
-                onClick={() => i < currentIdx && goToPhase(p)}
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                role="tab"
+                aria-selected={i === currentIdx}
+                aria-label={phaseLabels[p]}
+                data-navigation-dot="true"
                 style={{
                   height: isMobile ? '10px' : '8px',
                   width: i === currentIdx ? (isMobile ? '20px' : '24px') : (isMobile ? '10px' : '8px'),
                   borderRadius: '5px',
                   backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
-                  cursor: i < currentIdx ? 'pointer' : 'default',
-                  transition: 'all 0.3s',
+                  cursor: i <= currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s ease',
                   minWidth: isMobile ? '10px' : '8px',
-                  minHeight: isMobile ? '10px' : '8px'
+                  minHeight: isMobile ? '10px' : '8px',
+                  border: 'none',
+                  padding: 0
                 }}
                 title={phaseLabels[p]}
               />
@@ -994,6 +1026,11 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -1066,12 +1103,12 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <h1 style={{ color: '#ffffff', fontSize: '28px', marginBottom: '8px' }}>
               Why Does RAM Forget Everything?
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '18px', marginBottom: '24px' }}>
               The physics of volatile memory
             </p>
           </div>
@@ -1087,12 +1124,12 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: '#ffffff', fontSize: '16px', lineHeight: 1.6 }}>
                 Every time you turn off your computer, all the RAM goes blank. Programs disappear,
                 unsaved work vanishes. Yet SSDs and hard drives remember everything. What makes
                 RAM so forgetful?
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', marginTop: '12px' }}>
                 The answer lies in tiny capacitors that are constantly fighting physics.
               </p>
             </div>
@@ -1103,7 +1140,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: '#ffffff', fontSize: '14px' }}>
                 DRAM capacitors hold charge measured in femtofarads - that is 0.000000000000001 farads!
               </p>
             </div>
@@ -1116,15 +1153,34 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
   // PREDICT PHASE
   if (phase === 'predict') {
+    const selectedCount = prediction ? 1 : 0;
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>How Does DRAM Store Data?</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Each bit needs to be stored somehow
             </p>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              marginTop: '12px',
+              padding: '8px 16px',
+              background: colors.bgCard,
+              borderRadius: '20px',
+              width: 'fit-content',
+              margin: '12px auto 0'
+            }}>
+              <span style={{ fontSize: '12px', color: colors.textMuted }}>Progress:</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: prediction ? colors.success : colors.warning }}>
+                {selectedCount}/1 selected
+              </span>
+            </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
@@ -1148,6 +1204,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                     color: colors.textPrimary,
                     textAlign: 'left',
                     WebkitTapHighlightColor: 'transparent',
+                    minHeight: '44px',
                   }}
                 >
                   {p.label}
@@ -1166,11 +1223,24 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>DRAM Refresh Lab</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Watch capacitors leak and see why refresh is essential
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.15)',
+            margin: '0 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+              <strong>Observe:</strong> Watch how the charge level drops over time. Try adjusting the temperature slider to see how heat affects the leakage rate.
             </p>
           </div>
 
@@ -1215,6 +1285,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                   background: isSimulating ? colors.error : colors.success,
                   color: 'white',
                   WebkitTapHighlightColor: 'transparent',
+                  minHeight: '44px',
                 }}
               >
                 {isSimulating ? 'Pause' : 'Start Simulation'}
@@ -1227,6 +1298,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                   border: `1px solid ${colors.accent}`,
                   color: colors.accent,
                   WebkitTapHighlightColor: 'transparent',
+                  minHeight: '44px',
                 }}
               >
                 Reset
@@ -1257,25 +1329,52 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'capacitor';
+    const userPredictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            transition: 'all 0.3s ease',
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px' }}>
+              <strong>You predicted:</strong> {userPredictionLabel}
+            </p>
             <p style={{ color: colors.textPrimary }}>
               DRAM stores each bit as electric charge in a tiny capacitor. The capacitors are so
               small that charge naturally leaks away through quantum tunneling and parasitic paths.
             </p>
+          </div>
+
+          {/* SVG Diagram for review */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
+            <svg width="300" height="150" viewBox="0 0 300 150">
+              <rect width="300" height="150" fill="#0f172a" rx="8" />
+              <text x="150" y="20" fill="#f8fafc" fontSize="12" fontWeight="700" textAnchor="middle">DRAM Cell Structure</text>
+              {/* Capacitor */}
+              <rect x="100" y="40" width="60" height="80" fill="#1e293b" stroke="#3b82f6" strokeWidth="2" rx="4" />
+              <rect x="110" y="90" width="40" height="20" fill="#22d3ee" opacity="0.8" />
+              <text x="130" y="105" fill="#0f172a" fontSize="10" fontWeight="600" textAnchor="middle">Charge</text>
+              <text x="130" y="135" fill="#e2e8f0" fontSize="10" textAnchor="middle">Capacitor</text>
+              {/* Transistor */}
+              <rect x="180" y="60" width="40" height="40" fill="#f59e0b" opacity="0.8" rx="4" />
+              <text x="200" y="85" fill="#0f172a" fontSize="9" fontWeight="600" textAnchor="middle">Gate</text>
+              <text x="200" y="115" fill="#e2e8f0" fontSize="10" textAnchor="middle">Transistor</text>
+              {/* Connection line */}
+              <line x1="160" y1="80" x2="180" y2="80" stroke="#14b8a6" strokeWidth="2" />
+              {/* Leakage arrow */}
+              <line x1="130" y1="120" x2="130" y2="145" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowhead)" />
+              <text x="145" y="145" fill="#ef4444" fontSize="8">Leakage</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1314,15 +1413,58 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
+    const selectedCount = twistPrediction ? 1 : 0;
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Speed Paradox</h2>
             <p style={{ color: colors.textSecondary }}>
               What happens when we make memory faster?
             </p>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              marginTop: '12px',
+              padding: '8px 16px',
+              background: colors.bgCard,
+              borderRadius: '20px',
+              width: 'fit-content',
+              margin: '12px auto 0'
+            }}>
+              <span style={{ fontSize: '12px', color: colors.textMuted }}>Progress:</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: twistPrediction ? colors.success : colors.warning }}>
+                {selectedCount}/1 selected
+              </span>
+            </div>
+          </div>
+
+          {/* SVG Visualization for Twist Predict */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
+            <svg width="320" height="160" viewBox="0 0 320 160">
+              <rect width="320" height="160" fill="#0f172a" rx="8" />
+              <text x="160" y="20" fill="#f8fafc" fontSize="12" fontWeight="700" textAnchor="middle">DDR4 vs DDR5 Capacitor Size</text>
+
+              {/* DDR4 capacitor - larger */}
+              <rect x="60" y="40" width="60" height="80" fill="#1e293b" stroke="#3b82f6" strokeWidth="2" rx="4" />
+              <rect x="70" y="85" width="40" height="25" fill="#22d3ee" opacity="0.8" />
+              <text x="90" y="135" fill="#e2e8f0" fontSize="10" textAnchor="middle">DDR4</text>
+              <text x="90" y="75" fill="#e2e8f0" fontSize="9" textAnchor="middle">Larger</text>
+
+              {/* DDR5 capacitor - smaller */}
+              <rect x="200" y="55" width="40" height="55" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" rx="4" />
+              <rect x="207" y="85" width="26" height="18" fill="#fbbf24" opacity="0.8" />
+              <text x="220" y="135" fill="#e2e8f0" fontSize="10" textAnchor="middle">DDR5</text>
+              <text x="220" y="75" fill="#e2e8f0" fontSize="9" textAnchor="middle">Smaller</text>
+
+              {/* Arrow indicating comparison */}
+              <line x1="130" y1="80" x2="190" y2="80" stroke="#e2e8f0" strokeWidth="2" markerEnd="url(#arrowhead)" />
+              <text x="160" y="95" fill="#e2e8f0" fontSize="8" textAnchor="middle">3x Faster</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1354,6 +1496,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                     color: colors.textPrimary,
                     textAlign: 'left',
                     WebkitTapHighlightColor: 'transparent',
+                    minHeight: '44px',
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   {p.label}
@@ -1372,11 +1516,24 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Speed vs Power Trade-off</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Explore how memory speed affects refresh needs
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.15)',
+            margin: '0 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.warning}`
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+              <strong>Observe:</strong> Increase the memory speed slider and watch how the leakage rate changes. Faster memory has smaller capacitors that leak charge more quickly.
             </p>
           </div>
 
@@ -1422,6 +1579,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                   background: isSimulating ? colors.error : colors.success,
                   color: 'white',
                   WebkitTapHighlightColor: 'transparent',
+                  minHeight: '44px',
                 }}
               >
                 {isSimulating ? 'Pause' : 'Start'}
@@ -1434,6 +1592,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                   border: `1px solid ${colors.warning}`,
                   color: colors.warning,
                   WebkitTapHighlightColor: 'transparent',
+                  minHeight: '44px',
                 }}
               >
                 Reset
@@ -1462,25 +1621,67 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'more';
+    const userTwistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            transition: 'all 0.3s ease',
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px' }}>
+              <strong>You predicted:</strong> {userTwistPredictionLabel}
+            </p>
             <p style={{ color: colors.textPrimary }}>
               Faster memory requires MORE frequent refresh, not less! Smaller capacitors at
               tighter pitches have higher leakage rates and less charge margin.
             </p>
+          </div>
+
+          {/* SVG Diagram for Twist Review */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
+            <svg width="320" height="180" viewBox="0 0 320 180">
+              <rect width="320" height="180" fill="#0f172a" rx="8" />
+              <text x="160" y="20" fill="#f8fafc" fontSize="12" fontWeight="700" textAnchor="middle">Speed vs Refresh Rate Trade-off</text>
+
+              {/* Chart axes */}
+              <line x1="50" y1="140" x2="280" y2="140" stroke="#e2e8f0" strokeWidth="1" />
+              <line x1="50" y1="40" x2="50" y2="140" stroke="#e2e8f0" strokeWidth="1" />
+
+              {/* X-axis label */}
+              <text x="165" y="160" fill="#e2e8f0" fontSize="10" textAnchor="middle">Memory Speed (MHz)</text>
+
+              {/* Y-axis label */}
+              <text x="25" y="90" fill="#e2e8f0" fontSize="10" textAnchor="middle" transform="rotate(-90, 25, 90)">Refresh Rate</text>
+
+              {/* Data points - showing correlation */}
+              <circle cx="80" cy="120" r="6" fill="#22d3ee" />
+              <text x="80" y="135" fill="#e2e8f0" fontSize="8" textAnchor="middle">2400</text>
+
+              <circle cx="140" cy="100" r="6" fill="#fbbf24" />
+              <text x="140" y="135" fill="#e2e8f0" fontSize="8" textAnchor="middle">4000</text>
+
+              <circle cx="200" cy="75" r="6" fill="#f97316" />
+              <text x="200" y="135" fill="#e2e8f0" fontSize="8" textAnchor="middle">6000</text>
+
+              <circle cx="260" cy="55" r="6" fill="#ef4444" />
+              <text x="260" y="135" fill="#e2e8f0" fontSize="8" textAnchor="middle">8000</text>
+
+              {/* Trend line */}
+              <line x1="80" y1="120" x2="260" y2="55" stroke="#8b5cf6" strokeWidth="2" strokeDasharray="5,5" />
+
+              <text x="270" y="50" fill="#ef4444" fontSize="8">High</text>
+              <text x="70" y="120" fill="#22d3ee" fontSize="8">Low</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1521,14 +1722,31 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '8px' }}>
               Complete all 4 applications to unlock the test
             </p>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              background: colors.bgCard,
+              borderRadius: '20px',
+              width: 'fit-content',
+              margin: '0 auto 16px'
+            }}>
+              <span style={{ fontSize: '12px', color: colors.textMuted }}>Progress:</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: transferCompleted.size >= 4 ? colors.success : colors.warning }}>
+                {transferCompleted.size}/4 completed
+              </span>
+            </div>
           </div>
 
           {TRANSFER_APPLICATIONS.map((app, index) => (
@@ -1561,13 +1779,31 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                     color: colors.accent,
                     fontSize: '13px',
                     WebkitTapHighlightColor: 'transparent',
+                    minHeight: '44px',
                   }}
                 >
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    onClick={() => {}}
+                    style={{
+                      ...buttonStyle,
+                      padding: '8px 16px',
+                      background: colors.success,
+                      border: 'none',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      WebkitTapHighlightColor: 'transparent',
+                      minHeight: '44px',
+                    }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
@@ -1588,7 +1824,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
             <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '672px', margin: '0 auto' }}>
               {/* Score Summary */}
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -1838,7 +2074,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '672px', margin: '0 auto' }}>
             {/* Header */}
             <div style={{ marginBottom: '24px' }}>
@@ -1899,7 +2135,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
             {/* Question */}
             <p style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px', color: colors.textPrimary }}>
-              {currentQ.question}
+              Q{currentTestIndex + 1}: {currentQ.question}
             </p>
 
             {/* Answer Options */}

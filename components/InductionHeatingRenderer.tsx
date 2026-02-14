@@ -336,7 +336,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
     return props[mat] || props.steel;
   };
 
-  // Premium design colors
+  // Premium design colors - text colors meet WCAG contrast requirements (brightness >= 180)
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -347,8 +347,8 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast - brightness >= 180
+    textMuted: '#cbd5e1', // High contrast - brightness >= 180
     border: '#2a2a3a',
   };
 
@@ -407,7 +407,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
     const height = isMobile ? 280 : 340;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="cooktopSurface" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#1e293b" />
@@ -676,7 +676,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
     </div>
   );
 
-  // Primary button style
+  // Primary button style - minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #EA580C)`,
     color: 'white',
@@ -688,7 +688,34 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Navigation bar component - fixed position top with z-index
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 24px',
+      zIndex: 1000,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>⚡</span>
+        <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Induction Heating</span>
+      </div>
+      <div style={{ color: colors.textSecondary, ...typo.small }}>
+        {phaseLabels[phase]}
+      </div>
+    </nav>
+  );
 
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
@@ -702,12 +729,19 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '80px 24px 24px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '64px',
@@ -753,6 +787,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
         </button>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -769,11 +804,27 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '80px 24px 24px', flex: 1 }}>
+          {/* Progress indicator for predict phase */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '16px',
+          }}>
+            <span style={{ color: colors.textSecondary, ...typo.small }}>Step 1 of 1</span>
+            <div style={{ flex: 1, height: '4px', background: colors.border, borderRadius: '2px' }}>
+              <div style={{ width: prediction ? '100%' : '0%', height: '100%', background: colors.accent, borderRadius: '2px', transition: 'width 0.3s' }} />
+            </div>
+          </div>
+
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -846,9 +897,9 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
               Test My Prediction
             </button>
           )}
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -859,16 +910,22 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '80px 24px 24px', flex: 1 }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Induction Heating Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Turn on the cooktop and observe how different materials respond.
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Observe: Watch the eddy currents form and how temperature changes with different materials and frequencies.
           </p>
 
           {/* Main visualization */}
@@ -1046,11 +1103,14 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '80px 24px 24px', flex: 1 }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Induction Heating
           </h2>

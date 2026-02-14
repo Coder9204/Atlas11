@@ -304,7 +304,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
 
   // Coolant properties
   const coolantProps: Record<string, { cp: number; k: number; density: number; name: string; color: string }> = {
-    air: { cp: 1.005, k: 0.026, density: 1.2, name: 'Air', color: '#94a3b8' },
+    air: { cp: 1.005, k: 0.026, density: 1.2, name: 'Air', color: '#e2e8f0' },
     water: { cp: 4.186, k: 0.60, density: 1000, name: 'Water', color: '#3b82f6' },
     oil: { cp: 2.0, k: 0.15, density: 900, name: 'Mineral Oil', color: '#eab308' },
   };
@@ -415,7 +415,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
     const props = coolantProps[coolantType];
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="heatGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#dc2626" />
@@ -523,7 +523,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
     const twoPhaseDeltaT = useTwoPhase ? twistHeatLoad / ((5 / 60000) * 1000 * 100 * 1000) : singlePhaseDeltaT; // Effective Cp with latent heat
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           {useTwoPhase ? 'Two-Phase (Boiling) Cooling' : 'Single-Phase Liquid Cooling'}
         </text>
@@ -592,25 +592,90 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '4px',
-      background: colors.bgSecondary,
-      zIndex: 100,
-    }}>
+  // Navigation bar component
+  const renderNavBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
       <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
-  );
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '56px',
+        background: colors.bgSecondary,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        borderBottom: `1px solid ${colors.border}`,
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: canGoBack ? colors.textSecondary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            minHeight: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          <span>Back</span>
+        </button>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '4px',
+        }}>
+          <span style={{ ...typo.small, color: colors.textSecondary }}>
+            {phaseLabels[phase]}
+          </span>
+          <div style={{
+            height: '4px',
+            width: '100px',
+            background: colors.border,
+            borderRadius: '2px',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${((currentIndex + 1) / phaseOrder.length) * 100}%`,
+              background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+              transition: 'width 0.3s ease',
+              borderRadius: '2px',
+            }} />
+          </div>
+        </div>
+        <button
+          onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+          disabled={!canGoNext}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: canGoNext ? colors.textSecondary : colors.textMuted,
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            minHeight: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          <span>Next</span>
+        </button>
+      </div>
+    );
+  };
 
   // Navigation dots
   const renderNavDots = () => (
@@ -651,6 +716,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -670,7 +736,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         padding: '24px',
         textAlign: 'center',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{
           fontSize: '64px',
@@ -691,7 +757,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "Why is <span style={{ color: colors.accent }}>water</span> 25x better at cooling than <span style={{ color: '#94a3b8' }}>air</span>? The secret lies in a fundamental property called specific heat capacity."
+          "Why is <span style={{ color: colors.accent }}>water</span> 25x better at cooling than <span style={{ color: '#e2e8f0' }}>air</span>? The secret lies in a fundamental property called specific heat capacity."
         </p>
 
         <div style={{
@@ -736,9 +802,9 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         background: colors.bgPrimary,
         padding: '24px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '80px auto 0', overflowY: 'auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -755,7 +821,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             Why can water remove much more heat than air at the same flow rate?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Simple diagram - static SVG */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -763,27 +829,33 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🔥</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>500W Heat</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '24px' }}>💧</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Coolant</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Cool Chip</p>
-              </div>
-            </div>
+            <svg width={isMobile ? 320 : 400} height={160} viewBox={`0 0 ${isMobile ? 320 : 400} 160`} style={{ maxWidth: '100%' }}>
+              {/* Heat source */}
+              <rect x="20" y="40" width="80" height="80" rx="8" fill="#dc2626" />
+              <text x="60" y="75" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">500W</text>
+              <text x="60" y="95" textAnchor="middle" fill="white" fontSize="10">Heat</text>
+
+              {/* Arrow */}
+              <path d="M110 80 L140 80" stroke={colors.textMuted} strokeWidth="2" markerEnd="url(#arrowhead)" />
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill={colors.textMuted} />
+                </marker>
+              </defs>
+
+              {/* Coolant */}
+              <rect x="150" y="40" width="100" height="80" rx="8" fill={colors.accent + '44'} stroke={colors.accent} strokeWidth="2" />
+              <text x="200" y="75" textAnchor="middle" fill={colors.accent} fontSize="14" fontWeight="bold">Coolant</text>
+              <text x="200" y="95" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Q = m*Cp*dT</text>
+
+              {/* Arrow */}
+              <path d="M260 80 L290 80" stroke={colors.textMuted} strokeWidth="2" markerEnd="url(#arrowhead)" />
+
+              {/* Cool chip */}
+              <rect x={isMobile ? 240 : 300} y="40" width="80" height="80" rx="8" fill={colors.success} />
+              <text x={isMobile ? 280 : 340} y="75" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">Cool</text>
+              <text x={isMobile ? 280 : 340} y="95" textAnchor="middle" fill="white" fontSize="10">Chip</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -800,6 +872,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -846,14 +919,18 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         background: colors.bgPrimary,
         padding: '24px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '80px auto 0', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Liquid Cooling Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Compare different coolants and see how specific heat affects temperature rise.
+            The visualization below shows how heat flows from the source through the coolant.
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Real-world relevance: This same physics powers cooling in data centers, EVs, and gaming PCs.
           </p>
 
           {/* Main visualization */}
@@ -991,18 +1068,46 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionOptions: Record<string, string> = {
+      'a': 'Water is denser than air, so more mass contacts the heat source',
+      'b': 'Water has ~4x higher specific heat capacity, absorbing more energy per degree',
+      'c': 'Water is naturally colder than air at room temperature',
+    };
+    const userPrediction = prediction ? predictionOptions[prediction] : null;
+    const wasCorrect = prediction === 'b';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '80px auto 0', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Liquid Cooling
           </h2>
+
+          {/* Reference user's prediction */}
+          {userPrediction && (
+            <div style={{
+              background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${wasCorrect ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: wasCorrect ? colors.success : colors.warning, margin: 0, fontWeight: 600 }}>
+                Your prediction: "{userPrediction}"
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '8px 0 0 0' }}>
+                {wasCorrect
+                  ? 'Correct! You identified the key factor - specific heat capacity.'
+                  : 'Let\'s explore why specific heat capacity is the key factor.'}
+              </p>
+            </div>
+          )}
 
           <div style={{
             background: colors.bgCard,
@@ -1049,7 +1154,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#94a3b8' }}>Air (Cp = 1.0):</span>
+                <span style={{ color: '#e2e8f0' }}>Air (Cp = 1.0):</span>
                 <span style={{ color: colors.error, fontWeight: 600 }}>High deltaT</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1104,7 +1209,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         background: colors.bgPrimary,
         padding: '24px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -1132,9 +1237,27 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
               In two-phase immersion cooling, servers are submerged in a special fluid (like 3M Novec) that boils at low temperatures (34-61C). The fluid boils on hot chips, vapor rises, condenses, and drips back.
             </p>
-            <div style={{ textAlign: 'center', fontSize: '32px' }}>
-              🖥️ -&gt; 💧 -&gt; 🫧 -&gt; ❄️ -&gt; 💧
-            </div>
+            {/* Static SVG diagram for two-phase concept */}
+            <svg width={isMobile ? 320 : 400} height={140} viewBox={`0 0 ${isMobile ? 320 : 400} 140`} style={{ display: 'block', margin: '0 auto' }}>
+              {/* Tank */}
+              <rect x="80" y="20" width="240" height="100" rx="8" fill="#7c3aed22" stroke="#7c3aed" strokeWidth="2" />
+
+              {/* Chip at bottom */}
+              <rect x="150" y="85" width="100" height="25" rx="4" fill="#dc2626" />
+              <text x="200" y="102" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">Hot Chip</text>
+
+              {/* Bubbles rising */}
+              <circle cx="170" cy="70" r="6" fill="white" opacity="0.6" />
+              <circle cx="200" cy="55" r="8" fill="white" opacity="0.5" />
+              <circle cx="230" cy="65" r="5" fill="white" opacity="0.6" />
+
+              {/* Condenser at top */}
+              <rect x="100" y="5" width="200" height="15" rx="3" fill="#374151" stroke="#60a5fa" strokeWidth="2" />
+              <text x="200" y="15" textAnchor="middle" fill="#60a5fa" fontSize="9">Condenser</text>
+
+              {/* Labels */}
+              <text x="200" y="135" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Liquid boils → Vapor rises → Condenses → Drips back</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1149,6 +1272,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1195,7 +1319,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         background: colors.bgPrimary,
         padding: '24px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1308,7 +1432,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         background: colors.bgPrimary,
         padding: '24px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1385,6 +1509,19 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
+
+    const handleGotIt = () => {
+      playSound('click');
+      const newCompleted = [...completedApps];
+      newCompleted[selectedApp] = true;
+      setCompletedApps(newCompleted);
+      // Move to next uncompleted app if available
+      const nextUncompleted = completedApps.findIndex((c, i) => !c && i !== selectedApp);
+      if (nextUncompleted !== -1 && !allAppsCompleted) {
+        setSelectedApp(nextUncompleted);
+      }
+    };
 
     return (
       <div style={{
@@ -1392,12 +1529,15 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         background: colors.bgPrimary,
         padding: '24px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '80px auto 0', overflowY: 'auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} | Completed: {completedCount}/{realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1412,9 +1552,6 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                 onClick={() => {
                   playSound('click');
                   setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
                 }}
                 style={{
                   background: selectedApp === i ? `${a.color}22` : colors.bgCard,
@@ -1424,6 +1561,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1485,9 +1623,38 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             </div>
 
             <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
+            </div>
+
+            <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1502,14 +1669,54 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                 </div>
               ))}
             </div>
+
+            {/* Got It button */}
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={handleGotIt}
+                style={{
+                  ...primaryButtonStyle,
+                  width: '100%',
+                  background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                }}
+              >
+                Got It
+              </button>
+            )}
+            {completedApps[selectedApp] && (
+              <div style={{
+                textAlign: 'center',
+                padding: '12px',
+                background: `${colors.success}22`,
+                borderRadius: '8px',
+                color: colors.success,
+                fontWeight: 600,
+              }}>
+                Completed!
+              </div>
+            )}
           </div>
 
-          {allAppsCompleted && (
+          {allAppsCompleted ? (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
               Take the Knowledge Test
+            </button>
+          ) : (
+            <button
+              onClick={() => { playSound('click'); nextPhase(); }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                background: colors.bgCard,
+                border: `1px solid ${colors.border}`,
+                color: colors.textSecondary,
+                boxShadow: 'none',
+              }}
+            >
+              Skip to Test ({completedCount}/{realWorldApps.length} apps viewed)
             </button>
           )}
         </div>
@@ -1529,7 +1736,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
           background: colors.bgPrimary,
           padding: '24px',
         }}>
-          {renderProgressBar()}
+          {renderNavBar()}
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{
@@ -1585,9 +1792,9 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         background: colors.bgPrimary,
         padding: '24px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '80px auto 0', overflowY: 'auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1650,6 +1857,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1687,6 +1895,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Previous
@@ -1705,6 +1914,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next
@@ -1730,6 +1940,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1756,7 +1967,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         padding: '24px',
         textAlign: 'center',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{
           fontSize: '100px',

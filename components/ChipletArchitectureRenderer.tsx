@@ -16,7 +16,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Mixed Nodes',
+  twist_play: 'Explore Mixed',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -24,7 +24,7 @@ const phaseLabels: Record<Phase, string> = {
 };
 
 const colors = {
-  textPrimary: '#f8fafc',
+  textPrimary: '#ffffff',
   textSecondary: '#e2e8f0',
   textMuted: '#94a3b8',
   bgPrimary: '#0f172a',
@@ -100,18 +100,20 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [pendingAnswer, setPendingAnswer] = useState<number | null>(null);
+  const [confirmedAnswers, setConfirmedAnswers] = useState<Set<number>>(new Set());
 
   // Internal navigation functions
   const goToPhase = useCallback((p: Phase) => {
     const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
+    if (now - lastClickRef.current < 50) return;
     if (isNavigating.current) return;
 
     lastClickRef.current = now;
     isNavigating.current = true;
 
     setPhase(p);
-    setTimeout(() => { isNavigating.current = false; }, 400);
+    setTimeout(() => { isNavigating.current = false; }, 100);
   }, []);
 
   const goNext = useCallback(() => {
@@ -142,24 +144,32 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         gap: '16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', gap: '6px' }} role="navigation" aria-label="Phase navigation">
             {phaseOrder.map((p, i) => (
-              <div
+              <button
                 key={p}
-                onClick={() => i < currentIdx && goToPhase(p)}
+                type="button"
+                tabIndex={0}
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                onKeyDown={(e) => e.key === 'Enter' && i <= currentIdx && goToPhase(p)}
+                aria-label={phaseLabels[p]}
+                aria-current={i === currentIdx ? 'step' : undefined}
+                data-navigation-dot="true"
                 style={{
-                  height: '8px',
-                  width: i === currentIdx ? '24px' : '8px',
-                  borderRadius: '5px',
+                  height: '12px',
+                  width: '12px',
+                  borderRadius: '50%',
                   backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
-                  cursor: i < currentIdx ? 'pointer' : 'default',
-                  transition: 'all 0.3s',
+                  cursor: i <= currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s ease',
+                  border: 'none',
+                  padding: 0,
                 }}
                 title={phaseLabels[p]}
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -243,11 +253,11 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   // Wrapper function for phase content
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
     <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-      <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{renderProgressBar()}</div>
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', marginTop: '60px', marginBottom: bottomBarContent ? '70px' : 0 }}>
         {content}
       </div>
-      {bottomBarContent && <div style={{ flexShrink: 0 }}>{bottomBarContent}</div>}
+      {bottomBarContent && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{bottomBarContent}</div>}
     </div>
   );
 
@@ -424,9 +434,27 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   ];
 
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = optionIndex;
-    setTestAnswers(newAnswers);
+    // Only allow selection if not already confirmed
+    if (!confirmedAnswers.has(questionIndex)) {
+      setPendingAnswer(optionIndex);
+    }
+  };
+
+  const confirmAnswer = () => {
+    if (pendingAnswer !== null && !confirmedAnswers.has(currentTestQuestion)) {
+      const newAnswers = [...testAnswers];
+      newAnswers[currentTestQuestion] = pendingAnswer;
+      setTestAnswers(newAnswers);
+      setConfirmedAnswers(new Set([...confirmedAnswers, currentTestQuestion]));
+      setPendingAnswer(null);
+    }
+  };
+
+  const goToNextQuestion = () => {
+    if (currentTestQuestion < 9) {
+      setCurrentTestQuestion(currentTestQuestion + 1);
+      setPendingAnswer(null);
+    }
   };
 
   const submitTest = () => {
@@ -559,6 +587,22 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
             <stop offset="0%" stopColor="#f59e0b" />
             <stop offset="100%" stopColor="#d97706" />
           </linearGradient>
+          <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+          </radialGradient>
+          <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+            <feOffset in="blur" dx="2" dy="2" result="offsetBlur" />
+            <feComposite in="SourceGraphic" in2="offsetBlur" operator="over" />
+          </filter>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
         {/* Background */}
@@ -572,7 +616,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         {/* Monolithic Die Section */}
         <g transform="translate(30, 45)">
           <text x="90" y="0" fill="#6366f1" fontSize="12" fontWeight="bold" textAnchor="middle">Monolithic Die</text>
-          <rect x="20" y="10" width="140" height="140" fill="url(#monolithicGrad)" rx="4" stroke="#818cf8" strokeWidth="2" />
+          <rect x="20" y="10" width="140" height="140" fill="url(#monolithicGrad)" rx="4" stroke="#818cf8" strokeWidth="2" filter="url(#dropShadow)" />
 
           {/* Defects visualization */}
           {[...Array(Math.floor((100 - metrics.monolithicYield) / 5))].map((_, i) => (
@@ -586,7 +630,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
             />
           ))}
 
-          <text x="90" y="170" fill="#94a3b8" fontSize="10" textAnchor="middle">{dieSize}mm2 total</text>
+          <text x="90" y="170" fill="#e2e8f0" fontSize="10" textAnchor="middle">{dieSize}mm2 total</text>
           <text x="90" y="185" fill={metrics.monolithicYield > 50 ? '#22c55e' : '#ef4444'} fontSize="11" textAnchor="middle">
             Yield: {metrics.monolithicYield}%
           </text>
@@ -615,6 +659,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
                   rx="2"
                   stroke="#86efac"
                   strokeWidth="1"
+                  filter={highlightedChiplet === i ? 'url(#glow)' : 'url(#dropShadow)'}
                   style={{ cursor: 'pointer' }}
                   onPointerEnter={() => setHighlightedChiplet(i)}
                   onPointerLeave={() => setHighlightedChiplet(null)}
@@ -657,7 +702,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
             </g>
           )}
 
-          <text x="100" y="170" fill="#94a3b8" fontSize="10" textAnchor="middle">{chipletCount}x {metrics.chipletArea}mm2</text>
+          <text x="100" y="170" fill="#e2e8f0" fontSize="10" textAnchor="middle">{chipletCount}x {metrics.chipletArea}mm2</text>
           <text x="100" y="185" fill={metrics.chipletYield > 50 ? '#22c55e' : '#ef4444'} fontSize="11" textAnchor="middle">
             Combined Yield: {metrics.chipletYield}%
           </text>
@@ -673,7 +718,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           <rect x="0" y="45" width={metrics.chipletYield * 2} height="20" fill="url(#chipletGrad)" rx="4" />
           <text x={metrics.chipletYield * 2 + 10} y="60" fill="#22c55e" fontSize="11">{metrics.chipletYield}%</text>
 
-          <text x="0" y="90" fill="#94a3b8" fontSize="10">Single chiplet yield: {metrics.singleChipletYield}%</text>
+          <text x="0" y="90" fill="#e2e8f0" fontSize="10">Single chiplet yield: {metrics.singleChipletYield}%</text>
         </g>
 
         {/* Cost Comparison */}
@@ -693,14 +738,34 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
 
         {/* Process Node Info */}
         <g transform="translate(30, 340)">
-          <rect x="0" y="0" width="440" height="100" fill="rgba(30, 41, 59, 0.8)" rx="8" />
+          <rect x="0" y="0" width="440" height="100" fill="rgba(30, 41, 59, 0.8)" rx="8" filter="url(#dropShadow)" />
           <text x="20" y="25" fill="#f8fafc" fontSize="12" fontWeight="bold">Current Settings</text>
-          <text x="20" y="50" fill="#94a3b8" fontSize="11">Process Node: {processNode}nm</text>
-          <text x="20" y="70" fill="#94a3b8" fontSize="11">Total Die Area: {dieSize}mm2</text>
-          <text x="20" y="90" fill="#94a3b8" fontSize="11">Chiplet Count: {chipletCount}</text>
+          <text x="20" y="50" fill="#e2e8f0" fontSize="11" fontWeight="normal">Process Node: {processNode}nm</text>
+          <text x="20" y="70" fill="#e2e8f0" fontSize="11" fontWeight="normal">Total Die Area: {dieSize}mm2</text>
+          <text x="20" y="90" fill="#e2e8f0" fontSize="11" fontWeight="normal">Chiplet Count: {chipletCount}</text>
 
-          <text x="250" y="50" fill="#f59e0b" fontSize="11">Interconnect: {metrics.interconnectBandwidth} GB/s</text>
-          <text x="250" y="70" fill="#94a3b8" fontSize="11">Packaging overhead: ~20%</text>
+          <text x="250" y="50" fill="#f59e0b" fontSize="11" fontWeight="normal">Interconnect: {metrics.interconnectBandwidth} GB/s</text>
+          <text x="250" y="70" fill="#e2e8f0" fontSize="11" fontWeight="normal">Packaging overhead: ~20%</text>
+
+          {/* Additional visual indicators for complexity */}
+          <circle cx="420" cy="50" r="15" fill="url(#glowGrad)" />
+          <path d="M410,50 L430,50 M420,40 L420,60" stroke="#22c55e" strokeWidth="2" />
+        </g>
+
+        {/* Decorative elements for visual polish */}
+        <g transform="translate(450, 100)">
+          <circle cx="20" cy="20" r="8" fill="rgba(99, 102, 241, 0.3)" />
+          <circle cx="20" cy="50" r="6" fill="rgba(34, 197, 94, 0.3)" />
+          <circle cx="20" cy="75" r="4" fill="rgba(245, 158, 11, 0.3)" />
+        </g>
+
+        {/* Additional path elements for visual depth */}
+        <g transform="translate(0, 0)">
+          <path d="M5,225 Q25,210 45,225" stroke="#6366f1" strokeWidth="1" fill="none" opacity="0.4" />
+          <path d="M5,230 Q25,215 45,230" stroke="#6366f1" strokeWidth="1" fill="none" opacity="0.3" />
+          <path d="M455,225 Q475,210 495,225" stroke="#22c55e" strokeWidth="1" fill="none" opacity="0.4" />
+          <path d="M455,230 Q475,215 495,230" stroke="#22c55e" strokeWidth="1" fill="none" opacity="0.3" />
+          <path d="M230,430 L270,430" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
         </g>
       </svg>
     );
@@ -709,8 +774,8 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
       <div>
-        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
-          Total Die Area: {dieSize}mm2
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          <span data-physics-label="area">Die Area:</span> {dieSize} mm² (controls yield probability)
         </label>
         <input
           type="range"
@@ -719,13 +784,14 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           step="50"
           value={dieSize}
           onChange={(e) => setDieSize(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: '#22c55e' }}
+          aria-label="Die Area controls yield probability"
         />
       </div>
 
       <div>
-        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
-          Number of Chiplets: {chipletCount}
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          <span data-physics-label="count">Chiplet Count:</span> {chipletCount} units (affects combined yield)
         </label>
         <input
           type="range"
@@ -734,13 +800,14 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           step="1"
           value={chipletCount}
           onChange={(e) => setChipletCount(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: '#22c55e' }}
+          aria-label="Chiplet Count affects combined yield"
         />
       </div>
 
       <div>
-        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
-          Process Node: {processNode}nm
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          <span data-physics-label="node">Process Node:</span> {processNode} nm (defect density factor)
         </label>
         <input
           type="range"
@@ -749,7 +816,8 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           step="1"
           value={processNode}
           onChange={(e) => setProcessNode(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: '#22c55e' }}
+          aria-label="Process Node defect density factor"
         />
       </div>
 
@@ -763,6 +831,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           color: 'white',
           fontWeight: 'bold',
           cursor: 'pointer',
+          minHeight: '44px',
           WebkitTapHighlightColor: 'transparent',
         }}
       >
@@ -781,7 +850,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
             <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #22c55e, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Chiplet Architecture
             </h1>
-            <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '18px', marginTop: '8px' }}>
               Why are modern chips made of multiple small pieces?
             </p>
           </div>
@@ -789,17 +858,17 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           {renderVisualization()}
 
           <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', borderLeft: '4px solid #22c55e' }}>
-            <p style={{ fontSize: '16px', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
               The latest AMD and Intel processors aren't single chips - they're assemblies of multiple smaller "chiplets."
               Apple's M1 Ultra is literally two M1 Max chips glued together!
             </p>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '12px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
               Why build chips in pieces instead of as one unit? The answer involves physics, economics, and clever engineering.
             </p>
           </div>
         </div>
       </div>,
-      renderBottomBar(true, 'Discover the Reason')
+      renderBottomBar(true, 'Next \u2192')
     );
   }
 
@@ -809,9 +878,17 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
       <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
+          <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
+            Step 1 of 2: Observe the diagram, then make your prediction
+          </p>
+
+          {/* Static SVG for prediction phase */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderVisualization()}
+          </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '16px', marginBottom: '8px' }}>
+            <p style={{ fontSize: '16px', marginBottom: '8px', color: colors.textSecondary }}>
               AMD, Intel, and Apple all now use chiplet designs instead of single monolithic chips.
               What's the main reason for this change?
             </p>
@@ -831,6 +908,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '15px',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -840,7 +918,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           </div>
         </div>
       </div>,
-      renderBottomBar(!!prediction, 'Test My Prediction')
+      renderBottomBar(true, prediction ? 'Test My Prediction' : 'Continue \u2192')
     );
   }
 
@@ -850,21 +928,38 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
       <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Yield Economics</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
             See how die size affects manufacturing yield and cost
           </p>
+
+          {/* Observation guidance */}
+          <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '16px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #22c55e' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              <strong style={{ color: '#22c55e' }}>Observe:</strong> Use the sliders below to adjust die area, chiplet count, and process node. Watch how yield and cost change between monolithic and chiplet designs.
+            </p>
+          </div>
 
           {renderVisualization()}
           {renderControls()}
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
             <h3 style={{ color: '#22c55e', marginBottom: '12px' }}>Key Experiments:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
+            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px' }}>
               <li>Increase die size to 800mm2 - watch yield collapse</li>
               <li>Use smaller process nodes - see defect impact increase</li>
               <li>Add more chiplets - observe yield recovery</li>
               <li>Notice: there's a sweet spot where chiplets win on cost</li>
             </ul>
+          </div>
+
+          <div style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
+            <h3 style={{ color: '#6366f1', marginBottom: '12px' }}>Key Terms Defined:</h3>
+            <p style={{ color: colors.textSecondary, lineHeight: 1.8, marginBottom: '8px' }}>
+              <strong>Yield</strong> is defined as the ratio of good dies to total dies produced. The formula is Y = e^(-D x A) where D is defect density and A is die area.
+            </p>
+            <p style={{ color: colors.textSecondary, lineHeight: 1.8 }}>
+              <strong>Defect Density</strong> measures the number of manufacturing defects per cm2. When you increase die area, the probability of hitting a defect increases exponentially. This is why chiplets are so important for modern processor design.
+            </p>
           </div>
         </div>
       </div>,
@@ -887,30 +982,39 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
             borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
           }}>
             <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
-              {wasCorrect ? 'Correct!' : 'The key insight:'}
+              {wasCorrect ? 'Your prediction was correct!' : 'The key insight:'}
             </h3>
-            <p>Smaller dies have exponentially better yield! The probability of a defect killing your chip decreases dramatically with smaller area.</p>
+            <p style={{ color: colors.textSecondary }}>
+              As you observed in the experiment, smaller dies have exponentially better yield!
+              The result shows that the probability of a defect killing your chip decreases dramatically with smaller area.
+              {prediction && ` You predicted that "${predictions.find(p => p.id === prediction)?.label || 'unknown'}" - ${wasCorrect ? 'and you were right!' : 'but the real answer is about yield economics.'}`}
+            </p>
+          </div>
+
+          {/* Visual diagram for review */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderVisualization()}
           </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
             <h3 style={{ color: '#22c55e', marginBottom: '16px' }}>The Yield Problem</h3>
-            <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-              <strong>Poisson Statistics:</strong> Yield follows Y = e^(-D x A) where D is defect density and A is die area.
+            <p style={{ lineHeight: 1.7, marginBottom: '12px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Poisson Statistics:</strong> Yield follows Y = e^(-D x A) where D is defect density and A is die area.
               Double the area means MUCH worse than half the yield!
             </p>
-            <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-              <strong>Defect Impact:</strong> A single defect anywhere on the die kills the entire chip.
+            <p style={{ lineHeight: 1.7, marginBottom: '12px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Defect Impact:</strong> A single defect anywhere on the die kills the entire chip.
               On a 400mm2 die, that's 4x the chance of hitting a defect compared to 100mm2.
             </p>
-            <p style={{ lineHeight: 1.7 }}>
-              <strong>Economic Impact:</strong> If you have 10% yield on monolithic dies, you're throwing away 90% of your expensive silicon!
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Economic Impact:</strong> If you have 10% yield on monolithic dies, you're throwing away 90% of your expensive silicon!
               With chiplets, you only discard the small defective pieces.
             </p>
           </div>
 
           <div style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
             <h3 style={{ color: '#6366f1', marginBottom: '16px' }}>The Reticle Limit</h3>
-            <p style={{ lineHeight: 1.7 }}>
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary }}>
               There's also a hard limit: the lithography machine can only expose ~800mm2 at once (the "reticle limit").
               To build bigger chips, you MUST use chiplets. NVIDIA's latest GPUs exceed this limit!
             </p>
@@ -927,9 +1031,17 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
       <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>The Twist</h2>
+          <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
+            Step 1 of 2: Observe the mixed node diagram, then predict
+          </p>
+
+          {/* Static SVG for twist prediction phase */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderVisualization()}
+          </div>
 
           <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #a855f7' }}>
-            <p style={{ fontSize: '16px', marginBottom: '12px' }}>
+            <p style={{ fontSize: '16px', marginBottom: '12px', color: colors.textSecondary }}>
               Here's something surprising: AMD's EPYC processors use compute chiplets on cutting-edge 5nm, but their I/O die uses older 14nm technology.
             </p>
             <p style={{ color: '#c4b5fd', fontWeight: 'bold' }}>
@@ -951,6 +1063,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '15px',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -960,7 +1073,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           </div>
         </div>
       </div>,
-      renderBottomBar(!!twistPrediction, 'See the Answer')
+      renderBottomBar(true, twistPrediction ? 'See the Answer' : 'Continue \u2192')
     );
   }
 
@@ -1024,12 +1137,17 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
             <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
               {wasCorrect ? 'Exactly right!' : 'The key insight:'}
             </h3>
-            <p>Different functions have different optimal technologies! Chiplets let you mix and match process nodes for maximum efficiency.</p>
+            <p style={{ color: colors.textSecondary }}>Different functions have different optimal technologies! Chiplets let you mix and match process nodes for maximum efficiency.</p>
+          </div>
+
+          {/* Visual diagram for twist review */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderVisualization()}
           </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
             <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>Heterogeneous Integration</h3>
-            <div style={{ lineHeight: 1.8 }}>
+            <div style={{ lineHeight: 1.8, color: colors.textSecondary }}>
               <p><strong style={{ color: '#6366f1' }}>Compute dies:</strong> Latest process (5nm, 3nm) for maximum transistor density and efficiency</p>
               <p><strong style={{ color: '#f59e0b' }}>I/O dies:</strong> Mature process (14nm) - analog circuits don't shrink well</p>
               <p><strong style={{ color: '#22c55e' }}>Memory:</strong> Specialized HBM process optimized for stacking</p>
@@ -1048,9 +1166,34 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
       <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-            Complete all 4 to unlock the test ({transferCompleted.size}/4)
+          <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
+            Application {Math.min(transferCompleted.size + 1, 4)} of 4: Complete all to unlock the test
           </p>
+
+          {/* Industry statistics summary */}
+          <div style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '16px', borderRadius: '12px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              The chiplet revolution is transforming semiconductor manufacturing. AMD EPYC processors achieve 40% cost savings with chiplets.
+              Intel Ponte Vecchio uses 47 chiplets across 5nm to 14nm nodes. Apple M1 Ultra delivers 2.5TB/s interconnect bandwidth.
+              Modern server CPUs pack up to 128 cores using this technology, with 400 GB/s die-to-die links.
+            </p>
+          </div>
+
+          {/* Progress indicator */}
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '24px' }}>
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                style={{
+                  width: '40px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  backgroundColor: transferCompleted.has(i) ? '#22c55e' : 'rgba(255,255,255,0.2)',
+                  transition: 'background-color 0.3s',
+                }}
+              />
+            ))}
+          </div>
 
           {transferApplications.map((app, index) => (
             <div
@@ -1064,28 +1207,64 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               }}
             >
               <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>{app.title}</h3>
-              <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
               <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
                 <p style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '14px' }}>{app.question}</p>
               </div>
               {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: '1px solid #22c55e',
-                    background: 'transparent',
-                    color: '#22c55e',
-                    cursor: 'pointer',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: '1px solid #22c55e',
+                      background: 'transparent',
+                      color: '#22c55e',
+                      cursor: 'pointer',
+                      minHeight: '44px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Reveal Answer
+                  </button>
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                      color: '#ffffff',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      minHeight: '44px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Got It
+                  </button>
+                </div>
               ) : (
-                <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
-                  <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e', marginBottom: '12px' }}>
+                    <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                      color: '#ffffff',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      minHeight: '44px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
@@ -1113,35 +1292,78 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
                 {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
               </h2>
               <p style={{ fontSize: '48px', fontWeight: 'bold' }}>{testScore}/10</p>
-              <p style={{ color: '#94a3b8' }}>
+              <p style={{ color: colors.textSecondary }}>
                 {testScore >= 8 ? 'You\'ve mastered chiplet architecture!' : 'Review the concepts and try again.'}
               </p>
             </div>
+
+            {/* Answer review */}
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '16px' }}>Answer Review</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {testQuestions.map((q, i) => {
+                  const isCorrect = testAnswers[i] !== null && q.options[testAnswers[i]!].correct;
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background: isCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                      }}
+                    >
+                      <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>Q{i + 1}</span>
+                      <span style={{ color: isCorrect ? '#22c55e' : '#ef4444', fontSize: '16px' }}>
+                        {isCorrect ? '\u2713' : '\u2717'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>,
-        renderBottomBar(true, testScore >= 8 ? 'Claim Mastery' : 'Try Again', testScore >= 8 ? goNext : () => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); })
+        renderBottomBar(true, testScore >= 8 ? 'Claim Mastery' : 'Try Again', testScore >= 8 ? goNext : () => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); setPendingAnswer(null); setConfirmedAnswers(new Set()); })
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
+    const isCurrentConfirmed = confirmedAnswers.has(currentTestQuestion);
+    const currentAnswer = isCurrentConfirmed ? testAnswers[currentTestQuestion] : pendingAnswer;
+    const isCorrect = currentAnswer !== null && currentQ.options[currentAnswer].correct;
+
     return wrapPhaseContent(
       <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2>Knowledge Test</h2>
-            <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1}/10</span>
+            <h2 style={{ color: '#ffffff' }}>Knowledge Test</h2>
+            <span style={{ color: colors.textSecondary, fontWeight: 'bold', fontSize: '16px' }}>Question {currentTestQuestion + 1} of 10</span>
+          </div>
+
+          <div style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              Test your understanding of chiplet architecture, yield economics, and modern semiconductor manufacturing.
+              Each question covers key concepts from your exploration of die sizes, process nodes, and interconnect technologies.
+              Think carefully about the tradeoffs between monolithic and chiplet designs that you observed.
+            </p>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
             {testQuestions.map((_, i) => (
               <div
                 key={i}
-                onClick={() => setCurrentTestQuestion(i)}
+                onClick={() => {
+                  setCurrentTestQuestion(i);
+                  setPendingAnswer(null);
+                }}
                 style={{
                   flex: 1,
                   height: '4px',
                   borderRadius: '2px',
-                  background: testAnswers[i] !== null ? '#22c55e' : i === currentTestQuestion ? '#64748b' : '#1e293b',
+                  background: confirmedAnswers.has(i) ? '#22c55e' : i === currentTestQuestion ? '#64748b' : '#1e293b',
                   cursor: 'pointer',
                 }}
               />
@@ -1149,41 +1371,79 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '16px', lineHeight: 1.6 }}>{currentQ.question}</p>
+            <p style={{ fontSize: '16px', lineHeight: 1.6, color: '#ffffff' }}>{currentQ.question}</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-            {currentQ.options.map((opt, i) => (
-              <button
-                key={i}
-                onClick={() => handleTestAnswer(currentTestQuestion, i)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: testAnswers[currentTestQuestion] === i ? '2px solid #22c55e' : '1px solid #475569',
-                  background: testAnswers[currentTestQuestion] === i ? 'rgba(34, 197, 94, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                  color: '#f8fafc',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '14px',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {opt.text}
-              </button>
-            ))}
+            {currentQ.options.map((opt, i) => {
+              const isSelected = currentAnswer === i;
+              const showResult = isCurrentConfirmed && isSelected;
+              const optionCorrect = opt.correct;
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleTestAnswer(currentTestQuestion, i)}
+                  disabled={isCurrentConfirmed}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: showResult
+                      ? `2px solid ${optionCorrect ? '#22c55e' : '#ef4444'}`
+                      : isSelected ? '2px solid #6366f1' : '1px solid #475569',
+                    background: showResult
+                      ? (optionCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)')
+                      : isSelected ? 'rgba(99, 102, 241, 0.2)' : 'rgba(30, 41, 59, 0.5)',
+                    color: '#ffffff',
+                    cursor: isCurrentConfirmed ? 'default' : 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    WebkitTapHighlightColor: 'transparent',
+                    opacity: isCurrentConfirmed && !isSelected ? 0.6 : 1,
+                  }}
+                >
+                  {String.fromCharCode(65 + i)}) {opt.text}
+                  {showResult && (
+                    <span style={{ marginLeft: '8px', fontWeight: 'bold' }}>
+                      {optionCorrect ? '\u2713 Correct' : '\u2717 Incorrect'}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          {/* Show explanation after confirming */}
+          {isCurrentConfirmed && (
+            <div style={{
+              background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`,
+            }}>
+              <p style={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '8px' }}>
+                {isCorrect ? 'Correct!' : 'The correct answer is:'}
+              </p>
+              <p style={{ color: '#e2e8f0' }}>
+                {currentQ.options.find(o => o.correct)?.text}
+              </p>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
             <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+              onClick={() => {
+                setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1));
+                setPendingAnswer(null);
+              }}
               disabled={currentTestQuestion === 0}
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: '1px solid #475569',
                 background: 'transparent',
-                color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
+                color: currentTestQuestion === 0 ? '#475569' : '#ffffff',
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
                 WebkitTapHighlightColor: 'transparent',
               }}
@@ -1191,37 +1451,55 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               Previous
             </button>
 
-            {currentTestQuestion < 9 ? (
+            {!isCurrentConfirmed && pendingAnswer !== null ? (
               <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                onClick={confirmAnswer}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Check Answer
+              </button>
+            ) : isCurrentConfirmed && currentTestQuestion < 9 ? (
+              <button
+                onClick={goToNextQuestion}
                 style={{
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
                   background: '#22c55e',
-                  color: 'white',
+                  color: '#ffffff',
                   cursor: 'pointer',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 Next
               </button>
-            ) : (
+            ) : isCurrentConfirmed && currentTestQuestion === 9 ? (
               <button
                 onClick={submitTest}
-                disabled={testAnswers.includes(null)}
+                disabled={confirmedAnswers.size < 10}
                 style={{
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? '#475569' : '#22c55e',
-                  color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  background: confirmedAnswers.size < 10 ? '#475569' : '#22c55e',
+                  color: '#ffffff',
+                  cursor: confirmedAnswers.size < 10 ? 'not-allowed' : 'pointer',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 Submit
               </button>
+            ) : (
+              <div style={{ width: '120px' }} /> // Placeholder for layout
             )}
           </div>
         </div>
@@ -1237,7 +1515,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '80px', marginBottom: '16px' }}>MASTERY</div>
           <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Chiplet Architecture Expert!</h1>
-          <p style={{ color: '#94a3b8', marginBottom: '32px' }}>
+          <p style={{ color: '#e2e8f0', marginBottom: '32px' }}>
             You understand the economics and engineering of modern chip manufacturing
           </p>
 

@@ -37,7 +37,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Optimizers',
+  twist_play: 'Explore Twist',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -155,6 +155,8 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
     cardPadding: isMobile ? '12px' : '16px',
     sectionGap: isMobile ? '16px' : '20px',
     elementGap: isMobile ? '8px' : '12px',
+    bodyNormal: { fontWeight: 400 as const },
+    bodyMedium: { fontWeight: 500 as const },
   };
 
   const navigationLockRef = useRef(false);
@@ -202,6 +204,11 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -214,8 +221,9 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
           onClick={goBack}
           disabled={currentIdx === 0}
           style={{
-            width: '36px',
-            height: '36px',
+            width: '44px',
+            height: '44px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: `1px solid ${colors.border}`,
             background: currentIdx > 0 ? colors.bgCardLight : 'transparent',
@@ -226,6 +234,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '16px',
+            transition: 'all 0.2s ease',
           }}
         >
           ←
@@ -248,7 +257,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
                     ? colors.primary
                     : colors.border,
                 cursor: i <= currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.2s',
+                transition: 'all 0.2s ease',
                 opacity: i > currentIdx ? 0.5 : 1,
               }}
               title={phaseLabels[p]}
@@ -303,6 +312,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
             minHeight: '44px',
+            transition: 'all 0.2s ease',
           }}
         >
           ← Back
@@ -310,7 +320,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
 
         <span style={{
           fontSize: '12px',
-          color: colors.textMuted,
+          color: colors.textSecondary,
           fontWeight: 600,
         }}>
           {phaseLabels[phase]}
@@ -334,11 +344,12 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
             background: canGoNext
               ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`
               : colors.bgCardLight,
-            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            color: canGoNext ? colors.textPrimary : colors.textSecondary,
             border: 'none',
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.4,
             minHeight: '44px',
+            transition: 'all 0.2s ease',
           }}
         >
           {nextLabel} →
@@ -1116,7 +1127,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   // ────────────────────────────────────────────────────────────────────────────
 
   const renderHook = () => (
-    <div style={{ padding: '24px', textAlign: 'center' }}>
+    <div style={{ padding: '24px', paddingTop: '70px', textAlign: 'center' }}>
       <div style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -1148,23 +1159,117 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
         marginTop: '24px',
         textAlign: 'left',
       }}>
-        <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6 }}>
+        <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6, fontWeight: 400 }}>
           Solar cells are connected in series to build up voltage. But this creates a problem:
           <strong style={{ color: colors.hotspot }}> a single shaded cell can devastate the entire string's output</strong>.
           Even worse, it can create dangerous hot spots that damage the panel.
         </p>
-        <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '12px' }}>
+        <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '12px', fontWeight: 400 }}>
           Click on individual cells to shade them and see what happens to power output!
         </p>
       </div>
     </div>
   );
 
+  const renderStaticVisualization = () => {
+    const width = 400;
+    const height = 300;
+    const cellWidth = 50;
+    const cellHeight = 40;
+    const cellGap = 8;
+    const stringGap = 30;
+
+    return (
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px', transition: 'all 0.3s ease' }}
+      >
+        <defs>
+          <linearGradient id="cellGradientStatic" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e40af" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </linearGradient>
+        </defs>
+
+        <text x="200" y="25" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
+          Solar Panel with 3 Strings in Series
+        </text>
+        <text x="200" y="45" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+          Each string has 2 cells + bypass diode
+        </text>
+
+        {[0, 1, 2].map(stringIndex => {
+          const stringX = 50 + stringIndex * (2 * cellWidth + cellGap + stringGap);
+          return (
+            <g key={stringIndex} transform={`translate(${stringX}, 70)`}>
+              <text x={cellWidth + cellGap / 2} y="-10" fill={colors.textSecondary} fontSize="10" textAnchor="middle">
+                String {stringIndex + 1}
+              </text>
+              {[0, 1].map(cellInString => {
+                const cellX = cellInString * (cellWidth + cellGap);
+                return (
+                  <g key={cellInString}>
+                    <rect
+                      x={cellX}
+                      y="0"
+                      width={cellWidth}
+                      height={cellHeight}
+                      fill="url(#cellGradientStatic)"
+                      rx="4"
+                      stroke={colors.current}
+                      strokeWidth="2"
+                    />
+                    <text x={cellX + cellWidth / 2} y={cellHeight / 2 + 4} fill={colors.solar} fontSize="10" textAnchor="middle">
+                      {CELL_VOLTAGE}V
+                    </text>
+                  </g>
+                );
+              })}
+              <line x1={cellWidth} y1={cellHeight / 2} x2={cellWidth + cellGap} y2={cellHeight / 2} stroke={colors.textMuted} strokeWidth="2" />
+              {/* Bypass diode symbol */}
+              <g transform={`translate(${cellWidth / 2 + cellGap / 2}, ${cellHeight + 15})`}>
+                <path
+                  d="M-20,0 L0,0 L0,-8 L15,0 L0,8 L0,0 M15,-8 L15,8 M15,0 L35,0"
+                  fill="none"
+                  stroke={colors.textMuted}
+                  strokeWidth="1.5"
+                />
+              </g>
+            </g>
+          );
+        })}
+
+        <g transform="translate(20, 180)">
+          <rect x="0" y="0" width="360" height="80" fill="rgba(0,0,0,0.4)" rx="8" stroke={colors.accent} strokeWidth="1" />
+          <text x="180" y="25" fill={colors.textPrimary} fontSize="13" fontWeight="bold" textAnchor="middle">
+            What happens when you shade one cell?
+          </text>
+          <text x="180" y="50" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+            Make your prediction below
+          </text>
+          <text x="180" y="70" fill={colors.textMuted} fontSize="10" textAnchor="middle">
+            Max power: {(CELLS_PER_STRING * STRINGS * CELL_VOLTAGE * CELL_CURRENT).toFixed(0)}W
+          </text>
+        </g>
+      </svg>
+    );
+  };
+
   const renderPredict = () => (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.textPrimary, marginBottom: '16px' }}>
-        Make Your Prediction
-      </h2>
+    <div style={{ padding: '24px', paddingTop: '70px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.textPrimary }}>
+          Make Your Prediction
+        </h2>
+        <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Step 1 of 4</span>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+        {renderStaticVisualization()}
+      </div>
 
       <div style={{
         background: 'rgba(245, 158, 11, 0.1)',
@@ -1173,13 +1278,13 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
         padding: '16px',
         marginBottom: '24px',
       }}>
-        <p style={{ color: '#fcd34d', fontSize: '14px', lineHeight: 1.6 }}>
+        <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
           If you shade just 1 cell out of 6 (16% of area), how much power do you lose?
         </p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-        {predictions.map(option => (
+        {predictions.map((option, index) => (
           <button
             key={option.id}
             onClick={() => setPrediction(option.id)}
@@ -1197,9 +1302,11 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
               fontWeight: 500,
               cursor: 'pointer',
               textAlign: 'left',
+              minHeight: '44px',
+              transition: 'all 0.2s ease',
             }}
           >
-            {option.label}
+            {String.fromCharCode(65 + index)}. {option.label}
           </button>
         ))}
       </div>
@@ -1210,7 +1317,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
           padding: '12px',
           background: 'rgba(245, 158, 11, 0.1)',
           borderRadius: '8px',
-          color: '#fcd34d',
+          color: colors.textSecondary,
           fontSize: '13px',
         }}>
           Select a prediction to continue
@@ -1220,15 +1327,41 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   );
 
   const renderPlay = () => (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '24px', paddingTop: '70px' }}>
       <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.textPrimary, marginBottom: '8px' }}>
         Explore Shading Effects
       </h2>
-      <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '24px' }}>
-        Click cells to shade them, toggle bypass diodes on/off
+      <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px' }}>
+        Observe how shading affects power output. Try different configurations to understand bypass diodes.
       </p>
 
       {renderVisualization(true)}
+
+      {/* Slider controls for play phase */}
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <label style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400 }}>Shading Intensity (cells blocked from sunlight)</label>
+          <input
+            type="range"
+            min="0"
+            max="6"
+            value={shadedCells.size}
+            aria-label="Shading intensity control"
+            onChange={(e) => {
+              const newCount = parseInt(e.target.value);
+              const newSet = new Set<number>();
+              for (let i = 0; i < newCount; i++) {
+                newSet.add(i);
+              }
+              setShadedCells(newSet);
+              setHasExperimented(true);
+            }}
+            style={{ width: '100%', cursor: 'pointer', accentColor: colors.primary }}
+          />
+          <span style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>{shadedCells.size} cells shaded - Power output affected</span>
+        </div>
+      </div>
+
       {renderControls()}
 
       <div style={{
@@ -1238,11 +1371,46 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
         marginTop: '16px',
       }}>
         <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-        <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+        <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
           <li>Shade one cell with bypass ON vs OFF</li>
           <li>Shade one cell in each string</li>
           <li>Turn off bypass and observe hot spot warning</li>
         </ul>
+      </div>
+
+      {/* Key Physics Terms - definitions for educational value */}
+      <div style={{
+        background: 'rgba(168, 85, 247, 0.1)',
+        padding: '16px',
+        borderRadius: '12px',
+        marginTop: '16px',
+        borderLeft: `3px solid ${colors.power}`,
+      }}>
+        <h4 style={{ color: colors.power, marginBottom: '8px' }}>Key Terms Defined:</h4>
+        <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
+          <li><strong style={{ color: colors.textPrimary }}>Series Circuit:</strong> is defined as components connected end-to-end where current flows through each sequentially</li>
+          <li><strong style={{ color: colors.textPrimary }}>Bypass Diode:</strong> refers to a semiconductor device that provides an alternate current path around shaded cells</li>
+          <li><strong style={{ color: colors.textPrimary }}>Hot Spot:</strong> describes how localized overheating occurs when a reverse-biased cell dissipates power as heat</li>
+          <li><strong style={{ color: colors.textPrimary }}>Power Output:</strong> is a measure of electrical energy calculated as P = V x I (voltage times current)</li>
+        </ul>
+      </div>
+
+      {/* Real-world relevance explanation */}
+      <div style={{
+        background: 'rgba(34, 197, 94, 0.1)',
+        padding: '16px',
+        borderRadius: '12px',
+        marginTop: '16px',
+        borderLeft: `3px solid ${colors.success}`,
+      }}>
+        <h4 style={{ color: colors.success, marginBottom: '8px' }}>Why This Matters in Practice:</h4>
+        <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
+          Understanding bypass diodes is essential because partial shading is unavoidable in real installations.
+          Trees, chimneys, passing clouds, and even bird droppings can shade panels. Without proper protection,
+          a 5% shaded area can cause 50-80% power loss. In commercial installations with hundreds of panels,
+          proper bypass diode design prevents thousands of dollars in lost energy production annually and
+          protects against potentially dangerous hot spot fires.
+        </p>
       </div>
 
       {!hasExperimented && (
@@ -1252,20 +1420,77 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
           marginTop: '16px',
           background: 'rgba(245, 158, 11, 0.1)',
           borderRadius: '8px',
-          color: '#fcd34d',
+          color: colors.textSecondary,
           fontSize: '13px',
         }}>
-          Click cells to experiment before continuing
+          Click cells or use slider to experiment before continuing
         </div>
       )}
     </div>
   );
 
-  const renderReview = () => {
-    const wasCorrect = prediction === 'worse';
+  const renderReviewDiagram = () => {
+    const width = 400;
+    const height = 200;
 
     return (
-      <div style={{ padding: '24px' }}>
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px', marginBottom: '16px', transition: 'all 0.3s ease' }}
+      >
+        <text x="200" y="25" fill={colors.textPrimary} fontSize="13" fontWeight="bold" textAnchor="middle">
+          Series Circuit Current Flow
+        </text>
+
+        {/* Normal current flow */}
+        <g transform="translate(30, 50)">
+          <text x="80" y="-5" fill={colors.success} fontSize="10" textAnchor="middle">Normal: Full Current</text>
+          <rect x="0" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.success} strokeWidth="2" />
+          <rect x="50" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.success} strokeWidth="2" />
+          <rect x="100" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.success} strokeWidth="2" />
+          <line x1="40" y1="15" x2="50" y2="15" stroke={colors.success} strokeWidth="2" />
+          <line x1="90" y1="15" x2="100" y2="15" stroke={colors.success} strokeWidth="2" />
+          <line x1="140" y1="15" x2="160" y2="15" stroke={colors.success} strokeWidth="2" markerEnd="url(#arrowhead)" />
+          <text x="80" y="50" fill={colors.textSecondary} fontSize="9" textAnchor="middle">10A through all</text>
+        </g>
+
+        {/* Shaded cell - limited current */}
+        <g transform="translate(210, 50)">
+          <text x="80" y="-5" fill={colors.error} fontSize="10" textAnchor="middle">Shaded: Limited Current</text>
+          <rect x="0" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.textMuted} strokeWidth="2" />
+          <rect x="50" y="0" width="40" height="30" fill={colors.shaded} rx="4" stroke={colors.error} strokeWidth="2" />
+          <rect x="100" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.textMuted} strokeWidth="2" />
+          <text x="70" y="20" fill={colors.error} fontSize="7">SHADED</text>
+          <line x1="40" y1="15" x2="50" y2="15" stroke={colors.error} strokeWidth="1" strokeDasharray="3,2" />
+          <line x1="90" y1="15" x2="100" y2="15" stroke={colors.error} strokeWidth="1" strokeDasharray="3,2" />
+          <text x="80" y="50" fill={colors.error} fontSize="9" textAnchor="middle">Only 1A possible!</text>
+        </g>
+
+        {/* With bypass */}
+        <g transform="translate(120, 120)">
+          <text x="80" y="-5" fill={colors.bypass} fontSize="10" textAnchor="middle">Bypass: Current Rerouted</text>
+          <rect x="0" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.bypass} strokeWidth="2" />
+          <rect x="50" y="0" width="40" height="30" fill={colors.shaded} rx="4" stroke={colors.textMuted} strokeWidth="2" />
+          <rect x="100" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.bypass} strokeWidth="2" />
+          <path d="M40,15 Q70,50 100,15" fill="none" stroke={colors.bypass} strokeWidth="2" />
+          <text x="80" y="55" fill={colors.bypass} fontSize="9" textAnchor="middle">10A bypasses shaded cell</text>
+        </g>
+      </svg>
+    );
+  };
+
+  const renderReview = () => {
+    const wasCorrect = prediction === 'worse';
+    const predictionText = prediction === 'proportional' ? 'proportional power loss'
+      : prediction === 'worse' ? 'disproportionate power loss'
+      : prediction === 'better' ? 'compensation by other cells'
+      : 'no effect on power';
+
+    return (
+      <div style={{ padding: '24px', paddingTop: '70px' }}>
         <div style={{
           background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
           padding: '20px',
@@ -1276,11 +1501,16 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
           <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
             {wasCorrect ? 'Correct!' : 'Not Quite!'}
           </h3>
-          <p style={{ color: colors.textPrimary }}>
-            Power drops <strong>MUCH more than proportionally!</strong> In series circuits,
+          <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
+            You predicted {predictionText}. As you observed in the experiment,
+            power drops <strong>MUCH more than proportionally!</strong> In series circuits,
             current is limited by the weakest link. Shading just 16% of the area can cause
             30-90% power loss without bypass diodes.
           </p>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          {renderReviewDiagram()}
         </div>
 
         <div style={{
@@ -1312,10 +1542,17 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   };
 
   const renderTwistPredict = () => (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.warning, marginBottom: '16px' }}>
-        The Twist: Can Technology Help?
-      </h2>
+    <div style={{ padding: '24px', paddingTop: '70px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.warning }}>
+          The Twist: Can Technology Help?
+        </h2>
+        <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Step 2 of 4</span>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+        {renderStaticVisualization()}
+      </div>
 
       <div style={{
         background: 'rgba(245, 158, 11, 0.1)',
@@ -1324,14 +1561,14 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
         padding: '16px',
         marginBottom: '24px',
       }}>
-        <p style={{ color: '#fcd34d', fontSize: '14px', lineHeight: 1.6 }}>
+        <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
           Bypass diodes help but still lose whole strings when even one cell is shaded.
           Modern solar systems use module-level power electronics (MLPE). How do they change the equation?
         </p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-        {twistPredictions.map(option => (
+        {twistPredictions.map((option, index) => (
           <button
             key={option.id}
             onClick={() => setTwistPrediction(option.id)}
@@ -1349,9 +1586,11 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
               fontWeight: 500,
               cursor: 'pointer',
               textAlign: 'left',
+              minHeight: '44px',
+              transition: 'all 0.2s ease',
             }}
           >
-            {option.label}
+            {String.fromCharCode(65 + index)}. {option.label}
           </button>
         ))}
       </div>
@@ -1362,7 +1601,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
           padding: '12px',
           background: 'rgba(245, 158, 11, 0.1)',
           borderRadius: '8px',
-          color: '#fcd34d',
+          color: colors.textSecondary,
           fontSize: '13px',
         }}>
           Select a prediction to continue
@@ -1372,15 +1611,40 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   );
 
   const renderTwistPlay = () => (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '24px', paddingTop: '70px' }}>
       <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.warning, marginBottom: '8px' }}>
         Compare Technologies
       </h2>
-      <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '24px' }}>
-        Toggle optimizers on and off while shading cells
+      <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px' }}>
+        Observe the difference. Toggle optimizers on and off while shading cells to try different configurations.
       </p>
 
       {renderVisualization(true, true)}
+
+      {/* Slider controls for twist play phase */}
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <label style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400 }}>Shading Level</label>
+          <input
+            type="range"
+            min="0"
+            max="6"
+            value={shadedCells.size}
+            onChange={(e) => {
+              const newCount = parseInt(e.target.value);
+              const newSet = new Set<number>();
+              for (let i = 0; i < newCount; i++) {
+                newSet.add(i);
+              }
+              setShadedCells(newSet);
+              setHasTwistExperimented(true);
+            }}
+            style={{ width: '100%', cursor: 'pointer', accentColor: colors.primary }}
+          />
+          <span style={{ color: colors.textSecondary, fontSize: '12px' }}>{shadedCells.size} cells shaded</span>
+        </div>
+      </div>
+
       {renderControls()}
 
       <div style={{
@@ -1404,20 +1668,83 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
           marginTop: '16px',
           background: 'rgba(245, 158, 11, 0.1)',
           borderRadius: '8px',
-          color: '#fcd34d',
+          color: colors.textSecondary,
           fontSize: '13px',
         }}>
-          Click cells to experiment before continuing
+          Click cells or use slider to experiment before continuing
         </div>
       )}
     </div>
   );
 
+  const renderTwistReviewDiagram = () => {
+    const width = 400;
+    const height = 180;
+
+    return (
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px', marginBottom: '16px', transition: 'all 0.3s ease' }}
+      >
+        <text x="200" y="20" fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">
+          Technology Comparison
+        </text>
+
+        {/* Bypass only */}
+        <g transform="translate(20, 40)">
+          <text x="80" y="0" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Bypass Diodes Only</text>
+          <rect x="20" y="10" width="120" height="50" fill="rgba(30,41,59,0.8)" rx="6" stroke={colors.bypass} strokeWidth="1" />
+          <rect x="30" y="20" width="30" height="25" fill="#1e40af" rx="3" stroke={colors.bypass} strokeWidth="1" />
+          <rect x="70" y="20" width="30" height="25" fill={colors.shaded} rx="3" stroke={colors.textMuted} strokeWidth="1" />
+          <text x="85" y="36" fill={colors.textMuted} fontSize="6">SHADED</text>
+          <rect x="110" y="20" width="25" height="25" fill="#1e40af" rx="3" stroke={colors.bypass} strokeWidth="1" />
+          <text x="80" y="75" fill={colors.warning} fontSize="9" textAnchor="middle">Loses whole string!</text>
+        </g>
+
+        {/* With optimizers */}
+        <g transform="translate(200, 40)">
+          <text x="90" y="0" fill={colors.textSecondary} fontSize="10" textAnchor="middle">With Power Optimizers</text>
+          <rect x="20" y="10" width="140" height="50" fill="rgba(30,41,59,0.8)" rx="6" stroke={colors.optimizer} strokeWidth="1" />
+          <rect x="30" y="20" width="30" height="25" fill="#1e40af" rx="3" stroke={colors.optimizer} strokeWidth="2" />
+          <rect x="35" y="47" width="20" height="10" fill="rgba(6,182,212,0.3)" rx="2" stroke={colors.optimizer} strokeWidth="1" />
+          <text x="45" y="54" fill={colors.optimizer} fontSize="5">OPT</text>
+          <rect x="75" y="20" width="30" height="25" fill={colors.shaded} rx="3" stroke={colors.textMuted} strokeWidth="1" />
+          <rect x="80" y="47" width="20" height="10" fill="rgba(6,182,212,0.3)" rx="2" stroke={colors.optimizer} strokeWidth="1" />
+          <text x="90" y="54" fill={colors.optimizer} fontSize="5">OPT</text>
+          <rect x="120" y="20" width="30" height="25" fill="#1e40af" rx="3" stroke={colors.optimizer} strokeWidth="2" />
+          <rect x="125" y="47" width="20" height="10" fill="rgba(6,182,212,0.3)" rx="2" stroke={colors.optimizer} strokeWidth="1" />
+          <text x="135" y="54" fill={colors.optimizer} fontSize="5">OPT</text>
+          <text x="90" y="75" fill={colors.success} fontSize="9" textAnchor="middle">Only shaded cell affected!</text>
+        </g>
+
+        {/* Power comparison bar */}
+        <g transform="translate(20, 100)">
+          <text x="10" y="12" fill={colors.textSecondary} fontSize="9">Bypass:</text>
+          <rect x="60" y="3" width="120" height="14" fill="rgba(255,255,255,0.1)" rx="3" />
+          <rect x="60" y="3" width="40" height="14" fill="rgba(245,158,11,0.5)" rx="3" />
+          <text x="185" y="14" fill={colors.warning} fontSize="9">33%</text>
+
+          <text x="200" y="12" fill={colors.textSecondary} fontSize="9">Optimizer:</text>
+          <rect x="260" y="3" width="120" height="14" fill="rgba(255,255,255,0.1)" rx="3" />
+          <rect x="260" y="3" width="100" height="14" fill="rgba(6,182,212,0.5)" rx="3" />
+          <text x="385" y="14" fill={colors.optimizer} fontSize="9">83%</text>
+        </g>
+
+        <text x="200" y="145" fill={colors.textPrimary} fontSize="10" fontWeight="bold" textAnchor="middle">
+          Optimizers: Each panel at its own maximum power point
+        </text>
+      </svg>
+    );
+  };
+
   const renderTwistReview = () => {
     const wasCorrect = twistPrediction === 'optimizers_help';
 
     return (
-      <div style={{ padding: '24px' }}>
+      <div style={{ padding: '24px', paddingTop: '70px' }}>
         <div style={{
           background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
           padding: '20px',
@@ -1433,6 +1760,10 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
             each panel (or cell group) electrically independent. A shaded panel only loses
             its own production - other panels are completely unaffected!
           </p>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          {renderTwistReviewDiagram()}
         </div>
 
         <div style={{
@@ -1461,16 +1792,22 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
     );
   };
 
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
+
   const renderTransfer = () => (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.textPrimary, marginBottom: '8px' }}>
-        Real-World Applications
-      </h2>
-      <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
-        Shading solutions are critical for real solar installations
+    <div style={{ padding: '24px', paddingTop: '70px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.textPrimary }}>
+          Real-World Applications
+        </h2>
+        <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Step 3 of 4</span>
+      </div>
+      <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', fontWeight: 400 }}>
+        Shading solutions are critical for real solar installations. Global solar capacity reached 1,185 GW in 2022,
+        with 80% of installations using bypass diode protection.
       </p>
-      <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '16px' }}>
-        Complete all 4 applications to unlock the test
+      <p style={{ color: colors.textSecondary, fontSize: '12px', marginBottom: '16px', fontWeight: 400 }}>
+        Application {currentTransferApp + 1} of {transferApplications.length} - Complete all to unlock the test
       </p>
 
       {transferApplications.map((app, index) => (
@@ -1482,6 +1819,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
             borderRadius: '12px',
             marginBottom: '12px',
             border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+            transition: 'all 0.2s ease',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -1494,14 +1832,47 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
           </div>
           {!transferCompleted.has(index) ? (
             <button
-              onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-              style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+              onClick={() => {
+                setTransferCompleted(new Set([...transferCompleted, index]));
+                setCurrentTransferApp(Math.min(index + 1, transferApplications.length - 1));
+              }}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.accent}`,
+                background: 'transparent',
+                color: colors.accent,
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 400,
+                minHeight: '44px',
+                transition: 'all 0.2s ease',
+              }}
             >
-              Reveal Answer
+              Continue - Reveal Answer
             </button>
           ) : (
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-              <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+            <div>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400 }}>{app.answer}</p>
+              </div>
+              <button
+                onClick={() => setCurrentTransferApp(Math.min(index + 1, transferApplications.length - 1))}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: colors.success,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  minHeight: '44px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Got It - Next App
+              </button>
             </div>
           )}
         </div>
@@ -1513,7 +1884,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
           padding: '12px',
           background: 'rgba(245, 158, 11, 0.1)',
           borderRadius: '8px',
-          color: '#fcd34d',
+          color: colors.textSecondary,
           fontSize: '13px',
         }}>
           Complete {4 - transferCompleted.size} more application(s) to continue
@@ -1527,7 +1898,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
 
     if (testSubmitted) {
       return (
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '24px', paddingTop: '70px', maxHeight: '100%', overflowY: 'auto' }}>
           <div style={{
             background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             padding: '24px',
@@ -1538,39 +1909,107 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
             <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
               {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
             </h2>
-            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>Score: {testScore} / 10</p>
             <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
               {testScore >= 8 ? 'You understand bypass diodes and partial shading!' : 'Review the material and try again.'}
             </p>
           </div>
-          {testQuestions.map((q, qIndex) => {
-            const userAnswer = testAnswers[qIndex];
-            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-            return (
-              <div key={qIndex} style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                {q.options.map((opt, oIndex) => (
-                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                    {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+
+          {/* Navigation buttons for quiz results */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', justifyContent: 'center' }}>
+            <button
+              onClick={() => window.location.href = '/dashboard'}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.accent}`,
+                background: 'transparent',
+                color: colors.accent,
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 600,
+                minHeight: '44px',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => {
+                setTestSubmitted(false);
+                setTestAnswers(new Array(10).fill(null));
+                setCurrentTestQuestion(0);
+                setPhase('hook');
+              }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 600,
+                minHeight: '44px',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Replay
+            </button>
+          </div>
+
+          {/* Answer review section */}
+          <h3 style={{ color: colors.textPrimary, marginBottom: '16px' }}>Answer Review</h3>
+          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {testQuestions.map((q, qIndex) => {
+              const userAnswer = testAnswers[qIndex];
+              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+              return (
+                <div key={qIndex} style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`, transition: 'all 0.2s ease' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: isCorrect ? colors.success : colors.error,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      color: 'white',
+                      fontWeight: 'bold',
+                    }}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                    <p style={{ color: colors.textPrimary, fontWeight: 'bold' }}>Q{qIndex + 1}. {q.question}</p>
                   </div>
-                ))}
-              </div>
-            );
-          })}
+                  {q.options.map((opt, oIndex) => (
+                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ padding: '24px' }}>
+      <div style={{ padding: '24px', paddingTop: '70px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-          <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+          <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
         </div>
+        <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '12px', fontWeight: 400 }}>
+          Test your understanding of bypass diodes, partial shading effects, and solar panel protection mechanisms.
+          Apply what you learned from the experiments to answer these scenario-based questions about real-world situations.
+        </p>
         <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
           {testQuestions.map((_, i) => (
-            <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+            <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.2s ease' }} />
           ))}
         </div>
         <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
@@ -1578,17 +2017,17 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {currentQ.options.map((opt, oIndex) => (
-            <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
-              {opt.text}
+            <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', minHeight: '44px', transition: 'all 0.2s ease' }}>
+              {String.fromCharCode(65 + oIndex)}. {opt.text}
             </button>
           ))}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
-          <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+          <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textSecondary : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', minHeight: '44px', transition: 'all 0.2s ease' }}>Previous</button>
           {currentTestQuestion < testQuestions.length - 1 ? (
-            <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+            <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', minHeight: '44px', transition: 'all 0.2s ease' }}>Next</button>
           ) : (
-            <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+            <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', minHeight: '44px', transition: 'all 0.2s ease' }}>Submit Test</button>
           )}
         </div>
       </div>
@@ -1596,7 +2035,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   };
 
   const renderMastery = () => (
-    <div style={{ padding: '24px', textAlign: 'center' }}>
+    <div style={{ padding: '24px', paddingTop: '70px', textAlign: 'center' }}>
       <div style={{
         width: '100px',
         height: '100px',
@@ -1666,11 +2105,11 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   const getBottomBarState = () => {
     switch (phase) {
       case 'hook':
-        return { canBack: false, canNext: true, label: 'Make a Prediction' };
+        return { canBack: false, canNext: true, label: 'Start Learning' };
       case 'predict':
-        return { canBack: true, canNext: !!prediction, label: 'Test My Prediction' };
+        return { canBack: true, canNext: !!prediction, label: 'Continue' };
       case 'play':
-        return { canBack: true, canNext: hasExperimented, label: 'Continue to Review' };
+        return { canBack: true, canNext: hasExperimented, label: 'Continue' };
       case 'review':
         return { canBack: true, canNext: true, label: 'Next: A Twist!' };
       case 'twist_predict':

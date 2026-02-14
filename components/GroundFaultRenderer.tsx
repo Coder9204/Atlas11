@@ -328,8 +328,8 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#cbd5e1',
     border: '#2a2a3a',
     hot: '#EF4444',
     neutral: '#3B82F6',
@@ -393,16 +393,87 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
 
   const gfciStatus = getGFCIStatus();
 
+  // Previous phase helper
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Navigation bar component
+  const renderNavigationBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '60px',
+        background: colors.bgSecondary,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        borderBottom: `1px solid ${colors.border}`,
+      }}>
+        <button
+          onClick={prevPhase}
+          disabled={!canGoBack}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            minHeight: '44px',
+            opacity: canGoBack ? 1 : 0.5,
+          }}
+        >
+          ← Back
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '20px' }}>⚡</span>
+          <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
+            {phaseLabels[phase]} ({currentIndex + 1}/{phaseOrder.length})
+          </span>
+        </div>
+        <button
+          onClick={nextPhase}
+          disabled={!canGoNext}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canGoNext ? colors.accent : colors.border,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            minHeight: '44px',
+            opacity: canGoNext ? 1 : 0.5,
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
+
   // Progress bar component
   const renderProgressBar = () => (
     <div style={{
       position: 'fixed',
-      top: 0,
+      top: '60px',
       left: 0,
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -428,6 +499,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
           style={{
             width: phase === p ? '24px' : '8px',
             height: '8px',
+            minHeight: '44px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
@@ -452,6 +524,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // Circuit Visualization Component
@@ -460,7 +533,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
     const height = isMobile ? 280 : 340;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="hotWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.hot} stopOpacity="0.8" />
@@ -637,8 +710,11 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '84px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -704,7 +780,10 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -724,7 +803,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
             A circuit draws 10 amps normally. If someone touches a live wire and 5 milliamps (0.005A) flows through them to ground, what happens to hot and neutral current?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -732,30 +811,44 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px' }}>🔌</div>
-                <p style={{ ...typo.small, color: colors.hot }}>Hot: 10A out</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.bgSecondary,
-                padding: '20px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.warning}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>💡</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Load</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px' }}>🔌</div>
-                <p style={{ ...typo.small, color: colors.neutral }}>Neutral: ? A back</p>
-              </div>
-            </div>
+            <svg width="360" height="200" viewBox="0 0 360 200" style={{ maxWidth: '100%' }}>
+              {/* Power source */}
+              <rect x="20" y="60" width="50" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
+              <text x="45" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">120V</text>
+              <text x="45" y="115" textAnchor="middle" fill={colors.textMuted} fontSize="10">Source</text>
+
+              {/* Hot wire */}
+              <line x1="70" y1="75" x2="140" y2="75" stroke={colors.hot} strokeWidth="3" />
+              <line x1="220" y1="75" x2="290" y2="75" stroke={colors.hot} strokeWidth="3" />
+              <text x="105" y="65" fill={colors.hot} fontSize="11" fontWeight="600">Hot: 10A</text>
+
+              {/* Load */}
+              <rect x="140" y="55" width="80" height="90" rx="6" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" />
+              <text x="180" y="95" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="bold">LOAD</text>
+              <text x="180" y="115" textAnchor="middle" fill={colors.textMuted} fontSize="10">10A</text>
+
+              {/* Neutral wire */}
+              <line x1="70" y1="125" x2="140" y2="125" stroke={colors.neutral} strokeWidth="3" />
+              <line x1="220" y1="125" x2="290" y2="125" stroke={colors.neutral} strokeWidth="3" />
+              <text x="255" y="115" fill={colors.neutral} fontSize="11" fontWeight="600">Neutral: ?A</text>
+
+              {/* Person symbol */}
+              <circle cx="310" y="100" r="12" fill="none" stroke={colors.warning} strokeWidth="2" />
+              <line x1="310" y1="112" x2="310" y2="140" stroke={colors.warning} strokeWidth="2" />
+              <line x1="290" y1="75" x2="310" y2="88" stroke={colors.warning} strokeWidth="2" strokeDasharray="4,2" />
+
+              {/* Ground symbol */}
+              <line x1="310" y1="145" x2="310" y2="155" stroke={colors.ground} strokeWidth="2" />
+              <line x1="298" y1="155" x2="322" y2="155" stroke={colors.ground} strokeWidth="2" />
+              <line x1="302" y1="160" x2="318" y2="160" stroke={colors.ground} strokeWidth="1.5" />
+              <line x1="306" y1="165" x2="314" y2="165" stroke={colors.ground} strokeWidth="1" />
+
+              {/* Leakage label */}
+              <text x="330" y="130" fill={colors.warning} fontSize="10" fontWeight="600">5 mA</text>
+            </svg>
             <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: `1px solid ${colors.border}` }}>
               <p style={{ ...typo.small, color: colors.warning }}>
-                ⚠️ Meanwhile, 5 mA is escaping through a person to ground...
+                5 mA is escaping through a person to ground...
               </p>
             </div>
           </div>
@@ -774,6 +867,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -819,15 +913,21 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             GFCI Circuit Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Introduce a ground fault and watch the GFCI detect the current imbalance
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px' }}>
+            Real-world relevance: GFCIs in bathrooms and kitchens use this exact principle to save over 300 lives annually
           </p>
 
           {/* Main visualization */}
@@ -914,6 +1014,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                   fontWeight: 600,
                   cursor: 'pointer',
                   marginBottom: '16px',
+                  minHeight: '44px',
                 }}
               >
                 Reset GFCI
@@ -987,18 +1088,37 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionCorrect = prediction === 'b';
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             How GFCIs Detect Ground Faults
           </h2>
+
+          {/* Reference user's prediction */}
+          <div style={{
+            background: predictionCorrect ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${predictionCorrect ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: predictionCorrect ? colors.success : colors.warning, margin: 0 }}>
+              {predictionCorrect
+                ? "Your prediction was correct! Hot stays at 10A while neutral drops to 9.995A - the GFCI detects this 5mA difference."
+                : "Your prediction helped you explore the concept. The key insight: hot stays at 10A, but neutral drops because 5mA escapes to ground instead of returning through neutral."}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1014,7 +1134,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                 In a healthy circuit, <span style={{ color: colors.hot }}>I_hot</span> = <span style={{ color: colors.neutral }}>I_neutral</span>. All current flowing out must return.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                If current escapes to ground (through a person, damaged insulation, or water), there's an <span style={{ color: colors.warning }}>imbalance</span>: I_hot - I_neutral = I_leakage
+                If current escapes to ground (through a person, damaged insulation, or water), there is an <span style={{ color: colors.warning }}>imbalance</span>: I_hot - I_neutral = I_leakage
               </p>
               <p>
                 GFCIs use a <span style={{ color: colors.accent, fontWeight: 600 }}>differential current transformer</span> to detect this imbalance. Both wires pass through a toroidal core - if currents are equal, magnetic fields cancel. Any imbalance induces a voltage that triggers the trip mechanism.
@@ -1075,7 +1195,10 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1125,6 +1248,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1172,7 +1296,10 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
@@ -1311,7 +1438,10 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1398,19 +1528,26 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} completed)
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1425,9 +1562,6 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                 onClick={() => {
                   playSound('click');
                   setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
                 }}
                 style={{
                   background: selectedApp === i ? `${a.color}22` : colors.bgCard,
@@ -1437,6 +1571,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1501,6 +1636,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1515,6 +1651,40 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                 </div>
               ))}
             </div>
+
+            {/* Got It button for current app */}
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  ...primaryButtonStyle,
+                  width: '100%',
+                  background: app.color,
+                }}
+              >
+                Got It
+              </button>
+            )}
+            {completedApps[selectedApp] && selectedApp < realWorldApps.length - 1 && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(selectedApp + 1);
+                }}
+                style={{
+                  ...primaryButtonStyle,
+                  width: '100%',
+                  background: colors.success,
+                }}
+              >
+                Next Application →
+              </button>
+            )}
           </div>
 
           {allAppsCompleted && (
@@ -1541,7 +1711,10 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '84px',
+          overflowY: 'auto',
         }}>
+          {renderNavigationBar()}
           {renderProgressBar()}
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
@@ -1597,10 +1770,13 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1663,6 +1839,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1700,6 +1877,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 ← Previous
@@ -1718,6 +1896,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next →
@@ -1743,6 +1922,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1767,8 +1947,11 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '84px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -1824,6 +2007,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
               background: 'transparent',
               color: colors.textSecondary,
               cursor: 'pointer',
+              minHeight: '44px',
             }}
           >
             Play Again

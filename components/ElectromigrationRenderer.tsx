@@ -330,7 +330,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
 
   const mttf = calculateMTTF();
 
-  // Premium design colors
+  // Premium design colors - using brightness >= 180 for text contrast
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -341,8 +341,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast (brightness >= 180)
+    textMuted: '#cbd5e1', // High contrast (brightness >= 180)
     border: '#2a2a3a',
     copper: '#B87333',
     electron: '#60A5FA',
@@ -423,7 +423,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
     const atomDisplacement = isSimulating ? Math.sin(animationFrame * 0.1) * (currentDensity * 0.3) : 0;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           {/* Copper gradient */}
           <linearGradient id="copperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -665,7 +665,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
     </div>
   );
 
-  // Primary button style
+  // Primary button style with minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
     color: 'white',
@@ -677,7 +677,36 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Fixed navigation bar at top
+  const renderNavigationBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1001,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>⚡</span>
+        <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
+          Electromigration in Chips
+        </span>
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
+    </nav>
+  );
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
@@ -694,8 +723,11 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -731,14 +763,15 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "At the nanoscale, flowing electrons act like a river eroding its banks. Over years of operation, they physically push copper atoms along the wire, creating voids that break circuits and hillocks that cause shorts."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p className="text-secondary text-muted" style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
             — Semiconductor Reliability Engineering
           </p>
         </div>
 
         <button
           onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
+          style={{ ...primaryButtonStyle, minHeight: '44px' }}
+          data-testid="hook-continue-button"
         >
           Discover the Silent Killer
         </button>
@@ -762,10 +795,23 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+          {/* Progress indicator */}
+          <div style={{
+            ...typo.small,
+            color: colors.textSecondary,
+            textAlign: 'center',
+            marginBottom: '16px',
+          }}>
+            Prediction 1 of 1
+          </div>
+
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -782,7 +828,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             What causes copper interconnects inside microchips to eventually fail after years of use?
           </h2>
 
-          {/* Diagram */}
+          {/* Static Diagram with SVG */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -790,6 +836,39 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
+            {/* SVG static visualization */}
+            <svg width={isMobile ? 300 : 400} height={140} viewBox={`0 0 ${isMobile ? 300 : 400} 140`} style={{ marginBottom: '16px' }}>
+              <defs>
+                <linearGradient id="copperGradPredict" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#CD7F32" />
+                  <stop offset="50%" stopColor="#B87333" />
+                  <stop offset="100%" stopColor="#8B5A2B" />
+                </linearGradient>
+                <radialGradient id="atomGlowPredict" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#FDE68A" />
+                  <stop offset="100%" stopColor="#FCD34D" />
+                </radialGradient>
+              </defs>
+              {/* Background */}
+              <rect x={0} y={0} width={isMobile ? 300 : 400} height={140} fill="#1a1a24" rx={8} />
+              {/* Copper wire */}
+              <rect x={30} y={45} width={isMobile ? 240 : 340} height={40} rx={4} fill="url(#copperGradPredict)" />
+              {/* Wire outline */}
+              <rect x={30} y={45} width={isMobile ? 240 : 340} height={40} rx={4} fill="none" stroke="#8B5A2B" strokeWidth={1} />
+              {/* Atoms representation */}
+              {Array.from({ length: 8 }, (_, i) => (
+                <g key={i}>
+                  <circle cx={50 + i * (isMobile ? 30 : 42)} cy={65} r={12} fill="url(#atomGlowPredict)" opacity={0.9} />
+                  <circle cx={50 + i * (isMobile ? 30 : 42)} cy={65} r={7} fill="#F59E0B" opacity={1} />
+                </g>
+              ))}
+              {/* Labels */}
+              <text x={30} y={25} fill="#e2e8f0" fontSize="11" fontWeight="600">Copper Interconnect</text>
+              <text x={isMobile ? 200 : 280} y={25} fill="#60A5FA" fontSize="11">Metal Atoms</text>
+              <text x={(isMobile ? 150 : 200)} y={125} textAnchor="middle" fill={colors.textMuted} fontSize="12">
+                Static cross-section view
+              </text>
+            </svg>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '40px' }}>🖥️</div>
@@ -872,16 +951,33 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Electromigration Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Watch how current density affects atomic migration and chip lifetime
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}22`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Adjust the current density slider and click "Start Simulation" to observe how electrons push copper atoms, creating voids and hillocks over time.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -955,6 +1051,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
                   borderRadius: '8px',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 {isSimulating ? 'Pause Simulation' : 'Start Simulation'}
@@ -969,6 +1066,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
                   borderRadius: '8px',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Reset
@@ -1027,6 +1125,24 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             </div>
           )}
 
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+              Real-World Relevance
+            </h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              This exact phenomenon limits how much current can flow through the billions of copper wires in your CPU and GPU.
+              Chip designers use Black's equation to predict wire lifetime and set maximum current density rules.
+              Violating these rules even slightly can reduce a 10-year lifetime to just 2-3 years.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); resetSimulation(); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
@@ -1047,13 +1163,34 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Black's Equation: Predicting Chip Lifetime
           </h2>
+
+          {/* Reference to user's prediction */}
+          {prediction && (
+            <div style={{
+              background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
+                {prediction === 'b'
+                  ? "Your prediction was correct! Electron momentum transfer is indeed the cause of electromigration failure."
+                  : "Your prediction about chip failure was close, but electron momentum transfer (not heat, corrosion, or vibration) is the true mechanism behind electromigration."
+                }
+              </p>
+            </div>
+          )}
 
           {/* Black's equation display */}
           <div style={{
@@ -1171,10 +1308,13 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <div style={{
             background: `${colors.error}22`,
             borderRadius: '12px',
@@ -1190,6 +1330,42 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             A chip normally runs at 85C. During a heat wave or heavy gaming, it reaches 105C. How does this 20C increase affect electromigration?
           </h2>
+
+          {/* Static SVG for twist predict */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <svg width={isMobile ? 280 : 360} height={100} viewBox={`0 0 ${isMobile ? 280 : 360} 100`}>
+              <defs>
+                <linearGradient id="tempGradTwist" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#22C55E" />
+                  <stop offset="50%" stopColor="#EAB308" />
+                  <stop offset="100%" stopColor="#EF4444" />
+                </linearGradient>
+              </defs>
+              <rect x={0} y={0} width={isMobile ? 280 : 360} height={100} fill="#1a1a24" rx={8} />
+              {/* Temperature scale */}
+              <rect x={30} y={20} width={30} height={60} rx={4} fill="#12121a" stroke="#2a2a3a" />
+              <rect x={35} y={30} width={20} height={45} rx={2} fill="url(#tempGradTwist)" />
+              <text x={45} y={90} textAnchor="middle" fill="#e2e8f0" fontSize="10">Temp</text>
+              {/* Two chips showing comparison */}
+              <g transform="translate(90, 25)">
+                <rect x={0} y={0} width={60} height={50} rx={4} fill="#22C55E" opacity={0.3} />
+                <text x={30} y={30} textAnchor="middle" fill="#22C55E" fontSize="14" fontWeight="600">85C</text>
+                <text x={30} y={65} textAnchor="middle" fill="#e2e8f0" fontSize="10">Normal</text>
+              </g>
+              <g transform={`translate(${isMobile ? 180 : 220}, 25)`}>
+                <rect x={0} y={0} width={60} height={50} rx={4} fill="#EF4444" opacity={0.3} />
+                <text x={30} y={30} textAnchor="middle" fill="#EF4444" fontSize="14" fontWeight="600">105C</text>
+                <text x={30} y={65} textAnchor="middle" fill="#e2e8f0" fontSize="10">Heat wave</text>
+              </g>
+              <text x={(isMobile ? 160 : 200)} y={50} textAnchor="middle" fill="#cbd5e1" fontSize="20">?</text>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1252,10 +1428,13 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Temperature vs. Chip Lifetime
           </h2>
@@ -1365,10 +1544,13 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Thermal Management = Reliability
           </h2>
@@ -1458,10 +1640,13 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1637,6 +1822,34 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             Explore all 4 applications to continue ({completedApps.filter(c => c).length}/4 completed)
           </p>
 
+          {/* Got It button for within-phase navigation */}
+          {!allAppsCompleted && (
+            <button
+              onClick={() => {
+                playSound('click');
+                if (selectedApp < realWorldApps.length - 1) {
+                  const nextApp = selectedApp + 1;
+                  setSelectedApp(nextApp);
+                  const newCompleted = [...completedApps];
+                  newCompleted[nextApp] = true;
+                  setCompletedApps(newCompleted);
+                } else {
+                  // Mark current app as completed if on last app
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginBottom: '12px',
+              }}
+            >
+              Got It
+            </button>
+          )}
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
@@ -1661,10 +1874,13 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
         }}>
+          {renderNavigationBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '20px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1717,10 +1933,13 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1887,8 +2106,11 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{

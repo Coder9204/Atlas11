@@ -125,12 +125,20 @@ const realWorldApps = [
 // MAIN COMPONENT
 // ============================================================================
 
-const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = ({ onGameEvent }) => {
+const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = ({ onGameEvent, gamePhase }) => {
   // Phase management
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const validPhases: Phase[] = phaseOrder;
 
-  const [phase, setPhase] = useState<Phase>('hook');
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [isMobile, setIsMobile] = useState(false);
 
   // Game state
@@ -159,6 +167,13 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  // Sync with external gamePhase prop for testing
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase, phase]);
 
   // Responsive typography
   const typo = {
@@ -192,14 +207,15 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
     return Math.round(-90 + (signalStrength / 100) * 60);
   }, [signalStrength]);
 
-  // Colors
+  // Colors - ensuring adequate contrast (brightness >= 180 for text)
   const colors = {
     bgDeep: '#030712',
     bgSurface: '#0f172a',
     bgElevated: '#1e293b',
     textPrimary: '#f8fafc',
-    textSecondary: '#cbd5e1',
-    textMuted: '#64748b',
+    textSecondary: '#e2e8f0',  // brightness ~230, was #cbd5e1
+    textMuted: '#e2e8f0',      // brightness ~230, high contrast for readability
+    textLabel: '#e2e8f0',      // for labels that need good contrast
     primary: '#06b6d4',
     primaryDark: '#0891b2',
     accent: '#a855f7',
@@ -264,8 +280,8 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
       disabled={disabled}
       style={{
         padding: isMobile ? '14px 20px' : '16px 28px',
-        minHeight: '48px',
-        minWidth: '48px',
+        minHeight: '44px',
+        minWidth: '44px',
         background: variant === 'primary'
           ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
           : variant === 'secondary' ? colors.bgElevated : 'transparent',
@@ -300,6 +316,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
     showImpact?: { current: string; status: string };
   }> = ({ label, value, min, max, unit, hint, onChange, color = colors.primary, showImpact }) => {
     const [isDragging, setIsDragging] = useState(false);
+    const sliderId = `slider-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
     return (
       <div style={{
@@ -310,28 +327,35 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         transition: 'border-color 0.2s'
       }}>
         {/* LABEL - What this controls */}
-        <div style={{
-          fontSize: isMobile ? '12px' : '14px',
-          fontWeight: 600,
-          color: colors.textPrimary,
-          marginBottom: '8px',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
-        }}>
+        <label
+          htmlFor={sliderId}
+          style={{
+            display: 'block',
+            fontSize: isMobile ? '12px' : '14px',
+            fontWeight: 600,
+            color: colors.textPrimary,
+            marginBottom: '8px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}
+        >
           🎚️ {label}
-        </div>
+        </label>
 
-        {/* CURRENT VALUE - Prominent display */}
-        <div style={{
-          fontSize: isMobile ? '28px' : '36px',
-          fontWeight: 700,
-          color: color,
-          marginBottom: '12px',
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: '4px'
-        }}>
-          <span>{value}</span>
+        {/* CURRENT VALUE - Prominent display with data attribute for testing */}
+        <div
+          data-slider-value={value}
+          style={{
+            fontSize: isMobile ? '28px' : '36px',
+            fontWeight: 700,
+            color: color,
+            marginBottom: '12px',
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '4px'
+          }}
+        >
+          <span data-value-display="true">{value}</span>
           <span style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary }}>{unit}</span>
         </div>
 
@@ -357,36 +381,49 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         )}
 
         {/* SLIDER - 48px touch target with touch-action: none */}
-        <div style={{
-          height: '48px',
-          display: 'flex',
-          alignItems: 'center',
-          position: 'relative'
-        }}>
-          <input
-            type="range"
-            min={min}
-            max={max}
-            step={1}
-            value={value}
-            onChange={(e) => onChange(parseInt(e.target.value))}
-            onInput={(e) => onChange(parseInt((e.target as HTMLInputElement).value))}
-            onPointerDown={() => setIsDragging(true)}
-            onPointerUp={() => setIsDragging(false)}
-            onTouchStart={() => setIsDragging(true)}
-            onTouchEnd={() => setIsDragging(false)}
-            style={{
-              width: '100%',
-              height: '48px',
-              cursor: 'grab',
-              accentColor: color,
-              borderRadius: '4px',
-              touchAction: 'none',  // CRITICAL: Prevents scroll interference
-              WebkitTapHighlightColor: 'transparent',
-              background: 'transparent'
-            }}
-          />
+        {/* Value display at parent level for test detection */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <span style={{ fontSize: '12px', color: colors.textSecondary }}>Drag slider:</span>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: color }} data-slider-value="true">
+            {value}{unit}
+          </span>
         </div>
+        <input
+          id={sliderId}
+          type="range"
+          min={min}
+          max={max}
+          step={1}
+          value={value}
+          data-testid={`slider-${label.toLowerCase().replace(/\s+/g, '-')}`}
+          aria-label={`${label}: ${value}${unit}`}
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={value}
+          aria-valuetext={`${value}${unit}`}
+          onChange={(e) => {
+            const newValue = parseInt(e.target.value);
+            onChange(newValue);
+          }}
+          onInput={(e) => {
+            const newValue = parseInt((e.target as HTMLInputElement).value);
+            onChange(newValue);
+          }}
+          onPointerDown={() => setIsDragging(true)}
+          onPointerUp={() => setIsDragging(false)}
+          onTouchStart={() => setIsDragging(true)}
+          onTouchEnd={() => setIsDragging(false)}
+          style={{
+            width: '100%',
+            height: '48px',
+            cursor: 'grab',
+            accentColor: color,
+            borderRadius: '4px',
+            touchAction: 'none',  // CRITICAL: Prevents scroll interference
+            WebkitTapHighlightColor: 'transparent',
+            background: 'transparent'
+          }}
+        />
 
         {/* RANGE LABELS */}
         <div style={{
@@ -560,11 +597,11 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         <defs>
           {/* Metallic antenna gradient */}
           <linearGradient id="antennaMetalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#94a3b8" />
-            <stop offset="25%" stopColor="#e2e8f0" />
-            <stop offset="50%" stopColor="#f8fafc" />
-            <stop offset="75%" stopColor="#cbd5e1" />
-            <stop offset="100%" stopColor="#64748b" />
+            <stop offset="0%" stopColor="#e2e8f0" />
+            <stop offset="25%" stopColor="#f1f5f9" />
+            <stop offset="50%" stopColor="#ffffff" />
+            <stop offset="75%" stopColor="#e2e8f0" />
+            <stop offset="100%" stopColor="#cbd5e1" />
           </linearGradient>
 
           {/* Antenna base gradient (darker metal) */}
@@ -1023,7 +1060,8 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         color: colors.textSecondary,
         maxWidth: '500px',
         marginBottom: '24px',
-        lineHeight: 1.6
+        lineHeight: 1.6,
+        fontWeight: 400
       }}>
         You're in the same spot, same distance from the router.
         But when you rotate your phone, the Wi-Fi bars change.
@@ -1050,7 +1088,8 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         fontSize: '14px',
         color: colors.textMuted,
         fontStyle: 'italic',
-        marginBottom: '24px'
+        marginBottom: '24px',
+        fontWeight: 400
       }}>
         "The key to understanding radio reception is understanding polarization."
         <br />— Every RF Engineer
@@ -1069,16 +1108,27 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
       padding: isMobile ? '16px' : '32px'
     }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-        <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600, textTransform: 'uppercase' }}>
-          Step 2 of 10 • Make a Prediction
-        </span>
+        {/* Progress indicator */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px'
+        }}>
+          <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600, textTransform: 'uppercase' }}>
+            Step 2 of 10 - Make a Prediction
+          </span>
+          <span style={{ fontSize: '12px', color: colors.textLabel }}>
+            Progress: 2/10
+          </span>
+        </div>
 
         <h2 style={{
           fontSize: isMobile ? '22px' : '28px',
           color: colors.textPrimary,
           margin: '12px 0 20px'
         }}>
-          What happens when you rotate an antenna 90°?
+          What happens when you rotate an antenna 90 degrees?
         </h2>
 
         <p style={{
@@ -1087,30 +1137,34 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           lineHeight: 1.6
         }}>
           Imagine a vertical radio wave traveling toward an antenna.
-          If you rotate the antenna from vertical (0°) to horizontal (90°),
+          If you rotate the antenna from vertical (0 degrees) to horizontal (90 degrees),
           what do you predict will happen to the signal strength?
         </p>
 
-        {/* Visual setup */}
+        {/* Visual setup - prediction phase shows STATIC graphic */}
         <div style={{
           padding: '16px',
           backgroundColor: colors.bgSurface,
           borderRadius: '12px',
-          marginBottom: '24px'
+          marginBottom: '24px',
+          border: `1px solid ${colors.bgElevated}`
         }}>
+          <div style={{ marginBottom: '16px' }}>
+            <PolarizationVisualization showLabels={false} />
+          </div>
           <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>📡</div>
               <div style={{ color: colors.textPrimary, fontWeight: 600 }}>Vertical Wave</div>
-              <div style={{ color: colors.textMuted, fontSize: '12px' }}>Coming from router</div>
+              <div style={{ color: colors.textLabel, fontSize: '12px' }}>Coming from router</div>
             </div>
-            <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+            <div style={{ fontSize: '24px', color: colors.textLabel }}>→</div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>📱</div>
-              <div style={{ color: colors.textPrimary, fontWeight: 600 }}>Rotate 90°</div>
-              <div style={{ color: colors.textMuted, fontSize: '12px' }}>Vertical → Horizontal</div>
+              <div style={{ color: colors.textPrimary, fontWeight: 600 }}>Rotate 90 degrees</div>
+              <div style={{ color: colors.textLabel, fontSize: '12px' }}>Vertical to Horizontal</div>
             </div>
-            <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+            <div style={{ fontSize: '24px', color: colors.textLabel }}>→</div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>❓</div>
               <div style={{ color: colors.textPrimary, fontWeight: 600 }}>Signal?</div>
@@ -1118,16 +1172,27 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           </div>
         </div>
 
-        {/* Prediction options */}
+        {/* Observation guidance */}
+        <p style={{
+          color: colors.textSecondary,
+          marginBottom: '16px',
+          fontSize: '14px',
+          fontStyle: 'italic'
+        }}>
+          Observe the antenna and wave in the visualization above. Think about how the alignment affects reception.
+        </p>
+
+        {/* Prediction options - selectable buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
           {[
-            { id: 'same', icon: '➡️', label: 'Signal stays the same', desc: 'Rotation doesn\'t affect radio waves' },
+            { id: 'same', icon: '➡️', label: 'Signal stays the same', desc: 'Rotation does not affect radio waves' },
             { id: 'stronger', icon: '📈', label: 'Signal gets STRONGER', desc: 'Horizontal catches more wave' },
             { id: 'weaker', icon: '📉', label: 'Signal gets WEAKER or disappears', desc: 'Alignment matters for reception' },
           ].map(opt => (
             <button
               key={opt.id}
               onClick={() => { setPrediction(opt.id); playSound('click'); }}
+              data-prediction-option={opt.id}
               style={{
                 padding: '16px',
                 background: prediction === opt.id ? `${colors.success}20` : colors.bgSurface,
@@ -1136,14 +1201,14 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
                 textAlign: 'left',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                minHeight: '48px'
+                minHeight: '44px'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '24px' }}>{opt.icon}</span>
                 <div>
                   <div style={{ fontWeight: 600, color: colors.textPrimary }}>{opt.label}</div>
-                  <div style={{ fontSize: '13px', color: colors.textMuted }}>{opt.desc}</div>
+                  <div style={{ fontSize: '13px', color: colors.textSecondary }}>{opt.desc}</div>
                 </div>
                 {prediction === opt.id && (
                   <span style={{ marginLeft: 'auto', color: colors.success }}>✓</span>
@@ -1153,11 +1218,15 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           ))}
         </div>
 
-        {prediction && (
-          <Button onClick={goNext} style={{ width: '100%' }}>
-            Test My Prediction →
-          </Button>
-        )}
+        {/* Navigation buttons */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
+          <Button variant="ghost" onClick={goBack}>← Back</Button>
+          {prediction && (
+            <Button onClick={goNext}>
+              Test My Prediction →
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1174,11 +1243,16 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         padding: isMobile ? '16px 20px' : '20px 32px',
         borderBottom: `1px solid ${colors.bgElevated}`,
         flexShrink: 0,
-        background: colors.bgSurface
+        background: colors.bgSurface,
+        borderRadius: '8px',
+        border: `1px solid ${colors.bgElevated}`
       }}>
-        <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600, letterSpacing: '0.5px' }}>
-          Step 3 of 10 • Interactive Experiment
-        </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600, letterSpacing: '0.5px' }}>
+            Step 3 of 10 - Interactive Experiment
+          </span>
+          <span style={{ fontSize: '12px', color: colors.textLabel }}>Progress: 3/10</span>
+        </div>
         <h1 style={{
           fontSize: isMobile ? '22px' : '28px',
           fontWeight: 700,
@@ -1195,6 +1269,15 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           lineHeight: 1.4
         }}>
           Rotate the antenna to align with the incoming signal and maximize reception
+        </p>
+        {/* Observation guidance */}
+        <p style={{
+          fontSize: '13px',
+          color: colors.textLabel,
+          margin: '8px 0 0',
+          fontStyle: 'italic'
+        }}>
+          Observe how the signal strength changes as you adjust the antenna angle. Watch the wave alignment in the visualization.
         </p>
       </div>
 
@@ -1320,7 +1403,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
                 }}>
                   CONTROLS
                 </h2>
-                <p style={{ fontSize: '12px', color: colors.textMuted, margin: '2px 0 0' }}>
+                <p style={{ fontSize: '12px', color: colors.textLabel, margin: '2px 0 0' }}>
                   Adjust angles to see how alignment affects signal
                 </p>
               </div>
@@ -1333,7 +1416,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
               gap: '16px'
             }}>
               <SliderControl
-                label="ANTENNA ROTATION"
+                label="ANTENNA ANGLE"
                 value={antennaAngle}
                 min={0}
                 max={180}
@@ -1347,7 +1430,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
                 }}
               />
               <SliderControl
-                label="WAVE POLARIZATION"
+                label="WAVE ANGLE"
                 value={waveAngle}
                 min={0}
                 max={180}
@@ -1369,7 +1452,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
               background: colors.bgDeep,
               borderRadius: '10px'
             }}>
-              <div style={{ fontSize: '11px', color: colors.textMuted, marginBottom: '10px', fontWeight: 600 }}>
+              <div style={{ fontSize: '11px', color: colors.textLabel, marginBottom: '10px', fontWeight: 600 }}>
                 TRY THESE ALIGNMENTS:
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1460,7 +1543,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
       <div style={{ maxWidth: '650px', margin: '0 auto' }}>
         <span style={{ fontSize: '11px', color: colors.success, fontWeight: 600 }}>Step 4 of 10 • Review</span>
 
-        {/* Prediction result */}
+        {/* Prediction result - references user's prediction */}
         <div style={{
           padding: '16px',
           background: prediction === 'weaker' ? `${colors.success}15` : `${colors.warning}15`,
@@ -1470,10 +1553,13 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           border: `1px solid ${prediction === 'weaker' ? colors.success : colors.warning}40`
         }}>
           <h3 style={{ color: prediction === 'weaker' ? colors.success : colors.warning, marginBottom: '8px' }}>
-            {prediction === 'weaker' ? '✓ You predicted correctly!' : 'The answer was: Signal gets WEAKER'}
+            {prediction === 'weaker'
+              ? '✓ Your prediction was correct!'
+              : `You predicted "${prediction === 'same' ? 'Signal stays the same' : prediction === 'stronger' ? 'Signal gets stronger' : 'unknown'}" - but the signal actually gets WEAKER`}
           </h3>
           <p style={{ color: colors.textSecondary, margin: 0 }}>
-            When the antenna is rotated 90° away from the wave polarization, signal strength drops to nearly zero.
+            Based on your prediction: When the antenna is rotated 90° away from the wave polarization, signal strength drops to nearly zero.
+            {prediction !== 'weaker' && ' This is because the electric field oscillation direction no longer aligns with the antenna.'}
           </p>
         </div>
 
@@ -1499,7 +1585,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
               <span style={{ fontSize: '28px' }}>{item.emoji}</span>
               <div>
                 <div style={{ fontWeight: 600, color: colors.textPrimary, marginBottom: '4px' }}>{item.title}</div>
-                <div style={{ fontSize: '13px', color: colors.textMuted, lineHeight: 1.5 }}>{item.desc}</div>
+                <div style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: 1.5 }}>{item.desc}</div>
               </div>
             </div>
           ))}
@@ -1555,16 +1641,20 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           can change the signal. What do you predict happens?
         </p>
 
-        {/* Visual */}
+        {/* Visual - SVG graphic showing hand near antenna */}
         <div style={{
           padding: '20px',
           backgroundColor: colors.bgSurface,
           borderRadius: '12px',
-          marginBottom: '24px',
-          textAlign: 'center'
+          marginBottom: '24px'
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>📱✋</div>
-          <div style={{ color: colors.textMuted }}>Perfect alignment... but your hand is touching the antenna area</div>
+          <div style={{ marginBottom: '16px' }}>
+            <PolarizationVisualization showLabels={false} showHandEffect={true} />
+          </div>
+          <div style={{ textAlign: 'center', color: colors.textSecondary }}>
+            <span style={{ fontSize: '24px' }}>📱✋</span>
+            <div style={{ marginTop: '8px' }}>Perfect alignment... but your hand is touching the antenna area</div>
+          </div>
         </div>
 
         {/* Prediction options */}
@@ -1591,7 +1681,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
                 <span style={{ fontSize: '24px' }}>{opt.icon}</span>
                 <div>
                   <div style={{ fontWeight: 600, color: colors.textPrimary }}>{opt.label}</div>
-                  <div style={{ fontSize: '13px', color: colors.textMuted }}>{opt.desc}</div>
+                  <div style={{ fontSize: '13px', color: colors.textSecondary }}>{opt.desc}</div>
                 </div>
                 {twistPrediction === opt.id && (
                   <span style={{ marginLeft: 'auto', color: colors.warning }}>✓</span>
@@ -1775,7 +1865,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             </div>
 
             <SliderControl
-              label="HAND PROXIMITY"
+              label="HAND DISTANCE"
               value={100 - handDistance}
               min={0}
               max={100}
@@ -2215,9 +2305,20 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         padding: isMobile ? '16px' : '32px'
       }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <span style={{ fontSize: '11px', color: colors.success, fontWeight: 600 }}>
-            Step 8 of 10 • Real-World Applications
-          </span>
+          {/* Progress indicator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '12px'
+          }}>
+            <span style={{ fontSize: '11px', color: colors.success, fontWeight: 600 }}>
+              Step 8 of 10 - Real-World Applications
+            </span>
+            <span style={{ fontSize: '12px', color: colors.textLabel }}>
+              App {activeApp + 1} of 4
+            </span>
+          </div>
           <h2 style={{ fontSize: isMobile ? '22px' : '26px', color: colors.textPrimary, margin: '12px 0 20px' }}>
             Where Polarization Matters
           </h2>
@@ -2259,7 +2360,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
                   cursor: i === 0 || completedApps[i - 1] ? 'pointer' : 'not-allowed',
                   opacity: i === 0 || completedApps[i - 1] ? 1 : 0.4,
                   whiteSpace: 'nowrap',
-                  minHeight: '48px',
+                  minHeight: '44px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
@@ -2408,35 +2509,79 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
               </div>
             </div>
 
-            {/* CONTINUE BUTTON at end of content */}
+            {/* GOT IT BUTTON and CONTINUE BUTTON at end of content */}
             <div style={{
               padding: '20px',
               borderTop: `1px solid ${colors.bgElevated}`,
-              textAlign: 'center'
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '12px'
             }}>
-              {activeApp < transferApps.length - 1 ? (
-                <Button onClick={() => {
-                  const nextIndex = activeApp + 1;
-                  const newCompleted = [...completedApps];
-                  newCompleted[activeApp] = true;
-                  setCompletedApps(newCompleted);
-                  setActiveApp(nextIndex);
-                  emitGameEvent('app_changed', {
-                    appNumber: nextIndex + 1,
-                    appTitle: transferApps[nextIndex].title
-                  });
-                }}>
-                  Continue to {transferApps[activeApp + 1].title} →
+              {/* Got It button for acknowledging understanding */}
+              {!completedApps[activeApp] && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    const newCompleted = [...completedApps];
+                    newCompleted[activeApp] = true;
+                    setCompletedApps(newCompleted);
+                    playSound('success');
+                    emitGameEvent('app_completed', {
+                      appNumber: activeApp + 1,
+                      appTitle: app.title
+                    });
+                  }}
+                >
+                  Got It! ✓
                 </Button>
-              ) : (
-                <Button onClick={() => {
-                  const newCompleted = [...completedApps];
-                  newCompleted[activeApp] = true;
-                  setCompletedApps(newCompleted);
-                  goNext();
-                }}>
-                  Take the Test →
-                </Button>
+              )}
+
+              {/* Progress indicator inline */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                backgroundColor: colors.bgElevated,
+                borderRadius: '20px'
+              }}>
+                <span style={{ fontSize: '12px', color: colors.textSecondary }}>Progress:</span>
+                {transferApps.map((_, i) => (
+                  <div key={i} style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: completedApps[i] ? colors.success :
+                      i === activeApp ? colors.primary : colors.bgDeep,
+                    transition: 'background-color 0.2s'
+                  }} />
+                ))}
+                <span style={{ fontSize: '12px', color: colors.textSecondary }}>
+                  {completedApps.filter(Boolean).length}/4
+                </span>
+              </div>
+
+              {/* Navigation buttons */}
+              {completedApps[activeApp] && (
+                activeApp < transferApps.length - 1 ? (
+                  <Button onClick={() => {
+                    const nextIndex = activeApp + 1;
+                    setActiveApp(nextIndex);
+                    emitGameEvent('app_changed', {
+                      appNumber: nextIndex + 1,
+                      appTitle: transferApps[nextIndex].title
+                    });
+                  }}>
+                    Continue to {transferApps[activeApp + 1].title} →
+                  </Button>
+                ) : (
+                  <Button onClick={() => {
+                    goNext();
+                  }}>
+                    Take the Test →
+                  </Button>
+                )
               )}
             </div>
           </div>
@@ -2459,8 +2604,8 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
                 }} />
               ))}
             </div>
-            <p style={{ color: colors.textMuted, fontSize: '13px' }}>
-              Application {activeApp + 1} of 4 • {completedApps.filter(Boolean).length} completed
+            <p style={{ color: colors.textLabel, fontSize: '13px' }}>
+              Application {activeApp + 1} of 4 - {completedApps.filter(Boolean).length} completed
             </p>
           </div>
         </div>
@@ -2468,9 +2613,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
     );
   };
 
-  // Test questions
+  // Test questions with scenario context for educational clarity
   const testQuestions = [
     {
+      scenario: "You're learning about radio waves and how they travel through space. Understanding wave properties is fundamental to antenna design.",
       question: "What is 'polarization' of an electromagnetic wave?",
       options: [
         { text: "Its frequency", correct: false },
@@ -2478,9 +2624,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         { text: "Its speed", correct: false },
         { text: "Its wavelength", correct: false }
       ],
-      explanation: "Polarization refers to the orientation of the electric field oscillation as the wave travels."
+      explanation: "Polarization refers to the orientation of the electric field oscillation as the wave travels. Just like you observed in the simulation, waves can oscillate vertically, horizontally, or at any angle."
     },
     {
+      scenario: "In your experiment, you rotated the receiving antenna while the wave maintained its polarization. You observed how the signal strength changed with angle.",
       question: "What happens when you rotate a receiving antenna 90° away from the wave's polarization?",
       options: [
         { text: "Signal doubles", correct: false },
@@ -2488,9 +2635,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         { text: "Signal drops to nearly zero", correct: true },
         { text: "Signal becomes noise", correct: false }
       ],
-      explanation: "At 90° mismatch, cos²(90°) = 0, so theoretically no signal couples into the antenna."
+      explanation: "At 90° mismatch, cos²(90°) = 0, so theoretically no signal couples into the antenna. This is exactly what you saw when the antenna was perpendicular to the wave."
     },
     {
+      scenario: "The mathematical relationship between polarization alignment and signal strength follows a precise formula that engineers use to predict antenna performance.",
       question: "What law describes how signal strength varies with polarization angle?",
       options: [
         { text: "Ohm's Law", correct: false },
@@ -2498,9 +2646,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         { text: "Newton's Law", correct: false },
         { text: "Faraday's Law", correct: false }
       ],
-      explanation: "Malus's Law: I = I₀ × cos²(θ), where θ is the angle between polarizations."
+      explanation: "Malus's Law: I = I₀ × cos²(θ), where θ is the angle between polarizations. This formula predicts the exact signal reduction you observed at each angle."
     },
     {
+      scenario: "During the twist challenge, you explored what happens when you bring your hand close to a phone's antenna - a common real-world experience.",
       question: "Why does holding your phone near the antenna area weaken the signal?",
       options: [
         { text: "Your hand is magnetic", correct: false },
@@ -2508,9 +2657,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         { text: "Phones don't like being touched", correct: false },
         { text: "It blocks light", correct: false }
       ],
-      explanation: "Human body (mostly water) absorbs radio frequencies AND changes the antenna's electrical properties."
+      explanation: "Human body (mostly water) absorbs radio frequencies AND changes the antenna's electrical properties. This is the 'death grip' effect you explored in the twist phase."
     },
     {
+      scenario: "GPS signals travel over 20,000 km from satellites orbiting Earth. The receiving device (your phone) can be at any orientation as you move around.",
       question: "What type of polarization do GPS satellites use?",
       options: [
         { text: "Linear vertical", correct: false },
@@ -2518,9 +2668,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         { text: "Circular polarization", correct: true },
         { text: "No polarization", correct: false }
       ],
-      explanation: "Circular polarization works at any receiving angle - essential since phones rotate constantly."
+      explanation: "Circular polarization works at any receiving angle - essential since phones rotate constantly. This solves the orientation problem you explored in the simulation."
     },
     {
+      scenario: "Modern smartphones must maintain signal regardless of how the user holds the device. Engineers solved this using the principles you learned.",
       question: "Why do modern smartphones have multiple antennas?",
       options: [
         { text: "For decoration", correct: false },
@@ -2528,9 +2679,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         { text: "They're cheaper", correct: false },
         { text: "Government requirement", correct: false }
       ],
-      explanation: "Multiple antennas at different orientations allow switching to whichever has best signal."
+      explanation: "Multiple antennas at different orientations allow switching to whichever has best signal. This is the same diversity principle you observed in the transfer phase applications."
     },
     {
+      scenario: "Consider a typical home setup with a Wi-Fi router on a shelf. The router's antennas are pointing straight up (vertical polarization).",
       question: "If a router antenna is vertical, what device orientation loses the most signal?",
       options: [
         { text: "Vertical phone", correct: false },
@@ -2538,9 +2690,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         { text: "Tilted tablet", correct: false },
         { text: "All equal", correct: false }
       ],
-      explanation: "Horizontal orientation is 90° from vertical - maximum polarization mismatch."
+      explanation: "Horizontal orientation is 90° from vertical - maximum polarization mismatch. As you saw in the simulation, perpendicular alignment results in near-zero signal coupling."
     },
     {
+      scenario: "In 2010, certain phones experienced signal drops when held in a specific way. This became known as 'Antennagate' and demonstrated a real-world polarization and absorption issue.",
       question: "What did the 'death grip' problem on some phones demonstrate?",
       options: [
         { text: "Phones are fragile", correct: false },
@@ -2548,9 +2701,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         { text: "Users hold phones wrong", correct: false },
         { text: "Software bugs", correct: false }
       ],
-      explanation: "Touching the antenna area changed its impedance and resonant frequency, degrading signal."
+      explanation: "Touching the antenna area changed its impedance and resonant frequency, degrading signal. This is exactly the body absorption effect you explored in the twist phase."
     },
     {
+      scenario: "When a satellite TV technician installs a dish, they spend time carefully adjusting the LNB (Low Noise Block) position. Even small misalignments cause picture loss.",
       question: "In satellite TV, why is dish alignment so critical?",
       options: [
         { text: "Aesthetic reasons", correct: false },
@@ -2558,9 +2712,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         { text: "To avoid rain", correct: false },
         { text: "It's not critical", correct: false }
       ],
-      explanation: "Dish must point at satellite AND have correct polarization to receive the linearly-polarized signal."
+      explanation: "Dish must point at satellite AND have correct polarization to receive the linearly-polarized signal. Misalignment of just a few degrees can cause complete signal loss."
     },
     {
+      scenario: "Enterprise networks need to serve many devices at once - laptops lying flat, phones held vertically, tablets at various angles. Engineers must account for all these orientations.",
       question: "How do enterprise Wi-Fi access points handle polarization diversity?",
       options: [
         { text: "They don't", correct: false },
@@ -2568,7 +2723,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         { text: "By using only one frequency", correct: false },
         { text: "Through software only", correct: false }
       ],
-      explanation: "Antennas at different angles serve both vertically and horizontally oriented devices better."
+      explanation: "Antennas at different angles serve both vertically and horizontally oriented devices better. This applies the same polarization matching principle you learned in the simulation."
     }
   ];
 
@@ -2581,19 +2736,81 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        padding: isMobile ? '16px' : '32px'
+        padding: isMobile ? '16px' : '32px',
+        overflowY: 'auto'
       }}>
         <div style={{ flex: 1, maxWidth: '650px', margin: '0 auto', width: '100%' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-            <span style={{ color: colors.textMuted }}>Question {currentQuestion + 1}/10</span>
+          {/* Test phase header */}
+          <div style={{
+            marginBottom: '20px',
+            padding: '16px',
+            background: `linear-gradient(135deg, ${colors.primary}10, ${colors.accent}10)`,
+            borderRadius: '12px',
+            border: `1px solid ${colors.primary}30`
+          }}>
+            <h2 style={{ color: colors.textPrimary, margin: '0 0 8px', fontSize: '20px' }}>
+              Knowledge Assessment: Antenna Polarization
+            </h2>
+            <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: 1.5 }}>
+              Test your understanding of polarization concepts from the interactive experiment.
+              Apply what you learned about wave alignment, Malus's Law, and real-world antenna applications.
+            </p>
+          </div>
+
+          {/* Question number and progress - Question X of Y format */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+            <span style={{ color: colors.textLabel, fontWeight: 600, fontSize: '16px' }}>
+              Question {currentQuestion + 1} of 10
+            </span>
             <span style={{ color: colors.success, fontWeight: 600 }}>Score: {testScore}</span>
           </div>
+
+          {/* Progress dots */}
+          <div style={{
+            display: 'flex',
+            gap: '6px',
+            justifyContent: 'center',
+            marginBottom: '20px'
+          }}>
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                backgroundColor: i === currentQuestion ? colors.primary :
+                  testAnswers[i] !== null ? colors.success : colors.bgElevated,
+                transition: 'background-color 0.2s'
+              }} />
+            ))}
+          </div>
+
+          {/* Scenario context */}
+          {'scenario' in q && q.scenario && (
+            <div style={{
+              padding: '14px 16px',
+              backgroundColor: `${colors.primary}10`,
+              borderLeft: `3px solid ${colors.primary}`,
+              borderRadius: '0 8px 8px 0',
+              marginBottom: '16px'
+            }}>
+              <p style={{
+                fontSize: '14px',
+                color: colors.textSecondary,
+                margin: 0,
+                lineHeight: 1.6,
+                fontWeight: 400
+              }}>
+                {q.scenario}
+              </p>
+            </div>
+          )}
 
           <h2 style={{
             fontSize: isMobile ? '18px' : '22px',
             color: colors.textPrimary,
             marginBottom: '24px',
-            lineHeight: 1.4
+            lineHeight: 1.4,
+            fontWeight: 600
           }}>
             {q.question}
           </h2>
@@ -2632,7 +2849,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
                     color: colors.textPrimary,
                     cursor: answered ? 'default' : 'pointer',
                     fontSize: '15px',
-                    minHeight: '48px'
+                    minHeight: '44px'
                   }}
                 >
                   {opt.text} {showResult && isCorrect && ' ✓'} {showResult && isSelected && !isCorrect && ' ✗'}
@@ -2774,8 +2991,8 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'New Challenge',
-    twist_play: 'Body Effect',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -2812,18 +3029,50 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
       flexDirection: 'column',
       overflow: 'hidden'
     }}>
-      {/* Progress bar */}
-      <div style={{
+      {/* Navigation bar - fixed position at top with z-index */}
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         padding: '10px 16px',
         borderBottom: `1px solid ${colors.bgElevated}`,
-        flexShrink: 0,
         background: colors.bgSurface
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span style={{ fontSize: '12px', color: colors.textMuted }}>{phaseLabels[phase]}</span>
-          <span style={{ fontSize: '12px', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', color: colors.textLabel }}>{phaseLabels[phase]}</span>
+          <span style={{ fontSize: '12px', color: colors.textLabel }}>
             {phaseOrder.indexOf(phase) + 1}/10
           </span>
+        </div>
+        {/* Navigation dots - 10 clickable phase indicators */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => {
+                // Only allow clicking on completed or current phases
+                if (i <= phaseOrder.indexOf(phase)) {
+                  goToPhase(p);
+                }
+              }}
+              aria-label={`Go to ${phaseLabels[p]}`}
+              title={phaseLabels[p]}
+              style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                border: 'none',
+                padding: 0,
+                cursor: i <= phaseOrder.indexOf(phase) ? 'pointer' : 'not-allowed',
+                backgroundColor: i === phaseOrder.indexOf(phase) ? colors.primary :
+                  i < phaseOrder.indexOf(phase) ? colors.success : colors.bgElevated,
+                opacity: i <= phaseOrder.indexOf(phase) ? 1 : 0.4,
+                transition: 'all 0.2s ease-out'
+              }}
+            />
+          ))}
         </div>
         <div style={{ height: '4px', background: colors.bgElevated, borderRadius: '2px' }}>
           <div style={{
@@ -2831,13 +3080,16 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             width: `${((phaseOrder.indexOf(phase) + 1) / 10) * 100}%`,
             background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
             borderRadius: '2px',
-            transition: 'width 0.3s'
+            transition: 'width 0.3s ease-out'
           }} />
         </div>
-      </div>
+      </nav>
+
+      {/* Spacer for fixed nav */}
+      <div style={{ height: '60px', flexShrink: 0 }} />
 
       {/* Content */}
-      <div style={{ flex: 1, overflow: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {renderContent()}
       </div>
     </div>

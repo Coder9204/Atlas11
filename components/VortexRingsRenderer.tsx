@@ -10,7 +10,7 @@ interface VortexRingsRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -1161,6 +1161,65 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     </div>
   );
 
+  const renderNavBar = (showBack: boolean = true, canProceed: boolean = true, buttonText: string = 'Next') => (
+    <nav
+      aria-label="Game navigation"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 24px',
+        background: colors.bgDark,
+        borderBottom: `1px solid rgba(255,255,255,0.1)`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1001,
+      }}
+    >
+      {showBack ? (
+        <button
+          onClick={() => window.history.back()}
+          aria-label="Back"
+          style={{
+            padding: '10px 20px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`,
+            background: 'transparent',
+            color: colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            fontSize: '14px',
+          }}
+        >
+          Back
+        </button>
+      ) : (
+        <div style={{ width: '80px' }} />
+      )}
+      <button
+        onClick={onPhaseComplete}
+        disabled={!canProceed}
+        aria-label={buttonText}
+        style={{
+          padding: '10px 24px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          color: canProceed ? 'white' : colors.textMuted,
+          fontWeight: 'bold',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontSize: '14px',
+        }}
+      >
+        {buttonText}
+      </button>
+    </nav>
+  );
+
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed',
@@ -1172,13 +1231,14 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
       justifyContent: 'flex-end',
-      zIndex: 1000,
+      zIndex: 1001,
     }}>
       <button
         onClick={onPhaseComplete}
         disabled={disabled && !canProceed}
         style={{
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
@@ -1197,7 +1257,8 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(false, true, 'Make a Prediction')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Vortex Rings
@@ -1247,7 +1308,8 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, !!prediction, 'Test My Prediction')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1276,6 +1338,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
@@ -1300,11 +1363,24 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, true, 'Continue to Review')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Vortex Rings</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust aperture, tap strength, and viscosity to see how rings behave
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.15)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Watch how ring size, speed, and persistence change as you adjust parameters. Notice the rotating vortex cores on either side of the ring.
             </p>
           </div>
 
@@ -1337,7 +1413,8 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, true, 'Next: A Twist!')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1388,7 +1465,8 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, !!twistPrediction, 'Test My Prediction')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1422,6 +1500,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1446,11 +1525,24 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, true, 'See the Explanation')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Fog Visualization</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Toggle fog to see the vortex ring structure revealed
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.15)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.warning}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.warning }}>Observe:</strong> Toggle fog ON and tap the membrane. Watch how the fog reveals the spiral structure inside the vortex ring as it travels.
             </p>
           </div>
 
@@ -1462,6 +1554,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
               style={{
                 width: '100%',
                 padding: '16px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: showFog ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                 background: showFog ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1503,7 +1596,8 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, true, 'Apply This Knowledge')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1552,9 +1646,12 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const [currentAppIndex, setCurrentAppIndex] = useState(0);
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, transferCompleted.size >= 4, 'Take the Test')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1562,8 +1659,8 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
             <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               Vortex rings appear throughout nature and technology
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+              Complete all 4 applications to unlock the test ({transferCompleted.size}/4 completed)
             </p>
           </div>
 
@@ -1589,13 +1686,36 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                  style={{ padding: '8px 16px', minHeight: '44px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
                 >
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  {index < transferApplications.length - 1 && !transferCompleted.has(index + 1) && (
+                    <button
+                      onClick={() => {
+                        const nextCard = document.getElementById(`transfer-app-${index + 1}`);
+                        nextCard?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        minHeight: '44px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: colors.accent,
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Got It - Next Application
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -1611,7 +1731,8 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderNavBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1650,11 +1771,12 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, false, 'Submit')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary, fontSize: '16px', fontWeight: 'bold' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1666,18 +1788,18 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', minHeight: '44px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
                   {opt.text}
                 </button>
               ))}
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
             )}
           </div>
         </div>
@@ -1689,7 +1811,8 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(true, true, 'Complete Game')}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>MASTERY</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

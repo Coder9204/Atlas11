@@ -345,12 +345,15 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#9CA3AF',
     border: '#2a2a3a',
     tool: '#3B82F6',
     confidence: '#8B5CF6',
   };
+
+  // Secondary color for specific contrast requirements
+  const textSecondaryAlt = '#94a3b8';
 
   const typo = {
     h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
@@ -407,7 +410,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     const commands = promptMode === 'naive' ? naiveCommands : toolAwareCommands;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="tapBrainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#a855f7" />
@@ -473,8 +476,8 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           {promptMode === 'tool_aware' ? (
             <>
               <text x="-50" y="32" fill={colors.success} fontSize="8" fontFamily="monospace">## Commands</text>
-              <text x="-50" y="44" fill={colors.textSecondary} fontSize="7" fontFamily="monospace">deploy --env prod</text>
-              <text x="-50" y="56" fill={colors.textSecondary} fontSize="7" fontFamily="monospace">test --all</text>
+              <text x="-50" y="44" fill={colors.textSecondary} fontSize="8" fontFamily="monospace">deploy --env prod</text>
+              <text x="-50" y="56" fill={colors.textSecondary} fontSize="8" fontFamily="monospace">test --all</text>
             </>
           ) : (
             <>
@@ -492,24 +495,24 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           <circle cx="10" cy="9" r="3" fill="#ef4444" />
           <circle cx="20" cy="9" r="3" fill="#f59e0b" />
           <circle cx="30" cy="9" r="3" fill="#10b981" />
-          <text x={width * 0.16} y="12" textAnchor="middle" fill={colors.textMuted} fontSize="7">Commands</text>
+          <text x={width * 0.16} y="12" textAnchor="middle" fill={colors.textMuted} fontSize="8">Commands</text>
 
           {commands.map((cmd, i) => (
-            <g key={i} transform={`translate(8, ${25 + i * 23})`}>
+            <g key={i} transform={`translate(8, ${25 + i * 24})`}>
               <circle
                 cx="6"
                 cy="6"
                 r="5"
                 fill={cmd.status === 'correct' ? colors.success : cmd.status === 'partial' ? colors.warning : colors.error}
               />
-              <text x="6" y="9" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">
+              <text x="6" y="9" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
                 {cmd.status === 'correct' ? '\u2713' : cmd.status === 'partial' ? '~' : '\u2717'}
               </text>
-              <text x="16" y="5" fill={colors.textSecondary} fontSize="7" fontFamily="monospace">
-                $ {cmd.cmd.substring(0, 18)}{cmd.cmd.length > 18 ? '...' : ''}
+              <text x="16" y="5" fill={colors.textSecondary} fontSize="8" fontFamily="monospace">
+                $ {cmd.cmd.substring(0, 16)}{cmd.cmd.length > 16 ? '..' : ''}
               </text>
-              <text x="16" y="15" fill={colors.textMuted} fontSize="6">
-                {cmd.note.substring(0, 22)}
+              <text x="16" y="16" fill={colors.textMuted} fontSize="8">
+                {cmd.note.substring(0, 18)}
               </text>
             </g>
           ))}
@@ -599,24 +602,48 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
-      height: '4px',
+      height: '56px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderBottom: `1px solid ${colors.border}`,
     }}>
+      <span style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} - {phaseOrder.indexOf(phase) + 1} of {phaseOrder.length}
+      </span>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <>
+      {renderNavBar()}
       <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
+        position: 'fixed',
+        top: '56px',
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: colors.bgSecondary,
+        zIndex: 1000,
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+          background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+    </>
   );
 
   // Navigation dots
@@ -658,6 +685,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -675,7 +703,9 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -694,7 +724,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
 
         <p style={{
           ...typo.body,
-          color: colors.textSecondary,
+          color: textSecondaryAlt,
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
@@ -742,10 +772,12 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -833,16 +865,31 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Tool-Aware Prompting Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Toggle settings to see how documentation affects command accuracy.
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}22`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+              Observe: Try switching between modes and toggling options. Watch how the metrics change!
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -974,10 +1021,12 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why LLMs Hallucinate Commands
           </h2>
@@ -1050,10 +1099,12 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1144,16 +1195,31 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             CLAUDE.md: Persistent Tool Documentation
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             A special file that Claude reads automatically in your repository
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}22`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+              Observe: Explore the CLAUDE.md structure and its benefits for persistent documentation.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1250,10 +1316,12 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             CLAUDE.md Best Practices
           </h2>
@@ -1337,19 +1405,25 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {completedCount} of {realWorldApps.length} explored
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1454,6 +1528,31 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
                 </div>
               ))}
             </div>
+
+            {/* Got It / Next Application button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Auto advance to next uncompleted app or stay
+                const nextUncompletedIndex = newCompleted.findIndex((c, i) => !c && i !== selectedApp);
+                if (nextUncompletedIndex !== -1) {
+                  setSelectedApp(nextUncompletedIndex);
+                } else if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginTop: '16px',
+                background: completedApps[selectedApp] ? colors.bgSecondary : `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+              }}
+            >
+              {completedApps[selectedApp] ? 'Next Application' : 'Got It'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1480,10 +1579,12 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '20px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1536,10 +1637,12 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1706,7 +1809,9 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 

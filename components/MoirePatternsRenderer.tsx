@@ -77,16 +77,19 @@ const realWorldApps = [
 ];
 
 interface MoirePatternsRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
+const PHASE_ORDER = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#cbd5e1',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -103,11 +106,19 @@ const colors = {
 };
 
 const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
-  phase,
+  gamePhase,
+  phase: phaseProp,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state for self-managing mode
+  const [internalPhase, setInternalPhase] = useState<typeof PHASE_ORDER[number]>('hook');
+
+  // Use gamePhase prop if provided, otherwise use internal phase management
+  const phase = gamePhase || phaseProp || internalPhase;
+  const currentPhaseIndex = PHASE_ORDER.indexOf(phase as typeof PHASE_ORDER[number]);
+
   // Simulation state
   const [angle, setAngle] = useState(5);
   const [spacing1, setSpacing1] = useState(10);
@@ -120,6 +131,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -157,6 +169,32 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
     }, 50);
     return () => clearInterval(interval);
   }, [isAnimating]);
+
+  // Navigation handlers
+  const handleNext = useCallback(() => {
+    if (onPhaseComplete) {
+      onPhaseComplete();
+    } else {
+      // Self-managing mode: advance to next phase
+      const nextIndex = currentPhaseIndex + 1;
+      if (nextIndex < PHASE_ORDER.length) {
+        setInternalPhase(PHASE_ORDER[nextIndex]);
+      }
+    }
+  }, [onPhaseComplete, currentPhaseIndex]);
+
+  const handleBack = useCallback(() => {
+    const prevIndex = currentPhaseIndex - 1;
+    if (prevIndex >= 0) {
+      setInternalPhase(PHASE_ORDER[prevIndex]);
+    }
+  }, [currentPhaseIndex]);
+
+  const handlePhaseClick = useCallback((index: number) => {
+    if (index >= 0 && index < PHASE_ORDER.length) {
+      setInternalPhase(PHASE_ORDER[index]);
+    }
+  }, []);
 
   const predictions = [
     { id: 'nothing', label: 'Nothing special - just two overlapping grids' },
@@ -308,6 +346,130 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
     setTestScore(score);
     setTestSubmitted(true);
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+  };
+
+  // Navigation bar component
+  const renderNavBar = () => {
+    const progress = ((currentPhaseIndex + 1) / PHASE_ORDER.length) * 100;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.95) 100%)',
+        borderBottom: '1px solid rgba(139, 92, 246, 0.3)',
+        backdropFilter: 'blur(12px)',
+        padding: '12px 16px',
+      }}>
+        {/* Progress bar */}
+        <div
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Progress: ${currentPhaseIndex + 1} of ${PHASE_ORDER.length} phases`}
+          style={{
+            width: '100%',
+            height: '4px',
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '2px',
+            marginBottom: '12px',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{
+            width: `${progress}%`,
+            height: '100%',
+            background: 'linear-gradient(90deg, #8b5cf6 0%, #06b6d4 100%)',
+            borderRadius: '2px',
+            transition: 'width 0.3s ease',
+          }} />
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          {/* Back button */}
+          <button
+            onClick={handleBack}
+            disabled={currentPhaseIndex === 0}
+            aria-label="Back"
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              padding: '10px 16px',
+              borderRadius: '10px',
+              border: `1px solid ${currentPhaseIndex === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(139, 92, 246, 0.4)'}`,
+              background: currentPhaseIndex === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(139, 92, 246, 0.1)',
+              color: currentPhaseIndex === 0 ? colors.textMuted : colors.textSecondary,
+              cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease',
+              opacity: currentPhaseIndex === 0 ? 0.5 : 1,
+            }}
+          >
+            Back
+          </button>
+
+          {/* Phase dots */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {PHASE_ORDER.map((p, index) => (
+              <button
+                key={p}
+                onClick={() => handlePhaseClick(index)}
+                aria-label={`${p} phase`}
+                aria-current={index === currentPhaseIndex ? 'step' : undefined}
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: index === currentPhaseIndex
+                    ? 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)'
+                    : index < currentPhaseIndex
+                      ? colors.success
+                      : 'rgba(255,255,255,0.2)',
+                  boxShadow: index === currentPhaseIndex ? '0 0 8px rgba(139, 92, 246, 0.6)' : 'none',
+                  transition: 'all 0.2s ease',
+                  padding: 0,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Next button */}
+          <button
+            onClick={handleNext}
+            aria-label="Next"
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              padding: '10px 16px',
+              borderRadius: '10px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 15px rgba(139, 92, 246, 0.3)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Next
+          </button>
+        </div>
+      </nav>
+    );
   };
 
   // Premium SVG Visualization with comprehensive defs
@@ -571,7 +733,6 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
                 stroke="url(#moirInterferenceGradient)"
                 strokeWidth="2"
                 opacity={0.3}
-                filter="url(#moirInterferenceFilter)"
               />
             )}
           </g>
@@ -584,7 +745,6 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             fill="none"
             stroke="url(#moirFrameGradient)"
             strokeWidth="4"
-            filter="url(#moirPrimaryGlow)"
           />
           <circle
             cx={centerX}
@@ -637,64 +797,46 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
           {/* === INFO PANELS === */}
 
           {/* Left Panel - Grid 1 Info */}
-          <g transform="translate(15, 60)">
-            <rect x="0" y="0" width="85" height="65" rx="8" fill="#111827" stroke="#3b82f6" strokeWidth="1" opacity="0.9" />
-            <rect x="0" y="0" width="85" height="18" rx="8" ry="0" fill="#3b82f6" opacity="0.3" />
-            <text x="42" y="13" textAnchor="middle" fill="#60a5fa" fontSize="9" fontWeight="bold">GRID 1</text>
-            <circle cx="15" cy="35" r="6" fill="url(#moirGrid1Gradient)" filter="url(#moirSoftGlow)" />
-            <text x="28" y="38" fill="#94a3b8" fontSize="8">Spacing:</text>
-            <text x="70" y="38" textAnchor="end" fill="#f8fafc" fontSize="9" fontWeight="bold">{spacing1}px</text>
-            <text x="15" y="55" fill="#94a3b8" fontSize="8">Angle: 0deg</text>
-          </g>
+          <rect x="10" y="42" width="90" height="34" rx="6" fill="#111827" stroke="#3b82f6" strokeWidth="1" opacity="0.9" />
+          <text x="55" y="55" textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="bold">GRID 1</text>
+          <text x="15" y="70" fill="#e2e8f0" fontSize="11">{spacing1}px 0°</text>
 
           {/* Right Panel - Grid 2 Info */}
-          <g transform={`translate(${width - 100}, 60)`}>
-            <rect x="0" y="0" width="85" height="65" rx="8" fill="#111827" stroke="#ef4444" strokeWidth="1" opacity="0.9" />
-            <rect x="0" y="0" width="85" height="18" rx="8" ry="0" fill="#ef4444" opacity="0.3" />
-            <text x="42" y="13" textAnchor="middle" fill="#fca5a5" fontSize="9" fontWeight="bold">GRID 2</text>
-            <circle cx="15" cy="35" r="6" fill="url(#moirGrid2Gradient)" filter="url(#moirSoftGlow)" />
-            <text x="28" y="38" fill="#94a3b8" fontSize="8">Spacing:</text>
-            <text x="70" y="38" textAnchor="end" fill="#f8fafc" fontSize="9" fontWeight="bold">{spacing2}px</text>
-            <text x="15" y="55" fill="#94a3b8" fontSize="8">Angle: {angle.toFixed(1)}deg</text>
-          </g>
+          <rect x={width - 100} y="42" width="90" height="34" rx="6" fill="#111827" stroke="#ef4444" strokeWidth="1" opacity="0.9" />
+          <text x={width - 55} y="55" textAnchor="middle" fill="#fca5a5" fontSize="11" fontWeight="bold">GRID 2</text>
+          <text x={width - 95} y="70" fill="#e2e8f0" fontSize="11">{spacing2}px {angle.toFixed(1)}°</text>
 
-          {/* Bottom Panel - Moire Info */}
-          <g transform={`translate(${centerX - 90}, ${height - 75})`}>
-            <rect x="0" y="0" width="180" height="55" rx="10" fill="#111827" stroke="url(#moirFrameGradient)" strokeWidth="1.5" opacity="0.95" />
-            <rect x="0" y="0" width="180" height="20" rx="10" ry="0" fill="url(#moirInterferenceGradient)" opacity="0.2" />
-            <text x="90" y="14" textAnchor="middle" fill="#a855f7" fontSize="10" fontWeight="bold">INTERFERENCE ANALYSIS</text>
+          {/* Interactive marker that moves with angle */}
+          <circle
+            cx={centerX + (angle / 45) * 80}
+            cy={centerY - 10 + (angle / 45) * 60}
+            r="8"
+            fill="#10b981"
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#moirSoftGlow)"
+          />
 
-            <text x="15" y="35" fill="#94a3b8" fontSize="9">Moire Period:</text>
-            <text x="165" y="35" textAnchor="end" fill="#10b981" fontSize="11" fontWeight="bold" filter="url(#moirSoftGlow)">{moirePeriod}px</text>
-
-            <text x="15" y="48" fill="#64748b" fontSize="8">Rotation: {angle.toFixed(1)}deg | dSpacing: {Math.abs(spacing1 - spacing2)}px</text>
-          </g>
+          {/* Bottom Panel - Moire Info with formula */}
+          <rect x={centerX - 100} y={height - 80} width="200" height="58" rx="10" fill="#111827" stroke="url(#moirFrameGradient)" strokeWidth="1.5" opacity="0.95" />
+          <text x={centerX} y={height - 63} textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="bold">ANALYSIS</text>
+          <text x={centerX - 90} y={height - 47} fill="#e2e8f0" fontSize="11">Period: {moirePeriod}px</text>
+          <text x={centerX - 90} y={height - 30} fill="#cbd5e1" fontSize="11">Rot: {angle.toFixed(1)}°</text>
 
           {/* Angle indicator in corner */}
-          <g transform={`translate(${width - 55}, ${height - 55})`}>
-            <circle cx="20" cy="20" r="20" fill="#111827" stroke="#f59e0b" strokeWidth="1" opacity="0.9" />
-            <circle cx="20" cy="20" r="3" fill="url(#moirRotationGlow)" filter="url(#moirIntenseGlow)" />
-            <line
-              x1="20"
-              y1="20"
-              x2={20 + 15 * Math.cos(-angle * Math.PI / 180 - Math.PI/2)}
-              y2={20 + 15 * Math.sin(-angle * Math.PI / 180 - Math.PI/2)}
-              stroke="#f59e0b"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <text x="20" y="48" textAnchor="middle" fill="#f59e0b" fontSize="8" fontWeight="bold">{angle.toFixed(0)}deg</text>
-          </g>
-
-          {/* Legend */}
-          <g transform="translate(15, 140)">
-            <rect x="0" y="0" width="70" height="50" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="0.5" opacity="0.9" />
-            <text x="35" y="12" textAnchor="middle" fill="#64748b" fontSize="7" fontWeight="bold">LEGEND</text>
-            <line x1="8" y1="24" x2="25" y2="24" stroke="url(#moirGrid1Gradient)" strokeWidth="2" />
-            <text x="30" y="27" fill="#94a3b8" fontSize="7">Grid 1</text>
-            <line x1="8" y1="38" x2="25" y2="38" stroke="url(#moirGrid2Gradient)" strokeWidth="2" />
-            <text x="30" y="41" fill="#94a3b8" fontSize="7">Grid 2</text>
-          </g>
+          <text x={width - 35} y={height - 126} textAnchor="middle" fill="#f59e0b" fontSize="11">Angle</text>
+          <circle cx={width - 35} cy={height - 100} r="20" fill="#111827" stroke="#f59e0b" strokeWidth="1" opacity="0.9" />
+          <circle cx={width - 35} cy={height - 100} r="3" fill="url(#moirRotationGlow)" filter="url(#moirIntenseGlow)" />
+          <line
+            x1={width - 35}
+            y1={height - 100}
+            x2={width - 35 + 15 * Math.cos(-angle * Math.PI / 180 - Math.PI/2)}
+            y2={height - 100 + 15 * Math.sin(-angle * Math.PI / 180 - Math.PI/2)}
+            stroke="#f59e0b"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <text x={width - 35} y={height - 72} textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">{angle.toFixed(0)}°</text>
         </svg>
 
         {interactive && (
@@ -703,6 +845,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
               onClick={() => setIsAnimating(!isAnimating)}
               style={{
                 padding: '14px 28px',
+                minHeight: '44px',
                 borderRadius: '12px',
                 border: 'none',
                 background: isAnimating
@@ -724,6 +867,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
               onClick={() => { setAngle(5); setSpacing1(10); setSpacing2(10); setOffsetX(0); setOffsetY(0); }}
               style={{
                 padding: '14px 28px',
+                minHeight: '44px',
                 borderRadius: '12px',
                 border: `2px solid ${colors.accent}`,
                 background: 'rgba(139, 92, 246, 0.1)',
@@ -778,10 +922,10 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
           step="0.5"
           value={angle}
           onChange={(e) => setAngle(parseFloat(e.target.value))}
-          style={{
+          style={{ touchAction: 'pan-y',
             width: '100%',
             accentColor: colors.accent,
-            height: '8px',
+            height: '20px',
           }}
         />
       </div>
@@ -811,10 +955,10 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
           step="1"
           value={spacing1}
           onChange={(e) => setSpacing1(parseInt(e.target.value))}
-          style={{
+          style={{ touchAction: 'pan-y',
             width: '100%',
             accentColor: colors.grid1,
-            height: '8px',
+            height: '20px',
           }}
         />
       </div>
@@ -844,10 +988,10 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
           step="1"
           value={spacing2}
           onChange={(e) => setSpacing2(parseInt(e.target.value))}
-          style={{
+          style={{ touchAction: 'pan-y',
             width: '100%',
             accentColor: colors.grid2,
-            height: '8px',
+            height: '20px',
           }}
         />
       </div>
@@ -874,57 +1018,22 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             background: colors.moire,
             boxShadow: `0 0 10px ${colors.moire}`,
           }} />
-          Moire Period: {(spacing1 / (2 * Math.sin(angle * Math.PI / 360))).toFixed(1)}px
+          Moire Period: {(spacing1 / (2 * Math.sin(angle * Math.PI / 360))).toFixed(1)}px | Frequency: {(1000 / (spacing1 / (2 * Math.sin(angle * Math.PI / 360)))).toFixed(1)} Hz
         </div>
-        <div style={{ color: colors.textMuted, fontSize: '12px', lineHeight: 1.5 }}>
-          Smaller angle or spacing difference creates larger moire bands
+        <div style={{ color: colors.textMuted, fontSize: '12px', lineHeight: 1.5, display: 'flex', flexDirection: 'row' as const, gap: '12px', flexWrap: 'wrap' as const }}>
+          <span>Reference baseline: {spacing1}px grid vs current {spacing2}px grid</span>
+          <span>Smaller angle or spacing difference creates larger moire bands</span>
         </div>
       </div>
-    </div>
-  );
-
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 1) 100%)',
-      borderTop: `1px solid rgba(139, 92, 246, 0.3)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-      backdropFilter: 'blur(10px)',
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '14px 36px',
-          borderRadius: '12px',
-          border: 'none',
-          background: canProceed
-            ? 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)'
-            : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          boxShadow: canProceed ? '0 4px 20px rgba(139, 92, 246, 0.4)' : 'none',
-          transition: 'all 0.2s ease',
-        }}
-      >
-        {buttonText}
-      </button>
     </div>
   );
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{
               color: colors.accent,
@@ -934,7 +1043,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             }}>
               The Ghost Patterns
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               How can two simple grids create giant moving patterns?
             </p>
           </div>
@@ -949,12 +1058,12 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
               marginBottom: '16px',
               border: '1px solid rgba(139, 92, 246, 0.2)',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.7 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.7, fontWeight: 400 }}>
                 Overlay two window screens, or look through two layers of sheer fabric.
                 Rotate one slightly and mysterious waves appear - waves that don't
                 exist in either pattern alone!
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                 These are moire patterns - interference without waves.
               </p>
             </div>
@@ -965,13 +1074,12 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
               borderRadius: '12px',
               border: `1px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
                 Click "Start Animation" to slowly rotate one grid and watch the moire dance!
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
       </div>
     );
   }
@@ -979,8 +1087,16 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>Make Your Prediction</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Step 1 of 2: What do you think will happen?
+            </p>
+          </div>
+
           {renderVisualization(false)}
 
           <div style={{
@@ -1009,6 +1125,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '18px',
+                    minHeight: '44px',
                     borderRadius: '12px',
                     border: prediction === p.id
                       ? `2px solid ${colors.accent}`
@@ -1030,7 +1147,6 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1038,8 +1154,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '22px' }}>Explore Moire Patterns</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1057,7 +1174,10 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             borderRadius: '16px',
             border: '1px solid rgba(139, 92, 246, 0.2)',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '12px', fontSize: '16px' }}>Try These Experiments:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '12px', fontSize: '16px' }}>Observation Guide:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', fontWeight: 400 }}>
+              Observe how the moire pattern changes as you adjust the controls. Notice the relationship between angle, spacing, and pattern size.
+            </p>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 2, paddingLeft: '20px', margin: 0 }}>
               <li>Small angle (1-5deg) creates large, slow-moving bands</li>
               <li>Larger angle (15-30deg) creates smaller, faster bands</li>
@@ -1065,8 +1185,20 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
               <li>Animate to see the pattern drift</li>
             </ul>
           </div>
+
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)',
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '16px',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+          }}>
+            <h4 style={{ color: colors.success, marginBottom: '12px', fontSize: '16px' }}>Real-World Relevance:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
+              Moire patterns have important real-world applications in precision measurement instruments, anti-counterfeiting on currency, and security printing. Engineers must carefully avoid unwanted moire when photographing screens or designing displays.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
       </div>
     );
   }
@@ -1076,8 +1208,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
     const wasCorrect = prediction === 'moire';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect
               ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)'
@@ -1094,9 +1227,33 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', fontWeight: 400 }}>
+              You predicted: {predictions.find(p => p.id === prediction)?.label || 'No prediction made'}
+            </p>
             <p style={{ color: colors.textPrimary, fontSize: '16px' }}>
               Large-scale bands appear and drift - the moire effect!
             </p>
+          </div>
+
+          {/* SVG diagram for review */}
+          <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+            <svg width="100%" height="120" viewBox="0 0 400 120" style={{ maxWidth: '400px', display: 'block', margin: '0 auto' }}>
+              <defs>
+                <linearGradient id="reviewGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.8" />
+                </linearGradient>
+              </defs>
+              <rect x="10" y="10" width="180" height="100" rx="8" fill="rgba(30,41,59,0.8)" stroke="#3b82f6" strokeWidth="2" />
+              <text x="100" y="35" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">Spatial Beating</text>
+              <text x="100" y="55" textAnchor="middle" fill="#e2e8f0" fontSize="11">Two frequencies</text>
+              <text x="100" y="70" textAnchor="middle" fill="#e2e8f0" fontSize="11">create visible beats</text>
+
+              <rect x="210" y="10" width="180" height="100" rx="8" fill="rgba(30,41,59,0.8)" stroke="#8b5cf6" strokeWidth="2" />
+              <text x="300" y="35" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">Amplification</text>
+              <text x="300" y="55" textAnchor="middle" fill="#e2e8f0" fontSize="11">Small differences</text>
+              <text x="300" y="70" textAnchor="middle" fill="#e2e8f0" fontSize="11">large patterns</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1111,22 +1268,35 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
               <p style={{ marginBottom: '16px' }}>
                 <strong style={{ color: colors.textPrimary }}>Spatial Beating:</strong> Just as two
                 similar frequencies create audible "beats," two similar spatial frequencies create
-                visible moire bands. The pattern is the "beat frequency" in space.
+                visible moire bands. This demonstrates the principle of spatial interference,
+                because the pattern is the "beat frequency" in space.
+              </p>
+              <p style={{
+                marginBottom: '16px',
+                background: 'rgba(139, 92, 246, 0.15)',
+                padding: '12px',
+                borderRadius: '8px',
+                fontFamily: 'monospace',
+                textAlign: 'center' as const,
+              }}>
+                <strong style={{ color: colors.accent }}>Formula:</strong>{' '}
+                <span style={{ color: colors.textPrimary }}>
+                  Moire Period = d / (2 sin(theta/2))
+                </span>
               </p>
               <p style={{ marginBottom: '16px' }}>
                 <strong style={{ color: colors.textPrimary }}>Amplification:</strong> Small differences
-                in spacing or angle create large-scale patterns. Moving one grid slightly causes
+                in spacing or angle create large-scale patterns. The reason is that moving one grid slightly causes
                 the moire to shift dramatically - amplifying tiny motions.
               </p>
               <p>
                 <strong style={{ color: colors.textPrimary }}>No Waves Required:</strong> Unlike
-                diffraction, moire patterns are purely geometric - they arise from the overlap
-                of two periodic structures.
+                diffraction, moire patterns are purely geometric because they arise from the overlap
+                of two periodic structures, not from wave interference.
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -1134,8 +1304,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{
               color: colors.warning,
@@ -1143,8 +1314,11 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
               fontSize: '24px',
               textShadow: '0 0 20px rgba(245, 158, 11, 0.4)',
             }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '16px', marginBottom: '8px' }}>
               What if one grid is slightly stretched (different spacing)?
+            </p>
+            <p style={{ color: colors.textMuted, fontSize: '14px' }}>
+              Step 1 of 2: Make your prediction
             </p>
           </div>
 
@@ -1175,6 +1349,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '18px',
+                    minHeight: '44px',
                     borderRadius: '12px',
                     border: twistPrediction === p.id
                       ? `2px solid ${colors.warning}`
@@ -1196,7 +1371,6 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1204,8 +1378,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: '22px' }}>Test Spacing Differences</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1223,14 +1398,13 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             borderRadius: '16px',
             border: `1px solid ${colors.warning}`,
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '10px', fontSize: '16px' }}>Key Observation:</h4>
+            <h4 style={{ color: colors.warning, marginBottom: '10px', fontSize: '16px' }}>Observation Guide:</h4>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Even at zero angle, spacing differences create moire bands! As you rotate,
+              Observe how spacing differences affect the moire pattern. Even at zero angle, spacing differences create moire bands! As you rotate,
               the bands move faster or change direction depending on which effect dominates.
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
       </div>
     );
   }
@@ -1240,8 +1414,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
     const wasCorrect = twistPrediction === 'speed';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect
               ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)'
@@ -1258,9 +1433,27 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', fontWeight: 400 }}>
+              You predicted: {twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made'}
+            </p>
             <p style={{ color: colors.textPrimary, fontSize: '16px' }}>
               Spacing differences change the pattern's speed and direction of movement!
             </p>
+          </div>
+
+          {/* SVG diagram for twist review */}
+          <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+            <svg width="100%" height="120" viewBox="0 0 400 120" style={{ maxWidth: '400px', display: 'block', margin: '0 auto' }}>
+              <rect x="10" y="10" width="180" height="100" rx="8" fill="rgba(30,41,59,0.8)" stroke="#f59e0b" strokeWidth="2" />
+              <text x="100" y="35" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">Rotational Moire</text>
+              <text x="100" y="55" textAnchor="middle" fill="#e2e8f0" fontSize="11">Angle differences</text>
+              <text x="100" y="70" textAnchor="middle" fill="#e2e8f0" fontSize="11">perpendicular bands</text>
+
+              <rect x="210" y="10" width="180" height="100" rx="8" fill="rgba(30,41,59,0.8)" stroke="#22c55e" strokeWidth="2" />
+              <text x="300" y="35" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">Scaling Moire</text>
+              <text x="300" y="55" textAnchor="middle" fill="#e2e8f0" fontSize="11">Spacing differences</text>
+              <text x="300" y="70" textAnchor="middle" fill="#e2e8f0" fontSize="11">bands at zero angle</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1288,87 +1481,132 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const currentApp = realWorldApps[currentTransferApp];
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontSize: '22px' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontSize: '14px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px', fontSize: '14px' }}>
               Moire patterns appear in technology, security, and measurement
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <p style={{ color: colors.textMuted, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+              Application {currentTransferApp + 1} of {realWorldApps.length}
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
+          {/* Current application card */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)',
+            margin: '16px',
+            padding: '24px',
+            borderRadius: '16px',
+            border: `2px solid ${currentApp.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '32px' }}>{currentApp.icon}</span>
+              <div>
+                <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 'bold' }}>{currentApp.title}</h3>
+                <p style={{ color: colors.textSecondary, fontSize: '12px' }}>{currentApp.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>
+              {currentApp.description}
+            </p>
+
+            <div style={{
+              background: 'rgba(0,0,0,0.3)',
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ color: currentApp.color, fontSize: '14px', marginBottom: '8px' }}>Connection to What You Learned:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, marginBottom: '12px' }}>{currentApp.connection}</p>
+              <h4 style={{ color: currentApp.color, fontSize: '14px', marginBottom: '8px' }}>How It Works:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>{currentApp.howItWorks}</p>
+            </div>
+
+            <div style={{
+              background: 'rgba(0,0,0,0.2)',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ color: currentApp.color, fontSize: '13px', marginBottom: '6px' }}>Future Impact:</h4>
+              <p style={{ color: colors.textMuted, fontSize: '12px', lineHeight: 1.5 }}>{currentApp.futureImpact}</p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              {currentApp.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  flex: '1',
+                  minWidth: '80px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: currentApp.color }}>{stat.value}</div>
+                  <div style={{ fontSize: '10px', color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Navigation between apps */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '0 16px', marginBottom: '16px' }}>
+            {realWorldApps.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentTransferApp(index)}
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: index === currentTransferApp
+                    ? 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)'
+                    : 'rgba(255,255,255,0.2)',
+                  transition: 'all 0.2s ease',
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Got It button */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <button
+              onClick={handleNext}
               style={{
-                background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)',
-                margin: '16px',
-                padding: '20px',
-                borderRadius: '16px',
-                border: transferCompleted.has(index)
-                  ? `2px solid ${colors.success}`
-                  : '1px solid rgba(255,255,255,0.1)',
-                boxShadow: transferCompleted.has(index) ? '0 0 20px rgba(16, 185, 129, 0.2)' : 'none',
+                padding: '16px 48px',
+                minHeight: '44px',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '16px',
+                boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)',
+                transition: 'all 0.2s ease',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 'bold' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success, fontSize: '18px' }}>Done</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '14px', lineHeight: 1.6 }}>{app.description}</p>
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
-                padding: '14px',
-                borderRadius: '10px',
-                marginBottom: '12px',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
-              }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'rgba(139, 92, 246, 0.1)',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontWeight: 'bold',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
-                  padding: '14px',
-                  borderRadius: '10px',
-                  borderLeft: `3px solid ${colors.success}`
-                }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px', lineHeight: 1.6 }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
+              Got It - Continue
+            </button>
+          </div>
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -1377,8 +1615,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+          {renderNavBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
             <div style={{
               background: testScore >= 8
                 ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)'
@@ -1412,7 +1651,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
                   borderRadius: '12px',
                   borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`
                 }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '14px', fontWeight: 'bold', fontSize: '14px' }}>{qIndex + 1}. {q.question}</p>
+                  <p style={{ color: colors.textPrimary, marginBottom: '14px', fontWeight: 'bold', fontSize: '14px' }}>Question {qIndex + 1} of {testQuestions.length}: {q.question}</p>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{
                       padding: '10px 14px',
@@ -1437,15 +1676,15 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, fontSize: '20px' }}>Knowledge Test</h2>
@@ -1456,8 +1695,14 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
                 padding: '6px 14px',
                 borderRadius: '8px',
                 fontSize: '14px',
-              }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '16px', lineHeight: 1.6 }}>
+              You have explored how two overlapping periodic grids create moire interference patterns through spatial beating.
+              You discovered that the moire period depends on the angle between grids and their spacing differences.
+              Now test your understanding of these concepts, including rotational moire, scaling moire, amplification effects,
+              and real-world applications in security printing, precision measurement, display technology, and strain analysis.
+            </p>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
                 <div
@@ -1494,6 +1739,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
                   onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
                   style={{
                     padding: '18px',
+                    minHeight: '44px',
                     borderRadius: '12px',
                     border: testAnswers[currentTestQuestion] === oIndex
                       ? `2px solid ${colors.accent}`
@@ -1520,6 +1766,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
               disabled={currentTestQuestion === 0}
               style={{
                 padding: '12px 28px',
+                minHeight: '44px',
                 borderRadius: '10px',
                 border: `1px solid ${colors.textMuted}`,
                 background: 'rgba(15, 23, 42, 0.8)',
@@ -1536,6 +1783,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
                 onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
                 style={{
                   padding: '12px 28px',
+                  minHeight: '44px',
                   borderRadius: '10px',
                   border: 'none',
                   background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
@@ -1546,7 +1794,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
                   boxShadow: '0 4px 15px rgba(139, 92, 246, 0.3)',
                 }}
               >
-                Next
+                Next Question
               </button>
             ) : (
               <button
@@ -1554,6 +1802,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
                 disabled={testAnswers.includes(null)}
                 style={{
                   padding: '12px 28px',
+                  minHeight: '44px',
                   borderRadius: '10px',
                   border: 'none',
                   background: testAnswers.includes(null)
@@ -1579,14 +1828,15 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{
               fontSize: '72px',
               marginBottom: '16px',
               textShadow: '0 0 40px rgba(139, 92, 246, 0.6)',
-            }}>Trophy</div>
+            }}>🏆</div>
             <h1 style={{
               color: colors.success,
               marginBottom: '8px',
@@ -1628,12 +1878,63 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
       </div>
     );
   }
 
-  return null;
+  // Default fallback to hook phase
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      {renderNavBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '20px' }}>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <h1 style={{
+            color: colors.accent,
+            fontSize: '32px',
+            marginBottom: '8px',
+            textShadow: '0 0 30px rgba(139, 92, 246, 0.5)',
+          }}>
+            The Ghost Patterns
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            How can two simple grids create giant moving patterns?
+          </p>
+        </div>
+
+        {renderVisualization(true)}
+
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)',
+            padding: '24px',
+            borderRadius: '16px',
+            marginBottom: '16px',
+            border: '1px solid rgba(139, 92, 246, 0.2)',
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.7 }}>
+              Overlay two window screens, or look through two layers of sheer fabric.
+              Rotate one slightly and mysterious waves appear - waves that don't
+              exist in either pattern alone!
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              These are moire patterns - interference without waves.
+            </p>
+          </div>
+
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)',
+            padding: '16px',
+            borderRadius: '12px',
+            border: `1px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              Click "Start Animation" to slowly rotate one grid and watch the moire dance!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default MoirePatternsRenderer;

@@ -1222,84 +1222,85 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     <div className="space-y-4">
       <div className="text-center">
         <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">Convection Cell Lab</h2>
-        <p className="text-slate-400">Watch how temperature differences drive fluid circulation</p>
+        <p style={{ color: '#e2e8f0' }}>Watch how temperature differences drive fluid circulation</p>
+      </div>
+
+      {/* Observation guidance */}
+      <div style={{ background: 'rgba(59, 130, 246, 0.15)', borderRadius: '12px', padding: '12px 16px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+        <p style={{ color: '#93c5fd', fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>What to observe:</p>
+        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>Notice how particles change color (temperature) as they move through the convection cycle. This demonstrates heat transfer through fluid motion.</p>
       </div>
 
       {/* Simulation */}
-      <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl p-4">
+      <div style={{ background: 'linear-gradient(to bottom, #1f2937, #111827)', borderRadius: '16px', padding: '16px', border: '1px solid #374151' }}>
         {renderConvectionTank()}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-red-900/30 rounded-lg p-3 border border-red-500/30">
-          <p className="text-sm text-slate-400">Heat Power</p>
+        <div style={{ background: 'rgba(127, 29, 29, 0.3)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+          <p style={{ fontSize: '12px', color: '#e2e8f0' }}>Heat Power</p>
           <p className="font-bold text-red-400">{heatIntensity}%</p>
         </div>
-        <div className="bg-orange-900/30 rounded-lg p-3 border border-orange-500/30">
-          <p className="text-sm text-slate-400">Hot Particles</p>
+        <div style={{ background: 'rgba(124, 45, 18, 0.3)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
+          <p style={{ fontSize: '12px', color: '#e2e8f0' }}>Hot Particles</p>
           <p className="font-bold text-orange-400">{particles.filter(p => p.temp > 0.6).length}</p>
         </div>
-        <div className="bg-blue-900/30 rounded-lg p-3 border border-blue-500/30">
-          <p className="text-sm text-slate-400">Cold Particles</p>
+        <div style={{ background: 'rgba(30, 58, 138, 0.3)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+          <p style={{ fontSize: '12px', color: '#e2e8f0' }}>Cold Particles</p>
           <p className="font-bold text-blue-400">{particles.filter(p => p.temp < 0.4).length}</p>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="space-y-3">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-400">Heat Intensity:</span>
-            <span className="font-medium text-red-400">{heatIntensity}%</span>
+      {/* Controls with cause-effect explanations */}
+      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px', border: '1px solid #475569' }}>
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: '14px', color: '#e2e8f0' }}>Heat Intensity:</span>
+              <span className="font-medium text-red-400">{heatIntensity}%</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={heatIntensity}
+              onChange={(e) => {
+                setHeatIntensity(Number(e.target.value));
+                onGameEvent?.({ type: 'heat_intensity_changed', data: { value: Number(e.target.value) } });
+              }}
+              style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: '#ef4444' }}
+            />
+            <p style={{ fontSize: '12px', color: '#93c5fd' }}>When you increase heat, more particles become hot (red) and rise faster. This causes stronger circulation.</p>
           </div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={heatIntensity}
-            onChange={(e) => {
-              setHeatIntensity(Number(e.target.value));
-              onGameEvent?.({ type: 'heat_intensity_changed', data: { value: Number(e.target.value) } });
-            }}
-            style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: '#ef4444' }}
-          />
-        </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={() => {
-              setIsHeating(!isHeating);
-              playSound('click');
-            }}
-            className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
-              isHeating
-                ? 'bg-red-500 text-white'
-                : 'bg-slate-700 text-slate-300'
-            }`}
-          >
-            {isHeating ? 'Heating: ON' : 'Heating: OFF'}
-          </button>
-          <button
-            onClick={() => {
-              setShowFlowLines(!showFlowLines);
-              playSound('click');
-            }}
-            className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
-              showFlowLines
-                ? 'bg-purple-500 text-white'
-                : 'bg-slate-700 text-slate-300'
-            }`}
-          >
-            {showFlowLines ? 'Flow Lines: ON' : 'Flow Lines: OFF'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setIsHeating(!isHeating);
+                playSound('click');
+              }}
+              style={{ flex: 1, padding: '12px', borderRadius: '12px', fontWeight: 600, transition: 'all 0.3s ease', background: isHeating ? '#ef4444' : '#334155', color: 'white', border: 'none', cursor: 'pointer' }}
+            >
+              {isHeating ? 'Heating: ON' : 'Heating: OFF'}
+            </button>
+            <button
+              onClick={() => {
+                setShowFlowLines(!showFlowLines);
+                playSound('click');
+              }}
+              style={{ flex: 1, padding: '12px', borderRadius: '12px', fontWeight: 600, transition: 'all 0.3s ease', background: showFlowLines ? '#8b5cf6' : '#334155', color: 'white', border: 'none', cursor: 'pointer' }}
+            >
+              {showFlowLines ? 'Flow Lines: ON' : 'Flow Lines: OFF'}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Explanation */}
-      <div className="bg-orange-900/20 rounded-xl p-4 border border-orange-500/30">
-        <h4 className="font-semibold text-orange-400 mb-2">The Convection Cycle:</h4>
-        <ol className="text-sm text-slate-300 space-y-1">
+      {/* Physics explanation with definitions and real-world relevance */}
+      <div style={{ background: 'rgba(124, 45, 18, 0.2)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
+        <h4 style={{ fontWeight: 600, color: '#fb923c', marginBottom: '8px' }}>The Convection Cycle:</h4>
+        <ol style={{ fontSize: '14px', color: '#e2e8f0' }} className="space-y-1">
           <li>1. <span className="text-red-400 font-medium">Bottom heats</span> - fluid expands - density decreases</li>
           <li>2. <span className="text-orange-400 font-medium">Hot fluid rises</span> (buoyancy force pushes less dense fluid up)</li>
           <li>3. <span className="text-blue-400 font-medium">Top cools</span> - fluid contracts - density increases</li>
@@ -1308,9 +1309,17 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         </ol>
       </div>
 
+      {/* Key physics definition */}
+      <div style={{ background: 'rgba(88, 28, 135, 0.2)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+        <h4 style={{ fontWeight: 600, color: '#a855f7', marginBottom: '8px' }}>Key Physics Formula:</h4>
+        <p style={{ fontFamily: 'monospace', fontSize: '18px', color: '#c4b5fd', textAlign: 'center', marginBottom: '8px' }}>Q = h × A × ΔT</p>
+        <p style={{ fontSize: '13px', color: '#e2e8f0' }}>Convection heat transfer is defined as the heat flow rate (Q) equals the heat transfer coefficient (h) times the surface area (A) times the temperature difference (ΔT). This formula is essential for designing heating and cooling systems.</p>
+        <p style={{ fontSize: '13px', color: '#93c5fd', marginTop: '8px' }}>This is important because convection is used in practical applications everywhere - from your home radiator to cooling your computer's CPU. Engineers use this formula to design efficient heating, ventilation, and cooling systems.</p>
+      </div>
+
       <button
         onClick={() => goToPhase('review')}
-        className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold text-lg shadow-lg"
+        style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', borderRadius: '12px', fontWeight: 600, fontSize: '18px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)', transition: 'all 0.3s ease' }}
       >
         Review the Concepts
       </button>
@@ -1325,10 +1334,10 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     <div className="space-y-6">
       <div className="text-center space-y-3">
         <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">Understanding Convection</h2>
-        <p className="text-slate-400">
+        <p style={{ color: '#e2e8f0' }}>
           {prediction === 'B'
-            ? "Excellent! Your prediction was correct - density differences drive convection."
-            : "The answer was B - hot fluid expands and becomes less dense, so it rises due to buoyancy!"}
+            ? "Excellent! Your prediction was correct - as you observed in the experiment, density differences drive convection."
+            : "As you saw in the simulation, the result shows that hot fluid expands and becomes less dense, so it rises due to buoyancy! Your observation confirms that density is the key factor."}
         </p>
       </div>
 
@@ -1660,7 +1669,8 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
       <div className="space-y-4">
         <div className="text-center">
           <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">Convection in the Real World</h2>
-          <p className="text-slate-400">From kitchen to planet - convection is everywhere</p>
+          <p style={{ color: '#e2e8f0' }}>From kitchen to planet - convection is everywhere</p>
+          <p style={{ color: '#93c5fd', fontSize: '14px', marginTop: '8px' }}>Application {selectedApp + 1} of {transferApps.length}</p>
         </div>
 
         {/* App selector */}
@@ -1673,12 +1683,18 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                 playSound('click');
                 onGameEvent?.({ type: 'transfer_app_viewed', data: { app: a.title } });
               }}
-              className={`flex-shrink-0 px-4 py-2 rounded-full font-medium transition-all ${
-                selectedApp === i
-                  ? 'text-white shadow-lg'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-              style={selectedApp === i ? { backgroundColor: a.color } : {}}
+              style={{
+                flexShrink: 0,
+                padding: '8px 16px',
+                borderRadius: '9999px',
+                fontWeight: 500,
+                transition: 'all 0.3s ease',
+                background: selectedApp === i ? a.color : '#334155',
+                color: selectedApp === i ? 'white' : '#e2e8f0',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: selectedApp === i ? '0 4px 12px rgba(0,0,0,0.3)' : 'none'
+              }}
             >
               {a.icon} {a.short}
             </button>
@@ -1686,44 +1702,44 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         </div>
 
         {/* App details card */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-600 overflow-hidden">
-          <div className="p-4 text-white" style={{ backgroundColor: app.color }}>
+        <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', border: '1px solid #475569', overflow: 'hidden' }}>
+          <div style={{ padding: '16px', color: 'white', backgroundColor: app.color }}>
             <div className="flex items-center gap-3">
               <span className="text-4xl">{app.icon}</span>
               <div>
                 <h3 className="text-xl font-bold">{app.title}</h3>
-                <p className="text-white/80">{app.tagline}</p>
+                <p style={{ color: 'rgba(255,255,255,0.8)' }}>{app.tagline}</p>
               </div>
             </div>
           </div>
 
-          <div className="p-4 space-y-4">
-            <p className="text-slate-300">{app.description}</p>
+          <div style={{ padding: '16px' }} className="space-y-4">
+            <p style={{ color: '#e2e8f0' }}>{app.description}</p>
 
-            <div className="bg-slate-900/50 rounded-lg p-3">
-              <h4 className="font-semibold text-white mb-1">Convection Connection</h4>
-              <p className="text-sm text-slate-400">{app.connection}</p>
+            <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px' }}>
+              <h4 style={{ fontWeight: 600, color: 'white', marginBottom: '4px' }}>Convection Connection</h4>
+              <p style={{ fontSize: '14px', color: '#e2e8f0' }}>{app.connection}</p>
             </div>
 
-            <div className="bg-blue-900/30 rounded-lg p-3 border border-blue-500/20">
-              <h4 className="font-semibold text-blue-400 mb-1">How It Works</h4>
-              <p className="text-sm text-slate-300">{app.howItWorks}</p>
+            <div style={{ background: 'rgba(30, 58, 138, 0.3)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+              <h4 style={{ fontWeight: 600, color: '#60a5fa', marginBottom: '4px' }}>How It Works</h4>
+              <p style={{ fontSize: '14px', color: '#e2e8f0' }}>{app.howItWorks}</p>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {app.stats.map((stat, i) => (
-                <div key={i} className="bg-slate-900/50 rounded-lg p-2 text-center">
-                  <p className="font-bold text-lg" style={{ color: app.color }}>{stat.value}</p>
-                  <p className="text-xs text-slate-400">{stat.label}</p>
+                <div key={i} style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
+                  <p style={{ fontWeight: 700, fontSize: '18px', color: app.color }}>{stat.value}</p>
+                  <p style={{ fontSize: '12px', color: '#e2e8f0' }}>{stat.label}</p>
                 </div>
               ))}
             </div>
 
             {/* Examples */}
             <div>
-              <h4 className="font-semibold text-white mb-2">Examples:</h4>
-              <ul className="text-sm text-slate-400 space-y-1">
+              <h4 style={{ fontWeight: 600, color: 'white', marginBottom: '8px' }}>Examples:</h4>
+              <ul style={{ fontSize: '14px', color: '#e2e8f0' }} className="space-y-1">
                 {app.examples.map((ex, i) => (
                   <li key={i}>- {ex}</li>
                 ))}
@@ -1733,23 +1749,60 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             {/* Companies */}
             <div className="flex flex-wrap gap-2">
               {app.companies.map((company, i) => (
-                <span key={i} className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
+                <span key={i} style={{ padding: '4px 8px', background: '#334155', borderRadius: '4px', fontSize: '12px', color: '#e2e8f0' }}>
                   {company}
                 </span>
               ))}
             </div>
 
             {/* Future impact */}
-            <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-lg p-3 border border-purple-500/20">
-              <h4 className="font-semibold text-purple-400 mb-1">Future Impact</h4>
-              <p className="text-sm text-slate-300">{app.futureImpact}</p>
+            <div style={{ background: 'linear-gradient(to right, rgba(88, 28, 135, 0.2), rgba(219, 39, 119, 0.2))', borderRadius: '8px', padding: '12px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+              <h4 style={{ fontWeight: 600, color: '#a855f7', marginBottom: '4px' }}>Future Impact</h4>
+              <p style={{ fontSize: '14px', color: '#e2e8f0' }}>{app.futureImpact}</p>
             </div>
+
+            {/* Got It button for each app */}
+            <button
+              onClick={() => {
+                if (selectedApp < transferApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                  playSound('click');
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: selectedApp < transferApps.length - 1 ? `linear-gradient(135deg, ${app.color}, ${app.color}dd)` : 'linear-gradient(135deg, #10b981, #059669)',
+                color: 'white',
+                borderRadius: '12px',
+                fontWeight: 600,
+                fontSize: '16px',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+              }}
+            >
+              {selectedApp < transferApps.length - 1 ? 'Got It → Next App' : 'Got It! Ready for Test'}
+            </button>
           </div>
         </div>
 
         <button
           onClick={() => goToPhase('test')}
-          className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold text-lg shadow-lg"
+          style={{
+            width: '100%',
+            padding: '16px',
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            color: 'white',
+            borderRadius: '12px',
+            fontWeight: 600,
+            fontSize: '18px',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
+            transition: 'all 0.3s ease'
+          }}
         >
           Test Your Knowledge
         </button>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface TapeBirefringenceRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -85,7 +85,7 @@ const realWorldApps = [
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -94,15 +94,27 @@ const colors = {
   success: '#10b981',
   warning: '#f59e0b',
   error: '#ef4444',
-  tape: '#94a3b8',
+  tape: '#e2e8f0',
+  border: 'rgba(255,255,255,0.1)',
 };
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
-  phase,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [tapeLayers, setTapeLayers] = useState(3);
   const [polarizerAngle, setPolarizerAngle] = useState(45);
   const [isHeated, setIsHeated] = useState(false);
@@ -125,6 +137,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
   }, [isAnimating]);
 
   const [isMobile, setIsMobile] = useState(false);
+  const [currentAppIndex, setCurrentAppIndex] = useState(0);
 
   // Responsive detection
   useEffect(() => {
@@ -133,6 +146,40 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Phase navigation
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Explore',
+    review: 'Review',
+    twist_predict: 'New Twist',
+    twist_play: 'Twist Explore',
+    twist_review: 'Twist Review',
+    transfer: 'Apply',
+    test: 'Quiz',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = (p: Phase) => {
+    setPhase(p);
+  };
+
+  const nextPhase = () => {
+    const idx = validPhases.indexOf(phase);
+    if (idx < validPhases.length - 1) {
+      setPhase(validPhases[idx + 1]);
+    } else if (onPhaseComplete) {
+      onPhaseComplete();
+    }
+  };
+
+  const prevPhase = () => {
+    const idx = validPhases.indexOf(phase);
+    if (idx > 0) {
+      setPhase(validPhases[idx - 1]);
+    }
+  };
 
   // Responsive typography
   const typo = {
@@ -924,16 +971,96 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: colors.bgDark, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
-      <button onClick={onPhaseComplete} disabled={disabled && !canProceed} style={{ padding: '12px 32px', borderRadius: '8px', border: 'none', background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)', color: canProceed ? 'white' : colors.textMuted, fontWeight: 'bold', cursor: canProceed ? 'pointer' : 'not-allowed', fontSize: '16px' }}>{buttonText}</button>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: 'rgba(30, 41, 59, 0.8)',
+      zIndex: 1001,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((validPhases.indexOf(phase) + 1) / validPhases.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '8px 0',
+    }}>
+      {validPhases.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: validPhases.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  const renderBottomBar = (canProceed: boolean, buttonText: string) => (
+    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: colors.bgDark, borderTop: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1000 }}>
+      <button
+        onClick={prevPhase}
+        disabled={phase === 'hook'}
+        style={{
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.border}`,
+          background: 'transparent',
+          color: phase === 'hook' ? 'rgba(255,255,255,0.3)' : colors.textSecondary,
+          fontWeight: 'bold',
+          cursor: phase === 'hook' ? 'not-allowed' : 'pointer',
+          fontSize: '16px',
+          minHeight: '44px',
+        }}>
+        Back
+      </button>
+      {renderNavDots()}
+      <button
+        onClick={nextPhase}
+        disabled={!canProceed}
+        style={{
+          padding: '12px 32px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          color: canProceed ? 'white' : 'rgba(255,255,255,0.3)',
+          fontWeight: 'bold',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontSize: '16px',
+          minHeight: '44px',
+        }}>
+        {buttonText}
+      </button>
     </div>
   );
 
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>Can clear tape create color without pigment?</h1>
             <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>Hidden colors in ordinary sticky tape</p>
@@ -950,7 +1077,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Make a Prediction')}
       </div>
     );
   }
@@ -958,7 +1085,8 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
           {renderVisualization(false)}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
@@ -970,12 +1098,12 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>When you view clear tape between polarizers, what do you see?</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {predictions.map((p) => (
-                <button key={p.id} onClick={() => setPrediction(p.id)} style={{ padding: '16px', borderRadius: '8px', border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: prediction === p.id ? 'rgba(6, 182, 212, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>{p.label}</button>
+                <button key={p.id} onClick={() => setPrediction(p.id)} style={{ padding: '16px', borderRadius: '8px', border: prediction === p.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`, background: prediction === p.id ? 'rgba(6, 182, 212, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', minHeight: '44px' }}>{p.label}</button>
               ))}
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(!!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -983,7 +1111,8 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Tape Birefringence</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Stack layers and rotate the analyzer to create different colors</p>
@@ -991,6 +1120,10 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
           {renderVisualization(true)}
           {renderControls()}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Observation Guide:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>
+              Watch how changing tape layers and analyzer angle affects the observed color. The birefringence of stretched polymers rotates polarization differently for each wavelength.
+            </p>
             <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Add layers - colors change with each layer</li>
@@ -999,7 +1132,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, 'Continue to Review')}
       </div>
     );
   }
@@ -1008,11 +1141,13 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     const wasCorrect = prediction === 'colors';
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
           <div style={{ background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}` }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary }}>Vibrant colors appear from the completely clear tape!</p>
           </div>
+          {renderVisualization(false)}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Tape Birefringence</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
@@ -1022,7 +1157,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -1030,7 +1165,8 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>What happens when you heat the tape?</p>
@@ -1044,12 +1180,12 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>When the tape is heated, the colors will:</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {twistPredictions.map((p) => (
-                <button key={p.id} onClick={() => setTwistPrediction(p.id)} style={{ padding: '16px', borderRadius: '8px', border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)', background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>{p.label}</button>
+                <button key={p.id} onClick={() => setTwistPrediction(p.id)} style={{ padding: '16px', borderRadius: '8px', border: twistPrediction === p.id ? `2px solid ${colors.warning}` : `1px solid ${colors.border}`, background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', minHeight: '44px' }}>{p.label}</button>
               ))}
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1057,24 +1193,27 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Heat Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Toggle heat to see how colors shift</p>
           </div>
           {renderVisualization(true)}
           <div style={{ padding: '16px' }}>
-            <button onClick={() => setIsHeated(!isHeated)} style={{ width: '100%', padding: '16px', borderRadius: '8px', border: `2px solid ${colors.warning}`, background: isHeated ? 'rgba(245, 158, 11, 0.3)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', fontSize: '16px', fontWeight: 'bold' }}>
+            <button onClick={() => setIsHeated(!isHeated)} style={{ width: '100%', padding: '16px', borderRadius: '8px', border: `2px solid ${colors.warning}`, background: isHeated ? 'rgba(245, 158, 11, 0.3)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', minHeight: '44px' }}>
               {isHeated ? 'HEATED - Click to Cool' : 'COOL - Click to Heat'}
             </button>
           </div>
           {renderControls()}
           <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.warning}` }}>
+            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Observation Guide:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>Toggle the heat button and watch how colors shift. Compare the heated and cooled states at the same number of layers.</p>
             <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>When heated, the colors shift! Relaxing polymer chains reduce birefringence, changing which wavelengths are rotated and which pass through.</p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, 'See the Explanation')}
       </div>
     );
   }

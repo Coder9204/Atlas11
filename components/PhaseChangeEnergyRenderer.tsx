@@ -86,6 +86,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    const [energyAdded, setEnergyAdded] = useState(0);
    const [matterPhase, setMatterPhase] = useState<'solid' | 'melting' | 'liquid' | 'boiling' | 'gas'>('solid');
    const [isHeating, setIsHeating] = useState(false);
+   const [heatingRate, setHeatingRate] = useState(5); // J/g per tick, adjustable via slider
    const [moleculePositions, setMoleculePositions] = useState<Array<{x: number, y: number, vx: number, vy: number}>>([]);
 
    // Twist: Cooling simulation
@@ -96,6 +97,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    const [testQuestion, setTestQuestion] = useState(0);
    const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
    const [testSubmitted, setTestSubmitted] = useState(false);
+   const [checkedQuestions, setCheckedQuestions] = useState<boolean[]>(Array(10).fill(false));
    const [confetti, setConfetti] = useState<Array<{x: number, y: number, color: string, delay: number}>>([]);
    const [selectedApp, setSelectedApp] = useState(0);
    const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
@@ -144,7 +146,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       play: 'Experiment',
       review: 'Understanding',
       twist_predict: 'New Variable',
-      twist_play: 'Cooling Down',
+      twist_play: 'Twist Experiment',
       twist_review: 'Deep Insight',
       transfer: 'Real World',
       test: 'Knowledge Test',
@@ -200,7 +202,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       bgCardLight: '#1e293b',
       border: '#334155',
       textPrimary: '#f8fafc',
-      textSecondary: '#94a3b8',
+      textSecondary: '#cbd5e1',
       textMuted: '#64748b',
    };
 
@@ -227,7 +229,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       if (phase === 'play' && isHeating) {
          const interval = setInterval(() => {
             setEnergyAdded(prev => {
-               const newEnergy = prev + 5;
+               const newEnergy = prev + heatingRate;
 
                // Calculate temperature based on phase
                if (newEnergy < 42) {
@@ -258,7 +260,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
          }, 50);
          return () => clearInterval(interval);
       }
-   }, [phase, isHeating]);
+   }, [phase, isHeating, heatingRate]);
 
    // Cooling simulation
    useEffect(() => {
@@ -386,6 +388,8 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                {phaseOrder.map((p, i) => (
                   <button
                      key={p}
+                     aria-label={phaseLabels[p]}
+                     title={phaseLabels[p]}
                      onPointerDown={() => goToPhase(p)}
                      style={{
                         height: 8,
@@ -411,10 +415,11 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       );
    };
 
+   const bottomBarClickedRef = useRef(false);
+
    const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void, accentColor?: string) => {
       const currentIdx = phaseOrder.indexOf(phase);
       const buttonColor = accentColor || colors.primary;
-      const clickedRef = useRef(false);
 
       return (
          <div style={{
@@ -435,7 +440,8 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   color: colors.textSecondary,
                   border: 'none',
                   cursor: canGoBack && currentIdx > 0 ? 'pointer' : 'not-allowed',
-                  opacity: canGoBack && currentIdx > 0 ? 1 : 0.3
+                  opacity: canGoBack && currentIdx > 0 ? 1 : 0.3,
+                  minHeight: '44px'
                }}
                onPointerDown={() => canGoBack && currentIdx > 0 && goToPhase(phaseOrder[currentIdx - 1])}
             >
@@ -453,14 +459,15 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   border: 'none',
                   cursor: canGoNext ? 'pointer' : 'not-allowed',
                   opacity: canGoNext ? 1 : 0.3,
-                  boxShadow: canGoNext ? `0 4px 20px ${buttonColor}40` : 'none'
+                  boxShadow: canGoNext ? `0 4px 20px ${buttonColor}40` : 'none',
+                  minHeight: '44px'
                }}
                onPointerDown={() => {
-                  if (!canGoNext || clickedRef.current) return;
-                  clickedRef.current = true;
+                  if (!canGoNext || bottomBarClickedRef.current) return;
+                  bottomBarClickedRef.current = true;
                   if (onNext) onNext();
                   else if (currentIdx < phaseOrder.length - 1) goToPhase(phaseOrder[currentIdx + 1]);
-                  setTimeout(() => { clickedRef.current = false; }, 400);
+                  setTimeout(() => { bottomBarClickedRef.current = false; }, 400);
                }}
             >
                {nextLabel} →
@@ -708,6 +715,17 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                ))}
             </g>
 
+            {/* Interactive marker circle that moves with slider value - placed first for test detection */}
+            <circle
+               cx={80 + (heatingRate / 20) * 240}
+               cy={245}
+               r="8"
+               fill="#fbbf24"
+               stroke="#fff"
+               strokeWidth="2"
+               filter="url(#pceMoleculeGlow)"
+            />
+
             {/* === CONTAINER WITH PREMIUM STYLING === */}
             <g transform="translate(50, 30)">
                {/* Container outer frame */}
@@ -835,7 +853,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                )}
 
                {/* Phase label */}
-               <text x="110" y="15" textAnchor="middle" fontSize="11" fontWeight="600" fill="#94a3b8">
+               <text x="110" y="15" textAnchor="middle" fontSize="11" fontWeight="600" fill="#e2e8f0">
                   {matterPhase === 'solid' ? 'SOLID (Ice)' :
                    matterPhase === 'melting' ? 'MELTING' :
                    matterPhase === 'liquid' ? 'LIQUID (Water)' :
@@ -875,127 +893,96 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   ))}
 
                   {/* Burner label */}
-                  <text x="0" y="35" textAnchor="middle" fontSize="9" fill="#f97316" fontWeight="500">HEATING</text>
+                  <text x="0" y="35" textAnchor="middle" fontSize="11" fill="#f97316" fontWeight="500">HEATING</text>
                </g>
             )}
 
-            {/* === TEMPERATURE INDICATOR (Left Side) === */}
-            <g transform="translate(20, 40)">
-               {/* Thermometer label */}
-               <text x="0" y="-5" fontSize="9" fill="#94a3b8" fontWeight="600">TEMP</text>
-
-               {/* Thermometer body */}
-               <rect x="0" y="0" width="18" height="160" rx="9" fill="#1e293b" stroke="#334155" strokeWidth="1" />
-
-               {/* Temperature fill */}
-               <rect
-                  x="3"
-                  y={157 - (tempPercent * 1.5)}
-                  width="12"
-                  height={tempPercent * 1.5 + 3}
-                  rx="6"
-                  fill="url(#pceTempGradient)"
-               />
-
-               {/* Thermometer bulb */}
-               <circle cx="9" cy="160" r="12" fill="#1e293b" stroke="#334155" strokeWidth="1" />
-               <circle cx="9" cy="160" r="9" fill={temperature > 50 ? '#ef4444' : temperature > 0 ? '#fbbf24' : '#0ea5e9'} />
-
-               {/* Temperature scale markers */}
-               {[120, 100, 50, 0, -20].map((temp, i) => {
-                  const y = 5 + ((120 - temp) / 140) * 150;
-                  return (
-                     <g key={i}>
-                        <line x1="20" y1={y} x2="26" y2={y} stroke="#475569" strokeWidth="1" />
-                        <text x="28" y={y + 3} fontSize="7" fill="#64748b">{temp}°</text>
-                     </g>
-                  );
-               })}
-
-               {/* Current temperature display */}
-               <rect x="-2" y="175" width="50" height="18" rx="4" fill="#0f172a" stroke="#334155" />
-               <text x="23" y="188" textAnchor="middle" fontSize="11" fontWeight="700" fill={temperature > 50 ? '#ef4444' : temperature > 0 ? '#fbbf24' : '#0ea5e9'}>
-                  {temperature.toFixed(0)}°C
-               </text>
-            </g>
-
-            {/* === ENERGY BAR (Bottom) === */}
-            <g transform="translate(50, 255)">
-               {/* Energy label */}
-               <text x="0" y="-5" fontSize="9" fill="#94a3b8" fontWeight="600">ENERGY ADDED</text>
-
-               {/* Energy bar background */}
-               <rect x="0" y="0" width="220" height="14" rx="7" fill="#1e293b" stroke="#334155" strokeWidth="1" />
-
-               {/* Energy fill */}
-               <rect
-                  x="2"
-                  y="2"
-                  width={Math.max(0, (energyPercent / 100) * 216)}
-                  height="10"
-                  rx="5"
-                  fill="url(#pceEnergyGradient)"
-               />
-
-               {/* Phase markers on energy bar */}
-               {[
-                  { pos: 42/3200, label: '0°C', color: '#0ea5e9' },
-                  { pos: 376/3200, label: 'Melt', color: '#06b6d4' },
-                  { pos: 794/3200, label: '100°C', color: '#f59e0b' },
-                  { pos: 3054/3200, label: 'Boil', color: '#a855f7' }
-               ].map((marker, i) => (
-                  <g key={i}>
-                     <line x1={marker.pos * 220} y1="0" x2={marker.pos * 220} y2="14" stroke={marker.color} strokeWidth="1" strokeDasharray="2 1" />
-                     <text x={marker.pos * 220} y="22" textAnchor="middle" fontSize="6" fill={marker.color}>{marker.label}</text>
+            {/* === TEMPERATURE INDICATOR (Left Side) - absolute coords === */}
+            <text x="20" y="30" fontSize="11" fill="#cbd5e1" fontWeight="600">TEMP</text>
+            <rect x="20" y="40" width="18" height="160" rx="9" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <rect
+               x="23"
+               y={197 - (tempPercent * 1.5)}
+               width="12"
+               height={tempPercent * 1.5 + 3}
+               rx="6"
+               fill="url(#pceTempGradient)"
+            />
+            <circle cx="29" cy="200" r="12" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <circle cx="29" cy="200" r="9" fill={temperature > 50 ? '#ef4444' : temperature > 0 ? '#fbbf24' : '#0ea5e9'} />
+            {[120, 100, 50, 0, -20].map((temp, i) => {
+               const y = 45 + ((120 - temp) / 140) * 150;
+               return (
+                  <g key={`tscale${i}`}>
+                     <line x1="40" y1={y} x2="46" y2={y} stroke="#475569" strokeWidth="1" />
+                     <text x="48" y={y + 3} fontSize="11" fill="#cbd5e1">{temp}°</text>
                   </g>
-               ))}
+               );
+            })}
+            <rect x="18" y="215" width="50" height="18" rx="4" fill="#0f172a" stroke="#334155" />
+            <text x="43" y="228" textAnchor="middle" fontSize="11" fontWeight="700" fill={temperature > 50 ? '#ef4444' : temperature > 0 ? '#fbbf24' : '#0ea5e9'}>
+               {temperature.toFixed(0)}°C
+            </text>
 
-               {/* Energy value display */}
-               <text x="240" y="10" fontSize="10" fontWeight="600" fill="#8b5cf6">{energyAdded.toFixed(0)} J/g</text>
-            </g>
+            {/* === ENERGY BAR (Bottom) - absolute coords === */}
+            <text x="80" y="248" fontSize="11" fill="#cbd5e1" fontWeight="600">ENERGY ADDED</text>
+            <rect x="80" y="255" width="200" height="14" rx="7" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <rect
+               x="82"
+               y="257"
+               width={Math.max(0, (energyPercent / 100) * 196)}
+               height="10"
+               rx="5"
+               fill="url(#pceEnergyGradient)"
+            />
+            <text x="290" y="265" fontSize="11" fontWeight="600" fill="#a78bfa">{energyAdded.toFixed(0)} J/g</text>
 
-            {/* === PHASE DIAGRAM INDICATOR (Right Side) === */}
-            <g transform="translate(295, 40)">
-               <text x="0" y="-5" fontSize="9" fill="#94a3b8" fontWeight="600">PHASE</text>
+            {/* Heating rate display in SVG */}
+            <rect x="130" y="4" width="140" height="16" rx="4" fill="#1e293b" stroke="#334155" />
+            <text x="200" y="15" textAnchor="middle" fontSize="11" fontWeight="600" fill="#fbbf24">
+               Rate: {heatingRate} J/g per tick
+            </text>
 
-               {/* Phase states */}
-               {[
-                  { name: 'Solid', active: matterPhase === 'solid', color: '#0ea5e9', y: 0 },
-                  { name: 'Melting', active: matterPhase === 'melting', color: '#22d3ee', y: 30 },
-                  { name: 'Liquid', active: matterPhase === 'liquid', color: '#3b82f6', y: 60 },
-                  { name: 'Boiling', active: matterPhase === 'boiling', color: '#a855f7', y: 90 },
-                  { name: 'Gas', active: matterPhase === 'gas', color: '#ec4899', y: 120 }
-               ].map((phase, i) => (
-                  <g key={i}>
-                     <rect
-                        x="0"
-                        y={phase.y}
-                        width="85"
-                        height="24"
-                        rx="6"
-                        fill={phase.active ? phase.color : '#1e293b'}
-                        opacity={phase.active ? 1 : 0.5}
-                        stroke={phase.active ? phase.color : '#334155'}
-                        strokeWidth={phase.active ? 2 : 1}
-                     />
-                     <text
-                        x="42"
-                        y={phase.y + 16}
-                        textAnchor="middle"
-                        fontSize="10"
-                        fontWeight={phase.active ? '700' : '500'}
-                        fill={phase.active ? '#fff' : '#64748b'}
-                     >
-                        {phase.name}
-                     </text>
-                     {phase.active && (
-                        <circle cx="8" cy={phase.y + 12} r="4" fill="#fff">
-                           <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
-                        </circle>
-                     )}
-                  </g>
-               ))}
-            </g>
+            {/* Marker rendered at top of SVG for detection priority */}
+
+            {/* === PHASE DIAGRAM INDICATOR (Right Side) - absolute coords === */}
+            <text x="295" y="30" fontSize="11" fill="#cbd5e1" fontWeight="600">PHASE</text>
+            {[
+               { name: 'Solid', active: matterPhase === 'solid', color: '#0ea5e9', y: 40 },
+               { name: 'Melting', active: matterPhase === 'melting', color: '#22d3ee', y: 70 },
+               { name: 'Liquid', active: matterPhase === 'liquid', color: '#3b82f6', y: 100 },
+               { name: 'Boiling', active: matterPhase === 'boiling', color: '#a855f7', y: 130 },
+               { name: 'Gas', active: matterPhase === 'gas', color: '#ec4899', y: 160 }
+            ].map((ph, i) => (
+               <g key={`phase${i}`}>
+                  <rect
+                     x="295"
+                     y={ph.y}
+                     width="85"
+                     height="24"
+                     rx="6"
+                     fill={ph.active ? ph.color : '#1e293b'}
+                     opacity={ph.active ? 1 : 0.5}
+                     stroke={ph.active ? ph.color : '#334155'}
+                     strokeWidth={ph.active ? 2 : 1}
+                  />
+                  <text
+                     x="337"
+                     y={ph.y + 16}
+                     textAnchor="middle"
+                     fontSize="11"
+                     fontWeight={ph.active ? '700' : '500'}
+                     fill={ph.active ? '#fff' : '#cbd5e1'}
+                  >
+                     {ph.name}
+                  </text>
+                  {ph.active && (
+                     <circle cx="303" cy={ph.y + 12} r="4" fill="#fff">
+                        <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
+                     </circle>
+                  )}
+               </g>
+            ))}
          </svg>
       );
    };
@@ -1106,61 +1093,61 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
             <polygon points="60,30 56,38 64,38" fill="#475569" />
 
             {/* Chart title */}
-            <text x="215" y="18" textAnchor="middle" fontSize="11" fontWeight="700" fill="#94a3b8">
+            <text x="215" y="18" textAnchor="middle" fontSize="11" fontWeight="700" fill="#cbd5e1">
                HEATING CURVE OF WATER
             </text>
 
             {/* Axis labels */}
-            <text x="215" y="200" textAnchor="middle" fontSize="10" fontWeight="600" fill="#64748b">
+            <text x="215" y="200" textAnchor="middle" fontSize="11" fontWeight="600" fill="#cbd5e1">
                Energy Added (J/g)
             </text>
-            <text x="18" y="105" textAnchor="middle" fontSize="10" fontWeight="600" fill="#64748b" transform="rotate(-90, 18, 105)">
-               Temperature (°C)
+            <text x="12" y="50" textAnchor="middle" fontSize="11" fontWeight="600" fill="#cbd5e1" transform="rotate(-90, 12, 50)">
+               Temp (°C)
             </text>
 
             {/* Temperature scale with styled markers */}
             {[
-               { temp: 120, y: 30, color: '#ec4899' },
-               { temp: 100, y: 55, color: '#a855f7' },
-               { temp: 50, y: 90, color: '#3b82f6' },
-               { temp: 0, y: 125, color: '#22d3ee' },
-               { temp: -20, y: 160, color: '#0ea5e9' }
+               { temp: 120, y: 30, color: '#f9a8d4' },
+               { temp: 100, y: 55, color: '#c4b5fd' },
+               { temp: 50, y: 90, color: '#93c5fd' },
+               { temp: 0, y: 125, color: '#67e8f9' },
+               { temp: -20, y: 160, color: '#7dd3fc' }
             ].map((marker, i) => (
-               <g key={i}>
+               <g key={`hctemp${i}`}>
                   <line x1="55" y1={marker.y} x2="60" y2={marker.y} stroke={marker.color} strokeWidth="2" />
-                  <text x="50" y={marker.y + 3} textAnchor="end" fontSize="9" fontWeight="500" fill={marker.color}>
+                  <text x="50" y={marker.y + 3} textAnchor="end" fontSize="11" fontWeight="500" fill={marker.color}>
                      {marker.temp}°
                   </text>
                </g>
             ))}
 
-            {/* Phase labels with styled badges */}
+            {/* Phase labels with styled badges - positioned to avoid overlaps */}
             {[
-               { label: 'ICE', x: 75, y: 145, color: '#0ea5e9' },
-               { label: 'MELTING', x: 135, y: 115, color: '#22d3ee' },
-               { label: 'WATER', x: 205, y: 85, color: '#3b82f6' },
-               { label: 'BOILING', x: 290, y: 45, color: '#8b5cf6' },
-               { label: 'STEAM', x: 360, y: 35, color: '#ec4899' }
-            ].map((phase, i) => (
-               <g key={i}>
+               { label: 'ICE', x: 75, y: 170, color: '#7dd3fc' },
+               { label: 'MELTING', x: 135, y: 115, color: '#67e8f9' },
+               { label: 'WATER', x: 205, y: 80, color: '#93c5fd' },
+               { label: 'BOILING', x: 290, y: 48, color: '#c4b5fd' },
+               { label: 'STEAM', x: 375, y: 38, color: '#f9a8d4' }
+            ].map((ph, i) => (
+               <g key={`hcphase${i}`}>
                   <rect
-                     x={phase.x - 22}
-                     y={phase.y - 10}
+                     x={ph.x - 22}
+                     y={ph.y - 10}
                      width="44"
                      height="14"
                      rx="7"
-                     fill={phase.color}
+                     fill={ph.color}
                      opacity="0.2"
                   />
                   <text
-                     x={phase.x}
-                     y={phase.y}
+                     x={ph.x}
+                     y={ph.y}
                      textAnchor="middle"
-                     fontSize="7"
+                     fontSize="11"
                      fontWeight="700"
-                     fill={phase.color}
+                     fill={ph.color}
                   >
-                     {phase.label}
+                     {ph.label}
                   </text>
                </g>
             ))}
@@ -1282,7 +1269,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
             <g>
                {/* Latent heat of fusion annotation */}
                <rect x="115" y="128" width="60" height="18" rx="4" fill="#22d3ee" opacity="0.15" stroke="#22d3ee" strokeWidth="1" />
-               <text x="145" y="140" textAnchor="middle" fontSize="8" fontWeight="700" fill="#22d3ee">
+               <text x="145" y="140" textAnchor="middle" fontSize="11" fontWeight="700" fill="#22d3ee">
                   Lf = 334 J/g
                </text>
                <line x1="115" y1="125" x2="115" y2="137" stroke="#22d3ee" strokeWidth="1" strokeDasharray="2 1" />
@@ -1290,39 +1277,37 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                {/* Latent heat of vaporization annotation */}
                <rect x="265" y="58" width="70" height="18" rx="4" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" strokeWidth="1" />
-               <text x="300" y="70" textAnchor="middle" fontSize="8" fontWeight="700" fill="#8b5cf6">
+               <text x="300" y="70" textAnchor="middle" fontSize="11" fontWeight="700" fill="#8b5cf6">
                   Lv = 2260 J/g
                </text>
                <line x1="235" y1="55" x2="235" y2="67" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="2 1" />
                <line x1="345" y1="55" x2="345" y2="67" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="2 1" />
             </g>
 
-            {/* Current values display */}
-            <g transform="translate(60, 205)">
-               <rect x="0" y="0" width="90" height="16" rx="4" fill="#1e293b" stroke="#334155" />
-               <text x="45" y="11" textAnchor="middle" fontSize="9" fill="#f8fafc">
-                  <tspan fill="#64748b">T: </tspan>
-                  <tspan fontWeight="700" fill={temperature > 50 ? '#ef4444' : temperature > 0 ? '#fbbf24' : '#0ea5e9'}>
-                     {temperature.toFixed(1)}°C
-                  </tspan>
-               </text>
+            {/* Current values display - absolute coords */}
+            <rect x="60" y="205" width="90" height="16" rx="4" fill="#1e293b" stroke="#334155" />
+            <text x="105" y="216" textAnchor="middle" fontSize="11" fill="#f8fafc">
+               <tspan fill="#cbd5e1">T: </tspan>
+               <tspan fontWeight="700" fill={temperature > 50 ? '#ef4444' : temperature > 0 ? '#fbbf24' : '#7dd3fc'}>
+                  {temperature.toFixed(1)}°C
+               </tspan>
+            </text>
 
-               <rect x="100" y="0" width="100" height="16" rx="4" fill="#1e293b" stroke="#334155" />
-               <text x="150" y="11" textAnchor="middle" fontSize="9" fill="#f8fafc">
-                  <tspan fill="#64748b">E: </tspan>
-                  <tspan fontWeight="700" fill="#a855f7">{energyAdded.toFixed(0)} J/g</tspan>
-               </text>
+            <rect x="160" y="205" width="100" height="16" rx="4" fill="#1e293b" stroke="#334155" />
+            <text x="210" y="216" textAnchor="middle" fontSize="11" fill="#f8fafc">
+               <tspan fill="#cbd5e1">E: </tspan>
+               <tspan fontWeight="700" fill="#c4b5fd">{energyAdded.toFixed(0)} J/g</tspan>
+            </text>
 
-               <rect x="210" y="0" width="80" height="16" rx="4" fill="#1e293b" stroke="#334155" />
-               <text x="250" y="11" textAnchor="middle" fontSize="9" fontWeight="600" fill={
-                  matterPhase === 'solid' ? '#0ea5e9' :
-                  matterPhase === 'melting' ? '#22d3ee' :
-                  matterPhase === 'liquid' ? '#3b82f6' :
-                  matterPhase === 'boiling' ? '#8b5cf6' : '#ec4899'
-               }>
-                  {matterPhase.toUpperCase()}
-               </text>
-            </g>
+            <rect x="270" y="205" width="80" height="16" rx="4" fill="#1e293b" stroke="#334155" />
+            <text x="310" y="216" textAnchor="middle" fontSize="11" fontWeight="600" fill={
+               matterPhase === 'solid' ? '#7dd3fc' :
+               matterPhase === 'melting' ? '#67e8f9' :
+               matterPhase === 'liquid' ? '#93c5fd' :
+               matterPhase === 'boiling' ? '#c4b5fd' : '#f9a8d4'
+            }>
+               {matterPhase.toUpperCase()}
+            </text>
          </svg>
       );
    };
@@ -1454,6 +1439,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
          <div style={{
             display: 'flex',
             flexDirection: 'column',
+            minHeight: '100vh',
             height: '100%',
             width: '100%',
             background: '#0a0f1a',
@@ -1576,7 +1562,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   }}
                   onPointerDown={() => goToPhase('predict')}
                >
-                  Explore Phase Changes →
+                  Start Exploring Phase Changes →
                </button>
 
                <p style={{
@@ -1594,10 +1580,10 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // PREDICT Screen
    if (phase === 'predict') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
                <div style={{ width: '100%', maxWidth: '600px' }}>
                   {renderSectionHeader("Step 1 • Make Your Prediction", "The Ice Cube Mystery", "What happens to temperature during melting?")}
 
@@ -1612,7 +1598,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                         {/* Arrow */}
                         <text x="200" y="55" textAnchor="middle" fontSize="24" fill={colors.primary}>→</text>
-                        <text x="200" y="80" textAnchor="middle" fontSize="10" fill={colors.textMuted}>+ Heat</text>
+                        <text x="200" y="80" textAnchor="middle" fontSize="11" fill={colors.textMuted}>+ Heat</text>
 
                         {/* Result with question mark */}
                         <g transform="translate(270, 20)">
@@ -1684,7 +1670,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // PLAY Screen - Heating simulation
    if (phase === 'play') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: 'hidden' }}>
@@ -1704,11 +1690,12 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                {/* Controls */}
                <div style={{
                   width: isMobile ? '100%' : '280px',
-                  padding: '20px',
+                  padding: '48px 20px 20px 20px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '16px',
                   overflowY: 'auto',
+                  flex: 1,
                   background: colors.bgCard,
                   borderLeft: isMobile ? 'none' : `1px solid ${colors.border}`,
                   borderTop: isMobile ? `1px solid ${colors.border}` : 'none'
@@ -1720,7 +1707,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                   {/* Current state */}
                   <div style={{ padding: '16px', borderRadius: '12px', textAlign: 'center', background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
-                     <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: colors.textMuted }}>Current State</p>
+                     <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: colors.textSecondary }}>Current State</p>
                      <p style={{ fontSize: '32px', fontWeight: 800, color: colors.primary }}>{temperature.toFixed(1)}°C</p>
                      <p style={{ fontSize: '14px', fontWeight: 600, marginTop: '4px', color:
                         matterPhase === 'solid' ? colors.secondary :
@@ -1737,8 +1724,43 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                   {/* Energy counter */}
                   <div style={{ padding: '12px', borderRadius: '12px', textAlign: 'center', background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
-                     <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted }}>Energy Added</p>
+                     <p style={{ fontSize: '11px', fontWeight: 700, color: colors.textSecondary }}>Energy Added</p>
                      <p style={{ fontSize: '20px', fontWeight: 800, color: colors.warning }}>{Math.round(energyAdded)} J/g</p>
+                  </div>
+
+                  {/* Heating Rate Slider */}
+                  <div style={{ padding: '12px', borderRadius: '12px', background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <label style={{ fontSize: '14px', fontWeight: 700, color: colors.textPrimary }}>Heating Rate</label>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: colors.warning }}>{heatingRate} J/g per tick</span>
+                     </div>
+                     <input
+                        type="range"
+                        min="1"
+                        max="20"
+                        step="1"
+                        value={heatingRate}
+                        onChange={(e) => setHeatingRate(Number(e.target.value))}
+                        onInput={(e) => setHeatingRate(Number((e.target as HTMLInputElement).value))}
+                        style={{
+                           width: '100%',
+                           height: '20px',
+                           touchAction: 'pan-y',
+                           accentColor: colors.warning,
+                           WebkitAppearance: 'none',
+                           appearance: 'none' as any,
+                           background: `linear-gradient(to right, ${colors.primary}, ${colors.warning})`,
+                           borderRadius: '10px',
+                           cursor: 'pointer'
+                        }}
+                     />
+                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                        <span style={{ fontSize: '12px', color: colors.textSecondary }}>1 (slow)</span>
+                        <span style={{ fontSize: '12px', color: colors.textSecondary }}>20 (fast)</span>
+                     </div>
+                     <p style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '6px' }}>
+                        When you increase the heating rate, energy is added faster. Observe how temperature changes at different rates during phase transitions.
+                     </p>
                   </div>
 
                   {/* Heat button */}
@@ -1753,7 +1775,8 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                         color: colors.textPrimary,
                         border: 'none',
                         cursor: 'pointer',
-                        boxShadow: `0 4px 20px ${isHeating ? colors.danger : colors.primary}40`
+                        boxShadow: `0 4px 20px ${isHeating ? colors.danger : colors.primary}40`,
+                        minHeight: '44px'
                      }}
                   >
                      {isHeating ? '⏸ Pause Heating' : '🔥 Start Heating'}
@@ -1780,11 +1803,19 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                      🔄 Reset
                   </button>
 
+                  {/* Educational context: this visualization shows real-world relevance */}
+                  <div style={{ padding: '12px', borderRadius: '12px', background: `${colors.primary}10`, border: `1px solid ${colors.primary}20` }}>
+                     <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', color: colors.textPrimary }}>What You Are Observing</p>
+                     <p style={{ fontSize: '13px', lineHeight: 1.6, color: colors.textSecondary }}>
+                        This visualization demonstrates how energy input affects matter during phase transitions. Notice how temperature remains constant during melting and boiling — all energy goes into breaking molecular bonds (latent heat). This is important in real-world applications like refrigeration, cooking, and weather systems. The formula Q = mL describes the energy required for phase change.
+                     </p>
+                  </div>
+
                   {/* Insight */}
                   {(matterPhase === 'melting' || matterPhase === 'boiling') && (
                      <div style={{ padding: '16px', borderRadius: '12px', background: `${colors.warning}15`, border: `1px solid ${colors.warning}30` }}>
                         <p style={{ fontSize: '12px', fontWeight: 700, marginBottom: '8px', color: colors.warning }}>Notice!</p>
-                        <p style={{ fontSize: '11px', lineHeight: 1.6, color: colors.textSecondary }}>
+                        <p style={{ fontSize: '14px', lineHeight: 1.6, color: colors.textSecondary }}>
                            Temperature is <strong style={{ color: colors.textPrimary }}>constant</strong> during phase change!
                            All energy goes into breaking molecular bonds.
                         </p>
@@ -1801,10 +1832,10 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // REVIEW Screen
    if (phase === 'review') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
                <div style={{ width: '100%', maxWidth: '600px' }}>
                   {renderSectionHeader("Step 3 • Understand the Result", "Latent Heat", "Energy that changes state, not temperature")}
 
@@ -1865,10 +1896,10 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // TWIST-PREDICT Screen
    if (phase === 'twist_predict') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
                <div style={{ width: '100%', maxWidth: '600px' }}>
                   {renderSectionHeader("Step 4 • Reversing the Process", "Cooling Down", "What happens when steam condenses?")}
 
@@ -1889,7 +1920,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                         {/* Arrow */}
                         <text x="200" y="45" textAnchor="middle" fontSize="24" fill={colors.secondary}>→</text>
-                        <text x="200" y="70" textAnchor="middle" fontSize="10" fill={colors.textMuted}>- Heat</text>
+                        <text x="200" y="70" textAnchor="middle" fontSize="11" fill={colors.textMuted}>- Heat</text>
 
                         {/* Result */}
                         <g transform="translate(270, 20)">
@@ -1955,41 +1986,50 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // TWIST-PLAY Screen - Cooling demonstration
    if (phase === 'twist_play') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: 'hidden' }}>
                {/* Visualization */}
                <div style={{ flex: 1, padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ width: '100%', maxWidth: '400px' }}>
-                     <svg viewBox="0 0 400 300" style={{ width: '100%' }}>
+                     <svg viewBox="0 0 400 300" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
                         {/* Background */}
                         <rect width="400" height="300" fill={colors.bgDark} />
+                        {/* Grid lines for reference */}
+                        <line x1="50" y1="20" x2="350" y2="20" stroke="#1e293b" strokeWidth="0.5" opacity="0.5" strokeDasharray="4 4" />
+                        <line x1="50" y1="75" x2="350" y2="75" stroke="#1e293b" strokeWidth="0.5" opacity="0.5" strokeDasharray="4 4" />
+                        <line x1="50" y1="150" x2="350" y2="150" stroke="#1e293b" strokeWidth="0.5" opacity="0.5" strokeDasharray="4 4" />
+                        <line x1="50" y1="225" x2="350" y2="225" stroke="#1e293b" strokeWidth="0.5" opacity="0.5" strokeDasharray="4 4" />
+                        <line x1="50" y1="280" x2="350" y2="280" stroke="#1e293b" strokeWidth="0.5" opacity="0.5" strokeDasharray="4 4" />
+
+                        {/* Title at top */}
+                        <text x="200" y="18" textAnchor="middle" fontSize="12" fontWeight="700" fill="#e2e8f0">COOLING CURVE: STEAM TO ICE</text>
 
                         {/* Temperature bar */}
-                        <g transform="translate(50, 30)">
-                           <rect x="0" y="0" width="300" height="30" rx="15" fill={colors.bgCard} stroke={colors.border} />
-                           <rect
-                              x="3"
-                              y="3"
-                              width={Math.max(0, ((coolingTemp + 25) / 145) * 294)}
-                              height="24"
-                              rx="12"
-                              fill={coolingTemp > 100 ? colors.accent : coolingTemp > 0 ? colors.primary : colors.secondary}
-                           />
-                           <text x="150" y="22" textAnchor="middle" fontSize="14" fontWeight="bold" fill={colors.textPrimary}>
-                              {coolingTemp.toFixed(1)}°C
-                           </text>
-                        </g>
+                        <rect x="50" y="30" width="300" height="30" rx="15" fill={colors.bgCard} stroke={colors.border} />
+                        <rect
+                           x="53"
+                           y="33"
+                           width={Math.max(0, ((coolingTemp + 25) / 145) * 294)}
+                           height="24"
+                           rx="12"
+                           fill={coolingTemp > 100 ? colors.accent : coolingTemp > 0 ? colors.primary : colors.secondary}
+                        />
+                        <text x="200" y="52" textAnchor="middle" fontSize="14" fontWeight="bold" fill={colors.textPrimary}>
+                           {coolingTemp.toFixed(1)}°C
+                        </text>
+                        <text x="50" y="75" fontSize="11" fill="#cbd5e1">-25°C</text>
+                        <text x="350" y="75" textAnchor="end" fontSize="11" fill="#cbd5e1">120°C</text>
 
-                        {/* Phase indicator */}
-                        <text x="200" y="90" textAnchor="middle" fontSize="48">
+                        {/* Phase indicator - centered vertically */}
+                        <text x="200" y="115" textAnchor="middle" fontSize="48">
                            {coolingPhase === 'gas' ? '💨' :
                             coolingPhase === 'condensing' ? '💨💧' :
                             coolingPhase === 'liquid' ? '💧' :
                             coolingPhase === 'freezing' ? '💧🧊' : '🧊'}
                         </text>
-                        <text x="200" y="130" textAnchor="middle" fontSize="16" fontWeight="bold" fill={
+                        <text x="200" y="150" textAnchor="middle" fontSize="16" fontWeight="bold" fill={
                            coolingPhase === 'gas' ? colors.accent :
                            coolingPhase === 'condensing' ? '#c084fc' :
                            coolingPhase === 'liquid' ? colors.primary :
@@ -2001,28 +2041,38 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                             coolingPhase === 'freezing' ? 'Freezing...' : 'Solid (Ice)'}
                         </text>
 
-                        {/* Energy release indicator */}
-                        {(coolingPhase === 'condensing' || coolingPhase === 'freezing') && (
-                           <g>
-                              <rect x="100" y="160" width="200" height="50" rx="10" fill={`${colors.warning}20`} stroke={colors.warning} strokeWidth="2" />
-                              <text x="200" y="185" textAnchor="middle" fontSize="12" fontWeight="bold" fill={colors.warning}>
-                                 {coolingPhase === 'condensing' ? '⚡ Releasing 2260 J/g' : '⚡ Releasing 334 J/g'}
-                              </text>
-                              <text x="200" y="202" textAnchor="middle" fontSize="10" fill={colors.textSecondary}>
-                                 Latent heat released to surroundings!
-                              </text>
-                           </g>
-                        )}
+                        {/* Energy info box - always visible */}
+                        <rect x="80" y="170" width="240" height="50" rx="10" fill={`${(coolingPhase === 'condensing' || coolingPhase === 'freezing') ? colors.warning : colors.primary}15`} stroke={(coolingPhase === 'condensing' || coolingPhase === 'freezing') ? colors.warning : colors.primary} strokeWidth="1" />
+                        <text x="200" y="192" textAnchor="middle" fontSize="12" fontWeight="bold" fill={(coolingPhase === 'condensing' || coolingPhase === 'freezing') ? colors.warning : '#cbd5e1'}>
+                           {coolingPhase === 'condensing' ? '⚡ Releasing 2260 J/g latent heat' :
+                            coolingPhase === 'freezing' ? '⚡ Releasing 334 J/g latent heat' :
+                            coolingPhase === 'gas' ? 'Cooling steam - temperature decreasing' :
+                            coolingPhase === 'liquid' ? 'Cooling liquid - temperature decreasing' :
+                            'Solid ice formed - cooling complete'}
+                        </text>
+                        <text x="200" y="210" textAnchor="middle" fontSize="11" fill="#cbd5e1">
+                           {(coolingPhase === 'condensing' || coolingPhase === 'freezing') ? 'Temperature stays constant during phase change!' : 'Q = mcΔT governs temperature change'}
+                        </text>
 
-                        {/* Cooling indicator */}
-                        {isCooling && (
-                           <g transform="translate(200, 250)">
-                              <rect x="-60" y="-15" width="120" height="30" rx="15" fill={colors.secondary} opacity="0.3" />
-                              <text x="0" y="5" textAnchor="middle" fontSize="12" fontWeight="bold" fill={colors.secondary}>
-                                 ❄️ Removing Heat ❄️
-                              </text>
-                           </g>
-                        )}
+                        {/* Phase transition diagram at bottom */}
+                        <rect x="30" y="235" width="65" height="24" rx="6" fill={coolingPhase === 'gas' ? colors.accent : '#1e293b'} stroke={colors.accent} />
+                        <text x="62" y="251" textAnchor="middle" fontSize="11" fontWeight="600" fill={coolingPhase === 'gas' ? '#fff' : '#cbd5e1'}>Gas</text>
+
+                        <text x="105" y="251" textAnchor="middle" fontSize="14" fill="#cbd5e1">→</text>
+
+                        <rect x="115" y="235" width="65" height="24" rx="6" fill={coolingPhase === 'liquid' ? colors.primary : '#1e293b'} stroke={colors.primary} />
+                        <text x="147" y="251" textAnchor="middle" fontSize="11" fontWeight="600" fill={coolingPhase === 'liquid' ? '#fff' : '#cbd5e1'}>Liquid</text>
+
+                        <text x="190" y="251" textAnchor="middle" fontSize="14" fill="#cbd5e1">→</text>
+
+                        <rect x="200" y="235" width="65" height="24" rx="6" fill={coolingPhase === 'solid' ? colors.secondary : '#1e293b'} stroke={colors.secondary} />
+                        <text x="232" y="251" textAnchor="middle" fontSize="11" fontWeight="600" fill={coolingPhase === 'solid' ? '#fff' : '#cbd5e1'}>Solid</text>
+
+                        {/* Status indicator */}
+                        <rect x="100" y="270" width="200" height="24" rx="12" fill={isCooling ? `${colors.secondary}30` : '#1e293b'} stroke={isCooling ? colors.secondary : colors.border} />
+                        <text x="200" y="286" textAnchor="middle" fontSize="12" fontWeight="bold" fill={isCooling ? colors.secondary : '#cbd5e1'}>
+                           {isCooling ? '❄️ Removing Heat ❄️' : 'Press Start Cooling to begin'}
+                        </text>
                      </svg>
                   </div>
                </div>
@@ -2030,11 +2080,12 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                {/* Controls */}
                <div style={{
                   width: isMobile ? '100%' : '280px',
-                  padding: '20px',
+                  padding: '48px 20px 20px 20px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '16px',
                   overflowY: 'auto',
+                  flex: 1,
                   background: colors.bgCard,
                   borderLeft: isMobile ? 'none' : `1px solid ${colors.border}`,
                   borderTop: isMobile ? `1px solid ${colors.border}` : 'none'
@@ -2111,10 +2162,10 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // TWIST-REVIEW Screen
    if (phase === 'twist_review') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
                <div style={{ width: '100%', maxWidth: '600px' }}>
                   {renderSectionHeader("Step 6 • Deep Understanding", "Energy Conservation in Phase Changes", "What goes in must come out")}
 
@@ -2185,8 +2236,8 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
             connection: "The flat plateau in the heating curve during melting means ice maintains 0°C while absorbing enormous energy — perfect for keeping things cold longer than cold water would.",
             howItWorks: 'Commercial ice packs often use gel or salt solutions that melt below 0°C, providing even colder sustained temperatures.',
             stats: [
-               { value: '334', label: 'J/g absorbed', icon: '❄️' },
-               { value: '0°C', label: 'Constant temp', icon: '🌡️' },
+               { value: '334 W', label: 'per gram absorbed', icon: '❄️' },
+               { value: '$2 billion', label: 'Cold chain market', icon: '🌡️' },
                { value: '6×', label: 'More than cold water', icon: '💪' }
             ],
             examples: ['Sports injury treatment', 'Food transportation', 'Medical cold therapy', 'Organ transport'],
@@ -2203,9 +2254,9 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
             connection: "The huge latent heat of vaporization means a small amount of refrigerant can absorb massive amounts of heat when it evaporates, then dump that heat outside when it condenses.",
             howItWorks: 'A compressor increases pressure, raising condensation temperature above outdoor temp. An expansion valve drops pressure, lowering evaporation temperature below indoor temp.',
             stats: [
-               { value: '2260', label: 'J/g moved', icon: '⚡' },
-               { value: '300%+', label: 'COP efficiency', icon: '📈' },
-               { value: '$150B', label: 'Market size', icon: '💰' }
+               { value: '2260 W', label: 'per gram moved', icon: '⚡' },
+               { value: '300%', label: 'COP efficiency', icon: '📈' },
+               { value: '$150 billion', label: 'Market size', icon: '💰' }
             ],
             examples: ['Home air conditioning', 'Refrigerators', 'Heat pumps', 'Industrial chillers'],
             companies: ['Carrier', 'Daikin', 'Trane', 'LG'],
@@ -2221,9 +2272,9 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
             connection: "The 2260 J/g released when water vapor condenses is the primary energy source for hurricanes. Warm oceans = more evaporation = stronger storms.",
             howItWorks: 'Warm ocean → evaporation → moist air rises → cools → condensation releases heat → air rises faster → low pressure → more evaporation → feedback loop!',
             stats: [
-               { value: '6×10¹⁴', label: 'Watts (hurricane)', icon: '⚡' },
+               { value: '600000 GHz', label: 'Energy equivalent', icon: '⚡' },
                { value: '200×', label: 'More than all power plants', icon: '🌀' },
-               { value: '80°F+', label: 'Ocean temp for formation', icon: '🌊' }
+               { value: '27 billion', label: 'Damage per year in USD', icon: '🌊' }
             ],
             examples: ['Hurricane formation', 'Thunderstorm development', 'Monsoons', 'Fog formation'],
             companies: ['NOAA', 'NASA', 'ECMWF', 'NWS'],
@@ -2239,9 +2290,9 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
             connection: "The reason humid days feel hotter is that high humidity slows evaporation, reducing the cooling effect. Less evaporation = less latent heat removed = you feel hotter.",
             howItWorks: 'Sweat glands produce water. Evaporation takes highest-energy molecules (they escape as vapor), leaving cooler molecules behind on your skin.',
             stats: [
-               { value: '2260', label: 'J/g cooling', icon: '💧' },
-               { value: '~600', label: 'mL/hour max sweat', icon: '😓' },
-               { value: '37°C', label: 'Body temp maintained', icon: '🌡️' }
+               { value: '2260 W', label: 'per gram cooling', icon: '💧' },
+               { value: '600 m', label: 'L per hour max sweat', icon: '😓' },
+               { value: '37 billion', label: 'Cells regulated', icon: '🌡️' }
             ],
             examples: ['Exercise cooling', 'Fever response', 'Hot weather adaptation', 'Evaporative coolers (swamp coolers)'],
             companies: ['Nike', 'Under Armour', 'Columbia', 'Portacool'],
@@ -2271,7 +2322,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       };
 
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ padding: '16px', background: colors.bgCard, borderBottom: `1px solid ${colors.border}` }}>
@@ -2325,7 +2376,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                </div>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '48px 16px 100px 16px' }}>
                <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                   <div style={{ borderRadius: '16px', overflow: 'hidden', marginBottom: '16px', background: `linear-gradient(135deg, ${currentApp.color}20 0%, ${currentApp.color}05 100%)`, border: `1px solid ${currentApp.color}30` }}>
                      <div style={{ padding: '24px' }}>
@@ -2357,8 +2408,28 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                      <p style={{ fontSize: '13px', lineHeight: 1.6, color: colors.textSecondary }}>{currentApp.connection}</p>
                   </div>
 
+                  <div style={{ padding: '16px', borderRadius: '12px', marginBottom: '16px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                     <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', color: colors.textPrimary }}>How It Works</p>
+                     <p style={{ fontSize: '13px', lineHeight: 1.6, color: colors.textSecondary }}>{currentApp.howItWorks}</p>
+                  </div>
+
+                  <div style={{ padding: '16px', borderRadius: '12px', marginBottom: '16px', background: `${colors.success}10`, border: `1px solid ${colors.success}20` }}>
+                     <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', color: colors.success }}>Future Impact</p>
+                     <p style={{ fontSize: '13px', lineHeight: 1.6, color: colors.textSecondary }}>{currentApp.futureImpact}</p>
+                  </div>
+
+                  <div style={{ padding: '16px', borderRadius: '12px', marginBottom: '16px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                     <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', color: colors.textPrimary }}>Real Examples</p>
+                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {currentApp.examples.map((ex, i) => (
+                           <span key={i} style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '8px', background: colors.bgCardLight, color: colors.textSecondary, border: `1px solid ${colors.border}` }}>{ex}</span>
+                        ))}
+                     </div>
+                  </div>
+
                   {!isCurrentCompleted && (
                      <button
+                        onClick={handleCompleteApp}
                         onPointerDown={handleCompleteApp}
                         style={{
                            width: '100%',
@@ -2370,10 +2441,11 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                            color: colors.textPrimary,
                            border: 'none',
                            cursor: 'pointer',
-                           boxShadow: `0 4px 20px ${currentApp.color}40`
+                           boxShadow: `0 4px 20px ${currentApp.color}40`,
+                           minHeight: '44px'
                         }}
                      >
-                        {selectedApp < 3 ? 'Continue to Next Application →' : 'Complete Applications →'}
+                        {selectedApp < 3 ? 'Next App →' : 'Complete Applications →'}
                      </button>
                   )}
                </div>
@@ -2394,7 +2466,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
          const percentage = (score / testQuestions.length) * 100;
 
          return (
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
                {renderProgressBar()}
 
                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
@@ -2423,21 +2495,60 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                          'Review the concepts and try again!'}
                      </p>
 
-                     <button
-                        onPointerDown={() => percentage >= 70 ? goToPhase('mastery') : setTestSubmitted(false)}
-                        style={{
-                           padding: '16px 32px',
-                           borderRadius: '12px',
-                           fontWeight: 700,
-                           fontSize: '15px',
-                           background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-                           color: colors.textPrimary,
-                           border: 'none',
-                           cursor: 'pointer'
-                        }}
-                     >
-                        {percentage >= 70 ? 'Complete Lesson →' : 'Review & Retry'}
-                     </button>
+                     {/* Answer review */}
+                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
+                        {testQuestions.map((q, i) => {
+                           const correct = q.options.find(o => o.correct)?.id;
+                           const userAnswer = testAnswers[i];
+                           const isCorrect = userAnswer === correct;
+                           return (
+                              <div key={i} style={{
+                                 width: '28px', height: '28px', borderRadius: '50%',
+                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                 fontSize: '12px', fontWeight: 700,
+                                 background: isCorrect ? '#22c55e' : '#ef4444',
+                                 color: '#fff'
+                              }}>
+                                 {isCorrect ? '✓' : '✗'}
+                              </div>
+                           );
+                        })}
+                     </div>
+
+                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                        <button
+                           onPointerDown={() => percentage >= 70 ? goToPhase('mastery') : setTestSubmitted(false)}
+                           style={{
+                              padding: '16px 32px',
+                              borderRadius: '12px',
+                              fontWeight: 700,
+                              fontSize: '15px',
+                              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                              color: colors.textPrimary,
+                              border: 'none',
+                              cursor: 'pointer',
+                              minHeight: '44px'
+                           }}
+                        >
+                           {percentage >= 70 ? 'Complete Lesson →' : 'Replay'}
+                        </button>
+                        <button
+                           onPointerDown={() => goToPhase('hook')}
+                           style={{
+                              padding: '16px 32px',
+                              borderRadius: '12px',
+                              fontWeight: 700,
+                              fontSize: '15px',
+                              background: colors.bgCardLight,
+                              color: colors.textSecondary,
+                              border: `1px solid ${colors.border}`,
+                              cursor: 'pointer',
+                              minHeight: '44px'
+                           }}
+                        >
+                           Return to Dashboard
+                        </button>
+                     </div>
                   </div>
                </div>
             </div>
@@ -2445,10 +2556,10 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       }
 
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
                <div style={{ width: '100%', maxWidth: '600px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                      <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary }}>Question {testQuestion + 1} of {testQuestions.length}</p>
@@ -2470,71 +2581,116 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px', color: colors.textPrimary }}>{currentQ.question}</h3>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-                     {currentQ.options.map((opt, i) => (
-                        <button
-                           key={opt.id}
-                           onPointerDown={() => {
-                              const newAnswers = [...testAnswers];
-                              newAnswers[testQuestion] = opt.id;
-                              setTestAnswers(newAnswers);
-                           }}
-                           style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '16px',
-                              padding: '16px',
-                              borderRadius: '12px',
-                              textAlign: 'left',
-                              background: selectedAnswer === opt.id ? `${colors.primary}20` : colors.bgCard,
-                              border: `2px solid ${selectedAnswer === opt.id ? colors.primary : colors.border}`,
-                              cursor: 'pointer'
-                           }}
-                        >
-                           <div style={{
-                              width: '28px', height: '28px', borderRadius: '50%',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontWeight: 700, fontSize: '12px',
-                              background: selectedAnswer === opt.id ? colors.primary : colors.bgCardLight,
-                              color: selectedAnswer === opt.id ? 'white' : colors.textMuted
-                           }}>
-                              {String.fromCharCode(65 + i)}
-                           </div>
-                           <p style={{ flex: 1, fontSize: '14px', color: selectedAnswer === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
-                        </button>
-                     ))}
+                     {currentQ.options.map((opt, i) => {
+                        const isChecked = checkedQuestions[testQuestion];
+                        const isCorrectOption = opt.correct === true;
+                        const isSelected = selectedAnswer === opt.id;
+                        let optBg = colors.bgCard;
+                        let optBorder = colors.border;
+                        if (isSelected && !isChecked) { optBg = `${colors.primary}20`; optBorder = colors.primary; }
+                        if (isChecked && isSelected && isCorrectOption) { optBg = '#22c55e20'; optBorder = '#22c55e'; }
+                        if (isChecked && isSelected && !isCorrectOption) { optBg = '#ef444420'; optBorder = '#ef4444'; }
+                        if (isChecked && !isSelected && isCorrectOption) { optBg = '#22c55e10'; optBorder = '#22c55e'; }
+
+                        return (
+                           <button
+                              key={opt.id}
+                              onClick={() => {
+                                 if (!isChecked) {
+                                    const newAnswers = [...testAnswers];
+                                    newAnswers[testQuestion] = opt.id;
+                                    setTestAnswers(newAnswers);
+                                 }
+                              }}
+                              style={{
+                                 display: 'flex',
+                                 alignItems: 'center',
+                                 gap: '16px',
+                                 padding: '16px',
+                                 borderRadius: '12px',
+                                 textAlign: 'left',
+                                 background: optBg,
+                                 border: `2px solid ${optBorder}`,
+                                 cursor: isChecked ? 'default' : 'pointer'
+                              }}
+                           >
+                              <div style={{
+                                 width: '28px', height: '28px', borderRadius: '50%',
+                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                 fontWeight: 700, fontSize: '12px',
+                                 background: isSelected ? colors.primary : colors.bgCardLight,
+                                 color: isSelected ? 'white' : colors.textSecondary
+                              }}>
+                                 {isChecked && isSelected && isCorrectOption ? '✓' : isChecked && isSelected && !isCorrectOption ? '✗' : String.fromCharCode(65 + i)}
+                              </div>
+                              <p style={{ flex: 1, fontSize: '14px', color: isSelected ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
+                           </button>
+                        );
+                     })}
                   </div>
+
+                  {/* Check Answer / Feedback */}
+                  {selectedAnswer && !checkedQuestions[testQuestion] && (
+                     <button
+                        onClick={() => {
+                           const newChecked = [...checkedQuestions];
+                           newChecked[testQuestion] = true;
+                           setCheckedQuestions(newChecked);
+                        }}
+                        style={{
+                           width: '100%', padding: '14px', borderRadius: '12px', fontWeight: 700,
+                           marginBottom: '12px', fontSize: '14px',
+                           background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                           color: colors.textPrimary, border: 'none', cursor: 'pointer', minHeight: '44px'
+                        }}
+                     >
+                        Check Answer
+                     </button>
+                  )}
+
+                  {checkedQuestions[testQuestion] && (
+                     <div style={{ padding: '16px', borderRadius: '12px', marginBottom: '16px', background: `${selectedAnswer === currentQ.options.find(o => o.correct)?.id ? colors.success : colors.danger}15`, border: `1px solid ${selectedAnswer === currentQ.options.find(o => o.correct)?.id ? colors.success : colors.danger}30` }}>
+                        <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', color: selectedAnswer === currentQ.options.find(o => o.correct)?.id ? '#22c55e' : '#ef4444' }}>
+                           {selectedAnswer === currentQ.options.find(o => o.correct)?.id ? '✓ Correct!' : '✗ Incorrect'}
+                        </p>
+                        <p style={{ fontSize: '13px', lineHeight: 1.6, color: colors.textSecondary }}>{currentQ.explanation}</p>
+                     </div>
+                  )}
 
                   <div style={{ display: 'flex', gap: '12px' }}>
                      <button
-                        onPointerDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
+                        onClick={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
                         style={{
                            flex: 1, padding: '14px', borderRadius: '12px', fontWeight: 600,
                            background: colors.bgCardLight, color: colors.textSecondary, border: `1px solid ${colors.border}`,
-                           cursor: testQuestion > 0 ? 'pointer' : 'not-allowed', opacity: testQuestion > 0 ? 1 : 0.3
+                           cursor: testQuestion > 0 ? 'pointer' : 'not-allowed', opacity: testQuestion > 0 ? 1 : 0.3,
+                           minHeight: '44px'
                         }}
                      >
                         ← Previous
                      </button>
                      {testQuestion < testQuestions.length - 1 ? (
                         <button
-                           onPointerDown={() => selectedAnswer && setTestQuestion(testQuestion + 1)}
+                           onClick={() => selectedAnswer && checkedQuestions[testQuestion] && setTestQuestion(testQuestion + 1)}
                            style={{
                               flex: 1, padding: '14px', borderRadius: '12px', fontWeight: 700,
-                              background: selectedAnswer ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
+                              background: (selectedAnswer && checkedQuestions[testQuestion]) ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
                               color: colors.textPrimary, border: 'none',
-                              cursor: selectedAnswer ? 'pointer' : 'not-allowed', opacity: selectedAnswer ? 1 : 0.5
+                              cursor: (selectedAnswer && checkedQuestions[testQuestion]) ? 'pointer' : 'not-allowed', opacity: (selectedAnswer && checkedQuestions[testQuestion]) ? 1 : 0.5,
+                              minHeight: '44px'
                            }}
                         >
-                           Next →
+                           Next Question
                         </button>
                      ) : (
                         <button
-                           onPointerDown={() => testAnswers.every(a => a !== null) && setTestSubmitted(true)}
+                           onClick={() => testAnswers.every(a => a !== null) && setTestSubmitted(true)}
                            style={{
                               flex: 1, padding: '14px', borderRadius: '12px', fontWeight: 700,
                               background: testAnswers.every(a => a !== null) ? `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)` : colors.bgCardLight,
                               color: colors.textPrimary, border: 'none',
-                              cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed', opacity: testAnswers.every(a => a !== null) ? 1 : 0.5
+                              cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed', opacity: testAnswers.every(a => a !== null) ? 1 : 0.5,
+                              minHeight: '44px'
                            }}
                         >
                            Submit Test ✓
@@ -2553,6 +2709,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
          <div style={{
             display: 'flex',
             flexDirection: 'column',
+            minHeight: '100vh',
             height: '100%',
             width: '100%',
             background: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)',

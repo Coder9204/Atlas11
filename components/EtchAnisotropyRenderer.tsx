@@ -3,6 +3,12 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // Phase type for internal state management
 type EAPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
+// Validate phase input
+const isValidPhase = (p: string | undefined): p is EAPhase => {
+  const validPhases: EAPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  return p !== undefined && validPhases.includes(p as EAPhase);
+};
+
 interface EtchAnisotropyRendererProps {
   gamePhase?: EAPhase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
@@ -12,7 +18,7 @@ interface EtchAnisotropyRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#cbd5e1',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -71,14 +77,14 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
     elementGap: isMobile ? '8px' : '12px',
   };
 
-  // Internal phase state management
-  const [phase, setPhase] = useState<EAPhase>(() => gamePhase || 'hook');
+  // Internal phase state management - validate gamePhase prop
+  const [phase, setPhase] = useState<EAPhase>(() => isValidPhase(gamePhase) ? gamePhase : 'hook');
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
   // Sync phase with gamePhase prop when it changes (for resume)
   useEffect(() => {
-    if (gamePhase && gamePhase !== phase) {
+    if (isValidPhase(gamePhase) && gamePhase !== phase) {
       setPhase(gamePhase);
     }
   }, [gamePhase]);
@@ -663,38 +669,44 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
             </g>
           )}
 
-          {/* Substrate base layer */}
-          <rect
-            x={centerX - 100}
-            y={surfaceY + maxDepth}
-            width={200}
-            height={8}
-            fill="#1e1e2e"
-            rx={2}
-          />
+          {/* Substrate layer group */}
+          <g id="substrate-layer">
+            {/* Substrate base layer */}
+            <rect
+              x={centerX - 100}
+              y={surfaceY + maxDepth}
+              width={200}
+              height={8}
+              fill="#1e1e2e"
+              rx={2}
+            />
 
-          {/* Substrate material with premium gradient */}
-          <rect
-            x={centerX - 100}
-            y={surfaceY}
-            width={200}
-            height={maxDepth}
-            fill="url(#etchSubstrate)"
-            filter="url(#etchDepthShadow)"
-          />
+            {/* Substrate material with premium gradient */}
+            <rect
+              x={centerX - 100}
+              y={surfaceY}
+              width={200}
+              height={maxDepth}
+              fill="url(#etchSubstrate)"
+              filter="url(#etchDepthShadow)"
+            />
 
-          {/* Substrate edge highlights */}
-          <line x1={centerX - 100} y1={surfaceY} x2={centerX - 100} y2={surfaceY + maxDepth} stroke="#94a3b8" strokeWidth="0.5" opacity="0.3" />
-          <line x1={centerX + 100} y1={surfaceY} x2={centerX + 100} y2={surfaceY + maxDepth} stroke="#1e293b" strokeWidth="0.5" opacity="0.5" />
+            {/* Substrate edge highlights */}
+            <line x1={centerX - 100} y1={surfaceY} x2={centerX - 100} y2={surfaceY + maxDepth} stroke="#e2e8f0" strokeWidth="0.5" opacity="0.3" />
+            <line x1={centerX + 100} y1={surfaceY} x2={centerX + 100} y2={surfaceY + maxDepth} stroke="#1e293b" strokeWidth="0.5" opacity="0.5" />
+          </g>
 
-          {/* Etch profile (cut out from material) with gradient void */}
-          <path
-            d={generateEtchProfile()}
-            fill="url(#etchVoid)"
-            stroke={colors.accent}
-            strokeWidth={1.5}
-            filter="url(#etchDepthShadow)"
-          />
+          {/* Etch profile group */}
+          <g id="etch-profile">
+            {/* Etch profile (cut out from material) with gradient void */}
+            <path
+              d={generateEtchProfile()}
+              fill="url(#etchVoid)"
+              stroke={colors.accent}
+              strokeWidth={1.5}
+              filter="url(#etchDepthShadow)"
+            />
+          </g>
 
           {/* Sidewall angle indicator */}
           {etchTime > 20 && (
@@ -709,25 +721,28 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
             </g>
           )}
 
-          {/* Mask with premium gradient and glow */}
-          <rect
-            x={centerX - 100}
-            y={surfaceY - 15}
-            width={100 - halfMask - 5}
-            height={15}
-            fill="url(#etchMask)"
-            rx={2}
-            filter="url(#etchMaskGlow)"
-          />
-          <rect
-            x={centerX + halfMask + 5}
-            y={surfaceY - 15}
-            width={100 - halfMask - 5}
-            height={15}
-            fill="url(#etchMask)"
-            rx={2}
-            filter="url(#etchMaskGlow)"
-          />
+          {/* Mask layer group */}
+          <g id="mask-layer">
+            {/* Mask with premium gradient and glow */}
+            <rect
+              x={centerX - 100}
+              y={surfaceY - 15}
+              width={100 - halfMask - 5}
+              height={15}
+              fill="url(#etchMask)"
+              rx={2}
+              filter="url(#etchMaskGlow)"
+            />
+            <rect
+              x={centerX + halfMask + 5}
+              y={surfaceY - 15}
+              width={100 - halfMask - 5}
+              height={15}
+              fill="url(#etchMask)"
+              rx={2}
+              filter="url(#etchMaskGlow)"
+            />
+          </g>
 
           {/* Dimension lines */}
           {etchTime > 0 && (
@@ -751,7 +766,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
                 fill="rgba(0,0,0,0.7)"
                 rx={4}
               />
-              <text x={centerX + 96} y={surfaceY + result.depth * scale / 2 + 4} fill={colors.success} fontSize={9} textAnchor="middle" fontWeight="bold">
+              <text x={centerX + 96} y={surfaceY + result.depth * scale / 2 + 4} fill={colors.success} fontSize={11} textAnchor="middle" fontWeight="bold">
                 {result.depth.toFixed(0)}nm
               </text>
 
@@ -779,7 +794,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
                     x={centerX - halfMask - result.undercutAmount * scale / 2}
                     y={surfaceY + 25}
                     fill={colors.error}
-                    fontSize={8}
+                    fontSize={11}
                     textAnchor="middle"
                     fontWeight="bold"
                   >
@@ -791,19 +806,30 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
           )}
 
           {/* Comparison diagram with premium styling */}
-          <g transform="translate(340, 30)">
+          <g transform="translate(340, 15)">
             {/* Isotropic example */}
-            <rect x={10} y={30} width={100} height={60} fill="url(#etchCompSubstrate)" rx={2} />
-            <path d="M 30,30 Q 30,70 60,70 Q 90,70 90,30" fill="url(#etchVoid)" />
-            <rect x={10} y={20} width={20} height={10} fill="url(#etchCompMask)" rx={1} />
-            <rect x={90} y={20} width={20} height={10} fill="url(#etchCompMask)" rx={1} />
+            <text x={60} y={12} fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">Isotropic</text>
+            <rect x={10} y={25} width={100} height={130} fill="url(#etchCompSubstrate)" rx={2} />
+            <path d="M 30,25 Q 15,95 60,155 Q 105,95 90,25" fill="url(#etchVoid)" />
+            <rect x={10} y={15} width={20} height={10} fill="url(#etchCompMask)" rx={1} />
+            <rect x={90} y={15} width={20} height={10} fill="url(#etchCompMask)" rx={1} />
+            <text x={60} y={172} fill={colors.error} fontSize="11" textAnchor="middle">Undercut</text>
 
             {/* Anisotropic example */}
-            <rect x={10} y={130} width={100} height={60} fill="url(#etchCompSubstrate)" rx={2} />
-            <rect x={35} y={130} width={50} height={60} fill="url(#etchVoid)" />
-            <rect x={10} y={120} width={25} height={10} fill="url(#etchCompMask)" rx={1} />
-            <rect x={85} y={120} width={25} height={10} fill="url(#etchCompMask)" rx={1} />
+            <text x={60} y={192} fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">Anisotropic</text>
+            <rect x={10} y={205} width={100} height={130} fill="url(#etchCompSubstrate)" rx={2} />
+            <rect x={35} y={205} width={50} height={130} fill="url(#etchVoid)" />
+            <rect x={10} y={195} width={25} height={10} fill="url(#etchCompMask)" rx={1} />
+            <rect x={85} y={195} width={25} height={10} fill="url(#etchCompMask)" rx={1} />
+            <text x={60} y={355} fill={colors.success} fontSize="11" textAnchor="middle">Vertical</text>
           </g>
+
+          {/* Direct labels on main visualization objects */}
+          <text x={centerX - 100 + 5} y={surfaceY + 75} fill={colors.textSecondary} fontSize="11" fontWeight="bold">Substrate</text>
+          <text x={centerX - 100 + 5} y={surfaceY - 5} fill={colors.mask} fontSize="11" fontWeight="bold">Mask</text>
+          {etchTime > 0 && (
+            <text x={centerX} y={surfaceY + result.depth * scale / 2 + 4} fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="bold">Etched Area</text>
+          )}
 
           {/* Metrics panel with premium styling */}
           <rect x={15} y={320} width={210} height={90} fill="rgba(0,0,0,0.7)" rx={10} stroke={colors.accent} strokeWidth={1} strokeOpacity={0.5} />
@@ -940,17 +966,22 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
   const renderControls = (showPassivation: boolean = false) => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Etch Progress: {etchTime}%
+        <label
+          htmlFor="etch-progress-slider"
+          style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}
+        >
+          Etch Time Progress (controls etch depth): {etchTime}%
         </label>
         <input
+          id="etch-progress-slider"
           type="range"
           min="0"
           max="100"
           step="5"
           value={etchTime}
           onChange={(e) => { setEtchTime(parseInt(e.target.value)); setIsAnimating(false); }}
-          style={{ width: '100%' }}
+          aria-label="Etch time progress - controls how deep the etch penetrates"
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', minHeight: '44px', accentColor: colors.accent, WebkitAppearance: 'none' as const, appearance: 'none' as const, background: `linear-gradient(to right, ${colors.accent} ${etchTime}%, rgba(255,255,255,0.2) ${etchTime}%)`, borderRadius: '4px' }}
         />
       </div>
 
@@ -961,12 +992,14 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
           alignItems: 'center',
           gap: '12px',
           cursor: 'pointer',
+          minHeight: '44px',
         }}>
           <input
             type="checkbox"
             checked={!isIsotropic}
             onChange={(e) => setIsIsotropic(!e.target.checked)}
-            style={{ width: '20px', height: '20px' }}
+            aria-label="Toggle anisotropic etching mode"
+            style={{ width: '24px', height: '24px', minWidth: '24px', minHeight: '24px' }}
           />
           Use Anisotropic (Plasma RIE) Etching
         </label>
@@ -974,17 +1007,22 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
 
       {showPassivation && !isIsotropic && (
         <div>
-          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-            Sidewall Passivation: {sidewallPassivation}%
+          <label
+            htmlFor="passivation-slider"
+            style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}
+          >
+            Sidewall Passivation Strength (controls lateral etch protection): {sidewallPassivation}%
           </label>
           <input
+            id="passivation-slider"
             type="range"
             min="0"
             max="100"
             step="5"
             value={sidewallPassivation}
             onChange={(e) => setSidewallPassivation(parseInt(e.target.value))}
-            style={{ width: '100%' }}
+            aria-label="Sidewall passivation strength - controls how much the sidewalls are protected from lateral etching"
+            style={{ height: '20px', touchAction: 'pan-y', width: '100%', minHeight: '44px', accentColor: colors.accent, WebkitAppearance: 'none' as const, appearance: 'none' as const, background: `linear-gradient(to right, ${colors.warning} ${sidewallPassivation}%, rgba(255,255,255,0.2) ${sidewallPassivation}%)`, borderRadius: '4px' }}
           />
         </div>
       )}
@@ -1005,54 +1043,102 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
     </div>
   );
 
-  // Progress bar showing all 10 phases
+  // Navigation bar with 10 dots showing all phases
+  const renderNavigationBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <nav
+        aria-label="Phase navigation"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          padding: '12px 16px',
+          background: colors.bgDark,
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          zIndex: 1000,
+          overflowX: 'auto',
+        }}
+      >
+        {phaseOrder.map((p, index) => {
+          const isCompleted = index < currentIndex;
+          const isCurrent = index === currentIndex;
+          return (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              aria-label={`${phaseLabels[p]} phase${isCompleted ? ' (completed)' : isCurrent ? ' (current)' : ''}`}
+              aria-current={isCurrent ? 'step' : undefined}
+              style={{
+                width: '28px',
+                height: '28px',
+                minHeight: '44px',
+                minWidth: '44px',
+                borderRadius: '50%',
+                border: isCurrent ? `2px solid ${colors.accent}` : 'none',
+                background: isCompleted ? colors.success : isCurrent ? colors.accent : 'rgba(255,255,255,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '11px',
+                color: colors.textPrimary,
+                fontWeight: 'bold',
+                flexShrink: 0,
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              {isCompleted ? '\u2713' : index + 1}
+            </button>
+          );
+        })}
+      </nav>
+    );
+  };
+
+  // Progress bar showing phase labels
   const renderProgressBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        padding: '12px 16px',
-        background: 'rgba(0,0,0,0.3)',
-        overflowX: 'auto',
-      }}>
+      <div
+        role="progressbar"
+        aria-valuenow={currentIndex + 1}
+        aria-valuemin={1}
+        aria-valuemax={phaseOrder.length}
+        aria-label={`Progress: ${phaseLabels[phase]}`}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '12px 16px',
+          marginTop: '60px',
+          background: 'rgba(0,0,0,0.3)',
+          overflowX: 'auto',
+        }}
+      >
         {phaseOrder.map((p, index) => {
           const isCompleted = index < currentIndex;
           const isCurrent = index === currentIndex;
           return (
             <div
               key={p}
-              onClick={() => isCompleted && goToPhase(p)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                cursor: isCompleted ? 'pointer' : 'default',
               }}
             >
-              <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                background: isCompleted ? colors.success : isCurrent ? colors.accent : 'rgba(255,255,255,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '10px',
-                color: 'white',
-                fontWeight: 'bold',
-                flexShrink: 0,
-              }}>
-                {isCompleted ? '✓' : index + 1}
-              </div>
               <span style={{
                 fontSize: '10px',
-                color: isCurrent ? colors.accent : colors.textMuted,
+                color: isCompleted ? colors.success : isCurrent ? colors.accent : colors.textMuted,
                 whiteSpace: 'nowrap',
-                display: index < 4 || isCurrent ? 'block' : 'none',
               }}>
-                {phaseLabels[p]}
+                {isCompleted ? '\u2713' : ''}{phaseLabels[p]}
               </span>
               {index < phaseOrder.length - 1 && (
                 <div style={{
@@ -1091,8 +1177,10 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
         <button
           onClick={goBack}
           disabled={isFirst}
+          aria-label="Go back to previous phase"
           style={{
             padding: '12px 24px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: `1px solid ${colors.textMuted}`,
             background: 'transparent',
@@ -1101,6 +1189,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
             cursor: isFirst ? 'not-allowed' : 'pointer',
             fontSize: '14px',
             opacity: isFirst ? 0.5 : 1,
+            transition: 'all 0.3s ease',
           }}
         >
           Back
@@ -1108,8 +1197,10 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
         <button
           onClick={goNext}
           disabled={!canProceed || isLast}
+          aria-label={nextLabel}
           style={{
             padding: '12px 32px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: 'none',
             background: canProceed && !isLast ? colors.accent : 'rgba(255,255,255,0.1)',
@@ -1117,6 +1208,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
             fontWeight: 'bold',
             cursor: canProceed && !isLast ? 'pointer' : 'not-allowed',
             fontSize: '16px',
+            transition: 'all 0.3s ease',
           }}
         >
           {nextLabel}
@@ -1127,9 +1219,10 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
 
   // Wrapper for consistent layout
   const renderWrapper = (content: React.ReactNode, canProceed: boolean, nextLabel: string = 'Next') => (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, transition: 'all 0.3s ease' }}>
+      {renderNavigationBar()}
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', transition: 'all 0.3s ease' }}>
         {content}
       </div>
       {renderBottomBar(canProceed, nextLabel)}
@@ -1254,7 +1347,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
             borderRadius: '12px',
             marginBottom: '16px',
           }}>
-            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
               Think of dissolving a sugar cube in water - it dissolves from all surfaces equally.
               But what if you wanted to carve a precise vertical trench? Dissolving would
               create a rounded bowl, not a sharp-edged feature!
@@ -1302,16 +1395,28 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
         </div>
 
         <div style={{ padding: '0 16px 16px 16px' }}>
-          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-            Can etching be controlled to preserve feature edges?
-          </h3>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '12px',
+          }}>
+            <h3 style={{ color: colors.textPrimary, margin: 0 }}>
+              Can etching be controlled to preserve feature edges?
+            </h3>
+            <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+              {prediction ? '1/1 selected' : '0/1 selected'}
+            </span>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {predictions.map((p) => (
               <button
                 key={p.id}
                 onClick={() => setPrediction(p.id)}
+                aria-pressed={prediction === p.id}
                 style={{
                   padding: '16px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                   background: prediction === p.id ? 'rgba(249, 115, 22, 0.2)' : 'transparent',
@@ -1344,8 +1449,45 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
           </p>
         </div>
 
+        <div style={{
+          background: 'rgba(96, 165, 250, 0.15)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.plasma}`,
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+            <strong>Observe:</strong> Watch how the etch profile changes as you adjust the controls.
+            Pay attention to the sidewall angle and undercut beneath the mask.
+          </p>
+        </div>
+
+        <div style={{
+          background: 'rgba(249, 115, 22, 0.1)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.accent}`,
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+            <strong style={{ color: colors.accent }}>Real-World Relevance:</strong> This exact physics is used in every semiconductor fab to create transistor gates, memory cells, and MEMS sensors. Engineers optimize etch recipes to achieve vertical sidewalls for billions of nanometer-scale features on each chip.
+          </p>
+        </div>
+
         {renderVisualization(true)}
         {renderControls()}
+
+        <div style={{
+          background: 'rgba(96, 165, 250, 0.1)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.plasma}`,
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+            <strong style={{ color: colors.textPrimary }}>Anisotropy Ratio</strong> is defined as the ratio of vertical etch rate to lateral etch rate. The formula is: <span style={{ fontWeight: 'bold', color: colors.textPrimary }}>A = 1 - (R_lateral / R_vertical)</span>. A value of A = 1 means perfectly anisotropic (vertical only), while A = 0 means perfectly isotropic (equal in all directions).
+          </p>
+        </div>
 
         <div style={{
           background: colors.bgCard,
@@ -1353,7 +1495,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
           padding: '16px',
           borderRadius: '12px',
         }}>
-          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+          <h4 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Experiments to Try:</h4>
           <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
             <li>Run isotropic etch to 100% - observe the profile shape</li>
             <li>Reset and switch to anisotropic - compare the result</li>
@@ -1370,6 +1512,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'directional';
+    const predictionText = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return renderWrapper(
       <>
@@ -1383,11 +1526,16 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
           <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
             {wasCorrect ? 'Correct!' : 'Not Quite!'}
           </h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
+            You predicted: "{predictionText}"
+          </p>
           <p style={{ color: colors.textPrimary }}>
             Plasma etching can be made highly directional (anisotropic) by combining directional
             ion bombardment with sidewall passivation chemistry. This preserves precise feature edges!
           </p>
         </div>
+
+        {renderVisualization(false)}
 
         <div style={{
           background: colors.bgCard,
@@ -1494,6 +1642,19 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
           </p>
         </div>
 
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.15)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.warning}`,
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+            <strong>Observe:</strong> Toggle anisotropic mode and adjust the passivation slider.
+            Watch how the undercut changes with different passivation strengths.
+          </p>
+        </div>
+
         {renderVisualization(true, true)}
         {renderControls(true)}
 
@@ -1520,6 +1681,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'small_undercut';
+    const twistPredictionText = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return renderWrapper(
       <>
@@ -1533,10 +1695,53 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
           <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
             {wasCorrect ? 'Correct!' : 'Not Quite!'}
           </h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
+            You predicted: "{twistPredictionText}"
+          </p>
           <p style={{ color: colors.textPrimary }}>
             Even anisotropic etching has some undercut, but it can be minimized with proper
             sidewall passivation. The goal is to balance profile control with etch completion.
           </p>
+        </div>
+
+        {/* Visual diagram showing passivation effect */}
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '16px' }}>
+          <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '400px', transition: 'all 0.3s ease' }}>
+            <defs>
+              <linearGradient id="twistSubstrate" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#64748b" />
+                <stop offset="100%" stopColor="#475569" />
+              </linearGradient>
+              <linearGradient id="twistMask" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#a78bfa" />
+                <stop offset="100%" stopColor="#7c3aed" />
+              </linearGradient>
+              <linearGradient id="twistPassivation" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.8" />
+              </linearGradient>
+            </defs>
+            <rect width="400" height="200" fill="#0f172a" rx="8" />
+            <text x="100" y="25" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="bold">Low Passivation</text>
+            <text x="300" y="25" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="bold">High Passivation</text>
+
+            {/* Low passivation example */}
+            <rect x="30" y="60" width="140" height="100" fill="url(#twistSubstrate)" />
+            <rect x="30" y="50" width="40" height="10" fill="url(#twistMask)" />
+            <rect x="130" y="50" width="40" height="10" fill="url(#twistMask)" />
+            <path d="M 70,60 Q 55,110 100,110 Q 145,110 130,60" fill="#0f172a" stroke={colors.error} strokeWidth="1.5" />
+            <line x1="70" y1="65" x2="55" y2="65" stroke={colors.error} strokeWidth="1" strokeDasharray="3,2" />
+            <text x="100" y="180" fill={colors.error} fontSize="11" textAnchor="middle">More Undercut</text>
+
+            {/* High passivation example */}
+            <rect x="230" y="60" width="140" height="100" fill="url(#twistSubstrate)" />
+            <rect x="230" y="50" width="40" height="10" fill="url(#twistMask)" />
+            <rect x="330" y="50" width="40" height="10" fill="url(#twistMask)" />
+            <rect x="270" y="60" width="60" height="100" fill="#0f172a" stroke={colors.success} strokeWidth="1.5" />
+            <rect x="270" y="60" width="3" height="100" fill="url(#twistPassivation)" />
+            <rect x="327" y="60" width="3" height="100" fill="url(#twistPassivation)" />
+            <text x="300" y="180" fill={colors.success} fontSize="11" textAnchor="middle">Vertical Sidewalls</text>
+          </svg>
         </div>
 
         <div style={{
@@ -1578,13 +1783,45 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
           <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
-          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
             Etch anisotropy enables precise nanofabrication
           </p>
-          <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-            Complete all 4 applications to unlock the test
+          <p style={{ color: colors.textMuted, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+            Progress: {transferCompleted.size} of 4 applications completed
           </p>
         </div>
+
+        {/* Got It button for transfer phase progress */}
+        {transferCompleted.size === 0 && (
+          <div style={{
+            background: 'rgba(249, 115, 22, 0.15)',
+            margin: '0 16px 16px 16px',
+            padding: '16px',
+            borderRadius: '12px',
+            textAlign: 'center',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>
+              Explore each application below to see how etch anisotropy is used in real semiconductor manufacturing.
+            </p>
+            <button
+              onClick={() => setTransferCompleted(new Set([0]))}
+              style={{
+                padding: '12px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              Got It
+            </button>
+          </div>
+        )}
 
         {transferApplications.map((app, index) => (
           <div
@@ -1601,7 +1838,10 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
               <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
               {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
             </div>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>{app.description}</p>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '12px', fontWeight: 400 }}>
+              Typical specs: vertical etch depth up to 100nm at 50nm/s rate, aspect ratios exceeding 10:1, sidewall angles within 2° of 90°, and CD variation under 3nm across 300mm wafers.
+            </p>
             <div style={{ background: 'rgba(249, 115, 22, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
               <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
             </div>
@@ -1609,25 +1849,76 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
               <button
                 onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
                 style={{
-                  padding: '8px 16px',
+                  padding: '12px 20px',
+                  minHeight: '44px',
                   borderRadius: '6px',
                   border: `1px solid ${colors.accent}`,
                   background: 'transparent',
                   color: colors.accent,
                   cursor: 'pointer',
-                  fontSize: '13px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 Reveal Answer
               </button>
             ) : (
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-              </div>
+              <>
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                </div>
+                <button
+                  onClick={() => {}}
+                  style={{
+                    padding: '10px 16px',
+                    minHeight: '44px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: colors.success,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  Got It!
+                </button>
+              </>
             )}
           </div>
         ))}
+
+        {transferCompleted.size >= 4 && (
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.2)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            textAlign: 'center',
+          }}>
+            <p style={{ color: colors.success, fontWeight: 'bold', marginBottom: '8px' }}>
+              All applications completed!
+            </p>
+            <button
+              onClick={goNext}
+              style={{
+                padding: '12px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.success,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+              }}
+            >
+              Take the Test
+            </button>
+          </div>
+        )}
       </>,
       transferCompleted.size >= 4,
       'Take the Test'
@@ -1647,10 +1938,11 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
             textAlign: 'center',
           }}>
             <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-              {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+              {testScore >= 8 ? 'Excellent! You scored well!' : 'You scored - Keep Learning!'}
             </h2>
             <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-            <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 'bold' }}>Score: {testScore * 10}%</p>
+            <p style={{ color: colors.textSecondary, marginTop: '8px', fontWeight: 400 }}>
               {testScore >= 8 ? 'You understand etch anisotropy!' : 'Review the material and try again.'}
             </p>
           </div>
@@ -1670,7 +1962,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
           })}
         </>,
         testScore >= 8,
-        testScore >= 8 ? 'Complete Mastery' : 'Review & Retry'
+        testScore >= 8 ? 'Next Phase' : 'Review & Retry'
       );
     }
 
@@ -1680,7 +1972,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
         <div style={{ padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-            <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
           </div>
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
             {testQuestions.map((_, i) => (
@@ -1688,6 +1980,9 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
             ))}
           </div>
           <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px', fontWeight: 400 }}>
+              Scenario: You are an etch process engineer at a semiconductor fab developing recipes for advanced transistor gates. The feature dimensions require sub-nanometer precision.
+            </p>
             <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1763,7 +2058,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
         </div>
       </>,
       !testAnswers.includes(null),
-      'Submit Test'
+      'Grade Answers'
     );
   }
 

@@ -159,6 +159,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   const [hemisphere, setHemisphere] = useState<'north' | 'south'>('north');
   const [animPhase, setAnimPhase] = useState(0);
   const [ballLaunched, setBallLaunched] = useState(false);
+  const [rotationSpeed, setRotationSpeed] = useState(50); // 0-100 scale
 
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -1049,7 +1050,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
         );
 
       case 'play':
-        const earthRotation = animPhase * 0.5;
+        const earthRotation = animPhase * (rotationSpeed / 100);
         const deflectionDir = hemisphere === 'north' ? 1 : -1;
         const ballProgress = ballLaunched ? Math.min((animPhase % 100) / 100, 1) : 0;
         const ballIntendedAngle = 180;
@@ -1193,6 +1194,15 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                   </text>
                 </g>
 
+                {/* Speed indicator panel */}
+                <g transform="translate(300, 75)">
+                  <rect width="85" height="50" fill="url(#coriInfoPanel)" rx="8" stroke="#334155" strokeWidth="1" />
+                  <text x="42" y="18" textAnchor="middle" fontSize="9" fill="#64748b" fontWeight="600">SPEED</text>
+                  <text x="42" y="38" textAnchor="middle" fontSize="16" fill="#0ea5e9" fontWeight="bold">
+                    {rotationSpeed}%
+                  </text>
+                </g>
+
                 {/* Result panel */}
                 {ballLaunched && ballProgress >= 0.9 && (
                   <g transform="translate(300, 15)">
@@ -1243,7 +1253,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             </div>
 
             {/* Controls */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', width: '100%', maxWidth: '520px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '16px', width: '100%', maxWidth: '640px', marginBottom: '16px' }}>
               <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
                 <label style={{ color: '#cbd5e1', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Hemisphere</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -1269,6 +1279,17 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                   </button>
                 </div>
               </div>
+              <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+                <label style={{ color: '#cbd5e1', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Rotation Speed: {rotationSpeed}%</label>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={rotationSpeed}
+                  onChange={(e) => setRotationSpeed(Number(e.target.value))}
+                  style={{ width: '100%', height: '8px', accentColor: '#0ea5e9', background: '#334155', borderRadius: '4px', cursor: 'pointer' }}
+                />
+              </div>
               <button
                 onClick={() => {
                   setBallLaunched(true);
@@ -1281,11 +1302,24 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
               </button>
             </div>
 
+            {/* Educational explanation panel */}
+            <div className="bg-slate-800/60 rounded-xl p-4 mb-4 max-w-lg border border-slate-700">
+              <p className="text-slate-200 text-sm mb-2">
+                <strong className="text-sky-400">The Coriolis Force</strong> is defined as F = -2m(omega x v), where omega is the angular velocity of the rotating frame. This shows how moving objects are deflected in rotating reference frames.
+              </p>
+              <p className="text-slate-300 text-sm mb-2">
+                <strong>When you increase</strong> the rotation speed, the deflection becomes more pronounced because the Coriolis force is proportional to rotation rate. Higher rotation leads to greater apparent deflection.
+              </p>
+              <p className="text-slate-400 text-sm">
+                This effect is important in meteorology, ocean currents, and long-range ballistics where Earth&apos;s rotation affects trajectories over large distances.
+              </p>
+            </div>
+
             <div className="bg-slate-700/30 rounded-xl p-4 mb-4 max-w-lg">
               <p className="text-slate-300 text-center">
                 {ballLaunched
                   ? `The ball curves ${hemisphere === 'north' ? 'right' : 'left'} and misses your friend! This is the Coriolis effect - an apparent deflection due to observing from a rotating frame.`
-                  : 'Press "Throw Ball!" to see how the Coriolis effect deflects moving objects on a rotating platform.'}
+                  : 'Press "Fire Ball!" to see how the Coriolis effect deflects moving objects on a rotating platform.'}
               </p>
             </div>
 
@@ -1306,11 +1340,11 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
             {selectedPrediction === 'curves' ? (
               <div className="bg-green-500/20 border border-green-500 rounded-xl p-4 mb-6 max-w-lg">
-                <p className="text-green-400 font-semibold">Your prediction was correct! The ball curves.</p>
+                <p className="text-green-400 font-semibold">As you predicted, the ball curves! You observed the Coriolis deflection in action.</p>
               </div>
             ) : (
               <div className="bg-amber-500/20 border border-amber-500 rounded-xl p-4 mb-6 max-w-lg">
-                <p className="text-amber-400">The answer: It curves away from its intended path!</p>
+                <p className="text-amber-400">You saw the ball curve away from its intended path! This demonstrates what you observed - the Coriolis effect.</p>
               </div>
             )}
 

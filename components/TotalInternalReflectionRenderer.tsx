@@ -656,16 +656,17 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
         width: fullWidth ? '100%' : 'auto',
         zIndex: 10,
         position: 'relative',
+        minHeight: '44px',
         ...(size === 'sm' && {
-          padding: `${defined.spacing.sm} ${defined.spacing.md}`,
+          padding: '8px 16px',
           fontSize: defined.typography.sizes.sm,
         }),
         ...(size === 'md' && {
-          padding: `${defined.spacing.md} ${defined.spacing.lg}`,
+          padding: '12px 24px',
           fontSize: defined.typography.sizes.base,
         }),
         ...(size === 'lg' && {
-          padding: `${defined.spacing.lg} ${defined.spacing.xl}`,
+          padding: '16px 32px',
           fontSize: defined.typography.sizes.lg,
         }),
       };
@@ -805,7 +806,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
           gap: defined.spacing.md,
         }}
       >
-        <svg width={width} height={height} style={{ overflow: 'visible' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
           <defs>
             {/* Water gradient */}
             <linearGradient id="waterStreamGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1053,7 +1054,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
     const criticalRad = (currentMaterial.criticalAngle * Math.PI) / 180;
 
     return (
-      <svg width={width} height={height} style={{ overflow: 'visible' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
         <defs>
           <linearGradient id="mediumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="rgba(56, 189, 248, 0.05)" />
@@ -1295,7 +1296,8 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
                 key={key}
                 onClick={() => setMaterial(key as typeof material)}
                 style={{
-                  padding: defined.spacing.sm,
+                  padding: '12px 8px',
+                  minHeight: '44px',
                   borderRadius: defined.radius.md,
                   border:
                     material === key
@@ -1512,15 +1514,15 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
     const isTestPhase = phase === 'test';
 
     return (
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
         background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(12px)',
         borderTop: '1px solid rgba(255,255,255,0.1)',
         padding: '12px 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <button onClick={goBack} style={{
-          padding: '8px 16px', border: 'none', borderRadius: '8px',
+        <button onClick={goBack} aria-label="Back" style={{
+          padding: '12px 16px', minHeight: '44px', border: 'none', borderRadius: '8px',
           background: 'transparent', color: isFirst ? 'rgba(148,163,184,0.3)' : '#e2e8f0',
           cursor: isFirst ? 'not-allowed' : 'pointer', fontFamily: defined.typography.fontFamily,
           fontSize: '14px', fontWeight: 500, opacity: isFirst ? 0.4 : 1,
@@ -1531,18 +1533,18 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
 
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           {phaseOrder.map((p, i) => (
-            <button key={p} onClick={() => goToPhase(p)} title={phaseLabels[p]} style={{
-              width: phase === p ? '24px' : '8px', height: '8px',
+            <button key={p} onClick={() => goToPhase(p)} aria-label={phaseLabels[p]} title={phaseLabels[p]} style={{
+              width: phase === p ? '24px' : '8px', minHeight: '44px',
               borderRadius: '4px', border: 'none',
               background: phase === p ? defined.colors.primary : (i < idx ? defined.colors.success : 'rgba(100,116,139,0.4)'),
-              cursor: 'pointer', padding: 0,
+              cursor: 'pointer', padding: '18px 4px',
               transition: 'all 0.3s ease',
             }} />
           ))}
         </div>
 
-        <button onClick={goNext} disabled={isLast || isTestPhase} style={{
-          padding: '8px 20px', border: 'none', borderRadius: '8px',
+        <button onClick={goNext} disabled={isLast || isTestPhase} aria-label="Next" style={{
+          padding: '12px 20px', minHeight: '44px', border: 'none', borderRadius: '8px',
           background: (isLast || isTestPhase) ? 'rgba(100,116,139,0.3)' : 'linear-gradient(135deg, #6366F1, #4F46E5)',
           color: '#f8fafc', cursor: (isLast || isTestPhase) ? 'not-allowed' : 'pointer',
           fontFamily: defined.typography.fontFamily, fontSize: '14px', fontWeight: 600,
@@ -1552,7 +1554,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
         }}>
           {'Next \u2192'}
         </button>
-      </div>
+      </nav>
     );
   };
 
@@ -1787,7 +1789,9 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
         }}
       >
         Increase the incident angle and watch what happens when you cross the critical angle. Can
-        you trap all the light?
+        you trap all the light? This is why total internal reflection is so important in real-world
+        technology - this same principle is used in fiber optic cables, medical endoscopes, and
+        diamond cutting. Engineers design these applications to harness light trapping at 99% efficiency!
       </p>
 
       <div
@@ -1854,12 +1858,13 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
             marginBottom: defined.spacing.sm,
           }}
         >
-          {prediction === 'critical' ? '✓ Correct!' : '✗ Not quite!'}
+          {prediction === 'critical' ? '✓ Correct! Your prediction was right!' : '✗ Not quite what you predicted!'}
         </div>
         <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, lineHeight: 1.6 }}>
-          This demonstrates that because light travels from a denser medium to a less dense one,
+          As you observed in the experiment, when light travels from a denser medium to a less dense one,
           Snell&apos;s Law shows that above the critical angle, the equation would require sin&#952; &gt; 1,
-          which is impossible. Therefore 100% of light reflects back - the key principle of total internal reflection.
+          which is impossible. Therefore 100% of light reflects back - confirming what you saw when
+          you increased the angle past the critical point!
         </p>
       </div>
 
@@ -2734,7 +2739,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)',
+      minHeight: '100vh', height: '100vh', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)',
       color: '#f8fafc', position: 'relative', overflow: 'hidden',
       fontFamily: defined.typography.fontFamily, fontWeight: 400,
     }}>
@@ -2742,6 +2747,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
       <div style={{
         position: 'relative', flex: 1, paddingTop: '16px', paddingBottom: '80px',
         maxWidth: '900px', margin: '0 auto', width: '100%', padding: '16px 16px 80px',
+        overflowY: 'auto',
       }}>
         {phase === 'hook' && renderHook()}
         {phase === 'predict' && renderPredict()}
@@ -2766,7 +2772,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
           <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto', fontFamily: defined.typography.fontFamily }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: defined.colors.text.primary, fontSize: '20px', fontWeight: 700 }}>Knowledge Test</h2>
-              <span style={{ color: '#64748b', fontSize: '14px' }}>{currentTestQuestion + 1} of 10</span>
+              <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 600 }}>Question {currentTestQuestion + 1} of 10</span>
             </div>
 
             <div style={{
@@ -2833,6 +2839,9 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
                 background: 'rgba(30,41,59,0.8)', borderRadius: '12px', padding: '16px',
                 marginTop: '16px', border: '1px solid rgba(255,255,255,0.1)',
               }}>
+                <p style={{ fontSize: '13px', color: defined.colors.primary, fontWeight: 600, marginBottom: '8px' }}>
+                  Explanation:
+                </p>
                 <p style={{ fontSize: '14px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
                   {testCurrentQ.explanation}
                 </p>

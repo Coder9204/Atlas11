@@ -346,7 +346,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
   const energyLost = initialKE - finalKE;
   const energyLostPercent = (energyLost / initialKE) * 100;
 
-  // Premium design colors
+  // Premium design colors - using brightness >= 180 for text contrast
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -357,8 +357,8 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // Changed from #9CA3AF for better contrast (brightness 230)
+    textMuted: '#cbd5e1', // Changed from #6B7280 for better contrast (brightness 203)
     border: '#2a2a3a',
   };
 
@@ -425,25 +425,53 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
     playSound('crash');
   }, []);
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component - fixed position with z-index
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
-      height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      borderBottom: `1px solid ${colors.border}`,
+      zIndex: 1000,
+      padding: '8px 16px',
     }}>
       <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        maxWidth: '800px',
+        margin: '0 auto',
+      }}>
+        <span style={{ ...typo.small, color: colors.textSecondary }}>
+          {phaseLabels[phase]}
+        </span>
+        <span style={{ ...typo.small, color: colors.textMuted }}>
+          Phase {phaseOrder.indexOf(phase) + 1} of {phaseOrder.length}
+        </span>
+      </div>
+      {/* Progress bar */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '3px',
+        background: colors.border,
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+          background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+    </nav>
   );
+
+  // Progress bar component (legacy)
+  const renderProgressBar = () => renderNavBar();
 
   // Navigation dots
   const renderNavDots = () => (
@@ -472,7 +500,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
     </div>
   );
 
-  // Primary button style
+  // Primary button style - with minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #DC2626)`,
     color: 'white',
@@ -484,6 +512,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // Crash Visualization SVG
@@ -497,7 +526,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
     const carWidth = 80 - crumpleAmount;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="carBodySafe" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#60a5fa" />
@@ -606,10 +635,10 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
         )}
 
         {/* Speed indicator */}
-        <text x="40" y="50" fill="#94a3b8" fontSize="12">
+        <text x="40" y="50" fill="#e2e8f0" fontSize="12">
           Speed: <tspan fill="#f59e0b" fontWeight="bold">{impactSpeed} mph</tspan>
         </text>
-        <text x="40" y="70" fill="#94a3b8" fontSize="11">
+        <text x="40" y="70" fill="#e2e8f0" fontSize="11">
           Crumple Zone: <tspan fill={hasCrumpleZone ? '#22c55e' : '#ef4444'} fontWeight="bold">{hasCrumpleZone ? 'ON' : 'OFF'}</tspan>
         </text>
       </svg>
@@ -627,7 +656,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
     const combined = twistProgress >= 100;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* Title */}
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Perfectly Inelastic Collision
@@ -660,7 +689,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             </text>
             <circle cx="10" cy="40" r="8" fill="#1f2937" />
             <circle cx="40" cy="40" r="8" fill="#1f2937" />
-            <text x="25" y="5" textAnchor="middle" fill="#94a3b8" fontSize="10">At rest</text>
+            <text x="25" y="5" textAnchor="middle" fill="#e2e8f0" fontSize="10">At rest</text>
           </g>
         )}
 
@@ -718,6 +747,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -784,10 +814,12 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -804,7 +836,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             Two identical cars crash at 30 mph. One crumples on impact, the other stays rigid. Which passengers are safer?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -812,19 +844,29 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🚗</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Crumples</p>
-                <p style={{ ...typo.small, color: colors.success }}>150ms stop</p>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🚙</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Stays rigid</p>
-                <p style={{ ...typo.small, color: colors.error }}>30ms stop</p>
-              </div>
-            </div>
+            <svg width={isMobile ? 320 : 400} height={isMobile ? 160 : 180} viewBox={`0 0 ${isMobile ? 320 : 400} ${isMobile ? 160 : 180}`} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
+              {/* Crumpling car */}
+              <rect x="30" y="60" width="70" height="40" rx="5" fill="#3b82f6" />
+              <rect x="45" y="45" width="35" height="25" rx="3" fill="#1e293b" />
+              <circle cx="45" cy="100" r="10" fill="#374151" />
+              <circle cx="85" cy="100" r="10" fill="#374151" />
+              <text x="65" y="130" textAnchor="middle" fill="#e2e8f0" fontSize="11">Crumples</text>
+              <text x="65" y="145" textAnchor="middle" fill="#22c55e" fontSize="10">150ms stop</text>
+
+              {/* VS */}
+              <text x={isMobile ? 160 : 200} y="85" textAnchor="middle" fill="#e2e8f0" fontSize="18" fontWeight="bold">vs</text>
+
+              {/* Rigid car */}
+              <rect x={isMobile ? 220 : 280} y="60" width="70" height="40" rx="5" fill="#ef4444" />
+              <rect x={isMobile ? 235 : 295} y="45" width="35" height="25" rx="3" fill="#1e293b" />
+              <circle cx={isMobile ? 235 : 295} cy="100" r="10" fill="#374151" />
+              <circle cx={isMobile ? 275 : 335} cy="100" r="10" fill="#374151" />
+              <text x={isMobile ? 255 : 315} y="130" textAnchor="middle" fill="#e2e8f0" fontSize="11">Stays rigid</text>
+              <text x={isMobile ? 255 : 315} y="145" textAnchor="middle" fill="#ef4444" fontSize="10">30ms stop</text>
+
+              {/* Title */}
+              <text x={isMobile ? 160 : 200} y="25" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontWeight="600">Crash Comparison</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -886,16 +928,31 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Crash Test Laboratory
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Adjust the settings and run crash tests to see how crumple zones affect force.
           </p>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Real-world relevance:</strong> This simulation models how automotive engineers test crumple zone designs. These principles are used in crash test facilities by companies like Volvo and Mercedes-Benz to save thousands of lives annually.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -945,6 +1002,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                     color: 'white',
                     fontWeight: 600,
                     cursor: 'pointer',
+                    minHeight: '44px',
                   }}
                 >
                   {hasCrumpleZone ? 'ON' : 'OFF'}
@@ -966,6 +1024,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                   fontWeight: 700,
                   fontSize: '16px',
                   cursor: isAnimating ? 'not-allowed' : 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 {isAnimating ? 'Crashing...' : 'Run Crash Test'}
@@ -984,6 +1043,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                   color: colors.textSecondary,
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Reset
@@ -1057,18 +1117,44 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionOptions: Record<string, string> = {
+      'a': 'the rigid car is safer',
+      'b': 'the crumpling car is safer',
+      'c': 'both are equally safe'
+    };
+    const userPredictionText = prediction ? predictionOptions[prediction] : 'a prediction';
+    const wasCorrect = prediction === 'b';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Crash Safety
           </h2>
+
+          {/* Reference user's prediction */}
+          <div style={{
+            background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${wasCorrect ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              You predicted that <strong style={{ color: wasCorrect ? colors.success : colors.warning }}>{userPredictionText}</strong>.
+              {wasCorrect
+                ? " That's correct! The crumpling car is indeed safer because it extends the collision time, reducing force on passengers."
+                : " As it turns out, the crumpling car is actually safer. Let's understand why extending collision time reduces force."}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1355,6 +1441,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                   fontWeight: 700,
                   fontSize: '16px',
                   cursor: twistAnimating ? 'not-allowed' : 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 {twistAnimating ? 'Colliding...' : 'Run Collision'}
@@ -1369,6 +1456,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                   color: colors.textSecondary,
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Reset
@@ -1530,10 +1618,12 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1658,6 +1748,32 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                 ))}
               </div>
             </div>
+
+            {/* Got It button for current app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                marginTop: '20px',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: completedApps[selectedApp] ? colors.success : app.color,
+                color: 'white',
+                fontWeight: 600,
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              {completedApps[selectedApp] ? 'Completed' : 'Got It'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1740,10 +1856,12 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1806,6 +1924,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1843,6 +1962,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Previous
@@ -1861,6 +1981,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next
@@ -1886,6 +2007,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1911,6 +2033,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 

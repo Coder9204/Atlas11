@@ -309,8 +309,8 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#e2e8f0',
     border: '#2a2a3a',
   };
 
@@ -414,12 +414,12 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
   const renderProgressBar = () => (
     <div style={{
       position: 'fixed',
-      top: 0,
+      top: '56px',
       left: 0,
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1001,
     }}>
       <div style={{
         height: '100%',
@@ -469,7 +469,39 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Nav bar component
+  const renderNavBar = () => (
+    <nav
+      data-testid="nav-bar"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '56px',
+        background: colors.bgSecondary,
+        borderBottom: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        zIndex: 1000,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>🔊</span>
+        <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
+          Speed of Sound
+        </span>
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]}
+      </div>
+    </nav>
+  );
 
   // Echo Visualization Component
   const EchoVisualization = () => {
@@ -477,7 +509,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
     const height = isMobile ? 180 : 220;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="soundWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.8" />
@@ -586,7 +618,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
     const expectedSpeed = speedAtTemp(temperature);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="hotGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#FCA5A5" />
@@ -672,8 +704,11 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -720,13 +755,44 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Measure Sound Speed
+          Start Learning
         </button>
 
         {renderNavDots()}
       </div>
     );
   }
+
+  // Static Prediction Diagram SVG
+  const PredictDiagramSVG = () => {
+    const width = isMobile ? 340 : 480;
+    const height = 150;
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Person */}
+        <g transform="translate(50, 50)">
+          <circle cx="0" cy="0" r="15" fill="#FCD34D" />
+          <rect x="-10" y="18" width="20" height="35" fill="#3B82F6" rx="3" />
+          <text x="0" y="75" textAnchor="middle" fill={colors.textSecondary} fontSize="12">You</text>
+          <text x="0" y="90" textAnchor="middle" fill={colors.warning} fontSize="10">CLAP!</text>
+        </g>
+
+        {/* Arrow */}
+        <line x1="90" y1="60" x2={width - 90} y2="60" stroke={colors.warning} strokeWidth="3" />
+        <polygon points={`${width - 90},60 ${width - 100},55 ${width - 100},65`} fill={colors.warning} />
+        <text x={width / 2} y="45" textAnchor="middle" fill={colors.success} fontSize="14" fontWeight="600">170 m</text>
+
+        {/* Wall */}
+        <rect x={width - 60} y="30" width="30" height="80" fill="#475569" rx="3" />
+        <text x={width - 45} y="130" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Wall</text>
+
+        {/* Round trip label */}
+        <text x={width / 2} y={height - 10} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+          Round trip = 340 meters total
+        </text>
+      </svg>
+    );
+  };
 
   // PREDICT PHASE
   if (phase === 'predict') {
@@ -741,10 +807,13 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -761,28 +830,13 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
             You stand 170 meters from a wall and clap your hands. About how fast does the sound travel to the wall and back?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            justifyContent: 'center',
             marginBottom: '24px',
-            textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>You</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>CLAP!</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.warning }}>-&gt; 170m -&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>Wall</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Echo</p>
-              </div>
-            </div>
-            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '16px' }}>
-              Round trip = 340 meters total
-            </p>
+            <PredictDiagramSVG />
           </div>
 
           {/* Options */}
@@ -799,6 +853,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -844,16 +899,32 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Echo Experiment
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
             Clap to send a sound wave and time the echo!
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Watch the sound wave travel to the wall and return as an echo. Notice how the time changes when you adjust the distance.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -908,6 +979,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
                   fontSize: '18px',
                   cursor: measuring ? 'not-allowed' : 'pointer',
                   boxShadow: measuring ? 'none' : '0 4px 15px rgba(245, 158, 11, 0.4)',
+                  minHeight: '44px',
                 }}
               >
                 {measuring ? 'Measuring...' : 'CLAP!'}
@@ -923,6 +995,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
                     color: colors.textSecondary,
                     fontWeight: 600,
                     cursor: 'pointer',
+                    minHeight: '44px',
                   }}
                 >
                   Reset
@@ -989,7 +1062,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Understand the Physics
+              Continue
             </button>
           )}
         </div>
@@ -1006,10 +1079,13 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Sound Speed
           </h2>
@@ -1101,7 +1177,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore Temperature Effects
+            Continue
           </button>
         </div>
 
@@ -1123,10 +1199,13 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1176,6 +1255,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1204,7 +1284,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test Temperature Effect
+              Continue
             </button>
           )}
         </div>
@@ -1223,16 +1303,32 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Temperature and Sound Speed
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Adjust the temperature and watch how sound speed changes
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Drag the temperature slider and watch how the speed of sound changes. Hotter air means faster sound!
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1310,7 +1406,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand Why
+            Continue
           </button>
         </div>
 
@@ -1326,10 +1422,13 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Temperature Matters
           </h2>
@@ -1399,7 +1498,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            See Real-World Applications
+            Continue
           </button>
         </div>
 
@@ -1418,13 +1517,21 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1451,6 +1558,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (

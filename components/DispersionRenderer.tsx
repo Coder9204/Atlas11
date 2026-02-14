@@ -28,8 +28,8 @@ const defined = {
     },
     text: {
       primary: '#F8FAFC',
-      secondary: '#CBD5E1',
-      muted: '#64748B',
+      secondary: '#e2e8f0', // Brightness >= 180 for contrast compliance
+      muted: '#cbd5e1', // Upgraded from #64748B for better contrast
     },
     spectrum: {
       red: '#EF4444',
@@ -545,6 +545,7 @@ export default function DispersionRenderer() {
         border: 'none',
         opacity: disabled ? 0.5 : 1,
         width: fullWidth ? '100%' : 'auto',
+        minHeight: '44px', // Touch target compliance
         ...(size === 'sm' && {
           padding: `${defined.spacing.sm} ${defined.spacing.md}`,
           fontSize: defined.typography.sizes.sm,
@@ -679,7 +680,7 @@ export default function DispersionRenderer() {
           {PRISM_MATERIALS[prismMaterial].name} Prism
         </div>
 
-        <svg width={width} height={height} style={{ overflow: 'visible' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
           <defs>
             {/* ============================================ */}
             {/* PREMIUM GRADIENT DEFINITIONS - disp* prefix */}

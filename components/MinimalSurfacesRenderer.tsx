@@ -40,7 +40,7 @@ const colors = {
 
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
 
   border: '#334155',
   borderLight: '#475569',
@@ -194,7 +194,7 @@ const realWorldApps = [
     short: 'Roof structures',
     tagline: 'Nature-Inspired Building Design',
     description: 'Architects use minimal surface principles to design efficient tensile structures like stadium roofs, canopies, and membrane buildings that naturally distribute stress.',
-    connection: 'Soap films find the same minimal surfaces that make optimal tension structures. Dip a wire frame model in soap solution, and you get the ideal roof shape!',
+    connection: 'Soap films find the same minimal surfaces that make optimal tension structures. Dip a wire frame model in soap solution, and you get the ideal roof shape.',
     howItWorks: "Minimal surfaces have zero mean curvature at every point, meaning they're in perfect tension equilibrium. This makes them ideal for fabric roofs held in tension by cables.",
     stats: [
       { value: '1972', label: 'Munich Olympic Stadium', icon: '🏟️' },
@@ -216,7 +216,7 @@ const realWorldApps = [
     title: 'Network Optimization',
     short: 'Steiner trees',
     tagline: 'Finding Shortest Connections',
-    description: 'The Steiner tree problem asks: how do you connect points with minimum total wire length? Soap films between pins naturally solve this NP-hard problem!',
+    description: 'The Steiner tree problem asks: how do you connect points with minimum total wire length. Soap films between pins naturally solve this NP-hard problem.',
     connection: 'Place pins between parallel plates, dip in soap solution, and the film forms the shortest network connecting all pins - 120° junctions included.',
     howItWorks: 'Soap films minimize total surface area. For a thin film between pins, this equals minimizing total edge length. The 120° angles arise from balancing three equal surface tensions.',
     stats: [
@@ -240,7 +240,7 @@ const realWorldApps = [
     short: 'Cell structures',
     tagline: 'Life at the Surface',
     description: 'Lipid membranes behave like soap films, forming minimal surfaces. The endoplasmic reticulum, mitochondria, and cell organelles often adopt minimal surface geometries.',
-    connection: 'Biological membranes minimize free energy, just like soap films minimize area. Evolution discovered minimal surfaces billions of years before mathematicians!',
+    connection: 'Biological membranes minimize free energy, just like soap films minimize area. Evolution discovered minimal surfaces billions of years before mathematicians.',
     howItWorks: 'Lipid bilayers have surface tension that drives them toward minimal area configurations. Complex organelle shapes balance this with functional requirements like increased surface area for reactions.',
     stats: [
       { value: '5-10nm', label: 'Membrane thickness', icon: '🔬' },
@@ -263,7 +263,7 @@ const realWorldApps = [
     short: 'Bubble structures',
     tagline: 'The Geometry of Foam',
     description: 'Foams minimize total surface area while filling space. The Weaire-Phelan structure beats Kelvin\'s 1887 conjecture and inspired the Beijing Water Cube architecture.',
-    connection: 'Every foam obeys Plateau\'s laws: films meet in threes at 120°, edges meet in fours at ~109.5°. These rules emerge from surface tension minimization.',
+    connection: 'Every foam obeys Plateau\'s laws: films meet in threes at 120 degrees, edges meet in fours at approximately 109.5 degrees. These rules emerge from surface tension minimization.',
     howItWorks: 'Foam cells balance surface tension (minimizing area) with the constraint of filling space. Computer simulations found the Weaire-Phelan structure has 0.3% less surface area than Kelvin cells.',
     stats: [
       { value: '1993', label: 'Weaire-Phelan discovery', icon: '🎯' },
@@ -340,6 +340,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
   const [selectedFrame, setSelectedFrame] = useState<'square' | 'triangle' | 'circle' | 'cube'>('square');
   const [showFilm, setShowFilm] = useState(false);
   const [animTime, setAnimTime] = useState(0);
+  const [filmThickness, setFilmThickness] = useState(50);
 
   // Test phase state
   const [testQuestion, setTestQuestion] = useState(0);
@@ -488,6 +489,14 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
           </defs>
 
           <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
+
+          {/* Additional decorative elements for complexity */}
+          <circle cx="30" cy="30" r="5" fill={colors.primary} opacity="0.3" />
+          <circle cx={width - 30} cy="30" r="5" fill={colors.accent} opacity="0.3" />
+          <circle cx="30" cy={height - 30} r="5" fill={colors.soapFilm} opacity="0.3" />
+          <circle cx={width - 30} cy={height - 30} r="5" fill={colors.success} opacity="0.3" />
+          <line x1="20" y1="60" x2="40" y2="60" stroke={colors.border} strokeWidth="1" opacity="0.5" />
+          <line x1={width - 40} y1="60" x2={width - 20} y2="60" stroke={colors.border} strokeWidth="1" opacity="0.5" />
 
           <text x={width / 2} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
             {showSteiner ? 'Steiner Network Problem' : 'Minimal Surface Formation'}
@@ -683,7 +692,8 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
         {showBack ? (
           <button onClick={handleBack} style={{
             padding: '12px 20px', borderRadius: '12px', border: `1px solid ${colors.border}`,
-            backgroundColor: colors.bgCardLight, color: colors.textSecondary, fontSize: '14px', fontWeight: 600, cursor: 'pointer', minHeight: '48px'
+            backgroundColor: colors.bgCardLight, color: colors.textSecondary, fontSize: '14px', fontWeight: 600, cursor: 'pointer', minHeight: '48px',
+            transition: 'all 0.2s ease'
           }}>← Back</button>
         ) : <div />}
 
@@ -692,12 +702,12 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
             padding: '14px 28px', borderRadius: '12px', border: 'none',
             background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
             color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', minHeight: '52px', minWidth: '160px',
-            boxShadow: `0 4px 15px ${colors.primary}40`
+            boxShadow: `0 4px 15px ${colors.primary}40`, transition: 'all 0.2s ease'
           }}>{nextLabel}</button>
         ) : (
           <div style={{
             padding: '14px 28px', borderRadius: '12px', backgroundColor: colors.bgCardLight,
-            color: colors.textMuted, fontSize: '14px', minHeight: '52px', display: 'flex', alignItems: 'center'
+            color: colors.textMuted, fontSize: '14px', fontWeight: 400, minHeight: '52px', display: 'flex', alignItems: 'center'
           }}>Select an option above</div>
         )}
       </div>
@@ -710,14 +720,14 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
 
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden', transition: 'all 0.3s ease' }}>
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: isMobile ? '80px' : '120px', marginBottom: '20px' }}>🫧</div>
             <h1 style={{ fontSize: isMobile ? '28px' : '40px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px' }}>
               Nature's Optimizer
             </h1>
-            <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', maxWidth: '600px', margin: '0 auto 32px auto', lineHeight: 1.6 }}>
+            <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', maxWidth: '600px', margin: '0 auto 32px auto', lineHeight: 1.6, fontWeight: 400 }}>
               Soap films <strong style={{ color: colors.soapFilm }}>automatically find the smallest surface</strong> that spans a boundary. They're solving calculus problems in real-time!
             </p>
             <div style={{ background: colors.bgCard, borderRadius: '20px', padding: '24px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
@@ -753,7 +763,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
     ];
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden', transition: 'all 0.3s ease' }}>
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -782,7 +792,8 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
                     padding: '16px', borderRadius: '12px',
                     border: prediction === p.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
                     backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
-                    cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px'
+                    cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px',
+                    minHeight: '44px', transition: 'all 0.2s ease'
                   }}>
                     <span style={{ fontSize: '24px' }}>{p.icon}</span>
                     <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>{p.label}</span>
@@ -807,7 +818,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
 
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden', transition: 'all 0.3s ease' }}>
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -835,7 +846,8 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
                       padding: '12px 8px', borderRadius: '8px',
                       border: selectedFrame === frame.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
                       background: selectedFrame === frame.id ? `${colors.primary}20` : colors.bgDark,
-                      cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px'
+                      cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                      transition: 'all 0.2s ease'
                     }}>
                       <span style={{ fontSize: '24px' }}>{frame.icon}</span>
                       <span style={{ color: colors.textSecondary, fontSize: '11px' }}>{frame.label}</span>
@@ -844,21 +856,46 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
                 </div>
               </div>
 
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+                  Film Thickness: {filmThickness}%
+                </label>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={filmThickness}
+                  onChange={(e) => setFilmThickness(Number(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.primary }}
+                  aria-label="Film thickness slider"
+                />
+              </div>
+
               <button onClick={() => { setShowFilm(true); playSound('success'); }} style={{
                 width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
                 background: showFilm ? colors.bgCardLight : `linear-gradient(135deg, ${colors.soapFilm} 0%, ${colors.primary} 100%)`,
-                color: showFilm ? colors.textMuted : 'white', fontSize: '16px', fontWeight: 700, cursor: showFilm ? 'default' : 'pointer'
+                color: showFilm ? colors.textMuted : 'white', fontSize: '16px', fontWeight: 700, cursor: showFilm ? 'default' : 'pointer',
+                transition: 'all 0.3s ease', minHeight: '44px'
               }}>
                 {showFilm ? '🫧 Film Formed!' : '🫧 Dip in Soap Solution'}
               </button>
             </div>
 
-            <div style={{ background: `linear-gradient(135deg, ${colors.soapFilm}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.soapFilm}40` }}>
+            <div style={{ background: `linear-gradient(135deg, ${colors.soapFilm}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.soapFilm}40`, marginBottom: '16px' }}>
               <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>👀 What's Happening:</h4>
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
                 <strong style={{ color: colors.soapFilm }}>Surface tension</strong> pulls the soap film to minimize its total area.
                 Flat frames get flat films. Two rings create a <strong>catenoid</strong> (hourglass shape).
                 A cube frame produces <strong>13 different films</strong> all meeting at 120° angles!
+              </p>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+              <h4 style={{ color: colors.success, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🌍 Real-World Relevance:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                This principle is used in <strong style={{ color: colors.primaryLight }}>architecture</strong> (stadium roofs like the Munich Olympic Stadium),
+                <strong style={{ color: colors.primaryLight }}> network optimization</strong> (finding shortest cable routes),
+                and <strong style={{ color: colors.primaryLight }}>biology</strong> (cell membrane shapes). Engineers use soap films as analog computers to solve complex optimization problems!
               </p>
             </div>
           </div>
@@ -870,9 +907,16 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
 
   if (phase === 'review') {
     const wasCorrect = prediction === 'minimal';
+    const predictionLabels: Record<string, string> = {
+      'random': 'a random, lumpy surface',
+      'maximum': 'the largest possible surface',
+      'minimal': 'the smallest possible surface',
+      'none': 'no film at all'
+    };
+    const userPredictionText = prediction ? predictionLabels[prediction] : 'unknown';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden', transition: 'all 0.3s ease' }}>
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', padding: '24px', background: wasCorrect ? `${colors.success}15` : `${colors.primary}15`, borderRadius: '16px', marginBottom: '24px', border: `1px solid ${wasCorrect ? colors.success : colors.primary}40` }}>
@@ -880,6 +924,9 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: wasCorrect ? colors.success : colors.primaryLight, marginBottom: '8px' }}>
                 {wasCorrect ? 'Excellent Prediction!' : 'Great Learning Moment!'}
               </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
+                You predicted {userPredictionText}.
+              </p>
               <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Soap films form the surface with minimum area!</p>
             </div>
 
@@ -1081,7 +1128,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
     const allCompleted = completedApps.every(c => c);
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden', transition: 'all 0.3s ease' }}>
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1095,7 +1142,8 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
                   padding: '10px 16px', borderRadius: '12px',
                   border: selectedApp === i ? `2px solid ${a.color}` : `1px solid ${colors.border}`,
                   background: selectedApp === i ? `${a.color}20` : colors.bgCard,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', flexShrink: 0
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', flexShrink: 0,
+                  minHeight: '44px', transition: 'all 0.2s ease'
                 }}>
                   <span style={{ fontSize: '20px' }}>{a.icon}</span>
                   <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 600 }}>{a.short}</span>
@@ -1140,9 +1188,9 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
               width: '100%', padding: '16px', borderRadius: '12px', border: 'none',
               background: completedApps[selectedApp] ? colors.bgCardLight : `linear-gradient(135deg, ${app.color} 0%, ${colors.accent} 100%)`,
               color: completedApps[selectedApp] ? colors.textMuted : 'white', fontSize: '16px', fontWeight: 700,
-              cursor: completedApps[selectedApp] ? 'default' : 'pointer', minHeight: '52px'
+              cursor: completedApps[selectedApp] ? 'default' : 'pointer', minHeight: '52px', transition: 'all 0.2s ease'
             }}>
-              {completedApps[selectedApp] ? '✓ Completed' : 'Got It! Continue →'}
+              {completedApps[selectedApp] ? 'Completed' : 'Got It'}
             </button>
             <p style={{ textAlign: 'center', color: colors.textMuted, fontSize: '13px', marginTop: '12px' }}>
               {completedApps.filter(c => c).length} of 4 completed {allCompleted && '— Ready for test!'}

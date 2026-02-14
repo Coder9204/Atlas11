@@ -335,8 +335,8 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast for accessibility
+    textMuted: '#e2e8f0', // High contrast for accessibility
     border: '#2a2a3a',
   };
 
@@ -407,7 +407,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
     const heatColor = cpuTemp < 60 ? '#22c55e' : cpuTemp < 80 ? '#f59e0b' : '#ef4444';
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="cpuHeatGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor={heatColor} />
@@ -628,7 +628,34 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1001,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>🔥</span>
+        <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Heat Sink Thermal</span>
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
+    </nav>
+  );
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
@@ -642,59 +669,68 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          🔥💻❄️
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Heat Sink Thermal Resistance
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "A CPU generates 150 watts of heat in a chip smaller than your fingernail. Without cooling, it would hit <span style={{ color: colors.error }}>1000C in seconds</span>. How does heat escape through layers of metal and paste?"
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          paddingTop: '80px',
+          textAlign: 'center',
+          overflowY: 'auto',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Every interface between your CPU and the air is a thermal resistance. Like resistors in a circuit, they add up - and the total determines whether your chip runs cool or catches fire."
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🔥💻❄️
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Heat Sink Thermal Resistance
+          </h1>
+
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "A CPU generates 150 watts of heat in a chip smaller than your fingernail. Without cooling, it would hit <span style={{ color: colors.error }}>1000C in seconds</span>. How does heat escape through layers of metal and paste?"
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Thermal Engineering Fundamentals
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "Every interface between your CPU and the air is a thermal resistance. Like resistors in a circuit, they add up - and the total determines whether your chip runs cool or catches fire."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              - Thermal Engineering Fundamentals
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Explore Thermal Resistance
+          </button>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Thermal Resistance
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -711,115 +747,138 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '16px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Step 1 of 1 - Make your prediction
+              </span>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A CPU's heat must pass through: the die, thermal paste, heatsink base, and fins. How is total thermal resistance calculated?
-          </h2>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
+            </div>
 
-          {/* Diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center', padding: '10px' }}>
-                <div style={{ fontSize: '32px' }}>🔲</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>CPU Die</p>
-                <p style={{ ...typo.small, color: colors.accent }}>0.3 K/W</p>
-              </div>
-              <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
-              <div style={{ textAlign: 'center', padding: '10px' }}>
-                <div style={{ fontSize: '32px' }}>💧</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>TIM</p>
-                <p style={{ ...typo.small, color: colors.accent }}>0.5 K/W</p>
-              </div>
-              <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
-              <div style={{ textAlign: 'center', padding: '10px' }}>
-                <div style={{ fontSize: '32px' }}>🧱</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Base</p>
-                <p style={{ ...typo.small, color: colors.accent }}>0.1 K/W</p>
-              </div>
-              <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
-              <div style={{ textAlign: 'center', padding: '10px' }}>
-                <div style={{ fontSize: '32px' }}>🌡️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Fins</p>
-                <p style={{ ...typo.small, color: colors.accent }}>0.6 K/W</p>
-              </div>
-              <div style={{ fontSize: '20px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center', padding: '10px', background: colors.accent + '22', borderRadius: '8px' }}>
-                <div style={{ fontSize: '32px' }}>?</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Total</p>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A CPU's heat must pass through: the die, thermal paste, heatsink base, and fins. How is total thermal resistance calculated?
+            </h2>
+
+            {/* Diagram */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center', padding: '10px' }}>
+                  <div style={{ fontSize: '32px' }}>🔲</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>CPU Die</p>
+                  <p style={{ ...typo.small, color: colors.accent }}>0.3 K/W</p>
+                </div>
+                <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
+                <div style={{ textAlign: 'center', padding: '10px' }}>
+                  <div style={{ fontSize: '32px' }}>💧</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>TIM</p>
+                  <p style={{ ...typo.small, color: colors.accent }}>0.5 K/W</p>
+                </div>
+                <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
+                <div style={{ textAlign: 'center', padding: '10px' }}>
+                  <div style={{ fontSize: '32px' }}>🧱</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>Base</p>
+                  <p style={{ ...typo.small, color: colors.accent }}>0.1 K/W</p>
+                </div>
+                <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
+                <div style={{ textAlign: 'center', padding: '10px' }}>
+                  <div style={{ fontSize: '32px' }}>🌡️</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>Fins</p>
+                  <p style={{ ...typo.small, color: colors.accent }}>0.6 K/W</p>
+                </div>
+                <div style={{ fontSize: '20px', color: colors.textMuted }}>=</div>
+                <div style={{ textAlign: 'center', padding: '10px', background: colors.accent + '22', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '32px' }}>?</div>
+                  <p style={{ ...typo.small, color: colors.textPrimary }}>Total</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -830,148 +889,171 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Thermal Resistance Lab
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust each parameter to see how it affects CPU temperature
-          </p>
+        <div style={{
+          flex: 1,
+          padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Thermal Resistance Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Adjust each parameter to see how it affects CPU temperature
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <HeatSinkVisualization />
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}15`,
+              border: `1px solid ${colors.accent}44`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Observe:</strong> Watch how each resistance value contributes to total thermal resistance. Try changing the thermal paste - notice how the R_tim value and temperature change together.
+              </p>
             </div>
 
-            {/* Power slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>CPU Power (Watts)</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{cpuPower}W</span>
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <HeatSinkVisualization />
               </div>
-              <input
-                type="range"
-                min="50"
-                max="250"
-                value={cpuPower}
-                onChange={(e) => setCpuPower(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-            </div>
 
-            {/* Thermal paste selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Thermal Interface Material
-              </span>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {[
-                  { id: 'none', label: 'None (Air)', r: '2.0 K/W' },
-                  { id: 'cheap', label: 'Basic', r: '0.5 K/W' },
-                  { id: 'premium', label: 'Premium', r: '0.2 K/W' }
-                ].map(tim => (
-                  <button
-                    key={tim.id}
-                    onClick={() => setThermalPaste(tim.id as typeof thermalPaste)}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: `2px solid ${thermalPaste === tim.id ? colors.accent : colors.border}`,
-                      background: thermalPaste === tim.id ? colors.accent + '22' : 'transparent',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{tim.label}</div>
-                    <div style={{ ...typo.small, color: colors.textMuted }}>{tim.r}</div>
-                  </button>
-                ))}
+              {/* Power slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>CPU Power (Watts)</span>
+                  <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{cpuPower}W</span>
+                </div>
+                <input
+                  type="range"
+                  min="50"
+                  max="250"
+                  value={cpuPower}
+                  onChange={(e) => setCpuPower(parseInt(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer' }}
+                />
+              </div>
+
+              {/* Thermal paste selector */}
+              <div style={{ marginBottom: '20px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Thermal Interface Material
+                </span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[
+                    { id: 'none', label: 'None (Air)', r: '2.0 K/W' },
+                    { id: 'cheap', label: 'Basic', r: '0.5 K/W' },
+                    { id: 'premium', label: 'Premium', r: '0.2 K/W' }
+                  ].map(tim => (
+                    <button
+                      key={tim.id}
+                      onClick={() => setThermalPaste(tim.id as typeof thermalPaste)}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: `2px solid ${thermalPaste === tim.id ? colors.accent : colors.border}`,
+                        background: thermalPaste === tim.id ? colors.accent + '22' : 'transparent',
+                        cursor: 'pointer',
+                        minHeight: '44px',
+                      }}
+                    >
+                      <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{tim.label}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>{tim.r}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fin count slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Fin Count</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{finCount} fins</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="50"
+                  value={finCount}
+                  onChange={(e) => setFinCount(parseInt(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer' }}
+                />
+              </div>
+
+              {/* Fan speed slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Fan Speed</span>
+                  <span style={{ ...typo.small, color: '#60a5fa', fontWeight: 600 }}>{fanSpeed}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={fanSpeed}
+                  onChange={(e) => setFanSpeed(parseInt(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer' }}
+                />
               </div>
             </div>
 
-            {/* Fin count slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Fin Count</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{finCount} fins</span>
+            {/* Discovery prompts */}
+            {thermalPaste === 'none' && (
+              <div style={{
+                background: `${colors.error}22`,
+                border: `1px solid ${colors.error}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                  No thermal paste! Air gaps create massive resistance (2+ K/W). Notice the temperature spike!
+                </p>
               </div>
-              <input
-                type="range"
-                min="10"
-                max="50"
-                value={finCount}
-                onChange={(e) => setFinCount(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-            </div>
+            )}
 
-            {/* Fan speed slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Fan Speed</span>
-                <span style={{ ...typo.small, color: '#60a5fa', fontWeight: 600 }}>{fanSpeed}%</span>
+            {cpuTemp < 70 && thermalPaste === 'premium' && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  Excellent cooling! Premium TIM and good airflow keep things frosty.
+                </p>
               </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={fanSpeed}
-                onChange={(e) => setFanSpeed(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-            </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics
+            </button>
           </div>
 
-          {/* Discovery prompts */}
-          {thermalPaste === 'none' && (
-            <div style={{
-              background: `${colors.error}22`,
-              border: `1px solid ${colors.error}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
-                No thermal paste! Air gaps create massive resistance (2+ K/W). Notice the temperature spike!
-              </p>
-            </div>
-          )}
-
-          {cpuTemp < 70 && thermalPaste === 'premium' && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Excellent cooling! Premium TIM and good airflow keep things frosty.
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -982,11 +1064,19 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Thermal Ohm's Law
           </h2>
@@ -1055,9 +1145,10 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
           >
             Explore the Fin Paradox
           </button>
-        </div>
+          </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1074,89 +1165,111 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Fin Design Trade-offs
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '16px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Step 1 of 1 - Make your prediction
+              </span>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            You double the fin count from 25 to 50. What happens to cooling performance?
-          </h2>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                New Variable: Fin Design Trade-offs
+              </p>
+            </div>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px' }}>
-              <div>
-                <div style={{ fontSize: '40px' }}>📊</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>25 fins</p>
-                <p style={{ ...typo.small, color: colors.success }}>Good spacing</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div>
-                <div style={{ fontSize: '40px' }}>📊📊</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>50 fins</p>
-                <p style={{ ...typo.small, color: colors.warning }}>Packed tight</p>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              You double the fin count from 25 to 50. What happens to cooling performance?
+            </h2>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px' }}>
+                <div>
+                  <div style={{ fontSize: '40px' }}>📊</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>25 fins</p>
+                  <p style={{ ...typo.small, color: colors.success }}>Good spacing</p>
+                </div>
+                <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+                <div>
+                  <div style={{ fontSize: '40px' }}>📊📊</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>50 fins</p>
+                  <p style={{ ...typo.small, color: colors.warning }}>Packed tight</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
               See the Fin Paradox
             </button>
           )}
@@ -1164,6 +1277,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
 
         {renderNavDots()}
       </div>
+    </div>
     );
   }
 
@@ -1175,17 +1289,38 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             The Fin Count Paradox
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Watch how efficiency drops as fins get crowded
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Slide the fin count from 10 to 60. Notice how fin efficiency drops as spacing decreases - more fins doesn't always mean better cooling!
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1261,6 +1396,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
         </div>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }

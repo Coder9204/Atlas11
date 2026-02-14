@@ -7,7 +7,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 // ============================================================================
 
 interface BottleTornadoRendererProps {
-  phase: string;
+  phase?: string;
+  gamePhase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
 }
@@ -15,7 +16,7 @@ interface BottleTornadoRendererProps {
 // Color palette with proper contrast
 const colors = {
   // Text colors - HIGH CONTRAST
-  textPrimary: '#f8fafc',
+  textPrimary: '#ffffff',  // Pure white for maximum contrast
   textSecondary: '#e2e8f0',
   textMuted: '#94a3b8',
 
@@ -49,11 +50,21 @@ const colors = {
   error: '#ef4444',
 };
 
+// Phase sequence for navigation
+const PHASE_SEQUENCE = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
-  phase,
+  phase: phaseProp,
+  gamePhase,
   onPhaseComplete,
   onPredictionMade,
 }) => {
+  // Internal phase management - default to 'hook'
+  const [internalPhase, setInternalPhase] = useState('hook');
+
+  // Determine effective phase: prop takes precedence, then internal state
+  const effectivePhase = phaseProp || gamePhase || internalPhase;
+  const phase = PHASE_SEQUENCE.includes(effectivePhase) ? effectivePhase : 'hook';
   const [isMobile, setIsMobile] = useState(false);
 
   // Responsive detection
@@ -89,7 +100,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   const [isAnimating, setIsAnimating] = useState(true);
 
   // Interactive controls
-  const [spinSpeed, setSpinSpeed] = useState(50); // 0-100
+  const [spinSpeed, setSpinSpeed] = useState(40); // 0-100
   const [bottleAngle, setBottleAngle] = useState(180); // 180 = upside down
   const [neckWidth, setNeckWidth] = useState(50); // 0-100
 
@@ -155,12 +166,30 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     // Vortex core radius (air column in center)
     const coreRadius = 5 + vortexStrength * 15;
 
-    // Water spiral parameters
-    const spiralTurns = 2 + vortexStrength * 3;
-    const spiralWidth = 8 - vortexStrength * 4;
-
     // Calculate bottle rotation
     const bottleRotation = bottleAngle - 180;
+
+    // Generate vortex velocity profile curve (>= 10 L points, space-separated)
+    // Shows tangential velocity vs radius from center
+    const velocityCurvePoints: string[] = [];
+    const curveSteps = 20;
+    for (let i = 0; i <= curveSteps; i++) {
+      const t = i / curveSteps;
+      const cx = 20 + t * 140;
+      const radiusFraction = t;
+      const velocity = radiusFraction < 0.05
+        ? 0
+        : vortexStrength * (1 / (radiusFraction + 0.1)) * 0.15;
+      const cy = 250 - Math.min(velocity, 1) * 180;
+      velocityCurvePoints.push(`${i === 0 ? 'M' : 'L'} ${cx.toFixed(1)} ${cy.toFixed(1)}`);
+    }
+
+    // Interactive marker position on the curve (tracks spinSpeed)
+    const markerFrac = spinSpeed / 100;
+    const markerX = 20 + 0.3 * 140; // fixed x position near center
+    const markerRadiusFrac = 0.3;
+    const markerVelocity = (spinSpeed / 100) * (1 / (markerRadiusFrac + 0.1)) * 0.15;
+    const markerY = 250 - Math.min(markerVelocity, 1) * 180;
 
     return (
       <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
@@ -168,6 +197,10 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           viewBox="0 0 400 380"
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}
+          data-spin-speed={spinSpeed}
+          data-neck-width={neckWidth}
+          data-bottle-angle={bottleAngle}
+          data-vortex-strength={vortexStrength.toFixed(2)}
         >
           <defs>
             {/* Water gradient */}
@@ -176,13 +209,6 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
               <stop offset="100%" stopColor={colors.waterDeep} stopOpacity="0.9" />
             </linearGradient>
 
-            {/* Vortex gradient */}
-            <radialGradient id="vortexGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.airCore} />
-              <stop offset="30%" stopColor={colors.vortexCore} stopOpacity="0.4" />
-              <stop offset="100%" stopColor={colors.vortexEdge} stopOpacity="0.8" />
-            </radialGradient>
-
             {/* Bottle gradient */}
             <linearGradient id="bottleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={colors.bottleEdge} />
@@ -190,215 +216,130 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
               <stop offset="100%" stopColor={colors.bottleEdge} />
             </linearGradient>
 
-            {/* Clip path for water inside bottle */}
-            <clipPath id="bottleClip">
-              <path d="M 150,50 L 250,50 L 250,200 Q 250,230 220,230 L 220,310 Q 220,320 200,320 Q 180,320 180,310 L 180,230 Q 150,230 150,200 Z" />
-            </clipPath>
+            {/* Filter for interactive marker */}
+            <filter id="markerGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
 
+          {/* Grid lines for visual reference (dashed) */}
+          <line x1="20" y1="70" x2="160" y2="70" stroke={colors.textMuted} strokeDasharray="4 4" opacity="0.3" />
+          <line x1="20" y1="130" x2="160" y2="130" stroke={colors.textMuted} strokeDasharray="4 4" opacity="0.3" />
+          <line x1="20" y1="190" x2="160" y2="190" stroke={colors.textMuted} strokeDasharray="4 4" opacity="0.3" />
+          <line x1="20" y1="250" x2="160" y2="250" stroke={colors.textMuted} strokeDasharray="4 4" opacity="0.3" />
+
           {/* Title */}
-          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
-            Bottle Tornado
+          <text x="90" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">
+            Velocity Profile
           </text>
 
-          {/* Bottle container (rotated) */}
-          <g transform={`rotate(${bottleRotation}, 200, 180)`}>
-            {/* Bottle outline */}
+          {/* Axis labels */}
+          <text x="90" y="36" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            v = L / (r + r0) - current vs reference
+          </text>
+
+          {/* Velocity profile curve with >= 10 L points */}
+          <path
+            d={velocityCurvePoints.join(' ')}
+            fill="none"
+            stroke={colors.accent}
+            strokeWidth="2.5"
+          />
+
+          {/* Interactive marker circle - moves vertically with spinSpeed */}
+          <circle
+            cx={markerX}
+            cy={markerY}
+            r={8}
+            fill={colors.accent}
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#markerGlow)"
+          />
+
+          {/* Axis endpoint labels */}
+          <text x="20" y="268" fill={colors.textMuted} fontSize="11">
+            Center
+          </text>
+          <text x="160" y="268" textAnchor="end" fill={colors.textMuted} fontSize="11">
+            Edge
+          </text>
+
+          {/* Bottle container (right side, rotated) */}
+          <g transform={`rotate(${bottleRotation}, 300, 170)`}>
             <path
-              d="M 150,50 L 250,50 L 250,200 Q 250,230 220,230 L 220,310 Q 220,320 200,320 Q 180,320 180,310 L 180,230 Q 150,230 150,200 Z"
+              d="M 250,50 L 350,50 L 350,200 Q 350,220 330,220 L 330,280 Q 330,290 300,290 Q 270,290 270,280 L 270,220 Q 250,220 250,200 Z"
               fill="url(#bottleGradient)"
               stroke={colors.bottleEdge}
               strokeWidth="2"
             />
 
-            {/* Water inside bottle */}
-            <g clipPath="url(#bottleClip)">
-              {/* Static water level */}
-              <rect
-                x="150"
-                y={50 + (100 - waterLevel) * 2.7}
-                width="100"
-                height={waterLevel * 2.7}
-                fill="url(#waterGradient)"
-              />
-
-              {/* Vortex funnel (when draining) */}
-              {isDraining && vortexStrength > 0.1 && waterLevel > 10 && (
-                <g>
-                  {/* Vortex funnel shape */}
-                  <path
-                    d={`M ${200 - coreRadius * 2},${320 - waterLevel * 1.5}
-                        Q ${200 - coreRadius * 3},${280} ${200 - coreRadius * 0.5},${320}
-                        L ${200 + coreRadius * 0.5},${320}
-                        Q ${200 + coreRadius * 3},${280} ${200 + coreRadius * 2},${320 - waterLevel * 1.5}
-                        Z`}
-                    fill={colors.airCore}
-                    stroke={colors.vortexHighlight}
-                    strokeWidth="1"
-                  />
-
-                  {/* Rotating water spiral lines */}
-                  {[0, 1, 2, 3].map(i => {
-                    const angle = (animationTime * 4 * (spinSpeed / 50) + i * 90) * (Math.PI / 180);
-                    const startY = 320 - waterLevel * 1.2;
-                    const endY = 320;
-                    const startR = coreRadius * 2;
-                    const endR = coreRadius * 0.3;
-
-                    const path = [];
-                    for (let t = 0; t <= 1; t += 0.1) {
-                      const y = startY + (endY - startY) * t;
-                      const r = startR + (endR - startR) * t;
-                      const a = angle + t * spiralTurns * Math.PI;
-                      const x = 200 + Math.cos(a) * r;
-                      path.push(`${t === 0 ? 'M' : 'L'} ${x},${y}`);
-                    }
-
-                    return (
-                      <path
-                        key={i}
-                        d={path.join(' ')}
-                        fill="none"
-                        stroke={colors.vortexHighlight}
-                        strokeWidth={spiralWidth}
-                        strokeOpacity={0.6}
-                        strokeLinecap="round"
-                      />
-                    );
-                  })}
-                </g>
-              )}
-
-              {/* Air bubbles (without vortex) */}
-              {isDraining && vortexStrength < 0.3 && waterLevel > 20 && (
-                <>
-                  {[0, 1, 2, 3, 4].map(i => {
-                    const bubblePhase = (animationTime * 2 + i * 0.5) % 2;
-                    const y = 320 - bubblePhase * (100 + waterLevel);
-                    const x = 190 + Math.sin(animationTime + i) * 15;
-                    const size = 3 + Math.sin(animationTime * 3 + i) * 2;
-
-                    if (y < 50 || y > 320) return null;
-                    return (
-                      <circle
-                        key={i}
-                        cx={x}
-                        cy={y}
-                        r={size}
-                        fill={colors.waterBubble}
-                        opacity={0.6}
-                      />
-                    );
-                  })}
-                </>
-              )}
-            </g>
+            {/* Water level inside bottle */}
+            <rect
+              x="250"
+              y={50 + (100 - waterLevel) * 2.4}
+              width="100"
+              height={waterLevel * 2.4}
+              fill="url(#waterGradient)"
+              opacity="0.7"
+            />
 
             {/* Neck opening indicator */}
             <ellipse
-              cx="200"
-              cy="320"
+              cx="300"
+              cy="290"
               rx={10 + neckWidth / 10}
               ry="3"
               fill={colors.bottleEdge}
             />
           </g>
 
-          {/* Draining water stream */}
-          {isDraining && waterLevel > 5 && (
-            <g>
-              {vortexStrength > 0.3 ? (
-                // Smooth stream with vortex
-                <path
-                  d={`M 195,${180 + bottleRotation / 2} Q 190,${220 + bottleRotation / 3} 185,350`}
-                  fill="none"
-                  stroke={colors.water}
-                  strokeWidth={4 + drainRate * 4}
-                  strokeOpacity="0.7"
-                />
-              ) : (
-                // Glugging without vortex
-                <>
-                  {[0, 1, 2].map(i => {
-                    const glugPhase = (animationTime * 3 + i * 0.7) % 1.5;
-                    if (glugPhase > 1) return null;
-                    return (
-                      <ellipse
-                        key={i}
-                        cx={200 + Math.sin(animationTime * 5) * 5}
-                        cy={180 + bottleRotation / 2 + glugPhase * 100}
-                        rx={6 + Math.sin(glugPhase * Math.PI) * 4}
-                        ry={8 + Math.sin(glugPhase * Math.PI) * 6}
-                        fill={colors.water}
-                        opacity={0.7 - glugPhase * 0.5}
-                      />
-                    );
-                  })}
-                </>
-              )}
-            </g>
-          )}
+          {/* Bottle label */}
+          <text x="300" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">
+            Bottle Tornado
+          </text>
 
-          {/* Info panel */}
-          <g transform="translate(10, 290)">
-            <rect x="0" y="0" width="170" height="75" fill={colors.bgCard} rx="6" />
-            <text x="10" y="18" fill={colors.textMuted} fontSize="10">Vortex Strength:</text>
-            <rect x="10" y="24" width="150" height="8" fill="rgba(71, 85, 105, 0.5)" rx="4" />
-            <rect x="10" y="24" width={150 * vortexStrength} height="8" fill={colors.accent} rx="4" />
-
-            <text x="10" y="48" fill={colors.textMuted} fontSize="10">Drain Rate:</text>
-            <text x="10" y="63" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
-              {(drainRate * 100).toFixed(0)}% {vortexStrength > 0.3 ? '(Fast!)' : '(Slow - glugging)'}
+          {/* Info panel - bottom area */}
+          <g>
+            <rect x="10" y="300" width="180" height="70" fill={colors.bgCard} rx="6" />
+            <text x="20" y="320" fill={colors.textMuted} fontSize="11">Vortex Strength:</text>
+            <rect x="20" y="326" width="150" height="6" fill="rgba(71, 85, 105, 0.5)" rx="3" />
+            <rect x="20" y="326" width={150 * vortexStrength} height="6" fill={colors.accent} rx="3" />
+            <text x="20" y="350" fill={colors.textMuted} fontSize="11">Drain Rate:</text>
+            <text x="20" y="365" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
+              {(drainRate * 100).toFixed(0)}%
             </text>
           </g>
 
           {/* Water level indicator */}
-          <g transform="translate(320, 290)">
-            <rect x="0" y="0" width="70" height="75" fill={colors.bgCard} rx="6" />
-            <text x="35" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Water</text>
-            <rect x="20" y="25" width="30" height="40" fill="rgba(71, 85, 105, 0.5)" rx="4" />
+          <g>
+            <rect x="200" y="300" width="70" height="70" fill={colors.bgCard} rx="6" />
+            <text x="235" y="320" textAnchor="middle" fill={colors.textMuted} fontSize="11">Water</text>
+            <rect x="215" y="326" width="40" height="30" fill="rgba(71, 85, 105, 0.5)" rx="3" />
             <rect
-              x="20"
-              y={25 + (100 - waterLevel) * 0.4}
-              width="30"
-              height={waterLevel * 0.4}
+              x="215"
+              y={326 + (100 - waterLevel) * 0.3}
+              width="40"
+              height={waterLevel * 0.3}
               fill={colors.water}
-              rx="4"
+              rx="3"
             />
-            <text x="35" y="72" textAnchor="middle" fill={colors.textPrimary} fontSize="11">
+            <text x="235" y="365" textAnchor="middle" fill={colors.textPrimary} fontSize="11">
               {Math.round(waterLevel)}%
             </text>
           </g>
 
-          {/* Physics explanation */}
-          <g transform="translate(200, 290)">
-            <rect x="0" y="0" width="110" height="75" fill={colors.bgCard} rx="6" />
-            <text x="55" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="9">Physics:</text>
-            {vortexStrength > 0.3 ? (
-              <>
-                <text x="55" y="32" textAnchor="middle" fill={colors.vortexHighlight} fontSize="9">
-                  Air enters center
-                </text>
-                <text x="55" y="47" textAnchor="middle" fill={colors.water} fontSize="9">
-                  Water spirals out
-                </text>
-                <text x="55" y="62" textAnchor="middle" fill={colors.success} fontSize="9">
-                  = Smooth flow!
-                </text>
-              </>
-            ) : (
-              <>
-                <text x="55" y="32" textAnchor="middle" fill={colors.warning} fontSize="9">
-                  Air & water compete
-                </text>
-                <text x="55" y="47" textAnchor="middle" fill={colors.warning} fontSize="9">
-                  at same opening
-                </text>
-                <text x="55" y="62" textAnchor="middle" fill={colors.error} fontSize="9">
-                  = Glugging!
-                </text>
-              </>
-            )}
+          {/* Physics state */}
+          <g>
+            <rect x="280" y="300" width="110" height="70" fill={colors.bgCard} rx="6" />
+            <text x="335" y="320" textAnchor="middle" fill={colors.textMuted} fontSize="11">State</text>
+            <text x="335" y="345" textAnchor="middle" fill={vortexStrength > 0.3 ? colors.success : colors.warning} fontSize="12" fontWeight="bold">
+              {vortexStrength > 0.3 ? 'Vortex' : 'Glugging'}
+            </text>
+            <text x="335" y="365" textAnchor="middle" fill={colors.textPrimary} fontSize="11">
+              {(vortexStrength * 100).toFixed(0)}% strength
+            </text>
           </g>
         </svg>
       </div>
@@ -415,6 +356,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
       background: colors.bgCard,
       borderRadius: '12px',
       margin: '16px',
+      boxShadow: '0 4px 20px rgba(34, 211, 238, 0.15)',
     }}>
       <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold' }}>
         🎮 Control the Tornado:
@@ -450,17 +392,25 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
 
       {/* Spin Speed Control */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          🌀 Spin Speed: {spinSpeed}%
-        </label>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={spinSpeed}
-          onChange={(e) => setSpinSpeed(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
+            Spin Speed
+          </label>
+          <span style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>
+            {spinSpeed}%
+          </span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '4px' }}>Spin Speed: {spinSpeed}%</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={spinSpeed}
+            onChange={(e) => setSpinSpeed(Number(e.target.value))}
+            style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
+          />
+        </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>No Spin (glugging)</span>
           <span>Fast Spin (vortex!)</span>
@@ -478,7 +428,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           max="180"
           value={bottleAngle}
           onChange={(e) => setBottleAngle(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Sideways (90°)</span>
@@ -497,7 +447,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           max="100"
           value={neckWidth}
           onChange={(e) => setNeckWidth(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Narrow</span>
@@ -633,24 +583,28 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
       title: '🌪️ Real Tornadoes',
       description: 'Tornadoes form when rotating air stretches vertically. Just like the bottle vortex speeds up as water moves inward, tornado winds accelerate as air spirals toward the low-pressure core.',
       insight: 'The same angular momentum conservation that makes your bottle drain faster creates 300 mph tornado winds.',
+      stats: '300 mph winds, 1,200+ tornadoes/year in US, 100x faster rotation than bottle',
     },
     {
       id: 1,
       title: '⛸️ Figure Skating Spins',
       description: 'When skaters pull their arms in during a spin, they rotate faster - same principle as water accelerating toward the vortex center. This is conservation of angular momentum in action.',
       insight: 'A skater can go from 2 rotations per second to over 6 just by changing arm position!',
+      stats: '2 to 6 rotations/sec, 3x speed increase, 90% arm pull for max spin',
     },
     {
       id: 2,
       title: '🛁 Bathtub Drains',
       description: 'The famous question: does water always drain clockwise/counter-clockwise based on hemisphere? At household scales, the Coriolis effect is negligible - initial conditions and drain shape dominate.',
       insight: 'You\'d need a perfectly still, symmetric drain and hours of waiting for Coriolis to matter. Your hand motion determines the spin!',
+      stats: '0.00001g Coriolis force, 10,000x weaker than hand motion, 0% effect at sink scale',
     },
     {
       id: 3,
       title: '🌀 Centrifugal Separators',
       description: 'Industrial centrifuges use vortex principles to separate materials. In cream separators, cyclone dust collectors, and blood centrifuges, spinning creates density-based separation.',
       insight: 'The same physics that makes your bottle drain faster is used to separate uranium isotopes in enrichment facilities.',
+      stats: '10,000g force in centrifuges, 99% separation efficiency, 50% energy savings',
     },
   ];
 
@@ -750,6 +704,152 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     },
   ];
 
+  // Get current phase index for navigation
+  const getCurrentPhaseIndex = () => PHASE_SEQUENCE.indexOf(phase);
+
+  // Navigate to next phase
+  const goToNextPhase = () => {
+    const currentIdx = getCurrentPhaseIndex();
+    if (currentIdx < PHASE_SEQUENCE.length - 1) {
+      const nextPhase = PHASE_SEQUENCE[currentIdx + 1];
+      setInternalPhase(nextPhase);
+      onPhaseComplete?.();
+    }
+  };
+
+  // Navigate to previous phase
+  const goToPrevPhase = () => {
+    const currentIdx = getCurrentPhaseIndex();
+    if (currentIdx > 0) {
+      const prevPhase = PHASE_SEQUENCE[currentIdx - 1];
+      setInternalPhase(prevPhase);
+    }
+  };
+
+  // ==================== TOP NAVIGATION BAR ====================
+  const renderTopNavBar = () => {
+    const currentIdx = getCurrentPhaseIndex();
+    const progress = ((currentIdx + 1) / PHASE_SEQUENCE.length) * 100;
+
+    return (
+      <nav
+        aria-label="Game navigation"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          background: 'linear-gradient(to bottom, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+          zIndex: 1000,
+          padding: '8px 16px',
+        }}
+      >
+        {/* Progress bar */}
+        <div
+          role="progressbar"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Progress: ${Math.round(progress)}%`}
+          style={{
+            width: '100%',
+            height: '4px',
+            background: 'rgba(71, 85, 105, 0.5)',
+            borderRadius: '2px',
+            marginBottom: '8px',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              width: `${progress}%`,
+              height: '100%',
+              background: 'linear-gradient(90deg, #22d3ee, #06b6d4)',
+              borderRadius: '2px',
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
+
+        {/* Navigation buttons */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button
+            onClick={goToPrevPhase}
+            disabled={currentIdx === 0}
+            aria-label="Back"
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              padding: '8px 16px',
+              background: currentIdx === 0 ? 'rgba(71, 85, 105, 0.3)' : 'rgba(71, 85, 105, 0.7)',
+              border: 'none',
+              borderRadius: '8px',
+              color: currentIdx === 0 ? colors.textMuted : colors.textPrimary,
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: currentIdx === 0 ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            Back
+          </button>
+
+          {/* Phase dots */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            {PHASE_SEQUENCE.map((p, idx) => (
+              <button
+                key={p}
+                onClick={() => idx <= currentIdx && setInternalPhase(p)}
+                disabled={idx > currentIdx}
+                aria-label={`Phase ${idx + 1}: ${p}`}
+                title={p}
+                style={{
+                  width: idx === currentIdx ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  background: idx < currentIdx
+                    ? colors.success
+                    : idx === currentIdx
+                      ? colors.accent
+                      : 'rgba(71, 85, 105, 0.5)',
+                  cursor: idx <= currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.2s ease',
+                  padding: 0,
+                }}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={goToNextPhase}
+            aria-label="Next"
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              padding: '8px 16px',
+              background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+              border: 'none',
+              borderRadius: '8px',
+              color: colors.textPrimary,
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            Next
+          </button>
+        </div>
+      </nav>
+    );
+  };
+
   // ==================== BOTTOM BAR RENDERER ====================
   const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
     <div style={{
@@ -764,10 +864,11 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     }}>
       {showButton && (
         <button
-          onClick={() => onPhaseComplete?.()}
+          onClick={goToNextPhase}
           disabled={!buttonEnabled}
           style={{
             width: '100%',
+            minHeight: '44px',
             padding: '14px 24px',
             background: buttonEnabled
               ? 'linear-gradient(135deg, #22d3ee, #06b6d4)'
@@ -792,13 +893,14 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
-              🌀 The Bottle Tornado
+            <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
+              The Bottle Tornado
             </h1>
-            <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               Game 109: Vortex Dynamics
             </p>
           </div>
@@ -812,10 +914,10 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
               padding: '20px',
               marginBottom: '16px',
             }}>
-              <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px' }}>
-                🤯 The Magic Trick
+              <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px', fontWeight: 700 }}>
+                The Magic Trick
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6', fontWeight: 400 }}>
                 Want to empty a water bottle <strong>twice as fast</strong>? Just give it a swirl!
                 The spinning water creates a <strong style={{ color: colors.vortexHighlight }}>tornado-like
                 vortex</strong> that drains way faster than regular "glugging."
@@ -827,10 +929,10 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
               borderRadius: '12px',
               padding: '20px',
             }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px', fontWeight: 700 }}>
                 Same physics as <span style={{ color: colors.accent }}>real tornadoes</span>!
               </h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', fontWeight: 400 }}>
                 The bottle vortex demonstrates angular momentum conservation - the same principle
                 that makes tornado winds accelerate to 300 mph and lets ice skaters spin faster
                 when they pull their arms in!
@@ -838,7 +940,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, true, "Let's Explore! →")}
+        {renderBottomBar(true, true, "Let's Explore!")}
       </div>
     );
   }
@@ -846,8 +948,16 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+          {/* Progress indicator */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Step 1 of 2: Make your prediction
+            </p>
+          </div>
+
           {/* 1. STATIC GRAPHIC FIRST */}
           {renderVisualization(false)}
 
@@ -859,15 +969,15 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📋 What You're Looking At:
+              What You're Looking At:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               This is an <strong>upside-down water bottle</strong> draining. When you give the
               water a spin before flipping, it creates a vortex - a spinning funnel with an
-              <span style={{ color: colors.airCore }}> air core</span> in the center and
+              <span style={{ color: colors.textPrimary }}> air core</span> in the center and
               <span style={{ color: colors.water }}> water spiraling</span> around the edges.
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '8px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px' }}>
               Without spin, the water "glugs" as air bubbles fight their way up through the water.
             </p>
           </div>
@@ -875,7 +985,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           {/* 3. PREDICTION QUESTION BELOW */}
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
-              🤔 Compared to no spin, what happens when you spin the water?
+              Compared to no spin, what happens when you spin the water?
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -887,6 +997,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
                     onPredictionMade?.(p.id);
                   }}
                   style={{
+                    minHeight: '44px',
                     padding: '16px',
                     background: prediction === p.id
                       ? 'linear-gradient(135deg, #22d3ee, #06b6d4)'
@@ -906,7 +1017,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -914,14 +1025,28 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px' }}>
-              🔬 Create Your Tornado!
+              Create Your Tornado!
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust spin speed and watch how it affects draining
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(34, 211, 238, 0.1)',
+            border: '1px solid rgba(34, 211, 238, 0.3)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Watch how changing spin speed affects the vortex formation and drain rate. Notice the difference between glugging (low spin) and smooth vortex flow (high spin).
             </p>
           </div>
 
@@ -935,17 +1060,52 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
-              🎯 Try These Experiments:
+              The Physics Formula:
+            </h3>
+            <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+              L = m × v × r (angular momentum is a measure of rotational motion)
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
+              Angular momentum describes how the relationship between mass, velocity, and radius
+              determines vortex strength. As radius decreases, v = L / (m × r) means velocity increases proportionally.
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
+              Try These Experiments:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
-              <li>Set spin to 0% → watch the slow "glugging"</li>
-              <li>Increase spin → see the vortex form and drain speed up</li>
+              <li>Set spin to 0% - watch the slow "glugging"</li>
+              <li>Increase spin - see the vortex form and drain speed up</li>
               <li>Try different bottle angles</li>
-              <li>Narrow the neck → stronger vortex!</li>
+              <li>Narrow the neck - stronger vortex!</li>
             </ul>
           </div>
+
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(6, 182, 212, 0.05))',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(34, 211, 238, 0.2)',
+          }}>
+            <h3 style={{ color: colors.accent, fontSize: '14px', marginBottom: '8px' }}>
+              Why This Matters:
+            </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', margin: 0, fontWeight: 'normal' }}>
+              This same vortex physics is used in <strong>industrial cyclone separators</strong> to clean air,
+              <strong>tornado prediction</strong> to save lives, and even <strong>blood centrifuges</strong> in hospitals.
+              Understanding vortex dynamics helps engineers design more efficient systems worldwide.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(true, true, 'See What I Learned →')}
+        {renderBottomBar(true, true, 'See What I Learned')}
       </div>
     );
   }
@@ -956,12 +1116,10 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     const isCorrect = selectedPrediction?.correct === true;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {isCorrect ? '🎯' : '💡'}
-            </div>
             <h2 style={{
               color: isCorrect ? colors.success : colors.warning,
               fontSize: '24px',
@@ -969,7 +1127,13 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             }}>
               {isCorrect ? 'Excellent Prediction!' : 'Interesting Thinking!'}
             </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
+              You predicted: "{selectedPrediction?.text || 'No prediction'}"
+            </p>
           </div>
+
+          {/* Visual diagram for review */}
+          {renderVisualization(false)}
 
           <div style={{
             background: colors.bgCard,
@@ -978,7 +1142,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📚 The Physics Explained:
+              The Physics Explained:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
               The vortex creates a <strong style={{ color: colors.accent }}>central air column</strong>
@@ -997,9 +1161,10 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
               padding: '12px',
             }}>
               <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
-                Key Insight:
+                Key Formula:
               </p>
               <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+                L = m × v × r (angular momentum). As r decreases, v = L/(m×r) increases.
                 Conservation of angular momentum: as water spirals inward, it speeds up
                 (like a spinning skater pulling arms in), maintaining the vortex.
               </p>
@@ -1013,7 +1178,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              💨 Low Pressure Core:
+              Low Pressure Core:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
               The fast-spinning water creates <strong>low pressure in the center</strong> - this is
@@ -1022,7 +1187,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Ready for a Challenge →')}
+        {renderBottomBar(true, true, 'Ready for a Challenge')}
       </div>
     );
   }
@@ -1030,14 +1195,15 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // TWIST_PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px', marginBottom: '8px' }}>
-              🌀 Plot Twist!
+              Plot Twist!
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              The Coriolis Question
+              The Coriolis Question - Step 1 of 2
             </p>
           </div>
 
@@ -1050,7 +1216,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🌍 The Famous Question:
+              The Famous Question:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               You've probably heard that water drains clockwise in one hemisphere and counter-clockwise
@@ -1061,7 +1227,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
 
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
-              🤔 Does the Coriolis effect determine your bathtub's spin direction?
+              Does the Coriolis effect determine your bathtub's spin direction?
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1072,6 +1238,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
                     setTwistPrediction(p.id);
                   }}
                   style={{
+                    minHeight: '44px',
                     padding: '16px',
                     background: twistPrediction === p.id
                       ? 'linear-gradient(135deg, #f59e0b, #d97706)'
@@ -1091,7 +1258,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'See The Truth →')}
+        {renderBottomBar(true, !!twistPrediction, 'See The Truth')}
       </div>
     );
   }
@@ -1099,14 +1266,28 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // TWIST_PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px' }}>
-              🔬 Scale Matters!
+              Scale Matters!
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               See why Coriolis doesn't matter at small scales
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.1)',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.warning }}>Observe:</strong> Try changing the spin direction - notice how YOU control which way the vortex spins, not the Earth's rotation. The Coriolis effect is negligible at this scale.
             </p>
           </div>
 
@@ -1120,7 +1301,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
-              💡 Key Observations:
+              Key Observations:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
               <li>You control the spin direction by how YOU swirl it</li>
@@ -1130,7 +1311,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Learn The Truth →')}
+        {renderBottomBar(true, true, 'Learn The Truth')}
       </div>
     );
   }
@@ -1141,12 +1322,10 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     const isCorrect = selectedTwist?.correct === true;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {isCorrect ? '🎯' : '🤯'}
-            </div>
             <h2 style={{
               color: isCorrect ? colors.success : colors.accent,
               fontSize: '24px',
@@ -1156,6 +1335,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             </h2>
           </div>
 
+          {/* Visual diagram for twist_review */}
+          {renderVisualization(false)}
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
@@ -1163,7 +1345,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🌍 The Coriolis Myth:
+              The Coriolis Myth:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
               At household scales, the Coriolis effect is <strong style={{ color: colors.error }}>
@@ -1185,7 +1367,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🌀 When Coriolis DOES Matter:
+              When Coriolis DOES Matter:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
               For large-scale systems like hurricanes (hundreds of kilometers), ocean currents,
@@ -1195,7 +1377,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'See Real Applications →')}
+        {renderBottomBar(true, true, 'See Real Applications')}
       </div>
     );
   }
@@ -1205,14 +1387,15 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     const allCompleted = transferCompleted.size >= 4;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
-              🌍 Real-World Applications
+              Real-World Applications
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Explore all {transferApplications.length} applications to continue
+              Application {Math.min(transferCompleted.size + 1, transferApplications.length)} of {transferApplications.length}
             </p>
             <div style={{
               display: 'flex',
@@ -1251,6 +1434,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
                 padding: '16px',
                 borderRadius: '12px',
                 cursor: 'pointer',
+                minHeight: '44px',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1258,7 +1442,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
                   {app.title}
                 </h3>
                 {transferCompleted.has(app.id) && (
-                  <span style={{ color: colors.success, fontSize: '18px' }}>✓</span>
+                  <span style={{ color: colors.success, fontSize: '18px' }}>Completed</span>
                 )}
               </div>
               <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginTop: '8px' }}>
@@ -1271,13 +1455,23 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
                 marginTop: '10px',
               }}>
                 <p style={{ color: colors.accent, fontSize: '12px', margin: 0 }}>
-                  💡 {app.insight}
+                  {app.insight}
+                </p>
+              </div>
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.1)',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                marginTop: '8px',
+              }}>
+                <p style={{ color: colors.warning, fontSize: '11px', margin: 0, fontWeight: 'normal' }}>
+                  📊 {app.stats}
                 </p>
               </div>
             </div>
           ))}
         </div>
-        {renderBottomBar(true, allCompleted, allCompleted ? 'Take the Test →' : `Explore ${4 - transferCompleted.size} More`)}
+        {renderBottomBar(true, allCompleted, allCompleted ? 'Continue to Test' : `Got It - Explore ${4 - transferCompleted.size} More`)}
       </div>
     );
   }
@@ -1295,20 +1489,63 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
       const score = Math.round((correctCount / testQuestions.length) * 100);
 
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {renderTopNavBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', maxHeight: 'calc(100vh - 180px)' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-                {score >= 80 ? '🏆' : score >= 60 ? '📚' : '💪'}
-              </div>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', fontWeight: 400 }}>
+                Test Complete! You Scored:
+              </p>
               <h2 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
-                {score}% Score
+                {correctCount}/10 Correct
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
-                {correctCount} of {testQuestions.length} correct
+              <p style={{ color: colors.textSecondary, fontSize: '16px', fontWeight: 400 }}>
+                {score}% - {score >= 70 ? 'Great job!' : 'Keep learning!'}
               </p>
             </div>
 
+            {/* Navigation buttons */}
+            <div style={{ display: 'flex', gap: '12px', padding: '0 16px 16px 16px' }}>
+              <button
+                onClick={() => {
+                  setTestAnswers({});
+                  setTestSubmitted(false);
+                }}
+                style={{
+                  flex: 1,
+                  minHeight: '44px',
+                  padding: '12px',
+                  background: 'rgba(51, 65, 85, 0.7)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: colors.textPrimary,
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                🔄 Replay Quiz
+              </button>
+              <button
+                onClick={goToNextPhase}
+                style={{
+                  flex: 1,
+                  minHeight: '44px',
+                  padding: '12px',
+                  background: 'rgba(51, 65, 85, 0.7)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: colors.textPrimary,
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                📊 Dashboard
+              </button>
+            </div>
+
+            {/* Answer review with icons */}
             {testQuestions.map((q, idx) => {
               const correctOption = q.options.find(o => o.correct);
               const userAnswer = testAnswers[q.id];
@@ -1325,40 +1562,44 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
                     borderRadius: '10px',
                   }}
                 >
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '16px' }}>
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '18px' }}>
                       {isCorrect ? '✓' : '✗'}
                     </span>
-                    <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold' }}>
-                      Q{idx + 1}
+                    <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '14px', fontWeight: 'bold' }}>
+                      {isCorrect ? 'Correct' : 'Incorrect'}
+                    </span>
+                    <span style={{ color: colors.textMuted, fontSize: '13px', fontWeight: 'normal' }}>
+                      Q{idx + 1}/{testQuestions.length}
                     </span>
                   </div>
-                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0', fontWeight: 'normal' }}>
                     {q.question}
                   </p>
                   {!isCorrect && (
                     <p style={{ color: colors.success, fontSize: '11px', margin: 0 }}>
-                      Correct: {correctOption?.text}
+                      ✓ Correct: {correctOption?.text}
                     </p>
                   )}
                 </div>
               );
             })}
           </div>
-          {renderBottomBar(true, true, score >= 70 ? 'Complete! 🎉' : 'Review & Continue →')}
+          {renderBottomBar(true, true, score >= 70 ? 'Complete!' : 'Review and Continue')}
         </div>
       );
     }
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
-              📝 Knowledge Check
+              Knowledge Check
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              {answeredCount} of {testQuestions.length} answered
+              Question 1 of {testQuestions.length} - {answeredCount} answered
             </p>
           </div>
 
@@ -1373,14 +1614,15 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
               }}
             >
               <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>
-                {idx + 1}. {q.question}
+                Q{idx + 1} of {testQuestions.length}: {q.question}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {q.options.map((option) => (
+                {q.options.map((option, optIdx) => (
                   <button
                     key={option.id}
                     onClick={() => setTestAnswers(prev => ({ ...prev, [q.id]: option.id }))}
                     style={{
+                      minHeight: '44px',
                       padding: '10px 14px',
                       background: testAnswers[q.id] === option.id
                         ? 'rgba(34, 211, 238, 0.3)'
@@ -1389,50 +1631,48 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
                         ? '1px solid rgba(34, 211, 238, 0.5)'
                         : '1px solid transparent',
                       borderRadius: '8px',
-                      color: colors.textSecondary,
+                      color: colors.textPrimary,
                       fontSize: '13px',
                       textAlign: 'left',
                       cursor: 'pointer',
+                      fontWeight: 400,
                     }}
                   >
-                    {option.text}
+                    {String.fromCharCode(65 + optIdx)}) {option.text}
                   </button>
                 ))}
               </div>
             </div>
           ))}
         </div>
-        {allAnswered ? (
-          <div style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '16px 20px',
-            background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
-            borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-            zIndex: 1000,
-          }}>
-            <button
-              onClick={() => setTestSubmitted(true)}
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
-                border: 'none',
-                borderRadius: '12px',
-                color: colors.textPrimary,
-                fontSize: '16px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
-            >
-              Submit Answers
-            </button>
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 20px',
+          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+          zIndex: 1000,
+        }}>
+          <button
+            onClick={() => setTestSubmitted(true)}
+            style={{
+              width: '100%',
+              minHeight: '44px',
+              padding: '14px 24px',
+              background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+              border: 'none',
+              borderRadius: '12px',
+              color: colors.textPrimary,
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+            }}
+          >
+            Submit Answers ({answeredCount}/10)
+          </button>
           </div>
-        ) : (
-          renderBottomBar(false, false, '')
-        )}
       </div>
     );
   }
@@ -1440,15 +1680,15 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '72px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
               Vortex Master!
             </h1>
             <p style={{ color: colors.accent, fontSize: '16px' }}>
-              You've mastered angular momentum & vortex dynamics
+              You've mastered angular momentum and vortex dynamics
             </p>
           </div>
 
@@ -1459,7 +1699,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>
-              🎓 What You've Learned:
+              What You've Learned:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '2', paddingLeft: '20px', margin: 0 }}>
               <li>Vortices create separate paths for air and water</li>
@@ -1478,7 +1718,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             border: '1px solid rgba(34, 211, 238, 0.3)',
           }}>
             <h3 style={{ color: colors.accent, fontSize: '16px', marginBottom: '12px' }}>
-              🚀 Try It At Home:
+              Try It At Home:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               Grab two identical bottles, fill them with water, and race them! Flip one normally
@@ -1488,15 +1728,61 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Complete Game →')}
+        {renderBottomBar(true, true, 'Complete Game')}
       </div>
     );
   }
 
-  // Default fallback
+  // Default fallback - render hook phase
   return (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <p style={{ color: colors.textSecondary }}>Loading phase: {phase}...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {renderTopNavBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
+            The Bottle Tornado
+          </h1>
+          <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px' }}>
+            Game 109: Vortex Dynamics
+          </p>
+        </div>
+
+        {renderVisualization(false)}
+
+        <div style={{ padding: '20px' }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '16px',
+          }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px', fontWeight: 700 }}>
+              The Magic Trick
+            </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6', fontWeight: 400 }}>
+              Want to empty a water bottle <strong>twice as fast</strong>? Just give it a swirl!
+              The spinning water creates a <strong style={{ color: colors.vortexHighlight }}>tornado-like
+              vortex</strong> that drains way faster than regular "glugging."
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+          }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
+              Same physics as <span style={{ color: colors.accent }}>real tornadoes</span>!
+            </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
+              The bottle vortex demonstrates angular momentum conservation - the same principle
+              that makes tornado winds accelerate to 300 mph and lets ice skaters spin faster
+              when they pull their arms in!
+            </p>
+          </div>
+        </div>
+      </div>
+      {renderBottomBar(true, true, "Let's Explore!")}
     </div>
   );
 };

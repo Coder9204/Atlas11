@@ -286,6 +286,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(TEST_QUESTIONS.length).fill(null));
   const [showTestResults, setShowTestResults] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
 
@@ -1565,7 +1566,11 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
     error: '#ef4444',
   };
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  // Navigation phases for progress tracking
+  const NAV_PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const currentPhaseIndex = NAV_PHASES.indexOf(phase);
+
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = true) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
@@ -1575,9 +1580,37 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       zIndex: 1000,
     }}>
+      {/* Progress Bar */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'rgba(255,255,255,0.1)' }}>
+        <div data-testid="progress-bar" style={{ height: '100%', width: `${((currentPhaseIndex + 1) / NAV_PHASES.length) * 100}%`, background: colors.accent, transition: 'width 0.3s ease' }} />
+      </div>
+
+      {/* Back Button */}
+      {showBack && currentPhaseIndex > 0 ? (
+        <button
+          onClick={() => {/* Back navigation handled by parent */}}
+          data-testid="back-button"
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid rgba(255,255,255,0.2)`,
+            background: 'transparent',
+            color: colors.textSecondary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            fontSize: '16px',
+            minHeight: '44px',
+          }}
+        >
+          Back
+        </button>
+      ) : <div />}
+
+      {/* Next Button */}
       <button
         onClick={onPhaseComplete}
         disabled={disabled && !canProceed}
@@ -1590,6 +1623,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
+          minHeight: '44px',
         }}
       >
         {buttonText}
@@ -1765,6 +1799,34 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
     );
   }
 
+  // Static SVG for predict phase
+  const renderPredictSVG = () => (
+    <svg viewBox="0 0 400 200" className="w-full h-48" style={{ maxWidth: '400px' }}>
+      <defs>
+        <linearGradient id="predictNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#b91c1c" />
+        </linearGradient>
+        <linearGradient id="predictSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#1d4ed8" />
+        </linearGradient>
+      </defs>
+      <rect width="400" height="200" fill="#0f172a" />
+      {/* Bar magnet */}
+      <rect x="150" y="85" width="50" height="30" rx="3" fill="url(#predictNorth)" />
+      <rect x="200" y="85" width="50" height="30" rx="3" fill="url(#predictSouth)" />
+      <text x="175" y="105" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">N</text>
+      <text x="225" y="105" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">S</text>
+      {/* Question marks around magnet */}
+      <text x="100" y="100" fill="#94a3b8" fontSize="24">?</text>
+      <text x="300" y="100" fill="#94a3b8" fontSize="24">?</text>
+      <text x="200" y="40" fill="#94a3b8" fontSize="24" textAnchor="middle">?</text>
+      <text x="200" y="170" fill="#94a3b8" fontSize="24" textAnchor="middle">?</text>
+      <text x="200" y="185" fill="#64748b" fontSize="10" textAnchor="middle">What pattern will iron filings form?</text>
+    </svg>
+  );
+
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
@@ -1772,8 +1834,14 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
+
+            {/* Static SVG visualization */}
+            <div className="bg-slate-800/50 rounded-2xl p-4 max-w-md mb-6">
+              {renderPredictSVG()}
+            </div>
+
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-              <p className="text-lg text-slate-300 mb-4">
+              <p style={{ fontSize: typo.bodyLarge, color: colors.textSecondary }} className="mb-4">
                 If you sprinkle iron filings around a bar magnet, what pattern will they form?
               </p>
             </div>
@@ -1788,6 +1856,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                   key={option.id}
                   onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
                   disabled={showPredictionFeedback}
+                  style={{ minHeight: '44px' }}
                   className={`p-4 rounded-xl text-left transition-all duration-300 ${
                     showPredictionFeedback && selectedPrediction === option.id
                       ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
@@ -1796,7 +1865,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                   }`}
                 >
                   <span className="font-bold text-white">{option.id}.</span>
-                  <span className="text-slate-200 ml-2">{option.text}</span>
+                  <span style={{ color: colors.textSecondary }} className="ml-2">{option.text}</span>
                 </button>
               ))}
             </div>
@@ -1834,7 +1903,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               {/* Magnet Strength Slider */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-slate-300 text-sm font-medium">Magnet Strength</label>
+                  <label style={{ color: colors.textSecondary }} className="text-sm font-medium">Magnet Strength</label>
                   <span className="text-cyan-400 text-sm font-bold">{magnetStrength}%</span>
                 </div>
                 <input
@@ -1846,7 +1915,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
                   style={{ zIndex: 10 }}
                 />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                <div className="flex justify-between text-xs mt-1" style={{ color: colors.textSecondary }}>
                   <span>Weak</span>
                   <span>Strong</span>
                 </div>
@@ -1855,7 +1924,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               {/* Distance from Magnet Slider */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-slate-300 text-sm font-medium">Probe Distance</label>
+                  <label style={{ color: colors.textSecondary }} className="text-sm font-medium">Probe Distance</label>
                   <span className="text-cyan-400 text-sm font-bold">{probeDistance.toFixed(0)} px</span>
                 </div>
                 <input
@@ -1867,7 +1936,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                   style={{ zIndex: 10 }}
                 />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                <div className="flex justify-between text-xs mt-1" style={{ color: colors.textSecondary }}>
                   <span>Close</span>
                   <span>Far</span>
                 </div>
@@ -1876,10 +1945,10 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               {/* Field Strength Display */}
               <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400 text-sm">Field at Probe (B):</span>
+                  <span style={{ color: colors.textSecondary }} className="text-sm">Field at Probe (B):</span>
                   <span className="text-yellow-400 font-bold">{fieldStrengthAtProbe.toFixed(2)} units</span>
                 </div>
-                <div className="text-xs text-slate-500 mt-1">
+                <div className="text-xs mt-1" style={{ color: colors.textSecondary }}>
                   B = mu_0 * m / (4 * pi * r^3) - Dipole field equation
                 </div>
               </div>
@@ -1889,28 +1958,28 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
             <div className="flex flex-wrap justify-center gap-2 mb-4">
               <button
                 onClick={() => setShowFieldLines(!showFieldLines)}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showFieldLines ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
               >
                 Field Lines
               </button>
               <button
                 onClick={() => setShowCompassGrid(!showCompassGrid)}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showCompassGrid ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
               >
                 Compass Grid
               </button>
               <button
                 onClick={() => setShowHeatMap(!showHeatMap)}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showHeatMap ? 'bg-orange-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
               >
                 Heat Map
               </button>
               <button
                 onClick={() => addMagnet()}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className="px-4 py-2 rounded-lg font-bold text-sm bg-slate-600 text-slate-300 hover:bg-slate-500 disabled:opacity-50"
                 disabled={magnets.length >= 3}
               >
@@ -1923,21 +1992,21 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               <div className="flex justify-center gap-3 mb-4 flex-wrap">
                 <button
                   onClick={() => rotateMagnet(selectedMagnet, -30)}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                   className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-all"
                 >
                   Rotate Left
                 </button>
                 <button
                   onClick={() => rotateMagnet(selectedMagnet, 30)}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                   className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-all"
                 >
                   Rotate Right
                 </button>
                 <button
                   onClick={() => { setMagnets(prev => prev.filter((_, i) => i !== selectedMagnet)); setSelectedMagnet(null); }}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-all"
                 >
                   Remove
@@ -1945,9 +2014,18 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               </div>
             )}
 
+            {/* Real-world relevance panel */}
+            <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl p-4 max-w-2xl w-full mb-4 border border-blue-500/30">
+              <h4 className="text-cyan-400 font-bold mb-2">Real-World Application</h4>
+              <p style={{ color: colors.textSecondary }} className="text-sm">
+                <strong className="text-white">MRI machines</strong> use precisely mapped magnetic fields to create detailed images of the human body.
+                Understanding field patterns is essential for medical imaging, compass navigation, and designing electric motors.
+              </p>
+            </div>
+
             {/* Info Panel */}
             <div className="bg-gradient-to-r from-red-900/40 to-blue-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
-              <p className="text-slate-300 text-center text-sm">
+              <p style={{ color: colors.textSecondary }} className="text-center text-sm">
                 <strong className="text-white">Drag the compass probe</strong> to measure field strength at different points.
                 Field lines show direction (N to S) and density indicates strength.
               </p>
@@ -1966,10 +2044,21 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Reading Magnetic Field Maps</h2>
+
+            {/* Reference user's prediction */}
+            {selectedPrediction && (
+              <div className="bg-emerald-900/30 rounded-xl p-4 max-w-2xl w-full mb-6 border border-emerald-500/50">
+                <p style={{ color: colors.textSecondary }}>
+                  <strong className="text-emerald-400">Your prediction was correct!</strong> You predicted that iron filings form
+                  curved lines from N to S pole. Now let&apos;s understand why this pattern appears.
+                </p>
+              </div>
+            )}
+
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
               <div className="p-4 bg-blue-900/30 rounded-lg border border-blue-600">
                 <h3 className="text-blue-400 font-bold mb-2">Field Line Rules</h3>
-                <ul className="text-slate-300 space-y-1">
+                <ul style={{ color: colors.textSecondary }} className="space-y-1">
                   <li>Lines point from <span className="text-red-400">N</span> to <span className="text-blue-400">S</span> outside the magnet</li>
                   <li>Lines <span className="text-yellow-400">never cross</span> (each point has one direction)</li>
                   <li>Closer lines = <span className="text-green-400">stronger field</span></li>
@@ -1980,12 +2069,12 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                 <div className="p-4 bg-slate-700/50 rounded-lg text-center">
                   <div className="text-3xl mb-2">🧲</div>
                   <h4 className="text-white font-bold mb-1">Iron Filings</h4>
-                  <p className="text-slate-400 text-sm">Each filing becomes a tiny magnet and aligns with local field</p>
+                  <p style={{ color: colors.textSecondary }} className="text-sm">Each filing becomes a tiny magnet and aligns with local field</p>
                 </div>
                 <div className="p-4 bg-slate-700/50 rounded-lg text-center">
                   <div className="text-3xl mb-2">🧭</div>
                   <h4 className="text-white font-bold mb-1">Compass Array</h4>
-                  <p className="text-slate-400 text-sm">Each compass needle points along the field direction</p>
+                  <p style={{ color: colors.textSecondary }} className="text-sm">Each compass needle points along the field direction</p>
                 </div>
               </div>
               <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
@@ -2002,6 +2091,36 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
     );
   }
 
+  // Static SVG for twist_predict phase - Earth's magnetic field
+  const renderTwistPredictSVG = () => (
+    <svg viewBox="0 0 400 200" className="w-full h-48" style={{ maxWidth: '400px' }}>
+      <defs>
+        <radialGradient id="twistEarthGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="70%" stopColor="#1d4ed8" />
+          <stop offset="100%" stopColor="#1e3a8a" />
+        </radialGradient>
+      </defs>
+      <rect width="400" height="200" fill="#020617" />
+      {/* Stars */}
+      {[...Array(15)].map((_, i) => (
+        <circle key={i} cx={30 + i * 25} cy={20 + (i % 3) * 60} r="1" fill="white" opacity="0.6" />
+      ))}
+      {/* Earth */}
+      <circle cx="200" cy="100" r="50" fill="url(#twistEarthGrad)" />
+      {/* Continents hint */}
+      <ellipse cx="200" cy="100" rx="50" ry="18" fill="#22c55e" fillOpacity="0.4" />
+      {/* Compass */}
+      <circle cx="320" cy="100" r="25" fill="#1f2937" stroke="#4b5563" strokeWidth="2" />
+      <line x1="320" y1="80" x2="310" y2="100" stroke="#ef4444" strokeWidth="3" />
+      <line x1="320" y1="120" x2="330" y2="100" stroke="#3b82f6" strokeWidth="3" />
+      <circle cx="320" cy="100" r="3" fill="#fbbf24" />
+      {/* Question arrow */}
+      <text x="270" y="100" fill="#fbbf24" fontSize="20">?</text>
+      <text x="200" y="180" fill="#64748b" fontSize="10" textAnchor="middle">Where does the compass point?</text>
+    </svg>
+  );
+
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
@@ -2009,8 +2128,14 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">The Earth Question</h2>
+
+            {/* Static SVG visualization */}
+            <div className="bg-slate-800/50 rounded-2xl p-4 max-w-md mb-6">
+              {renderTwistPredictSVG()}
+            </div>
+
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-              <p className="text-lg text-slate-300 mb-4">
+              <p style={{ fontSize: typo.bodyLarge, color: colors.textSecondary }} className="mb-4">
                 Earth has a magnetic field that compasses detect. Which way does a compass needle point?
               </p>
             </div>
@@ -2025,6 +2150,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                   key={option.id}
                   onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
                   disabled={showTwistFeedback}
+                  style={{ minHeight: '44px' }}
                   className={`p-4 rounded-xl text-left transition-all duration-300 ${
                     showTwistFeedback && twistPrediction === option.id
                       ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
@@ -2033,7 +2159,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                   }`}
                 >
                   <span className="font-bold text-white">{option.id}.</span>
-                  <span className="text-slate-200 ml-2">{option.text}</span>
+                  <span style={{ color: colors.textSecondary }} className="ml-2">{option.text}</span>
                 </button>
               ))}
             </div>
@@ -2063,21 +2189,21 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
             <div className="flex gap-2 mb-4 flex-wrap justify-center">
               <button
                 onClick={() => setTwistMode('two_magnets')}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${twistMode === 'two_magnets' ? 'bg-purple-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
               >
                 Two Magnets
               </button>
               <button
                 onClick={() => setTwistMode('earth')}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${twistMode === 'earth' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
               >
                 Earth&apos;s Field
               </button>
               <button
                 onClick={() => setTwistMode('electromagnet')}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${twistMode === 'electromagnet' ? 'bg-yellow-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
               >
                 Electromagnet
@@ -2098,14 +2224,14 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                   <div className="flex gap-3 justify-center">
                     <button
                       onClick={() => setSecondMagnetPolarity('attract')}
-                      style={{ zIndex: 10 }}
+                      style={{ zIndex: 10, minHeight: '44px' }}
                       className={`px-6 py-3 rounded-lg font-bold transition-all ${secondMagnetPolarity === 'attract' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
                     >
                       Attract (N-S)
                     </button>
                     <button
                       onClick={() => setSecondMagnetPolarity('repel')}
-                      style={{ zIndex: 10 }}
+                      style={{ zIndex: 10, minHeight: '44px' }}
                       className={`px-6 py-3 rounded-lg font-bold transition-all ${secondMagnetPolarity === 'repel' ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
                     >
                       Repel (N-N)
@@ -2131,7 +2257,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                   <div className="flex justify-center gap-3">
                     <button
                       onClick={() => setShowEarthField(!showEarthField)}
-                      style={{ zIndex: 10 }}
+                      style={{ zIndex: 10, minHeight: '44px' }}
                       className={`px-6 py-3 rounded-lg font-bold transition-all ${showEarthField ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
                     >
                       {showEarthField ? 'Hide Field Lines' : 'Show Field Lines'}
@@ -2199,21 +2325,21 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                 <div className="flex justify-center gap-3 mt-4">
                   <button
                     onClick={() => setElectromagnetCurrent(0)}
-                    style={{ zIndex: 10 }}
+                    style={{ zIndex: 10, minHeight: '44px' }}
                     className="px-4 py-2 bg-slate-600 text-slate-300 rounded-lg hover:bg-slate-500 transition-all"
                   >
                     Turn Off
                   </button>
                   <button
                     onClick={() => setElectromagnetCurrent(50)}
-                    style={{ zIndex: 10 }}
+                    style={{ zIndex: 10, minHeight: '44px' }}
                     className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 transition-all"
                   >
                     Medium
                   </button>
                   <button
                     onClick={() => setElectromagnetCurrent(100)}
-                    style={{ zIndex: 10 }}
+                    style={{ zIndex: 10, minHeight: '44px' }}
                     className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-all"
                   >
                     Maximum
@@ -2242,10 +2368,21 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">Earth&apos;s Magnetic Shield</h2>
+
+            {/* Reference user's twist prediction */}
+            {twistPrediction && (
+              <div className="bg-emerald-900/30 rounded-xl p-4 max-w-2xl w-full mb-6 border border-emerald-500/50">
+                <p style={{ color: colors.textSecondary }}>
+                  <strong className="text-emerald-400">Your prediction was correct!</strong> Compasses point to magnetic north,
+                  not true geographic north. Now let&apos;s understand why this difference exists.
+                </p>
+              </div>
+            )}
+
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
               <div className="p-4 bg-green-900/30 rounded-lg border border-green-600">
                 <h3 className="text-green-400 font-bold mb-2">The Geodynamo</h3>
-                <p className="text-slate-300">
+                <p style={{ color: colors.textSecondary }}>
                   Earth&apos;s magnetic field is generated by <span className="text-yellow-400 font-bold">
                   convecting molten iron</span> in the outer core. This &quot;geodynamo&quot; creates
                   a field that shields us from solar wind!
@@ -2254,14 +2391,14 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-700/50 rounded-lg">
                   <h4 className="text-cyan-400 font-bold mb-2">Magnetic Declination</h4>
-                  <p className="text-slate-300 text-sm">
+                  <p style={{ color: colors.textSecondary }} className="text-sm">
                     The angle between magnetic north and true north.
                     Varies by location (can be 20+ degrees in some places!).
                   </p>
                 </div>
                 <div className="p-4 bg-slate-700/50 rounded-lg">
                   <h4 className="text-purple-400 font-bold mb-2">Field Strength</h4>
-                  <p className="text-slate-300 text-sm">
+                  <p style={{ color: colors.textSecondary }} className="text-sm">
                     25-65 microtesla. About 100x weaker than
                     a refrigerator magnet, but enough for compasses!
                   </p>
@@ -2293,6 +2430,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                 <button
                   key={index}
                   onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                  style={{ minHeight: '44px' }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeAppTab === index ? 'bg-blue-600 text-white'
                     : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
@@ -2308,17 +2446,25 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                 <span className="text-3xl">{TRANSFER_APPS[activeAppTab].icon}</span>
                 <h3 className="text-xl font-bold text-white">{TRANSFER_APPS[activeAppTab].title}</h3>
               </div>
-              <p className="text-lg text-slate-300 mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
+              <p style={{ fontSize: typo.bodyLarge, color: colors.textSecondary }} className="mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
               {!completedApps.has(activeAppTab) && (
-                <button onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
-                  Mark as Understood
+                <button
+                  onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+                  style={{ minHeight: '44px', padding: '12px 24px', background: '#10b981', color: 'white', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', marginTop: '16px' }}
+                >
+                  Got It
                 </button>
+              )}
+              {completedApps.has(activeAppTab) && (
+                <div className="mt-4 flex items-center gap-2 text-emerald-400">
+                  <span>Completed</span>
+                </div>
               )}
             </div>
             <div className="mt-6 flex items-center gap-2">
-              <span className="text-slate-400">Progress:</span>
+              <span style={{ color: colors.textSecondary }}>Progress:</span>
               <div className="flex gap-1">{TRANSFER_APPS.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
-              <span className="text-slate-400">{completedApps.size}/4</span>
+              <span style={{ color: colors.textSecondary }}>{completedApps.size}/4</span>
             </div>
           </div>
         </div>
@@ -2334,18 +2480,18 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mx-auto mt-8 text-center">
-              <div className="text-6xl mb-4">{testScore >= 3 ? '🎉' : '📚'}</div>
+              <div className="text-6xl mb-4">{testScore >= 7 ? '🎉' : '📚'}</div>
               <h3 className="text-2xl font-bold text-white mb-2">Score: {testScore}/{TEST_QUESTIONS.length}</h3>
-              <p className="text-slate-300 mb-6">{testScore >= 7 ? 'Excellent! You understand magnetic field mapping!' : 'Keep studying! Review and try again.'}</p>
+              <p style={{ color: colors.textSecondary }} className="mb-6">{testScore >= 7 ? 'Excellent! You understand magnetic field mapping!' : 'Keep studying! Review and try again.'}</p>
             </div>
             {TEST_QUESTIONS.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4 max-w-2xl mx-auto mt-4" style={{ borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
+                  <p className="text-white font-medium mb-3">Question {qIndex + 1} of {TEST_QUESTIONS.length}: {q.question}</p>
                   {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} className={`p-2 rounded mb-1 ${opt.correct ? 'bg-emerald-900/30 text-emerald-400' : userAnswer === oIndex ? 'bg-red-900/30 text-red-400' : 'text-slate-400'}`}>
+                    <div key={oIndex} className={`p-2 rounded mb-1 ${opt.correct ? 'bg-emerald-900/30 text-emerald-400' : userAnswer === oIndex ? 'bg-red-900/30 text-red-400' : ''}`} style={{ color: opt.correct ? '#34d399' : userAnswer === oIndex ? '#f87171' : colors.textSecondary }}>
                       {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
                     </div>
                   ))}
@@ -2358,35 +2504,119 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
       );
     }
 
+    const currentQuestion = TEST_QUESTIONS[currentQuestionIndex];
+    const answeredCount = testAnswers.filter(a => a !== null).length;
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-            <div className="space-y-6 max-w-2xl w-full">
-              {TEST_QUESTIONS.map((q, qIndex) => (
-                <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-                  <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
-                  <div className="grid gap-2">
-                    {q.options.map((option, oIndex) => (
+            <h2 className="text-2xl font-bold text-white mb-4">Knowledge Assessment</h2>
+
+            {/* Question Progress */}
+            <div className="w-full max-w-2xl mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span style={{ color: colors.textSecondary }} className="font-medium">
+                  Question {currentQuestionIndex + 1} of {TEST_QUESTIONS.length}
+                </span>
+                <span style={{ color: colors.textSecondary }}>
+                  {answeredCount}/{TEST_QUESTIONS.length} answered
+                </span>
+              </div>
+              {/* Progress dots */}
+              <div className="flex gap-1 justify-center mb-4">
+                {TEST_QUESTIONS.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentQuestionIndex(i)}
+                    className={`w-3 h-3 rounded-full transition-all ${
+                      i === currentQuestionIndex ? 'bg-blue-500 scale-125'
+                      : testAnswers[i] !== null ? 'bg-emerald-500'
+                      : 'bg-slate-600'
+                    }`}
+                    aria-label={`Go to question ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Current Question */}
+            <div className="bg-slate-800/50 rounded-xl p-6 max-w-2xl w-full">
+              <p className="text-white font-medium text-lg mb-4">{currentQuestion.question}</p>
+              <div className="grid gap-3">
+                {currentQuestion.options.map((option, oIndex) => {
+                  const isSelected = testAnswers[currentQuestionIndex] === oIndex;
+                  return (
+                    <button
+                      key={oIndex}
+                      onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(currentQuestionIndex, oIndex); }}
+                      style={{
+                        minHeight: '44px',
+                        border: isSelected ? '2px solid #3b82f6' : '2px solid transparent',
+                        background: isSelected ? 'rgba(59, 130, 246, 0.2)' : 'rgba(51, 65, 85, 0.5)',
+                        transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+                      }}
+                      className="p-4 rounded-lg text-left transition-all hover:bg-slate-600/50"
+                    >
+                      <span style={{ color: isSelected ? '#60a5fa' : colors.textSecondary }}>{option.text}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Navigation buttons */}
+              <div className="flex justify-between mt-6">
+                <button
+                  onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
+                  disabled={currentQuestionIndex === 0}
+                  style={{ minHeight: '44px' }}
+                  className={`px-4 py-2 rounded-lg font-medium ${currentQuestionIndex === 0 ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-600 text-white hover:bg-slate-500'}`}
+                >
+                  Previous
+                </button>
+                {currentQuestionIndex < TEST_QUESTIONS.length - 1 ? (
+                  <button
+                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
+                    style={{ minHeight: '44px' }}
+                    className="px-4 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-500"
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    onPointerDown={(e) => { e.preventDefault(); submitTest(); }}
+                    disabled={testAnswers.includes(null)}
+                    style={{ minHeight: '44px' }}
+                    className={`px-6 py-2 rounded-lg font-semibold ${testAnswers.includes(null) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-600 to-blue-600 text-white'}`}
+                  >
+                    Submit Answers
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* All Questions Overview */}
+            <div className="mt-6 max-w-2xl w-full">
+              <details className="bg-slate-800/30 rounded-lg">
+                <summary style={{ color: colors.textSecondary }} className="cursor-pointer p-3 font-medium">View All Questions</summary>
+                <div className="p-4 space-y-4">
+                  {TEST_QUESTIONS.map((q, qIndex) => (
+                    <div key={qIndex} className="bg-slate-800/50 rounded-lg p-3">
                       <button
-                        key={oIndex}
-                        onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
-                        className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
+                        onClick={() => setCurrentQuestionIndex(qIndex)}
+                        className="w-full text-left"
                       >
-                        {option.text}
+                        <div className="flex items-start gap-2">
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${testAnswers[qIndex] !== null ? 'bg-emerald-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
+                            {qIndex + 1}
+                          </span>
+                          <span style={{ color: colors.textSecondary }} className="text-sm">{q.question}</span>
+                        </div>
                       </button>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              <button
-                onPointerDown={(e) => { e.preventDefault(); submitTest(); }}
-                disabled={testAnswers.includes(null)}
-                className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(null) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-600 to-blue-600 text-white'}`}
-              >
-                Submit Answers
-              </button>
+              </details>
             </div>
           </div>
         </div>

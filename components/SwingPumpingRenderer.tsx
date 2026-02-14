@@ -669,7 +669,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -719,6 +719,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------

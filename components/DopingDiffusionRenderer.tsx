@@ -27,7 +27,7 @@ const phaseLabels: Record<Phase, string> = {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#cbd5e1', // Brightness >= 180 for contrast
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -320,19 +320,6 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
     // Calculate current diffusion profile based on animation
     const currentTime = isAnimating ? animationTime : diffusionTime;
     const timeRatio = Math.sqrt(currentTime / diffusionTime);
-
-    // Generate stable random positions for diffusing atoms (seeded by animation time)
-    const atomPositions = React.useMemo(() => {
-      const positions: Array<{x: number; y: number; delay: number}> = [];
-      for (let i = 0; i < 20; i++) {
-        positions.push({
-          x: 100 + (i * 37 % 200),
-          y: 0,
-          delay: (i * 0.15) % 1,
-        });
-      }
-      return positions;
-    }, []);
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
@@ -918,7 +905,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
           step="10"
           value={temperature}
           onChange={(e) => setTemperature(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -933,7 +920,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
           step="5"
           value={diffusionTime}
           onChange={(e) => setDiffusionTime(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -982,15 +969,33 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
 
   const currentIdx = phaseOrder.indexOf(phase);
 
+  // Generate stable random positions for diffusing atoms - moved outside render function to follow hooks rules
+  const atomPositions = React.useMemo(() => {
+    const positions: Array<{x: number; y: number; delay: number}> = [];
+    for (let i = 0; i < 20; i++) {
+      positions.push({
+        x: 100 + (i * 37 % 200),
+        y: 0,
+        delay: (i * 0.15) % 1,
+      });
+    }
+    return positions;
+  }, []);
+
   // Progress bar component
   const renderProgressBar = () => (
     <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '12px 16px',
       background: colors.bgDark,
       borderBottom: `1px solid rgba(255,255,255,0.1)`,
+      zIndex: 1001,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <button
@@ -1004,6 +1009,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             color: currentIdx > 0 ? colors.textPrimary : colors.textMuted,
             cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
             fontSize: '14px',
+            minHeight: '44px',
           }}
         >
           Back
@@ -1013,6 +1019,8 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         {phaseOrder.map((p, i) => (
           <div
             key={p}
+            role="button"
+            aria-label={`${phaseLabels[p]} - Step ${i + 1} of ${phaseOrder.length}`}
             onClick={() => i <= currentIdx && goToPhase(p)}
             style={{
               width: i === currentIdx ? '24px' : '8px',
@@ -1055,7 +1063,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      zIndex: 1000,
+      zIndex: 1001,
     }}>
       <button
         onClick={goBack}
@@ -1070,12 +1078,13 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
           cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
           fontSize: '14px',
           opacity: currentIdx > 0 ? 1 : 0.5,
+          minHeight: '44px',
           WebkitTapHighlightColor: 'transparent',
         }}
       >
         Back
       </button>
-      <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+      <span style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 400 }}>
         {phaseLabels[phase]}
       </span>
       <button
@@ -1090,6 +1099,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
+          minHeight: '44px',
           WebkitTapHighlightColor: 'transparent',
         }}
       >
@@ -1101,14 +1111,14 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
               Doping & Diffusion
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               Does doping mean "painting electrons on"?
             </p>
           </div>
@@ -1122,12 +1132,12 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 To create a p-n junction in a solar cell, we need to add phosphorus atoms
                 into the silicon. But phosphorus gas doesn't simply "stick" to the surface -
                 it actually diffuses into the silicon like dye spreading in water!
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                 Temperature is the key that controls how deep and how fast!
               </p>
             </div>
@@ -1138,7 +1148,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
                 Think of it like food coloring in warm vs cold gelatin!
               </p>
             </div>
@@ -1152,9 +1162,14 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: colors.textMuted, fontSize: '14px', fontWeight: 400 }}>
+              Step {currentIdx + 1} of {phaseOrder.length}: Make your prediction
+            </p>
+          </div>
           {renderVisualization(false)}
 
           <div style={{
@@ -1163,15 +1178,15 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Process:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>The Process:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 400 }}>
               A silicon wafer is placed in a furnace with phosphorus-containing gas (POCl3).
               At high temperature, phosphorus atoms enter the silicon. How do they get distributed?
             </p>
           </div>
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 700 }}>
               How do dopant atoms enter the silicon?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1188,6 +1203,8 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    minHeight: '44px',
+                    fontWeight: 400,
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
@@ -1205,13 +1222,25 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Diffusion Furnace Simulator</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Diffusion Furnace Simulator</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
               Control temperature and time to create your junction
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.solar}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
+              Observe how temperature and time affect the diffusion depth. Try adjusting the sliders to see the changes.
             </p>
           </div>
 
@@ -1224,13 +1253,42 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Experiments to Try:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
               <li>Increase temperature and watch diffusion accelerate dramatically</li>
               <li>Notice: doubling time only increases depth by sqrt(2) ~ 1.4x</li>
               <li>But increasing temperature by 100C can double or triple depth!</li>
               <li>Watch the concentration profile flatten as depth increases</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(96, 165, 250, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.nType}`,
+          }}>
+            <h4 style={{ color: colors.nType, marginBottom: '8px', fontWeight: 700 }}>Key Physics Terms:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
+              <li><strong style={{ color: colors.textPrimary }}>Diffusion Coefficient (D):</strong> Rate at which atoms spread through material - follows Arrhenius equation D = D0 * exp(-Ea/kT)</li>
+              <li><strong style={{ color: colors.textPrimary }}>Junction Depth:</strong> How deep the dopants penetrate into silicon - scales as sqrt(D*t)</li>
+              <li><strong style={{ color: colors.textPrimary }}>Sheet Resistance:</strong> Electrical resistance of a thin doped layer - measured in ohms per square</li>
+              <li><strong style={{ color: colors.textPrimary }}>Concentration Profile:</strong> Distribution of dopant atoms vs depth - typically Gaussian or error function shape</li>
+            </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Why This Matters:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, fontWeight: 400 }}>
+              Diffusion is the foundation of all semiconductor manufacturing. Every solar cell, computer chip, LED, and power transistor relies on precisely controlled doping profiles. A 10C temperature variation in a diffusion furnace can shift device performance by 5-10%. This is why semiconductor fabs maintain temperature control within 0.5C and why understanding diffusion physics is essential for engineers designing the next generation of solar cells and microchips.
+            </p>
           </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review')}
@@ -1243,9 +1301,9 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
     const wasCorrect = prediction === 'diffusion';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1253,14 +1311,28 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 700 }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Dopant atoms diffuse into silicon gradually - temperature controls the rate
-              exponentially, while time affects depth as a square root!
+            <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
+              {wasCorrect
+                ? 'As you predicted, dopant atoms diffuse into silicon gradually - temperature controls the rate exponentially, while time affects depth as a square root!'
+                : 'You predicted something different, but as you observed in the simulation, dopant atoms actually diffuse into silicon gradually - temperature controls the rate exponentially, while time affects depth as a square root!'}
             </p>
           </div>
+
+          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ margin: '16px auto', display: 'block', maxWidth: '400px' }}>
+            <defs>
+              <linearGradient id="reviewDiffGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={colors.accent} />
+                <stop offset="100%" stopColor={colors.success} />
+              </linearGradient>
+            </defs>
+            <rect x="20" y="20" width="360" height="80" rx="8" fill="rgba(30, 41, 59, 0.9)" stroke={colors.accent} strokeWidth="1" />
+            <text x="200" y="45" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Diffusion Equation</text>
+            <text x="200" y="75" textAnchor="middle" fill={colors.accent} fontSize="18" fontFamily="monospace">D = D0 * exp(-Ea/kT)</text>
+            <text x="200" y="95" textAnchor="middle" fill={colors.textMuted} fontSize="11">Temperature has exponential effect on diffusion rate</text>
+          </svg>
 
           <div style={{
             background: colors.bgCard,
@@ -1268,25 +1340,25 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Diffusion</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>The Physics of Diffusion</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Thermal Energy:</strong> At high
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Thermal Energy:</strong> At high
                 temperatures, silicon atoms vibrate more intensely, creating "jumps" between
                 lattice sites. Dopant atoms hop from site to site through this thermal motion.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Arrhenius Equation:</strong> The
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Arrhenius Equation:</strong> The
                 diffusion coefficient follows D = D0 * exp(-Ea/kT). The exponential means small
                 temperature changes have huge effects on diffusion rate.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Diffusion Length:</strong> Atoms
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Diffusion Length:</strong> Atoms
                 spread as sqrt(D*t), meaning time has diminishing returns. To double depth, you
                 need 4x the time - or just increase temperature slightly.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Concentration Profile:</strong> The
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Concentration Profile:</strong> The
                 profile follows an error function or Gaussian shape - highest at surface,
                 decreasing exponentially with depth.
               </p>
@@ -1301,13 +1373,16 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>The Twist</h2>
+            <p style={{ color: colors.textSecondary, fontWeight: 400 }}>
               Shallow junction vs. deep junction - which is better for solar cells?
+            </p>
+            <p style={{ color: colors.textMuted, fontSize: '14px', marginTop: '8px', fontWeight: 400 }}>
+              Step {currentIdx + 1} of {phaseOrder.length}: Make your prediction
             </p>
           </div>
 
@@ -1319,8 +1394,8 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Dilemma:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>The Dilemma:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 400 }}>
               Engineers can choose to make shallow junctions (0.3 um) or deep junctions (2+ um).
               Shallow junctions have high sheet resistance but better blue response. Deep junctions
               have low resistance but poorer blue response. Which is better?
@@ -1328,7 +1403,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
           </div>
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 700 }}>
               What's the optimal junction depth strategy?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1345,6 +1420,8 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    minHeight: '44px',
+                    fontWeight: 400,
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
@@ -1362,13 +1439,25 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Junction Depth Comparison</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>Junction Depth Comparison</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
               Compare shallow vs deep junction characteristics
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.solar}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
+              Observe the tradeoffs by toggling between shallow and deep junction types. Notice how sheet resistance and depth change.
             </p>
           </div>
 
@@ -1382,11 +1471,11 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `3px solid ${colors.warning}`,
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Tradeoff:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              <strong>Shallow (0.3-0.5 um):</strong> Better blue response (blue light absorbed at surface),
+            <h4 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>Key Tradeoff:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
+              <strong style={{ fontWeight: 700 }}>Shallow (0.3-0.5 um):</strong> Better blue response (blue light absorbed at surface),
               but higher sheet resistance increases series resistance losses.<br/><br/>
-              <strong>Deep (1-2 um):</strong> Lower sheet resistance, but carriers generated by blue light
+              <strong style={{ fontWeight: 700 }}>Deep (1-2 um):</strong> Lower sheet resistance, but carriers generated by blue light
               recombine before reaching the junction. Also more Auger recombination in heavily doped region.
             </p>
           </div>
@@ -1401,9 +1490,9 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
     const wasCorrect = twistPrediction === 'tradeoff';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1411,14 +1500,27 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 700 }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
               There's a real engineering tradeoff! Modern cells use "selective emitters" with
               different depths in different regions to get the best of both worlds.
             </p>
           </div>
+
+          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ margin: '16px auto', display: 'block', maxWidth: '400px' }}>
+            <defs>
+              <linearGradient id="twistRevGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={colors.warning} />
+                <stop offset="100%" stopColor={colors.success} />
+              </linearGradient>
+            </defs>
+            <rect x="20" y="20" width="360" height="80" rx="8" fill="rgba(30, 41, 59, 0.9)" stroke={colors.warning} strokeWidth="1" />
+            <text x="200" y="45" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Selective Emitter Strategy</text>
+            <text x="200" y="70" textAnchor="middle" fill={colors.warning} fontSize="12">Under contacts: Deep | Between fingers: Shallow</text>
+            <text x="200" y="90" textAnchor="middle" fill={colors.textMuted} fontSize="11">Best of both worlds for maximum efficiency</text>
+          </svg>
 
           <div style={{
             background: colors.bgCard,
@@ -1426,18 +1528,18 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Solution: Selective Emitters</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.warning, marginBottom: '12px', fontWeight: 700 }}>The Solution: Selective Emitters</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Under Metal Contacts:</strong> Deep,
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Under Metal Contacts:</strong> Deep,
                 heavily doped regions (~120 ohm/sq) for low contact resistance.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Between Fingers:</strong> Shallow,
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Between Fingers:</strong> Shallow,
                 lightly doped regions (~300 ohm/sq) for good blue response and less Auger recombination.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Implementation:</strong> Can be achieved
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Implementation:</strong> Can be achieved
                 through double diffusion, laser doping, or ion implantation with patterned masking.
                 Adds 0.3-0.5% absolute efficiency improvement.
               </p>
@@ -1452,22 +1554,22 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: 700 }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
               Diffusion is fundamental to all semiconductor devices
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <p style={{ color: colors.textMuted, fontSize: '14px', textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
+              App {transferCompleted.size + 1} of {realWorldApps.length}
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
+          {realWorldApps.map((app, index) => (
             <div
               key={index}
               style={{
@@ -1479,33 +1581,84 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700 }}>
+                  <span style={{ marginRight: '8px' }}>{app.icon}</span>{app.title}
+                </h3>
+                {transferCompleted.has(index) && <span style={{ color: colors.success, fontWeight: 700 }}>Complete</span>}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', fontWeight: 400 }}>{app.description}</p>
+
+              {/* Stats grid with numeric values */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                {app.stats.map((stat, sIndex) => (
+                  <div key={sIndex} style={{ background: 'rgba(0,0,0,0.2)', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
+                    <div style={{ color: app.color, fontSize: '16px', fontWeight: 700 }}>{stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '10px' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
               <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.connection}</p>
               </div>
               {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: `1px solid ${colors.accent}`,
+                      background: 'transparent',
+                      color: colors.accent,
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      minHeight: '44px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Learn More
+                  </button>
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: `1px solid ${colors.success}`,
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      color: colors.success,
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      minHeight: '44px',
+                      fontWeight: 700,
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Got It
+                  </button>
                 </div>
+              ) : (
+                <>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400 }}>{app.howItWorks}</p>
+                  </div>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: `1px solid ${colors.success}`,
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      color: colors.success,
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      minHeight: '44px',
+                      fontWeight: 700,
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Got It
+                  </button>
+                </>
               )}
             </div>
           ))}
@@ -1558,22 +1711,46 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
     }
 
     const currentQ = testQuestions[currentTestQuestion];
+
+    // Scenario context for each question to provide richer educational content
+    const questionScenarios = [
+      'In semiconductor manufacturing, engineers must control electrical properties precisely. Understanding this fundamental concept is essential for creating solar cells, LEDs, and computer chips.',
+      'A solar cell factory operates diffusion furnaces 24/7. The temperature inside must be precisely controlled to achieve consistent junction depths across millions of wafers.',
+      'Scientists studying semiconductor physics discovered that atomic movement follows predictable mathematical patterns. This relationship governs all diffusion processes in chip manufacturing.',
+      'When designing a solar cell, engineers must decide how deep to make the p-n junction. This critical decision affects both electrical performance and light absorption efficiency.',
+      'A thought experiment: Could you manufacture semiconductors at room temperature if you waited long enough? The physics of diffusion reveals why semiconductor fabs require high temperatures.',
+      'Measuring the distribution of dopant atoms in silicon requires sophisticated techniques. Understanding the expected profile shape helps engineers verify their manufacturing process.',
+      'Electrical characterization of doped layers is essential for quality control. Engineers use specialized probes to measure the resistance of thin semiconductor films.',
+      'A semiconductor fab is upgrading their diffusion furnaces from 800C to 900C capability. How will this affect their manufacturing process and junction characteristics?',
+      'Solar cell efficiency depends on matching the junction depth to the absorption depth of different wavelengths of light. Blue light behaves differently than red light in silicon.',
+      'Engineers designing high-efficiency solar cells must balance multiple competing requirements. Understanding these tradeoffs is key to optimizing cell performance.',
+    ];
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary, fontWeight: 400 }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
             </div>
+            <p style={{ color: colors.accent, fontSize: '16px', marginBottom: '16px', fontWeight: 700 }}>
+              Question {currentTestQuestion + 1} of {testQuestions.length}
+            </p>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
               ))}
             </div>
+            {/* Scenario context for richer educational content */}
+            <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', borderLeft: `3px solid ${colors.solar}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.5, fontWeight: 400, margin: 0 }}>
+                {questionScenarios[currentTestQuestion]}
+              </p>
+            </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 400 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
@@ -1589,6 +1766,8 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    minHeight: '44px',
+                    fontWeight: 400,
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
@@ -1608,6 +1787,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
                 background: 'transparent',
                 color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -1623,6 +1803,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
                   background: colors.accent,
                   color: 'white',
                   cursor: 'pointer',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1639,6 +1820,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1658,7 +1840,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered doping and diffusion!</p>
           </div>

@@ -652,7 +652,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
 
     return (
       <>
-        <svg width={width} height={height} className="mx-auto">
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="mx-auto">
           <defs>
             {/* Premium copper wire gradient with metallic sheen */}
             <linearGradient id="magfWireCopper" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -836,7 +836,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
 
     return (
       <>
-        <svg width={width} height={height} className="mx-auto">
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="mx-auto">
           <defs>
             {/* Premium copper coil gradient */}
             <linearGradient id="magfSolenoidCoil" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1509,6 +1509,16 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Magnetic Field Lab</h2>
 
+      {/* Observation guidance */}
+      <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%)', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', maxWidth: '600px', border: '1px solid #334155' }}>
+        <p style={{ color: '#93c5fd', fontSize: '14px', margin: 0 }}>
+          Try adjusting the sliders below and observe how the magnetic field strength changes. Experiment with different current values and distances to see the relationship between B, I, and r.
+        </p>
+        <p style={{ color: '#a5b4fc', fontSize: '13px', margin: '8px 0 0 0' }}>
+          When you increase the current, the magnetic field strength increases proportionally. This is important because electric motors, MRI machines, and many real-world technologies rely on controlling magnetic field strength by adjusting current.
+        </p>
+      </div>
+
       {/* Demo selector */}
       <div className="flex gap-2 mb-4">
         <button
@@ -1531,7 +1541,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         </button>
       </div>
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
+      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid #334155' }}>
         {selectedDemo === 'wire'
           ? renderFieldVisualization(isMobile ? 320 : 400, isMobile ? 280 : 320)
           : renderSolenoidVisualization(isMobile ? 320 : 400, isMobile ? 280 : 320)
@@ -1651,6 +1661,15 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Understanding Magnetic Fields</h2>
+
+      {/* Connect to prediction/observation */}
+      <div className="bg-gradient-to-r from-cyan-900/50 to-blue-900/50 rounded-xl p-4 mb-6 max-w-3xl">
+        <p className="text-cyan-300 text-sm">
+          As you observed in the experiment, the magnetic field forms concentric circles around the wire.
+          The correct prediction was that field lines form circles - this is because the field direction
+          at any point is tangent to these circles, just as you saw when adjusting the current.
+        </p>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-blue-900/50 to-indigo-900/50 rounded-2xl p-6">

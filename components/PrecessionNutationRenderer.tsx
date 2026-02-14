@@ -178,9 +178,9 @@ const realWorldApps = [
     connection: 'Precession allows angular momentum transfer between gyroscopes and spacecraft, enabling fuel-free attitude adjustments that can last for decades.',
     howItWorks: 'When a CMG gimbal tilts a spinning flywheel, the resulting torque causes the spacecraft to rotate perpendicular to both the spin axis and tilt direction - pure precession physics.',
     stats: [
-      { value: '6000+', label: 'Active satellites', icon: '🛰' },
-      { value: '20+ yrs', label: 'Gyro lifespan', icon: '⏱' },
-      { value: '0.001deg', label: 'Pointing accuracy', icon: '🎯' }
+      { value: '35,786 km', label: 'GEO orbit altitude', icon: '🛰' },
+      { value: '$500M', label: 'Market value', icon: '💰' },
+      { value: '250 W', label: 'CMG power', icon: '⚡' }
     ],
     examples: ['Hubble Space Telescope', 'International Space Station', 'GPS satellites', 'Communication satellites'],
     companies: ['NASA', 'SpaceX', 'Lockheed Martin', 'Northrop Grumman'],
@@ -274,6 +274,7 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
 
   // Earth visualization state
   const [earthPrecessionAngle, setEarthPrecessionAngle] = useState(0);
+  const [earthTiltAngle, setEarthTiltAngle] = useState(23.5);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -322,7 +323,7 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
 
   // Calculate precession rate (approximate formula)
   const precessionRate = (hasGravity && tiltAngle > 0)
-    ? (9.8 * tiltAngle * Math.PI / 180) / (spinSpeed * 0.5)
+    ? (9.8 * Math.sin(tiltAngle * Math.PI / 180)) / (spinSpeed * 0.5)
     : 0;
 
   // Premium design colors
@@ -336,8 +337,8 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#B8C0CC',
+    textMuted: '#D1D5DB',
     border: '#2a2a3a',
     gyro: '#6366F1',
     torque: '#F59E0B',
@@ -345,11 +346,11 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
   };
 
   const typo = {
-    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
-    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
-    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
-    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
-    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800 as const, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700 as const, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600 as const, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400 as const, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400 as const, lineHeight: 1.5 },
   };
 
   // Phase navigation
@@ -359,8 +360,8 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'New Scenario',
-    twist_play: 'Earth Wobble',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -391,7 +392,286 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
     }
   }, [phase, goToPhase, phaseOrder]);
 
-  // Spinning Top Visualization
+  // Progress bar
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #4F46E5)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // Navigation bar
+  const renderNavigationBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '8px 16px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+      }}>
+        <button
+          onClick={() => {
+            if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
+          }}
+          disabled={currentIndex === 0}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: currentIndex > 0 ? colors.bgCard : 'transparent',
+            color: currentIndex > 0 ? colors.textPrimary : colors.textMuted,
+            cursor: currentIndex > 0 ? 'pointer' : 'not-allowed',
+            fontWeight: 600,
+            opacity: currentIndex === 0 ? 0.4 : 1,
+          }}
+        >
+          Back
+        </button>
+        <span style={{ ...typo.small, color: colors.textSecondary }}>
+          {currentIndex + 1} / {phaseOrder.length}
+        </span>
+        <button
+          onClick={() => nextPhase()}
+          disabled={currentIndex >= phaseOrder.length - 1}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: 'none',
+            background: currentIndex < phaseOrder.length - 1 ? colors.accent : colors.textMuted,
+            color: 'white',
+            cursor: currentIndex < phaseOrder.length - 1 ? 'pointer' : 'not-allowed',
+            fontWeight: 600,
+          }}
+        >
+          Continue
+        </button>
+      </div>
+    );
+  };
+
+  // Slider style helper
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '20px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    accentColor: colors.accent,
+    touchAction: 'pan-y',
+    WebkitAppearance: 'none' as const,
+  };
+
+  // Precession Rate Graph Visualization
+  const PrecessionRateGraph = () => {
+    const graphW = 350;
+    const graphH = 280;
+    const padL = 55;
+    const padR = 20;
+    const padT = 30;
+    const padB = 45;
+    const plotW = graphW - padL - padR;
+    const plotH = graphH - padT - padB;
+
+    // Generate precession rate curve: rate = k * sin(tiltAngle) / spinSpeed
+    // X axis = spin speed (1 to 15), Y axis = precession rate
+    const numPoints = 30;
+    const minSpin = 1;
+    const maxSpin = 15;
+    const maxRate = (9.8 * Math.sin(45 * Math.PI / 180)) / (minSpin * 0.5);
+
+    const getRate = (s: number) => (9.8 * Math.sin(tiltAngle * Math.PI / 180)) / (s * 0.5);
+
+    const points: { x: number; y: number }[] = [];
+    for (let i = 0; i < numPoints; i++) {
+      const s = minSpin + (maxSpin - minSpin) * i / (numPoints - 1);
+      const rate = getRate(s);
+      const px = padL + (s - minSpin) / (maxSpin - minSpin) * plotW;
+      const py = padT + plotH - (rate / maxRate) * plotH;
+      points.push({ x: px, y: py });
+    }
+
+    const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+    // Reference curve at 20 deg tilt (baseline)
+    const refRate = (s: number) => (9.8 * Math.sin(20 * Math.PI / 180)) / (s * 0.5);
+    const refPoints: { x: number; y: number }[] = [];
+    for (let i = 0; i < numPoints; i++) {
+      const s = minSpin + (maxSpin - minSpin) * i / (numPoints - 1);
+      const rate = refRate(s);
+      const px = padL + (s - minSpin) / (maxSpin - minSpin) * plotW;
+      const py = padT + plotH - (rate / maxRate) * plotH;
+      refPoints.push({ x: px, y: py });
+    }
+    const refPathD = refPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+    // Interactive marker at current spin speed
+    const currentRate = getRate(spinSpeed);
+    const markerX = padL + (spinSpeed - minSpin) / (maxSpin - minSpin) * plotW;
+    const markerY = padT + plotH - (currentRate / maxRate) * plotH;
+
+    // Grid lines
+    const hGridCount = 5;
+    const vGridCount = 5;
+
+    // Fill area under curve
+    const fillPathD = pathD + ` L ${points[points.length - 1].x.toFixed(1)} ${padT + plotH} L ${points[0].x.toFixed(1)} ${padT + plotH} Z`;
+
+    return (
+      <svg width={graphW} height={graphH} viewBox={`0 0 ${graphW} ${graphH}`} style={{ maxWidth: '100%' }}>
+        <defs>
+          <linearGradient id="curveFillGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#6366F1" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#6366F1" stopOpacity="0.02" />
+          </linearGradient>
+          <linearGradient id="curveStrokeGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#818cf8" />
+            <stop offset="100%" stopColor="#6366F1" />
+          </linearGradient>
+          <filter id="markerGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Background */}
+        <g>
+          <rect x="0" y="0" width={graphW} height={graphH} rx="8" fill={colors.bgSecondary} />
+        </g>
+
+        {/* Grid lines */}
+        <g>
+          {Array.from({ length: hGridCount }).map((_, i) => {
+            const y = padT + (plotH * i) / (hGridCount - 1);
+            return (
+              <line key={`hg${i}`} x1={padL} y1={y} x2={padL + plotW} y2={y}
+                stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
+            );
+          })}
+          {Array.from({ length: vGridCount }).map((_, i) => {
+            const x = padL + (plotW * i) / (vGridCount - 1);
+            return (
+              <line key={`vg${i}`} x1={x} y1={padT} x2={x} y2={padT + plotH}
+                stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
+            );
+          })}
+        </g>
+
+        {/* Axes */}
+        <g>
+          <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.textMuted} strokeWidth="2" />
+          <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.textMuted} strokeWidth="2" />
+        </g>
+
+        {/* Axis labels */}
+        <text x={padL + plotW / 2} y={graphH - 4} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
+          Spin Speed (rad/s)
+        </text>
+        <text x="10" y={padT + plotH / 2} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600"
+          transform={`rotate(-90, 10, ${padT + plotH / 2})`}>
+          Rate (rad/s)
+        </text>
+
+        {/* Y-axis tick labels */}
+        <text x={padL - 6} y={padT + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">
+          {maxRate.toFixed(1)}
+        </text>
+        <text x={padL - 6} y={padT + plotH + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">
+          0
+        </text>
+
+        {/* X-axis tick labels */}
+        <text x={padL} y={padT + plotH + 16} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          1
+        </text>
+        <text x={padL + plotW} y={padT + plotH + 16} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          15
+        </text>
+
+        {/* Reference baseline curve (20 deg) */}
+        <g>
+          <path d={refPathD} fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.6" />
+          <text x={padL + plotW - 5} y={padT + plotH - 10} textAnchor="end" fill="#9CA3AF" fontSize="11">
+            baseline 20deg
+          </text>
+        </g>
+
+        {/* Current curve with fill */}
+        <g>
+          <path d={fillPathD} fill="url(#curveFillGrad)" />
+          <path d={pathD} fill="none" stroke="url(#curveStrokeGrad)" strokeWidth="2.5" />
+        </g>
+
+        {/* Interactive marker circle that moves with slider */}
+        <circle cx={markerX} cy={markerY} r="8" fill={colors.accent} stroke="white" strokeWidth="2" filter="url(#markerGlow)" />
+        <circle cx={markerX} cy={markerY} r="3" fill="white" />
+
+        {/* Title */}
+        <text x={padL + plotW / 2} y={padT - 10} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">
+          Precession Rate vs Spin Speed
+        </text>
+      </svg>
+    );
+  };
+
+  // Spinning Top Visualization (smaller, used alongside graph)
   const SpinningTopVisualization = ({ size = 250, showLabels = true }: { size?: number; showLabels?: boolean }) => {
     const nutationOffset = hasGravity ? Math.sin(nutationPhase) * 2 : 0;
     const effectiveTilt = hasGravity ? tiltAngle + nutationOffset : 0;
@@ -432,13 +712,13 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
             </feMerge>
           </filter>
           <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#10B981" />
+            <path d="M 0 0 L 0 6 L 9 3 z" fill="#10B981" />
           </marker>
           <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#F59E0B" />
+            <path d="M 0 0 L 0 6 L 9 3 z" fill="#F59E0B" />
           </marker>
           <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#EF4444" />
+            <path d="M 0 0 L 0 6 L 9 3 z" fill="#EF4444" />
           </marker>
         </defs>
 
@@ -553,38 +833,27 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
           />
         )}
 
-        {/* Labels */}
+        {/* Labels - positioned to avoid overlap */}
         {showLabels && showVectors && (
           <>
             <text
               x={centerX + 15 * scale}
-              y={centerY - 55 * scale - spinSpeed * 2 * scale}
+              y={centerY - 80 * scale}
               fill={colors.angular}
               fontSize={14 * scale}
               fontWeight="bold"
             >
-              L
+              L (angular momentum)
             </text>
-            {hasGravity && effectiveTilt > 0 && (
-              <text
-                x={centerX + Math.cos(precessionAngle * Math.PI / 180 + Math.PI/2) * 60 * scale}
-                y={centerY - 5 * scale + Math.sin(precessionAngle * Math.PI / 180 + Math.PI/2) * 18 * scale}
-                fill={colors.torque}
-                fontSize={14 * scale}
-                fontWeight="bold"
-              >
-                tau
-              </text>
-            )}
             {hasGravity && (
               <text
                 x={centerX + 78 * scale}
-                y={centerY + 5 * scale}
+                y={centerY + 45 * scale}
                 fill={colors.error}
                 fontSize={14 * scale}
                 fontWeight="bold"
               >
-                g
+                g (gravity)
               </text>
             )}
           </>
@@ -595,11 +864,11 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
 
   // Earth Precession Visualization
   const EarthPrecessionVisualization = () => {
-    const width = isMobile ? 320 : 400;
-    const height = isMobile ? 250 : 300;
+    const width = isMobile ? 320 : 350;
+    const height = isMobile ? 250 : 280;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%' }}>
         <defs>
           <radialGradient id="earthGrad" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#93c5fd" />
@@ -611,6 +880,9 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
             <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
           </radialGradient>
         </defs>
+
+        {/* Background */}
+        <rect x="0" y="0" width={width} height={height} rx="12" fill={colors.bgCard} />
 
         {/* Stars */}
         {Array.from({ length: 30 }).map((_, i) => (
@@ -678,6 +950,16 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
           />
         </g>
 
+        {/* Tilt angle label */}
+        <text
+          x={width / 2 + 75}
+          y={height / 2 + 10}
+          fill={colors.textSecondary}
+          fontSize="10"
+        >
+          Tilt: {earthTiltAngle.toFixed(1)}deg
+        </text>
+
         {/* Label */}
         <text
           x={width / 2}
@@ -692,67 +974,6 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
     );
   };
 
-  // Progress bar
-  const renderProgressBar = () => (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '4px',
-      background: colors.bgSecondary,
-      zIndex: 100,
-    }}>
-      <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
-  );
-
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
-
-  // Primary button style
-  const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #4F46E5)`,
-    color: 'white',
-    border: 'none',
-    padding: isMobile ? '14px 28px' : '16px 32px',
-    borderRadius: '12px',
-    fontSize: isMobile ? '16px' : '18px',
-    fontWeight: 700,
-    cursor: 'pointer',
-    boxShadow: `0 4px 20px ${colors.accentGlow}`,
-    transition: 'all 0.2s ease',
-  };
-
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
   // ---------------------------------------------------------------------------
@@ -765,57 +986,56 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
 
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'spin 3s linear infinite',
-        }}>
-          🌀
-        </div>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'spin 3s linear infinite',
+          }}>
+            🌀
+          </div>
+          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Precession & Nutation
-        </h1>
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Precession & Nutation
+          </h1>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Why doesn't a spinning top fall over? The answer involves one of physics' most elegant phenomena - and the same principles govern <span style={{ color: colors.accent }}>spacecraft</span>, <span style={{ color: colors.angular }}>MRI machines</span>, and <span style={{ color: colors.warning }}>Earth itself</span>."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <SpinningTopVisualization size={200} showLabels={false} />
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic', marginTop: '16px' }}>
-            "A spinning object defies gravity not by fighting it, but by dancing with it."
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            Why does a spinning top not fall over? The answer involves one of physics most elegant phenomena - and the same principles govern spacecraft, MRI machines, and Earth itself.
           </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <SpinningTopVisualization size={200} showLabels={false} />
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic', marginTop: '16px' }}>
+              A spinning object defies gravity not by fighting it, but by dancing with it.
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Discover Precession
+          </button>
+
+          {renderNavigationBar()}
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Discover Precession
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -832,85 +1052,89 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
-            </p>
-          </div>
+          <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A spinning top is tilted at an angle. What happens to the direction its spin axis points?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A spinning top is tilted at an angle. What happens to the direction its spin axis points?
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            display: 'flex',
-            justifyContent: 'center',
-          }}>
-            <SpinningTopVisualization size={180} showLabels={false} />
-          </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              display: 'flex',
+              justifyContent: 'center',
+            }}>
+              <SpinningTopVisualization size={180} showLabels={false} />
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+          {renderNavigationBar()}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -921,171 +1145,201 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Interactive Precession Lab
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust spin speed and tilt to see how precession changes.
-          </p>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SpinningTopVisualization size={isMobile ? 220 : 280} showLabels={true} />
-            </div>
-
-            {/* Spin speed slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Spin Speed</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{spinSpeed.toFixed(1)} rad/s</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="15"
-                step="0.5"
-                value={spinSpeed}
-                onChange={(e) => setSpinSpeed(parseFloat(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                Faster spin = slower precession
-              </p>
-            </div>
-
-            {/* Tilt angle slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Tilt Angle</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{tiltAngle}deg</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="45"
-                value={tiltAngle}
-                onChange={(e) => setTiltAngle(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                More tilt = faster precession
-              </p>
-            </div>
-
-            {/* Control buttons */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
-              <button
-                onClick={() => setIsSpinning(!isSpinning)}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isSpinning ? colors.error : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isSpinning ? 'Pause' : 'Play'}
-              </button>
-              <button
-                onClick={() => setShowVectors(!showVectors)}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: showVectors ? colors.accent : 'transparent',
-                  color: showVectors ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {showVectors ? 'Vectors On' : 'Vectors Off'}
-              </button>
-              <button
-                onClick={() => setHasGravity(!hasGravity)}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: hasGravity ? colors.warning : 'transparent',
-                  color: hasGravity ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {hasGravity ? 'Gravity On' : 'Gravity Off'}
-              </button>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.angular }}>{(spinSpeed * 0.5).toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Angular Momentum (L)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.torque }}>{hasGravity ? (tiltAngle * 0.1).toFixed(1) : '0'}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Torque (tau)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{precessionRate.toFixed(2)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Precession Rate</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Key insight */}
-          <div style={{
-            background: `${colors.angular}22`,
-            border: `1px solid ${colors.angular}44`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
-              <strong style={{ color: colors.angular }}>Key Insight:</strong> Gravity creates torque (tau) perpendicular to angular momentum (L). This torque doesn't make the top fall - it changes the <em>direction</em> of L, causing precession!
+          <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Interactive Precession Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Adjust spin speed and tilt angle to observe how precession changes. This is important for real-world applications from spacecraft engineering to MRI technology. The relationship is described by the equation: P = mgr*sin(theta) / (I*omega)
             </p>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                Observe: When you increase spin speed, notice how the precession rate decreases. When you increase tilt angle, watch how the rate increases. Try moving the spin speed slider from low to high and notice the curve shape - faster spin means slower precession due to greater angular momentum.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              {/* Graph and top visualization side by side on desktop */}
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '16px', justifyContent: 'center', alignItems: 'center', marginBottom: '24px' }}>
+                <PrecessionRateGraph />
+                <SpinningTopVisualization size={isMobile ? 180 : 200} showLabels={true} />
+              </div>
+
+              {/* Spin speed slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Spin Speed</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{spinSpeed.toFixed(1)} rad/s</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="15"
+                  step="0.5"
+                  value={spinSpeed}
+                  onChange={(e) => setSpinSpeed(parseFloat(e.target.value))}
+                  onInput={(e) => setSpinSpeed(parseFloat((e.target as HTMLInputElement).value))}
+                  style={{
+                    ...sliderStyle,
+                    background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((spinSpeed - 1) / 14) * 100}%, ${colors.border} ${((spinSpeed - 1) / 14) * 100}%, ${colors.border} 100%)`,
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>1 rad/s (Slow)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>15 rad/s (Fast)</span>
+                </div>
+              </div>
+
+              {/* Tilt angle slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Tilt Angle</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{tiltAngle}deg</span>
+                </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="45"
+                  value={tiltAngle}
+                  onChange={(e) => setTiltAngle(parseInt(e.target.value))}
+                  onInput={(e) => setTiltAngle(parseInt((e.target as HTMLInputElement).value))}
+                  style={{
+                    ...sliderStyle,
+                    background: `linear-gradient(to right, ${colors.warning} 0%, ${colors.warning} ${((tiltAngle - 5) / 40) * 100}%, ${colors.border} ${((tiltAngle - 5) / 40) * 100}%, ${colors.border} 100%)`,
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>5deg (Small tilt)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>45deg (Large tilt)</span>
+                </div>
+              </div>
+
+              {/* Control buttons */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+                <button
+                  onClick={() => setIsSpinning(!isSpinning)}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isSpinning ? colors.error : colors.success,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isSpinning ? 'Pause' : 'Play'}
+                </button>
+                <button
+                  onClick={() => setShowVectors(!showVectors)}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: showVectors ? colors.accent : 'transparent',
+                    color: showVectors ? 'white' : colors.textSecondary,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {showVectors ? 'Vectors On' : 'Vectors Off'}
+                </button>
+                <button
+                  onClick={() => setHasGravity(!hasGravity)}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: hasGravity ? colors.warning : 'transparent',
+                    color: hasGravity ? 'white' : colors.textSecondary,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {hasGravity ? 'Gravity On' : 'Gravity Off'}
+                </button>
+              </div>
+
+              {/* Stats display - comparison grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.angular }}>{(spinSpeed * 0.5).toFixed(1)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Angular Momentum (L)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.torque }}>{hasGravity ? (9.8 * Math.sin(tiltAngle * Math.PI / 180) * 0.1).toFixed(2) : '0'}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Torque (N*m)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{precessionRate.toFixed(2)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Precession Rate (rad/s)</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Key insight */}
+            <div style={{
+              background: `${colors.angular}22`,
+              border: `1px solid ${colors.angular}44`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
+                <strong style={{ color: colors.angular }}>Key Insight:</strong> Gravity creates torque perpendicular to angular momentum (L). This torque does not make the top fall - it changes the <em>direction</em> of L, causing precession. The rate is proportional to torque and inversely proportional to angular momentum.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics
+            </button>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
+          {renderNavigationBar()}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1096,93 +1350,100 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Physics of Precession & Nutation
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '20px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Precession: The Circular Dance
-            </h3>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                <li>The slow rotation of the spin axis around the vertical</li>
-                <li>Caused by gravity's torque on tilted angular momentum</li>
-                <li><strong>Faster spin = slower precession</strong> (inverse relationship)</li>
-                <li><strong>Greater tilt = faster precession</strong></li>
-              </ul>
-            </div>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '20px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
-              Nutation: The Wobble
-            </h3>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                <li>A wobbling "nodding" motion superimposed on precession</li>
-                <li>The axis bobs up and down while precessing</li>
-                <li>Results from initial conditions when the top is released</li>
-                <li>Eventually damps out due to friction</li>
-              </ul>
-            </div>
-          </div>
-
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              The Key Equations
-            </h3>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '8px' }}><strong>Angular Momentum:</strong> L = I * omega (moment of inertia x angular velocity)</p>
-              <p style={{ marginBottom: '8px' }}><strong>Torque:</strong> tau = r x F = m*g*r*sin(theta)</p>
-              <p><strong>Precession Rate:</strong> Omega = tau / L = mgr / (I*omega)</p>
-            </div>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
-              Why It Doesn't Fall
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Torque changes the <em>direction</em> of angular momentum, not its magnitude. Since tau is perpendicular to L, the torque continuously redirects L in a circle rather than reducing it. This is why a fast-spinning top resists falling - it has "gyroscopic rigidity."
+          <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
+              The Physics of Precession & Nutation
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              As you observed in the experiment, the spinning top does not fall over. Your prediction was tested - and the result shows that gravity's torque causes the axis to trace a circle rather than topple.
             </p>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '20px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Precession: The Circular Dance
+              </h3>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                  <li>The slow rotation of the spin axis around the vertical</li>
+                  <li>Caused by gravity's torque on tilted angular momentum</li>
+                  <li><strong>Faster spin = slower precession</strong> (inverse relationship)</li>
+                  <li><strong>Greater tilt = faster precession</strong></li>
+                </ul>
+              </div>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '20px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
+                Nutation: The Wobble
+              </h3>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                  <li>A wobbling nodding motion superimposed on precession</li>
+                  <li>The axis bobs up and down while precessing</li>
+                  <li>Results from initial conditions when the top is released</li>
+                  <li>Eventually damps out due to friction</li>
+                </ul>
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                The Key Equations
+              </h3>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '8px' }}><strong>Angular Momentum:</strong> L = I * omega (moment of inertia x angular velocity)</p>
+                <p style={{ marginBottom: '8px' }}><strong>Torque:</strong> tau = r x F = m*g*r*sin(theta)</p>
+                <p><strong>Precession Rate:</strong> Omega = tau / L = mgr / (I*omega)</p>
+              </div>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+                Why It Does Not Fall
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Torque changes the direction of angular momentum, not its magnitude. Since tau is perpendicular to L, the torque continuously redirects L in a circle rather than reducing it. This is why a fast-spinning top resists falling - it has gyroscopic rigidity.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Discover Earth's Wobble
+            </button>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover Earth's Wobble
-          </button>
+          {renderNavigationBar()}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1199,89 +1460,108 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌍 New Scenario: Earth as a Giant Top
-            </p>
-          </div>
+          <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                New Scenario: Earth as a Giant Top
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Earth's axis is tilted at 23.5 degrees. The Sun and Moon pull on Earth's equatorial bulge. What happens over thousands of years?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              Earth's axis is tilted at 23.5 degrees. The Sun and Moon pull on Earth's equatorial bulge. What happens over thousands of years?
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              Earth is like a cosmic spinning top, tilted with respect to its orbit around the Sun...
-            </p>
-            <div style={{ fontSize: '80px', margin: '16px 0' }}>🌍</div>
-          </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary }}>
+                Earth is like a cosmic spinning top, tilted with respect to its orbit around the Sun...
+              </p>
+              <svg width="200" height="200" viewBox="0 0 200 200" style={{ maxWidth: '100%', margin: '16px auto' }}>
+                <defs>
+                  <radialGradient id="twistEarthGrad" cx="35%" cy="35%" r="65%">
+                    <stop offset="0%" stopColor="#93c5fd" />
+                    <stop offset="50%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#1d4ed8" />
+                  </radialGradient>
+                </defs>
+                <circle cx="100" cy="110" r="55" fill="url(#twistEarthGrad)" />
+                <ellipse cx="85" cy="100" rx="15" ry="22" fill="#22c55e" opacity="0.6" />
+                <ellipse cx="118" cy="112" rx="12" ry="10" fill="#22c55e" opacity="0.6" />
+                <line x1="85" y1="30" x2="100" y2="110" stroke="#EF4444" strokeWidth="3" strokeLinecap="round" />
+                <circle cx="85" cy="30" r="5" fill="#EF4444" />
+                <ellipse cx="100" cy="25" rx="35" ry="12" fill="none" stroke="#F59E0B" strokeWidth="2" strokeDasharray="5,3" opacity="0.6" />
+                <text x="100" y="190" textAnchor="middle" fill={colors.textMuted} fontSize="12">23.5deg axial tilt</text>
+              </svg>
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                onClick={() => { playSound('success'); nextPhase(); }}
                 style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
+                  ...primaryButtonStyle,
+                  background: `linear-gradient(135deg, ${colors.warning}, #D97706)`,
                 }}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                See Earth's Precession
               </button>
-            ))}
+            )}
           </div>
 
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{
-                ...primaryButtonStyle,
-                background: `linear-gradient(135deg, ${colors.warning}, #D97706)`,
-              }}
-            >
-              See Earth's Precession
-            </button>
-          )}
+          {renderNavigationBar()}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1292,106 +1572,135 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Earth's 26,000-Year Wobble
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Watch how Earth's axis traces a circle among the stars.
-          </p>
+          <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Earth's 26,000-Year Wobble
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Watch how Earth's axis traces a circle among the stars. Adjust the tilt angle to observe how it affects precession speed.
+            </p>
 
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: '24px',
-          }}>
-            <EarthPrecessionVisualization />
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '24px',
+            }}>
+              <EarthPrecessionVisualization />
+            </div>
+
+            {/* Earth tilt angle slider */}
+            <div style={{ marginBottom: '20px', maxWidth: '400px', margin: '0 auto 20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Earth Tilt Angle</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{earthTiltAngle.toFixed(1)}deg</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="40"
+                step="0.5"
+                value={earthTiltAngle}
+                onChange={(e) => setEarthTiltAngle(parseFloat(e.target.value))}
+                onInput={(e) => setEarthTiltAngle(parseFloat((e.target as HTMLInputElement).value))}
+                style={{
+                  ...sliderStyle,
+                  background: `linear-gradient(to right, ${colors.warning} 0%, ${colors.warning} ${((earthTiltAngle - 10) / 30) * 100}%, ${colors.border} ${((earthTiltAngle - 10) / 30) * 100}%, ${colors.border} 100%)`,
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>10deg (Low tilt)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>40deg (High tilt)</span>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+              gap: '16px',
+              marginBottom: '24px',
+            }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>
+                  Current Era
+                </h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Polaris is our North Star. Ancient sailors used it for navigation. The Big Dipper points to it.
+                </p>
+              </div>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>
+                  In 12,000 Years
+                </h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Vega will become the new North Star. Constellations will appear in different seasonal positions.
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h2, color: colors.warning }}>3000 BCE</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Thuban was North Star</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h2, color: colors.accent }}>Today</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Polaris is North Star</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h2, color: colors.success }}>14000 CE</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Vega will be North Star</div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                background: `linear-gradient(135deg, ${colors.warning}, #D97706)`,
+              }}
+            >
+              Understand the Impact
+            </button>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-            gap: '16px',
-            marginBottom: '24px',
-          }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-            }}>
-              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>
-                Current Era
-              </h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Polaris is our North Star. Ancient sailors used it for navigation. The Big Dipper points to it.
-              </p>
-            </div>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-            }}>
-              <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>
-                In 12,000 Years
-              </h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Vega will become the new North Star. Constellations will appear in different seasonal positions.
-              </p>
-            </div>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.h2, color: colors.warning }}>3000 BCE</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Thuban was North Star</div>
-            </div>
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.h2, color: colors.accent }}>Today</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Polaris is North Star</div>
-            </div>
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.h2, color: colors.success }}>14000 CE</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Vega will be North Star</div>
-            </div>
-          </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{
-              ...primaryButtonStyle,
-              width: '100%',
-              background: `linear-gradient(135deg, ${colors.warning}, #D97706)`,
-            }}
-          >
-            Understand the Impact
-          </button>
+          {renderNavigationBar()}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1402,86 +1711,90 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Earth's Precession: Why It Matters
-          </h2>
+          <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Earth's Precession: Why It Matters
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '28px' }}>🌟</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Changing North Star</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '28px' }}>🌟</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Changing North Star</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  The North Celestial Pole traces a circle among the stars over 26,000 years. Different stars become the North Star at different times in this cycle. Ancient Egyptians used Thuban; we use Polaris; future generations will use Vega.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                The North Celestial Pole traces a circle among the stars over 26,000 years. Different stars become the "North Star" at different times in this cycle. Ancient Egyptians used Thuban; we use Polaris; future generations will use Vega.
-              </p>
+
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '28px' }}>🌡</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Milankovitch Cycles</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Precession affects when seasons occur relative to Earth's elliptical orbit. This contributes to long-term climate cycles. When Northern Hemisphere summer coincides with Earth's closest approach to the Sun, summers are hotter and winters milder - contributing to ice age timing.
+                </p>
+              </div>
+
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '28px' }}>📅</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Calendar Drift</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  The precession of the equinoxes was discovered by ancient Greek astronomer Hipparchus. It means the vernal equinox slowly shifts through the zodiac constellations - we are no longer in the Age of Pisces but moving into the Age of Aquarius.
+                </p>
+              </div>
+
+              <div style={{
+                background: `${colors.success}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.success}33`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '28px' }}>🔬</span>
+                  <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Same Physics, Cosmic Scale</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Earth precesses for the same reason a top does: gravitational torque on a tilted spinning object. The Sun and Moon pull on Earth's equatorial bulge (Earth is wider at the equator), creating the torque that drives this 26,000-year dance.
+                </p>
+              </div>
             </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '28px' }}>🌡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Milankovitch Cycles</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Precession affects when seasons occur relative to Earth's elliptical orbit. This contributes to long-term climate cycles. When Northern Hemisphere summer coincides with Earth's closest approach to the Sun, summers are hotter and winters milder - contributing to ice age timing.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '28px' }}>📅</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Calendar Drift</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                The "precession of the equinoxes" was discovered by ancient Greek astronomer Hipparchus. It means the vernal equinox slowly shifts through the zodiac constellations - we're no longer in the "Age of Pisces" but moving into the "Age of Aquarius."
-              </p>
-            </div>
-
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '28px' }}>🔬</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Same Physics, Cosmic Scale</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Earth precesses for the same reason a top does: gravitational torque on a tilted spinning object. The Sun and Moon pull on Earth's equatorial bulge (Earth is wider at the equator), creating the torque that drives this 26,000-year dance.
-              </p>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Explore Real-World Applications
+            </button>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Real-World Applications
-          </button>
+          {renderNavigationBar()}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1495,131 +1808,211 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+          <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Application {selectedApp + 1} of {realWorldApps.length} - Explore all applications to continue
+            </p>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    OK
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      OK
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How Precession Applies:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  Technical Details:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.howItWorks}
+                </p>
+              </div>
+
+              <div style={{
+                background: `${app.color}11`,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+                border: `1px solid ${app.color}33`,
+              }}>
+                <h4 style={{ ...typo.small, color: app.color, marginBottom: '8px', fontWeight: 600 }}>
+                  Future Impact:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.futureImpact}
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                  Key Examples:
+                </h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {app.examples.map((ex, i) => (
+                    <span key={i} style={{
+                      ...typo.small,
+                      color: colors.textPrimary,
+                      background: colors.bgSecondary,
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                    }}>
+                      {ex}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
+            {/* Got It / Continue button for current app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Auto-advance to next incomplete app
+                const nextIncomplete = newCompleted.findIndex(c => !c);
+                if (nextIncomplete >= 0) {
+                  setSelectedApp(nextIncomplete);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginBottom: '16px',
+                background: completedApps[selectedApp]
+                  ? colors.success
+                  : `linear-gradient(135deg, ${app.color}, ${colors.accent})`,
+              }}
+            >
+              {completedApps[selectedApp] ? 'Got It - Completed' : 'Got It - Continue'}
+            </button>
 
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Precession Applies:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          {renderNavigationBar()}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1632,52 +2025,57 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🏆' : '📚'}
+            <div style={{ maxWidth: '600px', margin: '20px auto 0', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '80px',
+                marginBottom: '24px',
+              }}>
+                {passed ? '🏆' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent Work!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You understand precession and nutation physics!'
+                  : 'Review the concepts and try again.'}
+              </p>
+
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review and Try Again
+                </button>
+              )}
             </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent Work!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand precession and nutation physics!'
-                : 'Review the concepts and try again.'}
-            </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
-            )}
-          </div>
+            {renderNavigationBar()}
           {renderNavDots()}
+          </div>
         </div>
       );
     }
@@ -1688,162 +2086,166 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
+          <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion
+                      ? colors.accent
+                      : testAnswers[i]
+                        ? colors.success
+                        : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+              {question.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {question.options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
+                </button>
               ))}
+            </div>
+
+            {/* Navigation */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white',
+                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
+          {renderNavigationBar()}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1856,83 +2258,82 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
 
-        <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Precession & Nutation Master!
-        </h1>
-
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand one of physics' most elegant phenomena - from spinning tops to spacecraft to planet Earth!
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            Key Concepts Mastered:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'Torque causes precession by changing angular momentum direction',
-              'Faster spin means slower precession (inverse relationship)',
-              'Nutation is wobbling superimposed on precession',
-              "Earth's 26,000-year precession changes the North Star",
-              'CMGs use precession for fuel-free spacecraft rotation',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>OK</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
-              </div>
-            ))}
+          <div style={{
+            fontSize: '100px',
+            marginBottom: '24px',
+            animation: 'bounce 1s infinite',
+          }}>
+            🏆
           </div>
-        </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Precession & Nutation Master!
+          </h1>
 
-        {renderNavDots()}
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+            You now understand one of physics most elegant phenomena - from spinning tops to spacecraft to planet Earth!
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              Key Concepts Mastered:
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+              {[
+                'Torque causes precession by changing angular momentum direction',
+                'Faster spin means slower precession (inverse relationship)',
+                'Nutation is wobbling superimposed on precession',
+                "Earth's 26,000-year precession changes the North Star",
+                'CMGs use precession for fuel-free spacecraft rotation',
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: colors.success }}>OK</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+              }}
+            >
+              Play Again
+            </button>
+            <a
+              href="/"
+              style={{
+                ...primaryButtonStyle,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Return to Dashboard
+            </a>
+          </div>
+
+          {renderNavigationBar()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }

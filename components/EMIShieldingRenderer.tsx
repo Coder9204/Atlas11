@@ -12,9 +12,9 @@ interface EMIShieldingRendererProps {
 }
 
 const colors = {
-  textPrimary: '#f8fafc',
+  textPrimary: '#ffffff',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -411,6 +411,11 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -434,6 +439,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
             opacity: currentIdx > 0 ? 1 : 0.4,
             fontSize: '12px',
             fontWeight: 600,
+            minHeight: '44px',
           }}
         >
           Back
@@ -451,7 +457,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                 borderRadius: '5px',
                 backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
                 cursor: i <= currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.3s',
+                transition: 'all 0.3s ease',
               }}
               title={phaseLabels[p]}
             />
@@ -494,6 +500,11 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
     return (
       <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -517,7 +528,8 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
             border: `1px solid ${colors.border}`,
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
           Back
@@ -547,7 +559,8 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.4,
             boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
           {nextLabel}
@@ -877,6 +890,9 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
             {/* Meter background */}
             <rect x={0} y={0} width={140} height={28} rx={4} fill="rgba(0,0,0,0.4)" />
 
+            {/* Meter label */}
+            <text x={70} y={10} textAnchor="middle" fill="#e2e8f0" fontSize="8" fontWeight="bold">SHIELDING: {shieldingEffectiveness}%</text>
+
             {/* Meter track */}
             <rect x={8} y={16} width={124} height={6} rx={3} fill="rgba(255,255,255,0.1)" />
 
@@ -890,6 +906,30 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
               fill="url(#emiMeterGrad)"
               filter="url(#emiSignalGlow)"
             />
+          </g>
+
+          {/* EMI Source Label */}
+          <text x={60} y={210} textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">EMI Source</text>
+
+          {/* Cable Label */}
+          <text x={250} y={70} textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">{cable.name}</text>
+
+          {/* Legend Panel */}
+          <g transform="translate(280, 10)">
+            <rect x={0} y={0} width={110} height={75} rx={6} fill="rgba(0,0,0,0.5)" stroke="#334155" strokeWidth={1} />
+            <text x={55} y={14} textAnchor="middle" fill="#e2e8f0" fontSize="9" fontWeight="bold">Legend</text>
+
+            {/* Signal wire */}
+            <line x1={8} y1={28} x2={28} y2={28} stroke="#60a5fa" strokeWidth={3} />
+            <text x={34} y={31} fill="#e2e8f0" fontSize="8">Signal Wire</text>
+
+            {/* Ground/Pair wire */}
+            <line x1={8} y1={44} x2={28} y2={44} stroke={cable.twisting ? '#22c55e' : '#94a3b8'} strokeWidth={3} />
+            <text x={34} y={47} fill="#e2e8f0" fontSize="8">{cable.twisting ? 'Pair Wire' : 'Ground Wire'}</text>
+
+            {/* EMI waves */}
+            <circle cx={18} cy={60} r={6} fill="none" stroke="#ef4444" strokeWidth={1.5} opacity={0.7} />
+            <text x={34} y={63} fill="#e2e8f0" fontSize="8">EMI Waves</text>
           </g>
 
           {/* Signal quality display panel */}
@@ -1095,7 +1135,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
           Signal Frequency: {signalFrequency} MHz
         </label>
         <input
@@ -1105,16 +1145,16 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
           step="10"
           value={signalFrequency}
           onChange={(e) => setSignalFrequency(parseInt(e.target.value))}
-          style={{ width: '100%', WebkitTapHighlightColor: 'transparent' }}
+          style={{ width: '100%', WebkitTapHighlightColor: 'transparent', accentColor: colors.accent }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '10px', fontWeight: 400 }}>
           <span>10 MHz (Ethernet)</span>
           <span>1000 MHz (High-speed)</span>
         </div>
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
           Noise Source Strength: {noiseSource}
         </label>
         <input
@@ -1124,12 +1164,12 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
           step="5"
           value={noiseSource}
           onChange={(e) => setNoiseSource(parseInt(e.target.value))}
-          style={{ width: '100%', WebkitTapHighlightColor: 'transparent' }}
+          style={{ width: '100%', WebkitTapHighlightColor: 'transparent', accentColor: colors.accent }}
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
           Cable Length: {cableLength} meters
         </label>
         <input
@@ -1139,7 +1179,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
           step="1"
           value={cableLength}
           onChange={(e) => setCableLength(parseInt(e.target.value))}
-          style={{ width: '100%', WebkitTapHighlightColor: 'transparent' }}
+          style={{ width: '100%', WebkitTapHighlightColor: 'transparent', accentColor: colors.accent }}
         />
       </div>
 
@@ -1168,7 +1208,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'hook') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
             <div style={{ padding: '24px', textAlign: 'center' }}>
               <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
                 Electromagnetic Interference (EMI)
@@ -1187,12 +1227,12 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                 borderRadius: '12px',
                 marginBottom: '16px',
               }}>
-                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                   Every wire carrying current creates electromagnetic fields. And every wire
                   can pick up fields from nearby sources. This crosstalk and interference
                   can corrupt data - unless cables are designed to fight back.
                 </p>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                   Understanding EMI is crucial for reliable high-speed networking.
                 </p>
               </div>
@@ -1203,13 +1243,13 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                 borderRadius: '8px',
                 borderLeft: `3px solid ${colors.accent}`,
               }}>
-                <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+                <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
                   Try different cable types to see how shielding and twisting protect signals!
                 </p>
               </div>
             </div>
           </div>
-          {renderBottomBar(true, 'Make a Prediction')}
+          {renderBottomBar(true, 'Start Exploring')}
         </>
       );
     }
@@ -1218,8 +1258,26 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'predict') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
             {renderVisualization(false)}
+
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '12px 16px',
+              gap: '8px',
+              background: colors.bgCard,
+              margin: '16px',
+              borderRadius: '8px',
+            }}>
+              <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Step 1 of 2: Make your prediction</span>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <div style={{ width: '24px', height: '4px', borderRadius: '2px', background: colors.accent }} />
+                <div style={{ width: '24px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)' }} />
+              </div>
+            </div>
 
             <div style={{
               background: colors.bgCard,
@@ -1253,6 +1311,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                       cursor: 'pointer',
                       textAlign: 'left',
                       fontSize: '14px',
+                      minHeight: '44px',
                       WebkitTapHighlightColor: 'transparent',
                     }}
                   >
@@ -1271,11 +1330,37 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'play') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore EMI Protection</h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
                 Adjust cable type and noise levels to see protection in action
+              </p>
+            </div>
+
+            {/* Real-world relevance */}
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.15)',
+              margin: '16px',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              borderLeft: `3px solid #3b82f6`,
+            }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                <strong>Real-World Connection:</strong> Data centers, hospitals, and factories all rely on proper EMI shielding. A single poorly shielded cable near a motor or power line can cause data corruption, equipment malfunction, or even safety hazards in medical devices.
+              </p>
+            </div>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: 'rgba(236, 72, 153, 0.15)',
+              margin: '16px',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                <strong>Observe:</strong> Watch how signal integrity changes as you adjust cable type and noise levels. Notice the difference between shielded and unshielded cables.
               </p>
             </div>
 
@@ -1289,7 +1374,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
               borderRadius: '12px',
             }}>
               <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
                 <li>Compare unshielded single wire vs twisted pair at high noise</li>
                 <li>Increase frequency to 1000 MHz - watch radiated EMI rise</li>
                 <li>Test STP (shielded twisted pair) - best of both protections</li>
@@ -1305,10 +1390,11 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     // REVIEW PHASE
     if (phase === 'review') {
       const wasCorrect = prediction === 'emi';
+      const predictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1319,7 +1405,10 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
               <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
                 {wasCorrect ? 'Correct!' : 'Not Quite!'}
               </h3>
-              <p style={{ color: colors.textPrimary }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, marginBottom: '8px' }}>
+                You predicted: "{predictionLabel}"
+              </p>
+              <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
                 Shielding prevents external EM fields from inducing noise on signal conductors!
               </p>
             </div>
@@ -1331,28 +1420,45 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
               borderRadius: '12px',
             }}>
               <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of EMI</h3>
-              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-                <p style={{ marginBottom: '12px' }}>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
+                <p style={{ marginBottom: '12px', fontWeight: 400 }}>
                   <strong style={{ color: colors.textPrimary }}>How EMI Happens:</strong>
                 </p>
-                <ul style={{ paddingLeft: '20px', marginBottom: '12px' }}>
+                <ul style={{ paddingLeft: '20px', marginBottom: '12px', fontWeight: 400 }}>
                   <li><strong>Induction:</strong> Changing magnetic fields from nearby currents induce voltages</li>
                   <li><strong>Capacitive Coupling:</strong> Electric fields from nearby voltages transfer charge</li>
                   <li><strong>Radiation:</strong> EM waves from RF sources couple into wires acting as antennas</li>
                 </ul>
-                <p style={{ marginBottom: '12px' }}>
+                <p style={{ marginBottom: '12px', fontWeight: 400 }}>
                   <strong style={{ color: colors.textPrimary }}>Shielding Works By:</strong> The metal shield intercepts
                   external fields. Induced currents flow in the shield instead of the signal conductors,
                   then drain to ground.
                 </p>
-                <p>
+                <p style={{ fontWeight: 400 }}>
                   <strong style={{ color: colors.textPrimary }}>Grounding is Critical:</strong> A shield that is not
                   properly grounded can actually make EMI worse by acting as an antenna!
                 </p>
               </div>
             </div>
+
+            {/* Mathematical relationship */}
+            <div style={{
+              background: 'rgba(99, 102, 241, 0.15)',
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+              borderLeft: `3px solid #6366f1`,
+            }}>
+              <h4 style={{ color: '#818cf8', marginBottom: '8px' }}>Key Relationship</h4>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', fontFamily: 'monospace', textAlign: 'center', margin: '12px 0', fontWeight: 400 }}>
+                Shielding Effectiveness = 20 × log₁₀(E₀/E₁) dB
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400 }}>
+                Where E₀ is the field without shielding and E₁ is with shielding. A 40dB shield reduces field strength by 100×.
+              </p>
+            </div>
           </div>
-          {renderBottomBar(true, 'Next: A Twist!')}
+          {renderBottomBar(true, 'Continue to Twist')}
         </>
       );
     }
@@ -1361,7 +1467,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'twist_predict') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
               <p style={{ color: colors.textSecondary }}>
@@ -1370,6 +1476,24 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
             </div>
 
             {renderVisualization(false)}
+
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '12px 16px',
+              gap: '8px',
+              background: colors.bgCard,
+              margin: '16px',
+              borderRadius: '8px',
+            }}>
+              <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Step 1 of 2: Make your prediction</span>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <div style={{ width: '24px', height: '4px', borderRadius: '2px', background: colors.warning }} />
+                <div style={{ width: '24px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)' }} />
+              </div>
+            </div>
 
             <div style={{
               background: colors.bgCard,
@@ -1403,6 +1527,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                       cursor: 'pointer',
                       textAlign: 'left',
                       fontSize: '14px',
+                      minHeight: '44px',
                       WebkitTapHighlightColor: 'transparent',
                     }}
                   >
@@ -1421,11 +1546,24 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'twist_play') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Twisted Pair Cancellation</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
                 Compare twisted vs untwisted wires under high noise
+              </p>
+            </div>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.15)',
+              margin: '16px',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              borderLeft: `3px solid ${colors.warning}`,
+            }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+                <strong>Observe:</strong> Switch between UTP (twisted) and unshielded single wire cables. Notice how the twist cancellation percentage affects signal integrity under the same noise conditions.
               </p>
             </div>
 
@@ -1456,10 +1594,11 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     // TWIST REVIEW PHASE
     if (phase === 'twist_review') {
       const wasCorrect = twistPrediction === 'cancellation';
+      const twistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1470,7 +1609,10 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
               <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
                 {wasCorrect ? 'Correct!' : 'Not Quite!'}
               </h3>
-              <p style={{ color: colors.textPrimary }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, marginBottom: '8px' }}>
+                You predicted: "{twistPredictionLabel}"
+              </p>
+              <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
                 Twisting ensures both wires pick up equal noise, which cancels in differential signaling!
               </p>
             </div>
@@ -1510,17 +1652,69 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'transfer') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
             <div style={{ padding: '16px' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
                 Real-World Applications
               </h2>
-              <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-                How EMI protection shapes infrastructure design
+              <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
+                How EMI protection shapes infrastructure design across industries
               </p>
-              <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-                Complete all 4 applications to unlock the test
-              </p>
+
+              {/* Key Statistics Banner */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                background: 'rgba(59, 130, 246, 0.15)',
+                padding: '16px',
+                borderRadius: '12px',
+                marginBottom: '16px',
+                flexWrap: 'wrap',
+                gap: '12px',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ color: '#60a5fa', fontSize: '24px', fontWeight: 'bold' }}>99.999%</div>
+                  <div style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>Data Center Uptime</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ color: '#60a5fa', fontSize: '24px', fontWeight: 'bold' }}>40+ dB</div>
+                  <div style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>Typical Shield Rating</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ color: '#60a5fa', fontSize: '24px', fontWeight: 'bold' }}>100m</div>
+                  <div style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>Max Cat6a Length</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ color: '#60a5fa', fontSize: '24px', fontWeight: 'bold' }}>10 Gbps</div>
+                  <div style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>STP Data Rate</div>
+                </div>
+              </div>
+
+              {/* Progress indicator */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '12px 16px',
+                gap: '8px',
+                background: colors.bgCard,
+                borderRadius: '8px',
+                marginBottom: '16px',
+              }}>
+                <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
+                  Application {Math.min(transferCompleted.size + 1, 4)} of 4
+                </span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {[0, 1, 2, 3].map(i => (
+                    <div key={i} style={{
+                      width: '24px',
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: transferCompleted.has(i) ? colors.success : 'rgba(255,255,255,0.2)'
+                    }} />
+                  ))}
+                </div>
+              </div>
             </div>
 
             {transferApplications.map((app, index) => (
@@ -1538,32 +1732,70 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                   <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
                   {transferCompleted.has(index) && <span style={{ color: colors.success }}>Completed</span>}
                 </div>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', fontWeight: 400 }}>{app.description}</p>
                 {!transferCompleted.has(index) ? (
-                  <button
-                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      border: `1px solid ${colors.accent}`,
-                      background: 'transparent',
-                      color: colors.accent,
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    Reveal Answer
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        border: `1px solid ${colors.accent}`,
+                        background: 'transparent',
+                        color: colors.accent,
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        minHeight: '44px',
+                        transition: 'all 0.2s ease',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      Reveal Answer
+                    </button>
+                    <button
+                      onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: colors.success,
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        minHeight: '44px',
+                        transition: 'all 0.2s ease',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      Continue Exploring
+                    </button>
+                  </div>
                 ) : (
                   <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px', marginBottom: '12px', fontWeight: 400 }}>{app.answer}</p>
+                    <button
+                      onClick={() => {}}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: colors.success,
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        minHeight: '44px',
+                        transition: 'all 0.2s ease',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      Got It
+                    </button>
                   </div>
                 )}
               </div>
             ))}
           </div>
-          {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
+          {renderBottomBar(transferCompleted.size >= 4, 'Continue to Test')}
         </>
       );
     }
@@ -1573,7 +1805,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
       if (testSubmitted) {
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
               <div style={{
                 background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                 margin: '16px',
@@ -1616,12 +1848,29 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
       const currentQ = testQuestions[currentTestQuestion];
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
             <div style={{ padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-                <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+                <span style={{ color: colors.textSecondary, fontWeight: 400 }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
               </div>
+
+              {/* Scenario context */}
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.15)',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                borderLeft: `3px solid #3b82f6`,
+              }}>
+                <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                  <strong>Scenario:</strong> You are designing the cabling infrastructure for a new data center.
+                  The facility will have high-power equipment, sensitive monitoring systems, and high-speed
+                  network connections requiring 10Gbps throughput with 99.999% reliability. Apply your EMI
+                  knowledge to answer these real-world engineering questions.
+                </p>
+              </div>
+
               <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
                 {testQuestions.map((_, i) => (
                   <div
@@ -1639,7 +1888,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                 ))}
               </div>
               <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 400 }}>{currentQ.question}</p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {currentQ.options.map((opt, oIndex) => (
@@ -1655,6 +1904,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                       cursor: 'pointer',
                       textAlign: 'left',
                       fontSize: '14px',
+                      minHeight: '44px',
                       WebkitTapHighlightColor: 'transparent',
                     }}
                   >
@@ -1674,6 +1924,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                   background: 'transparent',
                   color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
                   cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1689,6 +1940,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                     background: colors.accent,
                     color: 'white',
                     cursor: 'pointer',
+                    minHeight: '44px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
@@ -1705,6 +1957,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                     background: testAnswers.includes(null) ? colors.textMuted : colors.success,
                     color: 'white',
                     cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                    minHeight: '44px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
@@ -1721,9 +1974,9 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'mastery') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
             <div style={{ padding: '24px', textAlign: 'center' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
               <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
               <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
                 You understand EMI shielding physics
@@ -1768,7 +2021,8 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
       display: 'flex',
       flexDirection: 'column',
       background: colors.bgPrimary,
-      color: colors.textPrimary
+      color: colors.textPrimary,
+      paddingTop: '60px'
     }}>
       {renderProgressBar()}
       {renderContent()}

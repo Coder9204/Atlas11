@@ -11,7 +11,7 @@ interface DesignToFabTranslationRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -1065,7 +1065,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -1108,13 +1108,14 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 1000,
+        zIndex: 1001,
         gap: '12px'
       }}>
         <button
           onClick={goBack}
           style={{
             padding: '12px 24px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: `1px solid ${colors.textMuted}`,
             background: 'transparent',
@@ -1128,13 +1129,14 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
         >
           Back
         </button>
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
           {phaseLabels[phase]}
         </span>
         <button
           onClick={handleNext}
           style={{
             padding: '12px 32px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: 'none',
             background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
@@ -1196,7 +1198,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Make a Prediction')}
       </div>
     );
   }
@@ -1250,7 +1252,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(!!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1285,7 +1287,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, 'Continue to Review')}
       </div>
     );
   }
@@ -1340,7 +1342,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -1401,7 +1403,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1436,7 +1438,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, 'See the Explanation')}
       </div>
     );
   }
@@ -1490,7 +1492,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -1552,7 +1554,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -1593,7 +1595,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -1605,7 +1607,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1653,10 +1655,11 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
               disabled={currentTestQuestion === 0}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
+                border: `1px solid ${colors.textSecondary}`,
                 background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+                color: currentTestQuestion === 0 ? colors.textSecondary : colors.textPrimary,
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
                 WebkitTapHighlightColor: 'transparent',
               }}
@@ -1668,6 +1671,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
                 onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: colors.accent,
@@ -1684,9 +1688,10 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
                 disabled={testAnswers.includes(null)}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                  background: testAnswers.includes(null) ? colors.textSecondary : colors.success,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
                   WebkitTapHighlightColor: 'transparent',
@@ -1733,7 +1738,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar(true, 'Complete Game')}
       </div>
     );
   }

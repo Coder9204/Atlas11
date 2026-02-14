@@ -178,9 +178,9 @@ const realWorldApps = [
     connection: 'The simulation showed how topspin, backspin, and sidespin create pressure differentials. In sports, players intuitively control spin rate and axis to achieve specific trajectories - making physics their secret weapon.',
     howItWorks: 'Spinning ball drags air in rotation direction, creating asymmetric flow. Bernoulli principle causes pressure difference. Net force perpendicular to velocity curves trajectory. Spin axis determines curve direction.',
     stats: [
-      { value: '3000 rpm', label: 'Pitcher spin rate', icon: '⚾' },
-      { value: '8m', label: 'Maximum ball curve', icon: '📐' },
-      { value: '$50B', label: 'Global sports equipment', icon: '📈' }
+      { value: '50%', label: 'Drag reduction (dimples)', icon: '⚾' },
+      { value: '8 m', label: 'Maximum ball curve', icon: '📐' },
+      { value: '$50 billion', label: 'Global sports equipment', icon: '📈' }
     ],
     examples: ['Roberto Carlos free kick', 'Clayton Kershaw curveball', 'Dustin Johnson drives', 'Table tennis loops'],
     companies: ['Trackman', 'Rapsodo', 'Callaway', 'Wilson'],
@@ -344,8 +344,8 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
   };
 
@@ -365,7 +365,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Ball Surfaces',
+    twist_play: 'Explore Twist',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -409,7 +409,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
     const height = isMobile ? 280 : 320;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#0c1929" />
@@ -435,14 +435,23 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         <rect width={width} height={height} fill="url(#skyGradient)" rx="12" />
 
         {/* Grid pattern */}
-        <g opacity="0.1">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <line key={`vg-${i}`} x1={i * 20} y1="0" x2={i * 20} y2={height} stroke="#3b82f6" strokeWidth="1" />
-          ))}
-          {Array.from({ length: 16 }).map((_, i) => (
-            <line key={`hg-${i}`} x1="0" y1={i * 20} x2={width} y2={i * 20} stroke="#3b82f6" strokeWidth="1" />
-          ))}
-        </g>
+        {Array.from({ length: 20 }).map((_, i) => (
+          <line key={`vg-${i}`} x1={i * 20} y1="0" x2={i * 20} y2={height} stroke="#3b82f6" strokeWidth="1" opacity="0.1" strokeDasharray="4 4" />
+        ))}
+        {Array.from({ length: 16 }).map((_, i) => (
+          <line key={`hg-${i}`} x1="0" y1={i * 20} x2={width} y2={i * 20} stroke="#3b82f6" strokeWidth="1" opacity="0.1" strokeDasharray="4 4" />
+        ))}
+
+        {/* Reference trajectory (no spin - straight line with gravity) */}
+        <path
+          d={`M 50 ${height * 0.35} L 80 ${height * 0.38} L 110 ${height * 0.42} L 140 ${height * 0.47} L 170 ${height * 0.53} L 200 ${height * 0.6} L 230 ${height * 0.68} L 260 ${height * 0.72} L 290 ${height * 0.76} L 320 ${height * 0.8} L 350 ${height * 0.85}`}
+          fill="none"
+          stroke="#64748b"
+          strokeWidth="2"
+          strokeDasharray="6 4"
+          opacity="0.5"
+        />
+        <text x={width - 80} y={height * 0.88} fill="#64748b" fontSize="11">No-spin baseline</text>
 
         {/* Trajectory trail */}
         {trajectory.length > 1 && (
@@ -471,7 +480,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                   strokeLinecap="round"
                 />
               ))}
-              <text x={ballX} y={ballY - 70} textAnchor="middle" fill="#60a5fa" fontSize="10" fontWeight="bold">
+              <text x={ballX} y={ballY - 70} textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="bold">
                 FAST = LOW P
               </text>
             </g>
@@ -489,7 +498,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                   strokeDasharray="8,4"
                 />
               ))}
-              <text x={ballX} y={ballY + 85} textAnchor="middle" fill="#f87171" fontSize="10" fontWeight="bold">
+              <text x={ballX} y={ballY + 85} textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="bold">
                 SLOW = HIGH P
               </text>
             </g>
@@ -511,7 +520,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                 <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
               </marker>
             </defs>
-            <text x={ballX + 20} y={ballY - 10} fill="#22c55e" fontSize="10" fontWeight="bold">
+            <text x={ballX + 20} y={ballY - 10} fill="#22c55e" fontSize="11" fontWeight="bold">
               Magnus Force
             </text>
           </g>
@@ -522,7 +531,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
           <circle r="25" fill="url(#ballGradient)" />
           {/* Seam lines with rotation */}
           <g transform={`rotate(${ballRotation})`}>
-            <path d="M-15,0 Q0,-15 15,0 Q0,15 -15,0" fill="none" stroke="#fff" strokeWidth="2" opacity="0.8" />
+            <ellipse rx="15" ry="10" fill="none" stroke="#fff" strokeWidth="2" opacity="0.8" />
           </g>
           {/* Spin direction indicator */}
           {spinDirection === 'topspin' && (
@@ -539,21 +548,21 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
               <path d="M0,0 L0,6 L6,3 z" fill="#fbbf24" />
             </marker>
           </defs>
-          <text x="0" y="-45" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="bold">
+          <text x="0" y="-45" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">
             {spinDirection.toUpperCase()}
           </text>
         </g>
 
         {/* Target zone */}
         <rect x={width - 45} y="80" width="30" height="160" fill="rgba(34, 197, 94, 0.1)" stroke="#22c55e" strokeWidth="1" strokeDasharray="4,4" rx="4" />
-        <text x={width - 30} y={height - 20} textAnchor="middle" fill="#22c55e" fontSize="9">TARGET</text>
+        <text x={width - 30} y={height - 20} textAnchor="middle" fill="#22c55e" fontSize="11">TARGET</text>
 
         {/* Stats display */}
         <g>
           <rect x="10" y="10" width="100" height="60" rx="6" fill="rgba(0,0,0,0.5)" />
-          <text x="20" y="30" fill={colors.textMuted} fontSize="10">Spin: {spinRate}%</text>
-          <text x="20" y="45" fill={colors.textMuted} fontSize="10">Speed: {ballSpeed}%</text>
-          <text x="20" y="60" fill={colors.accent} fontSize="10">Force: {magnusForce}N</text>
+          <text x="20" y="30" fill={colors.textMuted} fontSize="11">Spin: {spinRate}%</text>
+          <text x="20" y="45" fill={colors.textMuted} fontSize="11">Speed: {ballSpeed}%</text>
+          <text x="20" y="60" fill={colors.accent} fontSize="11">Force: {magnusForce}N</text>
         </g>
       </svg>
     );
@@ -568,7 +577,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -579,32 +588,89 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
+  // Bottom navigation bar with Back / Next + dots
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: colors.bgPrimary,
+        padding: '10px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderTop: `1px solid ${colors.border}`,
+      }}>
         <button
-          key={p}
-          onClick={() => goToPhase(p)}
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            padding: '10px 18px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.border,
+            cursor: canGoBack ? 'pointer' : 'default',
+            fontWeight: 600,
+            minHeight: '44px',
+            opacity: canGoBack ? 1 : 0.4,
           }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+        >
+          Back
+        </button>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              title={phaseLabels[p]}
+              aria-label={phaseLabels[p]}
+              style={{
+                minHeight: '44px',
+                minWidth: '44px',
+                borderRadius: '4px',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
+            >
+              <span style={{
+                width: phase === p ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                transition: 'all 0.3s ease',
+                display: 'block',
+              }} />
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => currentIndex < phaseOrder.length - 1 && nextPhase()}
+          style={{
+            padding: '10px 18px',
+            borderRadius: '8px',
+            border: 'none',
+            background: currentIndex < phaseOrder.length - 1 ? colors.accent : colors.border,
+            color: 'white',
+            cursor: currentIndex < phaseOrder.length - 1 ? 'pointer' : 'default',
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          Next
+        </button>
+      </nav>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -618,6 +684,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -635,9 +702,14 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        flex: 1,
       }}>
         {renderProgressBar()}
+        {renderBottomNav()}
 
         <div style={{
           fontSize: '64px',
@@ -681,10 +753,8 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Discover the Secret
+          Start Discovery
         </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -702,10 +772,15 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
+        {renderBottomNav()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -714,7 +789,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
@@ -734,9 +809,9 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
               <rect width="300" height="150" fill="#1e3a5f" rx="8" />
               <circle cx="80" cy="75" r="25" fill="#dc2626" />
               <path d="M55,55 A30,30 0 0 1 105,55" fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#predArrow)" />
-              <text x="80" y="40" textAnchor="middle" fill="#fbbf24" fontSize="10">Topspin</text>
-              <line x1="110" y1="75" x2="250" y2="75" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,5" />
-              <text x="180" y="65" fill="#94a3b8" fontSize="10">Which way?</text>
+              <text x="80" y="40" textAnchor="middle" fill="#fbbf24" fontSize="11">Topspin</text>
+              <line x1="110" y1="75" x2="250" y2="75" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="5,5" />
+              <text x="180" y="65" fill="#e2e8f0" fontSize="11">Which way?</text>
               <path d="M250,75 L250,120" stroke="#22c55e" strokeWidth="3" markerEnd="url(#downArrow)" />
               <path d="M250,75 L250,30" stroke="#ef4444" strokeWidth="3" markerEnd="url(#upArrow)" />
               <defs>
@@ -767,6 +842,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -795,12 +871,10 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test My Prediction
+              Continue
             </button>
           )}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -812,16 +886,42 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
+        {renderBottomNav()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Magnus Effect Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust spin and speed to see how balls curve through the air.
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            Observe how spin rate and speed affect the ball trajectory. Watch the curve change as you increase spin - when you increase spin rate, the ball curves more because the pressure difference grows.
           </p>
+
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            This technology is used in sports engineering, ship design, and aerospace applications every day.
+          </p>
+
+          {/* Formula display */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            textAlign: 'center',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
+              <strong>F = CL × (1/2)pv² × A</strong>
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '4px', marginBottom: 0 }}>
+              Magnus force is proportional to spin rate and velocity squared
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -837,8 +937,9 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             {/* Spin rate slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Spin Rate</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Spin Rate (0%)</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{spinRate}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>(100%)</span>
               </div>
               <input
                 type="range"
@@ -847,20 +948,24 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                 value={spinRate}
                 onChange={(e) => setSpinRate(parseInt(e.target.value))}
                 style={{
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  height: '20px',
+                  borderRadius: '10px',
                   background: `linear-gradient(to right, ${colors.accent} ${spinRate}%, ${colors.border} ${spinRate}%)`,
                   cursor: 'pointer',
-                }}
+                } as React.CSSProperties}
               />
             </div>
 
             {/* Ball speed slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Ball Speed</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Ball Speed (20%)</span>
                 <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{ballSpeed}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>(100%)</span>
               </div>
               <input
                 type="range"
@@ -869,12 +974,15 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                 value={ballSpeed}
                 onChange={(e) => setBallSpeed(parseInt(e.target.value))}
                 style={{
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  height: '20px',
+                  borderRadius: '10px',
                   background: `linear-gradient(to right, ${colors.warning} ${ballSpeed}%, ${colors.border} ${ballSpeed}%)`,
                   cursor: 'pointer',
-                }}
+                } as React.CSSProperties}
               />
             </div>
 
@@ -924,6 +1032,42 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             </div>
           </div>
 
+          {/* Comparison: current vs baseline values */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ ...typo.h3, color: colors.accent }}>{magnusForce}N</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Current Force</div>
+            </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ ...typo.h3, color: colors.warning }}>{spinRate}%</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Spin Rate</div>
+            </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ ...typo.h3, color: colors.success }}>{ballSpeed}%</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Ball Speed</div>
+            </div>
+          </div>
+
           {/* Explanation box */}
           <div style={{
             background: `${colors.success}11`,
@@ -938,7 +1082,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p><strong>1.</strong> The spinning ball drags air around with it (boundary layer)</p>
               <p><strong>2.</strong> On one side, spin adds to airflow speed. On the other, it subtracts.</p>
-              <p><strong>3.</strong> Faster air = lower pressure (Bernoulli's principle)</p>
+              <p><strong>3.</strong> Faster air = lower pressure (Bernoulli&#39;s principle)</p>
               <p><strong>4.</strong> The ball curves toward the low-pressure side!</p>
             </div>
           </div>
@@ -950,26 +1094,50 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             Understand the Physics
           </button>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const userPredictionText = prediction === 'b'
+      ? "You correctly predicted that spin creates different air pressures!"
+      : prediction === 'a'
+        ? "You predicted spin adds weight - actually, spin creates pressure differences!"
+        : prediction === 'c'
+          ? "You predicted air 'grabs' the ball - close! It's about pressure differences from airflow."
+          : "Let's see how your prediction compares to the physics.";
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
+        {renderBottomNav()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             The Physics of the Magnus Effect
           </h2>
+
+          {/* Reference to user's prediction */}
+          <div style={{
+            background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}44`,
+          }}>
+            <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
+              {prediction === 'b' ? '✓' : '→'} {userPredictionText}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1049,11 +1217,9 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Discover a Surprising Twist
+            Continue
           </button>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1071,10 +1237,15 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
+        {renderBottomNav()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1083,7 +1254,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🔄 New Variable: Ball Surface & Extreme Conditions
+              New Variable: Ball Surface &amp; Extreme Conditions
             </p>
           </div>
 
@@ -1091,6 +1262,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             What happens when a smooth ball spins VERY fast at VERY high speeds?
           </h2>
 
+          {/* SVG diagram showing surface comparison */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1098,23 +1270,37 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
+            <svg width="320" height="200" viewBox="0 0 320 200" style={{ maxWidth: '100%' }}>
+              <rect width="320" height="200" fill="#1e3a5f" rx="8" />
+              {/* Smooth ball */}
+              <circle cx="60" cy="80" r="25" fill="#fbbf24" opacity="0.8" />
+              <text x="60" y="125" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">Smooth</text>
+              {/* Seamed ball */}
+              <circle cx="160" cy="80" r="25" fill="#dc2626" />
+              <ellipse cx="160" cy="80" rx="15" ry="12" fill="none" stroke="white" strokeWidth="1.5" />
+              <text x="160" y="125" textAnchor="middle" fill="#dc2626" fontSize="11" fontWeight="bold">Seamed</text>
+              {/* Dimpled ball */}
+              <circle cx="260" cy="80" r="25" fill="#e2e8f0" />
+              <circle cx="252" cy="73" r="2" fill="#94a3b8" />
+              <circle cx="260" cy="70" r="2" fill="#94a3b8" />
+              <circle cx="268" cy="73" r="2" fill="#94a3b8" />
+              <circle cx="255" cy="82" r="2" fill="#94a3b8" />
+              <circle cx="265" cy="82" r="2" fill="#94a3b8" />
+              <text x="260" y="125" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">Dimpled</text>
+              {/* Label */}
+              <text x="160" y="165" textAnchor="middle" fill="#94a3b8" fontSize="12">Surface affects Magnus force strength</text>
+              {/* Reference arrows */}
+              <path d="M60 40 L60 20 L110 20" fill="none" stroke="#f59e0b" strokeWidth="2" markerEnd="url(#twistArrow)" />
+              <text x="130" y="18" fill="#f59e0b" fontSize="11">Reverse possible!</text>
+              <defs>
+                <marker id="twistArrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L6,3 z" fill="#f59e0b" />
+                </marker>
+              </defs>
+            </svg>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px' }}>
               Different sports use different ball surfaces - some are smooth (volleyball), some have seams (baseball), some have dimples (golf).
             </p>
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '40px' }}>🏐</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Smooth</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '40px' }}>⚾</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Seamed</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '40px' }}>⛳</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Dimpled</p>
-              </div>
-            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1129,6 +1315,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1157,12 +1344,10 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Reverse Magnus Effect
+              Continue
             </button>
           )}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1182,10 +1367,15 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
+        {renderBottomNav()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Ball Surface Comparison
           </h2>
@@ -1225,6 +1415,27 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
               ))}
             </div>
 
+            {/* SVG responding to spin rate */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <svg width="300" height="180" viewBox="0 0 300 180">
+                <rect width="300" height="180" fill="#1e3a5f" rx="8" />
+                <line x1="30" y1="90" x2="270" y2="90" stroke="#64748b" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+                {/* Ball */}
+                <circle cx="50" cy="90" r="18" fill={ballSurface === 'smooth' ? '#fbbf24' : ballSurface === 'dimpled' ? '#e2e8f0' : '#dc2626'} />
+                {/* Trajectory curve based on spin */}
+                <path
+                  d={`M 50 90 L 80 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.5 : twistSpinRate * 0.5)} L 110 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.8 : twistSpinRate * 0.8)} L 140 ${Math.max(10, Math.min(170, 90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.9 : twistSpinRate * 0.9)))} L 170 ${Math.max(10, Math.min(170, 90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.85 : twistSpinRate * 0.85)))} L 200 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.7 : twistSpinRate * 0.7)} L 230 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.5 : twistSpinRate * 0.5)} L 260 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.25 : twistSpinRate * 0.25)}`}
+                  fill="none"
+                  stroke={ballSurface === 'smooth' && twistSpinRate > 70 ? '#f59e0b' : '#22c55e'}
+                  strokeWidth="3"
+                />
+                <text x="150" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">
+                  {ballSurface === 'smooth' && twistSpinRate > 70 ? 'REVERSE Magnus!' : 'Normal Magnus'}
+                </text>
+                <text x="150" y="170" textAnchor="middle" fill="#94a3b8" fontSize="11">Spin: {twistSpinRate}% | Surface: {ballSurface}</text>
+              </svg>
+            </div>
+
             {/* Spin rate for twist */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1238,11 +1449,14 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                 value={twistSpinRate}
                 onChange={(e) => setTwistSpinRate(parseInt(e.target.value))}
                 style={{
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  height: '20px',
+                  borderRadius: '10px',
                   cursor: 'pointer',
-                }}
+                } as React.CSSProperties}
               />
             </div>
 
@@ -1284,8 +1498,8 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                 <svg width="180" height="100" style={{ maxWidth: '100%' }}>
                   <rect width="180" height="100" fill="#1e3a5f" rx="6" />
                   <circle cx="40" cy="50" r="18" fill="#dc2626" />
-                  <path d="M58,50 Q100,30 160,50" fill="none" stroke="#22c55e" strokeWidth="3" />
-                  <text x="100" y="25" fill="#22c55e" fontSize="9">Curves as expected</text>
+                  <path d="M58 50 Q100 15 160 50" fill="none" stroke="#22c55e" strokeWidth="3" />
+                  <text x="100" y="12" fill="#22c55e" fontSize="11">Curves as expected</text>
                 </svg>
               </div>
               <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
@@ -1293,8 +1507,8 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                 <svg width="180" height="100" style={{ maxWidth: '100%' }}>
                   <rect width="180" height="100" fill="#1e3a5f" rx="6" />
                   <circle cx="40" cy="50" r="18" fill="#fbbf24" />
-                  <path d="M58,50 Q100,70 160,50" fill="none" stroke="#f59e0b" strokeWidth="3" />
-                  <text x="100" y="85" fill="#f59e0b" fontSize="9">Curves OPPOSITE!</text>
+                  <path d="M58 50 Q100 85 160 50" fill="none" stroke="#f59e0b" strokeWidth="3" />
+                  <text x="100" y="85" fill="#f59e0b" fontSize="11">Curves OPPOSITE!</text>
                 </svg>
               </div>
             </div>
@@ -1319,11 +1533,9 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand Why This Happens
+            Continue
           </button>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1335,10 +1547,15 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
+        {renderBottomNav()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Hidden Complexity of Magnus Effect
           </h2>
@@ -1409,11 +1626,9 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            See Real-World Applications
+            Continue
           </button>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1422,19 +1637,28 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
+        {renderBottomNav()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} - Explore all to continue
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1557,6 +1781,39 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                 ))}
               </div>
             </div>
+
+            {/* Got It button for current application */}
+            {!completedApps[selectedApp] ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  ...primaryButtonStyle,
+                  width: '100%',
+                  marginTop: '16px',
+                }}
+              >
+                Got It
+              </button>
+            ) : (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                marginTop: '16px',
+                padding: '12px',
+                background: `${colors.success}22`,
+                borderRadius: '8px',
+              }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.success }}>Completed</span>
+              </div>
+            )}
           </div>
 
           {allAppsCompleted && (
@@ -1564,12 +1821,10 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Take the Knowledge Test
+              Continue
             </button>
           )}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1583,10 +1838,15 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          overflowY: 'auto',
+          paddingBottom: '100px',
+          flex: 1,
+          paddingTop: '48px',
         }}>
           {renderProgressBar()}
+          {renderBottomNav()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', overflowY: 'auto' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1599,35 +1859,89 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
               {passed
                 ? 'You understand the Magnus effect and how it shapes sports and engineering!'
                 : 'Review the concepts and try again.'}
             </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
+            {/* Answer review section */}
+            <div style={{
+              textAlign: 'left',
+              marginBottom: '24px',
+              maxHeight: '300px',
+              overflowY: 'auto',
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Your Answers:</h3>
+              {testQuestions.map((q, i) => {
+                const correctId = q.options.find(o => o.correct)?.id;
+                const isCorrect = testAnswers[i] === correctId;
+                return (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px 0',
+                    borderBottom: `1px solid ${colors.border}`,
+                  }}>
+                    <span style={{
+                      color: isCorrect ? colors.success : colors.error,
+                      fontSize: '18px',
+                      fontWeight: 700,
+                      minWidth: '24px',
+                    }}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>
+                      Question {i + 1}: {isCorrect ? 'Correct' : `Wrong (correct: ${correctId?.toUpperCase()})`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Replay
+                </button>
+              )}
+              <a
+                href="/"
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  display: 'inline-block',
                 }}
-                style={primaryButtonStyle}
               >
-                Review and Try Again
-              </button>
-            )}
+                Return to Dashboard
+              </a>
+            </div>
           </div>
-          {renderNavDots()}
         </div>
       );
     }
@@ -1639,10 +1953,15 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
+        {renderBottomNav()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1705,6 +2024,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1742,6 +2062,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Previous
@@ -1760,6 +2081,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next
@@ -1785,6 +2107,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1792,8 +2115,6 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             )}
           </div>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1809,9 +2130,14 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        flex: 1,
       }}>
         {renderProgressBar()}
+        {renderBottomNav()}
 
         <div style={{
           fontSize: '100px',
@@ -1881,8 +2207,6 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             Return to Dashboard
           </a>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }

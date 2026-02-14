@@ -822,8 +822,12 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Centripetal Force Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust mass, speed, and radius to see how centripetal force changes
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            This visualization demonstrates how centripetal force keeps objects moving in circles.
+            Watch how the force vectors change as you adjust the controls below.
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+            This is important in real-world applications like race track design, satellite orbits, and centrifuges used in technology and industry.
           </p>
 
           {/* Main visualization */}
@@ -1010,9 +1014,14 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     if (phase === 'review') {
       return (
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             Understanding Centripetal Force
           </h2>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            As you observed in the experiment, centripetal force increases dramatically with speed.
+            Your prediction helped you see the result of these physics relationships in action.
+          </p>
 
           <div style={{ display: 'grid', gap: '16px', marginBottom: '32px' }}>
             {/* Centripetal Force Card */}

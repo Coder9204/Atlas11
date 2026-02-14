@@ -243,7 +243,7 @@ const realWorldApps = [
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -267,7 +267,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
     review: 'Review',
     twist_predict: 'Twist',
     twist_play: 'Explore',
-    twist_review: 'Explain',
+    twist_review: 'Insight',
     transfer: 'Transfer',
     test: 'Test',
     mastery: 'Mastery',
@@ -477,6 +477,11 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -503,7 +508,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -581,6 +586,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
             opacity: canBack ? 1 : 0.3,
             minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.3s ease',
           }}
           disabled={!canBack}
         >
@@ -607,6 +613,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
             boxShadow: canProceed ? `0 2px 12px ${colors.accentGlow}` : 'none',
             minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.3s ease',
           }}
         >
           {buttonText}
@@ -640,7 +647,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
     const signalStrength = Math.max(0, Math.min(100, (marginValue + 30) * 2));
 
     return (
-      <svg viewBox="0 0 500 340" style={{ width: '100%', maxWidth: '600px', height: 'auto' }}>
+      <svg viewBox="0 0 500 340" style={{ width: '100%', maxWidth: '600px', height: 'auto', transition: 'all 0.3s ease' }}>
         <defs>
           <linearGradient id="lnkbSpaceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#020617" />
@@ -878,7 +885,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
             <h1 style={{ fontSize: typo.title, marginTop: '8px', background: 'linear-gradient(90deg, #22d3ee, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Link Budget Calculation
             </h1>
-            <p style={{ color: colors.textMuted, fontSize: typo.bodyLarge, marginTop: '8px' }}>
+            <p style={{ color: colors.textMuted, fontSize: typo.bodyLarge, marginTop: '8px', fontWeight: 400 }}>
               How does a tiny satellite talk to Earth across thousands of kilometers?
             </p>
           </div>
@@ -921,6 +928,11 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px', fontSize: typo.heading }}>Make Your Prediction</h2>
 
+          {/* Static visualization */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderVisualization()}
+          </div>
+
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
             <p style={{ fontSize: typo.body, marginBottom: '8px', lineHeight: 1.6 }}>
               A satellite transmits 10 watts of power. By the time it reaches a ground station 36,000 km away, the signal is incredibly weak.
@@ -944,8 +956,9 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: typo.body,
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 {p.label}
@@ -958,15 +971,37 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
     );
   }
 
+  // Helper function to get prediction label
+  const getPredictionLabel = () => {
+    const found = predictions.find(p => p.id === prediction);
+    return found ? found.label : 'your prediction';
+  };
+
   // PLAY PHASE
   if (phase === 'play') {
     return wrapPhaseContent(
       <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: typo.heading }}>Link Budget Calculator</h2>
-          <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '24px', fontSize: typo.body }}>
+          <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '24px', fontSize: typo.body }}>
             Adjust parameters to see how distance, frequency, and gain affect signal strength
           </p>
+
+          {/* Observation guidance */}
+          <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', borderLeft: `3px solid ${colors.accent}` }}>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Watch how the link margin and signal strength change as you adjust the sliders below.
+            </p>
+          </div>
+
+          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>Key Terms Defined:</h4>
+            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', fontSize: typo.small, fontWeight: 400 }}>
+              <li><strong>FSPL (Free Space Path Loss)</strong> is defined as the signal attenuation due to spreading over distance, calculated as 20*log10(d) + 20*log10(f) + 92.45 dB</li>
+              <li><strong>EIRP</strong> is the measure of Effective Isotropic Radiated Power = Tx Power + Tx Antenna Gain</li>
+              <li><strong>Link Margin</strong> refers to the safety buffer above minimum required SNR for reliable communication</li>
+            </ul>
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             {renderVisualization()}
@@ -981,6 +1016,13 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
               <li>Increase antenna gain to compensate for distance</li>
               <li>Change frequency and observe FSPL changes</li>
             </ul>
+          </div>
+
+          <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '16px', borderLeft: `4px solid ${colors.accent}` }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>Why This Matters:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>
+              Link budget calculations are essential in real-world satellite engineering. Every communication satellite, from Starlink to GPS, relies on precise link budget analysis to ensure reliable data transmission across vast distances. Engineers use these calculations to design antennas, select frequencies, and determine power requirements.
+            </p>
           </div>
         </div>
       </div>,
@@ -1003,10 +1045,13 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, fontSize: typo.heading }}>
-              {wasCorrect ? 'Excellent!' : 'Not quite!'}
+              {wasCorrect ? 'Excellent! Your prediction was correct!' : 'Not quite what you predicted!'}
             </h3>
+            <p style={{ fontSize: typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+              You predicted: "{getPredictionLabel()}"
+            </p>
             <p style={{ fontSize: typo.body, lineHeight: 1.6 }}>
-              High-gain antennas are the key! They focus signal energy into a narrow beam, effectively multiplying power in that direction by thousands or millions of times. A 40 dBi antenna concentrates power 10,000x in its main beam.
+              High-gain antennas are the key! As you observed in the experiment, they focus signal energy into a narrow beam, effectively multiplying power in that direction by thousands or millions of times. A 40 dBi antenna concentrates power 10,000x in its main beam.
             </p>
           </div>
 
@@ -1054,6 +1099,11 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px', fontSize: typo.heading }}>The Frequency Trade-off</h2>
 
+          {/* Static visualization */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderVisualization()}
+          </div>
+
           <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #a855f7' }}>
             <p style={{ fontSize: typo.body, marginBottom: '12px', lineHeight: 1.6 }}>
               Higher frequencies (like Ka-band at 30 GHz) can carry much more data than lower frequencies (like L-band at 1.5 GHz).
@@ -1077,6 +1127,8 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: typo.body,
+                  minHeight: '44px',
+                  transition: 'all 0.3s ease',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1096,9 +1148,16 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
       <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '8px', fontSize: typo.heading }}>Frequency vs Data Rate Trade-off</h2>
-          <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '24px', fontSize: typo.body }}>
+          <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '24px', fontSize: typo.body }}>
             Adjust frequency and observe the effect on path loss
           </p>
+
+          {/* Observation guidance */}
+          <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', borderLeft: '3px solid #a855f7' }}>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0 }}>
+              <strong style={{ color: '#a855f7' }}>Observe:</strong> Watch the FSPL value change as you adjust the frequency slider.
+            </p>
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             {renderVisualization()}
@@ -1233,6 +1292,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
                   textAlign: 'center',
                   position: 'relative',
                   WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 {completedApps[i] && (
@@ -1272,24 +1332,75 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
               </div>
             </div>
 
-            <p style={{ color: colors.textSecondary, fontSize: typo.body, marginBottom: '16px', lineHeight: 1.6 }}>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body, marginBottom: '16px', lineHeight: 1.6, fontWeight: 400 }}>
               {app.description}
             </p>
 
             <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
               <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.small, fontWeight: 600 }}>Link Budget Connection:</h4>
-              <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0, lineHeight: 1.6 }}>{app.connection}</p>
+              <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0, lineHeight: 1.6, fontWeight: 400 }}>{app.connection}</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+              <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.small, fontWeight: 600 }}>How It Works:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0, lineHeight: 1.6, fontWeight: 400 }}>{app.howItWorks}</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{ background: colors.bgDark, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
                   <div style={{ fontSize: '16px', marginBottom: '4px' }}>{stat.icon}</div>
                   <div style={{ color: app.color, fontWeight: 'bold', fontSize: typo.body }}>{stat.value}</div>
-                  <div style={{ color: colors.textMuted, fontSize: typo.label }}>{stat.label}</div>
+                  <div style={{ color: colors.textSecondary, fontSize: typo.label, fontWeight: 400 }}>{stat.label}</div>
                 </div>
               ))}
             </div>
+
+            <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+              <h4 style={{ color: '#a855f7', marginBottom: '8px', fontSize: typo.small, fontWeight: 600 }}>Future Impact:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0, lineHeight: 1.6, fontWeight: 400 }}>{app.futureImpact}</p>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ color: colors.textSecondary, marginBottom: '8px', fontSize: typo.small, fontWeight: 600 }}>Examples: </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {app.examples.map((example, i) => (
+                  <span key={i} style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '4px', fontSize: typo.label, color: colors.textSecondary, fontWeight: 400 }}>
+                    {example}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Got It / Next Application button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                width: '100%',
+                marginTop: '16px',
+                padding: '14px 24px',
+                borderRadius: '10px',
+                fontWeight: 700,
+                fontSize: typo.body,
+                background: `linear-gradient(135deg, ${app.color} 0%, ${app.color}dd 100%)`,
+                color: colors.textPrimary,
+                border: 'none',
+                cursor: 'pointer',
+                minHeight: '44px',
+                transition: 'all 0.3s ease',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              {selectedApp < realWorldApps.length - 1 ? 'Got It - Next Application' : 'Got It'}
+            </button>
           </div>
         </div>
       </div>,
@@ -1343,7 +1454,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontSize: typo.heading }}>Knowledge Test</h2>
-            <span style={{ color: colors.textMuted, fontSize: typo.body }}>{currentTestQuestion + 1}/10</span>
+            <span style={{ color: colors.textSecondary, fontSize: typo.body }}>Question {currentTestQuestion + 1} of 10</span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>

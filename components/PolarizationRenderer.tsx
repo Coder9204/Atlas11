@@ -740,7 +740,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             {[0, 25, 50, 75, 100].map((mark, i) => (
               <g key={mark}>
                 <line x1={3} y1={150 - (mark / 100) * 148} x2={8} y2={150 - (mark / 100) * 148} stroke="#6b7280" strokeWidth={1} />
-                <text x={-3} y={154 - (mark / 100) * 148} fill="#64748b" fontSize={7} textAnchor="end">{mark}</text>
+                <text x={-3} y={154 - (mark / 100) * 148} fill="#64748b" fontSize={8} textAnchor="end">{mark}</text>
               </g>
             ))}
 
@@ -849,7 +849,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
           step="1"
           value={angle}
           onChange={(e) => setAngle(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -884,7 +884,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
                 step="1"
                 value={thirdPolarizerAngle}
                 onChange={(e) => setThirdPolarizerAngle(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                style={{ width: '100%', accentColor: colors.accent }}
               />
             </div>
           )}
@@ -993,10 +993,10 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
-              The Disappearing Light
+              Discover: The Disappearing Light
             </h1>
             <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '18px', marginBottom: '24px' }}>
-              Can you make the world go dark without turning lights off?
+              Let's explore how to make the world go dark without turning lights off!
             </p>
           </div>
 
@@ -1097,7 +1097,8 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Polarization</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Rotate the second polarizer and observe how intensity changes
+              Rotate the second polarizer and observe how intensity changes.
+              When the angle increases, light transmission decreases because the polarization directions become more misaligned.
             </p>
           </div>
 
@@ -1117,6 +1118,21 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
               <li>90 degrees: Crossed polarizers - nearly complete darkness!</li>
               <li>Notice how intensity follows cos^2(angle)</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Why This Matters</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              This technology is used in LCD screens, 3D cinema, and polarized sunglasses.
+              Engineers design displays using this principle, making it practical for everyday applications
+              from smartphones to medical imaging.
+            </p>
           </div>
         </div>
         {renderBottomBar()}
@@ -1139,10 +1155,10 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? 'Your prediction was correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              Brightness drops to near-black at 90 degrees rotation!
+              As you observed in the experiment, brightness drops to near-black at 90 degrees rotation!
             </p>
           </div>
 
@@ -1370,6 +1386,22 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
                 Companies: {app.companies.join(', ')}
               </p>
               <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', lineHeight: 1.5 }}>{app.futureImpact}</p>
+              <button
+                onClick={() => setTransferCompleted(prev => new Set([...prev, index]))}
+                style={{
+                  marginTop: '12px',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: transferCompleted.has(index) ? colors.success : colors.accent,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                }}
+              >
+                {transferCompleted.has(index) ? 'Understood' : 'Got It'}
+              </button>
             </div>
           ))}
           <div style={{ padding: '16px' }}>
@@ -1458,7 +1490,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
           <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700 }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary, fontSize: '14px' }}>{currentTestQuestion + 1} of 10</span>
+              <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Question {currentTestQuestion + 1} of 10</span>
             </div>
 
             <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '16px', borderLeft: `3px solid ${colors.accent}` }}>

@@ -76,10 +76,12 @@ const realWorldApps = [
 ];
 
 interface SoundInterferenceRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: string;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: unknown) => void;
 }
 
 const colors = {
@@ -100,12 +102,37 @@ const colors = {
   neutral: '#6366f1',
 };
 
-const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}) => {
+const VALID_PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (props) => {
+  const {
+    onPhaseComplete,
+    onCorrectAnswer,
+    onIncorrectAnswer,
+  } = props;
+
+  // Resolve phase from either prop
+  const rawPhase = props.phase || props.gamePhase || 'hook';
+  const phase = VALID_PHASES.includes(rawPhase) ? rawPhase : 'hook';
+
+  // Internal phase management for self-managing mode
+  const [internalPhase, setInternalPhase] = useState(phase);
+
+  // Update internal phase when prop changes
+  useEffect(() => {
+    setInternalPhase(phase);
+  }, [phase]);
+
+  const currentPhase = internalPhase;
+
+  const advancePhase = () => {
+    const idx = VALID_PHASES.indexOf(currentPhase);
+    if (idx < VALID_PHASES.length - 1) {
+      setInternalPhase(VALID_PHASES[idx + 1]);
+    }
+    if (onPhaseComplete) onPhaseComplete();
+  };
+
   // Simulation state
   const [frequency, setFrequency] = useState(340); // Hz
   const [speakerSeparation, setSpeakerSeparation] = useState(2); // meters
@@ -345,6 +372,26 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
     setListenerY(Math.max(0.5, Math.min(5.5, 6 - y)));
   }, [isDragging]);
 
+  // Generate interference intensity path for SVG
+  const generateInterferencePath = (yPos: number, width: number, height: number) => {
+    const points: string[] = [];
+    const scale = 55;
+    const centerX = width / 2;
+    const speakerYPx = height - 70;
+    const yMeters = (speakerYPx - yPos) / scale;
+
+    for (let px = 0; px <= width; px += Math.max(1, Math.floor(width / 40))) {
+      const xMeters = (px - centerX) / scale;
+      const d1 = Math.sqrt((xMeters - speaker1X) ** 2 + yMeters ** 2);
+      const d2 = Math.sqrt((xMeters - speaker2X) ** 2 + yMeters ** 2);
+      const pd = Math.abs(d2 - d1);
+      const interference = Math.cos(2 * Math.PI * pd / wavelength);
+      const yVal = yPos + (1 - interference) * 30;
+      points.push(`${px} ${yVal.toFixed(1)}`);
+    }
+    return `M ${points[0]} ${points.slice(1).map(p => `L ${p}`).join(' ')}`;
+  };
+
   const renderVisualization = (interactive: boolean) => {
     const width = 500;
     const height = 400;
@@ -433,6 +480,9 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
         }
       }
     }
+
+    // Generate interference path for visualization
+    const interferencePath = generateInterferencePath(150, width, height);
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -568,17 +618,24 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
           <rect width={width} height={height} fill="url(#sintfFloorGradient)" rx="16" />
 
           {/* Subtle grid pattern */}
-          <g opacity="0.1">
-            {Array.from({ length: Math.floor(width / 25) + 1 }).map((_, i) => (
-              <line key={`vgrid-${i}`} x1={i * 25} y1="0" x2={i * 25} y2={height} stroke="#475569" strokeWidth="0.5" />
-            ))}
-            {Array.from({ length: Math.floor(height / 25) + 1 }).map((_, i) => (
-              <line key={`hgrid-${i}`} x1="0" y1={i * 25} x2={width} y2={i * 25} stroke="#475569" strokeWidth="0.5" />
-            ))}
-          </g>
+          {Array.from({ length: Math.floor(width / 50) + 1 }).map((_, i) => (
+            <line key={`vgrid-${i}`} x1={i * 50} y1="0" x2={i * 50} y2={height} stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.15} />
+          ))}
+          {Array.from({ length: Math.floor(height / 50) + 1 }).map((_, i) => (
+            <line key={`hgrid-${i}`} x1="0" y1={i * 50} x2={width} y2={i * 50} stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.15} />
+          ))}
 
           {/* Interference pattern */}
           {patternElements}
+
+          {/* Interference intensity path curve */}
+          <path
+            d={interferencePath}
+            fill="none"
+            stroke="#60a5fa"
+            strokeWidth="1.5"
+            opacity={0.5}
+          />
 
           {/* Animated waves */}
           {waveCircles}
@@ -593,7 +650,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                 y2={listenerPxY}
                 stroke="#60a5fa"
                 strokeWidth={2}
-                strokeDasharray="8,4"
+                strokeDasharray="8 4"
                 opacity={0.6}
               />
               <line
@@ -603,15 +660,15 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                 y2={listenerPxY}
                 stroke="#60a5fa"
                 strokeWidth={2}
-                strokeDasharray="8,4"
+                strokeDasharray="8 4"
                 opacity={0.6}
               />
-              {/* Distance labels on path lines */}
+              {/* Distance labels on path lines - positioned with absolute coords */}
               <text
                 x={(speaker1Px + listenerPxX) / 2 - 15}
                 y={(speakerYPx - 15 + listenerPxY) / 2}
                 fill="#60a5fa"
-                fontSize="9"
+                fontSize="11"
                 fontWeight="bold"
                 opacity={0.8}
               >
@@ -619,9 +676,9 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
               </text>
               <text
                 x={(speaker2Px + listenerPxX) / 2 + 8}
-                y={(speakerYPx - 15 + listenerPxY) / 2}
+                y={(speakerYPx - 15 + listenerPxY) / 2 + 14}
                 fill="#60a5fa"
-                fontSize="9"
+                fontSize="11"
                 fontWeight="bold"
                 opacity={0.8}
               >
@@ -631,78 +688,56 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
           )}
 
           {/* === PREMIUM SPEAKER 1 === */}
-          <g transform={`translate(${speaker1Px - 22}, ${speakerYPx - 35})`}>
-            {/* Speaker cabinet */}
-            <rect x="0" y="0" width="44" height="50" rx="6" fill="url(#sintfSpeakerHousing)" stroke="#475569" strokeWidth="1" />
-            <rect x="2" y="2" width="40" height="46" rx="5" fill="#0f172a" opacity="0.3" />
-
-            {/* Speaker cone */}
-            <ellipse cx="22" cy="20" rx="16" ry="14" fill="url(#sintfSpeakerCone)" stroke="#334155" strokeWidth="1" />
-            <ellipse cx="22" cy="20" rx="12" ry="10" fill="#1e293b" stroke="#475569" strokeWidth="0.5" />
-            <ellipse cx="22" cy="20" rx="6" ry="5" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
-
-            {/* Center dust cap */}
-            <circle cx="22" cy="20" r="3" fill="#020617" />
-
-            {/* Membrane vibration glow when animating */}
-            {isAnimating && (
-              <ellipse cx="22" cy="20" rx="14" ry="12" fill="url(#sintfMembraneGlow)" filter="url(#sintfSpeakerGlow)">
-                <animate attributeName="rx" values="12;16;12" dur="0.15s" repeatCount="indefinite" />
-                <animate attributeName="ry" values="10;14;10" dur="0.15s" repeatCount="indefinite" />
-              </ellipse>
-            )}
-
-            {/* Power indicator */}
-            <circle cx="36" cy="42" r="3" fill={isAnimating ? "#22c55e" : "#475569"}>
-              {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
-            </circle>
-          </g>
+          {/* Speaker 1 cabinet */}
+          <rect x={speaker1Px - 22} y={speakerYPx - 35} width="44" height="50" rx="6" fill="url(#sintfSpeakerHousing)" stroke="#475569" strokeWidth="1" />
+          <rect x={speaker1Px - 20} y={speakerYPx - 33} width="40" height="46" rx="5" fill="#0f172a" opacity="0.3" />
+          {/* Speaker 1 cone */}
+          <ellipse cx={speaker1Px} cy={speakerYPx - 15} rx="16" ry="14" fill="url(#sintfSpeakerCone)" stroke="#334155" strokeWidth="1" />
+          <ellipse cx={speaker1Px} cy={speakerYPx - 15} rx="12" ry="10" fill="#1e293b" stroke="#475569" strokeWidth="0.5" />
+          <ellipse cx={speaker1Px} cy={speakerYPx - 15} rx="6" ry="5" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+          <circle cx={speaker1Px} cy={speakerYPx - 15} r="3" fill="#020617" />
+          {isAnimating && (
+            <ellipse cx={speaker1Px} cy={speakerYPx - 15} rx="14" ry="12" fill="url(#sintfMembraneGlow)" filter="url(#sintfSpeakerGlow)">
+              <animate attributeName="rx" values="12;16;12" dur="0.15s" repeatCount="indefinite" />
+              <animate attributeName="ry" values="10;14;10" dur="0.15s" repeatCount="indefinite" />
+            </ellipse>
+          )}
+          <circle cx={speaker1Px + 14} cy={speakerYPx + 7} r="3" fill={isAnimating ? "#22c55e" : "#475569"}>
+            {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
+          </circle>
 
           {/* Speaker 1 label */}
           <text x={speaker1Px} y={speakerYPx + 25} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600" filter="url(#sintfTextGlow)">Speaker 1</text>
 
           {/* === PREMIUM SPEAKER 2 === */}
-          <g transform={`translate(${speaker2Px - 22}, ${speakerYPx - 35})`}>
-            {/* Speaker cabinet */}
-            <rect x="0" y="0" width="44" height="50" rx="6" fill="url(#sintfSpeakerHousing)" stroke="#475569" strokeWidth="1" />
-            <rect x="2" y="2" width="40" height="46" rx="5" fill="#0f172a" opacity="0.3" />
-
-            {/* Speaker cone */}
-            <ellipse cx="22" cy="20" rx="16" ry="14" fill="url(#sintfSpeakerCone)" stroke="#334155" strokeWidth="1" />
-            <ellipse cx="22" cy="20" rx="12" ry="10" fill="#1e293b" stroke="#475569" strokeWidth="0.5" />
-            <ellipse cx="22" cy="20" rx="6" ry="5" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
-
-            {/* Center dust cap */}
-            <circle cx="22" cy="20" r="3" fill="#020617" />
-
-            {/* Membrane vibration glow when animating */}
-            {isAnimating && (
-              <ellipse cx="22" cy="20" rx="14" ry="12" fill="url(#sintfMembraneGlow)" filter="url(#sintfSpeakerGlow)">
-                <animate attributeName="rx" values="12;16;12" dur="0.15s" repeatCount="indefinite" />
-                <animate attributeName="ry" values="10;14;10" dur="0.15s" repeatCount="indefinite" />
-              </ellipse>
-            )}
-
-            {/* Power indicator */}
-            <circle cx="36" cy="42" r="3" fill={isAnimating ? "#22c55e" : "#475569"}>
-              {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
-            </circle>
-          </g>
+          <rect x={speaker2Px - 22} y={speakerYPx - 35} width="44" height="50" rx="6" fill="url(#sintfSpeakerHousing)" stroke="#475569" strokeWidth="1" />
+          <rect x={speaker2Px - 20} y={speakerYPx - 33} width="40" height="46" rx="5" fill="#0f172a" opacity="0.3" />
+          <ellipse cx={speaker2Px} cy={speakerYPx - 15} rx="16" ry="14" fill="url(#sintfSpeakerCone)" stroke="#334155" strokeWidth="1" />
+          <ellipse cx={speaker2Px} cy={speakerYPx - 15} rx="12" ry="10" fill="#1e293b" stroke="#475569" strokeWidth="0.5" />
+          <ellipse cx={speaker2Px} cy={speakerYPx - 15} rx="6" ry="5" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+          <circle cx={speaker2Px} cy={speakerYPx - 15} r="3" fill="#020617" />
+          {isAnimating && (
+            <ellipse cx={speaker2Px} cy={speakerYPx - 15} rx="14" ry="12" fill="url(#sintfMembraneGlow)" filter="url(#sintfSpeakerGlow)">
+              <animate attributeName="rx" values="12;16;12" dur="0.15s" repeatCount="indefinite" />
+              <animate attributeName="ry" values="10;14;10" dur="0.15s" repeatCount="indefinite" />
+            </ellipse>
+          )}
+          <circle cx={speaker2Px + 14} cy={speakerYPx + 7} r="3" fill={isAnimating ? "#22c55e" : "#475569"}>
+            {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
+          </circle>
 
           {/* Speaker 2 label */}
           <text x={speaker2Px} y={speakerYPx + 25} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600" filter="url(#sintfTextGlow)">Speaker 2</text>
 
           {/* Speaker separation indicator */}
-          <g opacity="0.6">
-            <line x1={speaker1Px} y1={speakerYPx + 35} x2={speaker2Px} y2={speakerYPx + 35} stroke="#64748b" strokeWidth="1" />
-            <line x1={speaker1Px} y1={speakerYPx + 32} x2={speaker1Px} y2={speakerYPx + 38} stroke="#64748b" strokeWidth="1" />
-            <line x1={speaker2Px} y1={speakerYPx + 32} x2={speaker2Px} y2={speakerYPx + 38} stroke="#64748b" strokeWidth="1" />
-            <text x={centerX} y={speakerYPx + 48} textAnchor="middle" fill="#64748b" fontSize="9">{speakerSeparation.toFixed(1)}m separation</text>
-          </g>
+          <line x1={speaker1Px} y1={speakerYPx + 35} x2={speaker2Px} y2={speakerYPx + 35} stroke="#64748b" strokeWidth="1" opacity={0.6} />
+          <line x1={speaker1Px} y1={speakerYPx + 32} x2={speaker1Px} y2={speakerYPx + 38} stroke="#64748b" strokeWidth="1" opacity={0.6} />
+          <line x1={speaker2Px} y1={speakerYPx + 32} x2={speaker2Px} y2={speakerYPx + 38} stroke="#64748b" strokeWidth="1" opacity={0.6} />
+          <text x={centerX} y={speakerYPx + 48} textAnchor="middle" fill="#64748b" fontSize="11" opacity={0.6}>{speakerSeparation.toFixed(1)}m separation</text>
 
           {/* === LISTENER WITH INTERFERENCE INDICATOR === */}
           {interactive && (
-            <g filter="url(#sintfListenerGlow)">
+            <>
               {/* Outer glow ring based on interference type */}
               <circle
                 cx={listenerPxX}
@@ -712,7 +747,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                 opacity={0.6}
               />
 
-              {/* Listener marker */}
+              {/* Listener marker - interactive circle that moves */}
               <circle
                 cx={listenerPxX}
                 cy={listenerPxY}
@@ -737,70 +772,55 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
               </text>
 
               {/* Listener label */}
-              <text x={listenerPxX} y={listenerPxY - 24} textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="bold">LISTENER</text>
-            </g>
+              <text x={listenerPxX} y={listenerPxY - 24} textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">LISTENER</text>
+            </>
           )}
 
-          {/* === PREMIUM LEGEND === */}
-          <g transform="translate(12, 12)" filter="url(#sintfBoxShadow)">
-            <rect x="0" y="0" width="130" height="75" rx="8" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+          {/* === PREMIUM LEGEND - top-left === */}
+          <rect x="12" y="12" width="130" height="75" rx="8" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+          <circle cx="26" cy="30" r="8" fill="url(#sintfConstructiveGlow)" />
+          <text x="40" y="34" fill="#10b981" fontSize="11" fontWeight="600">Loud (constructive)</text>
+          <circle cx="26" cy="52" r="8" fill="url(#sintfDestructiveGlow)" />
+          <text x="40" y="56" fill="#ef4444" fontSize="11" fontWeight="600">Quiet (destructive)</text>
+          <circle cx="26" cy="74" r="8" fill="url(#sintfNeutralGlow)" />
+          <text x="40" y="78" fill="#8b5cf6" fontSize="11" fontWeight="600">Partial</text>
 
-            {/* Constructive */}
-            <circle cx="14" cy="18" r="8" fill="url(#sintfConstructiveGlow)" />
-            <text x="28" y="22" fill="#10b981" fontSize="10" fontWeight="600">Loud (constructive)</text>
-
-            {/* Destructive */}
-            <circle cx="14" cy="40" r="8" fill="url(#sintfDestructiveGlow)" />
-            <text x="28" y="44" fill="#ef4444" fontSize="10" fontWeight="600">Quiet (destructive)</text>
-
-            {/* Neutral */}
-            <circle cx="14" cy="62" r="8" fill="url(#sintfNeutralGlow)" />
-            <text x="28" y="66" fill="#8b5cf6" fontSize="10" fontWeight="600">Partial interference</text>
-          </g>
-
-          {/* === PREMIUM INFO BOX === */}
+          {/* === PREMIUM INFO BOX - top-right, positioned to not overlap legend === */}
           {interactive && (
-            <g transform={`translate(${width - 155}, 12)`} filter="url(#sintfBoxShadow)">
-              <rect x="0" y="0" width="143" height="90" rx="8" fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth="1" />
+            <>
+              <rect x={width - 155} y="100" width="143" height="90" rx="8" fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth="1" />
+              <rect x={width - 155} y="100" width="143" height="22" rx="8" fill="rgba(59, 130, 246, 0.2)" />
+              <rect x={width - 155} y="114" width="143" height="8" fill="rgba(59, 130, 246, 0.2)" />
+              <text x={width - 155 + 72} y="115" textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="700">PATH ANALYSIS</text>
 
-              {/* Title bar */}
-              <rect x="0" y="0" width="143" height="22" rx="8" fill="rgba(59, 130, 246, 0.2)" />
-              <rect x="0" y="14" width="143" height="8" fill="rgba(59, 130, 246, 0.2)" />
-              <text x="72" y="15" textAnchor="middle" fill="#60a5fa" fontSize="10" fontWeight="700">PATH ANALYSIS</text>
+              <text x={width - 143} y="140" fill="#94a3b8" fontSize="11">d1:</text>
+              <text x={width - 120} y="140" fill="#f8fafc" fontSize="11" fontWeight="600">{distance1.toFixed(2)}m</text>
 
-              {/* Distance info */}
-              <text x="12" y="40" fill="#94a3b8" fontSize="10">d1:</text>
-              <text x="35" y="40" fill="#f8fafc" fontSize="11" fontWeight="600">{distance1.toFixed(2)} m</text>
+              <text x={width - 75} y="140" fill="#94a3b8" fontSize="11">d2:</text>
+              <text x={width - 52} y="140" fill="#f8fafc" fontSize="11" fontWeight="600">{distance2.toFixed(2)}m</text>
 
-              <text x="80" y="40" fill="#94a3b8" fontSize="10">d2:</text>
-              <text x="103" y="40" fill="#f8fafc" fontSize="11" fontWeight="600">{distance2.toFixed(2)} m</text>
+              <line x1={width - 143} y1="150" x2={width - 24} y2="150" stroke="#334155" strokeWidth="1" />
+              <text x={width - 143} y="165" fill="#94a3b8" fontSize="11">Diff:</text>
+              <text x={width - 108} y="165" fill={isDestructive ? "#ef4444" : isConstructive ? "#10b981" : "#8b5cf6"} fontSize="12" fontWeight="700">{pathDifference.toFixed(3)}m</text>
 
-              {/* Path difference */}
-              <line x1="12" y1="50" x2="131" y2="50" stroke="#334155" strokeWidth="1" />
-              <text x="12" y="65" fill="#94a3b8" fontSize="10">Path diff:</text>
-              <text x="70" y="65" fill={isDestructive ? "#ef4444" : isConstructive ? "#10b981" : "#8b5cf6"} fontSize="12" fontWeight="700">{pathDifference.toFixed(3)} m</text>
-
-              {/* Wavelength comparison */}
-              <text x="12" y="82" fill="#64748b" fontSize="9">= {(pathDifference / wavelength).toFixed(2)} wavelengths</text>
-            </g>
+              <text x={width - 143} y="182" fill="#64748b" fontSize="10">= {(pathDifference / wavelength).toFixed(2)} wavelengths</text>
+            </>
           )}
 
           {/* === INTERFERENCE STATUS INDICATOR === */}
           {interactive && (
-            <g transform={`translate(${centerX}, 28)`}>
-              <rect x="-80" y="-15" width="160" height="28" rx="14" fill={isDestructive ? "rgba(239, 68, 68, 0.2)" : isConstructive ? "rgba(16, 185, 129, 0.2)" : "rgba(139, 92, 246, 0.2)"} stroke={isDestructive ? "#ef4444" : isConstructive ? "#10b981" : "#8b5cf6"} strokeWidth="1.5" />
-              <text x="0" y="4" textAnchor="middle" fill={isDestructive ? "#f87171" : isConstructive ? "#34d399" : "#a78bfa"} fontSize="12" fontWeight="700">
-                {isDestructive ? 'DESTRUCTIVE - Dead Spot!' : isConstructive ? 'CONSTRUCTIVE - Loud!' : 'PARTIAL INTERFERENCE'}
+            <>
+              <rect x={centerX - 80} y="95" width="160" height="28" rx="14" fill={isDestructive ? "rgba(239, 68, 68, 0.2)" : isConstructive ? "rgba(16, 185, 129, 0.2)" : "rgba(139, 92, 246, 0.2)"} stroke={isDestructive ? "#ef4444" : isConstructive ? "#10b981" : "#8b5cf6"} strokeWidth="1.5" />
+              <text x={centerX} y="114" textAnchor="middle" fill={isDestructive ? "#f87171" : isConstructive ? "#34d399" : "#a78bfa"} fontSize="12" fontWeight="700">
+                {isDestructive ? 'DESTRUCTIVE' : isConstructive ? 'CONSTRUCTIVE' : 'PARTIAL'}
               </text>
-            </g>
+            </>
           )}
 
           {/* Wavelength indicator at bottom */}
-          <g transform={`translate(${centerX}, ${height - 18})`} opacity="0.7">
-            <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="10">
-              Frequency: {frequency} Hz | Wavelength: {wavelength.toFixed(2)} m
-            </text>
-          </g>
+          <text x={centerX} y={height - 8} textAnchor="middle" fill="#64748b" fontSize="11" opacity={0.7}>
+            f={frequency}Hz | v=343m/s | lambda = v/f = {wavelength.toFixed(2)}m
+          </text>
         </svg>
 
         {interactive && (
@@ -809,6 +829,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
               onClick={() => setIsAnimating(!isAnimating)}
               style={{
                 padding: '14px 28px',
+                minHeight: '44px',
                 borderRadius: '12px',
                 border: 'none',
                 background: isAnimating
@@ -821,7 +842,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                 boxShadow: isAnimating
                   ? '0 4px 20px rgba(239, 68, 68, 0.4)'
                   : '0 4px 20px rgba(16, 185, 129, 0.4)',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.3s ease',
               }}
             >
               {isAnimating ? 'Stop Waves' : 'Show Waves'}
@@ -830,6 +851,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
               onClick={() => { setFrequency(340); setSpeakerSeparation(2); setListenerX(0); setListenerY(3); }}
               style={{
                 padding: '14px 28px',
+                minHeight: '44px',
                 borderRadius: '12px',
                 border: `2px solid ${colors.accent}`,
                 background: 'rgba(139, 92, 246, 0.1)',
@@ -837,7 +859,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.3s ease',
               }}
             >
               Reset
@@ -846,6 +868,14 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
         )}
       </div>
     );
+  };
+
+  const sliderStyle: React.CSSProperties = {
+    height: '20px',
+    width: '100%',
+    touchAction: 'pan-y',
+    accentColor: colors.accent,
+    cursor: 'pointer',
   };
 
   const renderControls = () => (
@@ -861,8 +891,13 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
           step="10"
           value={frequency}
           onChange={(e) => setFrequency(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setFrequency(parseInt((e.target as HTMLInputElement).value))}
+          style={sliderStyle}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+          <span>100 Hz (Low)</span>
+          <span>1000 Hz (High)</span>
+        </div>
       </div>
 
       <div>
@@ -876,28 +911,56 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
           step="0.1"
           value={speakerSeparation}
           onChange={(e) => setSpeakerSeparation(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setSpeakerSeparation(parseFloat((e.target as HTMLInputElement).value))}
+          style={sliderStyle}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+          <span>0.5 m (Min)</span>
+          <span>4 m (Max)</span>
+        </div>
       </div>
 
       <div style={{
-        background: isDestructive ? 'rgba(239, 68, 68, 0.2)' : isConstructive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(139, 92, 246, 0.2)',
-        padding: '12px',
-        borderRadius: '8px',
-        borderLeft: `3px solid ${isDestructive ? colors.destructive : isConstructive ? colors.constructive : colors.accent}`,
+        display: 'flex', flexDirection: 'row', gap: '12px', flexWrap: 'wrap',
       }}>
-        <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
-          {isDestructive ? 'DEAD SPOT - Destructive Interference!' : isConstructive ? 'LOUD - Constructive Interference!' : 'Partial Interference'}
+        <div style={{
+          flex: 1, minWidth: '140px',
+          background: isDestructive ? 'rgba(239, 68, 68, 0.2)' : isConstructive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(139, 92, 246, 0.2)',
+          padding: '12px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${isDestructive ? colors.destructive : isConstructive ? colors.constructive : colors.accent}`,
+        }}>
+          <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
+            Current: {isDestructive ? 'DEAD SPOT' : isConstructive ? 'LOUD' : 'Partial'}
+          </div>
+          <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
+            Path difference: {pathDifference.toFixed(3)} m = {(pathDifference / wavelength).toFixed(2)} wavelengths
+          </div>
+          <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
+            {isDestructive
+              ? 'Waves arrive out of phase and cancel!'
+              : isConstructive
+              ? 'Waves arrive in phase and add!'
+              : 'Waves partially cancel'}
+          </div>
         </div>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          Path difference: {pathDifference.toFixed(3)} m = {(pathDifference / wavelength).toFixed(2)} wavelengths
-        </div>
-        <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
-          {isDestructive
-            ? 'Waves arrive out of phase and cancel!'
-            : isConstructive
-            ? 'Waves arrive in phase and add!'
-            : 'Waves partially cancel'}
+
+        <div style={{
+          flex: 1, minWidth: '140px',
+          background: colors.bgCard,
+          padding: '12px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.speaker}`,
+        }}>
+          <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
+            Reference baseline
+          </div>
+          <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
+            Formula: lambda = v / f = {speedOfSound} / {frequency} = {wavelength.toFixed(2)} m
+          </div>
+          <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
+            Destructive at delta d = (n+1/2) x lambda
+          </div>
         </div>
       </div>
 
@@ -913,55 +976,108 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
+  const renderNavBar = (showBack: boolean, canProceed: boolean, buttonText: string, disabled?: boolean) => (
+    <nav
+      aria-label="Game navigation"
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 24px',
+        background: colors.bgDark,
+        borderTop: `1px solid rgba(255,255,255,0.1)`,
+        display: 'flex',
+        justifyContent: showBack ? 'space-between' : 'flex-end',
+        alignItems: 'center',
+        zIndex: 1001,
+      }}
+    >
+      {showBack && (
+        <button
+          onClick={() => {
+            const idx = VALID_PHASES.indexOf(currentPhase);
+            if (idx > 0) setInternalPhase(VALID_PHASES[idx - 1]);
+          }}
+          aria-label="Go back"
+          style={{
+            padding: '12px 24px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`,
+            background: 'transparent',
+            color: colors.textSecondary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            fontSize: '16px',
+            transition: 'all 0.3s ease',
+          }}
+        >
+          Back
+        </button>
+      )}
       <button
-        onClick={onPhaseComplete}
+        onClick={advancePhase}
         disabled={disabled && !canProceed}
+        aria-label={buttonText}
         style={{
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)` : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : colors.textMuted,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
+          transition: 'all 0.3s ease',
+          boxShadow: canProceed ? '0 4px 15px rgba(139, 92, 246, 0.4)' : 'none',
         }}
       >
         {buttonText}
       </button>
-    </div>
+    </nav>
+  );
+
+  // Review phase visualization - a simple SVG diagram of interference concept
+  const renderReviewDiagram = () => (
+    <svg width="100%" height="160" viewBox="0 0 400 160" style={{ maxWidth: '450px', margin: '0 auto', display: 'block' }}>
+      <defs>
+        <linearGradient id="sintfReviewGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#10b981" />
+          <stop offset="50%" stopColor="#8b5cf6" />
+          <stop offset="100%" stopColor="#ef4444" />
+        </linearGradient>
+      </defs>
+      <rect width="400" height="160" rx="8" fill="#0f172a" />
+      {/* Constructive wave */}
+      <path d="M 20 40 L 40 25 L 60 40 L 80 55 L 100 40 L 120 25 L 140 40 L 160 55 L 180 40 L 200 25 L 220 40 L 240 55 L 260 40 L 280 25 L 300 40 L 320 55 L 340 40 L 360 25 L 380 40" fill="none" stroke="#10b981" strokeWidth="2" />
+      {/* Destructive wave */}
+      <path d="M 20 120 L 40 105 L 60 120 L 80 135 L 100 120 L 120 135 L 140 120 L 160 105 L 180 120 L 200 135 L 220 120 L 240 105 L 260 120 L 280 135 L 300 120 L 320 105 L 340 120 L 360 135 L 380 120" fill="none" stroke="#ef4444" strokeWidth="2" />
+      <text x="200" y="18" textAnchor="middle" fill="#10b981" fontSize="12" fontWeight="bold">Constructive (in phase)</text>
+      <text x="200" y="80" textAnchor="middle" fill="#94a3b8" fontSize="11">delta d = n x lambda</text>
+      <text x="200" y="98" textAnchor="middle" fill="#94a3b8" fontSize="11">delta d = (n+1/2) x lambda</text>
+      <text x="200" y="152" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">Destructive (out of phase)</text>
+    </svg>
   );
 
   // HOOK PHASE
-  if (phase === 'hook') {
+  if (currentPhase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ padding: '24px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Sound Dead Spots
             </h1>
             <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Can two loud speakers make silence in certain spots?
+              Can two loud speakers make silence in certain spots? Let's discover how waves work!
             </p>
           </div>
 
           {renderVisualization(true)}
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ padding: '24px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: colors.bgCard,
               padding: '20px',
@@ -990,16 +1106,16 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderNavBar(false, true, 'Start Exploring')}
       </div>
     );
   }
 
   // PREDICT PHASE
-  if (phase === 'predict') {
+  if (currentPhase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1007,6 +1123,9 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            maxWidth: '600px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
           }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
@@ -1016,9 +1135,9 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
+          <div style={{ padding: '0 16px 16px 16px', maxWidth: '600px', margin: '0 auto' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              When two speakers play the same tone, what do you expect to hear as you walk sideways?
+              What do you predict will happen as you walk sideways between two speakers?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {predictions.map((p) => (
@@ -1027,6 +1146,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
@@ -1034,6 +1154,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   {p.label}
@@ -1042,20 +1163,23 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderNavBar(true, !!prediction, 'Continue')}
       </div>
     );
   }
 
   // PLAY PHASE
-  if (phase === 'play') {
+  if (currentPhase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Sound Interference</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Drag the listener and adjust controls to find dead spots
+              Drag the listener and adjust controls to find dead spots.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
+              Observe how the interference pattern changes as you adjust the frequency and speaker separation.
             </p>
           </div>
 
@@ -1067,6 +1191,9 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            maxWidth: '600px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
           }}>
             <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
@@ -1077,24 +1204,27 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderNavBar(false, true, 'Continue to Review')}
       </div>
     );
   }
 
   // REVIEW PHASE
-  if (phase === 'review') {
+  if (currentPhase === 'review') {
     const wasCorrect = prediction === 'dead_spots';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            maxWidth: '600px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
@@ -1104,11 +1234,16 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </p>
           </div>
 
+          {renderReviewDiagram()}
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
+            maxWidth: '600px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
           }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Sound Interference</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
@@ -1132,27 +1267,27 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                 marginTop: '12px',
                 fontFamily: 'monospace',
               }}>
-                <div>Constructive: Delta d = n times lambda (n = 0, 1, 2...)</div>
-                <div>Destructive: Delta d = (n + 1/2) times lambda</div>
-                <div>Wavelength: lambda = v / f = {speedOfSound} / f</div>
+                <div>Constructive: delta d = n x lambda (n = 0, 1, 2...)</div>
+                <div>Destructive: delta d = (n + 1/2) x lambda</div>
+                <div>lambda = v / f = {speedOfSound} / f</div>
               </div>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderNavBar(false, true, 'Next: A Twist!')}
       </div>
     );
   }
 
   // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
+  if (currentPhase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
-              What happens when you change the frequency?
+              What do you predict will happen when you change the frequency?
             </p>
           </div>
 
@@ -1163,6 +1298,9 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            maxWidth: '600px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
           }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
@@ -1171,7 +1309,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
+          <div style={{ padding: '0 16px 16px 16px', maxWidth: '600px', margin: '0 auto' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
               When frequency increases, what happens to the dead spots?
             </h3>
@@ -1182,6 +1320,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1189,6 +1328,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   {p.label}
@@ -1197,20 +1337,23 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderNavBar(true, !!twistPrediction, 'Continue')}
       </div>
     );
   }
 
   // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
+  if (currentPhase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Frequency Changes</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Change the frequency and watch the interference pattern shift
+              Change the frequency and watch the interference pattern shift.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
+              Observe how higher frequencies create more closely-spaced interference stripes.
             </p>
           </div>
 
@@ -1223,6 +1366,9 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
             borderLeft: `3px solid ${colors.warning}`,
+            maxWidth: '600px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
           }}>
             <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1232,24 +1378,27 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderNavBar(false, true, 'Continue')}
       </div>
     );
   }
 
   // TWIST REVIEW PHASE
-  if (phase === 'twist_review') {
+  if (currentPhase === 'twist_review') {
     const wasCorrect = twistPrediction === 'move';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            maxWidth: '600px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
@@ -1259,11 +1408,16 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </p>
           </div>
 
+          {renderReviewDiagram()}
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
+            maxWidth: '600px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
           }}>
             <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Frequency Changes the Pattern</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
@@ -1285,17 +1439,17 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderNavBar(false, true, 'Continue')}
       </div>
     );
   }
 
   // TRANSFER PHASE
-  if (phase === 'transfer') {
+  if (currentPhase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
@@ -1303,7 +1457,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
               Wave interference appears in acoustics, electronics, and communication
             </p>
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+              Complete all 4 applications to unlock the test ({transferCompleted.size} of 4 done)
             </p>
           </div>
 
@@ -1316,6 +1470,9 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
                 padding: '16px',
                 borderRadius: '12px',
                 border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                maxWidth: '600px',
+                marginLeft: 'auto',
+                marginRight: 'auto',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -1329,35 +1486,46 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                  style={{ padding: '8px 16px', minHeight: '44px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s ease' }}
                 >
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
                   <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
                 </div>
+              )}
+              {transferCompleted.has(index) && (
+                <button
+                  onClick={() => {}}
+                  style={{ padding: '8px 16px', minHeight: '44px', borderRadius: '6px', border: 'none', background: `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`, color: 'white', cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s ease' }}
+                >
+                  Got It
+                </button>
               )}
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderNavBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Continue')}
       </div>
     );
   }
 
   // TEST PHASE
-  if (phase === 'test') {
+  if (currentPhase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
               padding: '24px',
               borderRadius: '12px',
               textAlign: 'center',
+              maxWidth: '600px',
+              marginLeft: 'auto',
+              marginRight: 'auto',
             }}>
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
                 {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
@@ -1371,7 +1539,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`, maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto' }}>
                   <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
@@ -1382,19 +1550,19 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderNavBar(false, testScore >= 8, testScore >= 8 ? 'Continue' : 'Review & Retry')}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1406,18 +1574,18 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', minHeight: '44px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', transition: 'all 0.2s ease' }}>
                   {opt.text}
                 </button>
               ))}
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease' }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)`, color: 'white', cursor: 'pointer', transition: 'all 0.2s ease' }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease' }}>Submit Test</button>
             )}
           </div>
         </div>
@@ -1426,16 +1594,16 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
   }
 
   // MASTERY PHASE
-  if (phase === 'mastery') {
+  if (currentPhase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ padding: '24px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered sound wave interference</p>
           </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto' }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
             <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Path difference determines interference type</li>
@@ -1445,7 +1613,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
               <li>Higher frequency = shorter wavelength = tighter stripe pattern</li>
             </ul>
           </div>
-          <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto' }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
               The same physics applies to light! Young's double-slit experiment demonstrated that light
@@ -1456,12 +1624,26 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderNavBar(false, true, 'Complete Game')}
       </div>
     );
   }
 
-  return null;
+  // Fallback - should never reach here since we validate phase above, but just in case
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ padding: '24px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            Sound Dead Spots
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            Explore how sound waves interfere!
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default SoundInterferenceRenderer;

@@ -54,7 +54,7 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 
 const colors = {
   textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
+  textSecondary: '#cbd5e1',
   textMuted: '#94a3b8',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
@@ -399,6 +399,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // Visualization component
@@ -482,9 +483,9 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
             <stop offset="100%" stopColor="#10b981" />
           </linearGradient>
           <linearGradient id="itopSilverTrace" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="0%" stopColor="#cbd5e1" />
             <stop offset="50%" stopColor="#e2e8f0" />
-            <stop offset="100%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#cbd5e1" />
           </linearGradient>
           <linearGradient id="itopCopperTrace" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#f59e0b" />
@@ -689,6 +690,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                 cursor: 'pointer',
                 fontWeight: 'bold',
                 fontSize: '12px',
+                minHeight: '44px',
               }}
             >
               {t}
@@ -757,6 +759,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
           background: showDataFlow ? colors.accent : 'rgba(255,255,255,0.1)',
           color: 'white',
           cursor: 'pointer',
+          minHeight: '44px',
         }}
       >
         {showDataFlow ? 'Hide Data Flow' : 'Show Data Flow'}
@@ -768,15 +771,37 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
   const renderProgressBar = () => {
     const currentIdx = phaseOrder.indexOf(phase);
     return (
-      <div style={{
+      <nav style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         padding: '12px 16px',
         borderBottom: `1px solid rgba(255,255,255,0.1)`,
         backgroundColor: colors.bgDark,
-        gap: '16px'
       }}>
+        <button
+          onClick={() => currentIdx > 0 && goBack()}
+          disabled={currentIdx === 0}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: currentIdx > 0 ? colors.textSecondary : 'transparent',
+            cursor: currentIdx > 0 ? 'pointer' : 'default',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: 600,
+            minHeight: '44px',
+            minWidth: '70px',
+          }}
+        >
+          Back
+        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ display: 'flex', gap: '6px' }}>
             {phaseOrder.map((p, i) => (
@@ -809,7 +834,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
         }}>
           {phaseLabels[phase]}
         </div>
-      </div>
+      </nav>
     );
   };
 
@@ -851,7 +876,9 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '70px',
         textAlign: 'center',
+        overflowY: 'auto' as const,
       }}>
         {renderProgressBar()}
 
@@ -905,6 +932,89 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
     );
   }
 
+  // Static visualization for predict phase
+  const renderStaticVisualization = () => {
+    const width = isMobile ? 340 : 500;
+    const height = isMobile ? 280 : 320;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = isMobile ? 80 : 100;
+    const staticNodes = 8;
+
+    const nodePositions: { x: number; y: number }[] = [];
+    for (let i = 0; i < staticNodes; i++) {
+      const angle = (2 * Math.PI * i) / staticNodes - Math.PI / 2;
+      nodePositions.push({
+        x: centerX + radius * Math.cos(angle),
+        y: centerY + radius * Math.sin(angle),
+      });
+    }
+
+    return (
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        style={{ borderRadius: '12px' }}
+        role="img"
+        aria-label="8 GPUs needing to share gradient data"
+      >
+        <defs>
+          <radialGradient id="staticDieGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="1" />
+            <stop offset="70%" stopColor="#1d4ed8" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#1e40af" stopOpacity="0.3" />
+          </radialGradient>
+        </defs>
+        <rect width={width} height={height} fill="#030712" />
+        <text x={width / 2} y={28} textAnchor="middle" fill={colors.textPrimary} fontSize={16} fontWeight="bold">
+          8 GPUs Need to Share Data
+        </text>
+        <text x={width / 2} y={48} textAnchor="middle" fill={colors.textSecondary} fontSize={12}>
+          How should they communicate?
+        </text>
+        {nodePositions.map((pos, i) => {
+          const chipSize = isMobile ? 28 : 32;
+          return (
+            <g key={`static-node-${i}`}>
+              <rect
+                x={pos.x - chipSize / 2}
+                y={pos.y - chipSize / 2}
+                width={chipSize}
+                height={chipSize}
+                rx={4}
+                fill="#1e293b"
+                stroke="#475569"
+                strokeWidth={1}
+              />
+              <rect
+                x={pos.x - chipSize / 3}
+                y={pos.y - chipSize / 3}
+                width={chipSize * 2 / 3}
+                height={chipSize * 2 / 3}
+                rx={2}
+                fill="url(#staticDieGlow)"
+              />
+              <text
+                x={pos.x}
+                y={pos.y + chipSize / 2 + 14}
+                textAnchor="middle"
+                fill={colors.textSecondary}
+                fontSize={10}
+                fontWeight="bold"
+              >
+                GPU {i}
+              </text>
+            </g>
+          );
+        })}
+        <text x={width / 2} y={height - 20} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
+          Each GPU has 700MB of gradient data
+        </text>
+      </svg>
+    );
+  };
+
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
@@ -918,11 +1028,16 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '70px',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          maxWidth: '700px',
+          margin: '0 auto',
+          padding: '24px',
+          overflowY: 'auto' as const,
+        }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -931,7 +1046,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
+              Step 1 of 2: Make Your Prediction
             </p>
           </div>
 
@@ -946,7 +1061,8 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
+            {renderStaticVisualization()}
+            <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '16px' }}>
               Each GPU has 700MB of gradient data. They all need to end up with the average of everyone's gradients.
             </p>
             <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
@@ -969,6 +1085,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{ color: colors.textPrimary, ...typo.body }}>
@@ -1016,17 +1133,44 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '70px',
+        overflowY: 'auto' as const,
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Topology Explorer Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Experiment with different topologies and observe their trade-offs.
           </p>
+          <div style={{
+            background: `${colors.accent}15`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}33`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> When you increase the number of nodes, latency steps grow differently for each topology. As you change from Ring to Tree, notice how the trade-off shifts between bandwidth and latency.
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginTop: 0, marginBottom: '12px' }}>Key Definitions</h4>
+            <ul style={{ color: colors.textSecondary, paddingLeft: '20px', margin: 0, lineHeight: 1.8, fontSize: '14px' }}>
+              <li><strong style={{ color: colors.textPrimary }}>Latency</strong> is defined as the time delay for data to travel from source to destination, measured in network hops or steps.</li>
+              <li><strong style={{ color: colors.textPrimary }}>Bandwidth Efficiency</strong> is the ratio of actual data throughput to theoretical maximum capacity.</li>
+              <li><strong style={{ color: colors.textPrimary }}>Scalability</strong> describes how performance changes as N (number of nodes) increases.</li>
+            </ul>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1055,6 +1199,21 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
             </ul>
           </div>
 
+          <div style={{
+            background: `${colors.warning}11`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}33`,
+          }}>
+            <h4 style={{ color: colors.warning, marginTop: 0, marginBottom: '8px' }}>Why This Matters in the Real World</h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Data center engineers must choose the right topology when designing GPU clusters for AI training.
+              The wrong choice can make training 10x slower or cost millions more in networking equipment.
+              This is why understanding topology trade-offs is essential for anyone building large-scale AI systems.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); goNext(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
@@ -1074,14 +1233,29 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '70px',
+        overflowY: 'auto' as const,
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Understanding Network Topologies
           </h2>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}33`,
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              {prediction === 'ring'
+                ? "Your prediction was correct! Ring all-reduce is indeed the most bandwidth-efficient approach."
+                : "As you observed in the experiment, ring all-reduce turned out to be the bandwidth-optimal solution."}
+            </p>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', borderLeft: `4px solid ${colors.ring}` }}>
@@ -1127,6 +1301,16 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                 This matches the algorithm to the physical network at each level.
               </p>
             </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}`, marginTop: '16px' }}>
+              <h3 style={{ color: colors.warning, marginTop: 0, marginBottom: '12px' }}>Mathematical Relationships</h3>
+              <div style={{ fontFamily: 'monospace', color: colors.textPrimary, fontSize: '14px', lineHeight: 2 }}>
+                <p style={{ margin: '8px 0' }}>Ring Latency = O(N) steps</p>
+                <p style={{ margin: '8px 0' }}>Tree Latency = O(log N) steps</p>
+                <p style={{ margin: '8px 0' }}>Full Mesh Links = N × (N-1) / 2</p>
+                <p style={{ margin: '8px 0' }}>Bandwidth Efficiency ∝ 1 / Bottleneck Factor</p>
+              </div>
+            </div>
           </div>
 
           <button
@@ -1155,11 +1339,12 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '70px',
+        overflowY: 'auto' as const,
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1168,7 +1353,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              The Twist: Topology Depends on Scale
+              Step 1 of 2: The Twist - Topology Depends on Scale
             </p>
           </div>
 
@@ -1182,6 +1367,41 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ marginBottom: '16px' }}>
+              <defs>
+                <linearGradient id="twistGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={colors.success} />
+                  <stop offset="100%" stopColor={colors.warning} />
+                </linearGradient>
+              </defs>
+              <rect width="400" height="200" fill="#030712" rx="8" />
+              <text x="100" y="30" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Single Machine</text>
+              <text x="300" y="30" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Data Center</text>
+              {/* 8 GPUs in ring */}
+              {[0,1,2,3,4,5,6,7].map(i => {
+                const angle = (2 * Math.PI * i) / 8 - Math.PI / 2;
+                const x = 100 + 50 * Math.cos(angle);
+                const y = 110 + 50 * Math.sin(angle);
+                return <rect key={`small-${i}`} x={x-8} y={y-8} width="16" height="16" rx="2" fill={colors.gpu} />;
+              })}
+              <circle cx="100" cy="110" r="55" fill="none" stroke={colors.success} strokeWidth="2" strokeDasharray="4,2" />
+              <text x="100" y="180" textAnchor="middle" fill={colors.success} fontSize="11">900 GB/s NVLink</text>
+              {/* 8000 GPUs in tree */}
+              <rect x="260" y="55" width="80" height="20" rx="4" fill={colors.warning} opacity="0.5" />
+              <rect x="250" y="90" width="40" height="15" rx="3" fill={colors.warning} opacity="0.4" />
+              <rect x="310" y="90" width="40" height="15" rx="3" fill={colors.warning} opacity="0.4" />
+              <rect x="240" y="120" width="20" height="12" rx="2" fill={colors.gpu} />
+              <rect x="270" y="120" width="20" height="12" rx="2" fill={colors.gpu} />
+              <rect x="310" y="120" width="20" height="12" rx="2" fill={colors.gpu} />
+              <rect x="340" y="120" width="20" height="12" rx="2" fill={colors.gpu} />
+              <line x1="300" y1="75" x2="270" y2="90" stroke={colors.warning} strokeWidth="2" />
+              <line x1="300" y1="75" x2="330" y2="90" stroke={colors.warning} strokeWidth="2" />
+              <line x1="270" y1="105" x2="250" y2="120" stroke={colors.warning} strokeWidth="1" />
+              <line x1="270" y1="105" x2="280" y2="120" stroke={colors.warning} strokeWidth="1" />
+              <line x1="330" y1="105" x2="320" y2="120" stroke={colors.warning} strokeWidth="1" />
+              <line x1="330" y1="105" x2="350" y2="120" stroke={colors.warning} strokeWidth="1" />
+              <text x="300" y="180" textAnchor="middle" fill={colors.warning} fontSize="11">400 Gb/s InfiniBand</text>
+            </svg>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', textAlign: 'center' }}>
               <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px' }}>
                 <div style={{ fontSize: '32px', marginBottom: '8px' }}>8 GPUs</div>
@@ -1211,6 +1431,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{ color: colors.textPrimary, ...typo.body }}>
@@ -1258,17 +1479,29 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '70px',
+        overflowY: 'auto' as const,
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '8px', textAlign: 'center' }}>
             Scale-Dependent Topology Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             See how topology choice changes with scale
           </p>
+          <div style={{
+            background: `${colors.warning}15`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}33`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.warning }}>Observe:</strong> Increase the number of nodes to 16 and compare Ring vs Fat Tree topologies. Notice how latency steps scale differently.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1338,11 +1571,12 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '70px',
+        overflowY: 'auto' as const,
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '24px', textAlign: 'center' }}>
             Topology Determines Training Speed at Scale
           </h2>
@@ -1401,19 +1635,24 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '70px',
+        overflowY: 'auto' as const,
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} explored)
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1440,6 +1679,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1504,6 +1744,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1518,6 +1759,55 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                 </div>
               ))}
             </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600, marginTop: 0 }}>
+                Industry Examples:
+              </h4>
+              <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px', lineHeight: 1.6 }}>
+                {app.examples.map((example, i) => (
+                  <li key={i}>{example}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{
+              background: `${app.color}15`,
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              border: `1px solid ${app.color}33`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: app.color }}>Future Impact:</strong> {app.futureImpact}
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                  newCompleted[selectedApp + 1] = true;
+                  setCompletedApps(newCompleted);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                background: `linear-gradient(135deg, ${app.color}, ${app.color}dd)`,
+              }}
+            >
+              {!completedApps[selectedApp] ? 'Got It' : selectedApp < realWorldApps.length - 1 ? 'Next Application' : 'Got It'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1543,11 +1833,12 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          paddingTop: '70px',
+          overflowY: 'auto' as const,
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1599,11 +1890,15 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '70px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
+        overflowY: 'auto' as const,
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1666,6 +1961,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1703,6 +1999,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Previous
@@ -1721,6 +2018,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next
@@ -1746,6 +2044,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1840,6 +2139,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
               background: 'transparent',
               color: colors.textSecondary,
               cursor: 'pointer',
+              minHeight: '44px',
             }}
           >
             Play Again

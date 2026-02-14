@@ -308,8 +308,8 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#94a3b8', // Slate-400 for secondary text
+    textMuted: '#64748b', // Slate-500 for muted text
     border: '#2a2a3a',
   };
 
@@ -329,7 +329,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Frequency Lab',
+    twist_play: 'Explore Frequency',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -411,44 +411,60 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
     const bwRadius = maxRadius * 0.5;
 
     return (
-      <svg width={size} height={size} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        {/* Grid circles */}
-        {[0.25, 0.5, 0.75, 1].map((frac, i) => (
-          <circle
-            key={i}
-            cx={centerX}
-            cy={centerY}
-            r={maxRadius * frac}
-            fill="none"
-            stroke={colors.border}
-            strokeDasharray="3,3"
-          />
-        ))}
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          {/* Gradient for radiation pattern */}
+          <radialGradient id="patternGradient" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="0.2" />
+          </radialGradient>
+          {/* Linear gradient for main beam */}
+          <linearGradient id="beamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={colors.success} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={colors.success} stopOpacity="0.1" />
+          </linearGradient>
+          {/* Glow filter for depth */}
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          {/* Drop shadow filter */}
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="2" stdDeviation="2" floodOpacity="0.3"/>
+          </filter>
+          {/* Arrow marker */}
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill={colors.warning} />
+          </marker>
+        </defs>
 
-        {/* Grid labels */}
-        {[0, -10, -20, -30].map((db, i) => (
-          <text
-            key={i}
-            x={centerX + 5}
-            y={centerY - maxRadius * (1 - i * 0.33) + 4}
-            fill={colors.textMuted}
-            fontSize="10"
-          >
-            {db} dB
-          </text>
-        ))}
+        {/* Background layer group */}
+        <g id="background-layer">
+          <circle cx={centerX} cy={centerY} r={maxRadius * 0.3} fill={colors.accent} opacity="0.1" filter="url(#glow)" />
+        </g>
 
-        {/* Cardinal directions */}
-        {[
-          { angle: 0, label: '0°' },
-          { angle: 90, label: '90°' },
-          { angle: 180, label: '180°' },
-          { angle: -90, label: '-90°' }
-        ].map((dir, i) => {
-          const rad = (dir.angle - 90) * Math.PI / 180;
-          return (
-            <g key={i}>
+        {/* Grid layer group */}
+        <g id="grid-layer">
+          {[0.25, 0.5, 0.75, 1].map((frac, i) => (
+            <circle
+              key={i}
+              cx={centerX}
+              cy={centerY}
+              r={maxRadius * frac}
+              fill="none"
+              stroke={colors.border}
+              strokeDasharray="3,3"
+            />
+          ))}
+          {/* Cardinal direction lines */}
+          {[0, 90, 180, -90].map((dir, i) => {
+            const rad = (dir - 90) * Math.PI / 180;
+            return (
               <line
+                key={i}
                 x1={centerX}
                 y1={centerY}
                 x2={centerX + maxRadius * Math.cos(rad)}
@@ -456,42 +472,44 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 stroke={colors.border}
                 strokeDasharray="3,3"
               />
-              <text
-                x={centerX + (maxRadius + 15) * Math.cos(rad)}
-                y={centerY + (maxRadius + 15) * Math.sin(rad)}
-                fill={colors.textSecondary}
-                fontSize="11"
-                textAnchor="middle"
-                dominantBaseline="middle"
-              >
-                {dir.label}
-              </text>
-            </g>
-          );
-        })}
+            );
+          })}
+        </g>
 
-        {/* Radiation pattern fill */}
-        <path
-          d={patternPath}
-          fill={`${colors.accent}33`}
-          stroke={colors.accent}
-          strokeWidth="2"
-        />
+        {/* Labels layer group */}
+        <g id="labels-layer">
+          <text x={centerX + maxRadius + 5} y={centerY - 5} fill="#e2e8f0" fontSize="9">0 dB</text>
+          <text x={centerX + maxRadius * 0.67 + 5} y={centerY - 5} fill="#e2e8f0" fontSize="9">-10</text>
+          <text x={centerX + maxRadius * 0.33 + 5} y={centerY - 5} fill="#e2e8f0" fontSize="9">-20</text>
+          <text x={centerX} y={18} fill="#e2e8f0" fontSize="11" textAnchor="middle">0 deg</text>
+          <text x={size - 12} y={centerY + 4} fill="#e2e8f0" fontSize="11" textAnchor="end">90</text>
+          <text x={centerX} y={size - 8} fill="#e2e8f0" fontSize="11" textAnchor="middle">180</text>
+          <text x={12} y={centerY + 4} fill="#e2e8f0" fontSize="11" textAnchor="start">-90</text>
+        </g>
 
-        {/* Beamwidth indicator */}
-        {showBeamwidth && beamwidth < 90 && (
+        {/* Pattern layer group */}
+        <g id="pattern-layer">
           <path
-            d={`M ${centerX} ${centerY} L ${centerX + bwRadius * Math.cos(bwStart)} ${centerY + bwRadius * Math.sin(bwStart)} A ${bwRadius} ${bwRadius} 0 0 1 ${centerX + bwRadius * Math.cos(bwEnd)} ${centerY + bwRadius * Math.sin(bwEnd)} Z`}
-            fill={`${colors.success}22`}
-            stroke={colors.success}
-            strokeWidth="1"
-            strokeDasharray="4,2"
+            d={patternPath}
+            fill="url(#patternGradient)"
+            stroke={colors.accent}
+            strokeWidth="2"
+            filter="url(#shadow)"
           />
-        )}
+          {showBeamwidth && beamwidth < 90 && (
+            <path
+              d={`M ${centerX} ${centerY} L ${centerX + bwRadius * Math.cos(bwStart)} ${centerY + bwRadius * Math.sin(bwStart)} A ${bwRadius} ${bwRadius} 0 0 1 ${centerX + bwRadius * Math.cos(bwEnd)} ${centerY + bwRadius * Math.sin(bwEnd)} Z`}
+              fill="url(#beamGradient)"
+              stroke={colors.success}
+              strokeWidth="1"
+              strokeDasharray="4,2"
+            />
+          )}
+        </g>
 
-        {/* Pointing direction arrow */}
-        {interactive && (
-          <g>
+        {/* Interactive layer group */}
+        <g id="interactive-layer">
+          {interactive && (
             <line
               x1={centerX}
               y1={centerY}
@@ -500,71 +518,117 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
               stroke={colors.warning}
               strokeWidth="2"
               markerEnd="url(#arrowhead)"
+              filter="url(#glow)"
             />
-            <defs>
-              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill={colors.warning} />
-              </marker>
-            </defs>
-          </g>
-        )}
+          )}
+        </g>
 
-        {/* Center point */}
-        <circle cx={centerX} cy={centerY} r="4" fill={colors.textPrimary} />
-
-        {/* Antenna icon at center */}
-        <text x={centerX} y={centerY + 2} fontSize="16" textAnchor="middle" dominantBaseline="middle">
-          📡
-        </text>
+        {/* Center marker layer group */}
+        <g id="center-layer">
+          <circle cx={centerX} cy={centerY} r="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" filter="url(#shadow)" />
+          <circle cx={centerX} cy={centerY} r="4" fill={colors.accent} />
+        </g>
       </svg>
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '4px',
-      background: colors.bgSecondary,
-      zIndex: 100,
-    }}>
-      <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
-  );
+  // Navigation bar component - fixed at top with z-index
+  const renderNavBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
 
-  // Navigation dots
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgSecondary,
+        borderBottom: `1px solid ${colors.border}`,
+        zIndex: 1000,
+        padding: '8px 16px',
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          maxWidth: '800px',
+          margin: '0 auto',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {canGoBack && (
+              <button
+                onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  color: '#e2e8f0',
+                  cursor: 'pointer',
+                  minHeight: '44px',
+                  minWidth: '44px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                aria-label="Back"
+              >
+                Back
+              </button>
+            )}
+            <span style={{ ...typo.small, color: '#e2e8f0' }}>
+              {phaseLabels[phase]} ({currentIndex + 1}/{phaseOrder.length})
+            </span>
+          </div>
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+          }}>
+            {phaseOrder.map((p, i) => (
+              <button
+                key={p}
+                onClick={() => goToPhase(p)}
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  minWidth: '12px',
+                  minHeight: '12px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                  cursor: 'pointer',
+                }}
+                aria-label={phaseLabels[p]}
+              />
+            ))}
+          </div>
+        </div>
+        {/* Progress bar */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: colors.bgPrimary,
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${((currentIndex + 1) / phaseOrder.length) * 100}%`,
+            background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+            transition: 'width 0.3s ease',
+          }} />
+        </div>
+      </div>
+    );
+  };
+
+  // Fixed footer spacer (no duplicate nav dots - nav is in header)
   const renderNavDots = () => (
     <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
+      height: '80px', // Spacer for fixed footer content area
+    }} />
   );
 
   // Primary button style
@@ -579,6 +643,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '52px',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -595,10 +660,11 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        padding: '80px 24px 100px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{
           fontSize: '64px',
@@ -619,7 +685,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "A larger antenna doesn't create more power—it <span style={{ color: colors.accent }}>focuses</span> the same power into a narrower beam. That's the secret to reaching across oceans, into space, and through walls."
+          A larger antenna does not create more power - it <span style={{ color: colors.accent }}>focuses</span> the same power into a narrower beam. That is the secret to reaching across oceans, into space, and through walls.
         </p>
 
         <div style={{
@@ -630,11 +696,11 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
           maxWidth: '500px',
           border: `1px solid ${colors.border}`,
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Gain is simply focusing. An antenna with 30 dBi gain concentrates energy 1,000 times more than spreading it equally—like a flashlight versus a bare bulb."
+          <p className="text-secondary" style={{ ...typo.small, color: '#94a3b8', fontStyle: 'italic' }}>
+            Gain is simply focusing. An antenna with 30 dBi gain concentrates energy 1,000 times more than spreading it equally - like a flashlight versus a bare bulb.
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — RF Engineering Principle
+          <p className="text-muted" style={{ ...typo.small, color: '#64748b', marginTop: '8px' }}>
+            - RF Engineering Principle
           </p>
         </div>
 
@@ -642,13 +708,90 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Focus the Beam →
+          Begin Learning
         </button>
 
         {renderNavDots()}
       </div>
     );
   }
+
+  // Static SVG for predict phase
+  const StaticRadiationPatternSVG = () => {
+    const size = isMobile ? 260 : 320;
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const maxRadius = size / 2 - 40;
+
+    // Generate a fixed pattern for 1m antenna at 10GHz
+    const fixedDiameterInWavelengths = 33; // 1m at 10GHz
+    const patternPoints: { x: number; y: number }[] = [];
+    for (let angle = -180; angle <= 180; angle += 2) {
+      const u = Math.PI * fixedDiameterInWavelengths * Math.sin(angle * Math.PI / 180);
+      let patternValue = 1;
+      if (Math.abs(u) >= 0.001) {
+        patternValue = Math.pow(2 * Math.abs(Math.sin(u) / u), 2);
+      }
+      const patternDb = 10 * Math.log10(Math.max(patternValue, 0.001));
+      const normalizedRadius = Math.max(0, (patternDb + 30) / 30) * maxRadius;
+      const angleRad = (angle - 90) * Math.PI / 180;
+      patternPoints.push({
+        x: centerX + normalizedRadius * Math.cos(angleRad),
+        y: centerY + normalizedRadius * Math.sin(angleRad),
+      });
+    }
+    const patternPath = patternPoints.map((pt, i) =>
+      `${i === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`
+    ).join(' ') + ' Z';
+
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <radialGradient id="staticPatternGradient" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="0.2" />
+          </radialGradient>
+          <filter id="staticGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <filter id="staticShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="2" stdDeviation="2" floodOpacity="0.3"/>
+          </filter>
+        </defs>
+        {/* Background group */}
+        <g id="static-background">
+          <circle cx={centerX} cy={centerY} r={maxRadius * 0.3} fill={colors.accent} opacity="0.1" filter="url(#staticGlow)" />
+        </g>
+        {/* Grid group */}
+        <g id="static-grid">
+          {[0.25, 0.5, 0.75, 1].map((frac, i) => (
+            <circle key={i} cx={centerX} cy={centerY} r={maxRadius * frac} fill="none" stroke={colors.border} strokeDasharray="3,3" />
+          ))}
+        </g>
+        {/* Labels group */}
+        <g id="static-labels">
+          <text x={centerX + maxRadius + 5} y={centerY - 5} fill="#e2e8f0" fontSize="9">0 dB</text>
+          <text x={centerX + maxRadius * 0.33 + 5} y={centerY - 5} fill="#e2e8f0" fontSize="9">-20</text>
+          <text x={centerX} y={18} fill="#e2e8f0" fontSize="11" textAnchor="middle">Main Beam (0 deg)</text>
+          <text x={size - 12} y={centerY + 4} fill="#e2e8f0" fontSize="11" textAnchor="end">90</text>
+          <text x={12} y={centerY + 4} fill="#e2e8f0" fontSize="11" textAnchor="start">-90</text>
+        </g>
+        {/* Pattern group */}
+        <g id="static-pattern">
+          <path d={patternPath} fill="url(#staticPatternGradient)" stroke={colors.accent} strokeWidth="2" filter="url(#staticShadow)" />
+        </g>
+        {/* Center group */}
+        <g id="static-center">
+          <circle cx={centerX} cy={centerY} r="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" filter="url(#staticShadow)" />
+          <circle cx={centerX} cy={centerY} r="4" fill={colors.accent} />
+        </g>
+      </svg>
+    );
+  };
 
   // PREDICT PHASE
   if (phase === 'predict') {
@@ -662,11 +805,12 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 100px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -674,16 +818,16 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             border: `1px solid ${colors.accent}44`,
           }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+              Prediction 1 of 2 - Make Your Prediction
             </p>
           </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+          <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '24px' }}>
             Why do larger antennas have higher "gain"? What does gain actually mean?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -691,19 +835,15 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px' }}>📻</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Small Antenna</p>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>Spreads wide</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📡</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Large Dish</p>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>Focused beam?</p>
-              </div>
+            <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '16px' }}>
+              Observe this radiation pattern - notice how energy is distributed
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <StaticRadiationPatternSVG />
             </div>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
+              The blue shape shows signal strength in each direction
+            </p>
           </div>
 
           {/* Options */}
@@ -720,6 +860,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '52px',
                 }}
               >
                 <span style={{
@@ -728,7 +869,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   height: '28px',
                   borderRadius: '50%',
                   background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  color: prediction === opt.id ? 'white' : '#e2e8f0',
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -736,7 +877,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 }}>
                   {opt.id.toUpperCase()}
                 </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                <span style={{ color: '#e2e8f0', ...typo.body }}>
                   {opt.text}
                 </span>
               </button>
@@ -748,7 +889,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test My Prediction →
+              Continue to Experiment
             </button>
           )}
         </div>
@@ -764,17 +905,31 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 100px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '8px', textAlign: 'center' }}>
             Shape the Radiation Pattern
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
             Adjust antenna size to see how the beam narrows and gain increases
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+              What to Watch: Notice how increasing antenna diameter concentrates energy in the main beam direction
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -790,7 +945,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             {/* Antenna diameter slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Antenna Diameter</span>
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>Antenna Diameter</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{antennaDiameter.toFixed(1)}m ({diameterInWavelengths.toFixed(1)} wavelengths)</span>
               </div>
               <input
@@ -800,6 +955,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 step="0.1"
                 value={antennaDiameter}
                 onChange={(e) => setAntennaDiameter(parseFloat(e.target.value))}
+                aria-label="Antenna Diameter"
                 style={{
                   width: '100%',
                   height: '8px',
@@ -813,7 +969,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             {/* Pointing angle slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Look Direction</span>
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>Look Direction</span>
                 <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pointingAngle.toFixed(0)} degrees off-axis</span>
               </div>
               <input
@@ -823,6 +979,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 step="5"
                 value={pointingAngle}
                 onChange={(e) => setPointingAngle(parseFloat(e.target.value))}
+                aria-label="Look Direction"
                 style={{
                   width: '100%',
                   height: '8px',
@@ -873,6 +1030,57 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             </div>
           </div>
 
+          {/* Educational content - cause-effect, definitions, real-world relevance */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '12px', fontWeight: 600 }}>
+              Key Physics Terms
+            </h4>
+            <ul style={{ ...typo.small, color: '#e2e8f0', margin: 0, paddingLeft: '20px' }}>
+              <li style={{ marginBottom: '8px' }}><strong style={{ color: colors.accent }}>Gain</strong> is defined as the ratio of power focused in a direction compared to an isotropic radiator. The formula is: Gain = (pi * D / wavelength)^2 * efficiency</li>
+              <li style={{ marginBottom: '8px' }}><strong style={{ color: colors.accent }}>Beamwidth</strong> is the measure of angular width where antenna gain is within 3dB of its peak</li>
+              <li><strong style={{ color: colors.accent }}>Aperture</strong> refers to the effective area that captures or transmits electromagnetic waves</li>
+            </ul>
+          </div>
+
+          <div style={{
+            background: `${colors.warning}11`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}33`,
+          }}>
+            <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+              Cause and Effect
+            </h4>
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+              When you <strong style={{ color: colors.accent }}>increase antenna diameter</strong>, the aperture area grows with the square of diameter.
+              This causes the beam to <strong style={{ color: colors.accent }}>narrow</strong> and the gain to <strong style={{ color: colors.accent }}>increase quadratically</strong>.
+              Doubling the diameter quadruples the gain (+6 dB).
+            </p>
+          </div>
+
+          <div style={{
+            background: `${colors.success}11`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.success}33`,
+          }}>
+            <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+              Why This Matters in the Real World
+            </h4>
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+              This principle is why satellite dishes are large, why 5G uses massive antenna arrays, and why radar systems need precise aiming.
+              Higher gain means longer range and better signal quality, but requires more precise pointing.
+            </p>
+          </div>
+
           {/* Discovery prompt */}
           {antennaDiameter >= 2 && (
             <div style={{
@@ -883,7 +1091,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+              <p style={{ ...typo.body, color: '#e2e8f0', margin: 0 }}>
                 Notice how the beam gets narrower as the antenna gets larger. The gain increases because energy is concentrated!
               </p>
             </div>
@@ -893,7 +1101,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand Why →
+            Continue to Review
           </button>
         </div>
 
@@ -904,18 +1112,37 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const correctPrediction = prediction === 'b';
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 100px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Antenna Gain
           </h2>
+
+          {/* Connection to prediction */}
+          <div style={{
+            background: correctPrediction ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${correctPrediction ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: '#e2e8f0', margin: 0 }}>
+              {correctPrediction ? (
+                <>As you predicted, bigger antennas focus energy into a narrower beam. You observed this in the experiment - the pattern narrowed as diameter increased!</>
+              ) : (
+                <>You saw in the experiment that larger antennas don't amplify - they focus. As you noticed, the beam got narrower and gain increased because energy is concentrated, not created.</>
+              )}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -927,12 +1154,12 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
               <RadiationPatternVisualization showBeamwidth={true} />
             </div>
 
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
+            <div style={{ ...typo.body, color: '#e2e8f0' }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Gain = Focusing Power</strong>
+                <strong style={{ color: '#e2e8f0' }}>Gain = Focusing Power</strong>
               </p>
               <p style={{ marginBottom: '16px' }}>
-                An <span style={{ color: colors.accent }}>isotropic antenna</span> (theoretical) radiates equally in all directions—like a bare light bulb. Real antennas concentrate energy in certain directions.
+                An <span style={{ color: colors.accent }}>isotropic antenna</span> (theoretical) radiates equally in all directions - like a bare light bulb. Real antennas concentrate energy in certain directions.
               </p>
               <p style={{ marginBottom: '16px' }}>
                 <span style={{ color: colors.accent }}>Gain in dBi</span> compares to this isotropic reference. +10 dBi means 10x power concentration in the main beam.
@@ -953,8 +1180,8 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
               Key Insight
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Antennas don't create power—they <strong>redistribute</strong> it. High gain in one direction means low gain elsewhere. This is the fundamental tradeoff: <span style={{ color: colors.warning }}>coverage vs. gain</span>.
+            <p style={{ ...typo.body, color: '#e2e8f0', margin: 0 }}>
+              Antennas do not create power - they <strong>redistribute</strong> it. High gain in one direction means low gain elsewhere. This is the fundamental tradeoff: <span style={{ color: colors.warning }}>coverage vs. gain</span>.
             </p>
           </div>
 
@@ -962,7 +1189,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore Frequency Effects →
+            Continue to Next Concept
           </button>
         </div>
 
@@ -983,11 +1210,12 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 100px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -995,14 +1223,30 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             border: `1px solid ${colors.warning}44`,
           }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Frequency
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+              Prediction 2 of 2 - New Variable: Frequency
             </p>
           </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+          <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '24px' }}>
             If you double the frequency (keeping antenna size the same), what happens to the radiation pattern?
           </h2>
+
+          {/* Static SVG for twist predict */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '12px' }}>
+              Current pattern at 10 GHz - What will happen at 20 GHz?
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <StaticRadiationPatternSVG />
+            </div>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1016,6 +1260,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '52px',
                 }}
               >
                 <span style={{
@@ -1024,7 +1269,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   height: '28px',
                   borderRadius: '50%',
                   background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  color: twistPrediction === opt.id ? 'white' : '#e2e8f0',
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -1032,7 +1277,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 }}>
                   {opt.id.toUpperCase()}
                 </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                <span style={{ color: '#e2e8f0', ...typo.body }}>
                   {opt.text}
                 </span>
               </button>
@@ -1044,7 +1289,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Frequency Effect →
+              Continue to Experiment
             </button>
           )}
         </div>
@@ -1060,17 +1305,31 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 100px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '8px', textAlign: 'center' }}>
             Frequency & Antenna Size Relationship
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
             Adjust frequency and see how it affects gain and beamwidth
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+              What to Watch: Try changing the frequency - observe how wavelength affects the pattern
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1085,7 +1344,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             {/* Frequency slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Frequency</span>
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>Frequency</span>
                 <span style={{
                   ...typo.small,
                   color: colors.warning,
@@ -1100,6 +1359,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 max="30"
                 value={frequency}
                 onChange={(e) => setFrequency(parseInt(e.target.value))}
+                aria-label="Frequency"
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1108,15 +1368,15 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>1 GHz (30cm)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>30 GHz (1cm)</span>
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>1 GHz (30cm)</span>
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>30 GHz (1cm)</span>
               </div>
             </div>
 
             {/* Antenna size slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Antenna Diameter</span>
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>Antenna Diameter</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{antennaDiameter.toFixed(1)}m</span>
               </div>
               <input
@@ -1126,6 +1386,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 step="0.1"
                 value={antennaDiameter}
                 onChange={(e) => setAntennaDiameter(parseFloat(e.target.value))}
+                aria-label="Antenna Diameter"
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1134,8 +1395,8 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>0.1m</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>3m</span>
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>0.1m</span>
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>3m</span>
               </div>
             </div>
 
@@ -1170,7 +1431,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Physics →
+            Continue to Review
           </button>
         </div>
 
@@ -1185,12 +1446,13 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 100px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '24px', textAlign: 'center' }}>
             The Wavelength Connection
           </h2>
 
@@ -1203,9 +1465,9 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <span style={{ fontSize: '24px' }}>📏</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Size in Wavelengths</h3>
+                <h3 style={{ ...typo.h3, color: '#e2e8f0', margin: 0 }}>Size in Wavelengths</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.body, color: '#e2e8f0', margin: 0 }}>
                 What matters is antenna size <span style={{ color: colors.accent }}>measured in wavelengths</span>, not physical size. A 1m dish at 10 GHz (3cm wavelength) is 33 wavelengths across. At 1 GHz (30cm), it's only 3.3 wavelengths.
               </p>
             </div>
@@ -1218,9 +1480,9 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <span style={{ fontSize: '24px' }}>📐</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Aperture Formula</h3>
+                <h3 style={{ ...typo.h3, color: '#e2e8f0', margin: 0 }}>Aperture Formula</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.body, color: '#e2e8f0', margin: 0 }}>
                 <code style={{ color: colors.warning, background: colors.bgSecondary, padding: '2px 6px', borderRadius: '4px' }}>
                   Gain = (4*pi*A) / wavelength^2
                 </code><br/>
@@ -1238,7 +1500,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 <span style={{ fontSize: '24px' }}>🎯</span>
                 <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>The Tradeoff</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.body, color: '#e2e8f0', margin: 0 }}>
                 <strong>Higher gain = narrower beam = harder to aim.</strong> A 60 dBi antenna might have a 0.1-degree beamwidth—miss by that much and you lose the signal entirely. This is why satellite dishes need precise alignment and tracking systems.
               </p>
             </div>
@@ -1248,7 +1510,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            See Real-World Applications →
+            Continue to Applications
           </button>
         </div>
 
@@ -1261,19 +1523,24 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 100px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} - Explore all to continue
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1300,6 +1567,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '52px',
                 }}
               >
                 {completedApps[i] && (
@@ -1319,7 +1587,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                <div style={{ ...typo.small, color: '#e2e8f0', fontWeight: 500 }}>
                   {a.title.split(' ').slice(0, 2).join(' ')}
                 </div>
               </button>
@@ -1337,12 +1605,12 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
               <span style={{ fontSize: '48px' }}>{app.icon}</span>
               <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <h3 style={{ ...typo.h3, color: '#e2e8f0', margin: 0 }}>{app.title}</h3>
                 <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            <p style={{ ...typo.body, color: '#e2e8f0', marginBottom: '16px' }}>
               {app.description}
             </p>
 
@@ -1355,7 +1623,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How Antenna Gain Matters:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
                 {app.connection}
               </p>
             </div>
@@ -1374,19 +1642,47 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
                   <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  <div style={{ ...typo.small, color: '#e2e8f0' }}>{stat.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
+          {/* Got It button for each app */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              // Auto-advance to next unviewed app or stay
+              if (selectedApp < realWorldApps.length - 1 && !completedApps[selectedApp + 1]) {
+                setSelectedApp(selectedApp + 1);
+              }
+            }}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              marginBottom: '16px',
+              background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+            }}
+          >
+            {completedApps[selectedApp] ? 'Got It - Completed' : 'Got It - Mark as Read'}
+          </button>
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
+              style={{ ...primaryButtonStyle, width: '100%', background: `linear-gradient(135deg, ${colors.success}, #059669)` }}
             >
-              Take the Knowledge Test →
+              Continue to Knowledge Test
             </button>
+          )}
+
+          {!allAppsCompleted && (
+            <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center' }}>
+              {completedCount} of {realWorldApps.length} applications viewed
+            </p>
           )}
         </div>
 
@@ -1403,11 +1699,12 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          padding: '80px 24px 100px',
+          overflowY: 'auto',
         }}>
-          {renderProgressBar()}
+          {renderNavBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1417,10 +1714,10 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
             </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+            <p style={{ ...typo.h1, color: '#e2e8f0', margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: '#e2e8f0', marginBottom: '32px' }}>
               {passed
                 ? 'You\'ve mastered Antenna Gain and Radiation Patterns!'
                 : 'Review the concepts and try again.'}
@@ -1431,7 +1728,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 onClick={() => { playSound('complete'); nextPhase(); }}
                 style={primaryButtonStyle}
               >
-                Complete Lesson →
+                Continue to Completion
               </button>
             ) : (
               <button
@@ -1459,11 +1756,12 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        padding: '80px 24px 100px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1471,8 +1769,8 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             alignItems: 'center',
             marginBottom: '24px',
           }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
+            <span style={{ ...typo.h3, color: '#e2e8f0' }}>
+              Q{currentQuestion + 1}: Question {currentQuestion + 1} of 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
@@ -1498,13 +1796,13 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             marginBottom: '16px',
             borderLeft: `3px solid ${colors.accent}`,
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
               {question.scenario}
             </p>
           </div>
 
           {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+          <h3 style={{ ...typo.h3, color: '#e2e8f0', marginBottom: '20px' }}>
             {question.question}
           </h3>
 
@@ -1526,6 +1824,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '52px',
                 }}
               >
                 <span style={{
@@ -1534,7 +1833,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   height: '24px',
                   borderRadius: '50%',
                   background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : '#e2e8f0',
                   textAlign: 'center',
                   lineHeight: '24px',
                   marginRight: '10px',
@@ -1543,7 +1842,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 }}>
                   {opt.id.toUpperCase()}
                 </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                <span style={{ color: '#e2e8f0', ...typo.small }}>
                   {opt.label}
                 </span>
               </button>
@@ -1561,8 +1860,9 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   borderRadius: '10px',
                   border: `1px solid ${colors.border}`,
                   background: 'transparent',
-                  color: colors.textSecondary,
+                  color: '#e2e8f0',
                   cursor: 'pointer',
+                  minHeight: '52px',
                 }}
               >
                 Previous
@@ -1581,9 +1881,10 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '52px',
                 }}
               >
-                Next
+                Next Question
               </button>
             ) : (
               <button
@@ -1606,6 +1907,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '52px',
                 }}
               >
                 Submit Test
@@ -1629,10 +1931,11 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        padding: '80px 24px 100px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{
           fontSize: '100px',
@@ -1647,7 +1950,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
           Antenna Gain Expert!
         </h1>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+        <p style={{ ...typo.body, color: '#e2e8f0', maxWidth: '500px', marginBottom: '32px' }}>
           You now understand how antennas focus electromagnetic energy and why gain is fundamental to all wireless systems.
         </p>
 
@@ -1658,7 +1961,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
           marginBottom: '32px',
           maxWidth: '400px',
         }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+          <h3 style={{ ...typo.h3, color: '#e2e8f0', marginBottom: '16px' }}>
             You Learned:
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
@@ -1672,7 +1975,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>+</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>{item}</span>
               </div>
             ))}
           </div>
@@ -1686,8 +1989,9 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
               borderRadius: '10px',
               border: `1px solid ${colors.border}`,
               background: 'transparent',
-              color: colors.textSecondary,
+              color: '#e2e8f0',
               cursor: 'pointer',
+              minHeight: '52px',
             }}
           >
             Play Again
@@ -1697,7 +2001,8 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             style={{
               ...primaryButtonStyle,
               textDecoration: 'none',
-              display: 'inline-block',
+              display: 'inline-flex',
+              alignItems: 'center',
             }}
           >
             Return to Dashboard

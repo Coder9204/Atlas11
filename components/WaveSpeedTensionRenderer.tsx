@@ -676,7 +676,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
           <button
             onClick={() => goToPhase('predict')}
             className="px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all"
-            style={{ zIndex: 10 }}
+            style={{ zIndex: 10, minHeight: '44px' }}
           >
             Start Experiment
           </button>
@@ -720,7 +720,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'border-amber-500 bg-amber-500/10 text-white'
                       : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
                   }`}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                 >
                   <span className="text-2xl">{opt.icon}</span>
                   <div>
@@ -747,9 +747,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
               >
-                Test It →
+                Test It
               </button>
             </div>
           </div>
@@ -783,9 +783,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
                       : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
                   }`}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                 >
-                  {isPulseSent ? '🏃 Traveling...' : '🎯 Send Pulse'}
+                  {isPulseSent ? 'Traveling...' : 'Send Pulse'}
                 </button>
               </div>
 
@@ -823,9 +823,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                 >
-                  Understand Why →
+                  Understand Why
                 </button>
               </div>
             </div>
@@ -880,9 +880,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               <button
                 onClick={() => goToPhase('twist_predict')}
                 className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg shadow-amber-500/30"
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
               >
-                Explore Mass Effect →
+                Explore Mass Effect
               </button>
             </div>
           </div>
@@ -922,7 +922,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'border-violet-500 bg-violet-500/10 text-white'
                       : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
                   }`}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                 >
                   <span className="text-2xl">{opt.icon}</span>
                   <div>
@@ -949,9 +949,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     ? 'bg-gradient-to-r from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/30'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
               >
-                Test Your Prediction →
+                Test Your Prediction
               </button>
             </div>
           </div>
@@ -985,9 +985,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
                       : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
                   }`}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                 >
-                  {isPulseSent ? '🏃 Traveling...' : '🎯 Send Pulse'}
+                  {isPulseSent ? 'Traveling...' : 'Send Pulse'}
                 </button>
               </div>
 
@@ -1025,9 +1025,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                 >
-                  See the Full Picture →
+                  See the Full Picture
                 </button>
               </div>
             </div>
@@ -1079,9 +1079,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               <button
                 onClick={() => goToPhase('transfer')}
                 className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg shadow-amber-500/30"
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
               >
-                Real-World Applications →
+                Real-World Applications
               </button>
             </div>
           </div>
@@ -1183,9 +1183,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     emitEvent('app_explored', { app: app.title });
                   }}
                   className="w-full py-4 rounded-xl bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 font-semibold text-lg"
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                 >
-                  ✓ Mark "{app.title}" as Read
+                  Got It
                 </button>
               ) : (
                 activeApp < applications.length - 1 ? (
@@ -1197,13 +1197,13 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       setActiveApp(activeApp + 1);
                     }}
                     className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-lg"
-                    style={{ zIndex: 10 }}
+                    style={{ zIndex: 10, minHeight: '44px' }}
                   >
-                    Next Application →
+                    Next Application
                   </button>
                 ) : (
                   <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center">
-                    <span className="text-emerald-400 font-semibold">✓ Completed</span>
+                    <span className="text-emerald-400 font-semibold">Completed</span>
                   </div>
                 )
               )}
@@ -1215,18 +1215,18 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               {allAppsCompleted ? (
                 <div className="text-center">
                   <div className="mb-3 text-emerald-400 font-semibold">
-                    ✓ All {applications.length} applications read!
+                    All {applications.length} applications read!
                   </div>
                   <button
                     onClick={() => goToPhase('test')}
                     className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30"
-                    style={{ zIndex: 10 }}
+                    style={{ zIndex: 10, minHeight: '44px' }}
                   >
-                    Take the Test →
+                    Take the Test
                   </button>
                 </div>
               ) : (
-                <div className="text-center py-3 px-4 rounded-xl bg-slate-800 text-slate-500">
+                <div style={{ color: '#e2e8f0' }} className="text-center py-3 px-4 rounded-xl bg-slate-800">
                   Read all {applications.length} applications to unlock the test ({completedApps.size}/{applications.length} completed)
                 </div>
               )}
@@ -1274,7 +1274,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 }
               }}
               className="px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30"
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
             >
               {passed ? 'Complete Lesson' : 'Try Again'}
             </button>
@@ -1327,7 +1327,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'border-amber-500 bg-amber-500/10 text-white'
                       : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
                   }`}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                 >
                   {opt.text}
                 </button>
@@ -1342,9 +1342,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               className={`px-6 py-3 rounded-xl font-bold transition-all ${
                 testIndex === 0 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
             >
-              ← Previous
+              Previous
             </button>
 
             {testIndex < testQuestions.length - 1 ? (
@@ -1462,9 +1462,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/3 rounded-full blur-3xl" />
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }} className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Wave Speed & Tension</span>
+          <span style={{ color: '#e2e8f0' }} className="text-sm font-semibold tracking-wide">Wave Speed & Tension</span>
           <div className="flex items-center gap-1.5">
             {phaseOrder.map((p) => (
               <button
@@ -1478,13 +1478,13 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px', minWidth: '44px' }}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-amber-400">{phaseLabels[phase]}</span>
+          <span style={{ color: '#e2e8f0' }} className="text-sm font-medium">{phaseLabels[phase]}</span>
         </div>
-      </div>
+      </nav>
 
       {/* Main content */}
       <div className="relative pt-16 pb-12">{renderPhase()}</div>

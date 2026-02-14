@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 interface CleanroomYieldRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -14,6 +15,7 @@ const colors = {
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
+  bgSecondary: '#1e293b',
   accent: '#f59e0b',
   accentGlow: 'rgba(245, 158, 11, 0.4)',
   success: '#10b981',
@@ -24,14 +26,64 @@ const colors = {
   badDie: '#ef4444',
   defect: '#f97316',
   spare: '#8b5cf6',
+  border: '#334155',
+  pink: '#ec4899',
+};
+
+const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+
+const phaseLabels: Record<string, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Explore',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Explore',
+  twist_review: 'Twist Review',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery',
 };
 
 const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
-  phase,
+  phase: phaseProp,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Self-managing navigation - always start at hook when no prop provided
+  const [currentPhase, setCurrentPhase] = useState<typeof phaseOrder[number]>('hook');
+
+  // Sync with external phase changes (only update if explicitly set)
+  useEffect(() => {
+    const externalPhase = gamePhase || phaseProp;
+    if (externalPhase && phaseOrder.includes(externalPhase)) {
+      setCurrentPhase(externalPhase);
+    }
+  }, [gamePhase, phaseProp]);
+
+  const phase = currentPhase;
+
+  const goToPhase = useCallback((newPhase: typeof phaseOrder[number]) => {
+    setCurrentPhase(newPhase);
+  }, []);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+      if (onPhaseComplete) onPhaseComplete();
+    }
+  }, [phase, goToPhase, onPhaseComplete]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   const [isMobile, setIsMobile] = useState(false);
 
   // Responsive detection
@@ -44,21 +96,16 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
 
   // Responsive typography
   const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 700, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
   };
 
   // Simulation state
-  const [defectDensity, setDefectDensity] = useState(0.5); // defects per cm^2
-  const [dieArea, setDieArea] = useState(100); // mm^2
+  const [defectDensity, setDefectDensity] = useState(0.5);
+  const [dieArea, setDieArea] = useState(100);
   const [redundancyEnabled, setRedundancyEnabled] = useState(false);
   const [spareRows, setSpareRows] = useState(2);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -66,17 +113,15 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
 
   // Generate random defect positions
   useEffect(() => {
-    const waferArea = 706.86; // 300mm wafer in cm^2
+    const waferArea = 706.86;
     const numDefects = Math.floor(defectDensity * waferArea);
     const positions = [];
-    // Wafer center coordinates (must match renderVisualization)
     const waferCenterX = 175;
     const waferCenterY = 200;
     const waferRadius = 140;
     for (let i = 0; i < numDefects; i++) {
-      // Random position within circular wafer
       const angle = Math.random() * 2 * Math.PI;
-      const r = Math.sqrt(Math.random()) * waferRadius; // radius up to wafer edge
+      const r = Math.sqrt(Math.random()) * waferRadius;
       positions.push({
         x: waferCenterX + r * Math.cos(angle),
         y: waferCenterY + r * Math.sin(angle),
@@ -89,39 +134,26 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
 
   // Physics calculations - Yield model (Poisson)
   const calculateYield = useCallback(() => {
-    // Die area in cm^2
     const dieAreaCm2 = dieArea / 100;
-
-    // Poisson yield model: Y = exp(-D * A)
-    // D = defect density, A = die area
     const poissonYield = Math.exp(-defectDensity * dieAreaCm2);
-
-    // Murphy yield model (more realistic): Y = ((1 - exp(-D*A)) / (D*A))^2
     const da = defectDensity * dieAreaCm2;
     const murphyYield = da > 0.01 ? Math.pow((1 - Math.exp(-da)) / da, 2) : 1;
-
-    // With redundancy (spare rows can repair some defects)
-    // Simplified: each spare row can absorb defects in that row
     const repairProbability = redundancyEnabled ? Math.min(0.9, spareRows * 0.2) : 0;
     const redundantYield = poissonYield + (1 - poissonYield) * repairProbability;
-
-    // Die count on 300mm wafer
-    const waferArea = 70686; // mm^2
-    const diesPerWafer = Math.floor(waferArea / dieArea * 0.85); // 85% utilization
-
-    // Good dies
+    const waferArea = 70686;
+    const diesPerWafer = Math.floor(waferArea / dieArea * 0.85);
     const goodDiesPoisson = Math.round(diesPerWafer * poissonYield);
     const goodDiesRedundant = Math.round(diesPerWafer * redundantYield);
-
-    // Cost impact
-    const costPerWafer = 10000; // $10k per wafer (simplified)
+    const costPerWafer = 10000;
     const costPerGoodDie = diesPerWafer > 0 ? costPerWafer / goodDiesPoisson : Infinity;
     const costPerGoodDieRedundant = diesPerWafer > 0 ? costPerWafer / goodDiesRedundant : Infinity;
 
@@ -304,23 +336,138 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     setTestScore(score);
     setTestSubmitted(true);
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    else if (onIncorrectAnswer) onIncorrectAnswer();
+  };
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.pink})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Bottom navigation bar with dots, back and next buttons
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 100,
+      }}>
+        {/* Back button */}
+        <button
+          onClick={prevPhase}
+          disabled={isFirst}
+          style={{
+            minHeight: '44px',
+            padding: '12px 20px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: isFirst ? colors.textMuted : colors.textSecondary,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: isFirst ? 0.5 : 1,
+          }}
+        >
+          Back
+        </button>
+
+        {/* Navigation dots */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '4px',
+        }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              style={{
+                width: '44px',
+                height: '44px',
+                minHeight: '44px',
+                borderRadius: '22px',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
+              aria-label={phaseLabels[p]}
+            >
+              <span style={{
+                width: phase === p ? '20px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                transition: 'all 0.3s ease',
+              }} />
+            </button>
+          ))}
+        </div>
+
+        {/* Next button */}
+        <button
+          onClick={nextPhase}
+          disabled={isLast}
+          style={{
+            minHeight: '44px',
+            padding: '12px 20px',
+            borderRadius: '10px',
+            border: 'none',
+            background: isLast ? colors.border : colors.accent,
+            color: 'white',
+            cursor: isLast ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: isLast ? 0.5 : 1,
+          }}
+        >
+          Next
+        </button>
+      </nav>
+    );
   };
 
   const renderVisualization = (interactive: boolean, showRedundancy: boolean = false) => {
     const width = 700;
-    const height = 520;
+    const height = 480;
     const yieldData = calculateYield();
 
-    // Wafer visualization
     const waferCenterX = 175;
     const waferCenterY = 200;
     const waferRadius = 140;
 
-    // Calculate die grid
-    const dieSide = Math.sqrt(dieArea);
     const dieDisplaySize = Math.max(8, Math.min(20, 200 / Math.sqrt(yieldData.diesPerWafer)));
 
-    // Generate die positions within wafer
     const dies: Array<{x: number, y: number, good: boolean, hasDefect: boolean, repaired: boolean}> = [];
     const gridSize = Math.ceil(waferRadius * 2 / dieDisplaySize);
     const startX = waferCenterX - gridSize * dieDisplaySize / 2;
@@ -333,14 +480,12 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         const distFromCenter = Math.sqrt((x - waferCenterX) ** 2 + (y - waferCenterY) ** 2);
 
         if (distFromCenter < waferRadius - 5) {
-          // Check if any defect hits this die
           const hasDefect = defectPositions.some(def => {
             const dx = def.x - x;
             const dy = def.y - y;
             return Math.abs(dx) < dieDisplaySize / 2 && Math.abs(dy) < dieDisplaySize / 2;
           });
 
-          // With redundancy, some defective dies can be repaired
           const repaired = hasDefect && showRedundancy && redundancyEnabled && Math.random() < spareRows * 0.2;
           const good = !hasDefect || repaired;
 
@@ -359,9 +504,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           style={{ borderRadius: '12px', maxWidth: '750px' }}
         >
           <defs>
-            {/* === PREMIUM CLEANROOM ENVIRONMENT GRADIENTS === */}
-
-            {/* Cleanroom background - sterile blue-white gradient */}
             <linearGradient id="cryCleanroomBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#0a1628" />
               <stop offset="25%" stopColor="#0f1d32" />
@@ -370,7 +512,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <stop offset="100%" stopColor="#081220" />
             </linearGradient>
 
-            {/* Premium silicon wafer - metallic gradient with depth */}
             <radialGradient id="cryWaferSilicon" cx="35%" cy="35%" r="70%">
               <stop offset="0%" stopColor="#a5b4c8" />
               <stop offset="20%" stopColor="#8b9cb4" />
@@ -380,7 +521,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <stop offset="100%" stopColor="#2d3748" />
             </radialGradient>
 
-            {/* Wafer surface reflection - adds metallic sheen */}
             <linearGradient id="cryWaferSheen" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
               <stop offset="30%" stopColor="#a5b4fc" stopOpacity="0.08" />
@@ -389,7 +529,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <stop offset="100%" stopColor="#ffffff" stopOpacity="0.1" />
             </linearGradient>
 
-            {/* Wafer edge bevel - 3D effect */}
             <linearGradient id="cryWaferEdge" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#1e293b" />
               <stop offset="15%" stopColor="#64748b" />
@@ -398,7 +537,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <stop offset="100%" stopColor="#1e293b" />
             </linearGradient>
 
-            {/* Good die gradient - healthy green silicon */}
             <linearGradient id="cryGoodDie" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#34d399" />
               <stop offset="40%" stopColor="#10b981" />
@@ -406,7 +544,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <stop offset="100%" stopColor="#047857" />
             </linearGradient>
 
-            {/* Bad die gradient - defective red */}
             <linearGradient id="cryBadDie" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#f87171" />
               <stop offset="40%" stopColor="#ef4444" />
@@ -414,7 +551,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <stop offset="100%" stopColor="#b91c1c" />
             </linearGradient>
 
-            {/* Repaired die gradient - purple for spare rows */}
             <linearGradient id="cryRepairedDie" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#c084fc" />
               <stop offset="40%" stopColor="#a855f7" />
@@ -422,7 +558,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <stop offset="100%" stopColor="#7e22ce" />
             </linearGradient>
 
-            {/* Particle contamination - orange/red danger */}
             <radialGradient id="cryParticleCore" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#fcd34d" />
               <stop offset="30%" stopColor="#fbbf24" />
@@ -430,42 +565,34 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <stop offset="100%" stopColor="#d97706" stopOpacity="0.6" />
             </radialGradient>
 
-            {/* Particle outer glow */}
             <radialGradient id="cryParticleGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
               <stop offset="50%" stopColor="#ea580c" stopOpacity="0.4" />
               <stop offset="100%" stopColor="#c2410c" stopOpacity="0" />
             </radialGradient>
 
-            {/* Stats panel background */}
             <linearGradient id="cryPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
               <stop offset="50%" stopColor="#0f172a" stopOpacity="0.98" />
               <stop offset="100%" stopColor="#020617" stopOpacity="0.95" />
             </linearGradient>
 
-            {/* Panel border glow */}
             <linearGradient id="cryPanelBorder" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
               <stop offset="50%" stopColor="#6366f1" stopOpacity="0.3" />
               <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.5" />
             </linearGradient>
 
-            {/* Yield curve success gradient */}
             <linearGradient id="cryCurveSuccess" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#10b981" />
               <stop offset="50%" stopColor="#34d399" />
               <stop offset="100%" stopColor="#6ee7b7" />
             </linearGradient>
 
-            {/* Cleanroom floor grid pattern */}
             <pattern id="cryFloorGrid" width="30" height="30" patternUnits="userSpaceOnUse">
               <rect width="30" height="30" fill="none" stroke="#1e3a5f" strokeWidth="0.5" strokeOpacity="0.4" />
             </pattern>
 
-            {/* === PREMIUM GLOW FILTERS === */}
-
-            {/* Defect/particle glow filter */}
             <filter id="cryDefectGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="3" result="blur1" />
               <feGaussianBlur stdDeviation="1.5" result="blur2" />
@@ -476,7 +603,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Wafer edge glow */}
             <filter id="cryWaferGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
@@ -485,7 +611,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Die highlight glow */}
             <filter id="cryDieGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="1" result="blur" />
               <feMerge>
@@ -494,7 +619,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Text glow for labels */}
             <filter id="cryTextGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="1" result="blur" />
               <feMerge>
@@ -503,13 +627,11 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Inner shadow for panels */}
             <filter id="cryInnerShadow" x="-10%" y="-10%" width="120%" height="120%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
 
-            {/* Ambient dust particles floating in air */}
             <filter id="cryDustFloat" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="0.5" result="blur" />
               <feMerge>
@@ -519,11 +641,9 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </filter>
           </defs>
 
-          {/* === CLEANROOM ENVIRONMENT BACKGROUND === */}
           <rect width={width} height={height} fill="url(#cryCleanroomBg)" />
           <rect width={width} height={height} fill="url(#cryFloorGrid)" />
 
-          {/* Ambient floating dust particles in cleanroom air */}
           {[...Array(15)].map((_, i) => (
             <circle
               key={`dust${i}`}
@@ -543,29 +663,19 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </circle>
           ))}
 
-          {/* === TITLE SECTION === */}
           <text x={width / 2} y={28} fill="#f59e0b" fontSize={16} fontWeight="bold" textAnchor="middle" filter="url(#cryTextGlow)">
             300mm Silicon Wafer - Cleanroom Yield Simulation
           </text>
-          <text x={width / 2} y={46} fill="#94a3b8" fontSize={10} textAnchor="middle">
+          <text x={width / 2} y={46} fill="#e2e8f0" fontSize={10} textAnchor="middle">
             Class 1 Cleanroom Environment | Defect Density Analysis
           </text>
 
-          {/* === PREMIUM SILICON WAFER === */}
           <g transform={`translate(${waferCenterX}, ${waferCenterY})`}>
-            {/* Wafer shadow for depth */}
             <ellipse cx={5} cy={8} rx={waferRadius + 2} ry={waferRadius + 2} fill="#000000" opacity="0.3" />
-
-            {/* Outer metallic edge/bevel */}
             <circle cx={0} cy={0} r={waferRadius + 3} fill="url(#cryWaferEdge)" filter="url(#cryWaferGlow)" />
-
-            {/* Main silicon surface */}
             <circle cx={0} cy={0} r={waferRadius} fill="url(#cryWaferSilicon)" />
-
-            {/* Surface reflection overlay */}
             <circle cx={0} cy={0} r={waferRadius} fill="url(#cryWaferSheen)" />
 
-            {/* Concentric processing rings (realistic wafer texture) */}
             {[0.3, 0.5, 0.7, 0.85, 0.95].map((ratio, i) => (
               <circle
                 key={`ring${i}`}
@@ -579,7 +689,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               />
             ))}
 
-            {/* Wafer notch (orientation marker) */}
             <path
               d={`M -8,${waferRadius - 4} L 0,${waferRadius + 4} L 8,${waferRadius - 4}`}
               fill="#1e293b"
@@ -587,13 +696,11 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               strokeWidth={1}
             />
 
-            {/* Wafer ID label */}
-            <text x={0} y={waferRadius - 15} fill="#64748b" fontSize={7} textAnchor="middle" fontFamily="monospace">
+            <text x={0} y={waferRadius - 15} fill="#64748b" fontSize={8} textAnchor="middle" fontFamily="monospace">
               LOT-2024-A001
             </text>
           </g>
 
-          {/* === DIES ON WAFER === */}
           {dies.map((die, i) => (
             <g key={`die${i}`}>
               <rect
@@ -609,35 +716,23 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </g>
           ))}
 
-          {/* === PARTICLE CONTAMINATION MARKERS === */}
           {defectPositions.slice(0, 60).map((def, i) => (
             <g key={`defect${i}`} transform={`translate(${def.x}, ${def.y})`}>
-              {/* Outer glow */}
               <circle r={6} fill="url(#cryParticleGlow)" filter="url(#cryDefectGlow)" />
-              {/* Inner core */}
               <circle r={3} fill="url(#cryParticleCore)" />
-              {/* Bright center */}
               <circle r={1} fill="#fef3c7" />
             </g>
           ))}
 
-          {/* === PREMIUM LEGEND PANEL === */}
           <g transform="translate(12, 375)">
             <rect x={0} y={0} width={140} height={showRedundancy ? 105 : 85} fill="url(#cryPanelBg)" rx={8} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
             <text x={12} y={20} fill="#f59e0b" fontSize={11} fontWeight="bold">Legend</text>
-
-            {/* Good die */}
             <rect x={12} y={30} width={14} height={14} fill="url(#cryGoodDie)" rx={2} />
             <text x={32} y={41} fill="#e2e8f0" fontSize={9}>Good Die (Functional)</text>
-
-            {/* Bad die */}
             <rect x={12} y={50} width={14} height={14} fill="url(#cryBadDie)" rx={2} />
             <text x={32} y={61} fill="#e2e8f0" fontSize={9}>Defective (Killed)</text>
-
-            {/* Particle */}
             <circle cx={19} cy={77} r={5} fill="url(#cryParticleCore)" filter="url(#cryDefectGlow)" />
             <text x={32} y={80} fill="#e2e8f0" fontSize={9}>Particle Defect</text>
-
             {showRedundancy && (
               <>
                 <rect x={12} y={88} width={14} height={14} fill="url(#cryRepairedDie)" rx={2} />
@@ -646,77 +741,52 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             )}
           </g>
 
-          {/* === YIELD STATISTICS PANEL === */}
           <g transform="translate(370, 70)">
             <rect x={0} y={0} width={210} height={160} fill="url(#cryPanelBg)" rx={10} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
-
-            {/* Panel header */}
             <rect x={0} y={0} width={210} height={28} fill="rgba(59, 130, 246, 0.15)" rx={10} />
             <text x={105} y={19} fill="#f59e0b" fontSize={12} fontWeight="bold" textAnchor="middle" filter="url(#cryTextGlow)">
               Yield Statistics
             </text>
-
-            {/* Stats rows */}
-            <text x={12} y={48} fill="#94a3b8" fontSize={10}>Defect Density:</text>
+            <text x={12} y={48} fill="#e2e8f0" fontSize={10}>Defect Density:</text>
             <text x={198} y={48} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{defectDensity.toFixed(2)} /cm2</text>
-
-            <text x={12} y={68} fill="#94a3b8" fontSize={10}>Die Area:</text>
+            <text x={12} y={68} fill="#e2e8f0" fontSize={10}>Die Area:</text>
             <text x={198} y={68} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{dieArea} mm2</text>
-
-            <text x={12} y={88} fill="#94a3b8" fontSize={10}>Dies per Wafer:</text>
+            <text x={12} y={88} fill="#e2e8f0" fontSize={10}>Dies per Wafer:</text>
             <text x={198} y={88} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{yieldData.diesPerWafer}</text>
-
             <line x1={12} y1={98} x2={198} y2={98} stroke="#334155" strokeWidth={1} />
-
-            <text x={12} y={116} fill="#94a3b8" fontSize={10}>Poisson Yield:</text>
+            <text x={12} y={116} fill="#e2e8f0" fontSize={10}>Poisson Yield:</text>
             <text x={198} y={116} fill={yieldData.poissonYield > 50 ? '#10b981' : '#ef4444'} fontSize={12} fontWeight="bold" textAnchor="end">
               {yieldData.poissonYield.toFixed(1)}%
             </text>
-
-            <text x={12} y={136} fill="#94a3b8" fontSize={10}>Good Dies:</text>
+            <text x={12} y={136} fill="#e2e8f0" fontSize={10}>Good Dies:</text>
             <text x={198} y={136} fill="#10b981" fontSize={12} fontWeight="bold" textAnchor="end">
               {showRedundancy && redundancyEnabled ? yieldData.goodDiesRedundant : yieldData.goodDiesPoisson}
             </text>
-
-            <text x={12} y={154} fill="#94a3b8" fontSize={10}>Cost per Die:</text>
+            <text x={12} y={154} fill="#e2e8f0" fontSize={10}>Cost per Die:</text>
             <text x={198} y={154} fill="#fbbf24" fontSize={11} fontWeight="bold" textAnchor="end">
               ${(showRedundancy && redundancyEnabled ? yieldData.costPerGoodDieRedundant : yieldData.costPerGoodDie).toFixed(0)}
             </text>
           </g>
 
-          {/* === YIELD CURVE GRAPH === */}
           <g transform="translate(370, 245)">
             <rect x={0} y={0} width={210} height={135} fill="url(#cryPanelBg)" rx={10} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
-
-            {/* Graph header */}
             <rect x={0} y={0} width={210} height={24} fill="rgba(59, 130, 246, 0.15)" rx={10} />
             <text x={105} y={17} fill="#f59e0b" fontSize={11} fontWeight="bold" textAnchor="middle">
               Yield vs Defect Density
             </text>
-
-            {/* Graph area */}
             <g transform="translate(35, 35)">
-              {/* Grid lines */}
               {[0, 25, 50, 75].map((y, i) => (
                 <line key={`grid${i}`} x1={0} y1={y} x2={160} y2={y} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" />
               ))}
-
-              {/* Axes */}
               <line x1={0} y1={75} x2={160} y2={75} stroke="#64748b" strokeWidth={1.5} />
               <line x1={0} y1={0} x2={0} y2={75} stroke="#64748b" strokeWidth={1.5} />
-
-              {/* Y-axis labels */}
-              <text x={-5} y={5} fill="#94a3b8" fontSize={8} textAnchor="end">100%</text>
-              <text x={-5} y={40} fill="#94a3b8" fontSize={8} textAnchor="end">50%</text>
-              <text x={-5} y={78} fill="#94a3b8" fontSize={8} textAnchor="end">0%</text>
-
-              {/* X-axis labels */}
-              <text x={0} y={90} fill="#94a3b8" fontSize={8} textAnchor="middle">0</text>
-              <text x={80} y={90} fill="#94a3b8" fontSize={8} textAnchor="middle">1.5</text>
-              <text x={160} y={90} fill="#94a3b8" fontSize={8} textAnchor="middle">3.0</text>
-              <text x={80} y={100} fill="#64748b" fontSize={7} textAnchor="middle">Defects/cm2</text>
-
-              {/* Yield curve with gradient */}
+              <text x={-5} y={5} fill="#e2e8f0" fontSize={8} textAnchor="end">100%</text>
+              <text x={-5} y={40} fill="#e2e8f0" fontSize={8} textAnchor="end">50%</text>
+              <text x={-5} y={78} fill="#e2e8f0" fontSize={8} textAnchor="end">0%</text>
+              <text x={0} y={90} fill="#e2e8f0" fontSize={8} textAnchor="middle">0</text>
+              <text x={80} y={88} fill="#e2e8f0" fontSize={8} textAnchor="middle">1.5</text>
+              <text x={160} y={88} fill="#e2e8f0" fontSize={8} textAnchor="middle">3.0</text>
+              <text x={80} y={102} fill="#64748b" fontSize={8} textAnchor="middle">Defects/cm2</text>
               <path
                 d={`M 0,${75 - Math.exp(-0 * dieArea / 100) * 75}
                     ${[...Array(32)].map((_, i) => {
@@ -729,8 +799,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                 strokeWidth={2.5}
                 strokeLinecap="round"
               />
-
-              {/* Current position marker with glow */}
               <circle
                 cx={(defectDensity / 3) * 160}
                 cy={75 - yieldData.poissonYield / 100 * 75}
@@ -747,8 +815,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                 stroke="#fef3c7"
                 strokeWidth={1.5}
               />
-
-              {/* Redundancy curve if enabled */}
               {showRedundancy && redundancyEnabled && (
                 <path
                   d={`M 0,${75 - 75}
@@ -769,7 +835,6 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </g>
           </g>
 
-          {/* === REDUNDANCY INDICATOR PANEL === */}
           {showRedundancy && redundancyEnabled && (
             <g transform="translate(370, 390)">
               <rect x={0} y={0} width={210} height={55} fill="rgba(139, 92, 246, 0.2)" rx={10} stroke="#8b5cf6" strokeWidth={1} strokeOpacity={0.5} />
@@ -777,13 +842,12 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                 <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" />
               </circle>
               <text x={35} y={22} fill="#c4b5fd" fontSize={11} fontWeight="bold">Redundancy Active</text>
-              <text x={35} y={40} fill="#94a3b8" fontSize={9}>
+              <text x={35} y={40} fill="#e2e8f0" fontSize={9}>
                 Spare Rows: {spareRows} | Repair Rate: {(spareRows * 20).toFixed(0)}%
               </text>
             </g>
           )}
 
-          {/* === CLEANROOM CLASS INDICATOR === */}
           <g transform="translate(590, 12)">
             <rect x={0} y={0} width={95} height={35} fill="rgba(16, 185, 129, 0.15)" rx={6} stroke="#10b981" strokeWidth={1} strokeOpacity={0.5} />
             <text x={48} y={15} fill="#10b981" fontSize={8} fontWeight="bold" textAnchor="middle">CLEANROOM</text>
@@ -797,6 +861,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               onClick={() => { setDefectDensity(0.1); setIsAnimating(true); }}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: isAnimating ? colors.error : colors.success,
@@ -813,6 +878,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               onClick={() => { setDefectDensity(0.5); setIsAnimating(false); }}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
                 background: 'transparent',
@@ -844,7 +910,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           step="0.05"
           value={defectDensity}
           onChange={(e) => setDefectDensity(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -859,7 +925,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           step="20"
           value={dieArea}
           onChange={(e) => setDieArea(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -895,7 +961,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                 step="1"
                 value={spareRows}
                 onChange={(e) => setSpareRows(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                style={{ width: '100%', accentColor: colors.accent }}
               />
             </div>
           )}
@@ -918,146 +984,48 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-
-  // Real-world applications data
-  const realWorldApps = [
-    {
-      icon: '🔬',
-      title: 'Semiconductor Manufacturing',
-      short: 'Chip Fabs',
-      tagline: 'Where atoms become processors',
-      description: 'Modern semiconductor fabs are the most sophisticated manufacturing facilities ever built. With transistors now smaller than 5 nanometers, even a single dust particle can destroy millions of dollars worth of chips. These facilities maintain Class 1 cleanrooms where air is filtered to remove particles larger than 0.1 microns.',
-      connection: 'The Poisson yield model directly governs chip fab economics. Understanding Y = e^(-D*A) explains why Intel, TSMC, and Samsung invest billions in contamination control - every 0.1 reduction in defect density can mean hundreds of millions in additional revenue.',
-      howItWorks: 'Wafers move through hundreds of processing steps over 2-3 months. At each step, particles can deposit on the wafer surface. Photolithography patterns features using light, etching removes material, and deposition adds layers. Each defect that lands on active circuitry kills that die.',
-      stats: [
-        { value: '$20B+', label: 'Cost of a leading-edge fab' },
-        { value: '0.09/cm²', label: 'Target defect density at 3nm' },
-        { value: '1000+', label: 'Process steps per wafer' },
-      ],
-      examples: [
-        'TSMC N3 process achieving 80%+ yield on Apple M3 chips',
-        'Intel recovering from 10nm yield problems that delayed products',
-        'Samsung improving 3nm GAA transistor defect density',
-        'ASML EUV machines enabling sub-5nm patterning precision',
-      ],
-      companies: ['TSMC', 'Intel', 'Samsung', 'GlobalFoundries', 'ASML'],
-      futureImpact: 'As transistors approach atomic scales at 2nm and below, yield engineering becomes even more critical. New techniques like chiplets and advanced packaging allow combining smaller, higher-yield dies into larger systems, fundamentally changing how we design chips.',
-      color: '#6366f1',
-    },
-    {
-      icon: '💊',
-      title: 'Pharmaceutical Production',
-      short: 'Drug Manufacturing',
-      tagline: 'Cleanrooms save lives',
-      description: 'Pharmaceutical manufacturing requires extreme cleanliness to prevent contamination of injectable drugs, vaccines, and sterile medications. A single bacterial spore or particulate in an IV solution can cause life-threatening infections. Pharma cleanrooms follow strict GMP (Good Manufacturing Practice) regulations.',
-      connection: 'The same Poisson statistics that govern chip yield apply to pharmaceutical contamination. The probability of a batch containing zero contaminants follows P = e^(-contamination_rate * volume). This drives the massive investment in sterile manufacturing environments.',
-      howItWorks: 'Drug production occurs in classified cleanrooms with HEPA-filtered laminar airflow. Workers wear full gowning including suits, gloves, masks, and booties. Air pressure differentials prevent contamination from entering critical zones. Every batch undergoes extensive testing before release.',
-      stats: [
-        { value: 'Class 100', label: 'Typical pharma cleanroom class' },
-        { value: '99.97%', label: 'HEPA filter particle capture rate' },
-        { value: '$1M+', label: 'Cost per contaminated batch recall' },
-      ],
-      examples: [
-        'COVID-19 mRNA vaccine production at unprecedented scale and purity',
-        'Insulin manufacturing requiring zero particulate contamination',
-        'Cancer drug production with cytotoxic containment requirements',
-        'Gene therapy manufacturing in Grade A aseptic environments',
-      ],
-      companies: ['Pfizer', 'Moderna', 'Johnson & Johnson', 'Merck', 'Novartis'],
-      futureImpact: 'Cell and gene therapies require even more stringent contamination control than traditional drugs. Personalized medicine manufacturing, where each patient receives a unique treatment, demands new approaches to maintaining sterility at small batch sizes.',
-      color: '#10b981',
-    },
-    {
-      icon: '🛰️',
-      title: 'Aerospace Component Assembly',
-      short: 'Satellites',
-      tagline: 'No second chances in orbit',
-      description: 'Satellites and spacecraft must operate flawlessly for years in the harsh environment of space with no possibility of repair. Contamination during assembly can cause optical system degradation, mechanism failures, or electrical shorts. Aerospace cleanrooms ensure components survive launch vibrations and space conditions.',
-      connection: 'Satellite reliability follows similar statistical models to chip yield. The probability of mission success depends on every component being defect-free. With thousands of critical parts, even a 99.9% per-component reliability means significant failure risk for the whole system.',
-      howItWorks: 'Spacecraft assembly occurs in ISO Class 5-7 cleanrooms. Technicians use precision tools and follow detailed procedures. Every component is tracked, tested, and certified. Molecular contamination control prevents outgassing that could coat sensitive optics or solar panels.',
-      stats: [
-        { value: '15+ years', label: 'Typical satellite design life' },
-        { value: '$500M', label: 'Average large satellite cost' },
-        { value: '0%', label: 'Acceptable on-orbit failure rate' },
-      ],
-      examples: [
-        'James Webb Space Telescope mirror assembly in Class 10000 cleanroom',
-        'Starlink satellite mass production with contamination control',
-        'Mars rover assembly requiring planetary protection protocols',
-        'GPS satellite construction with radiation-hardened electronics',
-      ],
-      companies: ['SpaceX', 'Lockheed Martin', 'Boeing', 'Northrop Grumman'],
-      futureImpact: 'Mega-constellations of thousands of satellites require new approaches to cleanroom manufacturing at scale. Reusable spacecraft add complexity as vehicles must be refurbished between flights while maintaining cleanliness standards.',
-      color: '#8b5cf6',
-    },
-    {
-      icon: '📺',
-      title: 'Display Panel Manufacturing',
-      short: 'Screens',
-      tagline: 'Millions of perfect pixels',
-      description: 'Modern displays contain millions of thin-film transistors (TFTs) that control individual pixels. A 4K TV has over 8 million pixels, each requiring multiple defect-free transistors. Display fabs rival semiconductor fabs in cleanliness requirements, processing glass substrates larger than king-size beds.',
-      connection: 'Display yield follows the same exponential model as chip yield, but with even larger areas. A single particle defect creates a visible "dead pixel" that ruins the entire panel. The larger the display, the more challenging yield becomes - this is why large OLED TVs cost so much.',
-      howItWorks: 'Giant glass substrates (Gen 10.5 is 2940mm x 3370mm) move through deposition, photolithography, and etching steps similar to chip manufacturing. Organic materials for OLED displays are extremely sensitive to moisture and oxygen contamination. Every panel is optically inspected for defects.',
-      stats: [
-        { value: '8.3M', label: 'Pixels in a 4K display' },
-        { value: '10m²', label: 'Gen 10.5 glass substrate size' },
-        { value: '<3 ppm', label: 'Acceptable dead pixel rate' },
-      ],
-      examples: [
-        'Samsung QD-OLED panel production achieving commercial yields',
-        'LG large OLED TV panel manufacturing optimization',
-        'BOE Gen 10.5 LCD fab achieving 90%+ yield rates',
-        'Apple ProMotion display manufacturing for iPhone/iPad',
-      ],
-      companies: ['Samsung Display', 'LG Display', 'BOE', 'Sharp'],
-      futureImpact: 'MicroLED displays promise superior performance but face enormous yield challenges - a 4K microLED TV needs 24 million perfectly functioning LEDs. New mass transfer and repair technologies are essential for commercial viability of this next-generation display technology.',
-      color: '#f59e0b',
-    },
-  ];
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, ${colors.pink})`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    minHeight: '44px',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: colors.bgPrimary,
+        zIndex: 50,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '100px',
+        }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>
+              🧹✨
+            </div>
+            <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '8px' }}>
               How Can ONE Speck Kill a Billion Transistors?
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              The exponential physics of chip yield
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
+              Discover the exponential physics of chip yield - let's explore how cleanrooms work!
             </p>
           </div>
 
@@ -1091,9 +1059,16 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                 Watch how yield collapses as defect density increases!
               </p>
             </div>
+
+            <button
+              onClick={nextPhase}
+              style={{ ...primaryButtonStyle, marginTop: '24px' }}
+            >
+              Make a Prediction
+            </button>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1101,8 +1076,32 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: colors.bgPrimary,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '100px',
+        }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            margin: '16px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Prediction {prediction ? '1' : '0'} of 1 - Make your prediction to continue
+            </p>
+          </div>
+
           {renderVisualization(false)}
 
           <div style={{
@@ -1120,6 +1119,18 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </p>
           </div>
 
+          <div style={{
+            background: `${colors.wafer}22`,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.wafer}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Observe the wafer visualization above. Notice how defects (orange particles) are scattered randomly across the wafer surface.
+            </p>
+          </div>
+
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
               How does yield change as defect density increases?
@@ -1131,6 +1142,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1147,7 +1159,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1155,12 +1167,36 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: colors.bgPrimary,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '100px',
+        }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Yield Physics</h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>Explore Yield Physics</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust defect density and die size to see yield impact
+            </p>
+          </div>
+
+          <div style={{
+            background: `${colors.wafer}22`,
+            margin: '0 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.wafer}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              Observe: Use the sliders below to explore how defect density and die area affect yield. Watch the yield curve respond in real-time.
             </p>
           </div>
 
@@ -1181,8 +1217,23 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <li>Calculate cost per good die at different yields</li>
             </ul>
           </div>
+
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Why This Matters in the Real World</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+              Understanding yield physics is critical because it directly impacts chip cost and availability.
+              A fab that achieves 90% yield vs 60% yield produces 50% more good chips from the same wafers.
+              This is why companies like Intel, TSMC, and Samsung invest billions in cleanroom technology.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1192,8 +1243,20 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     const wasCorrect = prediction === 'exponential';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: colors.bgPrimary,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '100px',
+        }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1202,9 +1265,14 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
+              {wasCorrect
+                ? 'As you predicted, yield drops exponentially - not linearly! The Poisson model Y = e^(-D x A) shows this beautifully.'
+                : 'You predicted something different, but as you observed in the simulation, yield actually drops exponentially!'}
+            </p>
+            <p style={{ color: colors.textSecondary, marginTop: '8px', fontSize: '14px' }}>
               Yield follows an exponential decay: Y = e^(-D x A). This means even a small increase
               in defect density causes a dramatic drop in yield, especially for large dies!
             </p>
@@ -1217,6 +1285,20 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Poisson Yield Model</h3>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ borderRadius: '8px', marginBottom: '16px' }}>
+              <defs>
+                <linearGradient id="reviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1e293b" />
+                  <stop offset="100%" stopColor="#0f172a" />
+                </linearGradient>
+              </defs>
+              <rect width="400" height="200" fill="url(#reviewBg)" rx="8" />
+              <text x="200" y="30" fill={colors.accent} fontSize="16" textAnchor="middle" fontWeight="bold">Poisson Yield Model</text>
+              <text x="200" y="60" fill={colors.textPrimary} fontSize="20" textAnchor="middle" fontFamily="serif">Y = e^(-D x A)</text>
+              <text x="200" y="100" fill={colors.textSecondary} fontSize="12" textAnchor="middle">D = defect density (defects/cm2)</text>
+              <text x="200" y="120" fill={colors.textSecondary} fontSize="12" textAnchor="middle">A = die area (cm2)</text>
+              <text x="200" y="160" fill={colors.success} fontSize="14" textAnchor="middle">Exponential relationship: small changes in D cause large yield changes</text>
+            </svg>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Random Defects:</strong> Particles fall
@@ -1239,7 +1321,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1247,12 +1329,36 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: colors.bgPrimary,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '100px',
+        }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
               What if we add spare rows that can replace defective ones?
+            </p>
+          </div>
+
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            margin: '16px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              Prediction {twistPrediction ? '1' : '0'} of 1 - Make your prediction to continue
             </p>
           </div>
 
@@ -1283,6 +1389,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1299,7 +1406,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1307,12 +1414,36 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: colors.bgPrimary,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '100px',
+        }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Redundancy</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Enable spare rows and see how yield recovers
+            </p>
+          </div>
+
+          <div style={{
+            background: `${colors.wafer}22`,
+            margin: '0 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.wafer}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              Observe: Enable the redundancy checkbox and adjust spare rows to see how yield can be recovered from defective dies.
             </p>
           </div>
 
@@ -1334,7 +1465,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1344,8 +1475,20 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     const wasCorrect = twistPrediction === 'big_help';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: colors.bgPrimary,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '100px',
+        }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1369,6 +1512,32 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Redundancy Strategies</h3>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ borderRadius: '8px', marginBottom: '16px' }}>
+              <defs>
+                <linearGradient id="twistReviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1e293b" />
+                  <stop offset="100%" stopColor="#0f172a" />
+                </linearGradient>
+              </defs>
+              <rect width="400" height="180" fill="url(#twistReviewBg)" rx="8" />
+              <text x="200" y="25" fill={colors.warning} fontSize="14" textAnchor="middle" fontWeight="bold">Redundancy Recovery</text>
+
+              <rect x="30" y="50" width="100" height="80" fill="rgba(239,68,68,0.3)" rx="8" stroke={colors.error} />
+              <text x="80" y="75" fill={colors.error} fontSize="12" textAnchor="middle">Original</text>
+              <text x="80" y="95" fill={colors.textPrimary} fontSize="18" textAnchor="middle">60%</text>
+              <text x="80" y="115" fill={colors.textSecondary} fontSize="10" textAnchor="middle">yield</text>
+
+              <text x="175" y="95" fill={colors.accent} fontSize="28" textAnchor="middle">+</text>
+              <text x="220" y="95" fill={colors.spare} fontSize="14" textAnchor="middle">spare</text>
+              <text x="220" y="110" fill={colors.spare} fontSize="14" textAnchor="middle">rows</text>
+
+              <rect x="270" y="50" width="100" height="80" fill="rgba(16,185,129,0.3)" rx="8" stroke={colors.success} />
+              <text x="320" y="75" fill={colors.success} fontSize="12" textAnchor="middle">With Redundancy</text>
+              <text x="320" y="95" fill={colors.textPrimary} fontSize="18" textAnchor="middle">85%</text>
+              <text x="320" y="115" fill={colors.textSecondary} fontSize="10" textAnchor="middle">yield</text>
+
+              <text x="200" y="165" fill={colors.textSecondary} fontSize="11" textAnchor="middle">+25% yield recovery at moderate defect densities</text>
+            </svg>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Spare Rows/Columns:</strong> Memory
@@ -1387,22 +1556,54 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomNav()}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const totalApps = transferApplications.length;
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: colors.bgPrimary,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '100px',
+        }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Yield engineering drives semiconductor economics
+            </p>
+            <p style={{ color: colors.accent, textAlign: 'center', fontSize: '14px' }}>
+              Application {currentTransferApp + 1} of {totalApps}
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(99, 102, 241, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.wafer}`,
+          }}>
+            <h4 style={{ color: colors.wafer, marginBottom: '8px' }}>Industry Statistics</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              Modern fabs achieve 85-95% yield on mature processes. A single 300mm wafer costs $10,000-$25,000 to process.
+              At 0.1 defects/cm2, a 100mm2 die achieves ~90% yield. Improving from 70% to 90% yield increases profit by 28%.
+              Leading-edge 3nm chips can cost $500+ per die, making yield critical to profitability.
             </p>
           </div>
 
@@ -1427,19 +1628,24 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               </div>
               {!transferCompleted.has(index) ? (
                 <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                  onClick={() => {
+                    setTransferCompleted(new Set([...transferCompleted, index]));
+                    setCurrentTransferApp(Math.min(index + 1, totalApps - 1));
+                  }}
                   style={{
-                    padding: '8px 16px',
+                    padding: '12px 20px',
+                    minHeight: '44px',
                     borderRadius: '6px',
                     border: `1px solid ${colors.accent}`,
                     background: 'transparent',
                     color: colors.accent,
                     cursor: 'pointer',
                     fontSize: '13px',
+                    fontWeight: 600,
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  Reveal Answer
+                  Got It - Reveal Answer
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
@@ -1449,7 +1655,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1458,8 +1664,20 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          background: colors.bgPrimary,
+        }}>
+          {renderProgressBar()}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingBottom: '100px',
+          }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1475,34 +1693,63 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                 {testScore >= 8 ? 'You understand cleanroom yield physics!' : 'Review the material and try again.'}
               </p>
             </div>
+            <h3 style={{ color: colors.textPrimary, margin: '16px', marginBottom: '8px' }}>Answer Review</h3>
             {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '20px' }}>{isCorrect ? '✓' : '✗'}</span>
+                    <p style={{ color: colors.textPrimary, fontWeight: 'bold', margin: 0 }}>Q{qIndex + 1} of {testQuestions.length}: {q.question}</p>
+                  </div>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                      {opt.correct ? '✓ ' : userAnswer === oIndex && !opt.correct ? '✗ ' : ''}{opt.text}
                     </div>
                   ))}
                 </div>
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomNav()}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: colors.bgPrimary,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '100px',
+        }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
               <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            </div>
+            <div style={{
+              background: 'rgba(99, 102, 241, 0.15)',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.wafer}`,
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.5 }}>
+                Semiconductor manufacturing requires pristine cleanroom environments where particle contamination
+                is measured in parts per billion. A single microscopic particle can destroy a chip worth hundreds
+                of dollars. Answer these questions based on what you learned about yield physics and defect density.
+              </p>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1520,6 +1767,9 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', marginBottom: '8px' }}>
+                Question {currentTestQuestion + 1} of {testQuestions.length}
+              </p>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1529,6 +1779,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                   onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1550,6 +1801,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               disabled={currentTestQuestion === 0}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.textMuted}`,
                 background: 'transparent',
@@ -1565,6 +1817,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                 onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: colors.accent,
@@ -1577,10 +1830,11 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               </button>
             ) : (
               <button
-                onClick={submitTest}
+                onClick={() => setShowConfirmSubmit(true)}
                 disabled={testAnswers.includes(null)}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
@@ -1593,7 +1847,68 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               </button>
             )}
           </div>
+
+          {/* Quiz submission confirmation modal */}
+          {showConfirmSubmit && (
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 200,
+            }}>
+              <div style={{
+                background: colors.bgCard,
+                padding: '24px',
+                borderRadius: '12px',
+                maxWidth: '400px',
+                margin: '16px',
+                textAlign: 'center',
+              }}>
+                <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>Submit Quiz?</h3>
+                <p style={{ color: colors.textSecondary, marginBottom: '20px' }}>
+                  Are you sure you want to submit your answers? You have answered {testAnswers.filter(a => a !== null).length} of {testQuestions.length} questions.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => setShowConfirmSubmit(false)}
+                    style={{
+                      padding: '12px 24px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowConfirmSubmit(false);
+                      submitTest();
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1601,10 +1916,22 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: colors.bgPrimary,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '100px',
+        }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand cleanroom yield and defect physics</p>
           </div>
@@ -1630,12 +1957,45 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomNav()}
       </div>
     );
   }
 
-  return null;
+  // Default fallback to hook phase
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      background: colors.bgPrimary,
+    }}>
+      {renderProgressBar()}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div style={{ textAlign: 'center', padding: '24px' }}>
+          <h1 style={{ color: colors.textPrimary, marginBottom: '16px' }}>
+            Cleanroom Yield Physics
+          </h1>
+          <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
+            Loading content...
+          </p>
+          <button onClick={() => goToPhase('hook')} style={primaryButtonStyle}>
+            Start Learning
+          </button>
+        </div>
+      </div>
+      {renderBottomNav()}
+    </div>
+  );
 };
 
 export default CleanroomYieldRenderer;

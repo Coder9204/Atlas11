@@ -259,6 +259,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const [animationTime, setAnimationTime] = useState(0);
   const [selectedConfig, setSelectedConfig] = useState<'single' | 'dipole' | 'parallel'>('single');
   const [isDraggingTestCharge, setIsDraggingTestCharge] = useState(false);
+  const [chargeMagnitude, setChargeMagnitude] = useState(5); // uC
 
   const lastClickRef = useRef(0);
   const hasEmittedStart = useRef(false);
@@ -298,33 +299,33 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   useEffect(() => {
     switch (selectedConfig) {
       case 'single':
-        setSourceCharges([{ id: 1, x: 250, y: 200, q: 5 }]);
+        setSourceCharges([{ id: 1, x: 250, y: 200, q: chargeMagnitude }]);
         setTestChargePos({ x: 350, y: 200 });
         break;
       case 'dipole':
         setSourceCharges([
-          { id: 1, x: 180, y: 200, q: 5 },
-          { id: 2, x: 320, y: 200, q: -5 }
+          { id: 1, x: 180, y: 200, q: chargeMagnitude },
+          { id: 2, x: 320, y: 200, q: -chargeMagnitude }
         ]);
         setTestChargePos({ x: 250, y: 120 });
         break;
       case 'parallel':
         setSourceCharges([
-          { id: 1, x: 100, y: 100, q: 5 },
-          { id: 2, x: 100, y: 150, q: 5 },
-          { id: 3, x: 100, y: 200, q: 5 },
-          { id: 4, x: 100, y: 250, q: 5 },
-          { id: 5, x: 100, y: 300, q: 5 },
-          { id: 6, x: 400, y: 100, q: -5 },
-          { id: 7, x: 400, y: 150, q: -5 },
-          { id: 8, x: 400, y: 200, q: -5 },
-          { id: 9, x: 400, y: 250, q: -5 },
-          { id: 10, x: 400, y: 300, q: -5 }
+          { id: 1, x: 100, y: 100, q: chargeMagnitude },
+          { id: 2, x: 100, y: 150, q: chargeMagnitude },
+          { id: 3, x: 100, y: 200, q: chargeMagnitude },
+          { id: 4, x: 100, y: 250, q: chargeMagnitude },
+          { id: 5, x: 100, y: 300, q: chargeMagnitude },
+          { id: 6, x: 400, y: 100, q: -chargeMagnitude },
+          { id: 7, x: 400, y: 150, q: -chargeMagnitude },
+          { id: 8, x: 400, y: 200, q: -chargeMagnitude },
+          { id: 9, x: 400, y: 250, q: -chargeMagnitude },
+          { id: 10, x: 400, y: 300, q: -chargeMagnitude }
         ]);
         setTestChargePos({ x: 250, y: 200 });
         break;
     }
-  }, [selectedConfig]);
+  }, [selectedConfig, chargeMagnitude]);
 
   // Emit game event
   const emitGameEvent = useCallback((
@@ -736,14 +737,12 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         }
 
         if (points.length > 3) {
-          const pathD = points.map((p, idx) =>
-            `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
-          ).join(' ');
+          const polyPoints = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 
           lines.push(
-            <path
+            <polyline
               key={`field-${chargeIndex}-${i}`}
-              d={pathD}
+              points={polyPoints}
               fill="none"
               stroke={charge.q > 0 ? 'url(#elecPlayFieldLineRedGrad)' : 'url(#elecPlayFieldLineBlueGrad)'}
               strokeWidth="2"
@@ -1231,8 +1230,46 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
 
             {/* Educational labels */}
             <text x="250" y="18" textAnchor="middle" fill="#93c5fd" fontSize="12" fontWeight="bold">Electric Field Map</text>
-            <text x="15" y="395" fill="#a78bfa" fontSize="10">E = kQ/r² (Coulomb's Law)</text>
-            <text x="485" y="395" textAnchor="end" fill="#6ee7b7" fontSize="10">Drag test charge to explore</text>
+            <text x="250" y="393" textAnchor="middle" fill="#a78bfa" fontSize="11">X-axis (position, m)</text>
+            <text x="12" y="200" textAnchor="middle" fill="#a78bfa" fontSize="11" transform="rotate(-90, 12, 200)">Y-axis (position, m)</text>
+            <text x="15" y="370" fill="#a78bfa" fontSize="11">E = kQ/r² (Coulomb's Law)</text>
+            <text x="485" y="370" textAnchor="end" fill="#6ee7b7" fontSize="11">Drag test charge to explore</text>
+
+            {/* E vs distance curve - shows inverse square law visually */}
+            {(() => {
+              const curvePoints: string[] = [];
+              const chartX0 = 350;
+              const chartY0 = 30;
+              const chartW = 140;
+              const chartH = 340;
+              const qFrac = chargeMagnitude / 10;
+              for (let i = 0; i <= 20; i++) {
+                const frac = i / 20;
+                const rVal = 1 + frac * 4;
+                const eVal = qFrac / (rVal * rVal);
+                const eNorm = eVal;
+                const px = chartX0 + frac * chartW;
+                const py = chartY0 + chartH - eNorm * chartH;
+                curvePoints.push(`${i === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)}`);
+              }
+              const interFrac = 0.3;
+              const rValInter = 1 + interFrac * 4;
+              const eValInter = qFrac / (rValInter * rValInter);
+              const eNormInter = eValInter;
+              const markerCx = chartX0 + interFrac * chartW;
+              const markerCy = chartY0 + chartH - eNormInter * chartH;
+              return (
+                <g>
+                  <rect x={chartX0 - 5} y={chartY0 - 5} width={chartW + 10} height={chartH + 25} rx="6" fill="rgba(15,23,42,0.85)" stroke="#334155" strokeWidth="1" />
+                  <text x={chartX0 + chartW / 2} y={chartY0 + chartH + 14} textAnchor="middle" fill="#94a3b8" fontSize="11">Distance (r)</text>
+                  <text x={chartX0 - 2} y={chartY0 + 5} fill="#94a3b8" fontSize="11" textAnchor="end">E</text>
+                  <line x1={chartX0} y1={chartY0} x2={chartX0} y2={chartY0 + chartH} stroke="#475569" strokeWidth="1" opacity="0.5" />
+                  <line x1={chartX0} y1={chartY0 + chartH} x2={chartX0 + chartW} y2={chartY0 + chartH} stroke="#475569" strokeWidth="1" opacity="0.5" />
+                  <path d={curvePoints.join(' ')} fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx={markerCx} cy={markerCy} r="7" fill="#fbbf24" stroke="#fff" strokeWidth="1.5" filter="url(#elecPlayDragGlow)" data-interactive="true" />
+                </g>
+              );
+            })()}
 
             {/* Charge auras (ambient glow behind charges) */}
             {sourceCharges.map(charge => (
@@ -1348,6 +1385,34 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           ))}
         </div>
 
+        {/* Charge Magnitude Slider */}
+        <div style={{ touchAction: 'pan-y', width: '100%', maxWidth: '672px', marginBottom: '16px', backgroundColor: 'rgba(30,41,59,0.5)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(51,65,85,0.5)' }}>
+          <label className="block text-slate-300 font-medium mb-2">
+            Charge Magnitude (Q): {chargeMagnitude} uC
+          </label>
+          <input
+            type="range"
+            min="1"
+            max="10"
+            step="1"
+            value={chargeMagnitude}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              setChargeMagnitude(val);
+              emitGameEvent('slider_changed', { parameter: 'chargeMagnitude', value: val });
+            }}
+            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+            style={{ accentColor: '#3b82f6', touchAction: 'pan-y', height: '20px', width: '100%' }}
+          />
+          <div className="flex justify-between text-xs text-slate-500 mt-1">
+            <span>1 uC</span>
+            <span>10 uC</span>
+          </div>
+          <p className="text-slate-400 text-xs mt-2">
+            When you increase the charge magnitude, the electric field strength increases proportionally. This demonstrates why high voltage power lines use careful insulation - stronger charges create more intense fields.
+          </p>
+        </div>
+
         {/* Display toggles */}
         <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mb-4">
           <button
@@ -1370,17 +1435,28 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           </button>
         </div>
 
+        {/* Educational explanation */}
+        <div style={{ width: '100%', maxWidth: '672px', marginBottom: '16px', backgroundColor: 'rgba(6,182,212,0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(6,182,212,0.2)' }}>
+          <p className="text-cyan-400 text-sm font-medium mb-2">
+            This visualization shows how electric field lines radiate from charges.
+          </p>
+          <p className="text-slate-400 text-xs">
+            Understanding electric fields is important for real-world applications like designing capacitors, touchscreens, and high-voltage equipment. Engineers use these principles to control electron beams in displays and to prevent dangerous electrical discharges.
+          </p>
+        </div>
+
         {/* Field information */}
-        <div className="bg-gradient-to-r from-slate-800/70 to-slate-700/70 rounded-xl p-4 w-full max-w-2xl">
+        <div style={{ width: '100%', maxWidth: '672px', backgroundColor: 'rgba(30,41,59,0.7)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(51,65,85,0.5)' }}>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
-              <p className="text-slate-400 text-sm">Field Magnitude:</p>
+              <p className="text-slate-400 text-sm">Current Field Magnitude:</p>
               <p className="text-xl font-bold text-yellow-400">
                 {E > 1e6 ? (E / 1e6).toFixed(1) + ' MN/C' : '~0 N/C'}
               </p>
+              <p className="text-slate-500 text-xs">Reference: 5.0 MN/C at Q=5uC, r=3cm</p>
             </div>
             <div>
-              <p className="text-slate-400 text-sm">Field Direction:</p>
+              <p className="text-slate-400 text-sm">Current Field Direction:</p>
               <p className="text-xl font-bold text-cyan-400">
                 {E > 1e6 ? angle.toFixed(0) + ' deg' : 'N/A'}
               </p>
@@ -1411,6 +1487,13 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Electric Field Fundamentals</h2>
+
+      {/* Reference to prediction */}
+      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl mb-6 text-center">
+        <p className="text-cyan-400 text-sm">
+          As you observed in the experiment, the electric field points toward negative charges and away from positive charges - exactly as you predicted! The field strength follows the inverse square law.
+        </p>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/30 rounded-2xl p-6">
@@ -1486,7 +1569,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist Challenge</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <svg viewBox="0 0 400 200" className="w-full max-w-md mx-auto mb-4">
+        <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto mb-4">
           <defs>
             {/* Premium positive charge gradient */}
             <radialGradient id="elecTwistPredPosGrad" cx="35%" cy="35%" r="60%">
@@ -1545,28 +1628,38 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             </radialGradient>
           </defs>
 
-          <rect x="0" y="0" width="400" height="200" fill="#0f172a" rx="8" />
-          <rect x="0" y="0" width="400" height="200" fill="url(#elecTwistPredGrid)" rx="8" />
+          <rect x="0" y="0" width="400" height="300" fill="#0f172a" rx="8" />
+          <rect x="0" y="0" width="400" height="300" fill="url(#elecTwistPredGrid)" rx="8" />
+
+          {/* Title */}
+          <text x="200" y="25" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="bold">Electric Dipole - Field at Midpoint?</text>
 
           {/* Charge auras */}
-          <circle cx="130" cy="100" r="50" fill="url(#elecTwistPredPosAura)" />
-          <circle cx="270" cy="100" r="50" fill="url(#elecTwistPredNegAura)" />
+          <circle cx="130" cy="150" r="50" fill="url(#elecTwistPredPosAura)" />
+          <circle cx="270" cy="150" r="50" fill="url(#elecTwistPredNegAura)" />
 
           {/* Connection line hint */}
-          <line x1="155" y1="100" x2="245" y2="100" stroke="#475569" strokeWidth="2" strokeDasharray="5,5" opacity="0.5" />
+          <line x1="155" y1="150" x2="245" y2="150" stroke="#475569" strokeWidth="2" strokeDasharray="5,5" opacity="0.5" />
+
+          {/* Curved field line hints spanning vertical space */}
+          <path d="M 130 150 Q 200 40 270 150" fill="none" stroke="#475569" strokeWidth="1" strokeDasharray="4,4" opacity="0.4" />
+          <path d="M 130 150 Q 200 260 270 150" fill="none" stroke="#475569" strokeWidth="1" strokeDasharray="4,4" opacity="0.4" />
 
           {/* Dipole charges with premium styling */}
-          <circle cx="130" cy="100" r="25" fill="url(#elecTwistPredPosGrad)" filter="url(#elecTwistPredPosGlow)" />
-          <text x="130" y="110" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>+</text>
+          <circle cx="130" cy="150" r="25" fill="url(#elecTwistPredPosGrad)" filter="url(#elecTwistPredPosGlow)" />
+          <text x="130" y="160" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>+</text>
 
-          <circle cx="270" cy="100" r="25" fill="url(#elecTwistPredNegGrad)" filter="url(#elecTwistPredNegGlow)" />
-          <text x="270" y="112" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>-</text>
+          <circle cx="270" cy="150" r="25" fill="url(#elecTwistPredNegGrad)" filter="url(#elecTwistPredNegGlow)" />
+          <text x="270" y="162" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>-</text>
 
           {/* Animated question mark */}
-          <text x="200" y="115" textAnchor="middle" fill="#fbbf24" fontSize="40" fontWeight="bold" filter="url(#elecTwistPredQGlow)">
+          <text x="200" y="165" textAnchor="middle" fill="#fbbf24" fontSize="40" fontWeight="bold" filter="url(#elecTwistPredQGlow)">
             ?
             <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
           </text>
+
+          {/* Bottom label */}
+          <text x="200" y="290" textAnchor="middle" fill="#64748b" fontSize="11">What is the field strength at the midpoint?</text>
         </svg>
         {/* Labels moved outside SVG using typo system */}
         <div className="flex justify-between max-w-md mx-auto px-8 mb-2">
@@ -1715,6 +1808,9 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           <rect x="0" y="0" width="500" height="300" fill="#0a0f1a" rx="12" />
           <rect x="0" y="0" width="500" height="300" fill="url(#elecTwistPlayGrid)" rx="12" />
 
+          {/* Title */}
+          <text x="250" y="20" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="bold">Dipole Field Pattern</text>
+
           {/* Charge auras */}
           <circle cx="150" cy="150" r="60" fill="url(#elecTwistPlayPosAura)">
             <animate attributeName="r" values="55;65;55" dur="3s" repeatCount="indefinite" />
@@ -1723,15 +1819,14 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             <animate attributeName="r" values="55;65;55" dur="3s" repeatCount="indefinite" />
           </circle>
 
-          {/* Dipole field lines with gradient */}
+          {/* Dipole field lines with gradient - spread vertically */}
           {[0, 1, 2, 3, 4, 5].map(i => {
-            const yOffset = (i - 2.5) * 30;
-            const amplitude = 40 + Math.abs(i - 2.5) * 20;
+            const yOffset = (i - 2.5) * 40;
+            const amplitude = 80 + Math.abs(i - 2.5) * 30;
             return (
               <path
                 key={`dipole-line-${i}`}
-                d={`M 150 ${150 + yOffset}
-                    Q 250 ${150 + yOffset - amplitude * Math.sign(yOffset || 1)} 350 ${150 + yOffset}`}
+                d={`M 150 ${150 + yOffset} Q 250 ${150 + yOffset - amplitude * Math.sign(yOffset || 1)} 350 ${150 + yOffset}`}
                 fill="none"
                 stroke="url(#elecTwistPlayFieldGrad)"
                 strokeWidth="2.5"
@@ -1768,6 +1863,9 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             <animate attributeName="r" values="23;27;23" dur="2s" repeatCount="indefinite" />
           </circle>
           <text x="350" y="160" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>-</text>
+
+          {/* Bottom annotation for vertical distribution */}
+          <text x="250" y="285" textAnchor="middle" fill="#64748b" fontSize="11">Field lines curve from + to - charge</text>
         </svg>
         {/* Labels moved outside SVG using typo system */}
         <p className="text-center text-green-400 font-bold mt-3" style={{ fontSize: typo.body }}>
@@ -2020,12 +2118,47 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <p style={{ fontSize: '18px', fontWeight: 700, color: 'white', marginBottom: '16px' }}>{q.question}</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-          {q.options.map((opt, i) => (
-            <button key={i} onClick={() => { if (!isConfirmed) { const newA = [...testAnswers]; newA[currentQuestion] = i; setTestAnswers(newA); } }} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', border: testAnswers[currentQuestion] === i ? '2px solid #3b82f6' : '1px solid #334155', backgroundColor: testAnswers[currentQuestion] === i ? 'rgba(59,130,246,0.15)' : '#0f172a', cursor: isConfirmed ? 'default' : 'pointer', textAlign: 'left' }}>
-              <span style={{ fontSize: '16px', color: 'white' }}>{String.fromCharCode(65 + i)}) {opt.text}</span>
-            </button>
-          ))}
+          {q.options.map((opt, i) => {
+            const isSelected = testAnswers[currentQuestion] === i;
+            const isCorrectOption = opt.correct;
+            const showResult = isConfirmed;
+
+            let borderColor = isSelected ? '#3b82f6' : '#334155';
+            let bgColor = isSelected ? 'rgba(59,130,246,0.15)' : '#0f172a';
+
+            if (showResult) {
+              if (isCorrectOption) {
+                borderColor = '#10b981';
+                bgColor = 'rgba(16,185,129,0.2)';
+              } else if (isSelected && !isCorrectOption) {
+                borderColor = '#ef4444';
+                bgColor = 'rgba(239,68,68,0.2)';
+              }
+            }
+
+            return (
+              <button key={i} onClick={() => { if (!isConfirmed) { const newA = [...testAnswers]; newA[currentQuestion] = i; setTestAnswers(newA); } }} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', border: `2px solid ${borderColor}`, backgroundColor: bgColor, cursor: isConfirmed ? 'default' : 'pointer', textAlign: 'left' }}>
+                <span style={{ fontSize: '16px', color: 'white' }}>
+                  {showResult && isCorrectOption && <span style={{ color: '#10b981', marginRight: '8px' }}>&#10003;</span>}
+                  {showResult && isSelected && !isCorrectOption && <span style={{ color: '#ef4444', marginRight: '8px' }}>&#10007;</span>}
+                  {String.fromCharCode(65 + i)}) {opt.text}
+                </span>
+              </button>
+            );
+          })}
         </div>
+
+        {/* Explanation box - shown after confirming answer */}
+        {isConfirmed && (
+          <div style={{ backgroundColor: q.options[testAnswers[currentQuestion]]?.correct ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', border: `1px solid ${q.options[testAnswers[currentQuestion]]?.correct ? '#10b981' : '#ef4444'}`, borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: q.options[testAnswers[currentQuestion]]?.correct ? '#10b981' : '#ef4444', marginBottom: '8px' }}>
+              {q.options[testAnswers[currentQuestion]]?.correct ? 'Correct!' : 'Incorrect'}
+            </p>
+            <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.6, margin: 0 }}>
+              <strong>Explanation:</strong> {q.explanation}
+            </p>
+          </div>
+        )}
 
         {!isConfirmed ? (
           <button onClick={() => { if (testAnswers[currentQuestion] !== -1) setConfirmedIndex(currentQuestion); }} disabled={testAnswers[currentQuestion] === -1} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: testAnswers[currentQuestion] !== -1 ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : '#1e293b', color: testAnswers[currentQuestion] !== -1 ? 'white' : '#64748b', fontSize: '16px', fontWeight: 700, cursor: testAnswers[currentQuestion] !== -1 ? 'pointer' : 'not-allowed', opacity: testAnswers[currentQuestion] !== -1 ? 1 : 0.5 }}>
@@ -2145,7 +2278,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <span style={{ fontSize: '14px', color: '#64748b' }}>{phaseIndex + 1}/10</span>
       </div>
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', paddingBottom: '100px', paddingTop: '48px' }}>
         <div style={{ position: 'fixed', top: 0, left: 0, width: `${((phaseIndex + 1) / 10) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #06b6d4, #3b82f6)', transition: 'width 0.3s ease', zIndex: 20 }} />
         {renderPhase()}
       </div>

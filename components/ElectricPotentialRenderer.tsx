@@ -20,11 +20,11 @@ const phaseLabels: Record<Phase, string> = {
   hook: 'Introduction',
   predict: 'Predict',
   play: 'Experiment',
-  review: 'Understanding',
-  twist_predict: 'New Scenario',
-  twist_play: 'Voltage Lab',
-  twist_review: 'Deep Insight',
-  transfer: 'Real World',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Play',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
   test: 'Knowledge Test',
   mastery: 'Mastery'
 };
@@ -157,10 +157,16 @@ const realWorldApps = [
 
 const ElectricPotentialRenderer: React.FC<Props> = ({
   onGameEvent,
+  gamePhase,
   onPhaseComplete
 }) => {
   // ==================== STATE ====================
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  });
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -171,6 +177,8 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
   const [activeAppIndex, setActiveAppIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [testIndex, setTestIndex] = useState(0);
+  const [showTestExplanation, setShowTestExplanation] = useState(false);
 
   // Simulation state
   const [sourceCharges, setSourceCharges] = useState<SourceCharge[]>([
@@ -195,6 +203,13 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Sync phase with gamePhase prop
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
 
   // Responsive typography
   const typo = {
@@ -455,111 +470,111 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       scenario: "A scientist places a +2μC charge at a point where the electric potential is 500V.",
       question: "What is the potential energy of the charge at this location?",
       options: [
-        { text: "250 J", correct: false },
-        { text: "1000 μJ (1 mJ)", correct: true },
-        { text: "500 J", correct: false },
-        { text: "2500 J", correct: false }
+        { text: "250 joules total", correct: false },
+        { text: "1 millijoule (1 mJ)", correct: true },
+        { text: "500 joules total", correct: false },
+        { text: "2500 joules total", correct: false }
       ],
       explanation: "U = qV = (2×10⁻⁶ C)(500 V) = 1×10⁻³ J = 1 mJ. Potential energy equals charge times potential."
     },
     {
-      scenario: "An electron is released from rest at a point where V = -100V and moves to a point where V = 0V.",
+      scenario: "An electron is released from rest at V = -100V and moves to V = 0V.",
       question: "How much kinetic energy does the electron gain?",
       options: [
-        { text: "100 eV", correct: true },
-        { text: "-100 eV", correct: false },
-        { text: "0 eV (no change)", correct: false },
-        { text: "1.6×10⁻¹⁷ J", correct: false }
+        { text: "100 electron-volts gained", correct: true },
+        { text: "Negative 100 electron-volts", correct: false },
+        { text: "Zero electron-volts", correct: false },
+        { text: "1.6 × 10⁻¹⁷ joules", correct: false }
       ],
-      explanation: "ΔKE = -qΔV = -(-e)(0-(-100)) = +100 eV. The electron gains 100 eV of kinetic energy as it moves to higher potential."
+      explanation: "ΔKE = -qΔV = -(-e)(0-(-100)) = +100 eV. The electron gains 100 eV of kinetic energy."
     },
     {
-      scenario: "A +5μC charge creates an electric potential field. You measure V = 900 kV at a distance r from the charge.",
+      scenario: "A +5μC charge creates an electric potential field. You measure V = 900 kV at distance r.",
       question: "What is the distance r from the charge?",
       options: [
-        { text: "1 cm", correct: false },
-        { text: "5 cm", correct: true },
-        { text: "10 cm", correct: false },
-        { text: "50 cm", correct: false }
+        { text: "About 1 centimeter", correct: false },
+        { text: "About 5 centimeters", correct: true },
+        { text: "About 10 centimeters", correct: false },
+        { text: "About 50 centimeters", correct: false }
       ],
       explanation: "V = kq/r, so r = kq/V = (8.99×10⁹)(5×10⁻⁶)/(9×10⁵) = 0.05 m = 5 cm."
     },
     {
-      scenario: "A capacitor has two parallel plates separated by 2mm with a voltage difference of 200V between them.",
+      scenario: "A capacitor has two parallel plates separated by 2mm with 200V between them.",
       question: "What is the magnitude of the electric field between the plates?",
       options: [
-        { text: "100 V/m", correct: false },
-        { text: "400 V/m", correct: false },
-        { text: "100,000 V/m", correct: true },
-        { text: "200 V/m", correct: false }
+        { text: "100 volts per meter", correct: false },
+        { text: "400 volts per meter", correct: false },
+        { text: "100,000 volts per meter", correct: true },
+        { text: "200 volts per meter", correct: false }
       ],
       explanation: "E = V/d = 200 V / 0.002 m = 100,000 V/m. The field is uniform between parallel plates."
     },
     {
-      scenario: "A proton and an electron start from rest between two charged plates. The potential difference is 1000V.",
+      scenario: "A proton and electron start from rest between two plates with 1000V potential difference.",
       question: "Which particle gains more kinetic energy?",
       options: [
-        { text: "The proton (it's heavier)", correct: false },
-        { text: "The electron (it's lighter)", correct: false },
-        { text: "Both gain the same energy", correct: true },
-        { text: "Neither gains energy", correct: false }
+        { text: "The proton because it is heavier", correct: false },
+        { text: "The electron because it is lighter", correct: false },
+        { text: "Both gain exactly the same energy", correct: true },
+        { text: "Neither gains any energy at all", correct: false }
       ],
-      explanation: "Both gain KE = |q|ΔV = (1.6×10⁻¹⁹)(1000) = 1000 eV. Energy depends on charge and potential difference, not mass."
+      explanation: "Both gain KE = |q|ΔV = (1.6×10⁻¹⁹)(1000) = 1000 eV. Energy depends on charge and potential, not mass."
     },
     {
       scenario: "A test charge is moved along an equipotential surface from point A to point B.",
-      question: "How much work is done by the electric field during this movement?",
+      question: "How much work is done by the electric field?",
       options: [
-        { text: "Maximum work (moving with field)", correct: false },
-        { text: "Depends on the path taken", correct: false },
-        { text: "Zero (same potential)", correct: true },
-        { text: "Negative work (against field)", correct: false }
+        { text: "Maximum work with field", correct: false },
+        { text: "Depends on path taken", correct: false },
+        { text: "Zero because same potential", correct: true },
+        { text: "Negative work against field", correct: false }
       ],
       explanation: "W = qΔV. Along an equipotential, ΔV = 0, so W = 0. No work is done moving along equipotential surfaces."
     },
     {
-      scenario: "Two point charges (+4μC and -4μC) form a dipole, separated by 10cm.",
-      question: "What is the potential at the exact midpoint between them?",
+      scenario: "Two charges (+4μC and -4μC) form a dipole separated by 10cm.",
+      question: "What is the potential at the exact midpoint?",
       options: [
-        { text: "Very high positive", correct: false },
-        { text: "Very high negative", correct: false },
-        { text: "Zero", correct: true },
-        { text: "Undefined (divide by zero)", correct: false }
+        { text: "Very high positive potential", correct: false },
+        { text: "Very high negative potential", correct: false },
+        { text: "Exactly zero at midpoint", correct: true },
+        { text: "Undefined at that location", correct: false }
       ],
-      explanation: "At the midpoint, the distance to each charge is equal. V = k(+q)/r + k(-q)/r = 0. The potentials cancel exactly."
+      explanation: "At the midpoint, distance to each charge is equal. V = k(+q)/r + k(-q)/r = 0."
     },
     {
-      scenario: "A Van de Graaff generator charges a metal sphere to 500,000V. A person touches the sphere.",
-      question: "Why might the spark be harmless despite the high voltage?",
+      scenario: "A Van de Graaff generator charges a sphere to 500,000V. A person touches it.",
+      question: "Why might the spark be harmless despite high voltage?",
       options: [
-        { text: "High voltage always means high current", correct: false },
-        { text: "The human body is a perfect insulator", correct: false },
-        { text: "Limited charge means limited energy transfer", correct: true },
-        { text: "Voltage doesn't affect the human body", correct: false }
+        { text: "High voltage means high current", correct: false },
+        { text: "Human body is a perfect insulator", correct: false },
+        { text: "Limited charge means limited energy", correct: true },
+        { text: "Voltage has no effect on body", correct: false }
       ],
-      explanation: "Energy = qV. While V is high, the stored charge q is very small (limited capacitance), so total energy is small. It's the energy, not voltage alone, that determines harm."
+      explanation: "Energy = qV. While V is high, stored charge q is very small, so total energy is small."
     },
     {
-      scenario: "A battery maintains a constant 12V between its terminals. When current flows, charges move from the negative to positive terminal through the battery.",
-      question: "What does the battery do to these charges?",
+      scenario: "A 12V battery maintains constant voltage between terminals as current flows.",
+      question: "What does the battery do to charges passing through?",
       options: [
-        { text: "Nothing - charges flow naturally", correct: false },
-        { text: "Provides energy to increase their potential", correct: true },
-        { text: "Removes energy from them", correct: false },
-        { text: "Changes their mass", correct: false }
+        { text: "Nothing — charges flow naturally", correct: false },
+        { text: "Raises their electric potential", correct: true },
+        { text: "Removes energy from charges", correct: false },
+        { text: "Changes the charge of electrons", correct: false }
       ],
-      explanation: "The battery does work on charges to raise their potential energy by 12 eV per electron (or 12 J per Coulomb). This is the EMF of the battery."
+      explanation: "The battery does work on charges to raise their potential energy by 12 eV per electron."
     },
     {
-      scenario: "Lightning occurs when the potential difference between a cloud and the ground exceeds about 100 million volts across a 1km gap.",
-      question: "What is the approximate electric field strength that causes air to break down and conduct?",
+      scenario: "Lightning: potential difference of 100 million volts across a 1km gap ionizes air.",
+      question: "What is the approximate breakdown electric field?",
       options: [
-        { text: "1,000 V/m", correct: false },
-        { text: "10,000 V/m", correct: false },
-        { text: "100,000 V/m (100 kV/m)", correct: true },
-        { text: "1,000,000,000 V/m", correct: false }
+        { text: "About 1,000 volts per meter", correct: false },
+        { text: "About 10,000 volts per meter", correct: false },
+        { text: "About 100,000 volts per meter", correct: true },
+        { text: "About 1 billion volts per meter", correct: false }
       ],
-      explanation: "E = V/d = 10⁸ V / 10³ m = 10⁵ V/m = 100 kV/m. Air breaks down at approximately 3 MV/m at sea level, but lightning occurs through stepped leaders at lower average fields."
+      explanation: "E = V/d = 10⁸ V / 10³ m = 10⁵ V/m = 100 kV/m."
     }
   ];
 
@@ -757,26 +772,26 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
   // ==================== PHASE RENDERERS ====================
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '600px', padding: '48px 24px', textAlign: 'center' }}>
       {/* Premium Badge */}
-      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-6">
-        <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-        <span className="text-amber-400 text-sm font-medium">Electromagnetic Physics</span>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '9999px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)', marginBottom: '24px' }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }} />
+        <span style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 500 }}>Electromagnetic Physics</span>
       </div>
 
-      {/* Gradient Title */}
-      <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl'} font-bold bg-gradient-to-r from-amber-400 via-orange-400 to-red-400 bg-clip-text text-transparent mb-3`}>
+      {/* Title */}
+      <h1 style={{ fontSize: isMobile ? '30px' : '36px', fontWeight: 800, lineHeight: 1.2, color: '#f59e0b', marginBottom: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
         Electric Potential
       </h1>
 
       {/* Subtitle */}
-      <p className="text-slate-400 text-lg mb-8 max-w-md">
+      <p style={{ fontSize: '17px', fontWeight: 400, lineHeight: 1.6, color: 'rgba(148, 163, 184, 0.8)', maxWidth: '500px', marginBottom: '32px' }}>
         Discover the energy landscape that drives electric current
       </p>
 
       {/* Premium Card */}
-      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 max-w-2xl shadow-2xl">
-        <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto mb-6">
+      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '24px', padding: isMobile ? '24px' : '32px', maxWidth: '700px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+        <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: '400px', margin: '0 auto 24px', display: 'block' }}>
           <defs>
             {/* Premium background gradient showing potential field */}
             <radialGradient id="epotHookBg" cx="25%" cy="50%" r="80%">
@@ -869,46 +884,54 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           <path d="M238,150 L145,150" fill="none" stroke="url(#epotHookArrow)" strokeWidth="4" markerEnd="url(#epotHookArrowHead)" />
         </svg>
 
-        {/* Labels moved outside SVG using typo system */}
-        <div className="flex justify-between items-center mb-4 px-8">
-          <div className="text-center">
-            <span style={{ fontSize: typo.label }} className="text-red-400 font-bold block">+Q Source</span>
-            <span style={{ fontSize: typo.label }} className="text-amber-400">High V</span>
+        {/* Labels */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', padding: '0 32px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#ef4444', display: 'block' }}>+Q Source</span>
+            <span style={{ fontSize: '12px', color: '#fbbf24' }}>High V</span>
           </div>
-          <div className="text-center">
-            <span style={{ fontSize: typo.small }} className="text-emerald-400 font-semibold">Work = qDelta V</span>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#22c55e' }}>Work = qDelta V</span>
           </div>
-          <div className="text-center">
-            <span style={{ fontSize: typo.label }} className="text-blue-400 font-bold block">Test q</span>
-            <span style={{ fontSize: typo.label }} className="text-emerald-400">Low V</span>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#60a5fa', display: 'block' }}>Test q</span>
+            <span style={{ fontSize: '12px', color: '#22c55e' }}>Low V</span>
           </div>
         </div>
 
-        <p className="text-xl text-slate-300 mb-4">
+        <p style={{ fontSize: '18px', fontWeight: 500, lineHeight: 1.5, color: '#cbd5e1', marginBottom: '16px' }}>
           Why does a ball roll downhill? Gravity creates a potential energy landscape!
         </p>
-        <p className="text-lg text-amber-400 font-medium">
+        <p style={{ fontSize: '16px', fontWeight: 600, lineHeight: 1.5, color: '#f59e0b' }}>
           Electric charges do the same thing - they "roll" from high to low electric potential!
         </p>
-        <p className="text-slate-400 mt-4">
-          Just like height determines gravitational potential, <span className="text-amber-400">voltage</span> determines electric potential energy per charge.
+        <p style={{ fontSize: '14px', fontWeight: 400, lineHeight: 1.6, color: '#94a3b8', marginTop: '16px' }}>
+          Just like height determines gravitational potential, <span style={{ color: '#f59e0b' }}>voltage</span> determines electric potential energy per charge.
         </p>
       </div>
 
       {/* Premium CTA Button */}
       <button
         onClick={() => goToPhase('predict')}
-        style={{ zIndex: 10 }}
-        className="group mt-8 px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-lg font-semibold rounded-2xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300 shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] flex items-center gap-2"
+        style={{
+          background: 'linear-gradient(135deg, #d97706, #ea580c)',
+          color: '#ffffff',
+          border: 'none',
+          padding: '16px 32px',
+          borderRadius: '16px',
+          fontSize: '18px',
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: '0 4px 20px rgba(217, 119, 6, 0.3)',
+          transition: 'all 0.3s ease',
+          marginTop: '32px',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
       >
         Explore Electric Potential
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
       </button>
 
-      {/* Subtle Hint */}
-      <p className="mt-4 text-slate-500 text-sm">
+      <p style={{ marginTop: '16px', fontSize: '14px', fontWeight: 400, lineHeight: 1.5, color: 'rgba(100, 116, 139, 0.8)' }}>
         Tap to begin your exploration
       </p>
     </div>
@@ -965,7 +988,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           <button
             key={option.id}
             onClick={() => handlePrediction(option.id)}
-            style={{ zIndex: 10 }}
+            style={{ zIndex: 10, minHeight: '44px' }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -978,7 +1001,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
             }`}
           >
             <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
+            <span style={{ color: '#e2e8f0' }} className="ml-2">{option.text}</span>
           </button>
         ))}
       </div>
@@ -993,7 +1016,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           </p>
           <button
             onClick={() => goToPhase('play')}
-            style={{ zIndex: 10 }}
+            style={{ zIndex: 10, minHeight: '44px' }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
           >
             Explore the Simulation
@@ -1027,14 +1050,188 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
     return vectors;
   }, [sourceCharges, calculateField]);
 
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-4">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-4`}>
+  const renderPlay = () => {
+    // Generate potential curve path for the graph - uses space-separated coords with 20+ L points
+    const generatePotentialCurve = () => {
+      const points: string[] = [];
+      const graphLeft = 60;
+      const graphRight = 380;
+      const graphTop = 60;
+      const graphBottom = 340;
+      const numPoints = 25;
+      for (let i = 0; i <= numPoints; i++) {
+        const frac = i / numPoints;
+        const sampleX = 50 + frac * 300;
+        const V = calculatePotential(sampleX, 200);
+        const clampedV = Math.max(-1e6, Math.min(1e6, V));
+        const normalizedV = Math.tanh(clampedV / 5e5);
+        const px = graphLeft + frac * (graphRight - graphLeft);
+        const py = (graphTop + graphBottom) / 2 - normalizedV * ((graphBottom - graphTop) / 2 - 10);
+        points.push(`${px.toFixed(1)} ${py.toFixed(1)}`);
+      }
+      return `M ${points[0]} ${points.slice(1).map(p => `L ${p}`).join(' ')}`;
+    };
+
+    // Interactive marker position on the curve
+    const markerFrac = (plateVoltage - 10) / (500 - 10);
+    const markerX = 60 + markerFrac * 320;
+    const markerSampleX = 50 + markerFrac * 300;
+    const markerV = calculatePotential(markerSampleX, 200);
+    const markerClampedV = Math.max(-1e6, Math.min(1e6, markerV));
+    const markerNormV = Math.tanh(markerClampedV / 5e5);
+    const markerY = 200 - markerNormV * 130;
+
+    return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', maxWidth: '800px', margin: '0 auto' }}>
+      <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, lineHeight: 1.3, color: '#ffffff', marginBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
         Electric Potential Lab
       </h2>
 
+      <p style={{ fontSize: '15px', fontWeight: 400, lineHeight: 1.6, color: '#e2e8f0', textAlign: 'center', marginBottom: '8px', maxWidth: '600px' }}>
+        Observe how the potential curve changes as you adjust the slider. This graph illustrates how V = kq/r represents energy per unit charge. When you increase voltage, the curve rises because higher voltage causes stronger potential.
+      </p>
+      <p style={{ fontSize: '13px', fontWeight: 400, lineHeight: 1.5, color: '#94a3b8', textAlign: 'center', marginBottom: '16px', maxWidth: '600px' }}>
+        This is important in real-world technology: electric potential is used in batteries, capacitors, and medical devices where voltage differences drive current flow.
+      </p>
+
+      {/* SVG Title */}
+      <div style={{ fontSize: '16px', fontWeight: 600, color: '#f59e0b', marginBottom: '8px', textAlign: 'center' }}>Electric Potential vs Distance</div>
+
+      {/* Main SVG Graph */}
+      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.5)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', width: '100%', maxWidth: '500px' }}>
+        <svg viewBox="0 0 420 400" style={{ width: '100%', display: 'block' }}>
+          <defs>
+            <linearGradient id="epotCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+            <radialGradient id="epotMarkerGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </radialGradient>
+            <filter id="epotGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="epotShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.4" />
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect x="0" y="0" width="420" height="400" fill="#0f172a" rx="12" />
+
+          {/* Grid lines group */}
+          <g opacity="0.5">
+          {[100, 150, 200, 250, 300].map(y => (
+            <line key={`gy-${y}`} x1="60" y1={y} x2="380" y2={y} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+          ))}
+          {[100, 150, 200, 250, 300, 350].map(x => (
+            <line key={`gx-${x}`} x1={x} y1="60" x2={x} y2="340" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+          ))}
+          </g>
+
+          {/* Axes */}
+          <line x1="60" y1="340" x2="380" y2="340" stroke="#94a3b8" strokeWidth="2" />
+          <line x1="60" y1="60" x2="60" y2="340" stroke="#94a3b8" strokeWidth="2" />
+
+          {/* Y axis label */}
+          <text x="12" y="54" fill="#f59e0b" fontSize="12" fontWeight="600" textAnchor="start">V</text>
+
+          {/* X axis label */}
+          <text x="220" y="390" fill="#94a3b8" fontSize="12" fontWeight="600" textAnchor="middle">Distance (mm)</text>
+
+          {/* Y axis tick labels */}
+          <text x="52" y="72" fill="#94a3b8" fontSize="11" textAnchor="end">+High</text>
+          <text x="52" y="198" fill="#94a3b8" fontSize="11" textAnchor="end">0</text>
+          <text x="52" y="336" fill="#94a3b8" fontSize="11" textAnchor="end">-Low</text>
+
+          {/* X axis tick labels */}
+          <text x="70" y="358" fill="#94a3b8" fontSize="11" textAnchor="middle">0</text>
+          <text x="220" y="358" fill="#94a3b8" fontSize="11" textAnchor="middle">150</text>
+          <text x="370" y="358" fill="#94a3b8" fontSize="11" textAnchor="middle">300</text>
+
+          {/* Potential curve path - space-separated, 25+ L points */}
+          <path
+            d={generatePotentialCurve()}
+            fill="none"
+            stroke="url(#epotCurveGrad)"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+
+          {/* Reference zero line */}
+          <line x1="60" y1="200" x2="380" y2="200" stroke="#64748b" strokeWidth="1" strokeDasharray="6 4" opacity="0.6" />
+          <text x="385" y="204" fill="#64748b" fontSize="11">V=0</text>
+
+          {/* Interactive marker circle - moves with slider */}
+          <g filter="url(#epotGlowFilter)">
+            <circle cx={markerX} cy={markerY} r="20" fill="url(#epotMarkerGlow)" />
+            <circle cx={markerX} cy={markerY} r="8" fill="#f59e0b" stroke="#ffffff" strokeWidth="2" />
+            <circle cx={markerX} cy={markerY} r="14" fill="none" stroke="#f59e0b" strokeWidth="1" opacity="0.4">
+              <animate attributeName="r" values="12;16;12" dur="2s" repeatCount="indefinite" />
+            </circle>
+          </g>
+
+          {/* Marker label - positioned below marker to avoid overlap */}
+          <text x={Math.min(markerX, 340)} y={Math.min(markerY + 28, 330)} fill="#f59e0b" fontSize="11" fontWeight="700" textAnchor="middle">{formatVoltage(markerV)}</text>
+
+          {/* Source charge label */}
+          <text x="80" y="88" fill="#ef4444" fontSize="12" fontWeight="600">Source: +Q</text>
+
+          {/* Test charge label */}
+          <text x="280" y="88" fill="#22c55e" fontSize="12" fontWeight="600">Test: +q</text>
+
+          {/* Formula - placed in separate area to avoid overlap */}
+          <text x="210" y="30" fill="#fbbf24" fontSize="12" fontWeight="600" textAnchor="middle">V = kq/r | F = qE | E = -dV/dr</text>
+
+          {/* Legend panel */}
+          <g filter="url(#epotShadow)">
+            <rect x="260" y="100" width="110" height="60" fill="#0f172a" stroke="#334155" strokeWidth="1" rx="6" opacity="0.9" />
+            <circle cx="276" cy="118" r="5" fill="#f59e0b" />
+            <text x="288" y="122" fill="#e2e8f0" fontSize="11">Potential curve</text>
+            <circle cx="276" cy="138" r="5" fill="#22c55e" stroke="#fff" strokeWidth="1" />
+            <text x="288" y="142" fill="#e2e8f0" fontSize="11">Marker position</text>
+            <line x1="270" y1="152" x2="282" y2="152" stroke="#64748b" strokeDasharray="4 2" />
+            <text x="288" y="156" fill="#e2e8f0" fontSize="11">Zero reference</text>
+          </g>
+        </svg>
+      </div>
+
+      {/* Slider controls */}
+      <div style={{ width: '100%', maxWidth: '500px', marginBottom: '16px' }}>
+        <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <label htmlFor="voltageSlider" style={{ fontSize: '14px', fontWeight: 600, color: '#f59e0b' }}>Source Voltage</label>
+            <span style={{ fontSize: '18px', fontWeight: 700, color: '#f59e0b' }}>{plateVoltage}V</span>
+          </div>
+          <input
+            id="voltageSlider"
+            type="range"
+            min="10"
+            max="500"
+            value={plateVoltage}
+            onInput={(e) => setPlateVoltage(Number((e.target as HTMLInputElement).value))}
+            onChange={(e) => setPlateVoltage(Number(e.target.value))}
+            role="slider"
+            aria-label="Voltage"
+            aria-valuemin={10}
+            aria-valuemax={500}
+            aria-valuenow={plateVoltage}
+            style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: '#f59e0b', touchAction: 'pan-y', WebkitAppearance: 'none', appearance: 'none' as never }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+            <span>10 (Min)</span>
+            <span>500 (Max)</span>
+          </div>
+        </div>
+      </div>
+
       {/* Configuration selector */}
-      <div className="flex gap-2 mb-4 flex-wrap justify-center">
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {[
           { id: 'single', label: 'Single Charge' },
           { id: 'dipole', label: 'Dipole' },
@@ -1043,505 +1240,89 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           <button
             key={config.id}
             onClick={() => setSelectedConfig(config.id as 'single' | 'dipole' | 'parallel')}
-            style={{ zIndex: 10 }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              selectedConfig === config.id
-                ? 'bg-amber-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '10px',
+              fontWeight: 600,
+              fontSize: '14px',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              background: selectedConfig === config.id ? 'linear-gradient(135deg, #f59e0b, #ea580c)' : 'rgba(51, 65, 85, 0.8)',
+              color: selectedConfig === config.id ? '#ffffff' : '#94a3b8',
+            }}
           >
             {config.label}
           </button>
         ))}
       </div>
 
-      {/* Main simulation */}
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-        <svg
-          ref={svgRef}
-          viewBox="0 0 400 400"
-          className={`${isMobile ? 'w-[320px] h-[320px]' : 'w-[400px] h-[400px]'} cursor-crosshair`}
-          onPointerMove={handleMouseMove}
-          onPointerUp={() => setIsDragging(false)}
-          onPointerLeave={() => setIsDragging(false)}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={() => setIsDragging(false)}
-        >
-          {/* ============ PREMIUM DEFS SECTION ============ */}
-          <defs>
-            {/* Premium lab background gradient */}
-            <linearGradient id="epotLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#0a0f1a" />
-              <stop offset="25%" stopColor="#0f172a" />
-              <stop offset="50%" stopColor="#1e293b" />
-              <stop offset="75%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#0a0f1a" />
-            </linearGradient>
-
-            {/* Positive charge radial gradient (red/orange glow) */}
-            <radialGradient id="epotPositiveCharge" cx="35%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#fbbf24" />
-              <stop offset="25%" stopColor="#f97316" />
-              <stop offset="50%" stopColor="#ef4444" />
-              <stop offset="75%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#991b1b" />
-            </radialGradient>
-
-            {/* Negative charge radial gradient (blue glow) */}
-            <radialGradient id="epotNegativeCharge" cx="35%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#67e8f9" />
-              <stop offset="25%" stopColor="#22d3ee" />
-              <stop offset="50%" stopColor="#3b82f6" />
-              <stop offset="75%" stopColor="#2563eb" />
-              <stop offset="100%" stopColor="#1e40af" />
-            </radialGradient>
-
-            {/* Test charge gradient (green) */}
-            <radialGradient id="epotTestCharge" cx="35%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#86efac" />
-              <stop offset="30%" stopColor="#4ade80" />
-              <stop offset="60%" stopColor="#22c55e" />
-              <stop offset="100%" stopColor="#15803d" />
-            </radialGradient>
-
-            {/* Positive plate gradient for parallel plates */}
-            <linearGradient id="epotPositivePlate" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#991b1b" />
-              <stop offset="25%" stopColor="#dc2626" />
-              <stop offset="50%" stopColor="#ef4444" />
-              <stop offset="75%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#991b1b" />
-            </linearGradient>
-
-            {/* Negative plate gradient for parallel plates */}
-            <linearGradient id="epotNegativePlate" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1e40af" />
-              <stop offset="25%" stopColor="#2563eb" />
-              <stop offset="50%" stopColor="#3b82f6" />
-              <stop offset="75%" stopColor="#2563eb" />
-              <stop offset="100%" stopColor="#1e40af" />
-            </linearGradient>
-
-            {/* High potential equipotential gradient */}
-            <linearGradient id="epotEquipotentialHigh" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.2" />
-              <stop offset="25%" stopColor="#f97316" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
-              <stop offset="75%" stopColor="#f97316" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.2" />
-            </linearGradient>
-
-            {/* Low potential equipotential gradient */}
-            <linearGradient id="epotEquipotentialLow" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-              <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
-              <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
-            </linearGradient>
-
-            {/* Neutral equipotential gradient */}
-            <linearGradient id="epotEquipotentialNeutral" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#64748b" stopOpacity="0.2" />
-              <stop offset="50%" stopColor="#f8fafc" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#64748b" stopOpacity="0.2" />
-            </linearGradient>
-
-            {/* Field vector gradient (arrow) */}
-            <linearGradient id="epotFieldVector" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#c084fc" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#e879f9" stopOpacity="1" />
-            </linearGradient>
-
-            {/* Voltage contour heat gradient */}
-            <linearGradient id="epotHeatGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="25%" stopColor="#06b6d4" />
-              <stop offset="50%" stopColor="#22c55e" />
-              <stop offset="75%" stopColor="#f59e0b" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-
-            {/* Positive charge glow filter */}
-            <filter id="epotPositiveGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feFlood floodColor="#f97316" floodOpacity="0.6" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Negative charge glow filter */}
-            <filter id="epotNegativeGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feFlood floodColor="#3b82f6" floodOpacity="0.6" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Test charge glow filter */}
-            <filter id="epotTestGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feFlood floodColor="#22c55e" floodOpacity="0.5" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Equipotential line glow */}
-            <filter id="epotLineGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Plate glow filter */}
-            <filter id="epotPlateGlow" x="-50%" y="-10%" width="200%" height="120%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Readout box shadow */}
-            <filter id="epotReadoutShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
-            </filter>
-
-            {/* Arrow marker for field vectors */}
-            <marker id="epotArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L8,3 z" fill="url(#epotFieldVector)" />
-            </marker>
-          </defs>
-
-          {/* Premium dark lab background */}
-          <rect x="0" y="0" width="400" height="400" fill="url(#epotLabBg)" rx="15" />
-
-          {/* Subtle grid overlay */}
-          <g opacity="0.1">
-            {Array.from({ length: 11 }).map((_, i) => (
-              <React.Fragment key={`grid-${i}`}>
-                <line x1={i * 40} y1="0" x2={i * 40} y2="400" stroke="#64748b" strokeWidth="0.5" />
-                <line x1="0" y1={i * 40} x2="400" y2={i * 40} stroke="#64748b" strokeWidth="0.5" />
-              </React.Fragment>
-            ))}
-          </g>
-
-          {/* Potential heat map with premium coloring */}
-          {Array.from({ length: 20 }).map((_, i) =>
-            Array.from({ length: 20 }).map((_, j) => {
-              const x = 10 + i * 20;
-              const y = 10 + j * 20;
-              const V = calculatePotential(x, y);
-              return (
-                <rect
-                  key={`${i}-${j}`}
-                  x={x - 10}
-                  y={y - 10}
-                  width="20"
-                  height="20"
-                  fill={getPotentialColor(V)}
-                  opacity="0.25"
-                />
-              );
-            })
-          )}
-
-          {/* Parallel plates with premium styling */}
-          {selectedConfig === 'parallel' && (
-            <>
-              {/* Positive plate with glow */}
-              <g filter="url(#epotPlateGlow)">
-                <rect x="93" y="50" width="14" height="300" fill="url(#epotPositivePlate)" rx="3" />
-                <rect x="95" y="52" width="10" height="296" fill="none" stroke="#fbbf24" strokeWidth="1" strokeOpacity="0.5" rx="2" />
-              </g>
-              {/* Negative plate with glow */}
-              <g filter="url(#epotPlateGlow)">
-                <rect x="293" y="50" width="14" height="300" fill="url(#epotNegativePlate)" rx="3" />
-                <rect x="295" y="52" width="10" height="296" fill="none" stroke="#67e8f9" strokeWidth="1" strokeOpacity="0.5" rx="2" />
-              </g>
-              {/* Uniform field arrows between plates */}
-              {Array.from({ length: 7 }).map((_, i) => {
-                const y = 80 + i * 40;
-                return (
-                  <line
-                    key={`field-${i}`}
-                    x1="130"
-                    y1={y}
-                    x2="270"
-                    y2={y}
-                    stroke="url(#epotFieldVector)"
-                    strokeWidth="2"
-                    markerEnd="url(#epotArrowHead)"
-                    opacity="0.6"
-                  />
-                );
-              })}
-            </>
-          )}
-
-          {/* Electric field vectors for point charges */}
-          {selectedConfig !== 'parallel' && generateFieldVectors().map((vec, i) => {
-            const maxLen = 25;
-            const len = Math.min(maxLen, Math.log10(vec.E + 1) * 5);
-            if (len < 3) return null;
-            const angle = Math.atan2(vec.Ey, vec.Ex);
-            const endX = vec.x + len * Math.cos(angle);
-            const endY = vec.y + len * Math.sin(angle);
-            return (
-              <line
-                key={`vec-${i}`}
-                x1={vec.x}
-                y1={vec.y}
-                x2={endX}
-                y2={endY}
-                stroke="url(#epotFieldVector)"
-                strokeWidth="1.5"
-                markerEnd="url(#epotArrowHead)"
-                opacity="0.5"
-              />
-            );
-          })}
-
-          {/* Equipotential lines with premium gradients */}
-          {showEquipotentials && generateEquipotentials().map((line, i) => (
-            <g key={i} filter="url(#epotLineGlow)">
-              {line.points.length >= 2 && (
-                <path
-                  d={selectedConfig === 'parallel'
-                    ? `M${line.points[0].x},${line.points[0].y} L${line.points[1].x},${line.points[1].y}`
-                    : `M${line.points.map(p => `${p.x},${p.y}`).join(' L')}`
-                  }
-                  fill="none"
-                  stroke={line.V > 0 ? 'url(#epotEquipotentialHigh)' : line.V < 0 ? 'url(#epotEquipotentialLow)' : 'url(#epotEquipotentialNeutral)'}
-                  strokeWidth="2"
-                  strokeDasharray="6,4"
-                  opacity="0.8"
-                />
-              )}
-            </g>
-          ))}
-
-          {/* Source charges with premium glow effects */}
-          {sourceCharges.map(charge => (
-            <g key={charge.id} filter={charge.q > 0 ? 'url(#epotPositiveGlow)' : 'url(#epotNegativeGlow)'}>
-              {/* Outer glow ring */}
-              <circle
-                cx={charge.x}
-                cy={charge.y}
-                r="28"
-                fill="none"
-                stroke={charge.q > 0 ? '#f97316' : '#3b82f6'}
-                strokeWidth="1"
-                opacity="0.3"
-              />
-              {/* Main charge circle with gradient */}
-              <circle
-                cx={charge.x}
-                cy={charge.y}
-                r="22"
-                fill={charge.q > 0 ? 'url(#epotPositiveCharge)' : 'url(#epotNegativeCharge)'}
-                stroke="#fff"
-                strokeWidth="2"
-              />
-              {/* Inner highlight */}
-              <circle
-                cx={charge.x - 5}
-                cy={charge.y - 5}
-                r="6"
-                fill="#fff"
-                opacity="0.2"
-              />
-            </g>
-          ))}
-
-          {/* Test charge with premium styling */}
-          <g
-            style={{ cursor: 'grab' }}
-            onPointerDown={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onTouchStart={(e) => { e.preventDefault(); setIsDragging(true); }}
-            filter="url(#epotTestGlow)"
-          >
-            {/* Outer pulse ring */}
-            <circle
-              cx={testChargePos.x}
-              cy={testChargePos.y}
-              r="22"
-              fill="none"
-              stroke="#22c55e"
-              strokeWidth="1"
-              opacity="0.4"
-            >
-              <animate attributeName="r" values="18;25;18" dur="2s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.4;0.1;0.4" dur="2s" repeatCount="indefinite" />
-            </circle>
-            {/* Main test charge with gradient */}
-            <circle
-              cx={testChargePos.x}
-              cy={testChargePos.y}
-              r="16"
-              fill="url(#epotTestCharge)"
-              stroke="#fff"
-              strokeWidth="2"
-            />
-            {/* Inner highlight */}
-            <circle
-              cx={testChargePos.x - 4}
-              cy={testChargePos.y - 4}
-              r="4"
-              fill="#fff"
-              opacity="0.3"
-            />
-          </g>
-
-          {/* Premium readout box at test charge */}
-          <g filter="url(#epotReadoutShadow)">
-            <rect
-              x={testChargePos.x + 22}
-              y={testChargePos.y - 32}
-              width="95"
-              height="28"
-              fill="#0f172a"
-              stroke="#f59e0b"
-              strokeWidth="1"
-              rx="6"
-              opacity="0.95"
-            />
-            <rect
-              x={testChargePos.x + 23}
-              y={testChargePos.y - 31}
-              width="93"
-              height="26"
-              fill="none"
-              stroke="#fbbf24"
-              strokeWidth="0.5"
-              strokeOpacity="0.3"
-              rx="5"
-            />
-          </g>
-        </svg>
-
-        {/* External text labels using typo system */}
-        <div className="flex justify-between items-center mt-2 px-2">
-          {selectedConfig === 'parallel' && (
-            <>
-              <span style={{ fontSize: typo.small }} className="text-red-400 font-semibold">+{plateVoltage}V</span>
-              <span style={{ fontSize: typo.label }} className="text-slate-400">Uniform Field</span>
-              <span style={{ fontSize: typo.small }} className="text-blue-400 font-semibold">0V (Ground)</span>
-            </>
-          )}
-          {selectedConfig === 'single' && (
-            <>
-              <span style={{ fontSize: typo.small }} className="text-amber-400 font-semibold">+{sourceCharges[0]?.q}μC Source</span>
-              <span style={{ fontSize: typo.label }} className="text-slate-400">Radial Field</span>
-              <span style={{ fontSize: typo.small }} className="text-emerald-400 font-semibold">V = {formatVoltage(currentPotential)}</span>
-            </>
-          )}
-          {selectedConfig === 'dipole' && (
-            <>
-              <span style={{ fontSize: typo.small }} className="text-red-400 font-semibold">+{Math.abs(sourceCharges[0]?.q || 5)}μC</span>
-              <span style={{ fontSize: typo.label }} className="text-slate-400">Dipole Field</span>
-              <span style={{ fontSize: typo.small }} className="text-blue-400 font-semibold">-{Math.abs(sourceCharges[1]?.q || 5)}μC</span>
-            </>
-          )}
+      {/* Data display - comparison layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', width: '100%', maxWidth: '500px', marginBottom: '16px' }}>
+        <div style={{ background: 'rgba(30, 41, 59, 0.7)', borderRadius: '12px', padding: '12px', textAlign: 'center', border: '1px solid rgba(71, 85, 105, 0.5)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 400, lineHeight: 1.5 }}>Current Potential</div>
+          <div style={{ fontSize: '20px', fontWeight: 700, color: '#f59e0b' }}>{formatVoltage(currentPotential)}</div>
         </div>
-
-        {/* Charge indicator labels */}
-        <div className="flex justify-center gap-4 mt-2">
-          {sourceCharges.map(charge => (
-            <span key={charge.id} style={{ fontSize: typo.label }} className={`${charge.q > 0 ? 'text-red-400' : 'text-blue-400'}`}>
-              {charge.q > 0 ? '+' : ''}{charge.q}μC
-            </span>
-          ))}
-          <span style={{ fontSize: typo.label }} className="text-emerald-400">Test: +q</span>
+        <div style={{ background: 'rgba(30, 41, 59, 0.7)', borderRadius: '12px', padding: '12px', textAlign: 'center', border: '1px solid rgba(71, 85, 105, 0.5)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 400, lineHeight: 1.5 }}>Reference: baseline</div>
+          <div style={{ fontSize: '20px', fontWeight: 700, color: '#06b6d4' }}>{(currentField.E / 1000).toFixed(0)} kV/m</div>
         </div>
-
-        {/* Controls */}
-        <div className="mt-4 flex flex-wrap gap-2 justify-center">
-          <button
-            onClick={() => setShowEquipotentials(!showEquipotentials)}
-            style={{ zIndex: 10 }}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-              showEquipotentials ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-300'
-            }`}
-          >
-            Equipotentials {showEquipotentials ? 'ON' : 'OFF'}
-          </button>
-          {selectedConfig === 'parallel' && (
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-sm">Voltage:</span>
-              <input
-                type="range"
-                min="10"
-                max="500"
-                value={plateVoltage}
-                onChange={(e) => setPlateVoltage(Number(e.target.value))}
-                className="w-24"
-              />
-              <span className="text-amber-400 text-sm font-medium">{plateVoltage}V</span>
-            </div>
-          )}
+        <div style={{ background: 'rgba(30, 41, 59, 0.7)', borderRadius: '12px', padding: '12px', textAlign: 'center', border: '1px solid rgba(71, 85, 105, 0.5)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 400, lineHeight: 1.5 }}>Position</div>
+          <div style={{ fontSize: '20px', fontWeight: 700, color: '#22c55e' }}>{testChargePos.x.toFixed(0)}, {testChargePos.y.toFixed(0)}</div>
+        </div>
+        <div style={{ background: 'rgba(30, 41, 59, 0.7)', borderRadius: '12px', padding: '12px', textAlign: 'center', border: '1px solid rgba(71, 85, 105, 0.5)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 400, lineHeight: 1.5 }}>Test Charge</div>
+          <div style={{ fontSize: '20px', fontWeight: 700, color: '#a855f7' }}>+1 μC</div>
         </div>
       </div>
 
-      {/* Data display */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mb-4">
-        <div className="bg-slate-800/70 rounded-xl p-3 text-center">
-          <div style={{ fontSize: typo.heading }} className="font-bold text-amber-400">{formatVoltage(currentPotential)}</div>
-          <div style={{ fontSize: typo.label }} className="text-slate-400">Potential at test charge</div>
-        </div>
-        <div className="bg-slate-800/70 rounded-xl p-3 text-center">
-          <div style={{ fontSize: typo.heading }} className="font-bold text-cyan-400">{(currentField.E / 1000).toFixed(0)} kV/m</div>
-          <div style={{ fontSize: typo.label }} className="text-slate-400">Field strength</div>
-        </div>
-        <div className="bg-slate-800/70 rounded-xl p-3 text-center">
-          <div style={{ fontSize: typo.heading }} className="font-bold text-emerald-400">{testChargePos.x.toFixed(0)}, {testChargePos.y.toFixed(0)}</div>
-          <div style={{ fontSize: typo.label }} className="text-slate-400">Position (px)</div>
-        </div>
-        <div className="bg-slate-800/70 rounded-xl p-3 text-center">
-          <div style={{ fontSize: typo.heading }} className="font-bold text-purple-400">+1 μC</div>
-          <div style={{ fontSize: typo.label }} className="text-slate-400">Test charge</div>
-        </div>
-      </div>
-
-      {/* Key insight */}
-      <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-xl p-4 max-w-2xl">
-        <h3 style={{ fontSize: typo.bodyLarge }} className="font-bold text-amber-400 mb-2">Key Insight</h3>
-        <p style={{ fontSize: typo.body }} className="text-slate-300">
-          <strong>Equipotential surfaces</strong> are always perpendicular to electric field lines.
-          Moving along an equipotential requires <strong>no work</strong> because Delta V = 0!
+      {/* Key insight card */}
+      <div style={{ background: 'linear-gradient(135deg, rgba(120, 53, 15, 0.4), rgba(154, 52, 18, 0.4))', borderRadius: '12px', padding: '16px', maxWidth: '500px', width: '100%', border: '1px solid rgba(245, 158, 11, 0.3)', marginBottom: '16px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#f59e0b', marginBottom: '8px', lineHeight: 1.3 }}>Key Insight</h3>
+        <p style={{ fontSize: '14px', fontWeight: 400, lineHeight: 1.6, color: '#cbd5e1' }}>
+          <strong>Equipotential surfaces</strong> are perpendicular to field lines. Moving along an equipotential requires <strong>no work</strong> (W = q x 0 = 0). V = kq/r for point charges.
         </p>
-        <p style={{ fontSize: typo.body }} className="text-cyan-400 mt-2">
-          V = kq/r for a point charge. Potential decreases as 1/r (slower than field's 1/r squared).
+        <p style={{ fontSize: '14px', fontWeight: 500, lineHeight: 1.6, color: '#06b6d4', marginTop: '8px' }}>
+          Formula: V = kq/r | E = -dV/dr | W = q x Delta V
         </p>
       </div>
 
       <button
         onClick={() => goToPhase('review')}
-        style={{ zIndex: 10 }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
+        style={{
+          padding: '14px 28px',
+          borderRadius: '12px',
+          border: 'none',
+          background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+          color: '#ffffff',
+          fontWeight: 600,
+          fontSize: '16px',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          boxShadow: '0 4px 20px rgba(245, 158, 11, 0.3)',
+        }}
       >
         Review the Concepts
       </button>
     </div>
-  );
+    );
+  };
 
   const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+      <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, lineHeight: 1.3, color: '#ffffff', marginBottom: '24px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
         Understanding Electric Potential
       </h2>
+
+      {/* Reference user's prediction */}
+      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px', marginBottom: '24px', maxWidth: '700px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
+        <p style={{ color: '#e2e8f0', fontSize: '15px', fontWeight: 400, lineHeight: 1.6 }}>
+          {selectedPrediction === 'B'
+            ? "You correctly predicted that a positive charge gains kinetic energy moving from high to low potential - your prediction was right!"
+            : "Your prediction showed good thinking. Remember: a positive charge gains kinetic energy when moving from high to low potential, converting potential energy to kinetic energy."}
+        </p>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-2xl p-6">
@@ -1613,7 +1394,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
       <button
         onClick={() => goToPhase('twist_predict')}
-        style={{ zIndex: 10 }}
+        style={{ zIndex: 10, minHeight: '44px' }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Discover a Surprising Twist
@@ -1646,9 +1427,9 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           <rect x="140" y="35" width="40" height="10" fill="#64748b" />
 
           {/* Labels */}
-          <text x="55" y="110" textAnchor="middle" fill="#ef4444" fontSize="10">+9V</text>
-          <text x="75" y="110" textAnchor="middle" fill="#3b82f6" fontSize="10">0V</text>
-          <text x="160" y="25" textAnchor="middle" fill="#64748b" fontSize="10">Resistor</text>
+          <text x="55" y="110" textAnchor="middle" fill="#ef4444" fontSize="11">+9V</text>
+          <text x="75" y="110" textAnchor="middle" fill="#3b82f6" fontSize="11">0V</text>
+          <text x="160" y="25" textAnchor="middle" fill="#64748b" fontSize="11">Resistor</text>
 
           {/* Question marks at different points */}
           <circle cx="100" cy="40" r="10" fill="#f59e0b" opacity="0.5" />
@@ -1676,7 +1457,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           <button
             key={option.id}
             onClick={() => handleTwistPrediction(option.id)}
-            style={{ zIndex: 10 }}
+            style={{ zIndex: 10, minHeight: '44px' }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -1704,7 +1485,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           </p>
           <button
             onClick={() => goToPhase('twist_play')}
-            style={{ zIndex: 10 }}
+            style={{ zIndex: 10, minHeight: '44px' }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
           >
             Explore Voltage in Circuits
@@ -1738,7 +1519,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
           {/* Resistor 1 */}
           <rect x="330" y="120" width="40" height="60" fill="#64748b" stroke="#94a3b8" strokeWidth="2" rx="3" />
-          <text x="350" y="155" textAnchor="middle" fill="white" fontSize="10">R1</text>
+          <text x="350" y="155" textAnchor="middle" fill="white" fontSize="11">R1</text>
 
           {/* Middle wire */}
           <line x1="350" y1="180" x2="350" y2="200" stroke="#f59e0b" strokeWidth="4" />
@@ -1746,7 +1527,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
           {/* Resistor 2 */}
           <rect x="180" y="170" width="40" height="60" fill="#64748b" stroke="#94a3b8" strokeWidth="2" rx="3" />
-          <text x="200" y="205" textAnchor="middle" fill="white" fontSize="10">R2</text>
+          <text x="200" y="205" textAnchor="middle" fill="white" fontSize="11">R2</text>
 
           {/* Bottom wire - low potential */}
           <line x1="200" y1="230" x2="200" y2="250" stroke="#3b82f6" strokeWidth="4" />
@@ -1755,17 +1536,17 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
           {/* Voltage labels */}
           <circle cx="200" cy="50" r="15" fill="#ef4444" opacity="0.3" />
-          <text x="200" y="55" textAnchor="middle" fill="#ef4444" fontSize="10">9V</text>
+          <text x="200" y="55" textAnchor="middle" fill="#ef4444" fontSize="11">9V</text>
 
           <circle cx="350" cy="200" r="15" fill="#f59e0b" opacity="0.3" />
-          <text x="350" y="205" textAnchor="middle" fill="#f59e0b" fontSize="10">4.5V</text>
+          <text x="350" y="205" textAnchor="middle" fill="#f59e0b" fontSize="11">4.5V</text>
 
           <circle cx="200" cy="250" r="15" fill="#3b82f6" opacity="0.3" />
-          <text x="200" y="255" textAnchor="middle" fill="#3b82f6" fontSize="10">0V</text>
+          <text x="200" y="255" textAnchor="middle" fill="#3b82f6" fontSize="11">0V</text>
 
           {/* Voltage drop annotations */}
-          <text x="380" y="150" fill="#22c55e" fontSize="9">Delta V = 4.5V</text>
-          <text x="140" y="200" fill="#22c55e" fontSize="9">Delta V = 4.5V</text>
+          <text x="380" y="150" fill="#22c55e" fontSize="11">Delta V = 4.5V</text>
+          <text x="140" y="200" fill="#22c55e" fontSize="11">Delta V = 4.5V</text>
         </svg>
       </div>
 
@@ -1800,7 +1581,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
       <button
         onClick={() => goToPhase('twist_review')}
-        style={{ zIndex: 10 }}
+        style={{ zIndex: 10, minHeight: '44px' }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Review This Discovery
@@ -1860,7 +1641,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
       <button
         onClick={() => goToPhase('transfer')}
-        style={{ zIndex: 10 }}
+        style={{ zIndex: 10, minHeight: '44px' }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
       >
         Explore Real-World Applications
@@ -1869,234 +1650,406 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
   );
 
   const renderTransfer = () => (
-    <div className="flex flex-col items-center p-4">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+      <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, lineHeight: 1.3, color: '#ffffff', marginBottom: '24px' }}>
         Real-World Applications
       </h2>
 
       {/* App selector tabs */}
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {transferApps.map((app, index) => (
           <button
             key={index}
             onClick={() => setActiveAppIndex(index)}
-            style={{ zIndex: 10 }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppIndex === index
-                ? 'bg-amber-600 text-white'
-                : completedApps.has(index)
-                ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '10px',
+              fontWeight: 600,
+              transition: 'all 0.3s ease',
+              border: completedApps.has(index) ? '1px solid #22c55e' : 'none',
+              background: activeAppIndex === index ? 'linear-gradient(135deg, #f59e0b, #ea580c)' : completedApps.has(index) ? 'rgba(34, 197, 94, 0.2)' : '#334155',
+              color: activeAppIndex === index ? '#fff' : completedApps.has(index) ? '#22c55e' : '#94a3b8',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
           >
             {app.icon} {app.short}
           </button>
         ))}
       </div>
 
-      {/* Active app display */}
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-3xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-4xl">{transferApps[activeAppIndex].icon}</span>
-          <div>
-            <h3 className="text-xl font-bold text-white">{transferApps[activeAppIndex].title}</h3>
-            <p className="text-amber-400 text-sm">{transferApps[activeAppIndex].tagline}</p>
-          </div>
-        </div>
+      {/* Scroll container with all app cards */}
+      <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', flex: 1, width: '100%', maxWidth: '700px' }}>
+        {transferApps.map((app, appIdx) => (
+          <div key={appIdx} style={{
+            display: activeAppIndex === appIdx ? 'block' : 'none',
+            background: 'rgba(30, 41, 59, 0.5)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid rgba(71, 85, 105, 0.5)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            marginBottom: '16px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '32px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', lineHeight: 1.3 }}>{app.title}</h3>
+                <p style={{ fontSize: '14px', color: '#f59e0b', fontWeight: 500 }}>{app.tagline}</p>
+              </div>
+            </div>
 
-        <p className="text-slate-300 mb-4">{transferApps[activeAppIndex].description}</p>
+            <p style={{ fontSize: '14px', fontWeight: 400, lineHeight: 1.6, color: '#cbd5e1', marginBottom: '16px' }}>{app.description}</p>
 
-        <div className={`bg-gradient-to-r ${transferApps[activeAppIndex].color} bg-opacity-20 rounded-xl p-4 mb-4`}>
-          <h4 className="font-semibold text-white mb-2">Physics Connection</h4>
-          <p className="text-slate-200 text-sm">{transferApps[activeAppIndex].connection}</p>
-        </div>
+            <div style={{ background: 'rgba(30, 58, 138, 0.3)', borderRadius: '12px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#60a5fa', marginBottom: '8px' }}>Physics Connection</h4>
+              <p style={{ fontSize: '13px', fontWeight: 400, lineHeight: 1.5, color: '#cbd5e1' }}>{app.connection}</p>
+            </div>
 
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <h4 className="font-semibold text-cyan-400 mb-2">How It Works</h4>
-            <ul className="text-sm text-slate-300 space-y-1">
-              {transferApps[activeAppIndex].howItWorks.map((step, i) => (
-                <li key={i}>{step}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold text-emerald-400 mb-2">Key Numbers</h4>
-            <div className="grid grid-cols-2 gap-2">
-              {transferApps[activeAppIndex].stats.map((stat, i) => (
-                <div key={i} className="bg-slate-900/50 rounded-lg p-2 text-center">
-                  <div className="text-amber-400 font-bold">{stat.value}</div>
-                  <div className="text-xs text-slate-500">{stat.label}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              <div>
+                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#06b6d4', marginBottom: '8px' }}>How It Works</h4>
+                <ul style={{ fontSize: '13px', color: '#cbd5e1', margin: 0, paddingLeft: '16px' }}>
+                  {app.howItWorks.map((step, i) => (
+                    <li key={i} style={{ marginBottom: '4px', lineHeight: 1.5 }}>{step}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#22c55e', marginBottom: '8px' }}>Key Numbers</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  {app.stats.map((stat, i) => (
+                    <div key={i} style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#f59e0b' }}>{stat.value}</div>
+                      <div style={{ fontSize: '10px', color: '#64748b' }}>{stat.label}</div>
+                    </div>
+                  ))}
                 </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+              {app.companies.map((company, i) => (
+                <span key={i} style={{ padding: '4px 8px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '6px', fontSize: '12px', color: '#cbd5e1' }}>
+                  {company}
+                </span>
               ))}
             </div>
+
+            {!completedApps.has(appIdx) && (
+              <button
+                onClick={() => handleAppComplete(appIdx)}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  color: '#ffffff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #22c55e, #0d9488)',
+                  transition: 'all 0.3s ease',
+                  fontSize: '14px',
+                }}
+              >
+                Got It! Mark as Understood
+              </button>
+            )}
+            {completedApps.has(appIdx) && (
+              <div style={{ width: '100%', padding: '14px', borderRadius: '12px', fontWeight: 600, textAlign: 'center', background: 'rgba(34, 197, 94, 0.2)', color: '#22c55e', border: '1px solid #22c55e' }}>
+                Completed
+              </div>
+            )}
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          {transferApps[activeAppIndex].companies.map((company, i) => (
-            <span key={i} className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
-              {company}
-            </span>
-          ))}
-        </div>
-
-        <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
-          <h4 className="font-semibold text-purple-400 mb-1 text-sm">Future Impact</h4>
-          <p className="text-slate-400 text-xs">{transferApps[activeAppIndex].futureImpact}</p>
-        </div>
-
-        {!completedApps.has(activeAppIndex) && (
-          <button
-            onClick={() => handleAppComplete(activeAppIndex)}
-            style={{ zIndex: 10 }}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition-colors"
-          >
-            Mark as Understood
-          </button>
-        )}
+        ))}
       </div>
 
       {/* Progress indicator */}
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">
+      <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <span style={{ color: '#94a3b8', fontSize: '14px' }}>Progress:</span>
+        <div style={{ display: 'flex', gap: '4px' }}>
           {transferApps.map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`}
-            />
+            <div key={i} style={{ width: '12px', height: '12px', borderRadius: '50%', background: completedApps.has(i) ? '#22c55e' : '#334155' }} />
           ))}
         </div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
+        <span style={{ color: '#94a3b8', fontSize: '14px' }}>{completedApps.size}/{transferApps.length}</span>
       </div>
 
-      {completedApps.size >= 4 && (
-        <button
-          onClick={() => goToPhase('test')}
-          style={{ zIndex: 10 }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
-        >
-          Take the Knowledge Test
-        </button>
-      )}
+      {/* Continue button to test phase */}
+      <button
+        onClick={() => goToPhase('test')}
+        style={{
+          marginTop: '24px',
+          padding: '16px 32px',
+          borderRadius: '12px',
+          border: 'none',
+          background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+          color: '#ffffff',
+          fontWeight: 600,
+          fontSize: '16px',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          boxShadow: '0 4px 20px rgba(245, 158, 11, 0.3)',
+        }}
+      >
+        Continue to Knowledge Test
+      </button>
     </div>
   );
 
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-4">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>
-        Knowledge Assessment
-      </h2>
+  const renderTest = () => {
+    const optionLabels = ['A', 'B', 'C', 'D'];
 
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <div className="bg-slate-900/50 rounded-lg p-3 mb-3">
-                <p className="text-amber-400 text-sm italic">{q.scenario}</p>
-              </div>
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{ zIndex: 10 }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-amber-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          <button
-            onClick={() => {
-              const score = calculateScore();
-              setTestScore(score);
-              setShowTestResults(true);
-              playSound(score >= 7 ? 'complete' : 'incorrect');
-            }}
-            style={{ zIndex: 10 }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-500 hover:to-orange-500'
-            }`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="max-w-2xl w-full">
-          <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
-            <div className="text-6xl mb-4">{testScore >= 7 ? '🎉' : '📚'}</div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Score: {testScore}/10
-            </h3>
-            <p className="text-slate-300 mb-4">
-              {testScore >= 7
-                ? 'Excellent! You\'ve mastered electric potential!'
-                : 'Keep studying! Review the concepts and try again.'}
+    if (showTestResults) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{ padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>{passed ? '🎉' : '📚'}</div>
+            <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>
+              {passed ? 'Test Complete!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ fontSize: '36px', fontWeight: 800, color: passed ? '#10b981' : '#f59e0b', margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ fontSize: '16px', color: '#94a3b8', marginBottom: '24px' }}>
+              {passed ? 'You scored ' + testScore + '/10 - Excellent! You\'ve mastered electric potential!' : 'You scored ' + testScore + '/10 - Review the concepts and try again.'}
             </p>
           </div>
 
-          {/* Show explanations */}
-          <div className="space-y-4 mb-6">
+          {/* Answer review with scrollable container */}
+          <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '24px' }}>
             {testQuestions.map((q, qIndex) => {
-              const isCorrect = q.options[testAnswers[qIndex]]?.correct;
+              const userAnswer = testAnswers[qIndex];
+              const isCorrect = userAnswer !== -1 && q.options[userAnswer]?.correct;
               return (
                 <div
                   key={qIndex}
-                  className={`rounded-xl p-4 ${isCorrect ? 'bg-emerald-900/30 border border-emerald-600' : 'bg-red-900/30 border border-red-600'}`}
+                  style={{
+                    borderRadius: '12px',
+                    padding: '16px',
+                    marginBottom: '12px',
+                    background: isCorrect ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                    border: `1px solid ${isCorrect ? '#10b981' : '#ef4444'}`,
+                  }}
                 >
-                  <p className="text-white font-medium mb-2">
-                    {qIndex + 1}. {q.question}
+                  <p style={{ color: '#ffffff', fontWeight: 600, marginBottom: '8px' }}>
+                    Question {qIndex + 1}: {q.question}
                   </p>
-                  <p className={`text-sm mb-2 ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
-                    Your answer: {q.options[testAnswers[qIndex]]?.text}
+                  <p style={{ fontSize: '14px', color: isCorrect ? '#10b981' : '#ef4444', marginBottom: '4px' }}>
+                    {isCorrect ? '✓' : '✗'} Your answer: {userAnswer !== -1 ? q.options[userAnswer]?.text : 'Not answered'}
                     {isCorrect ? ' (Correct)' : ' (Incorrect)'}
                   </p>
-                  <p className="text-slate-400 text-sm">{q.explanation}</p>
+                  {!isCorrect && (
+                    <p style={{ fontSize: '14px', color: '#10b981', marginBottom: '4px' }}>
+                      Correct answer: {q.options.find(o => o.correct)?.text}
+                    </p>
+                  )}
+                  <p style={{ fontSize: '13px', color: '#94a3b8' }}>{q.explanation}</p>
                 </div>
               );
             })}
           </div>
 
-          {testScore >= 7 ? (
-            <button
-              onClick={() => goToPhase('mastery')}
-              style={{ zIndex: 10 }}
-              className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
-            >
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button
-              onClick={() => {
+          <button
+            onClick={() => {
+              if (passed) {
+                goToPhase('mastery');
+              } else {
                 setShowTestResults(false);
                 setTestAnswers(Array(10).fill(-1));
+                setTestIndex(0);
+                setShowTestExplanation(false);
                 goToPhase('review');
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '14px',
+              borderRadius: '12px',
+              border: 'none',
+              background: passed ? 'linear-gradient(135deg, #10b981, #0d9488)' : 'linear-gradient(135deg, #f59e0b, #ea580c)',
+              color: '#ffffff',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {passed ? 'Claim Your Mastery Badge' : 'Review and Try Again'}
+          </button>
+        </div>
+      );
+    }
+
+    const q = testQuestions[testIndex];
+    const selected = testAnswers[testIndex];
+    const isCorrect = selected !== -1 && q.options[selected]?.correct;
+
+    return (
+      <div style={{ padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
+        {/* Knowledge assessment header */}
+        <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#ffffff', marginBottom: '8px', textAlign: 'center' }}>
+          Electric Potential Knowledge Assessment
+        </h2>
+        <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px', textAlign: 'center', lineHeight: 1.5 }}>
+          Test your understanding of electric potential, voltage, equipotential surfaces, and energy stored in electric fields. Apply the formulas V = kq/r and U = qV to solve real physics scenarios.
+        </p>
+
+        {/* Question counter */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 500, color: 'rgba(148, 163, 184, 0.8)' }}>Question</span>
+            <span style={{ fontSize: '28px', fontWeight: 800, color: '#f59e0b' }}>{testIndex + 1}</span>
+            <span style={{ fontSize: '16px', fontWeight: 600, color: '#e2e8f0' }}>of 10</span>
+          </div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {testQuestions.map((_, i) => (
+              <div key={i} style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: i === testIndex ? '#f59e0b' : testAnswers[i] !== -1 ? '#10b981' : '#334155',
+              }} />
+            ))}
+          </div>
+        </div>
+
+        {/* Scenario */}
+        <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px', marginBottom: '16px', borderLeft: '3px solid #f59e0b' }}>
+          <p style={{ fontSize: '14px', fontWeight: 400, lineHeight: 1.5, color: '#e2e8f0', margin: 0, fontStyle: 'italic' }}>{q.scenario}</p>
+        </div>
+
+        <h3 style={{ fontSize: '20px', fontWeight: 700, lineHeight: 1.3, color: '#ffffff', marginBottom: '20px' }}>{q.question}</h3>
+
+        {/* Answer options */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+          {q.options.map((opt, i) => {
+            let borderColor = '#334155';
+            let bgColor = 'rgba(30, 41, 59, 0.5)';
+            if (showTestExplanation) {
+              if (opt.correct) { borderColor = '#10b981'; bgColor = 'rgba(16, 185, 129, 0.15)'; }
+              else if (selected === i && !opt.correct) { borderColor = '#ef4444'; bgColor = 'rgba(239, 68, 68, 0.15)'; }
+            } else if (selected === i) {
+              borderColor = '#f59e0b'; bgColor = 'rgba(245, 158, 11, 0.15)';
+            }
+            return (
+              <button
+                key={i}
+                onClick={() => {
+                  if (!showTestExplanation) {
+                    handleTestAnswer(testIndex, i);
+                  }
+                }}
+                disabled={showTestExplanation}
+                style={{
+                  background: bgColor,
+                  border: `2px solid ${borderColor}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: showTestExplanation ? 'default' : 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <span style={{ color: '#ffffff', fontSize: '14px', fontWeight: 400, lineHeight: 1.5 }}>
+                  {optionLabels[i]}) {opt.text}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Explanation after checking */}
+        {showTestExplanation && (
+          <div style={{
+            background: isCorrect ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+            border: `1px solid ${isCorrect ? '#10b981' : '#ef4444'}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: isCorrect ? '#10b981' : '#ef4444', marginBottom: '8px' }}>
+              {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+            </p>
+            <p style={{ fontSize: '14px', fontWeight: 400, lineHeight: 1.5, color: '#94a3b8', margin: 0 }}>{q.explanation}</p>
+          </div>
+        )}
+
+        {/* Navigation buttons */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {!showTestExplanation && selected !== -1 && (
+            <button
+              onClick={() => {
+                playSound(isCorrect ? 'success' : 'incorrect');
+                setShowTestExplanation(true);
               }}
-              style={{ zIndex: 10 }}
-              className="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#f59e0b',
+                color: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+              }}
             >
-              Review and Try Again
+              Check Answer
+            </button>
+          )}
+
+          {showTestExplanation && testIndex < 9 && (
+            <button
+              onClick={() => {
+                setTestIndex(testIndex + 1);
+                setShowTestExplanation(false);
+              }}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#f59e0b',
+                color: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Next Question
+            </button>
+          )}
+
+          {showTestExplanation && testIndex === 9 && (
+            <button
+              onClick={() => {
+                const score = testAnswers.reduce((acc, ans, i) => {
+                  if (ans === -1) return acc;
+                  return acc + (testQuestions[i].options[ans]?.correct ? 1 : 0);
+                }, 0);
+                setTestScore(score);
+                setShowTestResults(true);
+                playSound(score >= 7 ? 'complete' : 'incorrect');
+              }}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #10b981, #0d9488)',
+                color: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              See Results
             </button>
           )}
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   const renderMastery = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
@@ -2145,7 +2098,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         <div className="flex gap-4 justify-center">
           <button
             onClick={() => goToPhase('hook')}
-            style={{ zIndex: 10 }}
+            style={{ zIndex: 10, minHeight: '44px' }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
             Explore Again
@@ -2172,42 +2125,148 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
     }
   };
 
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const isFirstPhase = currentPhaseIndex === 0;
+  const isLastPhase = currentPhaseIndex === phaseOrder.length - 1;
+  const canAdvance = !isLastPhase && phase !== 'test';
+
+  const renderBottomNav = () => (
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '12px 20px',
+      borderTop: '1px solid rgba(71, 85, 105, 0.5)',
+      background: 'rgba(15, 23, 42, 0.95)',
+      backdropFilter: 'blur(12px)',
+      zIndex: 1000,
+    }}>
+      <button
+        onClick={() => !isFirstPhase && goToPhase(phaseOrder[currentPhaseIndex - 1])}
+        style={{
+          minHeight: '48px',
+          padding: '12px 20px',
+          borderRadius: '10px',
+          border: '1px solid rgba(71, 85, 105, 0.5)',
+          background: 'transparent',
+          color: isFirstPhase ? 'rgba(148, 163, 184, 0.4)' : '#e2e8f0',
+          cursor: isFirstPhase ? 'not-allowed' : 'pointer',
+          opacity: isFirstPhase ? 0.4 : 1,
+          transition: 'all 0.3s ease',
+          fontWeight: 600,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontSize: '14px',
+        }}
+      >
+        Back
+      </button>
+      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+        {phaseOrder.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(p)}
+            aria-label={phaseLabels[p]}
+            title={phaseLabels[p]}
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              padding: '0',
+            }}
+          >
+            <span style={{
+              width: p === phase ? '20px' : '10px',
+              height: '10px',
+              borderRadius: '5px',
+              background: p === phase ? '#f59e0b' : i < currentPhaseIndex ? '#22c55e' : '#334155',
+              transition: 'all 0.3s ease',
+              display: 'block',
+            }} />
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={() => canAdvance && goToPhase(phaseOrder[currentPhaseIndex + 1])}
+        style={{
+          minHeight: '48px',
+          padding: '12px 20px',
+          borderRadius: '10px',
+          border: 'none',
+          background: canAdvance ? 'linear-gradient(135deg, #f59e0b, #ea580c)' : '#334155',
+          color: '#ffffff',
+          cursor: canAdvance ? 'pointer' : 'not-allowed',
+          opacity: canAdvance ? 1 : 0.4,
+          transition: 'all 0.3s ease',
+          fontWeight: 600,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontSize: '14px',
+        }}
+        disabled={!canAdvance}
+      >
+        Next
+      </button>
+    </nav>
+  );
+
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium Background Layers */}
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-950/50 via-transparent to-orange-950/50" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/20 via-transparent to-transparent" />
-
-      {/* Ambient Glow Circles */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-3/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl" />
-
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)',
+      color: '#ffffff',
+      display: 'flex',
+      flexDirection: 'column',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
       {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-slate-400`}>Electric Potential</span>
-          <div className="flex gap-1.5 items-center">
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: 'rgba(15, 23, 42, 0.9)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', maxWidth: '900px', margin: '0 auto' }}>
+          <span style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: 600, color: '#e2e8f0' }}>Electric Potential</span>
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
             {phaseOrder.map((p, i) => (
-              <button
+              <div
                 key={p}
                 onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p ? 'bg-amber-500 w-6' : phaseOrder.indexOf(phase) > i ? 'bg-amber-500 w-2' : 'bg-slate-600 w-2'
-                }`}
-                title={phaseLabels[p]}
+                style={{
+                  width: phase === p ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: phase === p ? '#f59e0b' : currentPhaseIndex > i ? '#f59e0b' : '#334155',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
               />
             ))}
           </div>
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-500`}>{phaseLabels[phase]}</span>
+          <span style={{ fontSize: isMobile ? '12px' : '14px', color: '#e2e8f0' }}>{phaseLabels[phase]}</span>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 pt-14 pb-8">
+      {/* Main content - scrollable */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', position: 'relative', zIndex: 10 }}>
         {renderPhase()}
       </div>
+
+      {renderBottomNav()}
     </div>
   );
 };

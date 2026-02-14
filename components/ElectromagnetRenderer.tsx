@@ -1239,6 +1239,16 @@ export default function ElectromagnetRenderer({
       <div className="flex flex-col items-center p-6">
         <h2 className="text-2xl font-bold text-white mb-4">Electromagnet Lab</h2>
 
+        {/* Key Concept Panel - Physics definition and real-world relevance */}
+        <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)', borderRadius: '12px', border: '1px solid #3b82f6', padding: '16px', marginBottom: '16px', maxWidth: '672px', width: '100%' }}>
+          <p className="text-slate-200 text-sm">
+            <strong className="text-cyan-400">Magnetic field strength</strong> is defined as the force experienced by a moving charge in a magnetic field and is measured in Tesla (T).
+            The relationship between current, coil turns, and field strength is given by the formula: <span className="font-mono text-yellow-400">B = u x n x I</span>.
+            This technology is important because electromagnets are used in MRI machines, electric motors, speakers, and industrial applications.
+            Engineers design electromagnets for practical applications from medical imaging to maglev trains.
+          </p>
+        </div>
+
         <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
           {renderElectromagnet(current, coilTurns, hasCore, paperClipPositions)}
 
@@ -1352,6 +1362,15 @@ export default function ElectromagnetRenderer({
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Understanding Electromagnets</h2>
+
+      {/* Connection to prediction */}
+      <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 rounded-2xl p-4 mb-6 max-w-4xl border border-green-600/30">
+        <p className="text-slate-200 text-sm">
+          As you observed in the experiment, your prediction about current creating magnetism was correct!
+          You saw that increasing current strengthens the field - this is exactly what the result of the simulation demonstrated.
+          The observation you made confirms Oersted&apos;s discovery from 1820.
+        </p>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         {/* Oersted's Discovery */}

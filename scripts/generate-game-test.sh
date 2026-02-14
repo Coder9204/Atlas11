@@ -1,25 +1,30 @@
 #!/bin/bash
 
 # ============================================================================
-# GAME TEST GENERATOR
+# GAME TEST GENERATOR v2
 # ============================================================================
-# Usage: ./scripts/generate-game-test.sh GameRendererName
+# Usage: ./scripts/generate-game-test.sh GameRendererName [architecture]
 #
-# This script creates a test file for any game renderer that uses the
-# universal TDD test factory to run all 109 validation tests.
+# Creates a test file using the universal TDD test factory v2 with
+# architecture auto-detection and tiered validation.
+#
+# Arguments:
+#   GameRendererName  - Name of the renderer component (without .tsx)
+#   architecture      - Optional: 'self-managing' or 'externally-managed' or 'auto'
 #
 # Example:
 #   ./scripts/generate-game-test.sh WaveParticleDualityRenderer
-#   npm run test:run -- tests/games/WaveParticleDualityRenderer.test.tsx
+#   ./scripts/generate-game-test.sh BrachistochroneRenderer externally-managed
 # ============================================================================
 
 if [ -z "$1" ]; then
-  echo "Usage: $0 <GameRendererName>"
+  echo "Usage: $0 <GameRendererName> [architecture]"
   echo "Example: $0 WaveParticleDualityRenderer"
   exit 1
 fi
 
 GAME_NAME=$1
+ARCH=${2:-auto}
 TEST_FILE="tests/games/${GAME_NAME}.test.tsx"
 COMPONENT_FILE="components/${GAME_NAME}.tsx"
 
@@ -36,28 +41,24 @@ if [ -f "$TEST_FILE" ]; then
   exit 0
 fi
 
+# Auto-detect architecture if not specified
+if [ "$ARCH" = "auto" ]; then
+  if grep -q "gamePhase" "$COMPONENT_FILE"; then
+    ARCH="self-managing"
+  else
+    ARCH="externally-managed"
+  fi
+fi
+
 # Create the test file
 cat > "$TEST_FILE" << EOF
-/**
- * TDD Test Suite for ${GAME_NAME}
- *
- * Auto-generated test file using the universal game test factory.
- * Runs all 109 validation tests against the game component.
- *
- * Run with: npm run test:run -- ${TEST_FILE}
- */
-
 import ${GAME_NAME} from '../../components/${GAME_NAME}';
 import { createGameTestSuite } from '../utils/game-test-factory';
 
-// Run the complete TDD validation suite
-createGameTestSuite('${GAME_NAME}', ${GAME_NAME});
+createGameTestSuite('${GAME_NAME}', ${GAME_NAME}, {
+  tier: 'all',
+  architecture: '${ARCH}',
+});
 EOF
 
-echo "Created test file: $TEST_FILE"
-echo ""
-echo "Run tests with:"
-echo "  npm run test:run -- $TEST_FILE"
-echo ""
-echo "Or run in watch mode:"
-echo "  npm test -- $TEST_FILE"
+echo "Created: $TEST_FILE (architecture: $ARCH)"

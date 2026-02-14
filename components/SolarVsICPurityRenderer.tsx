@@ -577,6 +577,11 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -629,6 +634,11 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
 
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -700,7 +710,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Solar vs IC Silicon Purity
@@ -748,7 +758,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
           {renderVisualization(false)}
 
           <div style={{ padding: '16px' }}>
@@ -788,11 +798,14 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Purity Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust purity and compare solar vs IC requirements
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', fontStyle: 'italic' }}>
+              Observe how impurity levels affect carrier lifetime, transistor yield, and cost for each application.
             </p>
           </div>
 
@@ -826,7 +839,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -879,7 +892,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -926,11 +939,14 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Explore the Cost Curve</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Watch how cost scales with each additional 9 of purity
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', fontStyle: 'italic' }}>
+              Observe how the cost bars grow as you increase purity levels.
             </p>
           </div>
 
@@ -963,7 +979,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1014,7 +1030,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1054,14 +1070,43 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
                     color: colors.accent,
                     cursor: 'pointer',
                     fontSize: '13px',
+                    minHeight: '44px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      // Find next incomplete application
+                      const nextIndex = transferApplications.findIndex((_, i) => i > index && !transferCompleted.has(i));
+                      if (nextIndex !== -1) {
+                        // Scroll to next application
+                        const cards = document.querySelectorAll('[data-transfer-card]');
+                        if (cards[nextIndex]) {
+                          cards[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      minHeight: '44px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {index < transferApplications.length - 1 ? 'Next Application' : 'Got It'}
+                  </button>
                 </div>
               )}
             </div>
@@ -1119,11 +1164,11 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (

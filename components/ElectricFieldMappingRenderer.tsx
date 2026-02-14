@@ -21,9 +21,9 @@ const premiumDesign = {
       card: 'rgba(255, 255, 255, 0.03)',
     },
     text: {
-      primary: '#FFFFFF',
-      secondary: 'rgba(255, 255, 255, 0.7)',
-      muted: 'rgba(255, 255, 255, 0.4)',
+      primary: '#f8fafc',
+      secondary: '#e2e8f0',
+      muted: '#cbd5e1',
     },
     gradient: {
       primary: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
@@ -53,10 +53,10 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   'hook': 'Hook',
   'predict': 'Predict',
-  'play': 'Lab',
+  'play': 'Experiment',
   'review': 'Review',
   'twist_predict': 'Twist Predict',
-  'twist_play': 'Twist Lab',
+  'twist_play': 'Twist Experiment',
   'twist_review': 'Twist Review',
   'transfer': 'Transfer',
   'test': 'Test',
@@ -135,6 +135,9 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
 
   // Twist review
   const [twistReviewStep, setTwistReviewStep] = useState(0);
+
+  // Play phase - field strength slider
+  const [fieldStrength, setFieldStrength] = useState(50);
 
   // Transfer phase
   const [activeApp, setActiveApp] = useState(0);
@@ -292,7 +295,9 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
     try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+      const audioContext = new AudioCtx();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       oscillator.connect(gainNode);
@@ -488,6 +493,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
       fontFamily: premiumDesign.typography.fontFamily,
       opacity: disabled ? 0.5 : 1,
       zIndex: 10,
+      minHeight: '44px',
     };
 
     const variants = {
@@ -581,7 +587,8 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
     vectors: FieldVector[],
     lines: { x: number; y: number }[][],
     showVec: boolean,
-    showLines: boolean
+    showLines: boolean,
+    fieldScale: number = 100
   ) {
     // Generate equipotential lines (circles around charges)
     const generateEquipotentialLines = () => {
@@ -792,14 +799,15 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
 
         {/* Field vectors with gradient and glow */}
         {showVec && vectors.map((v, i) => {
-          const maxLen = 15;
-          const scale = Math.min(maxLen, v.magnitude * 0.1);
+          const scaleFactor = fieldScale / 100;
+          const maxLen = 15 * scaleFactor;
+          const scale = Math.min(maxLen, v.magnitude * 0.1 * scaleFactor);
           const mag = Math.sqrt(v.ex * v.ex + v.ey * v.ey);
           if (mag < 0.01) return null;
 
           const endX = v.x + (v.ex / mag) * scale;
           const endY = v.y + (v.ey / mag) * scale;
-          const opacity = Math.min(1, v.magnitude * 0.025);
+          const opacity = Math.min(1, v.magnitude * 0.025 * scaleFactor);
 
           return (
             <line
@@ -865,8 +873,41 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
             >
               {charge.q > 0 ? '+' : '−'}
             </text>
+            {/* SVG Label for charge */}
+            <text
+              x={charge.x}
+              y={charge.y + 35}
+              textAnchor="middle"
+              fill="#e2e8f0"
+              fontSize="11"
+              fontWeight="500"
+            >
+              {charge.q > 0 ? 'Positive Charge' : 'Negative Charge'}
+            </text>
           </g>
         ))}
+
+        {/* Field direction label */}
+        {showLines && lines.length > 0 && (
+          <text x="150" y="285" textAnchor="middle" fill="#22d3ee" fontSize="11" fontWeight="500">
+            Field Lines (E-field direction)
+          </text>
+        )}
+
+        {/* Axis labels and educational annotations */}
+        <g id="axis-labels">
+          <text x="90" y="15" textAnchor="middle" fill="#94a3b8" fontSize="11">Distance (position)</text>
+          <text x="12" y="155" textAnchor="middle" fill="#94a3b8" fontSize="11" transform="rotate(-90 12 155)">Force intensity</text>
+        </g>
+
+        {/* Formula annotation */}
+        <g id="formula-layer">
+          <text x="270" y="268" textAnchor="end" fill="#6ee7b7" fontSize="11">E = kq/r²</text>
+          <text x="30" y="30" textAnchor="start" fill="#94a3b8" fontSize="11">Scale: {Math.round(fieldScale)}%</text>
+        </g>
+
+        {/* Interactive marker circle - moves with field scale */}
+        <circle cx={150} cy={150 - fieldScale * 0.5} r="4" fill="#f59e0b" stroke="white" strokeWidth="1" opacity="0.8" />
 
       </svg>
     );
@@ -878,7 +919,8 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
     vectors: FieldVector[],
     lines: { x: number; y: number }[][],
     showVec: boolean,
-    showLines: boolean
+    showLines: boolean,
+    fieldScale: number = 100
   ) {
     return (
       <div style={{ position: 'relative' }}>
@@ -906,33 +948,39 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
             </span>
           </div>
         )}
-        {/* Field strength legend */}
-        {chargeList.length > 0 && (
-          <div style={{
-            position: 'absolute',
-            bottom: typo.elementGap,
-            right: typo.elementGap,
-            padding: `${premiumDesign.spacing.xs}px ${premiumDesign.spacing.sm}px`,
-            background: 'rgba(0,0,0,0.7)',
-            borderRadius: premiumDesign.radius.sm,
-            border: '1px solid rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: premiumDesign.spacing.sm,
-            zIndex: 10,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-              <span style={{ fontSize: typo.label, color: premiumDesign.colors.text.muted }}>+</span>
+        {/* Legend section */}
+        <div data-legend="true" style={{
+          position: 'absolute',
+          bottom: typo.elementGap,
+          right: typo.elementGap,
+          padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px`,
+          background: 'rgba(0,0,0,0.85)',
+          borderRadius: premiumDesign.radius.md,
+          border: '1px solid rgba(255,255,255,0.15)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 10,
+        }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, color: '#e2e8f0', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Legend</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ef4444', border: '1px solid rgba(255,255,255,0.5)' }} />
+              <span style={{ fontSize: '11px', color: '#e2e8f0' }}>Positive charge (+)</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6' }} />
-              <span style={{ fontSize: typo.label, color: premiumDesign.colors.text.muted }}>-</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#3b82f6', border: '1px solid rgba(255,255,255,0.5)' }} />
+              <span style={{ fontSize: '11px', color: '#e2e8f0' }}>Negative charge (-)</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: 16, height: 2, background: 'linear-gradient(90deg, #06b6d4, #10b981)', borderRadius: '1px' }} />
+              <span style={{ fontSize: '11px', color: '#e2e8f0' }}>Field lines</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: 10, height: 10, background: 'linear-gradient(45deg, #10b981 50%, #6ee7b7 50%)', borderRadius: '2px' }} />
+              <span style={{ fontSize: '11px', color: '#e2e8f0' }}>Field vectors</span>
             </div>
           </div>
-        )}
-        {renderFieldVisualization(chargeList, vectors, lines, showVec, showLines)}
+        </div>
+        {renderFieldVisualization(chargeList, vectors, lines, showVec, showLines, fieldScale)}
       </div>
     );
   }
@@ -1051,44 +1099,107 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '600px',
+        padding: '48px 24px',
+        textAlign: 'center',
+      }}>
         {/* Premium badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
-          <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-          <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 16px',
+          background: 'rgba(6, 182, 212, 0.1)',
+          border: '1px solid rgba(6, 182, 212, 0.2)',
+          borderRadius: '9999px',
+          marginBottom: '32px',
+        }}>
+          <span style={{
+            width: '8px',
+            height: '8px',
+            background: '#06b6d4',
+            borderRadius: '50%',
+          }} />
+          <span style={{
+            fontSize: '14px',
+            fontWeight: 500,
+            color: '#06b6d4',
+            letterSpacing: '0.5px',
+          }}>PHYSICS EXPLORATION</span>
         </div>
 
         {/* Gradient title */}
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent">
+        <h1 style={{
+          fontSize: isMobile ? '32px' : '48px',
+          fontWeight: 700,
+          marginBottom: '24px',
+          background: 'linear-gradient(135deg, #06b6d4 0%, #3B82F6 50%, #10B981 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          lineHeight: 1.2,
+        }}>
           {hookContent[hookStep].title}
         </h1>
 
         {/* Premium card */}
-        <div className="max-w-2xl mx-auto p-8 bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 shadow-xl">
-          <p className="text-lg text-slate-300 leading-relaxed">
+        <div style={{
+          maxWidth: '640px',
+          margin: '0 auto',
+          padding: '32px',
+          background: 'rgba(30, 41, 59, 0.5)',
+          backdropFilter: 'blur(8px)',
+          borderRadius: '16px',
+          border: '1px solid rgba(71, 85, 105, 0.5)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        }}>
+          <p style={{
+            fontSize: '18px',
+            color: '#94a3b8',
+            lineHeight: 1.7,
+          }}>
             {hookContent[hookStep].text}
           </p>
         </div>
 
         {/* Step indicators */}
-        <div className="flex gap-2 mt-8">
+        <div style={{ display: 'flex', gap: '8px', marginTop: '32px' }}>
           {hookContent.map((_, i) => (
             <div
               key={i}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === hookStep ? 'w-8 bg-cyan-400' : 'w-2 bg-slate-700'
-              }`}
+              style={{
+                height: '8px',
+                width: i === hookStep ? '32px' : '8px',
+                borderRadius: '9999px',
+                background: i === hookStep ? '#06b6d4' : '#334155',
+                transition: 'all 0.3s ease',
+              }}
             />
           ))}
         </div>
 
         {/* Navigation buttons */}
-        <div className="flex gap-4 mt-8">
+        <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
           {hookStep > 0 && (
             <button
               onClick={(e) => { e.preventDefault(); setHookStep(h => h - 1); }}
-              className="px-6 py-3 bg-slate-700/50 hover:bg-slate-600/50 text-white rounded-xl font-medium transition-all"
-              style={{ zIndex: 10 }}
+              style={{
+                padding: '12px 24px',
+                background: 'rgba(51, 65, 85, 0.5)',
+                color: 'white',
+                borderRadius: '12px',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                zIndex: 10,
+                minHeight: '44px',
+              }}
             >
               Back
             </button>
@@ -1102,13 +1213,102 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                 goNext();
               }
             }}
-            className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/25 transition-all"
-            style={{ zIndex: 10 }}
+            style={{
+              padding: '12px 32px',
+              background: 'linear-gradient(135deg, #06b6d4 0%, #3B82F6 100%)',
+              color: 'white',
+              borderRadius: '12px',
+              fontWeight: 600,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 10px 25px -5px rgba(6, 182, 212, 0.25)',
+              transition: 'all 0.3s ease',
+              zIndex: 10,
+              minHeight: '44px',
+            }}
           >
             {hookStep < hookContent.length - 1 ? 'Continue' : 'Make a Prediction'}
           </button>
         </div>
       </div>
+    );
+  }
+
+  // Static predict phase SVG showing a charge without field lines
+  function renderPredictSVG() {
+    return (
+      <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 200, marginBottom: premiumDesign.spacing.lg }}>
+        <defs>
+          <radialGradient id="efmPredictCharge" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#991b1b" />
+          </radialGradient>
+          <radialGradient id="efmPredictGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <g id="background-layer">
+          <rect width="300" height="200" fill="#0f172a" rx="12" />
+          <rect x="10" y="10" width="280" height="180" fill="none" stroke="#1e293b" strokeWidth="1" rx="8" />
+        </g>
+        <g id="charge-layer">
+          {/* Central positive charge */}
+          <circle cx="150" cy="100" r="35" fill="url(#efmPredictGlow)" />
+          <circle cx="150" cy="100" r="22" fill="url(#efmPredictCharge)" stroke="rgba(255,255,255,0.7)" strokeWidth="2" />
+          <text x="150" y="108" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">+</text>
+          <text x="150" y="140" textAnchor="middle" fill="#e2e8f0" fontSize="12">Positive Charge</text>
+        </g>
+        <g id="question-layer">
+          {/* Question marks around the charge */}
+          <text x="80" y="70" fill="#94a3b8" fontSize="18" fontWeight="bold">?</text>
+          <text x="220" y="70" fill="#94a3b8" fontSize="18" fontWeight="bold">?</text>
+          <text x="80" y="140" fill="#94a3b8" fontSize="18" fontWeight="bold">?</text>
+          <text x="220" y="140" fill="#94a3b8" fontSize="18" fontWeight="bold">?</text>
+        </g>
+        <g id="label-layer">
+          <text x="150" y="185" textAnchor="middle" fill="#64748b" fontSize="11">Which direction do field lines point?</text>
+        </g>
+      </svg>
+    );
+  }
+
+  // Static twist predict phase SVG showing dipole setup
+  function renderTwistPredictSVG() {
+    return (
+      <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 200, marginBottom: premiumDesign.spacing.lg }}>
+        <defs>
+          <radialGradient id="efmTwistPosCharge" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#991b1b" />
+          </radialGradient>
+          <radialGradient id="efmTwistNegCharge" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#1e40af" />
+          </radialGradient>
+        </defs>
+        <g id="twist-background">
+          <rect width="300" height="200" fill="#0f172a" rx="12" />
+          <rect x="10" y="10" width="280" height="180" fill="none" stroke="#1e293b" strokeWidth="1" rx="8" />
+        </g>
+        <g id="twist-charges">
+          {/* Positive charge */}
+          <circle cx="100" cy="100" r="20" fill="url(#efmTwistPosCharge)" stroke="rgba(255,255,255,0.7)" strokeWidth="2" />
+          <text x="100" y="107" textAnchor="middle" fill="white" fontSize="20" fontWeight="bold">+</text>
+          <text x="100" y="135" textAnchor="middle" fill="#e2e8f0" fontSize="11">Positive</text>
+          {/* Negative charge */}
+          <circle cx="200" cy="100" r="20" fill="url(#efmTwistNegCharge)" stroke="rgba(255,255,255,0.7)" strokeWidth="2" />
+          <text x="200" y="107" textAnchor="middle" fill="white" fontSize="20" fontWeight="bold">-</text>
+          <text x="200" y="135" textAnchor="middle" fill="#e2e8f0" fontSize="11">Negative</text>
+        </g>
+        <g id="twist-labels">
+          <text x="150" y="50" textAnchor="middle" fill="#94a3b8" fontSize="14" fontWeight="500">Electric Dipole</text>
+          <text x="150" y="185" textAnchor="middle" fill="#64748b" fontSize="11">What happens to field lines between opposite charges?</text>
+        </g>
+      </svg>
     );
   }
 
@@ -1119,6 +1319,8 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
       { id: 'circles', text: "Field lines form circles around all charges" },
       { id: 'random', text: "Field lines point randomly in all directions" },
     ];
+
+    const selectedCount = prediction ? 1 : 0;
 
     return (
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
@@ -1139,6 +1341,23 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
           }}>
             Which way do electric field lines point around charges?
           </p>
+          {/* Progress indicator for predict phase */}
+          <div style={{
+            marginTop: premiumDesign.spacing.md,
+            padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px`,
+            background: 'rgba(16, 185, 129, 0.1)',
+            borderRadius: premiumDesign.radius.md,
+            display: 'inline-block',
+          }}>
+            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>
+              Progress: {selectedCount}/1 prediction made
+            </span>
+          </div>
+        </div>
+
+        {/* Static SVG for predict phase */}
+        <div style={{ maxWidth: 400, margin: '0 auto' }}>
+          {renderPredictSVG()}
         </div>
 
         <div style={{
@@ -1167,6 +1386,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
                 zIndex: 10,
+                minHeight: '48px',
               }}
               onClick={(e) => {
                 e.preventDefault();
@@ -1207,6 +1427,18 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Add charges and visualize the electric field around them
           </p>
+          {/* Observation guidance text */}
+          <div style={{
+            marginTop: premiumDesign.spacing.md,
+            padding: premiumDesign.spacing.md,
+            background: 'rgba(34, 211, 238, 0.1)',
+            borderRadius: premiumDesign.radius.md,
+            border: '1px solid rgba(34, 211, 238, 0.3)',
+          }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', margin: 0 }}>
+              <strong>Observe:</strong> Watch how field lines radiate from positive charges and converge toward negative charges. Notice how line density indicates field strength.
+            </p>
+          </div>
         </div>
 
         <div style={{
@@ -1223,7 +1455,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            {renderFieldVisualizationWithLabels(charges, fieldVectors, fieldLines, showVectors, showFieldLines)}
+            {renderFieldVisualizationWithLabels(charges, fieldVectors, fieldLines, showVectors, showFieldLines, fieldStrength)}
           </div>
 
           {/* Controls */}
@@ -1328,6 +1560,37 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
               </label>
             </div>
 
+            {/* Field Strength Slider */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.md }}>
+                Field Intensity / Force Amplitude: {fieldStrength}%
+              </h4>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value={fieldStrength}
+                onChange={(e) => setFieldStrength(Number(e.target.value))}
+                style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: premiumDesign.colors.success }}
+                aria-label="Field force amplitude"
+              />
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '12px',
+                color: premiumDesign.colors.text.muted,
+                marginTop: premiumDesign.spacing.xs,
+              }}>
+                <span>Subtle</span>
+                <span>Strong</span>
+              </div>
+            </div>
+
             <button
               style={{
                 padding: premiumDesign.spacing.md,
@@ -1337,6 +1600,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                 color: premiumDesign.colors.text.secondary,
                 cursor: 'pointer',
                 zIndex: 10,
+                minHeight: '44px',
               }}
               onClick={(e) => {
                 e.preventDefault();
@@ -1356,6 +1620,22 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                 Field lines point AWAY from + charges, TOWARD - charges. Closer lines = stronger field!
               </p>
             </div>
+
+            {/* Real-world relevance */}
+            <div style={{
+              background: 'rgba(99, 102, 241, 0.1)',
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.md,
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+              marginTop: premiumDesign.spacing.md,
+            }}>
+              <p style={{ color: '#e2e8f0', fontSize: '13px', margin: 0, fontWeight: 600 }}>
+                Real-World Application:
+              </p>
+              <p style={{ color: '#e2e8f0', fontSize: '13px', margin: `${premiumDesign.spacing.xs}px 0 0` }}>
+                Electric field mapping is used in medical devices like cardiac defibrillators, touchscreen technology, and particle accelerators at CERN to control charged particles.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1371,24 +1651,26 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
     const reviewContent = [
       {
         title: "Field Direction Convention",
-        content: "Electric field lines point in the direction a positive test charge would move. Since positive charges repel other positive charges, lines point AWAY from positive charges. Since positive is attracted to negative, lines point TOWARD negative charges.",
-        formula: "E points: + -> away, - -> toward",
+        content: prediction === 'away'
+          ? "As you predicted, your observation was correct! Electric field lines point in the direction a positive test charge would move. Since positive charges repel other positive charges, lines point AWAY from positive charges. Since positive is attracted to negative, lines point TOWARD negative charges. The key equation is E = kq/r², showing the force relationship."
+          : "Your prediction has been tested by experiment. The observation shows that electric field lines point in the direction a positive test charge would move. Since positive charges repel other positive charges, lines point AWAY from positive charges. Since positive is attracted to negative, lines point TOWARD negative charges. The key equation is E = kq/r², showing the force relationship.",
+        formula: "E = kq/r² (Coulomb's Law for field strength)",
       },
       {
         title: "Field Strength from Line Density",
-        content: "The density of field lines indicates field strength. Where lines are bunched together (close to charges), the field is strong. Where lines spread apart (far from charges), the field is weak.",
+        content: "The density of field lines indicates field strength. Where lines are bunched together (close to charges), the field is strong. Where lines spread apart (far from charges), the field is weak. This demonstrates the inverse square relationship.",
         formula: "E = kq/r² (inverse square law)",
       },
       {
         title: "Field Lines Never Cross",
-        content: "Electric field lines NEVER cross each other. At any point in space, the electric field has only one direction. If lines crossed, there would be two directions at that point - which is impossible!",
-        formula: "One point -> One direction -> No crossing",
+        content: "Electric field lines NEVER cross each other. At any point in space, the electric field has only one direction. If lines crossed, there would be two directions at that point - which is impossible! This is a fundamental principle of the field equation.",
+        formula: "F = qE (force on a charge in a field)",
       },
       {
-        title: "Your Prediction",
+        title: "Your Prediction Result",
         content: prediction === 'away'
-          ? "Excellent! You correctly predicted that field lines point away from positive charges and toward negative charges."
-          : "The correct answer is that field lines point AWAY from positive charges and TOWARD negative charges. This follows from the convention of how a positive test charge would move.",
+          ? "Excellent! You correctly predicted that field lines point away from positive charges and toward negative charges. Your prediction matches the experimental observation."
+          : "The correct answer is that field lines point AWAY from positive charges and TOWARD negative charges. This follows from the convention of how a positive test charge would move. Compare your prediction with the observation to deepen your understanding.",
         formula: "Convention: Follow where + would go",
       },
     ];
@@ -1518,6 +1800,11 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
           </p>
         </div>
 
+        {/* Static SVG for twist predict phase */}
+        <div style={{ maxWidth: 400, margin: '0 auto' }}>
+          {renderTwistPredictSVG()}
+        </div>
+
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -1544,6 +1831,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
                 zIndex: 10,
+                minHeight: '48px',
               }}
               onClick={(e) => {
                 e.preventDefault();
@@ -1625,7 +1913,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                 max="160"
                 value={separation}
                 onChange={(e) => setSeparation(Number(e.target.value))}
-                style={{ width: '100%', accentColor: premiumDesign.colors.secondary }}
+                style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: premiumDesign.colors.secondary }}
               />
               <div style={{
                 display: 'flex',
@@ -1815,24 +2103,24 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
   function renderTransferPhase() {
     const applications = [
       {
-        title: "Capacitors",
-        description: "Capacitors store energy in the electric field between parallel plates. Understanding field patterns helps engineers design capacitors with uniform fields for maximum energy storage in devices from phones to electric cars.",
-        fact: "The energy stored in a capacitor is proportional to E squared - doubling the field quadruples the stored energy!",
+        title: "Capacitors and Energy Storage",
+        description: "Capacitors store energy in the electric field between parallel plates. Understanding field patterns helps engineers design capacitors with uniform fields for maximum energy storage. In modern electronics, capacitors are found in smartphones, laptops, electric vehicles, and power grid stabilization systems. Engineers use field mapping to optimize plate geometry, dielectric materials, and spacing for maximum capacitance density while preventing dielectric breakdown.",
+        fact: "The energy stored is proportional to E² - doubling the field gives 4x energy. A typical smartphone capacitor operates at 3W while industrial ones handle 500W or more.",
       },
       {
-        title: "Lightning Rods",
-        description: "Lightning rods work because electric fields concentrate at sharp points. The intense field at the rod's tip ionizes air, creating a path for lightning to safely discharge to ground instead of striking buildings.",
-        fact: "Benjamin Franklin invented the lightning rod in 1752 after his famous (and dangerous!) kite experiment.",
+        title: "Lightning Rods and Safety",
+        description: "Lightning rods work because electric fields concentrate at sharp points. The intense field at the rod's tip ionizes air, creating a corona discharge that provides a path for lightning to safely discharge to ground instead of striking buildings. Field mapping helps engineers position rods optimally on structures, accounting for building geometry, height, and surrounding terrain to create comprehensive protection zones.",
+        fact: "Benjamin Franklin invented the lightning rod in 1752. Modern systems must handle 200000W peak power and protect structures within 46 m radius.",
       },
       {
-        title: "Old CRT Displays",
-        description: "Cathode ray tube (CRT) TVs and monitors used electric fields to steer electron beams and draw images on screen. Changing the field deflected electrons to different positions, painting pictures line by line.",
-        fact: "A CRT TV could draw 15,000+ horizontal lines per second, creating smooth motion video!",
+        title: "CRT Displays and Electron Beams",
+        description: "Cathode ray tube (CRT) TVs and monitors used precisely controlled electric fields to steer electron beams and draw images on screen. Deflection plates created variable electric fields that bent the electron beam to different positions, painting pictures pixel by pixel, line by line. The precision of field control determined image sharpness and color accuracy in these displays.",
+        fact: "A CRT TV drew 15000 lines per second at 30% the speed of light. Deflection plates used 25000W of power and controlled beams across 50 m of effective path length.",
       },
       {
         title: "Particle Accelerators",
-        description: "Particle accelerators like the Large Hadron Collider use carefully shaped electric fields to accelerate charged particles to near light speed. Field mapping is crucial for controlling these incredibly precise machines.",
-        fact: "The LHC's beam travels at 99.9999991% the speed of light - if it were a train, it could circle Earth 7.5 times per second!",
+        description: "Particle accelerators like the Large Hadron Collider use carefully shaped electric fields to accelerate charged particles to near light speed. Field mapping is crucial for controlling these incredibly precise machines. Radio-frequency cavities generate oscillating electric fields that push particles faster with each revolution, while superconducting magnets steer beams along curved paths with extraordinary precision.",
+        fact: "The LHC beam travels at 99% light speed, completing 11245 laps per second. Peak collision energy reaches 13 TB equivalent, with 600W of beam power per bunch.",
       },
     ];
 
@@ -1850,7 +2138,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
             Electric Fields in Action
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
-            Explore all {applications.length} applications to unlock the quiz
+            Electric field mapping is used across many industries and real-world applications. Explore how the same physics principles you just learned are applied by engineers, scientists, and doctors to solve important problems in technology, safety, and medicine.
           </p>
         </div>
 
@@ -1881,6 +2169,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                 fontSize: '14px',
                 transition: 'all 0.3s ease',
                 zIndex: 10,
+                minHeight: '44px',
               }}
               onClick={(e) => {
                 e.preventDefault();
@@ -1946,6 +2235,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                 fontWeight: 600,
                 cursor: 'pointer',
                 zIndex: 10,
+                minHeight: '44px',
               }}
               onClick={(e) => {
                 e.preventDefault();
@@ -1957,7 +2247,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                 }
               }}
             >
-              Mark as Read
+              Got It
             </button>
           ) : (
             activeApp < applications.length - 1 && (
@@ -1975,6 +2265,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                   fontWeight: 600,
                   cursor: 'pointer',
                   zIndex: 10,
+                  minHeight: '44px',
                 }}
                 onClick={(e) => {
                   e.preventDefault();
@@ -1998,9 +2289,8 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
         {renderBottomBar(
           { text: '← Back', onClick: () => goToPhase('twist_review') },
           {
-            text: completedApps.size === applications.length ? 'Take the Quiz →' : `Explore ${applications.length - completedApps.size} More →`,
+            text: 'Next →',
             onClick: goNext,
-            disabled: completedApps.size < applications.length,
           }
         )}
       </div>
@@ -2036,7 +2326,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
               color: premiumDesign.colors.text.primary,
               marginBottom: premiumDesign.spacing.md,
             }}>
-              {passed ? 'Excellent Work!' : 'Keep Learning!'}
+              {passed ? 'Excellent Work!' : 'Test Complete!'}
             </h2>
 
             <div style={{
@@ -2056,8 +2346,8 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
               marginBottom: premiumDesign.spacing.xl,
             }}>
               {passed
-                ? 'You have mastered electric field mapping!'
-                : 'Review the material and try again.'}
+                ? `You scored ${testScore}/${testQuestions.length} - you have mastered electric field mapping!`
+                : `You scored ${testScore}/${testQuestions.length}. Review the material and try again.`}
             </p>
 
             {renderButton(
@@ -2104,6 +2394,17 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
           border: '1px solid rgba(255,255,255,0.1)',
           flex: 1,
         }}>
+          {/* Scenario context */}
+          <p style={{
+            color: premiumDesign.colors.text.muted,
+            fontSize: '14px',
+            lineHeight: 1.6,
+            marginBottom: premiumDesign.spacing.md,
+            fontStyle: 'italic',
+          }}>
+            {question.scenario}
+          </p>
+
           <h3 style={{
             fontSize: isMobile ? '18px' : '22px',
             color: premiumDesign.colors.text.primary,
@@ -2119,31 +2420,37 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
             gap: premiumDesign.spacing.md,
           }}>
             {question.options.map((option, index) => {
-              let buttonStyle: React.CSSProperties = {
+              let borderColor = 'rgba(255,255,255,0.1)';
+              let bg = premiumDesign.colors.background.tertiary;
+
+              if (showExplanation) {
+                if (option.correct) {
+                  bg = 'rgba(16, 185, 129, 0.2)';
+                  borderColor = premiumDesign.colors.success;
+                } else if (index === selectedAnswer && !option.correct) {
+                  bg = 'rgba(239, 68, 68, 0.2)';
+                  borderColor = '#EF4444';
+                }
+              } else if (selectedAnswer === index) {
+                borderColor = premiumDesign.colors.success;
+                bg = 'rgba(16, 185, 129, 0.2)';
+              }
+
+              const buttonStyle: React.CSSProperties = {
                 padding: premiumDesign.spacing.lg,
                 borderRadius: premiumDesign.radius.lg,
-                border: '2px solid rgba(255,255,255,0.1)',
-                background: premiumDesign.colors.background.tertiary,
+                borderWidth: '2px',
+                borderStyle: 'solid',
+                borderColor,
+                background: bg,
                 color: premiumDesign.colors.text.primary,
                 fontSize: '16px',
                 cursor: showExplanation ? 'default' : 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
                 zIndex: 10,
+                minHeight: '48px',
               };
-
-              if (showExplanation) {
-                if (option.correct) {
-                  buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
-                  buttonStyle.borderColor = premiumDesign.colors.success;
-                } else if (index === selectedAnswer && !option.correct) {
-                  buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
-                  buttonStyle.borderColor = '#EF4444';
-                }
-              } else if (selectedAnswer === index) {
-                buttonStyle.borderColor = premiumDesign.colors.success;
-                buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
-              }
 
               return (
                 <button
@@ -2157,7 +2464,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
                   }}
                   disabled={showExplanation}
                 >
-                  {option.text}
+                  {option.label}
                 </button>
               );
             })}
@@ -2287,40 +2594,115 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
 
   // Main render
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 right-1/3 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0f172a 0%, #0a1628 50%, #0f172a 100%)',
+      color: 'white',
+      position: 'relative',
+      overflow: 'hidden',
+      fontFamily: premiumDesign.typography.fontFamily,
+    }}>
+      {/* Premium background effects */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '25%',
+        width: '100%',
+        maxWidth: '384px',
+        height: '384px',
+        background: 'radial-gradient(circle, rgba(6, 182, 212, 0.05) 0%, transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(48px)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        right: '25%',
+        width: '100%',
+        maxWidth: '384px',
+        height: '384px',
+        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(48px)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        right: '33%',
+        width: '100%',
+        maxWidth: '384px',
+        height: '384px',
+        background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(48px)',
+      }} />
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Electric Field Mapping</span>
-          <div className="flex items-center gap-1.5">
+      {/* Navigation Bar - fixed position top with z-index */}
+      <nav
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          background: 'rgba(15, 23, 42, 0.95)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+        }}
+        aria-label="Phase navigation"
+      >
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 24px',
+          maxWidth: '1024px',
+          margin: '0 auto',
+        }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>Electric Field Mapping</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {phaseOrder.map((p) => (
               <button
                 key={p}
                 onClick={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
+                aria-label={phaseLabels[p]}
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '9999px',
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  minHeight: '44px',
+                  minWidth: '44px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                }}
                 title={phaseLabels[p]}
-                style={{ zIndex: 10 }}
-              />
+              >
+                <span style={{
+                  width: phase === p ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '9999px',
+                  background: phase === p
+                    ? '#22d3ee'
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
+                      ? '#10b981'
+                      : '#334155',
+                  display: 'block',
+                }} />
+              </button>
             ))}
           </div>
-          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#22d3ee' }}>{phaseLabels[phase]}</span>
         </div>
-      </div>
+      </nav>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12">
+      <div style={{ overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', flex: 1 }}>
         <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? premiumDesign.spacing.md : premiumDesign.spacing.xl }}>
           {phase === 'hook' && renderHookPhase()}
           {phase === 'predict' && renderPredictPhase()}

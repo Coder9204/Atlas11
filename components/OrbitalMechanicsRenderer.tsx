@@ -383,19 +383,19 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
     setOutcome('none');
   };
 
-  // Premium design colors
+  // Premium design colors - brighter for better contrast
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#3B82F6',
+    accent: '#3b82f6',
     accentGlow: 'rgba(59, 130, 246, 0.3)',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    success: '#10b981',
+    error: '#ef4444',
+    warning: '#f59e0b',
+    textPrimary: '#ffffff',
+    textSecondary: '#cbd5e1', // slate-300 - bright enough for contrast (brightness ~210)
+    textMuted: '#94a3b8', // slate-400 - secondary muted (brightness ~170)
     border: '#2a2a3a',
   };
 
@@ -415,7 +415,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Free Fall',
+    twist_play: 'Explore Twist',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -534,6 +534,16 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
             <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
             <stop offset="100%" stopColor="#e879f9" stopOpacity="0.5" />
           </linearGradient>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="2" dy="2" stdDeviation="2" floodOpacity="0.3"/>
+          </filter>
         </defs>
 
         {/* Space background */}
@@ -583,7 +593,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
 
         {/* Projectile */}
         {isLaunched && outcome === 'none' && (
-          <circle cx={projectilePos.x} cy={projectilePos.y} r={6} fill="url(#projectileGrad)" />
+          <circle cx={projectilePos.x} cy={projectilePos.y} r={6} fill="url(#projectileGrad)" filter="url(#glow)" />
         )}
 
         {/* Velocity indicator (before launch) */}
@@ -628,7 +638,23 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
           </text>
         )}
 
-        <text x="200" y="340" textAnchor="middle" fill="#6b7280" fontSize="12">
+        {/* Labels for key elements */}
+        <text x={EARTH_CENTER.x} y={EARTH_CENTER.y + EARTH_RADIUS + 20} textAnchor="middle" fill="#60a5fa" fontSize="11">Earth</text>
+        <text x={EARTH_CENTER.x + 20} y={EARTH_CENTER.y - EARTH_RADIUS - 30} textAnchor="start" fill="#9ca3af" fontSize="10">Cannon</text>
+        <text x={EARTH_CENTER.x - 40} y={EARTH_CENTER.y - EARTH_RADIUS - 10} textAnchor="end" fill="#9ca3af" fontSize="10">Mountain</text>
+
+        {/* Legend */}
+        <g transform="translate(10, 10)">
+          <text x="0" y="12" fill="#9ca3af" fontSize="10" fontWeight="600">Legend:</text>
+          <line x1="0" y1="22" x2="20" y2="22" stroke="#22c55e" strokeWidth="3" />
+          <text x="25" y="26" fill="#22c55e" fontSize="9">Orbit (~8 km/s)</text>
+          <line x1="0" y1="36" x2="20" y2="36" stroke="#ef4444" strokeWidth="3" />
+          <text x="25" y="40" fill="#ef4444" fontSize="9">Crash (too slow)</text>
+          <line x1="0" y1="50" x2="20" y2="50" stroke="#8B5CF6" strokeWidth="3" />
+          <text x="25" y="54" fill="#8B5CF6" fontSize="9">Escape (11+ km/s)</text>
+        </g>
+
+        <text x="200" y="340" textAnchor="middle" fill="#9ca3af" fontSize="12">
           Newton's Cannonball: What speed makes it orbit?
         </text>
       </svg>
@@ -679,11 +705,11 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
           <rect x="-10" y="-7" width="20" height="14" fill="#94a3b8" rx="3" />
         </g>
 
-        {/* Gravity vector */}
+        {/* Gravity vector - scales with gravityStrength */}
         <g transform={`translate(${issX}, ${issY + 18})`}>
-          <line x1="0" y1="0" x2="0" y2="30" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
-          <polygon points="-5,25 5,25 0,35" fill="#ef4444" />
-          <text x="15" y="20" fill="#f87171" fontSize="11" fontWeight="600">Gravity</text>
+          <line x1="0" y1="0" x2="0" y2={gravityStrength * 0.35} stroke="#ef4444" strokeWidth="3" strokeLinecap="round" opacity={gravityStrength / 100} />
+          <polygon points={`-5,${gravityStrength * 0.3} 5,${gravityStrength * 0.3} 0,${gravityStrength * 0.4}`} fill="#ef4444" opacity={gravityStrength / 100} />
+          <text x="15" y="20" fill="#f87171" fontSize="11" fontWeight="600">{gravityStrength}% Gravity</text>
         </g>
 
         {/* Velocity vector */}
@@ -731,12 +757,19 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '64px',
@@ -751,7 +784,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
           The Falling Satellite Paradox
         </h1>
 
-        <p style={{
+        <p className="text-secondary" style={{
           ...typo.body,
           color: colors.textSecondary,
           maxWidth: '600px',
@@ -780,13 +813,67 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Investigate the Paradox
+          Start Discovery
         </button>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }
+
+  // Static prediction diagram SVG
+  const renderPredictDiagram = () => {
+    return (
+      <svg viewBox="0 0 400 300" style={{ width: '100%', maxHeight: '250px', background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Space background */}
+        <rect width="400" height="300" fill="#030712" />
+
+        {/* Stars */}
+        {[...Array(30)].map((_, i) => (
+          <circle
+            key={`pred-star-${i}`}
+            cx={(i * 37 + i * i * 3) % 400}
+            cy={(i * 23 + i * 7) % 150}
+            r={0.5 + (i % 3) * 0.3}
+            fill="white"
+            opacity={0.3 + (i % 4) * 0.15}
+          />
+        ))}
+
+        {/* Earth */}
+        <circle cx="200" cy="250" r="70" fill="#2563eb" />
+        <circle cx="200" cy="250" r="72" fill="none" stroke="#60a5fa" strokeWidth="3" opacity="0.3" />
+
+        {/* Mountain */}
+        <polygon points="180,180 200,150 220,180" fill="#6b7280" />
+
+        {/* Cannon */}
+        <rect x="200" y="145" width="30" height="8" rx="2" fill="#475569" />
+
+        {/* Projectile with question mark */}
+        <circle cx="260" cy="149" r="8" fill="#f59e0b" opacity="0.6" />
+        <text x="260" y="154" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">?</text>
+
+        {/* Possible trajectories (dashed) */}
+        <path d="M 235 149 Q 280 100 320 80" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="5,5" opacity="0.5" />
+        <path d="M 235 149 Q 270 149 300 180" fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="5,5" opacity="0.5" />
+        <path d="M 235 149 Q 300 120 350 149 Q 300 180 250 200" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeDasharray="5,5" opacity="0.5" />
+
+        {/* Labels */}
+        <text x="200" y="290" textAnchor="middle" fill="#60a5fa" fontSize="11">Earth</text>
+        <text x="200" y="140" textAnchor="middle" fill="#9ca3af" fontSize="10">Cannon</text>
+        <text x="330" y="75" textAnchor="start" fill="#22c55e" fontSize="10">Escape?</text>
+        <text x="310" y="185" textAnchor="start" fill="#ef4444" fontSize="10">Crash?</text>
+        <text x="355" y="155" textAnchor="start" fill="#8B5CF6" fontSize="10">Orbit?</text>
+
+        {/* Title */}
+        <text x="200" y="25" textAnchor="middle" fill="#9ca3af" fontSize="12">
+          What determines the cannonball's fate?
+        </text>
+      </svg>
+    );
+  };
 
   // PREDICT PHASE
   if (phase === 'predict') {
@@ -821,30 +908,14 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
             You fire a cannonball horizontally from a very tall mountain. What determines if it orbits Earth?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram showing the prediction scenario */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '24px',
-            textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>&#x1F30D;</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Earth</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>&#x1F4A8;</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Cannon on Mountain</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Orbit or Crash?</p>
-              </div>
-            </div>
+            {renderPredictDiagram()}
           </div>
 
           {/* Options */}
@@ -884,14 +955,32 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
             ))}
           </div>
 
-          {prediction && (
+          {/* Navigation buttons */}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
             <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
+              onClick={() => { playSound('click'); goToPhase('hook'); }}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
             >
-              Test My Prediction
+              &#x2190; Back
             </button>
-          )}
+            {prediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, flex: 2 }}
+              >
+                Test My Prediction
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -905,11 +994,14 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ maxWidth: '800px', margin: '40px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Newton's Cannonball
           </h2>
@@ -947,6 +1039,8 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
                   height: '8px',
                   borderRadius: '4px',
                   cursor: isLaunched ? 'not-allowed' : 'pointer',
+                  accentColor: colors.accent,
+                  background: colors.bgSecondary,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -991,7 +1085,22 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
               textAlign: 'center',
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.accent }}>Key Insight:</strong> The cannonball always falls toward Earth. But if it's moving fast enough sideways, Earth's surface curves away beneath it at the same rate!
+                <strong style={{ color: colors.accent }}>Key Insight:</strong> The cannonball always falls toward Earth. But if it is moving fast enough sideways, Earth's surface curves away beneath it at the same rate!
+              </p>
+            </div>
+
+            {/* Cause-effect explanation */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginTop: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0, marginBottom: '8px' }}>
+                <strong style={{ color: colors.textPrimary }}>What to Watch:</strong> When you increase the launch speed, the cannonball travels farther before falling back. This is important because it demonstrates the relationship between velocity and orbit.
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.warning }}>Real-World Application:</strong> This principle is used by engineers to design satellite orbits. Understanding orbital velocity helps us place communication satellites and space stations at the right altitude.
               </p>
             </div>
           </div>
@@ -1002,6 +1111,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
           >
             Understand the Physics
           </button>
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1096,6 +1206,63 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
     );
   }
 
+  // Twist predict diagram SVG
+  const renderTwistPredictDiagram = () => {
+    return (
+      <svg viewBox="0 0 400 250" style={{ width: '100%', maxHeight: '220px', background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Space background */}
+        <rect width="400" height="250" fill="#020617" />
+
+        {/* Stars */}
+        {[...Array(35)].map((_, i) => (
+          <circle
+            key={`twist-star-${i}`}
+            cx={(i * 29 + i * i * 2) % 400}
+            cy={(i * 19 + i * 5) % 150}
+            r={0.4 + (i % 4) * 0.25}
+            fill="white"
+            opacity={0.25 + (i % 5) * 0.1}
+          />
+        ))}
+
+        {/* Earth (partial view) */}
+        <ellipse cx="200" cy="320" rx="160" ry="140" fill="#2563eb" />
+        <ellipse cx="200" cy="320" rx="162" ry="142" fill="none" stroke="#93c5fd" strokeWidth="2" opacity="0.3" />
+
+        {/* ISS */}
+        <g transform="translate(200, 100)">
+          {/* Solar panels */}
+          <rect x="-30" y="-5" width="24" height="10" fill="#fbbf24" rx="1" />
+          <rect x="6" y="-5" width="24" height="10" fill="#fbbf24" rx="1" />
+          {/* Main truss */}
+          <rect x="-32" y="-3" width="64" height="6" fill="#cbd5e1" rx="1" />
+          {/* Central module */}
+          <rect x="-12" y="-8" width="24" height="16" fill="#94a3b8" rx="3" />
+        </g>
+
+        {/* Astronaut inside (floating) */}
+        <text x="200" y="100" textAnchor="middle" fontSize="20">&#x1F9D1;&#x200D;&#x1F680;</text>
+
+        {/* Gravity arrow pointing down */}
+        <line x1="200" y1="125" x2="200" y2="165" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+        <polygon points="195,160 205,160 200,175" fill="#ef4444" />
+        <text x="220" y="155" fill="#f87171" fontSize="11" fontWeight="600">Gravity: 8.7 m/s^2</text>
+
+        {/* Question mark */}
+        <circle cx="280" cy="95" r="18" fill="#f59e0b" opacity="0.2" />
+        <text x="280" y="102" textAnchor="middle" fill="#f59e0b" fontSize="22" fontWeight="bold">?</text>
+
+        {/* Labels */}
+        <text x="200" y="30" textAnchor="middle" fill="#9ca3af" fontSize="12">
+          ISS at 400 km - Gravity still 90% of surface!
+        </text>
+        <text x="200" y="230" textAnchor="middle" fill="#60a5fa" fontSize="11">Earth</text>
+        <text x="100" y="100" textAnchor="middle" fill="#fbbf24" fontSize="10">ISS</text>
+        <text x="280" y="120" fill="#f59e0b" fontSize="10">Why do they float?</text>
+      </svg>
+    );
+  };
+
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     const options = [
@@ -1129,17 +1296,14 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
             Astronauts on the ISS "float" and experience "weightlessness." But gravity at 400 km is still 90% as strong as on Earth's surface! Why do they float?
           </h2>
 
+          {/* SVG diagram showing the twist scenario */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '24px',
-            textAlign: 'center',
           }}>
-            <div style={{ fontSize: '64px', marginBottom: '12px' }}>&#x1F9D1;&#x200D;&#x1F680;&#x1F6F0;&#xFE0F;</div>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              At 400 km altitude, gravity is still <span style={{ color: colors.accent, fontWeight: 600 }}>8.7 m/s^2</span> (vs 9.8 at surface)
-            </p>
+            {renderTwistPredictDiagram()}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1232,7 +1396,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
                 max="100"
                 value={gravityStrength}
                 onChange={(e) => setGravityStrength(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent, background: colors.bgSecondary }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>0% (no gravity)</span>
@@ -1384,19 +1548,48 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
+
+    const handleGotIt = () => {
+      playSound('click');
+      const newCompleted = [...completedApps];
+      newCompleted[selectedApp] = true;
+      setCompletedApps(newCompleted);
+
+      // Auto-advance to next uncompleted app
+      if (selectedApp < realWorldApps.length - 1) {
+        const nextUncompletedIndex = completedApps.findIndex((c, i) => !c && i > selectedApp);
+        if (nextUncompletedIndex !== -1) {
+          setSelectedApp(nextUncompletedIndex);
+        } else if (!newCompleted.every(c => c)) {
+          const firstUncompleted = newCompleted.findIndex(c => !c);
+          if (firstUncompleted !== -1) {
+            setSelectedApp(firstUncompleted);
+          }
+        }
+      }
+    };
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ maxWidth: '800px', margin: '40px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} - {completedCount} of {realWorldApps.length} completed
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1411,9 +1604,6 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
                 onClick={() => {
                   playSound('click');
                   setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
                 }}
                 style={{
                   background: selectedApp === i ? `${a.color}22` : colors.bgCard,
@@ -1484,9 +1674,24 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
             </div>
 
             <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1497,20 +1702,50 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
                   <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>{stat.label}</div>
                 </div>
               ))}
             </div>
+
+            {/* Got It button for each app */}
+            {!completedApps[selectedApp] ? (
+              <button
+                onClick={handleGotIt}
+                style={{
+                  ...primaryButtonStyle,
+                  width: '100%',
+                  background: `linear-gradient(135deg, ${app.color}, ${colors.accent})`,
+                }}
+              >
+                Got It! Next App
+              </button>
+            ) : (
+              <div style={{
+                textAlign: 'center',
+                padding: '12px',
+                background: `${colors.success}22`,
+                borderRadius: '8px',
+                color: colors.success,
+                fontWeight: 600,
+              }}>
+                &#x2713; Completed
+              </div>
+            )}
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              opacity: allAppsCompleted ? 1 : 0.5,
+              cursor: allAppsCompleted ? 'pointer' : 'not-allowed',
+            }}
+            disabled={!allAppsCompleted}
+          >
+            {allAppsCompleted ? 'Continue to Knowledge Test' : `Complete all ${realWorldApps.length} apps to continue`}
+          </button>
+        </div>
         </div>
 
         {renderNavDots()}

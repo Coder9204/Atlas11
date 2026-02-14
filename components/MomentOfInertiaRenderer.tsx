@@ -353,8 +353,8 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: 'rgba(156, 163, 175, 0.9)',
-    textMuted: 'rgba(107, 114, 128, 0.8)',
+    textSecondary: 'rgba(200, 205, 215, 0.9)',
+    textMuted: 'rgba(180, 185, 195, 0.8)',
     border: '#2a2a3a',
   };
 
@@ -499,7 +499,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
     const intensity = Math.min(1, currentOmega / 10);
 
     return (
-      <svg width={size} height={size + 40} style={{ overflow: 'visible' }}>
+      <svg width={size} height={size + 40} viewBox={`0 0 ${size} ${size + 40}`} style={{ overflow: 'visible' }}>
         <defs>
           <linearGradient id="iceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.2" />
@@ -794,7 +794,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
               </defs>
               {/* Extended skater */}
               <g>
-                <text x={isMobile ? 80 : 110} y="20" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="13" fontWeight="600">Arms Extended</text>
+                <text x={isMobile ? 80 : 110} y="20" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="13" fontWeight="600">Arms Extended</text>
                 {/* Body */}
                 <ellipse cx={isMobile ? 80 : 110} cy="110" rx="12" ry="40" fill="url(#predSkaterGrad)" />
                 {/* Head */}
@@ -806,7 +806,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
                 <line x1={isMobile ? 85 : 115} y1="150" x2={isMobile ? 95 : 125} y2="185" stroke="#f472b6" strokeWidth="3" />
                 {/* Spin arrow (slow) */}
                 <path d={`M ${isMobile ? 80 : 110} 185 A 30 30 0 0 1 ${isMobile ? 110 : 140} 195`} fill="none" stroke="rgba(244,114,182,0.5)" strokeWidth="2" />
-                <text x={isMobile ? 80 : 110} y="210" textAnchor="middle" fill="rgba(156,163,175,0.5)" fontSize="11">Slow spin</text>
+                <text x={isMobile ? 80 : 110} y="210" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="11">Slow spin</text>
               </g>
               {/* Arrow */}
               <g>
@@ -816,7 +816,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
               </g>
               {/* Tucked skater */}
               <g>
-                <text x={isMobile ? 250 : 340} y="20" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="13" fontWeight="600">Arms Tucked</text>
+                <text x={isMobile ? 250 : 340} y="20" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="13" fontWeight="600">Arms Tucked</text>
                 {/* Body */}
                 <ellipse cx={isMobile ? 250 : 340} cy="110" rx="10" ry="40" fill="url(#predSkaterGrad)" />
                 {/* Head */}
@@ -900,8 +900,11 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Skater Spin Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Move the slider to change arm position and observe the spin speed change
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            When arms extend outward, moment of inertia increases and spin slows down. This is important in figure skating, diving, and engineering applications.
           </p>
 
           {/* Main visualization */}
@@ -1066,6 +1069,18 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Rotation
           </h2>
+
+          <div style={{
+            background: `${colors.success}22`,
+            border: `1px solid ${colors.success}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+              As you observed in the experiment, pulling arms in causes the skater to spin faster. Your prediction helped you discover this key relationship!
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1475,9 +1490,14 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1605,7 +1625,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
                   padding: '4px 12px',
                   borderRadius: '16px',
                   ...typo.small,
-                  color: 'rgba(156,163,175,0.7)',
+                  color: colors.textSecondary,
                 }}>
                   {ex}
                 </span>
@@ -1616,14 +1636,40 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
               background: `${app.color}11`,
               borderRadius: '8px',
               padding: '12px',
+              marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: app.color, marginBottom: '4px', fontWeight: 600 }}>
                 Future Impact:
               </h4>
-              <p style={{ ...typo.small, color: 'rgba(156,163,175,0.6)', margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.futureImpact}
               </p>
             </div>
+
+            {/* Got It button for current app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: completedApps[selectedApp] ? colors.success : app.color,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              {completedApps[selectedApp] ? 'Got It!' : 'Continue'}
+            </button>
           </div>
 
           {allAppsCompleted && (

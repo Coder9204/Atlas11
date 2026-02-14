@@ -370,8 +370,8 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
     warning: '#F59E0B',
     purple: '#8B5CF6',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#B5BCC5',
+    textMuted: '#B8C0CA',
     border: '#2a2a3a',
   };
 
@@ -557,7 +557,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
     const centerY = size / 2;
 
     return (
-      <svg width={size} height={size} style={{ overflow: 'visible' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible' }}>
         <defs>
           <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#0369a1" />
@@ -641,10 +641,10 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
 
           <ellipse cx="-40" cy="5" rx="3.5" ry="2" fill="#fb7185" />
 
-          <line x1="-50" y1="3" x2="-60" y2="0" stroke="#94a3b8" strokeWidth="0.5" />
-          <line x1="-50" y1="5" x2="-60" y2="5" stroke="#94a3b8" strokeWidth="0.5" />
-          <line x1="-30" y1="3" x2="-20" y2="0" stroke="#94a3b8" strokeWidth="0.5" />
-          <line x1="-30" y1="5" x2="-20" y2="5" stroke="#94a3b8" strokeWidth="0.5" />
+          <line x1="-50" y1="3" x2="-60" y2="0" stroke="#cbd5e1" strokeWidth="0.5" />
+          <line x1="-50" y1="5" x2="-60" y2="5" stroke="#cbd5e1" strokeWidth="0.5" />
+          <line x1="-30" y1="3" x2="-20" y2="0" stroke="#cbd5e1" strokeWidth="0.5" />
+          <line x1="-30" y1="5" x2="-20" y2="5" stroke="#cbd5e1" strokeWidth="0.5" />
 
           {frontExt ? (
             <>
@@ -662,16 +662,16 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
         </g>
         <g>
           <rect x="0" y={size - 12} width={size} height="12" fill="url(#groundGrad)" />
-          <text x={size / 2} y={size - 2} textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="8">Ground</text>
+          <text x={size / 2} y={size - 2} textAnchor="middle" fill="rgba(255,255,255,0.9)" fontSize="8">Ground</text>
         </g>
         <g filter="url(#catGlow)">
           <circle cx={size - 20} cy={20} r="8" fill="rgba(249,115,22,0.4)" />
         </g>
 
         {/* Educational labels */}
-        <text x={12} y={16} fill="rgba(255,255,255,0.7)" fontSize="9" fontWeight="bold">Angular Momentum</text>
-        <text x={12} y={28} fill="rgba(147,197,253,0.7)" fontSize="8">L = I × omega</text>
-        <text x={size - 12} y={size - 18} textAnchor="end" fill="rgba(52,211,153,0.7)" fontSize="8">Moment of Inertia</text>
+        <text x={12} y={16} fill="rgba(255,255,255,0.9)" fontSize="9" fontWeight="bold">Angular Momentum</text>
+        <text x={12} y={28} fill="rgba(191,219,254,0.95)" fontSize="8">L = I x omega</text>
+        <text x={size - 12} y={size - 18} textAnchor="end" fill="rgba(110,231,183,0.95)" fontSize="8">Moment of Inertia</text>
       </svg>
     );
   };
@@ -738,6 +738,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
         maxWidth: '500px',
         border: `1px solid ${colors.border}`,
         marginBottom: '32px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
       }}>
         <div style={{ marginBottom: '24px' }}>
           {renderCat(catRotation, frontLegsExtended, backLegsExtended, isMobile ? 200 : 240)}
@@ -910,9 +911,15 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
       maxWidth: '800px',
       margin: '0 auto',
     }}>
-      <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+      <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px' }}>
         Cat Righting Lab
       </h2>
+
+      <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px', maxWidth: '600px' }}>
+        This visualization demonstrates how cats rotate in mid-air using angular momentum transfer.
+        Watch how the cat changes its body configuration to achieve rotation. This principle is important
+        for understanding spacecraft attitude control and how engineers design self-righting robots.
+      </p>
 
       <div style={{
         backgroundColor: colors.bgCard,
@@ -1032,16 +1039,20 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
             </button>
           </div>
           <div style={{ padding: '0 16px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: colors.textSecondary, fontWeight: 500, textAlign: 'center' }}>
+              Rotation Angle Control
+            </label>
             <input
               type="range"
               min="0"
               max="180"
               value={manualRotation}
               onChange={(e) => setManualRotation(Number(e.target.value))}
-              style={{ width: '100%' }}
+              style={{ width: '100%', accentColor: colors.accent, background: colors.bgSecondary }}
+              aria-label="Cat rotation angle"
             />
-            <p style={{ ...typo.label, color: colors.textMuted, textAlign: 'center' }}>
-              Rotation: {manualRotation}° (180° = upside down)
+            <p style={{ ...typo.label, color: colors.textSecondary, textAlign: 'center' }}>
+              Angle: {manualRotation}° (180° = upside down)
             </p>
           </div>
         </div>
@@ -1119,9 +1130,14 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
       maxWidth: '900px',
       margin: '0 auto',
     }}>
-      <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '32px' }}>
+      <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px' }}>
         Understanding Angular Momentum Transfer
       </h2>
+
+      <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px', maxWidth: '700px' }}>
+        As you observed in the experiment, the cat rotates by redistributing angular momentum between body parts.
+        Your prediction was correct - cats achieve this rotation without any external torque!
+      </p>
 
       <div style={{
         display: 'grid',
@@ -1271,10 +1287,10 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
               <rect x="20" y="30" width="160" height="60" rx="10" fill="url(#stationGrad)" stroke="#475569" strokeWidth="1" />
               <circle cx="100" cy="60" r="12" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
               <text x="100" y="64" textAnchor="middle" fill="#334155" fontSize="10">?</text>
-              <path d="M75,55 Q65,40 55,55" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4" />
-              <path d="M125,55 Q135,40 145,55" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4" />
+              <path d="M75,55 Q65,40 55,55" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4" />
+              <path d="M125,55 Q135,40 145,55" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4" />
             </g>
-            <text x="100" y="110" textAnchor="middle" fill="#94a3b8" fontSize="10">Astronaut in space station</text>
+            <text x="100" y="110" textAnchor="middle" fill="#cbd5e1" fontSize="10">Astronaut in space station</text>
           </svg>
         </div>
       </div>
@@ -1889,7 +1905,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
             color: colors.textSecondary,
             fontWeight: 500,
           }}>
-            {currentQuestion + 1} / 10
+            Question {currentQuestion + 1} of 10
           </span>
         </div>
 
@@ -2178,7 +2194,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
         position: 'relative',
         zIndex: 10,
         paddingTop: '70px',
-        paddingBottom: '40px',
+        paddingBottom: '80px',
       }}>
         {renderPhase()}
       </div>

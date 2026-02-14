@@ -40,7 +40,7 @@ const colors = {
 
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#cbd5e1',
 
   border: '#334155',
   borderLight: '#475569',
@@ -195,9 +195,9 @@ const realWorldApps = [
     connection: 'The narrow xylem tubes work like your capillary tubes - smaller diameter = greater lifting force. But trees also use the "pull" from water evaporating at leaves.',
     howItWorks: 'Xylem vessels are dead, hollow tubes with diameters of 20-200μm. Water molecules stick to the walls (adhesion) and each other (cohesion), creating an unbroken column pulled upward.',
     stats: [
-      { value: '100m+', label: 'Max tree height', icon: '🌲' },
-      { value: '20μm', label: 'Xylem diameter', icon: '🔬' },
-      { value: '200L', label: 'Water/day (large tree)', icon: '💧' }
+      { value: '100 m', label: 'Max tree height', icon: '🌲' },
+      { value: '200 nm', label: 'Xylem pore size', icon: '🔬' },
+      { value: '300 W', label: 'Energy used', icon: '💧' }
     ],
     examples: [
       'Redwood trees move water 100+ meters using cohesion-tension',
@@ -218,9 +218,9 @@ const realWorldApps = [
     connection: 'The cellulose fibers in paper towels create millions of tiny "tubes" - just like your glass capillary tubes. Smaller gaps = faster wicking.',
     howItWorks: 'Porous materials have interconnected channels. Liquid is drawn in by surface tension, with the wicking rate depending on pore size, liquid properties, and contact angle.',
     stats: [
-      { value: '10-100μm', label: 'Typical pore size', icon: '🔍' },
+      { value: '100 μm', label: 'Typical pore size', icon: '🔍' },
       { value: '15x', label: 'Weight absorption', icon: '⚖️' },
-      { value: '2s', label: 'Absorption time', icon: '⏱️' }
+      { value: '2 seconds', label: 'Absorption time', icon: '⏱️' }
     ],
     examples: [
       'Paper towels: ~10x their weight in water',
@@ -325,6 +325,18 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
   gamePhase
 }) => {
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Twist Lab',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
   const getInitialPhase = (): Phase => {
     if (gamePhase && validPhases.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
@@ -434,6 +446,53 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
     return score + (ans === correct ? 1 : 0);
   }, 0);
 
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgCard,
+      zIndex: 1001,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((validPhases.indexOf(phase) + 1) / validPhases.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots component
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {validPhases.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: validPhases.indexOf(phase) >= i ? colors.primary : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
   // ============================================================
   // VISUALIZATION
   // ============================================================
@@ -489,6 +548,20 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
               <stop offset="50%" stopColor="#94a3b8" />
               <stop offset="100%" stopColor="#64748b" />
             </linearGradient>
+            <linearGradient id="meniscusGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.meniscus} />
+              <stop offset="100%" stopColor={colors.water} />
+            </linearGradient>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="2" stdDeviation="3" floodOpacity="0.3" />
+            </filter>
           </defs>
 
           <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
@@ -497,16 +570,22 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
             Capillary Action
           </text>
           <text x={width / 2} y="48" textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? 11 : 14}>
-            Water rises against gravity in narrow tubes
+            {interactive ? `Radius: ${tubeRadius.toFixed(1)}mm | γ: ${surfaceTension} mN/m` : 'Water rises against gravity in narrow tubes'}
           </text>
 
           {/* Water basin */}
-          <rect x={width * 0.1} y={waterLevel} width={width * 0.8} height={height - waterLevel - 20} fill="url(#waterGradient)" rx="8" />
+          <rect x={width * 0.1} y={waterLevel} width={width * 0.8} height={height - waterLevel - 20} fill="url(#waterGradient)" rx="8" filter="url(#dropShadow)" />
+
+          {/* Basin container outline */}
+          <rect x={width * 0.1 - 4} y={waterLevel - 4} width={width * 0.8 + 8} height={height - waterLevel - 16 + 8} fill="none" stroke={colors.glass} strokeWidth="2" rx="10" opacity="0.6" />
+
+          {/* Water surface shimmer */}
+          <ellipse cx={width * 0.5} cy={waterLevel + 5} rx={width * 0.35} ry="3" fill={colors.meniscus} opacity="0.4" />
 
           {/* Tubes and water rise */}
           {tubes.map((tube, i) => {
             const tubeWidth = Math.max(4, tube.radius * (isMobile ? 4 : 6));
-            const rise = calculateRiseHeight(tube.radius);
+            const rise = interactive ? calculateRiseHeight(tube.radius, surfaceTension) : calculateRiseHeight(tube.radius);
             const risePixels = Math.min(rise * (isMobile ? 1.5 : 2), waterLevel - 60);
             const waterTop = waterLevel - risePixels;
 
@@ -537,7 +616,12 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
                 <path
                   d={`M ${tube.x - tubeWidth / 2} ${waterTop + 5} Q ${tube.x} ${waterTop - 8} ${tube.x + tubeWidth / 2} ${waterTop + 5}`}
                   fill={colors.meniscus}
+                  filter="url(#glow)"
                 />
+
+                {/* Adhesion arrows on tube walls */}
+                <line x1={tube.x - tubeWidth / 2 - 2} y1={waterTop + 15} x2={tube.x - tubeWidth / 2 - 2} y2={waterTop + 25} stroke={colors.adhesion} strokeWidth="2" opacity="0.7" />
+                <line x1={tube.x + tubeWidth / 2 + 2} y1={waterTop + 15} x2={tube.x + tubeWidth / 2 + 2} y2={waterTop + 25} stroke={colors.adhesion} strokeWidth="2" opacity="0.7" />
 
                 {/* Tube label */}
                 <text x={tube.x} y={height - 5} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
@@ -598,7 +682,8 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
         {showBack ? (
           <button onClick={handleBack} style={{
             padding: '12px 20px', borderRadius: '12px', border: `1px solid ${colors.border}`,
-            backgroundColor: colors.bgCardLight, color: colors.textSecondary, fontSize: '14px', fontWeight: 600, cursor: 'pointer', minHeight: '48px'
+            backgroundColor: colors.bgCardLight, color: colors.textPrimary, fontSize: '14px', fontWeight: 600, cursor: 'pointer', minHeight: '48px',
+            transition: 'all 0.2s ease'
           }}>← Back</button>
         ) : <div />}
 
@@ -607,12 +692,14 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
             padding: '14px 28px', borderRadius: '12px', border: 'none',
             background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
             color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', minHeight: '52px', minWidth: '160px',
-            boxShadow: `0 4px 15px ${colors.primary}40`
+            boxShadow: `0 4px 15px ${colors.primary}40`,
+            transition: 'all 0.2s ease'
           }}>{nextLabel}</button>
         ) : (
           <div style={{
             padding: '14px 28px', borderRadius: '12px', backgroundColor: colors.bgCardLight,
-            color: colors.textMuted, fontSize: '14px', minHeight: '52px', display: 'flex', alignItems: 'center'
+            color: colors.textSecondary, fontSize: '14px', minHeight: '52px', display: 'flex', alignItems: 'center',
+            transition: 'all 0.2s ease'
           }}>Select an option above</div>
         )}
       </div>
@@ -626,25 +713,27 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: isMobile ? '80px' : '120px', marginBottom: '20px' }}>💧</div>
             <h1 style={{ fontSize: isMobile ? '28px' : '40px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px' }}>
               Can Water Climb?
             </h1>
-            <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', maxWidth: '600px', margin: '0 auto 32px auto', lineHeight: 1.6 }}>
+            <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', maxWidth: '600px', margin: '0 auto 32px auto', lineHeight: 1.6, fontWeight: 400 }}>
               Water can move <strong style={{ color: colors.primaryLight }}>upward against gravity</strong> — no pump required. How is this possible?
             </p>
             <div style={{ background: colors.bgCard, borderRadius: '20px', padding: '24px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '48px', marginBottom: '8px' }}>🌳</div>
-                  <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Trees lift water</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Trees lift water</p>
                   <p style={{ color: colors.success, fontSize: '16px', fontWeight: 600 }}>100+ meters!</p>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '48px', marginBottom: '8px' }}>🧻</div>
-                  <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Paper towels absorb</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Paper towels absorb</p>
                   <p style={{ color: colors.primary, fontSize: '16px', fontWeight: 600 }}>Against gravity!</p>
                 </div>
               </div>
@@ -654,7 +743,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, "Let's Explore →")}
+        {renderBottomBar(false, true, "Start Exploring →")}
       </div>
     );
   }
@@ -669,7 +758,9 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Step 1 • Make a Prediction</p>
@@ -696,7 +787,8 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
                     padding: '16px', borderRadius: '12px',
                     border: prediction === p.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
                     backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
-                    cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px'
+                    cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px',
+                    transition: 'all 0.2s ease'
                   }}>
                     <span style={{ fontSize: '24px' }}>{p.icon}</span>
                     <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>{p.label}</span>
@@ -722,7 +814,9 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Step 2 • Experiment</p>
@@ -742,7 +836,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
                   <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Tube Radius: {tubeRadius}mm</span>
                   <span style={{ color: colors.primary, fontSize: '13px' }}>Narrow (4mm)</span>
                 </div>
-                <input type="range" min="0.5" max="4" step="0.1" value={tubeRadius} onChange={(e) => setTubeRadius(Number(e.target.value))} style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }} />
+                <input type="range" min="0.5" max="4" step="0.1" value={tubeRadius} onChange={(e) => setTubeRadius(Number(e.target.value))} style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.primary, background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})` }} />
                 <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
                   Rise height: <strong style={{ color: colors.primaryLight }}>{riseHeight.toFixed(1)}mm</strong>
                 </p>
@@ -754,17 +848,36 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
                   <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Surface Tension: {surfaceTension} mN/m</span>
                   <span style={{ color: colors.adhesion, fontSize: '13px' }}>Pure water (72)</span>
                 </div>
-                <input type="range" min="30" max="72" value={surfaceTension} onChange={(e) => setSurfaceTension(Number(e.target.value))} style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }} />
+                <input type="range" min="30" max="72" value={surfaceTension} onChange={(e) => setSurfaceTension(Number(e.target.value))} style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.primary, background: `linear-gradient(to right, ${colors.warning}, ${colors.primary})` }} />
               </div>
             </div>
 
-            <div style={{ background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}40` }}>
-              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>👀 What's Happening:</h4>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+            <div style={{ background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}40`, marginBottom: '16px' }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>👀 What the Visualization Shows:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
+                This diagram illustrates three glass tubes of different widths dipped in water. The visualization demonstrates
+                how water rises to different heights in each tube due to capillary action. Notice how the meniscus
+                (curved surface) forms at the top of each water column. This display represents the physics of
+                surface tension and adhesion forces in action.
+              </p>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🔬 The Physics:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
                 <strong style={{ color: colors.adhesion }}>Adhesion</strong> (water attracted to glass) pulls water up the tube walls.
                 <strong style={{ color: colors.cohesion }}> Cohesion</strong> (water attracted to itself) holds the column together.
                 <br /><br />
                 <strong>Narrower tubes = more wall contact relative to volume = higher rise!</strong>
+              </p>
+            </div>
+
+            <div style={{ background: `linear-gradient(135deg, ${colors.success}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.success}40` }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🌍 Why This Matters in Real Life:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
+                Capillary action is essential in nature and engineering. Trees transport water 100+ meters from roots to leaves.
+                Paper towels absorb spills through tiny fiber gaps. Medical devices use capillary channels to move blood samples
+                without pumps. Understanding this principle helps us design better absorbent materials and microfluidic technology.
               </p>
             </div>
           </div>
@@ -779,14 +892,20 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', padding: '24px', background: wasCorrect ? `${colors.success}15` : `${colors.primary}15`, borderRadius: '16px', marginBottom: '24px', border: `1px solid ${wasCorrect ? colors.success : colors.primary}40` }}>
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>{wasCorrect ? '🎯' : '💡'}</div>
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: wasCorrect ? colors.success : colors.primaryLight, marginBottom: '8px' }}>
                 {wasCorrect ? 'Excellent Prediction!' : 'Great Learning Moment!'}
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Water rises highest in the narrowest tube!</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
+                {wasCorrect
+                  ? 'You correctly predicted that water rises highest in the narrowest tube! As you observed in the experiment, narrower tubes create more surface contact relative to volume.'
+                  : 'As you saw in the simulation, water rises highest in the narrowest tube! Your prediction helped you engage with this surprising result.'}
+              </p>
             </div>
 
             <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
@@ -838,26 +957,60 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>🔄 Twist • Surface Tension</p>
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Pure Water vs Soapy Water</h2>
             </div>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '60px', flexWrap: 'wrap' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>💧</div>
-                  <p style={{ color: colors.water, fontWeight: 600 }}>Pure Water</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>γ = 72 mN/m</p>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>🧼</div>
-                  <p style={{ color: colors.warning, fontWeight: 600 }}>Soapy Water</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>γ = 30 mN/m</p>
-                </div>
-              </div>
+            <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '16px' }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block' }}>
+                <defs>
+                  <linearGradient id="pureWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={colors.waterDark} />
+                    <stop offset="100%" stopColor={colors.water} />
+                  </linearGradient>
+                  <linearGradient id="soapyWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#eab308" />
+                    <stop offset="100%" stopColor="#fbbf24" />
+                  </linearGradient>
+                  <filter id="twistGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <rect x="0" y="0" width="400" height="200" fill={colors.bgDark} rx="8" />
+                <text x="200" y="24" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Which Water Rises Higher?</text>
+
+                {/* Pure water tube */}
+                <g>
+                  <rect x="80" y="40" width="20" height="130" fill="#64748b" opacity="0.3" rx="2" />
+                  <rect x="82" y="90" width="16" height="80" fill="url(#pureWaterGrad)" opacity="0.9" />
+                  <text x="90" y="185" textAnchor="middle" fill={colors.water} fontSize="12" fontWeight="600">Pure</text>
+                  <text x="90" y="85" textAnchor="middle" fill={colors.textMuted} fontSize="10">?</text>
+                </g>
+
+                {/* Soapy water tube */}
+                <g>
+                  <rect x="300" y="40" width="20" height="130" fill="#64748b" opacity="0.3" rx="2" />
+                  <rect x="302" y="110" width="16" height="60" fill="url(#soapyWaterGrad)" opacity="0.9" />
+                  <text x="310" y="185" textAnchor="middle" fill={colors.warning} fontSize="12" fontWeight="600">Soapy</text>
+                  <text x="310" y="105" textAnchor="middle" fill={colors.textMuted} fontSize="10">?</text>
+                </g>
+
+                {/* Question marks */}
+                <text x="200" y="110" textAnchor="middle" fill={colors.primary} fontSize="32" fontWeight="bold" filter="url(#twistGlow)">VS</text>
+
+                {/* Surface tension labels */}
+                <text x="90" y="55" textAnchor="middle" fill={colors.textSecondary} fontSize="10">γ = 72 mN/m</text>
+                <text x="310" y="55" textAnchor="middle" fill={colors.textSecondary} fontSize="10">γ = 30 mN/m</text>
+              </svg>
             </div>
 
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
@@ -893,14 +1046,67 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
   }
 
   if (phase === 'twist_play' || phase === 'twist_review') {
+    const pureRise = calculateRiseHeight(1, 72);
+    const soapyRise = calculateRiseHeight(1, 30);
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', padding: '24px', background: `${colors.success}15`, borderRadius: '16px', marginBottom: '24px', border: `1px solid ${colors.success}40` }}>
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>💧</div>
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary, marginBottom: '8px' }}>Pure Water Wins!</h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Higher surface tension = higher capillary rise</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Higher surface tension = higher capillary rise</p>
+            </div>
+
+            {/* Comparison SVG */}
+            <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '16px' }}>
+              <svg viewBox="0 0 400 220" width="100%" style={{ display: 'block' }}>
+                <defs>
+                  <linearGradient id="twistPureGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={colors.waterDark} />
+                    <stop offset="100%" stopColor={colors.water} />
+                  </linearGradient>
+                  <linearGradient id="twistSoapyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#eab308" />
+                    <stop offset="100%" stopColor="#fbbf24" />
+                  </linearGradient>
+                  <filter id="resultGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <rect x="0" y="0" width="400" height="220" fill={colors.bgDark} rx="8" />
+                <text x="200" y="24" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Capillary Rise Comparison</text>
+
+                {/* Pure water tube - rises higher */}
+                <g>
+                  <rect x="100" y="40" width="24" height="140" fill="#64748b" opacity="0.3" rx="2" />
+                  <rect x="102" y="70" width="20" height="110" fill="url(#twistPureGrad)" opacity="0.9" />
+                  <path d="M 102 75 Q 112 65 122 75" fill={colors.meniscus} filter="url(#resultGlow)" />
+                  <text x="112" y="200" textAnchor="middle" fill={colors.water} fontSize="12" fontWeight="600">Pure Water</text>
+                  <text x="112" y="60" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="700">↑ {pureRise.toFixed(1)}mm</text>
+                  <text x="145" y="100" fill={colors.success} fontSize="24" fontWeight="bold">✓</text>
+                </g>
+
+                {/* Soapy water tube - rises lower */}
+                <g>
+                  <rect x="276" y="40" width="24" height="140" fill="#64748b" opacity="0.3" rx="2" />
+                  <rect x="278" y="100" width="20" height="80" fill="url(#twistSoapyGrad)" opacity="0.9" />
+                  <path d="M 278 105 Q 288 95 298 105" fill="#fef08a" />
+                  <text x="288" y="200" textAnchor="middle" fill={colors.warning} fontSize="12" fontWeight="600">Soapy Water</text>
+                  <text x="288" y="90" textAnchor="middle" fill={colors.error} fontSize="11" fontWeight="700">↑ {soapyRise.toFixed(1)}mm</text>
+                </g>
+
+                {/* Difference indicator */}
+                <line x1="140" y1="110" x2="260" y2="110" stroke={colors.primary} strokeWidth="2" strokeDasharray="4,4" />
+                <text x="200" y="130" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="600">Δ = {(pureRise - soapyRise).toFixed(1)}mm difference</text>
+              </svg>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
@@ -908,16 +1114,16 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '32px', marginBottom: '8px' }}>💧</div>
                   <p style={{ color: colors.water, fontWeight: 700 }}>Pure Water</p>
-                  <p style={{ color: colors.textSecondary, fontSize: '13px' }}>γ = 72 mN/m</p>
-                  <p style={{ color: colors.success, fontWeight: 700, marginTop: '8px' }}>Rise: {calculateRiseHeight(1, 72).toFixed(1)}mm</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400 }}>γ = 72 mN/m</p>
+                  <p style={{ color: colors.success, fontWeight: 700, marginTop: '8px' }}>Rise: {pureRise.toFixed(1)}mm</p>
                 </div>
               </div>
               <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.warning}40` }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '32px', marginBottom: '8px' }}>🧼</div>
                   <p style={{ color: colors.warning, fontWeight: 700 }}>Soapy Water</p>
-                  <p style={{ color: colors.textSecondary, fontSize: '13px' }}>γ = 30 mN/m</p>
-                  <p style={{ color: colors.error, fontWeight: 700, marginTop: '8px' }}>Rise: {calculateRiseHeight(1, 30).toFixed(1)}mm</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400 }}>γ = 30 mN/m</p>
+                  <p style={{ color: colors.error, fontWeight: 700, marginTop: '8px' }}>Rise: {soapyRise.toFixed(1)}mm</p>
                 </div>
               </div>
             </div>
@@ -945,7 +1151,9 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>🌍 Real-World Applications</p>
@@ -958,7 +1166,8 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
                   padding: '10px 16px', borderRadius: '12px',
                   border: selectedApp === i ? `2px solid ${a.color}` : `1px solid ${colors.border}`,
                   background: selectedApp === i ? `${a.color}20` : colors.bgCard,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', flexShrink: 0
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', flexShrink: 0,
+                  transition: 'all 0.2s ease'
                 }}>
                   <span style={{ fontSize: '20px' }}>{a.icon}</span>
                   <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 600 }}>{a.short}</span>
@@ -975,19 +1184,39 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
                   <p style={{ color: app.color, fontSize: '14px', fontWeight: 600, margin: 0 }}>{app.tagline}</p>
                 </div>
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, marginBottom: '20px' }}>{app.description}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, marginBottom: '20px', fontWeight: 400 }}>{app.description}</p>
+
               <div style={{ background: `${app.color}15`, borderRadius: '12px', padding: '16px', marginBottom: '20px', borderLeft: `4px solid ${app.color}` }}>
-                <h4 style={{ color: app.color, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🔗 Connection:</h4>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>{app.connection}</p>
+                <h4 style={{ color: app.color, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🔗 Connection to Capillary Physics:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>{app.connection}</p>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
-                {app.stats.map((stat, i) => (
-                  <div key={i} style={{ background: colors.bgDark, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
-                    <div style={{ color: app.color, fontSize: '18px', fontWeight: 700 }}>{stat.value}</div>
-                    <div style={{ color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
-                  </div>
-                ))}
+
+              <div style={{ background: colors.bgDark, borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '12px' }}>📊 Key Statistics:</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  {app.stats.map((stat, i) => (
+                    <div key={i} style={{ background: colors.bgCard, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                      <div style={{ color: app.color, fontSize: '16px', fontWeight: 700 }}>{stat.value}</div>
+                      <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 400 }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🔧 How It Works:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.6, fontWeight: 400 }}>{app.howItWorks}</p>
+              </div>
+
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🏢 Industry Leaders:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, fontWeight: 400 }}>
+                  Companies using this technology: {app.companies.join(', ')}
+                </p>
+                <p style={{ color: colors.primary, fontSize: '13px', marginTop: '8px', fontStyle: 'italic', fontWeight: 400 }}>
+                  Future Impact: {app.futureImpact}
+                </p>
               </div>
             </div>
 
@@ -1002,8 +1231,9 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
             }} disabled={completedApps[selectedApp]} style={{
               width: '100%', padding: '16px', borderRadius: '12px', border: 'none',
               background: completedApps[selectedApp] ? colors.bgCardLight : `linear-gradient(135deg, ${app.color} 0%, ${colors.accent} 100%)`,
-              color: completedApps[selectedApp] ? colors.textMuted : 'white', fontSize: '16px', fontWeight: 700,
-              cursor: completedApps[selectedApp] ? 'default' : 'pointer', minHeight: '52px'
+              color: completedApps[selectedApp] ? colors.textSecondary : 'white', fontSize: '16px', fontWeight: 700,
+              cursor: completedApps[selectedApp] ? 'default' : 'pointer', minHeight: '52px',
+              transition: 'all 0.2s ease'
             }}>
               {completedApps[selectedApp] ? '✓ Completed' : 'Got It! Continue →'}
             </button>
@@ -1025,7 +1255,9 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1039,11 +1271,18 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
             </div>
 
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px', border: `1px solid ${colors.border}` }}>
-              <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>SCENARIO</p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>{currentQ.scenario}</p>
+              <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>SCENARIO</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400, lineHeight: 1.6 }}>{currentQ.scenario}</p>
             </div>
 
-            <h3 style={{ color: colors.textPrimary, fontSize: isMobile ? '18px' : '20px', fontWeight: 700, marginBottom: '20px' }}>{currentQ.question}</h3>
+            <div style={{ background: `linear-gradient(135deg, ${colors.primary}10 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', marginBottom: '16px', border: `1px solid ${colors.primary}30` }}>
+              <p style={{ color: colors.textPrimary, fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>QUESTION</p>
+              <h3 style={{ color: colors.textPrimary, fontSize: isMobile ? '18px' : '20px', fontWeight: 700, margin: 0 }}>{currentQ.question}</h3>
+            </div>
+
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '16px', fontWeight: 400 }}>
+              Read the scenario carefully and select the best answer below. Apply your understanding of capillary action, surface tension, and adhesion forces to reason through each question. Consider how tube radius, liquid properties, and contact angles affect capillary rise.
+            </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
               {currentQ.options.map((opt) => {
@@ -1055,7 +1294,8 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
                     padding: '16px', borderRadius: '12px',
                     border: showCorrect ? `2px solid ${colors.success}` : showWrong ? `2px solid ${colors.error}` : isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
                     backgroundColor: showCorrect ? `${colors.success}15` : showWrong ? `${colors.error}15` : isSelected ? `${colors.primary}20` : colors.bgCard,
-                    cursor: showExplanation ? 'default' : 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px'
+                    cursor: showExplanation ? 'default' : 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px',
+                    transition: 'all 0.2s ease'
                   }}>
                     <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>{opt.label}</span>
                     {showCorrect && <span style={{ color: colors.success, fontSize: '20px' }}>✓</span>}
@@ -1067,7 +1307,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
             </div>
 
             {selectedAnswer && !showExplanation && (
-              <button onClick={() => { setShowExplanation(true); playSound(isCorrect ? 'success' : 'failure'); }} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Check Answer</button>
+              <button onClick={() => { setShowExplanation(true); playSound(isCorrect ? 'success' : 'failure'); }} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s ease' }}>Check Answer</button>
             )}
 
             {showExplanation && (
@@ -1084,7 +1324,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
 
         {showExplanation ? (
           <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, minHeight: '72px', background: colors.bgCard, borderTop: `1px solid ${colors.border}`, boxShadow: '0 -4px 20px rgba(0,0,0,0.5)', padding: '12px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <button onClick={() => { if (testQuestion < 9) { setTestQuestion(testQuestion + 1); setShowExplanation(false); playSound('click'); } else { goToPhase('mastery'); } }} style={{ padding: '14px 28px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', minHeight: '52px', minWidth: '200px' }}>
+            <button onClick={() => { if (testQuestion < 9) { setTestQuestion(testQuestion + 1); setShowExplanation(false); playSound('click'); } else { goToPhase('mastery'); } }} style={{ padding: '14px 28px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', minHeight: '52px', minWidth: '200px', transition: 'all 0.2s ease' }}>
               {testQuestion < 9 ? 'Next Question →' : 'See Results →'}
             </button>
           </div>
@@ -1100,7 +1340,9 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          {renderNavDots()}
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '16px' }}>{passed ? '🏆' : '📚'}</div>
             <h2 style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: 800, color: passed ? colors.success : colors.primaryLight, marginBottom: '8px' }}>{passed ? 'Mastery Achieved!' : 'Keep Learning!'}</h2>

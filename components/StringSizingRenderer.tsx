@@ -37,7 +37,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Temperature Effects',
+  twist_play: 'Explore Twist',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -90,7 +90,7 @@ const colors = {
   bgCardLight: '#334155',
   border: '#475569',
   textPrimary: '#f8fafc',
-  textSecondary: '#94a3b8',
+  textSecondary: '#e2e8f0',
   textMuted: '#64748b',
 };
 
@@ -108,9 +108,9 @@ const realWorldApps = [
     connection: 'The string voltage equation V = N x Voc directly determines how many panels can safely connect to your home inverter without damage.',
     howItWorks: 'Installers calculate maximum cold-weather voltage to stay under inverter limits, and minimum hot-weather voltage to stay in MPPT range. This ensures optimal performance in all seasons.',
     stats: [
-      { value: '8-12', label: 'Panels per string', icon: '🔢' },
+      { value: '12x', label: 'Panels per string', icon: '🔢' },
       { value: '400V', label: 'Typical string voltage', icon: '⚡' },
-      { value: '25yr', label: 'System warranty', icon: '📋' }
+      { value: '5000W', label: 'System capacity', icon: '📋' }
     ],
     examples: ['Single-family homes', 'Townhouses', 'Small commercial', 'Agricultural buildings'],
     companies: ['Tesla', 'Sunrun', 'SunPower', 'Vivint Solar'],
@@ -461,6 +461,11 @@ export default function StringSizingRenderer({
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -473,8 +478,9 @@ export default function StringSizingRenderer({
           onClick={goBack}
           disabled={currentIdx === 0}
           style={{
-            width: '36px',
-            height: '36px',
+            width: '44px',
+            height: '44px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: `1px solid ${colors.border}`,
             background: currentIdx > 0 ? colors.bgCardLight : 'transparent',
@@ -719,16 +725,17 @@ export default function StringSizingRenderer({
         border: '1px solid rgba(234, 179, 8, 0.2)',
         borderRadius: '20px',
         marginBottom: '24px',
+        boxShadow: '0 0 20px rgba(234, 179, 8, 0.2)',
       }}>
         <span style={{ width: '8px', height: '8px', background: '#eab308', borderRadius: '50%' }} />
         <span style={{ fontSize: '12px', color: '#eab308', fontWeight: 600 }}>SOLAR ENGINEERING</span>
       </div>
 
-      <h1 style={{ fontSize: typo.title, fontWeight: 'bold', color: '#f8fafc', marginBottom: '16px' }}>
+      <h1 style={{ fontSize: typo.title, fontWeight: 'bold', color: '#f8fafc', marginBottom: '16px', textShadow: '0 0 20px rgba(234, 179, 8, 0.3)' }}>
         Why Can't You Just Connect Any Number of Solar Panels Together?
       </h1>
 
-      <p style={{ fontSize: typo.body, color: '#94a3b8', marginBottom: '32px', maxWidth: '500px', margin: '0 auto 32px' }}>
+      <p style={{ fontSize: typo.body, color: '#e2e8f0', marginBottom: '32px', maxWidth: '500px', margin: '0 auto 32px', fontWeight: 400 }}>
         Too few panels and you lose power. Too many and you destroy your inverter. The sweet spot depends on physics!
       </p>
 
@@ -775,7 +782,7 @@ export default function StringSizingRenderer({
           />
         ))}
 
-        <text x="200" y="160" textAnchor="middle" fill="#94a3b8" fontSize="14">
+        <text x="200" y="160" textAnchor="middle" fill="#e2e8f0" fontSize="14">
           5 panels x 40V = 200V
         </text>
         <text x="200" y="180" textAnchor="middle" fill="#22c55e" fontSize="12">
@@ -804,6 +811,28 @@ export default function StringSizingRenderer({
       <h2 style={{ fontSize: typo.heading, fontWeight: 'bold', color: '#f8fafc', marginBottom: '16px' }}>
         Make Your Prediction
       </h2>
+
+      {/* Static visualization */}
+      <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+        <defs>
+          <linearGradient id="strPanelGradPredict" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e3a8a" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </linearGradient>
+        </defs>
+        <rect width="400" height="150" fill="#0f172a" rx="12" />
+        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+          <g key={i} transform={`translate(${25 + i * 45}, 35)`}>
+            <rect width="40" height="55" fill="#64748b" rx="3" />
+            <rect x="2" y="2" width="36" height="51" fill="url(#strPanelGradPredict)" rx="2" />
+            <text x="20" y="70" textAnchor="middle" fill="#e2e8f0" fontSize="11">40V</text>
+          </g>
+        ))}
+        <text x="200" y="120" textAnchor="middle" fill="#fcd34d" fontSize="14" fontWeight="bold">
+          8 panels x 40V = 320V | How many more can we add?
+        </text>
+      </svg>
 
       <div style={{
         background: 'rgba(234, 179, 8, 0.1)',
@@ -880,9 +909,92 @@ export default function StringSizingRenderer({
       <h2 style={{ fontSize: typo.heading, fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>
         String Sizing Calculator
       </h2>
-      <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
+      <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '16px' }}>
         Adjust panel count to find the optimal string size
       </p>
+
+      {/* Observation guidance */}
+      <div style={{
+        background: 'rgba(59, 130, 246, 0.1)',
+        border: '1px solid rgba(59, 130, 246, 0.3)',
+        borderRadius: '8px',
+        padding: '12px',
+        marginBottom: '16px',
+      }}>
+        <p style={{ color: '#93c5fd', fontSize: '13px', lineHeight: 1.5 }}>
+          <strong>Observe:</strong> Try different panel counts and watch the voltage change. Notice where the voltage enters the green MPPT range and when it goes into the danger zone.
+        </p>
+      </div>
+
+      {/* SVG visualization of panels and voltage chart */}
+      <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+        <defs>
+          <linearGradient id="strPanelGradPlay" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e3a8a" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </linearGradient>
+          <linearGradient id="playChartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#eab308" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+          </linearGradient>
+          <filter id="playMarkerGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <radialGradient id="playBgGrad">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </radialGradient>
+        </defs>
+        <rect width="400" height="300" fill="url(#playBgGrad)" rx="8" />
+        {/* Panel display group */}
+        <g>
+          <text x="200" y="18" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontWeight="bold">Solar Panel String Configuration</text>
+          {Array.from({ length: Math.min(panelCount, 12) }).map((_, i) => (
+            <rect key={i} x={10 + i * 32} y={28} width="28" height="40" fill="url(#strPanelGradPlay)" rx="2" />
+          ))}
+          {panelCount > 12 && (
+            <text x="390" y="50" textAnchor="end" fill="#e2e8f0" fontSize="12">+{panelCount - 12}</text>
+          )}
+          <text x="200" y="88" textAnchor="middle" fill={getStatusColor()} fontSize="14" fontWeight="bold">
+            {panelCount} panels x {panelVoc}V = {stringVoltage.toFixed(0)}V
+          </text>
+        </g>
+        {/* Voltage chart group */}
+        <g>
+          {/* Chart axes */}
+          <line x1="55" y1="100" x2="55" y2="275" stroke="#475569" strokeWidth="1" />
+          <line x1="55" y1="275" x2="380" y2="275" stroke="#475569" strokeWidth="1" />
+          {/* Grid lines */}
+          <line x1="55" y1="130" x2="380" y2="130" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+          <line x1="55" y1="165" x2="380" y2="165" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+          <line x1="55" y1="200" x2="380" y2="200" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+          <line x1="55" y1="235" x2="380" y2="235" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+          {/* Danger zone line */}
+          <line x1="55" y1={275 - (inverterMaxV / 600) * 175} x2="380" y2={275 - (inverterMaxV / 600) * 175} stroke="#ef4444" strokeWidth="1.5" strokeDasharray="6 3" />
+          {/* MPPT range band */}
+          <rect x="55" y={275 - (inverterMpptMax / 600) * 175} width="325" height={((inverterMpptMax - inverterMpptMin) / 600) * 175} fill="rgba(34,197,94,0.12)" />
+          {/* Filled area under curve */}
+          <path d={`M 55 275 L 55 ${275 - (4 * panelVoc / 600) * 175} L 84 ${275 - (5 * panelVoc / 600) * 175} L 113 ${275 - (6 * panelVoc / 600) * 175} L 142 ${275 - (7 * panelVoc / 600) * 175} L 171 ${275 - (8 * panelVoc / 600) * 175} L 200 ${275 - (9 * panelVoc / 600) * 175} L 229 ${275 - (10 * panelVoc / 600) * 175} L 258 ${275 - (11 * panelVoc / 600) * 175} L 287 ${275 - (12 * panelVoc / 600) * 175} L 316 ${275 - (13 * panelVoc / 600) * 175} L 345 ${275 - (14 * panelVoc / 600) * 175} L 374 ${275 - (15 * panelVoc / 600) * 175} L 374 275 Z`} fill="url(#playChartGrad)" />
+          {/* Voltage curve with 12 points spanning full range */}
+          <path d={`M 55 ${275 - (4 * panelVoc / 600) * 175} L 84 ${275 - (5 * panelVoc / 600) * 175} L 113 ${275 - (6 * panelVoc / 600) * 175} L 142 ${275 - (7 * panelVoc / 600) * 175} L 171 ${275 - (8 * panelVoc / 600) * 175} L 200 ${275 - (9 * panelVoc / 600) * 175} L 229 ${275 - (10 * panelVoc / 600) * 175} L 258 ${275 - (11 * panelVoc / 600) * 175} L 287 ${275 - (12 * panelVoc / 600) * 175} L 316 ${275 - (13 * panelVoc / 600) * 175} L 345 ${275 - (14 * panelVoc / 600) * 175} L 374 ${275 - (15 * panelVoc / 600) * 175}`} stroke="#eab308" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          {/* Interactive marker group */}
+          <g>
+            <circle cx={55 + ((panelCount - 4) / 11) * 319} cy={275 - (stringVoltage / 600) * 175} r={8} fill={getStatusColor()} filter="url(#playMarkerGlow)" stroke="#ffffff" strokeWidth="2" />
+            <ellipse cx={55 + ((panelCount - 4) / 11) * 319} cy={275 - (stringVoltage / 600) * 175} rx="14" ry="14" fill="none" stroke={getStatusColor()} strokeWidth="1" opacity="0.3" />
+          </g>
+          {/* Y-axis labels */}
+          <text x="50" y={275 - (inverterMaxV / 600) * 175 - 5} textAnchor="end" fill="#ef4444" fontSize="11">{inverterMaxV}V</text>
+          <text x="50" y={275 - (inverterMpptMax / 600) * 175 + 4} textAnchor="end" fill="#22c55e" fontSize="11">{inverterMpptMax}V</text>
+          <text x="50" y={275 - (inverterMpptMin / 600) * 175 + 4} textAnchor="end" fill="#22c55e" fontSize="11">{inverterMpptMin}V</text>
+          {/* X-axis labels */}
+          <text x="55" y="290" fill="#94a3b8" fontSize="11">4 panels</text>
+          <text x="374" y="290" textAnchor="end" fill="#94a3b8" fontSize="11">15 panels</text>
+          {/* Axis title - positioned right of y-axis labels to avoid overlap */}
+          <text x="250" y="120" textAnchor="middle" fill="#94a3b8" fontSize="11">Voltage vs Panel Count</text>
+        </g>
+      </svg>
 
       {/* Status Display */}
       <div style={{
@@ -893,7 +1005,7 @@ export default function StringSizingRenderer({
         textAlign: 'center',
         border: `2px solid ${getStatusColor()}`,
       }}>
-        <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '8px' }}>STRING VOLTAGE</div>
+        <div style={{ fontSize: '12px', color: '#e2e8f0', marginBottom: '8px' }}>STRING VOLTAGE</div>
         <div style={{ fontSize: '48px', fontWeight: 'bold', color: getStatusColor() }}>
           {stringVoltage.toFixed(0)}V
         </div>
@@ -963,7 +1075,7 @@ export default function StringSizingRenderer({
 
       {/* Panel count slider */}
       <div style={{ marginBottom: '24px' }}>
-        <label style={{ display: 'block', color: '#94a3b8', fontSize: '14px', marginBottom: '8px' }}>
+        <label style={{ display: 'block', color: '#e2e8f0', fontSize: '14px', marginBottom: '8px' }}>
           Number of Panels: {panelCount}
         </label>
         <input
@@ -972,7 +1084,7 @@ export default function StringSizingRenderer({
           max="15"
           value={panelCount}
           onChange={(e) => handlePanelCountChange(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: '#eab308' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#eab308' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
           <span>4 panels</span>
@@ -983,11 +1095,11 @@ export default function StringSizingRenderer({
       {/* Info cards */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
         <div style={{ background: 'rgba(30, 41, 59, 0.8)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: '#94a3b8' }}>Panel Voc</div>
+          <div style={{ fontSize: '10px', color: '#e2e8f0' }}>Panel Voc</div>
           <div style={{ fontSize: '18px', color: '#3b82f6', fontWeight: 'bold' }}>{panelVoc}V</div>
         </div>
         <div style={{ background: 'rgba(30, 41, 59, 0.8)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: '#94a3b8' }}>Panels x Voltage</div>
+          <div style={{ fontSize: '10px', color: '#e2e8f0' }}>Panels x Voltage</div>
           <div style={{ fontSize: '18px', color: '#eab308', fontWeight: 'bold' }}>{panelCount} x {panelVoc}V</div>
         </div>
       </div>
@@ -1001,7 +1113,8 @@ export default function StringSizingRenderer({
         <p style={{ color: '#fcd34d', fontSize: '13px', lineHeight: 1.6 }}>
           <strong>Goal:</strong> Keep the string voltage within the green MPPT range.
           Too low = lost efficiency. Too high = potential damage!
-        </p>
+          When you increase the panel count, the total string voltage increases proportionally because voltages add in series.
+          This is important for real-world solar design and engineering applications.</p>
       </div>
     </div>
   );
@@ -1024,6 +1137,17 @@ export default function StringSizingRenderer({
         <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', marginTop: '8px' }}>
           Series connection adds voltages
         </div>
+      </div>
+
+      <div style={{
+        background: 'rgba(30, 41, 59, 0.8)',
+        borderRadius: '12px',
+        padding: '16px',
+        marginBottom: '16px',
+      }}>
+        <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: 1.6 }}>
+          As you observed in the experiment, adding more panels increases string voltage linearly. Your prediction and observation confirm that string sizing requires careful calculation.
+        </p>
       </div>
 
       {[
@@ -1054,7 +1178,7 @@ export default function StringSizingRenderer({
           <span style={{ fontSize: '24px' }}>{item.icon}</span>
           <div>
             <h4 style={{ color: '#f8fafc', fontWeight: 'bold', marginBottom: '4px' }}>{item.title}</h4>
-            <p style={{ color: '#94a3b8', fontSize: '13px', lineHeight: 1.5 }}>{item.desc}</p>
+            <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: 1.5 }}>{item.desc}</p>
           </div>
         </div>
       ))}
@@ -1066,6 +1190,34 @@ export default function StringSizingRenderer({
       <h2 style={{ fontSize: typo.heading, fontWeight: 'bold', color: '#f59e0b', marginBottom: '16px' }}>
         The Temperature Factor
       </h2>
+
+      {/* Static SVG visualization for twist predict */}
+      <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+        <defs>
+          <linearGradient id="twistBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+        </defs>
+        <rect width="400" height="220" fill="url(#twistBgGrad)" rx="12" />
+        <text x="200" y="30" textAnchor="middle" fill="#f59e0b" fontSize="14" fontWeight="bold">Temperature vs Panel Voltage</text>
+        {/* Temperature axis labels */}
+        <text x="50" y="200" textAnchor="middle" fill="#60a5fa" fontSize="12">-20C</text>
+        <text x="200" y="200" textAnchor="middle" fill="#4ade80" fontSize="12">25C (STC)</text>
+        <text x="350" y="200" textAnchor="middle" fill="#f87171" fontSize="12">60C</text>
+        {/* Voltage curve showing inverse relationship */}
+        <path d="M 50 60 L 80 70 L 110 82 L 140 95 L 170 108 L 200 120 L 230 132 L 260 142 L 290 150 L 320 157 L 350 163" stroke="#f59e0b" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Axis lines */}
+        <line x1="40" y1="45" x2="40" y2="180" stroke="#475569" strokeWidth="1" />
+        <line x1="40" y1="180" x2="370" y2="180" stroke="#475569" strokeWidth="1" />
+        {/* Grid lines */}
+        <line x1="40" y1="90" x2="370" y2="90" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+        <line x1="40" y1="135" x2="370" y2="135" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+        {/* Y-axis label */}
+        <text x="20" y="120" textAnchor="middle" fill="#e2e8f0" fontSize="11" transform="rotate(-90, 20, 120)">Voltage</text>
+        {/* Question mark */}
+        <text x="200" y="140" textAnchor="middle" fill="#fcd34d" fontSize="24" fontWeight="bold">?</text>
+      </svg>
 
       <div style={{
         background: 'rgba(245, 158, 11, 0.1)',
@@ -1140,9 +1292,77 @@ export default function StringSizingRenderer({
       <h2 style={{ fontSize: typo.heading, fontWeight: 'bold', color: '#f59e0b', marginBottom: '8px' }}>
         Temperature-Adjusted String Sizing
       </h2>
-      <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
+      <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '16px' }}>
         See how temperature changes affect your string voltage
       </p>
+
+      {/* Observation guidance */}
+      <div style={{
+        background: 'rgba(245, 158, 11, 0.1)',
+        border: '1px solid rgba(245, 158, 11, 0.3)',
+        borderRadius: '8px',
+        padding: '12px',
+        marginBottom: '16px',
+      }}>
+        <p style={{ color: '#fcd34d', fontSize: '13px', lineHeight: 1.5 }}>
+          <strong>Observe:</strong> Slide the temperature from cold to hot and watch how the voltage changes. Notice how a string designed for 25C might exceed limits in cold weather!
+        </p>
+      </div>
+
+      {/* SVG visualization of temperature-adjusted voltage */}
+      {(() => {
+        // Calculate voltage range for dynamic y-axis scaling
+        const vCold = panelCount * panelVoc * (1 + tempCoefficient * (-20 - stcTemp));
+        const vHot = panelCount * panelVoc * (1 + tempCoefficient * (60 - stcTemp));
+        const vPad = (vCold - vHot) * 0.3;
+        const yAxisMin = Math.max(0, Math.floor((vHot - vPad) / 50) * 50);
+        const yAxisMax = Math.ceil((vCold + vPad) / 50) * 50;
+        const yAxisRange = yAxisMax - yAxisMin || 100;
+        const mapV = (v: number) => 210 - ((v - yAxisMin) / yAxisRange) * 170;
+        const temps = [-20, -10, 0, 10, 20, 25, 30, 40, 50, 60];
+        const tempX = (t: number) => 50 + ((t + 20) / 80) * 330;
+        return (
+          <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+            <defs>
+              <filter id="twistMarkerGlow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            <rect width="400" height="250" fill="#0f172a" rx="8" />
+            <text x="200" y="22" textAnchor="middle" fill="#f59e0b" fontSize="13" fontWeight="bold">Temperature vs String Voltage</text>
+            {/* Axes */}
+            <line x1="50" y1="35" x2="50" y2="210" stroke="#475569" strokeWidth="1" />
+            <line x1="50" y1="210" x2="380" y2="210" stroke="#475569" strokeWidth="1" />
+            {/* Grid lines */}
+            <line x1="50" y1="75" x2="380" y2="75" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+            <line x1="50" y1="122" x2="380" y2="122" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+            <line x1="50" y1="170" x2="380" y2="170" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+            {/* Inverter max line if in range */}
+            {inverterMaxV >= yAxisMin && inverterMaxV <= yAxisMax && (
+              <line x1="50" y1={mapV(inverterMaxV)} x2="380" y2={mapV(inverterMaxV)} stroke="#ef4444" strokeWidth="1.5" strokeDasharray="6 3" />
+            )}
+            {/* Voltage vs temperature curve with 10+ points */}
+            <path d={temps.map((t, i) => {
+              const v = panelCount * panelVoc * (1 + tempCoefficient * (t - stcTemp));
+              return `${i === 0 ? 'M' : 'L'} ${tempX(t)} ${mapV(v)}`;
+            }).join(' ')} stroke="#f59e0b" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Interactive marker at current temperature */}
+            <circle cx={tempX(temperature)} cy={mapV(stringVoltage)} r={8} fill={getStatusColor()} filter="url(#twistMarkerGlow)" stroke="#ffffff" strokeWidth="2" />
+            {/* X-axis labels */}
+            <text x="50" y="228" textAnchor="middle" fill="#60a5fa" fontSize="11">-20C</text>
+            <text x="215" y="228" textAnchor="middle" fill="#4ade80" fontSize="11">25C</text>
+            <text x="380" y="228" textAnchor="end" fill="#f87171" fontSize="11">60C</text>
+            {/* Y-axis labels */}
+            <text x="46" y="44" textAnchor="end" fill="#94a3b8" fontSize="11">{yAxisMax}V</text>
+            <text x="46" y="213" textAnchor="end" fill="#94a3b8" fontSize="11">{yAxisMin}V</text>
+            {/* Current value label */}
+            <text x="200" y="245" textAnchor="middle" fill={getStatusColor()} fontSize="12" fontWeight="bold">
+              {stringVoltage.toFixed(0)}V at {temperature}C
+            </text>
+          </svg>
+        );
+      })()}
 
       {/* Status Display */}
       <div style={{
@@ -1153,13 +1373,13 @@ export default function StringSizingRenderer({
         textAlign: 'center',
         border: `2px solid ${getStatusColor()}`,
       }}>
-        <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+        <div style={{ fontSize: '12px', color: '#e2e8f0', marginBottom: '4px' }}>
           STRING VOLTAGE @ {temperature}C
         </div>
         <div style={{ fontSize: '48px', fontWeight: 'bold', color: getStatusColor() }}>
           {stringVoltage.toFixed(0)}V
         </div>
-        <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+        <div style={{ fontSize: '12px', color: '#e2e8f0', marginTop: '4px' }}>
           Base: {(panelCount * panelVoc).toFixed(0)}V | Adjusted: {((voltageAdjustment - 1) * 100).toFixed(1)}%
         </div>
         <div style={{
@@ -1196,7 +1416,7 @@ export default function StringSizingRenderer({
 
       {/* Temperature slider */}
       <div style={{ marginBottom: '16px' }}>
-        <label style={{ display: 'block', color: '#94a3b8', fontSize: '14px', marginBottom: '8px' }}>
+        <label style={{ display: 'block', color: '#e2e8f0', fontSize: '14px', marginBottom: '8px' }}>
           Temperature: {temperature}C ({(temperature * 9/5 + 32).toFixed(0)}F)
         </label>
         <input
@@ -1205,7 +1425,7 @@ export default function StringSizingRenderer({
           max="60"
           value={temperature}
           onChange={(e) => handleTemperatureChange(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: '#f59e0b' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#f59e0b' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
           <span style={{ color: '#3b82f6' }}>-20C (Cold)</span>
@@ -1216,7 +1436,7 @@ export default function StringSizingRenderer({
 
       {/* Panel count slider */}
       <div style={{ marginBottom: '24px' }}>
-        <label style={{ display: 'block', color: '#94a3b8', fontSize: '14px', marginBottom: '8px' }}>
+        <label style={{ display: 'block', color: '#e2e8f0', fontSize: '14px', marginBottom: '8px' }}>
           Number of Panels: {panelCount}
         </label>
         <input
@@ -1225,7 +1445,7 @@ export default function StringSizingRenderer({
           max="15"
           value={panelCount}
           onChange={(e) => setPanelCount(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: '#eab308' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#eab308' }}
         />
       </div>
 
@@ -1294,7 +1514,7 @@ export default function StringSizingRenderer({
           <span style={{ fontSize: '24px' }}>{item.icon}</span>
           <div>
             <h4 style={{ color: '#f8fafc', fontWeight: 'bold', marginBottom: '4px' }}>{item.title}</h4>
-            <p style={{ color: '#94a3b8', fontSize: '13px', lineHeight: 1.5 }}>{item.desc}</p>
+            <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: 1.5 }}>{item.desc}</p>
           </div>
         </div>
       ))}
@@ -1309,7 +1529,7 @@ export default function StringSizingRenderer({
         <h2 style={{ fontSize: typo.heading, fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>
           Real-World Applications
         </h2>
-        <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
+        <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '24px' }}>
           Explore all 4 applications to continue
         </p>
 
@@ -1331,7 +1551,7 @@ export default function StringSizingRenderer({
                   : completedApps.has(index)
                     ? 'rgba(34, 197, 94, 0.2)'
                     : 'rgba(51, 65, 85, 0.5)',
-                color: activeAppTab === index ? 'white' : completedApps.has(index) ? '#22c55e' : '#94a3b8',
+                color: activeAppTab === index ? 'white' : completedApps.has(index) ? '#22c55e' : '#e2e8f0',
                 fontSize: '24px',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
@@ -1379,7 +1599,7 @@ export default function StringSizingRenderer({
             </div>
           </div>
 
-          <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6, marginBottom: '16px' }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6, marginBottom: '16px' }}>
             {app.description}
           </p>
 
@@ -1392,13 +1612,13 @@ export default function StringSizingRenderer({
             <p style={{ color: '#fcd34d', fontSize: '12px', marginBottom: '4px', fontWeight: 600 }}>
               Connection to String Sizing:
             </p>
-            <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.5 }}>
+            <p style={{ color: '#e2e8f0', fontSize: '12px', lineHeight: 1.5 }}>
               {app.connection}
             </p>
           </div>
 
           {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
             {app.stats.map((stat, i) => (
               <div key={i} style={{
                 background: 'rgba(15, 23, 42, 0.5)',
@@ -1412,12 +1632,64 @@ export default function StringSizingRenderer({
               </div>
             ))}
           </div>
+
+          {/* How it works */}
+          <div style={{ marginBottom: '16px' }}>
+            <p style={{ color: '#fcd34d', fontSize: '12px', marginBottom: '4px', fontWeight: 600 }}>How It Works:</p>
+            <p style={{ color: '#e2e8f0', fontSize: '12px', lineHeight: 1.5 }}>{app.howItWorks}</p>
+          </div>
+
+          {/* Companies */}
+          <div style={{ marginBottom: '16px' }}>
+            <p style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '4px' }}>Key Companies: {app.companies.join(', ')}</p>
+            <p style={{ color: '#94a3b8', fontSize: '11px' }}>Examples: {app.examples.join(', ')}</p>
+          </div>
+
+          {/* Future impact */}
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.5)',
+            borderRadius: '8px',
+            padding: '10px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ color: '#60a5fa', fontSize: '11px', lineHeight: 1.5 }}>
+              <strong>Future:</strong> {app.futureImpact}
+            </p>
+          </div>
+
+          {/* Got It / Next Application button */}
+          <button
+            onClick={() => {
+              handleCompleteApp(activeAppTab);
+              if (activeAppTab < realWorldApps.length - 1) {
+                setActiveAppTab(activeAppTab + 1);
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '10px',
+              border: 'none',
+              background: completedApps.has(activeAppTab)
+                ? 'rgba(34, 197, 94, 0.2)'
+                : `linear-gradient(135deg, ${app.color} 0%, ${app.color}dd 100%)`,
+              color: completedApps.has(activeAppTab) ? '#22c55e' : 'white',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              minHeight: '44px',
+            }}
+          >
+            {completedApps.has(activeAppTab)
+              ? (activeAppTab < realWorldApps.length - 1 ? 'Next Application' : 'Got It')
+              : 'Got It'}
+          </button>
         </div>
 
         {/* Progress */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#94a3b8', fontSize: '14px' }}>Progress</span>
+            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Progress</span>
             <span style={{ color: '#eab308', fontSize: '14px', fontWeight: 'bold' }}>{completedApps.size}/4</span>
           </div>
           <div style={{ height: '8px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '4px' }}>
@@ -1456,10 +1728,10 @@ export default function StringSizingRenderer({
           </div>
 
           <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>
-            {testScore}/10 Correct
+            Test Complete! {testScore}/10 Correct
           </h2>
-          <p style={{ color: '#94a3b8', marginBottom: '32px' }}>
-            {testScore >= 7 ? 'Excellent! You understand string sizing!' : 'Review the concepts and try again.'}
+          <p style={{ color: '#e2e8f0', marginBottom: '32px' }}>
+            You scored {testScore} out of 10. {testScore >= 7 ? 'Excellent! You understand string sizing!' : 'Review the concepts and try again.'}
           </p>
 
           {/* Show explanations for incorrect answers */}
@@ -1484,7 +1756,7 @@ export default function StringSizingRenderer({
                     {isCorrect ? '✓ Correct' : `✗ Your answer: ${q.options.find(o => o.id === userAnswer)?.text || 'None'}`}
                   </p>
                   {!isCorrect && (
-                    <p style={{ color: '#94a3b8', fontSize: '11px', marginTop: '4px' }}>
+                    <p style={{ color: '#e2e8f0', fontSize: '11px', marginTop: '4px' }}>
                       <strong>Explanation:</strong> {q.explanation}
                     </p>
                   )}
@@ -1521,7 +1793,7 @@ export default function StringSizingRenderer({
           ))}
         </div>
 
-        <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', color: '#e2e8f0', marginBottom: '16px' }}>
           Question {currentQuestion + 1} of 10
         </div>
 
@@ -1669,7 +1941,7 @@ export default function StringSizingRenderer({
       <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>
         String Sizing Master!
       </h1>
-      <p style={{ color: '#94a3b8', fontSize: '16px', marginBottom: '32px' }}>
+      <p style={{ color: '#e2e8f0', fontSize: '16px', marginBottom: '32px' }}>
         You now understand solar string sizing and temperature effects
       </p>
 
@@ -1776,63 +2048,63 @@ export default function StringSizingRenderer({
       case 'hook':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto' }}>{renderHook()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderHook()}</div>
             {renderBottomBar(false, true, 'Start Learning')}
           </>
         );
       case 'predict':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto' }}>{renderPredict()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderPredict()}</div>
             {renderBottomBar(true, showPredictionFeedback, 'Continue')}
           </>
         );
       case 'play':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto' }}>{renderPlay()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderPlay()}</div>
             {renderBottomBar(true, hasExperimented, 'Continue')}
           </>
         );
       case 'review':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto' }}>{renderReview()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderReview()}</div>
             {renderBottomBar(true, true, 'Next: The Twist')}
           </>
         );
       case 'twist_predict':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto' }}>{renderTwistPredict()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTwistPredict()}</div>
             {renderBottomBar(true, showTwistFeedback, 'Continue')}
           </>
         );
       case 'twist_play':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto' }}>{renderTwistPlay()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTwistPlay()}</div>
             {renderBottomBar(true, hasExploredTwist, 'Continue')}
           </>
         );
       case 'twist_review':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto' }}>{renderTwistReview()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTwistReview()}</div>
             {renderBottomBar(true, true, 'Applications')}
           </>
         );
       case 'transfer':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto' }}>{renderTransfer()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTransfer()}</div>
             {renderBottomBar(true, completedApps.size >= 4, 'Take Test')}
           </>
         );
       case 'test':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto' }}>{renderTest()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTest()}</div>
             {!testSubmitted && renderBottomBar(true, false, 'Submit')}
             {testSubmitted && renderBottomBar(true, true, 'Complete')}
           </>
@@ -1840,7 +2112,7 @@ export default function StringSizingRenderer({
       case 'mastery':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto' }}>{renderMastery()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderMastery()}</div>
           </>
         );
       default:
@@ -1851,12 +2123,14 @@ export default function StringSizingRenderer({
   return (
     <div
       style={{
+        minHeight: '100vh',
         position: 'absolute',
         inset: 0,
         display: 'flex',
         flexDirection: 'column',
         background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
         color: 'white',
+        paddingTop: '60px',
       }}
     >
       {renderProgressBar()}
@@ -1865,6 +2139,9 @@ export default function StringSizingRenderer({
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        overflowY: 'auto',
+        paddingBottom: '100px',
+        paddingTop: '48px',
         maxWidth: '600px',
         width: '100%',
         margin: '0 auto',

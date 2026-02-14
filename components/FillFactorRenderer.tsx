@@ -27,7 +27,7 @@ const phaseLabels: Record<Phase, string> = {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -46,6 +46,8 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Transfer phase tracking
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -968,7 +970,78 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
     );
   };
 
-  // Bottom bar with Back/Next navigation
+  // Top navigation bar with Back/Next navigation
+  const renderNavBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const isFirst = currentIdx === 0;
+    const isLast = currentIdx === phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 24px',
+        background: colors.bgDark,
+        borderBottom: `1px solid rgba(255,255,255,0.1)`,
+        zIndex: 1001,
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '8px',
+        }}>
+          <button
+            onClick={goBack}
+            disabled={isFirst}
+            style={{
+              padding: '10px 24px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: `1px solid ${isFirst ? 'transparent' : colors.accent}`,
+              background: isFirst ? 'transparent' : 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1))',
+              color: isFirst ? colors.textMuted : colors.accent,
+              fontWeight: 'bold',
+              cursor: isFirst ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              opacity: isFirst ? 0.5 : 1,
+              transition: 'all 0.2s ease',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            Back
+          </button>
+          <span style={{ color: colors.textSecondary, fontSize: '12px' }}>
+            {phaseLabels[phase]}
+          </span>
+          <button
+            onClick={goNext}
+            disabled={isLast}
+            style={{
+              padding: '10px 24px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: 'none',
+              background: isLast ? `linear-gradient(135deg, ${colors.success}, #059669)` : `linear-gradient(135deg, ${colors.accent}, #d97706)`,
+              color: 'white',
+              fontWeight: 'bold',
+              cursor: isLast ? 'default' : 'pointer',
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {isLast ? 'Complete' : 'Next'}
+          </button>
+        </div>
+        {renderProgressBar()}
+      </div>
+    );
+  };
+
+  // Bottom navigation bar
   const renderBottomBar = () => {
     const currentIdx = phaseOrder.indexOf(phase);
     const isFirst = currentIdx === 0;
@@ -980,57 +1053,53 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
         bottom: 0,
         left: 0,
         right: 0,
-        padding: '12px 24px',
+        padding: '16px 24px',
         background: colors.bgDark,
         borderTop: `1px solid rgba(255,255,255,0.1)`,
-        zIndex: 1000,
+        zIndex: 1001,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
       }}>
-        {renderProgressBar()}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '8px',
-        }}>
-          <button
-            onClick={goBack}
-            disabled={isFirst}
-            style={{
-              padding: '10px 24px',
-              borderRadius: '8px',
-              border: `1px solid ${isFirst ? 'transparent' : colors.accent}`,
-              background: 'transparent',
-              color: isFirst ? colors.textMuted : colors.accent,
-              fontWeight: 'bold',
-              cursor: isFirst ? 'not-allowed' : 'pointer',
-              fontSize: '14px',
-              opacity: isFirst ? 0.5 : 1,
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Back
-          </button>
-          <span style={{ color: colors.textMuted, fontSize: '12px' }}>
-            {phaseLabels[phase]}
-          </span>
-          <button
-            onClick={goNext}
-            disabled={isLast}
-            style={{
-              padding: '10px 24px',
-              borderRadius: '8px',
-              border: 'none',
-              background: isLast ? colors.success : colors.accent,
-              color: 'white',
-              fontWeight: 'bold',
-              cursor: isLast ? 'default' : 'pointer',
-              fontSize: '14px',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            {isLast ? 'Complete' : 'Next'}
-          </button>
-        </div>
+        <button
+          onClick={goBack}
+          disabled={isFirst}
+          style={{
+            padding: '10px 24px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: `1px solid ${isFirst ? 'transparent' : colors.accent}`,
+            background: isFirst ? 'transparent' : 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1))',
+            color: isFirst ? colors.textMuted : colors.accent,
+            fontWeight: 'bold',
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            opacity: isFirst ? 0.5 : 1,
+            transition: 'all 0.2s ease',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          Back
+        </button>
+        <button
+          onClick={goNext}
+          disabled={isLast}
+          style={{
+            padding: '10px 24px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: 'none',
+            background: isLast ? `linear-gradient(135deg, ${colors.success}, #059669)` : `linear-gradient(135deg, ${colors.accent}, #d97706)`,
+            color: 'white',
+            fontWeight: 'bold',
+            cursor: isLast ? 'default' : 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.2s ease',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {isLast ? 'Complete' : 'Next'}
+        </button>
       </div>
     );
   };
@@ -1038,13 +1107,14 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 'bold' }}>
               Fill Factor
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 'normal' }}>
               Two panels show the same Voc - can one still be worse?
             </p>
           </div>
@@ -1058,7 +1128,7 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 'normal' }}>
                 Two solar cells might have identical open-circuit voltage, but produce
                 vastly different power outputs. The secret lies in the SHAPE of their
                 I-V curves - a metric called fill factor!
@@ -1071,14 +1141,13 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'normal' }}>
                 Adjust series resistance, shunt resistance, and recombination to see how
                 the I-V curve shape changes!
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1086,12 +1155,18 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', fontWeight: 'normal' }}>
+              Step 1 of 2: Make your prediction
+            </p>
+          </div>
           {renderVisualization()}
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>
               If two cells have the same open-circuit voltage (Voc), can one produce less power?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1101,13 +1176,15 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    background: prediction === p.id ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.1))' : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontWeight: 'normal',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
@@ -1117,7 +1194,6 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1125,12 +1201,37 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Fill Factor</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 'bold' }}>Explore Fill Factor</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
               Adjust cell parameters to see how the I-V curve shape changes
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.2)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.blue}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 'normal' }}>
+              Observe how series resistance, shunt resistance, and recombination affect the I-V curve shape and fill factor.
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.15)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.success}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 'normal' }}>
+              <strong style={{ color: colors.textPrimary }}>Real-World Relevance:</strong> Solar panel manufacturers use fill factor as a primary quality metric. A high FF (above 0.75) indicates excellent cell quality with low resistance losses and minimal defects - critical for maximizing energy output in rooftop and utility-scale installations.
             </p>
           </div>
 
@@ -1143,8 +1244,8 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 'bold' }}>Experiments to Try:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 'normal' }}>
               <li>Increase series resistance - watch the curve bend near Voc</li>
               <li>Decrease shunt resistance - see voltage drop under load</li>
               <li>Increase recombination - ideality factor rises, FF drops</li>
@@ -1152,7 +1253,6 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1160,10 +1260,24 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'shape';
+    const userPredictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `4px solid ${colors.blue}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 'normal' }}>
+              <strong style={{ color: colors.textPrimary }}>You predicted:</strong> {userPredictionLabel}
+            </p>
+          </div>
+
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1171,15 +1285,17 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 'bold' }}>
               {wasCorrect ? 'Correct!' : 'Let\'s understand why!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textPrimary, fontWeight: 'normal' }}>
               The shape of the I-V curve determines how much power you can extract. A
               "rounder" curve has a lower fill factor and produces less power, even with
               identical Voc and Isc!
             </p>
           </div>
+
+          {renderVisualization()}
 
           <div style={{
             background: colors.bgCard,
@@ -1187,8 +1303,8 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Fill Factor Physics</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 'bold' }}>Fill Factor Physics</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 'normal' }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Series Resistance (Rs):</strong> From
                 metal contacts, grid lines, and semiconductor bulk. High Rs makes the curve droop
@@ -1211,7 +1327,6 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1219,12 +1334,16 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 'bold' }}>The Twist</h2>
+            <p style={{ color: colors.textSecondary, fontWeight: 'normal' }}>
               What happens when you heat up the cell?
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px', fontWeight: 'normal' }}>
+              Step 1 of 2: Make your prediction
             </p>
           </div>
 
@@ -1236,15 +1355,15 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              Solar panels in the real world get hot - sometimes 50°C or more above ambient.
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 'bold' }}>The Setup:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 'normal' }}>
+              Solar panels in the real world get hot - sometimes 50C or more above ambient.
               Will this heat help or hurt the fill factor?
             </p>
           </div>
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>
               What happens to fill factor when cell temperature increases?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1254,13 +1373,15 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    background: twistPrediction === p.id ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.1))' : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontWeight: 'normal',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
@@ -1270,7 +1391,6 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1278,12 +1398,25 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Temperature Effects</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Vary temperature from 0°C to 70°C and observe fill factor changes
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 'bold' }}>Test Temperature Effects</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
+              Vary temperature from 0C to 70C and observe fill factor changes
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.2)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.blue}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 'normal' }}>
+              Observe how temperature affects fill factor, Voc, and overall power output.
             </p>
           </div>
 
@@ -1297,15 +1430,14 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `3px solid ${colors.warning}`,
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Insight:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Higher temperature reduces Voc significantly (about -2mV/°C for silicon).
+            <h4 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 'bold' }}>Key Insight:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
+              Higher temperature reduces Voc significantly (about -2mV/C for silicon).
               Fill factor also degrades because recombination increases and carrier
               mobility changes.
             </p>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1313,10 +1445,24 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'degrade';
+    const userTwistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `4px solid ${colors.blue}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 'normal' }}>
+              <strong style={{ color: colors.textPrimary }}>You predicted:</strong> {userTwistPredictionLabel}
+            </p>
+          </div>
+
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1324,14 +1470,16 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 'bold' }}>
               {wasCorrect ? 'Correct!' : 'Important to know!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textPrimary, fontWeight: 'normal' }}>
               Temperature is the enemy of solar cell performance! Both Voc and fill factor
-              decrease with temperature, reducing overall power output by 0.3-0.5% per °C.
+              decrease with temperature, reducing overall power output by 0.3-0.5% per C.
             </p>
           </div>
+
+          {renderVisualization()}
 
           <div style={{
             background: colors.bgCard,
@@ -1339,12 +1487,12 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Temperature Effects Explained</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.warning, marginBottom: '12px', fontWeight: 'bold' }}>Temperature Effects Explained</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 'normal' }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Voltage Drop:</strong> Higher temperature
                 increases intrinsic carrier concentration, reducing the built-in potential. Voc drops
-                about 2 mV/°C for silicon cells.
+                about 2 mV/C for silicon cells.
               </p>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Increased Recombination:</strong> Thermal
@@ -1353,75 +1501,129 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               </p>
               <p>
                 <strong style={{ color: colors.textPrimary }}>Practical Impact:</strong> On a hot day,
-                panels at 65°C produce 15-20% less power than at 25°C! This is why ventilation and
+                panels at 65C produce 15-20% less power than at 25C! This is why ventilation and
                 cooling are important for high-performance installations.
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const currentApp = realWorldApps[currentTransferApp];
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontWeight: 'normal' }}>
               Fill factor is critical for solar system performance
+            </p>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', fontSize: '14px' }}>
+              Application {currentTransferApp + 1} of {realWorldApps.length}
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
+          <div
+            style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              border: `2px solid ${currentApp.color}`,
+            }}
+          >
+            <h3 style={{ color: currentApp.color, fontSize: '20px', marginBottom: '12px', fontWeight: 'bold' }}>{currentApp.title}</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', fontWeight: 'normal' }}>{currentApp.tagline}</p>
+
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px', fontWeight: 'bold' }}>Overview</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, fontWeight: 'normal' }}>{currentApp.description}</p>
             </div>
-          ))}
+
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px', fontWeight: 'bold' }}>Connection to Fill Factor</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, fontWeight: 'normal' }}>{currentApp.connection}</p>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px', fontWeight: 'bold' }}>How It Works</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, fontWeight: 'normal' }}>{currentApp.howItWorks}</p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+              {currentApp.stats.map((stat, idx) => (
+                <div key={idx} style={{ background: `${currentApp.color}20`, padding: '12px 16px', borderRadius: '8px', textAlign: 'center', flex: '1 1 80px', minWidth: '80px' }}>
+                  <div style={{ color: currentApp.color, fontSize: '18px', fontWeight: 'bold' }}>{stat.value}</div>
+                  <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 'normal' }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px', fontWeight: 'bold' }}>Real Examples</h4>
+              <ul style={{ color: colors.textSecondary, fontSize: '13px', paddingLeft: '20px', margin: 0, fontWeight: 'normal' }}>
+                {currentApp.examples.map((ex, idx) => (
+                  <li key={idx} style={{ marginBottom: '4px' }}>{ex}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{ background: `${currentApp.color}15`, padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${currentApp.color}` }}>
+              <h4 style={{ color: currentApp.color, fontSize: '13px', marginBottom: '4px', fontWeight: 'bold' }}>Future Impact</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, fontWeight: 'normal' }}>{currentApp.futureImpact}</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', padding: '16px' }}>
+            {currentTransferApp < realWorldApps.length - 1 ? (
+              <button
+                onClick={() => setCurrentTransferApp(currentTransferApp + 1)}
+                style={{
+                  padding: '12px 32px',
+                  minHeight: '44px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.accent}, #d97706)`,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Next Application
+              </button>
+            ) : (
+              <button
+                onClick={goNext}
+                style={{
+                  padding: '12px 32px',
+                  minHeight: '44px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Got It
+              </button>
+            )}
+          </div>
         </div>
-        {renderBottomBar()}
       </div>
     );
   }
@@ -1430,8 +1632,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderNavBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1443,7 +1646,7 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
                 {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
               </h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+              <p style={{ color: colors.textSecondary, marginTop: '8px', fontWeight: 'normal' }}>
                 {testScore >= 8 ? 'You\'ve mastered fill factor!' : 'Review the material and try again.'}
               </p>
             </div>
@@ -1452,9 +1655,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>Question {qIndex + 1} of {testQuestions.length}: {q.question}</p>
                   {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontWeight: 'normal' }}>
                       {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
                     </div>
                   ))}
@@ -1462,27 +1665,35 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar()}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <h2 style={{ color: colors.textPrimary, fontWeight: 'bold' }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
+                Score: {testAnswers.filter(a => a !== null).length} / {testQuestions.length}
+              </span>
             </div>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', fontWeight: 'normal' }}>
+              Test your understanding of fill factor, I-V curve characteristics, and solar cell performance. These concepts are essential for evaluating solar panel quality and understanding how resistance, recombination, and temperature affect power output.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '16px', marginBottom: '16px', fontWeight: 'bold' }}>
+              Question {currentTestQuestion + 1} of {testQuestions.length}
+            </p>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.2s ease' }} />
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 'normal' }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
@@ -1491,6 +1702,7 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
                   onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1498,6 +1710,8 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontWeight: 'normal',
+                    transition: 'all 0.2s ease',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
@@ -1512,11 +1726,13 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               disabled={currentTestQuestion === 0}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.textMuted}`,
                 background: 'transparent',
                 color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -1527,11 +1743,13 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
                 onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: colors.accent,
                   color: 'white',
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1543,11 +1761,13 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
                 disabled={testAnswers.includes(null)}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1563,17 +1783,18 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered fill factor!</p>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
+            <h1 style={{ color: colors.success, marginBottom: '8px', fontWeight: 'bold' }}>Mastery Achieved!</h1>
+            <p style={{ color: colors.textSecondary, marginBottom: '24px', fontWeight: 'normal' }}>You've mastered fill factor!</p>
           </div>
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Fill factor = Pmax / (Voc × Isc)</li>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 'bold' }}>Key Concepts Mastered:</h3>
+            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 'normal' }}>
+              <li>Fill factor = Pmax / (Voc x Isc)</li>
               <li>Series resistance affects curve slope near Voc</li>
               <li>Shunt resistance causes voltage drop under load</li>
               <li>Recombination increases ideality factor</li>
@@ -1581,16 +1802,15 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             </ul>
           </div>
           <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 'bold' }}>Beyond the Basics:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, fontWeight: 'normal' }}>
               High-efficiency cells like HJT (heterojunction) achieve fill factors above 84%
               through superior passivation and contact design. Research cells have reached
-              FF &gt; 87% - approaching theoretical limits!
+              FF greater than 87% - approaching theoretical limits!
             </p>
           </div>
           {renderVisualization()}
         </div>
-        {renderBottomBar()}
       </div>
     );
   }

@@ -355,8 +355,8 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#e2e8f0',
     border: '#2a2a3a',
     lift: '#22C55E',
     drag: '#EF4444',
@@ -450,7 +450,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
     };
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="airfoilGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#94a3b8" />
@@ -598,25 +598,83 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '4px',
-      background: colors.bgSecondary,
-      zIndex: 100,
-    }}>
-      <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
-  );
+  // Previous phase navigation
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Navigation bar component with progress
+  const renderNavBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '60px',
+        background: colors.bgSecondary,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        borderBottom: `1px solid ${colors.border}`,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {currentIndex > 0 && (
+            <button
+              onClick={prevPhase}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                padding: '8px',
+                fontSize: '14px',
+                minHeight: '44px',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              Back
+            </button>
+          )}
+          <span style={{ fontSize: '24px' }}>&#9992;</span>
+          <span style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '16px' }}>Lift Force</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            {phaseLabels[phase]}
+          </span>
+          <span style={{ color: '#94a3b8', fontSize: '12px' }}>
+            ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+          </span>
+        </div>
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: colors.bgPrimary,
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+            background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+            transition: 'width 0.3s ease',
+          }} />
+        </div>
+      </nav>
+    );
+  };
+
+  // Alias for renderNavBar - some phases use renderProgressBar
+  const renderProgressBar = renderNavBar;
 
   // Navigation dots
   const renderNavDots = () => (
@@ -657,6 +715,21 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Secondary button style
+  const secondaryButtonStyle: React.CSSProperties = {
+    background: 'transparent',
+    color: colors.textSecondary,
+    border: `1px solid ${colors.border}`,
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -674,9 +747,11 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '84px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'float 3s ease-in-out infinite' }}>
           <span role="img" aria-label="airplane">&#9992;</span>
@@ -868,7 +943,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
                 step="10"
                 value={airspeed}
                 onChange={(e) => setAirspeed(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent, touchAction: 'pan-y' }}
               />
             </div>
 
@@ -972,6 +1047,19 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             </p>
           </div>
 
+          {/* Real-world relevance */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Real-world relevance:</strong> These same principles govern how commercial aircraft generate the lift needed to carry hundreds of passengers. Engineers use these exact equations when designing wings for Boeing and Airbus jets.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
@@ -987,11 +1075,20 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionOptions: Record<string, string> = {
+      'A': 'Air molecules bouncing off the bottom of the wing',
+      'B': 'Lower pressure above the wing than below, due to faster airflow on top',
+      'C': 'The engine pushing the aircraft upward',
+    };
+    const userPredictionText = prediction ? predictionOptions[prediction] : null;
+    const wasCorrect = prediction === 'B';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -999,6 +1096,29 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Understanding Lift Force
           </h2>
+
+          {/* Reference user's prediction */}
+          {userPredictionText && (
+            <div style={{
+              background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${wasCorrect ? colors.success : colors.warning}44`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: wasCorrect ? colors.success : colors.warning, margin: 0, marginBottom: '8px', fontWeight: 600 }}>
+                {wasCorrect ? 'Your prediction was correct!' : 'Let\'s revisit your prediction'}
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                You predicted: "{userPredictionText}"
+              </p>
+              {!wasCorrect && (
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0, marginTop: '8px' }}>
+                  The correct answer is that lift comes from pressure differences created by airflow over the wing shape.
+                </p>
+              )}
+            </div>
+          )}
 
           <div style={{
             background: colors.bgCard,
@@ -1533,14 +1653,13 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             </div>
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          {/* Got It button for transfer phase */}
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
+          >
+            {allAppsCompleted ? 'Take the Knowledge Test' : 'Got It'}
+          </button>
         </div>
 
         {renderNavDots()}

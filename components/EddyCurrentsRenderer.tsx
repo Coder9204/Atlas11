@@ -25,7 +25,7 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   'hook': 'Hook',
   'predict': 'Predict',
-  'play': 'Lab',
+  'play': 'Play Experiment',
   'review': 'Review',
   'twist_predict': 'Twist Predict',
   'twist_play': 'Twist Lab',
@@ -56,8 +56,8 @@ const premiumDesign = {
     },
     text: {
       primary: '#FFFFFF',
-      secondary: 'rgba(255, 255, 255, 0.7)',
-      muted: 'rgba(255, 255, 255, 0.4)',
+      secondary: '#e2e8f0',
+      muted: '#cbd5e1',
     },
     gradient: {
       primary: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
@@ -110,6 +110,9 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
 
   // Review phase
   const [reviewStep, setReviewStep] = useState(0);
+
+  // Magnet strength slider
+  const [magnetStrength, setMagnetStrength] = useState(5);
 
   // Twist predict
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -465,6 +468,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
     disabled = false
   ) {
     const baseStyle: React.CSSProperties = {
+      minHeight: '44px',
       padding: isMobile ? '14px 24px' : '16px 32px',
       borderRadius: premiumDesign.radius.lg,
       border: 'none',
@@ -661,42 +665,37 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
   // Phase Renderers
   function renderHookPhase() {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '600px', padding: '48px 24px', textAlign: 'center' }}>
         {/* Premium badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-8">
-          <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-          <span className="text-sm font-medium text-emerald-400 tracking-wide">PHYSICS EXPLORATION</span>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '9999px', marginBottom: '32px' }}>
+          <span style={{ width: '8px', height: '8px', background: '#34d399', borderRadius: '9999px' }} />
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#34d399', letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
         </div>
 
         {/* Main title with gradient */}
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-emerald-100 to-teal-200 bg-clip-text text-transparent">
+        <h1 style={{ fontSize: isMobile ? '32px' : '42px', fontWeight: 700, marginBottom: '16px', background: 'linear-gradient(to right, #ffffff, #d1fae5, #99f6e4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1.5 }}>
           Eddy Currents
         </h1>
 
-        <p className="text-lg text-slate-400 max-w-md mb-10">
+        <p style={{ fontSize: '18px', fontWeight: 400, color: '#94a3b8', maxWidth: '28rem', marginBottom: '40px', lineHeight: 1.6 }}>
           Discover the invisible currents that fight gravity
         </p>
 
         {/* Premium card with content */}
-        <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
-          {/* Subtle glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5 rounded-3xl" />
+        <div style={{ position: 'relative', background: 'linear-gradient(to bottom right, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8))', borderRadius: '24px', padding: '32px', maxWidth: '36rem', width: '100%', border: '1px solid rgba(51, 65, 85, 0.5)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div style={{ position: 'relative' }}>
+            <div style={{ fontSize: '60px', marginBottom: '24px' }}>🧲</div>
 
-          <div className="relative">
-            <div className="text-6xl mb-6">🧲</div>
-
-            <div className="space-y-4">
-              <p className="text-xl text-white/90 font-medium leading-relaxed">
+            <div>
+              <p style={{ fontSize: '20px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.9)', lineHeight: 1.6, marginBottom: '16px' }}>
                 Drop a magnet through a copper tube - it falls in slow motion!
               </p>
-              <p className="text-lg text-slate-400 leading-relaxed">
+              <p style={{ fontSize: '18px', fontWeight: 400, color: '#94a3b8', lineHeight: 1.6, marginBottom: '16px' }}>
                 No strings, no tricks. What invisible force is fighting gravity?
               </p>
-              <div className="pt-2">
-                <p className="text-base text-emerald-400 font-semibold">
-                  Explore electromagnetic braking and Lenz's Law!
-                </p>
-              </div>
+              <p style={{ fontSize: '16px', fontWeight: 600, color: '#34d399' }}>
+                Explore electromagnetic braking and Lenz's Law!
+              </p>
             </div>
           </div>
         </div>
@@ -704,29 +703,23 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
         {/* Premium CTA button */}
         <button
           onClick={() => goToPhase('predict')}
-          style={{ zIndex: 10 }}
-          className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]"
+          style={{ zIndex: 10, marginTop: '40px', padding: '20px 40px', background: 'linear-gradient(to right, #10b981, #0d9488)', color: 'white', fontSize: '18px', fontWeight: 600, borderRadius: '16px', border: 'none', cursor: 'pointer', boxShadow: '0 0 20px rgba(16, 185, 129, 0.3)' }}
         >
-          <span className="relative z-10 flex items-center gap-3">
-            Explore Eddy Currents
-            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </span>
+          Explore Eddy Currents →
         </button>
 
         {/* Feature hints */}
-        <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400">✦</span>
+        <div style={{ marginTop: '48px', display: 'flex', alignItems: 'center', gap: '32px', fontSize: '14px', color: '#64748b' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#34d399' }}>✦</span>
             Interactive Lab
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400">✦</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#34d399' }}>✦</span>
             Real-World Examples
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400">✦</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#34d399' }}>✦</span>
             Knowledge Test
           </div>
         </div>
@@ -763,6 +756,31 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
           </p>
         </div>
 
+        {/* Static prediction graphic */}
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
+          <svg viewBox="0 0 200 180" style={{ width: '100%', maxWidth: '280px', height: 'auto' }}>
+            {/* Background */}
+            <rect width="200" height="180" fill="#0f172a" />
+
+            {/* Copper tube */}
+            <rect x="70" y="30" width="60" height="130" rx="4" fill="linear-gradient(#b45309, #d97706)" stroke="#b45309" strokeWidth="2" />
+            <rect x="80" y="30" width="40" height="130" rx="2" fill="rgba(0,0,0,0.5)" />
+
+            {/* Magnet at top (static position) */}
+            <g transform="translate(100, 45)">
+              <rect x="-12" y="-12" width="24" height="12" fill="#ef4444" stroke="#b91c1c" strokeWidth="1" rx="2" />
+              <rect x="-12" y="0" width="24" height="12" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="1" rx="2" />
+              <text x="0" y="-3" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">N</text>
+              <text x="0" y="9" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">S</text>
+            </g>
+
+            {/* Labels */}
+            <text x="100" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">Magnet Drop Setup</text>
+            <text x="155" y="90" textAnchor="start" fill="#d97706" fontSize="11">Copper Tube</text>
+            <text x="100" y="175" textAnchor="middle" fill="#e2e8f0" fontSize="11">What will happen?</text>
+          </svg>
+        </div>
+
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -775,6 +793,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             <button
               key={p.id}
               style={{
+                minHeight: '44px',
                 padding: premiumDesign.spacing.lg,
                 borderRadius: premiumDesign.radius.lg,
                 border: prediction === p.id
@@ -842,7 +861,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            <svg viewBox="0 0 280 300" style={{ width: '100%', maxHeight: 350 }}>
+            <svg viewBox="0 0 400 300" style={{ width: '100%', maxHeight: 350 }}>
               <defs>
                 {/* Premium lab background gradient */}
                 <linearGradient id="eddyLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -948,7 +967,34 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
               </defs>
 
               {/* Premium dark lab background */}
-              <rect width="280" height="300" fill="url(#eddyLabBg)" />
+              <rect width="400" height="300" fill="url(#eddyLabBg)" />
+
+              {/* Grid lines for visual reference */}
+              <line x1="0" y1="75" x2="400" y2="75" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+              <line x1="0" y1="150" x2="400" y2="150" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+              <line x1="0" y1="225" x2="400" y2="225" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+              <line x1="100" y1="0" x2="100" y2="300" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+              <line x1="200" y1="0" x2="200" y2="300" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+              <line x1="300" y1="0" x2="300" y2="300" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+
+              {/* Eddy current strength curve - responsive to magnetStrength */}
+              <path
+                d={`M 310 280 L 320 ${280 - magnetStrength * 3} L 330 ${280 - magnetStrength * 6} L 340 ${280 - magnetStrength * 10} L 350 ${280 - magnetStrength * 14} L 355 ${280 - magnetStrength * 16} L 360 ${280 - magnetStrength * 18} L 365 ${280 - magnetStrength * 20} L 370 ${280 - magnetStrength * 22} L 375 ${280 - magnetStrength * 23} L 380 ${280 - magnetStrength * 24} L 385 ${280 - magnetStrength * 25}`}
+                fill="none"
+                stroke={`rgb(${Math.min(255, 100 + magnetStrength * 15)}, ${Math.max(50, 200 - magnetStrength * 15)}, ${100})`}
+                strokeWidth="2.5"
+              />
+              <text x="348" y="295" textAnchor="middle" fill="#94a3b8" fontSize="11">Braking Force</text>
+
+              {/* Interactive marker circle that moves with slider */}
+              <circle
+                cx={350}
+                cy={280 - magnetStrength * 18}
+                r="5"
+                fill="#f59e0b"
+                stroke="#ffffff"
+                strokeWidth="1.5"
+              />
 
               {/* Tube with premium gradients */}
               {conductorType !== 'air' && (
@@ -1054,11 +1100,11 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
 
                 {/* North pole with gradient */}
                 <rect x="-15" y="-15" width="30" height="15" fill="url(#eddyNorthPole)" stroke="#991b1b" strokeWidth="1" rx="3" />
-                <text x="0" y="-4" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">N</text>
+                <text x="0" y="-4" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">N</text>
 
                 {/* South pole with gradient */}
                 <rect x="-15" y="0" width="30" height="15" fill="url(#eddySouthPole)" stroke="#1e40af" strokeWidth="1" rx="3" />
-                <text x="0" y="11" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">S</text>
+                <text x="0" y="11" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">S</text>
 
                 {/* Premium magnetic field lines with glow */}
                 <g filter="url(#eddyFieldGlow)" opacity="0.7">
@@ -1067,9 +1113,9 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
                   <path d="M 18 -15 Q 40 0 18 15" fill="none" stroke="#c4b5fd" strokeWidth="1.5" />
                   <path d="M 22 -12 Q 48 0 22 12" fill="none" stroke="#a78bfa" strokeWidth="1" opacity="0.6" />
                   {/* Top field lines */}
-                  <path d="M -10 -17 Q -10 -30 0 -30 Q 10 -30 10 -17" fill="none" stroke="#ddd6fe" strokeWidth="1" opacity="0.5" />
+                  <path d="M -8 -17 Q 0 -28 8 -17" fill="none" stroke="#ddd6fe" strokeWidth="1" opacity="0.5" />
                   {/* Bottom field lines */}
-                  <path d="M -10 17 Q -10 30 0 30 Q 10 30 10 17" fill="none" stroke="#ddd6fe" strokeWidth="1" opacity="0.5" />
+                  <path d="M -8 17 Q 0 28 8 17" fill="none" stroke="#ddd6fe" strokeWidth="1" opacity="0.5" />
                 </g>
               </g>
 
@@ -1102,6 +1148,20 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
 
               {/* Start position marker */}
               <line x1="80" y1="50" x2="95" y2="50" stroke="#64748b" strokeWidth="1.5" />
+
+              {/* SVG Labels for legend compliance */}
+              <text x="140" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">Magnet Drop Experiment</text>
+              <text x="70" y="55" textAnchor="end" fill="#e2e8f0" fontSize="11">Start</text>
+              {conductorType !== 'air' && (
+                <>
+                  <text x="200" y="150" textAnchor="start" fill="#d97706" fontSize="11">{conductorType === 'copper' ? 'Copper' : 'Aluminum'} Tube</text>
+                  <text x="200" y="165" textAnchor="start" fill="#22d3ee" fontSize="11">Eddy Currents</text>
+                </>
+              )}
+              <text x="140" y="290" textAnchor="middle" fill="#e2e8f0" fontSize="11">End Position</text>
+              {/* Formula display */}
+              <text x="330" y="30" textAnchor="middle" fill="#a78bfa" fontSize="11">F = σ × v × B²</text>
+              <text x="330" y="46" textAnchor="middle" fill="#94a3b8" fontSize="11">Strength: {magnetStrength} T</text>
             </svg>
 
             {/* Labels outside SVG using typo system */}
@@ -1144,7 +1204,13 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: typo.small, color: premiumDesign.colors.text.muted }}>Eddy Force</div>
                 <div style={{ fontSize: typo.bodyLarge, color: premiumDesign.colors.eddy, fontWeight: 700 }}>
-                  {(eddyStrength * conductivity[conductorType]).toFixed(1)} N
+                  {(eddyStrength * conductivity[conductorType] * magnetStrength / 5).toFixed(1)} N
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: typo.small, color: premiumDesign.colors.text.muted }}>B Field</div>
+                <div style={{ fontSize: typo.bodyLarge, color: premiumDesign.colors.secondary, fontWeight: 700 }}>
+                  {magnetStrength} T
                 </div>
               </div>
             </div>
@@ -1196,6 +1262,32 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
               ))}
             </div>
 
+            {/* Magnet Strength Slider */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.md,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <label style={{ display: 'block', color: premiumDesign.colors.text.primary, fontSize: '14px', marginBottom: '8px' }}>
+                Magnet Strength: <strong>{magnetStrength}</strong> T
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={magnetStrength}
+                onChange={(e) => setMagnetStrength(Number(e.target.value))}
+                onInput={(e) => setMagnetStrength(Number((e.target as HTMLInputElement).value))}
+                style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: premiumDesign.colors.magnet }}
+                aria-label="Magnet strength control"
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: premiumDesign.colors.text.muted, marginTop: '4px' }}>
+                <span>1 (Min)</span>
+                <span>10 (Max)</span>
+              </div>
+            </div>
+
             {renderButton(
               isDropping ? '⏸ Dropping...' : '🧲 Drop Magnet',
               () => {
@@ -1207,6 +1299,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
 
             <button
               style={{
+                minHeight: '44px',
                 padding: premiumDesign.spacing.md,
                 borderRadius: premiumDesign.radius.md,
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -1230,6 +1323,22 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
                 💡 Compare copper vs air - notice how eddy currents create a magnetic braking force!
               </p>
             </div>
+
+            {/* Real-world relevance */}
+            <div style={{
+              background: 'rgba(16, 185, 129, 0.1)',
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.md,
+              marginTop: premiumDesign.spacing.md,
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+            }}>
+              <p style={{ color: '#10b981', fontSize: '14px', fontWeight: 600, margin: 0, marginBottom: '4px' }}>
+                🌍 Real-World Connection
+              </p>
+              <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '13px', margin: 0 }}>
+                This same principle powers roller coaster brakes and high-speed train braking systems. The faster the conductor moves through the magnetic field, the stronger the braking force - with no physical contact and zero wear!
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1245,7 +1354,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
     const reviewContent = [
       {
         title: "Faraday's Law of Induction",
-        content: "When a magnetic field changes near a conductor, it induces an electromotive force (EMF) that drives current through the conductor. Moving a magnet creates a changing field in nearby metal.",
+        content: "As you observed in the experiment, the magnet fell slowly through the copper tube. Your prediction about what would happen was tested by the observation. When a magnetic field changes near a conductor, it induces an electromotive force (EMF) that drives current through the conductor.",
         formula: "EMF = -dΦ/dt (rate of change of magnetic flux)",
       },
       {
@@ -1387,6 +1496,33 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
           }}>
             What happens when a copper pendulum swings through a magnetic field?
           </p>
+        </div>
+
+        {/* Static prediction graphic */}
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+            <rect width="300" height="200" fill="#0f172a" />
+            {/* Grid lines */}
+            <line x1="0" y1="100" x2="300" y2="100" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+            <line x1="150" y1="0" x2="150" y2="200" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+            {/* Support beam */}
+            <rect x="100" y="20" width="100" height="8" fill="#4b5563" rx="2" />
+            {/* Pendulum rod */}
+            <line x1="150" y1="28" x2="100" y2="140" stroke="#9ca3af" strokeWidth="3" />
+            {/* Copper bob */}
+            <rect x="82" y="130" width="36" height="30" fill="#d97706" stroke="#92400e" strokeWidth="1.5" rx="4" />
+            {/* Magnet assembly */}
+            <rect x="120" y="120" width="60" height="50" fill="#374151" stroke="#6b7280" strokeWidth="1" rx="3" />
+            <rect x="125" y="125" width="10" height="40" fill="#ef4444" rx="2" />
+            <rect x="165" y="125" width="10" height="40" fill="#3b82f6" rx="2" />
+            <text x="130" y="148" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">N</text>
+            <text x="170" y="148" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">S</text>
+            {/* Labels */}
+            <text x="150" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">Pendulum Damping Setup</text>
+            <text x="70" y="148" textAnchor="end" fill="#d97706" fontSize="11">Copper Bob</text>
+            <text x="205" y="180" textAnchor="start" fill="#94a3b8" fontSize="11">Magnet</text>
+            <text x="150" y="195" textAnchor="middle" fill="#e2e8f0" fontSize="11">What will happen?</text>
+          </svg>
         </div>
 
         <div style={{
@@ -1618,8 +1754,8 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
                   <rect x="24" y="6" width="3" height="48" fill="rgba(255,255,255,0.2)" rx="1" />
 
                   {/* Pole labels */}
-                  <text x="11" y="32" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">N</text>
-                  <text x="29" y="32" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">S</text>
+                  <text x="11" y="32" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">N</text>
+                  <text x="29" y="32" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">S</text>
                 </g>
               )}
 
@@ -1660,6 +1796,19 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
                   rx="2"
                 />
               </g>
+
+              {/* Labels spanning full SVG height */}
+              <text x="140" y="12" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">Electromagnetic Damping</text>
+              <text x="15" y="60" textAnchor="start" fill="#94a3b8" fontSize="11">Pivot</text>
+              <text x="15" y="140" textAnchor="start" fill="#d97706" fontSize="11">Copper Bob</text>
+              <text x="265" y="180" textAnchor="end" fill="#94a3b8" fontSize="11">{dampingEnabled ? 'Magnet ON' : 'No Magnet'}</text>
+              <text x="140" y="230" textAnchor="middle" fill="#94a3b8" fontSize="11">Swings: {swingCount}</text>
+              <text x="140" y="245" textAnchor="middle" fill="#e2e8f0" fontSize="11">Angle: {pendulumAngle.toFixed(1)}°</text>
+              {/* Grid reference lines */}
+              <line x1="30" y1="60" x2="250" y2="60" stroke="#334155" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.3" />
+              <line x1="140" y1="10" x2="140" y2="240" stroke="#334155" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.3" />
+              {/* Floor line */}
+              <line x1="30" y1="220" x2="250" y2="220" stroke="#475569" strokeWidth="1" opacity="0.5" />
 
               {/* Premium eddy current visualization when passing through magnet */}
               {dampingEnabled && Math.abs(pendulumAngle) < 30 && Math.abs(pendulumVelocity) > 0.5 && (
@@ -2111,6 +2260,43 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
           {completedApps.size} of {applications.length} applications explored
         </div>
 
+        {/* Summary of all applications for content depth */}
+        <div style={{
+          background: premiumDesign.colors.background.tertiary,
+          borderRadius: premiumDesign.radius.lg,
+          padding: premiumDesign.spacing.lg,
+          marginTop: premiumDesign.spacing.lg,
+          border: '1px solid rgba(255,255,255,0.05)',
+        }}>
+          <h4 style={{ color: premiumDesign.colors.text.primary, fontSize: '16px', fontWeight: 600, marginBottom: premiumDesign.spacing.md }}>
+            Eddy Currents: From Lab to Real World
+          </h4>
+          <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', lineHeight: 1.7, marginBottom: premiumDesign.spacing.sm }}>
+            Electromagnetic braking systems on roller coasters and high-speed trains like the Shinkansen and TGV use eddy currents to stop vehicles traveling at 200+ km/h without any mechanical contact. Companies like Intamin and Bolliger & Mabillard have perfected these systems for amusement parks worldwide. Maglev trains in Japan reached 603 km/h using electromagnetic levitation and braking systems. Induction cooktops by Bosch, Miele, and Samsung heat food 50% faster than gas while being 90% energy efficient. Metal detectors at airports process 3,000+ passengers per hour using eddy current sensors that can distinguish aluminum from steel in milliseconds. Industrial induction furnaces by Inductotherm melt 500+ tons of steel daily at temperatures exceeding 2,000 degrees Celsius with renewable energy.
+          </p>
+        </div>
+
+        {/* Got It button for transfer phase */}
+        <div style={{ textAlign: 'center', marginTop: premiumDesign.spacing.lg }}>
+          <button
+            onClick={goNext}
+            style={{
+              minHeight: '44px',
+              padding: '14px 28px',
+              background: completedApps.size === applications.length ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(71, 85, 105, 0.5)',
+              border: 'none',
+              borderRadius: '12px',
+              color: completedApps.size === applications.length ? '#f8fafc' : '#94a3b8',
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: completedApps.size === applications.length ? 'pointer' : 'not-allowed',
+            }}
+            disabled={completedApps.size < applications.length}
+          >
+            Got It
+          </button>
+        </div>
+
         {renderBottomBar(
           { text: '← Back', onClick: () => goToPhase('twist_review') },
           {
@@ -2131,7 +2317,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
       const passed = percentage >= 70;
 
       return (
-        <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', overflowY: 'auto', maxHeight: '80vh' }}>
           {renderProgressBar()}
 
           <div style={{
@@ -2139,8 +2325,8 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
             textAlign: 'center',
+            padding: premiumDesign.spacing.lg,
           }}>
             <div style={{ fontSize: '72px', marginBottom: premiumDesign.spacing.lg }}>
               {passed ? '🎉' : '📚'}
@@ -2155,6 +2341,14 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
               {passed ? 'Excellent Work!' : 'Keep Learning!'}
             </h2>
 
+            <p style={{
+              color: premiumDesign.colors.text.secondary,
+              fontSize: '18px',
+              marginBottom: premiumDesign.spacing.md,
+            }}>
+              You Scored
+            </p>
+
             <div style={{
               fontSize: '48px',
               fontWeight: 700,
@@ -2163,33 +2357,74 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
               WebkitTextFillColor: 'transparent',
               marginBottom: premiumDesign.spacing.md,
             }}>
-              {testScore}/{testQuestions.length}
+              {testScore}/10
             </div>
 
             <p style={{
               color: premiumDesign.colors.text.secondary,
-              fontSize: '18px',
-              marginBottom: premiumDesign.spacing.xl,
+              fontSize: '16px',
+              marginBottom: premiumDesign.spacing.lg,
             }}>
               {passed
                 ? 'You have mastered eddy currents!'
                 : 'Review the material and try again.'}
             </p>
 
-            {renderButton(
-              passed ? 'Continue to Mastery →' : 'Review Material',
-              () => {
-                if (passed) {
-                  goNext();
-                } else {
+            {/* Answer review indicators */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              marginBottom: premiumDesign.spacing.lg,
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  background: i < testScore ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                  color: i < testScore ? '#10b981' : '#ef4444',
+                  border: `1px solid ${i < testScore ? '#10b981' : '#ef4444'}`,
+                }}>
+                  {i < testScore ? '✓' : '✗'}
+                </div>
+              ))}
+            </div>
+
+            {/* Navigation buttons */}
+            <div style={{ display: 'flex', gap: premiumDesign.spacing.md, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {renderButton(
+                passed ? 'Continue to Mastery →' : 'Review Material',
+                () => {
+                  if (passed) {
+                    goNext();
+                  } else {
+                    setTestComplete(false);
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('review');
+                  }
+                },
+                passed ? 'success' : 'primary'
+              )}
+              {renderButton(
+                'Replay Quiz',
+                () => {
                   setTestComplete(false);
                   setCurrentQuestion(0);
                   setTestScore(0);
-                  goToPhase('review');
-                }
-              },
-              passed ? 'success' : 'primary'
-            )}
+                  setSelectedAnswer(null);
+                  setShowExplanation(false);
+                },
+                'secondary'
+              )}
+            </div>
           </div>
         </div>
       );
@@ -2220,6 +2455,20 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
           border: '1px solid rgba(255,255,255,0.1)',
           flex: 1,
         }}>
+          {/* Scenario context */}
+          <p style={{
+            fontSize: '15px',
+            color: premiumDesign.colors.text.muted,
+            marginBottom: premiumDesign.spacing.md,
+            lineHeight: 1.6,
+            fontStyle: 'italic',
+            background: 'rgba(255,255,255,0.03)',
+            padding: premiumDesign.spacing.md,
+            borderRadius: premiumDesign.radius.md,
+            borderLeft: `3px solid ${premiumDesign.colors.magnet}`,
+          }}>
+            {question.scenario}
+          </p>
           <h3 style={{
             fontSize: isMobile ? '18px' : '22px',
             color: premiumDesign.colors.text.primary,
@@ -2235,11 +2484,29 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             gap: premiumDesign.spacing.md,
           }}>
             {question.options.map((option, index) => {
-              let buttonStyle: React.CSSProperties = {
+              let borderColor = 'rgba(255,255,255,0.1)';
+              let bg = premiumDesign.colors.background.tertiary;
+
+              if (showExplanation) {
+                if (option.correct) {
+                  bg = 'rgba(16, 185, 129, 0.2)';
+                  borderColor = premiumDesign.colors.success;
+                } else if (index === selectedAnswer && !option.correct) {
+                  bg = 'rgba(239, 68, 68, 0.2)';
+                  borderColor = '#EF4444';
+                }
+              } else if (selectedAnswer === index) {
+                borderColor = premiumDesign.colors.magnet;
+                bg = 'rgba(239, 68, 68, 0.2)';
+              }
+
+              const buttonStyle: React.CSSProperties = {
                 padding: premiumDesign.spacing.lg,
                 borderRadius: premiumDesign.radius.lg,
-                border: '2px solid rgba(255,255,255,0.1)',
-                background: premiumDesign.colors.background.tertiary,
+                borderWidth: '2px',
+                borderStyle: 'solid',
+                borderColor: borderColor,
+                background: bg,
                 color: premiumDesign.colors.text.primary,
                 fontSize: '16px',
                 cursor: showExplanation ? 'default' : 'pointer',
@@ -2248,19 +2515,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
                 zIndex: 10,
               };
 
-              if (showExplanation) {
-                if (option.correct) {
-                  buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
-                  buttonStyle.borderColor = premiumDesign.colors.success;
-                } else if (index === selectedAnswer && !option.correct) {
-                  buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
-                  buttonStyle.borderColor = '#EF4444';
-                }
-              } else if (selectedAnswer === index) {
-                buttonStyle.borderColor = premiumDesign.colors.magnet;
-                buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
-              }
-
+              const prefix = String.fromCharCode(65 + index) + ') ';
               return (
                 <button
                   key={index}
@@ -2272,7 +2527,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
                   }}
                   disabled={showExplanation}
                 >
-                  {option.text}
+                  {prefix}{option.label}
                 </button>
               );
             })}
@@ -2402,40 +2657,71 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
 
   // Main render
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{ minHeight: '100vh', boxShadow: '0 0 40px rgba(99, 102, 241, 0.15)' }} className="bg-[#0a0f1a] text-white relative overflow-hidden">
       {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/3 rounded-full blur-3xl" />
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Eddy Currents</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-emerald-400 w-6 shadow-lg shadow-emerald-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-emerald-400">{phaseLabels[phase]}</span>
+      {/* Header - Fixed navigation bar */}
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, background: 'linear-gradient(to bottom, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95))', borderBottom: '1px solid rgba(51, 65, 85, 0.5)', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <button
+          onClick={goBack}
+          disabled={phaseOrder.indexOf(phase) === 0}
+          style={{
+            minHeight: '44px',
+            padding: '10px 16px',
+            background: phaseOrder.indexOf(phase) > 0 ? 'rgba(71, 85, 105, 0.5)' : 'transparent',
+            border: phaseOrder.indexOf(phase) > 0 ? '1px solid #334155' : '1px solid transparent',
+            borderRadius: '8px',
+            color: phaseOrder.indexOf(phase) > 0 ? '#e2e8f0' : 'transparent',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: phaseOrder.indexOf(phase) > 0 ? 'pointer' : 'default',
+          }}
+        >
+          Back
+        </button>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => i <= phaseOrder.indexOf(phase) && goToPhase(p)}
+              style={{
+                width: phase === p ? '20px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                border: 'none',
+                background: i <= phaseOrder.indexOf(phase) ? '#10b981' : '#334155',
+                cursor: i <= phaseOrder.indexOf(phase) ? 'pointer' : 'default',
+                transition: 'all 0.2s ease',
+              }}
+              title={phaseLabels[p]}
+            />
+          ))}
         </div>
-      </div>
+        <button
+          onClick={goNext}
+          disabled={phaseOrder.indexOf(phase) === phaseOrder.length - 1}
+          style={{
+            minHeight: '44px',
+            padding: '10px 16px',
+            background: phaseOrder.indexOf(phase) < phaseOrder.length - 1 ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(71, 85, 105, 0.3)',
+            border: 'none',
+            borderRadius: '8px',
+            color: phaseOrder.indexOf(phase) < phaseOrder.length - 1 ? '#f8fafc' : '#64748b',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: phaseOrder.indexOf(phase) < phaseOrder.length - 1 ? 'pointer' : 'not-allowed',
+          }}
+        >
+          Next
+        </button>
+      </nav>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12 max-w-4xl mx-auto px-4">
+      <div style={{ position: 'relative', maxWidth: '900px', margin: '0 auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '16px', paddingRight: '16px', overflowY: 'auto', minHeight: '100vh', flex: 1, display: 'flex', flexDirection: 'column' }}>
         {phase === 'hook' && renderHookPhase()}
         {phase === 'predict' && renderPredictPhase()}
         {phase === 'play' && renderPlayPhase()}

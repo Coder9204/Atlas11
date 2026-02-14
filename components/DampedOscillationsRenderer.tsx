@@ -183,9 +183,9 @@ const realWorldApps = [
     connection: 'When a wheel hits a bump, the spring stores energy (potential energy). Without damping, this energy would cause continuous bouncing. The shock absorber converts kinetic energy to heat through hydraulic fluid forced through small orifices, providing the damping force c(dx/dt) that removes energy each oscillation.',
     howItWorks: 'Inside a shock absorber, a piston moves through oil. Small valves control oil flow, creating velocity-dependent resistance. Modern adaptive dampers use magnetorheological fluid - oil containing iron particles that stiffen when magnetized - allowing real-time damping adjustment in 2-3 milliseconds.',
     stats: [
-      { value: 'ζ ≈ 0.2-0.4', label: 'Typical damping ratio', icon: '📊' },
-      { value: '1-2 Hz', label: 'Body natural frequency', icon: '🔄' },
-      { value: '~85%', label: 'Energy absorbed/cycle', icon: '⚡' }
+      { value: '85%', label: 'Energy absorbed per cycle', icon: '⚡' },
+      { value: '50 ms', label: 'Damper response time', icon: '🔄' },
+      { value: '250 W', label: 'Power dissipated per damper', icon: '📊' }
     ],
     examples: [
       'MacPherson struts in passenger cars - combines spring and damper in one unit',
@@ -206,9 +206,9 @@ const realWorldApps = [
     connection: 'A building is a mass-spring system: the mass is the building itself, the "spring" is the structural stiffness. Earthquakes excite the building at various frequencies. If excitation matches natural frequency, resonance causes catastrophic amplification. Dampers add the energy dissipation term that limits amplitude regardless of excitation.',
     howItWorks: 'Three main strategies: Base isolation (building sits on rubber bearings that filter high frequencies), Tuned Mass Dampers (counter-oscillating masses that absorb energy), and Viscous dampers (hydraulic cylinders between floors that dissipate energy as heat). Many buildings combine all three.',
     stats: [
-      { value: '730 tons', label: 'Taipei 101 TMD mass', icon: '🏗️' },
-      { value: '40-60%', label: 'Vibration reduction', icon: '📉' },
-      { value: '0.5-2%', label: 'Structural damping ratio', icon: '📊' }
+      { value: '730000 kg', label: 'Taipei 101 TMD mass', icon: '🏗️' },
+      { value: '60%', label: 'Vibration reduction', icon: '📉' },
+      { value: '500 m', label: 'Max building height protected', icon: '📊' }
     ],
     examples: [
       'Taipei 101 - 730-ton pendulum damper visible to tourists, reduces sway by 40%',
@@ -437,8 +437,8 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#e2e8f0',
     border: '#2a2a3a',
     cyan: '#06B6D4',
     orange: '#F97316',
@@ -460,7 +460,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Comparison Lab',
+    twist_play: 'Explore Compare',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -523,7 +523,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
     const massY = 100 + (disp * 0.5);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id={`massGrad-${color}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={color} />
@@ -538,17 +538,20 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
           </filter>
         </defs>
 
+        {/* Title at top */}
+        <text x={width / 2} y="8" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Spring-Mass-Damper</text>
+
         {/* Ceiling */}
-        <rect x="20" y="10" width={width - 40} height="15" fill={colors.border} rx="3" />
+        <rect x="20" y="14" width={width - 40} height="12" fill={colors.border} rx="3" />
         <pattern id="hatch" patternUnits="userSpaceOnUse" width="10" height="10">
           <path d="M0,10 L10,0" stroke={colors.textMuted} strokeWidth="1" />
         </pattern>
-        <rect x="20" y="10" width={width - 40} height="15" fill="url(#hatch)" opacity="0.5" />
+        <rect x="20" y="14" width={width - 40} height="12" fill="url(#hatch)" opacity="0.5" />
 
         {/* Spring */}
         <path
-          d={`M${width/2} 25 ${Array.from({length: 8}, (_, i) => {
-            const y = 25 + (i + 1) * ((massY - 25) / 9);
+          d={`M${width/2} 26 ${Array.from({length: 8}, (_, i) => {
+            const y = 26 + (i + 1) * ((massY - 26) / 9);
             const x = width/2 + (i % 2 === 0 ? -15 : 15);
             return `L${x} ${y}`;
           }).join(' ')} L${width/2} ${massY}`}
@@ -559,7 +562,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
         />
 
         {/* Damper (simplified) */}
-        <rect x={width/2 + 20} y="35" width="12" height={massY - 55} fill={colors.textMuted} rx="2" />
+        <rect x={width/2 + 20} y="35" width="12" height={Math.max(10, massY - 55)} fill={colors.textMuted} rx="2" />
         <rect x={width/2 + 17} y={massY - 30} width="18" height="15" fill={colors.border} rx="2" />
 
         {/* Mass */}
@@ -575,11 +578,15 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
 
         {/* Equilibrium line */}
         <line x1="20" y1="150" x2={width - 20} y2="150" stroke={colors.textMuted} strokeDasharray="5,5" />
-        <text x="25" y="165" fill={colors.textMuted} fontSize="10">Equilibrium</text>
+        <text x="25" y="165" fill={colors.textMuted} fontSize="11">Equilibrium</text>
+
+        {/* Displacement indicator */}
+        <line x1={width - 25} y1="150" x2={width - 25} y2={massY + 17} stroke={color} strokeWidth="1.5" />
+        <text x={width - 22} y={Math.min(massY + 17, 150) + Math.abs(massY + 17 - 150) / 2 + 4} fill={color} fontSize="11">{Math.abs(disp).toFixed(0)}%</text>
 
         {/* Label */}
         {label && (
-          <text x={width/2} y={height - 10} textAnchor="middle" fill={color} fontSize="12" fontWeight="600">
+          <text x={width/2} y={height - 5} textAnchor="middle" fill={color} fontSize="12" fontWeight="600">
             {label}
           </text>
         )}
@@ -589,8 +596,13 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
 
   // Response Graph
   const ResponseGraph = () => {
-    const width = isMobile ? 300 : 400;
-    const height = 180;
+    const width = isMobile ? 340 : 440;
+    const height = 260;
+    const plotTop = 35;
+    const plotBottom = 220;
+    const plotMid = (plotTop + plotBottom) / 2;
+    const plotLeft = 55;
+    const plotRight = width - 25;
     const points: string[] = [];
 
     const omega_n = 2;
@@ -606,28 +618,69 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
         const s2 = -omega_n * (dampingRatio + Math.sqrt(dampingRatio * dampingRatio - 1));
         y = (s2 / (s2 - s1)) * Math.exp(s1 * t) + (-s1 / (s2 - s1)) * Math.exp(s2 * t);
       }
-      const x = 40 + (t / 10) * (width - 60);
-      const yPos = 90 - y * 60;
-      points.push(`${x},${yPos}`);
+      const x = plotLeft + (t / 10) * (plotRight - plotLeft);
+      const yPos = plotMid - y * 80;
+      points.push(`${x} ${yPos}`);
     }
 
     const dampInfo = getDampingLabel(dampingRatio);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        {/* Grid */}
-        <line x1="40" y1="30" x2="40" y2="150" stroke={colors.border} />
-        <line x1="40" y1="90" x2={width - 20} y2="90" stroke={colors.border} />
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="responseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={dampInfo.color} />
+            <stop offset="100%" stopColor={dampInfo.color} stopOpacity="0.4" />
+          </linearGradient>
+          <filter id="markerGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        {/* Title */}
+        <text x={width / 2} y="22" textAnchor="middle" fill={dampInfo.color} fontSize="14" fontWeight="700">
+          Displacement vs Time
+        </text>
+
+        {/* Grid lines */}
+        <g>
+          {[0.25, 0.5, 0.75].map(frac => (
+            <line key={`hgrid-${frac}`} x1={plotLeft} y1={plotTop + frac * (plotBottom - plotTop)} x2={plotRight} y2={plotTop + frac * (plotBottom - plotTop)} stroke={colors.border} strokeDasharray="4,4" opacity="0.4" />
+          ))}
+          {[0.2, 0.4, 0.6, 0.8].map(frac => (
+            <line key={`vgrid-${frac}`} x1={plotLeft + frac * (plotRight - plotLeft)} y1={plotTop} x2={plotLeft + frac * (plotRight - plotLeft)} y2={plotBottom} stroke={colors.border} strokeDasharray="4,4" opacity="0.4" />
+          ))}
+        </g>
+
+        {/* Axes */}
+        <g>
+          <line x1={plotLeft} y1={plotTop} x2={plotLeft} y2={plotBottom} stroke={colors.textMuted} strokeWidth="1.5" />
+          <line x1={plotLeft} y1={plotMid} x2={plotRight} y2={plotMid} stroke={colors.textMuted} strokeWidth="1.5" />
+          {/* Y-axis tick marks */}
+          <line x1={plotLeft - 5} y1={plotTop} x2={plotLeft} y2={plotTop} stroke={colors.textMuted} />
+          <line x1={plotLeft - 5} y1={plotBottom} x2={plotLeft} y2={plotBottom} stroke={colors.textMuted} />
+          {/* X-axis tick marks */}
+          <line x1={plotRight} y1={plotMid - 3} x2={plotRight} y2={plotMid + 3} stroke={colors.textMuted} />
+        </g>
+
+        {/* Axis labels */}
+        <text x="15" y={plotMid - 40} fill={colors.textSecondary} fontSize="12" transform={`rotate(-90, 15, ${plotMid})`} textAnchor="middle">Amplitude</text>
+        <text x={(plotLeft + plotRight) / 2} y={plotBottom + 28} textAnchor="middle" fill={colors.textSecondary} fontSize="12">Time (s)</text>
+        <text x={plotLeft - 8} y={plotTop + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">+1</text>
+        <text x={plotLeft - 8} y={plotMid + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">0</text>
+        <text x={plotLeft - 8} y={plotBottom + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">-1</text>
+        <text x={plotRight} y={plotMid + 16} textAnchor="middle" fill={colors.textMuted} fontSize="11">10s</text>
 
         {/* Envelope for underdamped */}
         {dampingRatio < 1 && (
-          <>
+          <g>
             <path
-              d={`M40,30 ${Array.from({length: 50}, (_, i) => {
+              d={`M${plotLeft} ${plotTop} ${Array.from({length: 50}, (_, i) => {
                 const t = i * 0.2;
                 const env = Math.exp(-dampingRatio * omega_n * t);
-                const x = 40 + (t / 10) * (width - 60);
-                return `L${x},${90 - env * 60}`;
+                const x = plotLeft + (t / 10) * (plotRight - plotLeft);
+                return `L${x} ${plotMid - env * 80}`;
               }).join(' ')}`}
               fill="none"
               stroke={colors.accent}
@@ -636,11 +689,11 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
               opacity="0.5"
             />
             <path
-              d={`M40,150 ${Array.from({length: 50}, (_, i) => {
+              d={`M${plotLeft} ${plotBottom} ${Array.from({length: 50}, (_, i) => {
                 const t = i * 0.2;
                 const env = Math.exp(-dampingRatio * omega_n * t);
-                const x = 40 + (t / 10) * (width - 60);
-                return `L${x},${90 + env * 60}`;
+                const x = plotLeft + (t / 10) * (plotRight - plotLeft);
+                return `L${x} ${plotMid + env * 80}`;
               }).join(' ')}`}
               fill="none"
               stroke={colors.accent}
@@ -648,33 +701,69 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
               strokeDasharray="4,4"
               opacity="0.5"
             />
-          </>
+            <text x={plotLeft + 10} y={plotTop + 12} fill={colors.accent} fontSize="11" opacity="0.7">Envelope</text>
+          </g>
         )}
 
         {/* Response curve */}
-        <polyline
-          points={points.join(' ')}
-          fill="none"
-          stroke={dampInfo.color}
-          strokeWidth="2.5"
-        />
-
-        {/* Current time marker */}
-        {isSimulating && (
-          <circle
-            cx={40 + (simTime / 10) * (width - 60)}
-            cy={90 - (displacement / 100) * 60}
-            r="6"
-            fill={dampInfo.color}
+        <g>
+          <polyline
+            points={points.join(' ')}
+            fill="none"
+            stroke={dampInfo.color}
+            strokeWidth="2.5"
           />
-        )}
+        </g>
 
-        {/* Labels */}
-        <text x={width/2} y="20" textAnchor="middle" fill={dampInfo.color} fontSize="14" fontWeight="600">
+        {/* Origin reference point */}
+        <circle cx={plotLeft} cy={plotMid} r="3" fill={colors.textMuted} />
+
+        {/* Current value marker - responds to damping ratio */}
+        {(() => {
+          // Show marker at representative time position based on damping ratio
+          const markerT = isSimulating ? simTime : 2.0;
+          const markerDisp = isSimulating ? displacement : (() => {
+            const omega_n2 = 2;
+            if (dampingRatio < 1) {
+              const wd2 = omega_n2 * Math.sqrt(1 - dampingRatio * dampingRatio);
+              return 100 * Math.exp(-dampingRatio * omega_n2 * markerT) * Math.cos(wd2 * markerT);
+            } else if (dampingRatio === 1) {
+              return 100 * (1 + omega_n2 * markerT) * Math.exp(-omega_n2 * markerT);
+            } else {
+              const s1m = -omega_n2 * (dampingRatio - Math.sqrt(dampingRatio * dampingRatio - 1));
+              const s2m = -omega_n2 * (dampingRatio + Math.sqrt(dampingRatio * dampingRatio - 1));
+              return 100 * ((s2m / (s2m - s1m)) * Math.exp(s1m * markerT) + (-s1m / (s2m - s1m)) * Math.exp(s2m * markerT));
+            }
+          })();
+          return (
+            <circle
+              cx={plotLeft + (markerT / 10) * (plotRight - plotLeft)}
+              cy={plotMid - (markerDisp / 100) * 80}
+              r="8"
+              fill={dampInfo.color}
+              stroke="#ffffff"
+              strokeWidth="2"
+              filter="url(#markerGlow)"
+            />
+          );
+        })()}
+
+        {/* Regime label */}
+        <text x={plotRight - 5} y={plotTop + 12} textAnchor="end" fill={dampInfo.color} fontSize="13" fontWeight="600">
           {dampInfo.label} (ζ = {dampingRatio.toFixed(2)})
         </text>
-        <text x="25" y="94" textAnchor="middle" fill={colors.textMuted} fontSize="10">0</text>
-        <text x={width - 10} y="100" fill={colors.textMuted} fontSize="10">t</text>
+
+        {/* Legend */}
+        <g>
+          <rect x={plotLeft + 5} y={plotBottom + 34} width="10" height="10" fill={dampInfo.color} rx="2" />
+          <text x={plotLeft + 20} y={plotBottom + 43} fill={colors.textSecondary} fontSize="11">Response Curve</text>
+          {dampingRatio < 1 && (
+            <>
+              <line x1={plotLeft + 130} y1={plotBottom + 39} x2={plotLeft + 150} y2={plotBottom + 39} stroke={colors.accent} strokeDasharray="4,4" opacity="0.7" />
+              <text x={plotLeft + 155} y={plotBottom + 43} fill={colors.textSecondary} fontSize="11">Decay Envelope</text>
+            </>
+          )}
+        </g>
       </svg>
     );
   };
@@ -688,7 +777,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1002,
     }}>
       <div style={{
         height: '100%',
@@ -702,16 +791,23 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
   // Phase indicators
   const renderPhaseIndicators = () => (
     <div style={{
+      position: 'fixed',
+      top: '4px',
+      left: 0,
+      right: 0,
       display: 'flex',
       justifyContent: 'center',
       gap: '8px',
       padding: '16px',
       flexWrap: 'wrap',
+      zIndex: 1001,
+      background: colors.bgPrimary,
     }}>
       {phaseOrder.map((p, i) => (
         <button
           key={p}
           onClick={() => goToPhase(p)}
+          aria-label={`Go to ${phaseLabels[p]} phase`}
           style={{
             width: phase === p ? '32px' : '10px',
             height: '10px',
@@ -720,6 +816,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            minHeight: '44px',
           }}
           title={phaseLabels[p]}
         />
@@ -780,7 +877,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
         marginBottom: '32px',
         border: `1px solid ${colors.border}`,
       }}>
-        <svg width={isMobile ? 280 : 380} height={isMobile ? 180 : 220}>
+        <svg width={isMobile ? 280 : 380} height={isMobile ? 180 : 220} viewBox={`0 0 ${isMobile ? 280 : 380} ${isMobile ? 180 : 220}`}>
           <defs>
             <linearGradient id="roadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#374151" />
@@ -843,6 +940,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
           cursor: 'pointer',
           transition: 'transform 0.2s, box-shadow 0.2s',
           boxShadow: `0 4px 20px ${colors.accentGlow}`,
+          minHeight: '44px',
         }}
         onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
         onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -873,6 +971,76 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
         <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
           Make Your Prediction
         </h2>
+
+        {/* Static SVG showing damped oscillation concept */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '16px',
+          marginBottom: '24px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <svg width={isMobile ? 280 : 360} height={140} viewBox={`0 0 ${isMobile ? 280 : 360} 140`}>
+            {/* Decaying wave pattern */}
+            <defs>
+              <linearGradient id="predictWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={colors.accent} />
+                <stop offset="100%" stopColor={colors.cyan} stopOpacity="0.3" />
+              </linearGradient>
+            </defs>
+
+            {/* Axis */}
+            <line x1="30" y1="70" x2={isMobile ? 260 : 340} y2="70" stroke={colors.border} strokeWidth="1" />
+            <line x1="30" y1="20" x2="30" y2="120" stroke={colors.border} strokeWidth="1" />
+
+            {/* Decaying oscillation curve */}
+            <path
+              d={`M30,70 ${Array.from({length: 50}, (_, i) => {
+                const t = i * 0.2;
+                const amp = 40 * Math.exp(-0.25 * t);
+                const y = 70 - amp * Math.sin(t * 1.5);
+                const x = 30 + t * (isMobile ? 23 : 31);
+                return `L${x},${y}`;
+              }).join(' ')}`}
+              fill="none"
+              stroke="url(#predictWaveGrad)"
+              strokeWidth="2.5"
+            />
+
+            {/* Envelope lines */}
+            <path
+              d={`M30,30 ${Array.from({length: 25}, (_, i) => {
+                const t = i * 0.4;
+                const amp = 40 * Math.exp(-0.25 * t);
+                const x = 30 + t * (isMobile ? 23 : 31);
+                return `L${x},${70 - amp}`;
+              }).join(' ')}`}
+              fill="none"
+              stroke={colors.accent}
+              strokeWidth="1"
+              strokeDasharray="4,4"
+              opacity="0.5"
+            />
+            <path
+              d={`M30,110 ${Array.from({length: 25}, (_, i) => {
+                const t = i * 0.4;
+                const amp = 40 * Math.exp(-0.25 * t);
+                const x = 30 + t * (isMobile ? 23 : 31);
+                return `L${x},${70 + amp}`;
+              }).join(' ')}`}
+              fill="none"
+              stroke={colors.accent}
+              strokeWidth="1"
+              strokeDasharray="4,4"
+              opacity="0.5"
+            />
+
+            {/* Labels */}
+            <text x="15" y="25" fill={colors.textSecondary} fontSize="11">Amplitude</text>
+            <text x={isMobile ? 240 : 310} y="85" fill={colors.textSecondary} fontSize="11">Time</text>
+            <text x={(isMobile ? 280 : 360)/2} y="130" textAnchor="middle" fill={colors.textMuted} fontSize="11">Decaying Oscillation Pattern</text>
+          </svg>
+        </div>
 
         <div style={{
           background: colors.bgCard,
@@ -919,6 +1087,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 cursor: prediction !== null ? 'default' : 'pointer',
                 transition: 'all 0.2s',
                 opacity: prediction !== null && prediction !== opt.id && !opt.correct ? 0.5 : 1,
+                minHeight: '44px',
               }}
             >
               <span style={{ fontWeight: 700, marginRight: '12px', color: colors.accent }}>{opt.id}.</span>
@@ -953,6 +1122,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 borderRadius: '8px',
                 fontWeight: 600,
                 cursor: 'pointer',
+                minHeight: '44px',
               }}
             >
               Explore the Physics
@@ -973,18 +1143,41 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
         alignItems: 'center',
         padding: '24px',
       }}>
-        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px' }}>
           Damped Oscillation Laboratory
         </h2>
+
+        {/* Real-world relevance text */}
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '600px', textAlign: 'center', marginBottom: '12px' }}>
+          Adjust the damping ratio to observe how car suspensions, building dampers, and instrument needles behave.
+          This technology is used in real-world engineering applications from earthquake-resistant buildings to your smartphone's accelerometer.
+        </p>
+
+        {/* Observation guidance */}
+        <div style={{
+          background: `${colors.accent}15`,
+          borderRadius: '12px',
+          padding: '12px 20px',
+          marginBottom: '24px',
+          maxWidth: '600px',
+          border: `1px solid ${colors.accent}30`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary }}>
+            <strong style={{ color: colors.accent }}>What to Watch:</strong> Notice how when you increase the damping ratio, the oscillation amplitude decays faster. When you decrease it, the mass bounces more times before settling. Try adjusting the slider to see what happens at the critical point (ζ = 1).
+          </p>
+        </div>
+
+        {/* Main response graph first (primary SVG) */}
+        <ResponseGraph />
 
         <div style={{
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
           gap: '24px',
           marginBottom: '24px',
+          marginTop: '16px',
         }}>
           <OscillatorVis disp={displacement} color={dampInfo.color} />
-          <ResponseGraph />
         </div>
 
         {/* Controls */}
@@ -999,8 +1192,8 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ color: colors.textSecondary }}>Damping Ratio (ζ)</span>
-              <span style={{ color: dampInfo.color, fontWeight: 600 }}>
-                {dampingRatio.toFixed(2)} - {dampInfo.label}
+              <span style={{ color: colors.textPrimary, fontWeight: 600 }}>
+                {dampingRatio.toFixed(2)} - {dampInfo.label} ({dampingRatio < 1 ? `${(2 * Math.sqrt(1 - dampingRatio * dampingRatio) / (2 * Math.PI)).toFixed(2)} Hz` : '0 Hz'} oscillation)
               </span>
             </div>
             <input
@@ -1010,12 +1203,12 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
               step="0.05"
               value={dampingRatio}
               onChange={(e) => setDampingRatio(parseFloat(e.target.value))}
-              style={{ width: '100%', cursor: 'pointer' }}
+              style={{ height: '20px', touchAction: 'pan-y', width: '100%', cursor: 'pointer', accentColor: colors.accent }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ ...typo.small, color: colors.cyan }}>Underdamped</span>
-              <span style={{ ...typo.small, color: colors.success }}>Critical</span>
-              <span style={{ ...typo.small, color: colors.orange }}>Overdamped</span>
+              <span style={{ ...typo.small, color: '#7dd3fc' }}>0.05 (Underdamped)</span>
+              <span style={{ ...typo.small, color: '#6ee7b7' }}>Critical (ζ=1)</span>
+              <span style={{ ...typo.small, color: '#fdba74' }}>2.5 (Overdamped)</span>
             </div>
           </div>
 
@@ -1032,6 +1225,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 borderRadius: '8px',
                 fontWeight: 600,
                 cursor: isSimulating ? 'default' : 'pointer',
+                minHeight: '44px',
               }}
             >
               {isSimulating ? 'Oscillating...' : 'Release Mass'}
@@ -1069,7 +1263,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
               background: dampingRatio < 0.95 ? `${colors.cyan}20` : 'transparent',
               border: dampingRatio < 0.95 ? `1px solid ${colors.cyan}` : `1px solid ${colors.border}`,
             }}>
-              <span style={{ color: colors.cyan, fontWeight: 600 }}>ζ &lt; 1 Underdamped:</span>
+              <span style={{ color: '#7dd3fc', fontWeight: 600 }}>ζ &lt; 1 Underdamped:</span>
               <span style={{ color: colors.textSecondary, marginLeft: '8px' }}>Oscillates with exponentially decaying amplitude</span>
             </div>
             <div style={{
@@ -1078,7 +1272,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
               background: dampingRatio >= 0.95 && dampingRatio <= 1.05 ? `${colors.success}20` : 'transparent',
               border: dampingRatio >= 0.95 && dampingRatio <= 1.05 ? `1px solid ${colors.success}` : `1px solid ${colors.border}`,
             }}>
-              <span style={{ color: colors.success, fontWeight: 600 }}>ζ = 1 Critical:</span>
+              <span style={{ color: '#6ee7b7', fontWeight: 600 }}>ζ = 1 Critical:</span>
               <span style={{ color: colors.textSecondary, marginLeft: '8px' }}>Fastest return to equilibrium without oscillation</span>
             </div>
             <div style={{
@@ -1087,7 +1281,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
               background: dampingRatio > 1.05 ? `${colors.orange}20` : 'transparent',
               border: dampingRatio > 1.05 ? `1px solid ${colors.orange}` : `1px solid ${colors.border}`,
             }}>
-              <span style={{ color: colors.orange, fontWeight: 600 }}>ζ &gt; 1 Overdamped:</span>
+              <span style={{ color: '#fdba74', fontWeight: 600 }}>ζ &gt; 1 Overdamped:</span>
               <span style={{ color: colors.textSecondary, marginLeft: '8px' }}>Slow, creeping return without oscillation</span>
             </div>
           </div>
@@ -1104,6 +1298,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
             borderRadius: '12px',
             fontWeight: 600,
             cursor: 'pointer',
+            minHeight: '44px',
           }}
         >
           Review the Concepts
@@ -1119,9 +1314,27 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
       alignItems: 'center',
       padding: '24px',
     }}>
-      <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+      <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px' }}>
         Understanding Damped Oscillations
       </h2>
+
+      {/* Reference user's prediction */}
+      <div style={{
+        background: prediction === 'B' ? `${colors.success}20` : `${colors.warning}20`,
+        borderRadius: '12px',
+        padding: '16px',
+        marginBottom: '24px',
+        maxWidth: '700px',
+        border: `1px solid ${prediction === 'B' ? colors.success : colors.warning}40`,
+      }}>
+        <p style={{ ...typo.body, color: colors.textSecondary }}>
+          {prediction === 'B'
+            ? 'You correctly predicted that damping forces remove energy from the system! Now let\'s understand exactly how this works mathematically.'
+            : prediction
+              ? 'Earlier you thought gravity or spring elasticity was the key. Actually, damping forces are what remove energy from oscillating systems. Let\'s see why this matters.'
+              : 'As you observed in the experiment, damping forces remove energy from the oscillating system. Your prediction is now being validated by the physics. Let\'s understand exactly how this works mathematically.'}
+        </p>
+      </div>
 
       <div style={{
         display: 'grid',
@@ -1228,6 +1441,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
           borderRadius: '12px',
           fontWeight: 600,
           cursor: 'pointer',
+          minHeight: '44px',
         }}
       >
         Discover a Surprising Twist
@@ -1254,6 +1468,58 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
         <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '24px', textAlign: 'center' }}>
           The Twist Challenge
         </h2>
+
+        {/* SVG showing comparison of critical vs slightly underdamped */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '16px',
+          marginBottom: '24px',
+          border: `1px solid ${colors.warning}40`,
+        }}>
+          <svg width={isMobile ? 320 : 400} height={220} viewBox={`0 0 ${isMobile ? 320 : 400} 220`}>
+            <defs>
+              <linearGradient id="twistPredGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={colors.warning} />
+                <stop offset="100%" stopColor={colors.accent} />
+              </linearGradient>
+            </defs>
+            <text x={(isMobile ? 320 : 400) / 2} y="20" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="700">Comparison: ζ = 0.7 vs ζ = 1.0</text>
+            {/* Grid */}
+            <line x1="50" y1="35" x2="50" y2="180" stroke={colors.textMuted} strokeWidth="1" />
+            <line x1="50" y1="110" x2={(isMobile ? 300 : 380)} y2="110" stroke={colors.textMuted} strokeWidth="1" />
+            <line x1="50" y1="70" x2={(isMobile ? 300 : 380)} y2="70" stroke={colors.border} strokeDasharray="4,4" opacity="0.4" />
+            <line x1="50" y1="150" x2={(isMobile ? 300 : 380)} y2="150" stroke={colors.border} strokeDasharray="4,4" opacity="0.4" />
+            {/* Critical damping curve (ζ=1) */}
+            <path
+              d={`M50 40 ${Array.from({length: 50}, (_, i) => {
+                const t = i * 0.2;
+                const y = (1 + 2 * t) * Math.exp(-2 * t);
+                const xp = 50 + (t / 10) * ((isMobile ? 250 : 330));
+                return `L${xp} ${110 - y * 70}`;
+              }).join(' ')}`}
+              fill="none" stroke={colors.success} strokeWidth="2.5"
+            />
+            {/* ζ=0.7 curve with slight overshoot */}
+            <path
+              d={`M50 40 ${Array.from({length: 50}, (_, i) => {
+                const t = i * 0.2;
+                const wd = 2 * Math.sqrt(1 - 0.49);
+                const y = Math.exp(-0.7 * 2 * t) * Math.cos(wd * t);
+                const xp = 50 + (t / 10) * ((isMobile ? 250 : 330));
+                return `L${xp} ${110 - y * 70}`;
+              }).join(' ')}`}
+              fill="none" stroke={colors.cyan} strokeWidth="2.5"
+            />
+            <text x="15" y="75" fill={colors.textSecondary} fontSize="11">Amplitude</text>
+            <text x={(isMobile ? 270 : 350)} y="125" fill={colors.textSecondary} fontSize="11">Time</text>
+            {/* Legend */}
+            <rect x="60" y="190" width="12" height="8" fill={colors.cyan} rx="2" />
+            <text x="78" y="198" fill={colors.textSecondary} fontSize="11">ζ = 0.7 (slight overshoot)</text>
+            <rect x={(isMobile ? 200 : 240)} y="190" width="12" height="8" fill={colors.success} rx="2" />
+            <text x={(isMobile ? 218 : 258)} y="198" fill={colors.textSecondary} fontSize="11">ζ = 1.0 (critical)</text>
+          </svg>
+        </div>
 
         <div style={{
           background: colors.bgCard,
@@ -1337,6 +1603,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 borderRadius: '8px',
                 fontWeight: 600,
                 cursor: 'pointer',
+                minHeight: '44px',
               }}
             >
               See the Difference
@@ -1362,39 +1629,166 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
           Comparing Damping Responses
         </h2>
 
+        {/* Comparison response graph FIRST (primary SVG) - responds to both sliders */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '12px',
+          padding: '12px',
+          marginBottom: '24px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <svg width={isMobile ? 340 : 440} height={260} viewBox={`0 0 ${isMobile ? 340 : 440} 260`}>
+            <defs>
+              <filter id="twistMarkerGlow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            <text x={(isMobile ? 340 : 440) / 2} y="20" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="700">Response Comparison</text>
+            {/* Axes */}
+            <line x1="55" y1="35" x2="55" y2="220" stroke={colors.textMuted} strokeWidth="1.5" />
+            <line x1="55" y1="127" x2={(isMobile ? 320 : 420)} y2="127" stroke={colors.textMuted} strokeWidth="1.5" />
+            {/* Grid */}
+            <line x1="55" y1="75" x2={(isMobile ? 320 : 420)} y2="75" stroke={colors.border} strokeDasharray="4,4" opacity="0.4" />
+            <line x1="55" y1="180" x2={(isMobile ? 320 : 420)} y2="180" stroke={colors.border} strokeDasharray="4,4" opacity="0.4" />
+            {[0.25, 0.5, 0.75].map(frac => (
+              <line key={`tg-${frac}`} x1={55 + frac * ((isMobile ? 265 : 365))} y1="35" x2={55 + frac * ((isMobile ? 265 : 365))} y2="220" stroke={colors.border} strokeDasharray="4,4" opacity="0.3" />
+            ))}
+            {/* Axis labels */}
+            <text x="15" y="130" fill={colors.textSecondary} fontSize="12" transform={`rotate(-90, 15, 130)`} textAnchor="middle">Amplitude</text>
+            <text x={(isMobile ? 190 : 240)} y="245" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Time (s)</text>
+            <text x="45" y="39" textAnchor="end" fill={colors.textMuted} fontSize="11">+1</text>
+            <text x="45" y="131" textAnchor="end" fill={colors.textMuted} fontSize="11">0</text>
+            <text x="45" y="224" textAnchor="end" fill={colors.textMuted} fontSize="11">-1</text>
+            {/* System A curve */}
+            <path
+              d={`M55 ${127 - 85} ${Array.from({length: 50}, (_, i) => {
+                const t = i * 0.2;
+                const omega_n = 2;
+                let y: number;
+                if (twistDamping1 < 1) {
+                  const wd = omega_n * Math.sqrt(1 - twistDamping1 * twistDamping1);
+                  y = Math.exp(-twistDamping1 * omega_n * t) * Math.cos(wd * t);
+                } else if (twistDamping1 === 1) {
+                  y = (1 + omega_n * t) * Math.exp(-omega_n * t);
+                } else {
+                  const s1r = -omega_n * (twistDamping1 - Math.sqrt(twistDamping1 * twistDamping1 - 1));
+                  const s2r = -omega_n * (twistDamping1 + Math.sqrt(twistDamping1 * twistDamping1 - 1));
+                  y = (s2r / (s2r - s1r)) * Math.exp(s1r * t) + (-s1r / (s2r - s1r)) * Math.exp(s2r * t);
+                }
+                const xp = 55 + (t / 10) * ((isMobile ? 265 : 365));
+                return `L${xp} ${127 - y * 85}`;
+              }).join(' ')}`}
+              fill="none" stroke={info1.color} strokeWidth="2.5"
+            />
+            {/* System B curve */}
+            <path
+              d={`M55 ${127 - 85} ${Array.from({length: 50}, (_, i) => {
+                const t = i * 0.2;
+                const omega_n = 2;
+                let y: number;
+                if (twistDamping2 < 1) {
+                  const wd = omega_n * Math.sqrt(1 - twistDamping2 * twistDamping2);
+                  y = Math.exp(-twistDamping2 * omega_n * t) * Math.cos(wd * t);
+                } else if (twistDamping2 === 1) {
+                  y = (1 + omega_n * t) * Math.exp(-omega_n * t);
+                } else {
+                  const s1r = -omega_n * (twistDamping2 - Math.sqrt(twistDamping2 * twistDamping2 - 1));
+                  const s2r = -omega_n * (twistDamping2 + Math.sqrt(twistDamping2 * twistDamping2 - 1));
+                  y = (s2r / (s2r - s1r)) * Math.exp(s1r * t) + (-s1r / (s2r - s1r)) * Math.exp(s2r * t);
+                }
+                const xp = 55 + (t / 10) * ((isMobile ? 265 : 365));
+                return `L${xp} ${127 - y * 85}`;
+              }).join(' ')}`}
+              fill="none" stroke={info2.color} strokeWidth="2.5" strokeDasharray="6,3"
+            />
+            {/* Interactive markers at t=2s */}
+            {(() => {
+              const omega_n = 2;
+              const t2 = 2.0;
+              let y1: number;
+              if (twistDamping1 < 1) { const wd = omega_n * Math.sqrt(1 - twistDamping1 * twistDamping1); y1 = Math.exp(-twistDamping1 * omega_n * t2) * Math.cos(wd * t2); }
+              else if (twistDamping1 === 1) { y1 = (1 + omega_n * t2) * Math.exp(-omega_n * t2); }
+              else { const s1r = -omega_n * (twistDamping1 - Math.sqrt(twistDamping1 * twistDamping1 - 1)); const s2r = -omega_n * (twistDamping1 + Math.sqrt(twistDamping1 * twistDamping1 - 1)); y1 = (s2r / (s2r - s1r)) * Math.exp(s1r * t2) + (-s1r / (s2r - s1r)) * Math.exp(s2r * t2); }
+              let y2: number;
+              if (twistDamping2 < 1) { const wd = omega_n * Math.sqrt(1 - twistDamping2 * twistDamping2); y2 = Math.exp(-twistDamping2 * omega_n * t2) * Math.cos(wd * t2); }
+              else if (twistDamping2 === 1) { y2 = (1 + omega_n * t2) * Math.exp(-omega_n * t2); }
+              else { const s1r = -omega_n * (twistDamping2 - Math.sqrt(twistDamping2 * twistDamping2 - 1)); const s2r = -omega_n * (twistDamping2 + Math.sqrt(twistDamping2 * twistDamping2 - 1)); y2 = (s2r / (s2r - s1r)) * Math.exp(s1r * t2) + (-s1r / (s2r - s1r)) * Math.exp(s2r * t2); }
+              const mx = 55 + (t2 / 10) * ((isMobile ? 265 : 365));
+              return (
+                <>
+                  <circle cx={mx} cy={127 - y1 * 85} r="7" fill={info1.color} stroke="#ffffff" strokeWidth="2" filter="url(#twistMarkerGlow)" />
+                  <circle cx={mx} cy={127 - y2 * 85} r="7" fill={info2.color} stroke="#ffffff" strokeWidth="2" filter="url(#twistMarkerGlow)" />
+                </>
+              );
+            })()}
+            {/* Legend */}
+            <g>
+              <rect x="65" y="230" width="12" height="8" fill={info1.color} rx="2" />
+              <text x="83" y="238" fill={colors.textSecondary} fontSize="11">System A (ζ={twistDamping1.toFixed(1)})</text>
+              <line x1={(isMobile ? 210 : 260)} y1="234" x2={(isMobile ? 230 : 280)} y2="234" stroke={info2.color} strokeWidth="2" strokeDasharray="6,3" />
+              <text x={(isMobile ? 235 : 285)} y="238" fill={colors.textSecondary} fontSize="11">System B (ζ={twistDamping2.toFixed(1)})</text>
+            </g>
+          </svg>
+        </div>
+
+        {/* Slider controls */}
         <div style={{
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
           gap: '24px',
           marginBottom: '24px',
         }}>
-          {/* System 1 */}
-          <div style={{ textAlign: 'center' }}>
-            <OscillatorVis disp={twistDisp1} color={info1.color} label={`ζ = ${twistDamping1.toFixed(1)}`} />
-            <input
-              type="range"
-              min="0.1"
-              max="2.0"
-              step="0.1"
-              value={twistDamping1}
-              onChange={(e) => setTwistDamping1(parseFloat(e.target.value))}
-              style={{ width: '150px', marginTop: '12px' }}
-            />
+          {/* System 1 slider */}
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ marginBottom: '8px' }}>
+              <span style={{ color: info1.color, fontSize: '14px', fontWeight: 600 }}>System A: ζ = {twistDamping1.toFixed(1)} - {info1.label}</span>
+            </div>
+            <div>
+              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>0.1</span>
+              <input
+                type="range"
+                min="0.1"
+                max="2.0"
+                step="0.1"
+                value={twistDamping1}
+                onChange={(e) => setTwistDamping1(parseFloat(e.target.value))}
+                style={{ touchAction: 'pan-y', width: '150px', height: '20px', cursor: 'pointer', accentColor: info1.color }}
+              />
+              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>2.0</span>
+            </div>
           </div>
 
-          {/* System 2 */}
-          <div style={{ textAlign: 'center' }}>
-            <OscillatorVis disp={twistDisp2} color={info2.color} label={`ζ = ${twistDamping2.toFixed(1)}`} />
-            <input
-              type="range"
-              min="0.1"
-              max="2.0"
-              step="0.1"
-              value={twistDamping2}
-              onChange={(e) => setTwistDamping2(parseFloat(e.target.value))}
-              style={{ width: '150px', marginTop: '12px' }}
-            />
+          {/* System 2 slider */}
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ marginBottom: '8px' }}>
+              <span style={{ color: info2.color, fontSize: '14px', fontWeight: 600 }}>System B: ζ = {twistDamping2.toFixed(1)} - {info2.label}</span>
+            </div>
+            <div>
+              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>0.1</span>
+              <input
+                type="range"
+                min="0.1"
+                max="2.0"
+                step="0.1"
+                value={twistDamping2}
+                onChange={(e) => setTwistDamping2(parseFloat(e.target.value))}
+                style={{ touchAction: 'pan-y', width: '150px', height: '20px', cursor: 'pointer', accentColor: info2.color }}
+              />
+              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>2.0</span>
+            </div>
           </div>
+        </div>
+
+        {/* Oscillator animations - secondary visualization */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: '24px',
+          marginBottom: '24px',
+        }}>
+          <OscillatorVis disp={twistDisp1} color={info1.color} label={`System A: ζ = ${twistDamping1.toFixed(1)}`} />
+          <OscillatorVis disp={twistDisp2} color={info2.color} label={`System B: ζ = ${twistDamping2.toFixed(1)}`} />
         </div>
 
         <button
@@ -1409,6 +1803,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
             fontWeight: 600,
             cursor: twistSimulating ? 'default' : 'pointer',
             marginBottom: '24px',
+            minHeight: '44px',
           }}
         >
           {twistSimulating ? `Comparing... ${twistTime.toFixed(1)}s` : 'Release Both Masses'}
@@ -1445,6 +1840,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
             borderRadius: '12px',
             fontWeight: 600,
             cursor: 'pointer',
+            minHeight: '44px',
           }}
         >
           Review This Discovery
@@ -1531,6 +1927,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
           borderRadius: '12px',
           fontWeight: 600,
           cursor: 'pointer',
+          minHeight: '44px',
         }}
       >
         Explore Real-World Applications
@@ -1577,6 +1974,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
+                minHeight: '44px',
               }}
             >
               <span>{a.icon}</span>
@@ -1716,11 +2114,30 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 borderRadius: '8px',
                 fontWeight: 600,
                 cursor: 'pointer',
+                minHeight: '44px',
               }}
             >
               Mark as Understood
             </button>
           )}
+          {/* Got It button for transfer phase navigation */}
+          <button
+            onClick={nextPhase}
+            style={{
+              marginTop: '16px',
+              width: '100%',
+              padding: '12px',
+              background: `linear-gradient(135deg, ${colors.accent}, ${colors.cyan})`,
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              minHeight: '44px',
+            }}
+          >
+            Got It
+          </button>
         </div>
 
         {/* Progress */}
@@ -1752,6 +2169,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
               borderRadius: '12px',
               fontWeight: 600,
               cursor: 'pointer',
+              minHeight: '44px',
             }}
           >
             Take the Knowledge Test
@@ -1844,6 +2262,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 borderRadius: '12px',
                 fontWeight: 600,
                 cursor: 'pointer',
+                minHeight: '44px',
               }}
             >
               Claim Your Mastery Badge
@@ -1865,6 +2284,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 borderRadius: '12px',
                 fontWeight: 600,
                 cursor: 'pointer',
+                minHeight: '44px',
               }}
             >
               Review and Try Again
@@ -1950,6 +2370,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{ fontWeight: 600, marginRight: '8px', color: colors.accent }}>{opt.id.toUpperCase()}.</span>
@@ -1971,6 +2392,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 borderRadius: '8px',
                 color: colors.textSecondary,
                 cursor: 'pointer',
+                minHeight: '44px',
               }}
             >
               Previous
@@ -1988,6 +2410,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 borderRadius: '8px',
                 color: 'white',
                 cursor: answered ? 'pointer' : 'default',
+                minHeight: '44px',
               }}
             >
               Next
@@ -2011,6 +2434,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                 color: 'white',
                 fontWeight: 600,
                 cursor: allAnswered ? 'pointer' : 'default',
+                minHeight: '44px',
               }}
             >
               Submit Test
@@ -2092,6 +2516,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
             borderRadius: '8px',
             color: colors.textSecondary,
             cursor: 'pointer',
+            minHeight: '44px',
           }}
         >
           Explore Again
@@ -2149,10 +2574,64 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
 
       {renderProgressBar()}
 
-      <div style={{ position: 'relative', zIndex: 10, paddingTop: '8px' }}>
+      <div style={{ position: 'relative', zIndex: 10, paddingTop: '80px', paddingBottom: '100px', overflowY: 'auto', flex: 1, minHeight: '100vh' }}>
         {renderPhaseIndicators()}
         {renderPhase()}
       </div>
+
+      {/* Bottom Navigation Bar */}
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 24px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        zIndex: 1003,
+      }}>
+        <button
+          onClick={() => {
+            const idx = phaseOrder.indexOf(phase);
+            if (idx > 0) goToPhase(phaseOrder[idx - 1]);
+          }}
+          disabled={phase === 'hook'}
+          style={{
+            padding: '10px 24px',
+            background: phase === 'hook' ? colors.border : colors.bgCard,
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px',
+            color: phase === 'hook' ? colors.textMuted : colors.textPrimary,
+            cursor: phase === 'hook' ? 'default' : 'pointer',
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          Back
+        </button>
+        <span style={{ color: colors.textMuted, fontSize: '13px' }}>
+          {phaseOrder.indexOf(phase) + 1} / {phaseOrder.length}
+        </span>
+        <button
+          onClick={nextPhase}
+          disabled={phase === 'mastery'}
+          style={{
+            padding: '10px 24px',
+            background: phase === 'mastery' ? colors.border : `linear-gradient(135deg, ${colors.accent}, ${colors.cyan})`,
+            border: 'none',
+            borderRadius: '8px',
+            color: 'white',
+            cursor: phase === 'mastery' ? 'default' : 'pointer',
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          Next
+        </button>
+      </nav>
     </div>
   );
 };

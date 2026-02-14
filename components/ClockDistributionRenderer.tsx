@@ -31,16 +31,16 @@ const colors = {
 const phaseOrder: ClockPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 const phaseLabels: Record<ClockPhase, string> = {
-  hook: 'Hook',
+  hook: 'Introduction',
   predict: 'Predict',
-  play: 'Play',
-  review: 'Review',
+  play: 'Experiment',
+  review: 'Understanding',
   twist_predict: 'Twist',
   twist_play: 'Explore',
-  twist_review: 'Explain',
-  transfer: 'Transfer',
-  test: 'Test',
-  mastery: 'Mastery',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery Complete',
 };
 
 const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
@@ -141,23 +141,23 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
 
   // Physics calculations
   const calculateClockMetrics = useCallback(() => {
-    // Speed of light in silicon (c/3.5 due to dielectric)
-    const lightSpeedInSilicon = 3e8 / 3.5; // m/s = 85.7 mm/ns
+    // Speed of light in silicon (c/3.5 due to dielectric) in mm/ns
+    const lightSpeedMmPerNs = 300 / 3.5; // 85.7 mm/ns
 
-    // Clock period
+    // Clock period in ns
     const clockPeriod = 1 / clockFrequency; // ns
 
-    // Time for light to cross chip
-    const lightCrossingTime = chipSize / lightSpeedInSilicon; // ns
+    // Time for light to cross chip in ns
+    const lightCrossingTime = chipSize / lightSpeedMmPerNs; // ns
 
-    // Maximum theoretical skew (corner to corner without repeaters)
-    const maxSkew = lightCrossingTime * Math.sqrt(2); // diagonal
+    // Maximum theoretical skew (corner to corner without repeaters) in ns
+    const maxSkew = lightCrossingTime * Math.sqrt(2); // diagonal, ns
 
-    // Skew with clock tree (reduced by factor of tree depth)
-    const clockTreeSkew = maxSkew / (2 ** (treeDepth - 1)); // ps
+    // Skew with clock tree (reduced by factor of tree depth) in ns
+    const clockTreeSkew = maxSkew / (2 ** (treeDepth - 1)); // ns
 
-    // Jitter from wire variation
-    const jitter = clockTreeSkew * (wireVariation / 100); // ps
+    // Jitter from wire variation in ns
+    const jitter = clockTreeSkew * (wireVariation / 100); // ns
 
     // Skew as percentage of clock period
     const skewPercentage = (clockTreeSkew / clockPeriod) * 100;
@@ -192,25 +192,25 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   const transferApplications = [
     {
       title: 'Multi-Core Processor Synchronization',
-      description: 'Modern CPUs have multiple cores that must coordinate. Each core has its own clock domain, synchronized by a global reference.',
+      description: 'Modern CPUs running at 5 GHz have 10 billion transistors across a 20mm die. Each core has its own clock domain, synchronized by a global reference at 100 MHz.',
       question: 'Why do multi-core CPUs use multiple clock domains instead of one global clock?',
       answer: 'A single global clock at 5 GHz across a 20mm chip would have intolerable skew. Instead, each core runs its own local clock, synchronized to a lower-frequency global reference. This allows high local frequencies with manageable inter-core timing.',
     },
     {
       title: 'DDR Memory Timing',
-      description: 'DDR5 memory runs at 4800+ MT/s. The memory controller must precisely time when to sample incoming data.',
+      description: 'DDR5 memory runs at 4800 MHz with timing margins of just 50 ps. The memory controller must precisely time when to sample incoming data across 64 GB modules.',
       question: 'Why does DDR use source-synchronous clocking with the data?',
       answer: 'Sending a clock with the data ensures the clock and data experience the same delay. The receiver can use this clock to sample data reliably, regardless of absolute propagation time. This is called source-synchronous design.',
     },
     {
       title: 'High-Frequency Trading Systems',
-      description: 'Financial trading systems measure time in nanoseconds. A difference of 10ns can mean millions of dollars.',
+      description: 'Financial trading systems measure time in nanoseconds at 10 GHz clock rates. A difference of 10 ns can mean $14 million in profit.',
       question: 'Why do HFT systems use GPS for clock synchronization?',
       answer: 'GPS provides nanosecond-accurate time worldwide. HFT systems use this to synchronize clocks across data centers thousands of miles apart, ensuring fair market access and regulatory compliance.',
     },
     {
       title: 'Network Switch Fabric',
-      description: 'Data center switches move terabits per second across multiple ports. All ports must be synchronized to route packets correctly.',
+      description: 'Data center switches move 400 GB per second across 48 ports at 25 GHz SerDes rates. All ports must be synchronized to route packets correctly.',
       question: 'How do network switches handle clock distribution across large PCBs?',
       answer: 'High-speed switches use clock and data recovery (CDR) at each port. The incoming data stream contains enough transitions to recover the clock locally. This eliminates the need for a single global clock across the large board.',
     },
@@ -432,11 +432,45 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
     const clockPhaseAngle = (animationTime / 360) * 2 * Math.PI * 3;
     const clockValue = Math.sin(clockPhaseAngle) > 0 ? 1 : 0;
 
-    // Pulse propagation animation (0-1 cycle every ~2 seconds)
-    const pulseProgress = (animationTime % 120) / 120;
+    // Build skew vs chip-size data plot path with >=10 L points spanning vertical space
+    // Plot area: x=[380..680], y=[60..250] (190px vertical in 480px viewBox = 39%)
+    const plotLeft = 380;
+    const plotRight = 680;
+    const plotTop = 60;
+    const plotBottom = 250;
+    const plotW = plotRight - plotLeft;
+    const plotH = plotBottom - plotTop;
+    const dataPoints: { x: number; y: number }[] = [];
+    const lightSpeedMmNs = 300 / 3.5; // 85.7 mm/ns
+    for (let i = 0; i <= 14; i++) {
+      const t = i / 14;
+      const sz = 2 + t * 23; // chip size 2..25 mm
+      const crossingNs = sz / lightSpeedMmNs; // ns
+      const maxSkNs = crossingNs * Math.sqrt(2);
+      const treeSkNs = maxSkNs / (2 ** (treeDepth - 1));
+      const skewPsVal = treeSkNs * 1000; // ps
+      dataPoints.push({ x: sz, y: skewPsVal });
+    }
+    // Map to SVG coordinates - find ranges
+    const xVals = dataPoints.map(p => p.x);
+    const yVals = dataPoints.map(p => p.y);
+    const xMin = Math.min(...xVals);
+    const xMax = Math.max(...xVals);
+    const yMin = Math.min(...yVals);
+    const yMax = Math.max(...yVals);
+    const yRange = yMax - yMin || 1;
 
-    // Skew animation (delayed arrivals at different points)
-    const skewOffsets = [0, 0.05, 0.12, 0.08, 0.15, 0.10, 0.18, 0.06];
+    const mapX = (v: number) => plotLeft + ((v - xMin) / (xMax - xMin)) * plotW;
+    const mapY = (v: number) => plotBottom - ((v - yMin) / yRange) * plotH;
+
+    const dataPathD = dataPoints.map((p, i) =>
+      `${i === 0 ? 'M' : 'L'} ${mapX(p.x).toFixed(1)} ${mapY(p.y).toFixed(1)}`
+    ).join(' ');
+
+    // Current chip size marker position
+    const currentSkewPs = metrics.clockTreeSkew; // ps (now correct)
+    const markerX = mapX(chipSize);
+    const markerY = mapY(currentSkewPs);
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -448,555 +482,262 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
           style={{ borderRadius: '12px', maxWidth: '700px' }}
         >
           <defs>
-            {/* === PREMIUM LINEAR GRADIENTS === */}
-
-            {/* Lab background gradient with depth */}
             <linearGradient id="clkdLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />
-              <stop offset="25%" stopColor="#0a0f1a" />
               <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="75%" stopColor="#0a0f1a" />
               <stop offset="100%" stopColor="#030712" />
             </linearGradient>
-
-            {/* Premium chip substrate gradient */}
             <linearGradient id="clkdChipSubstrate" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1e1b4b" />
-              <stop offset="20%" stopColor="#312e81" />
               <stop offset="50%" stopColor="#3730a3" />
-              <stop offset="80%" stopColor="#312e81" />
               <stop offset="100%" stopColor="#1e1b4b" />
             </linearGradient>
-
-            {/* Circuit trace gradient - copper with depth */}
             <linearGradient id="clkdCopperTrace" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="15%" stopColor="#c084fc" />
-              <stop offset="40%" stopColor="#a855f7" />
-              <stop offset="60%" stopColor="#9333ea" />
-              <stop offset="85%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#9333ea" />
               <stop offset="100%" stopColor="#c084fc" />
             </linearGradient>
-
-            {/* Active clock signal pulse gradient */}
-            <linearGradient id="clkdPulseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
-              <stop offset="30%" stopColor="#67e8f9" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#a5f3fc" stopOpacity="1" />
-              <stop offset="70%" stopColor="#67e8f9" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
-            </linearGradient>
-
-            {/* PLL housing metal gradient */}
             <linearGradient id="clkdPLLMetal" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="25%" stopColor="#16a34a" />
               <stop offset="50%" stopColor="#15803d" />
-              <stop offset="75%" stopColor="#16a34a" />
               <stop offset="100%" stopColor="#22c55e" />
             </linearGradient>
-
-            {/* Waveform background gradient */}
-            <linearGradient id="clkdWaveformBg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="30%" stopColor="#1e293b" />
-              <stop offset="70%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-
-            {/* Metrics panel gradient */}
-            <linearGradient id="clkdMetricsBg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="20%" stopColor="#0f172a" />
-              <stop offset="80%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-
-            {/* === RADIAL GRADIENTS FOR GLOW EFFECTS === */}
-
-            {/* PLL core glow - oscillating source */}
             <radialGradient id="clkdPLLGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
-              <stop offset="30%" stopColor="#22c55e" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#16a34a" stopOpacity="0.4" />
               <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
             </radialGradient>
-
-            {/* Clock buffer glow */}
             <radialGradient id="clkdBufferGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#c084fc" stopOpacity="1" />
-              <stop offset="40%" stopColor="#a855f7" stopOpacity="0.6" />
               <stop offset="100%" stopColor="#9333ea" stopOpacity="0" />
             </radialGradient>
-
-            {/* Flip-flop active glow */}
             <radialGradient id="clkdFFActiveGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
-              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
               <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
             </radialGradient>
-
-            {/* Skew warning glow */}
             <radialGradient id="clkdSkewWarning" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
-              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.6" />
               <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
             </radialGradient>
-
-            {/* Error state glow */}
             <radialGradient id="clkdErrorGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
-              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.6" />
               <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
             </radialGradient>
-
-            {/* === GLOW FILTERS === */}
-
-            {/* PLL glow filter */}
             <filter id="clkdPLLBlur" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
-
-            {/* Clock pulse glow filter */}
-            <filter id="clkdPulseBlur" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Soft trace glow */}
             <filter id="clkdTraceGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
-
-            {/* Flip-flop glow filter */}
             <filter id="clkdFFGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="2.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
-
-            {/* Inner shadow for depth */}
-            <filter id="clkdInnerShadow">
-              <feOffset dx="1" dy="1" />
-              <feGaussianBlur stdDeviation="1" result="shadow" />
-              <feComposite in="SourceGraphic" in2="shadow" operator="over" />
+            <filter id="clkdMarkerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
-
-            {/* Grid pattern for chip surface */}
-            <pattern id="clkdChipGrid" width="10" height="10" patternUnits="userSpaceOnUse">
-              <rect width="10" height="10" fill="none" stroke="#4338ca" strokeWidth="0.3" strokeOpacity="0.3" />
-            </pattern>
-
-            {/* Via pattern for realistic circuit */}
-            <pattern id="clkdViaPattern" width="20" height="20" patternUnits="userSpaceOnUse">
-              <circle cx="10" cy="10" r="1.5" fill="#6366f1" opacity="0.4" />
-            </pattern>
           </defs>
 
-          {/* === PREMIUM DARK LAB BACKGROUND === */}
+          {/* Background */}
           <rect width={width} height={height} fill="url(#clkdLabBg)" />
 
-          {/* Subtle grid overlay */}
-          <pattern id="clkdLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-            <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-          </pattern>
-          <rect width={width} height={height} fill="url(#clkdLabGrid)" />
-
-          {/* === TITLE SECTION === */}
-          <text x={width/2} y={28} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle" style={{ letterSpacing: '0.05em' }}>
+          {/* === TITLE === */}
+          <text x={175} y={18} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
             Clock Distribution Network
           </text>
-          <text x={width/2} y={46} fill={colors.textMuted} fontSize={11} textAnchor="middle">
-            H-Tree Topology with {treeDepth}-Level Buffering
+          <text x={175} y={33} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            H-Tree with {treeDepth}-Level Buffering
           </text>
 
-          {/* === PREMIUM CHIP VISUALIZATION === */}
-          <g transform="translate(50, 70)">
-            {/* Chip package outline with depth */}
-            <rect x={-15} y={-15} width={290} height={230} rx={8} fill="#111827" stroke="#1f2937" strokeWidth={2} />
-            <rect x={-10} y={-10} width={280} height={220} rx={6} fill="#0a0a0a" />
+          {/* === CHIP VISUALIZATION (left side, absolute coords) === */}
+          <g>
+            {/* Chip package */}
+            <rect x={30} y={55} width={290} height={215} rx={8} fill="#111827" stroke="#1f2937" strokeWidth={2} />
+            <rect x={35} y={60} width={280} height={205} rx={6} fill="url(#clkdChipSubstrate)" stroke="#4f46e5" strokeWidth={1.5} />
 
-            {/* Die substrate with premium gradient */}
-            <rect x={0} y={0} width={260} height={200} rx={4} fill="url(#clkdChipSubstrate)" stroke="#4f46e5" strokeWidth={1.5} />
-            <rect x={0} y={0} width={260} height={200} rx={4} fill="url(#clkdChipGrid)" />
-            <rect x={0} y={0} width={260} height={200} rx={4} fill="url(#clkdViaPattern)" opacity={0.3} />
+            {/* Chip label - well below subtitle */}
+            <text x={30} y={54} fill={colors.textSecondary} fontSize={11} textAnchor="start">{chipSize}mm Die</text>
 
-            {/* Chip label */}
-            <rect x={85} y={-28} width={90} height={16} rx={4} fill="#111827" stroke="#4f46e5" strokeWidth={0.5} />
-            <text x={130} y={-17} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
-              {chipSize}mm x {chipSize}mm Die
-            </text>
+            {/* PLL at center of chip */}
+            <circle cx={175} cy={160} r={20} fill="url(#clkdPLLGlow)" opacity={clockValue ? 1 : 0.4} />
+            <rect x={155} y={142} width={40} height={36} rx={5} fill="url(#clkdPLLMetal)" stroke="#4ade80" strokeWidth={1.5} />
+            <circle cx={175} cy={160} r={10} fill="#15803d" stroke="#22c55e" strokeWidth={2} />
+            <text x={175} y={164} fill="white" fontSize={11} textAnchor="middle" fontWeight="bold">PLL</text>
 
-            {/* === PLL (CLOCK SOURCE) AT CENTER === */}
-            <g transform="translate(130, 100)">
-              {/* PLL outer glow */}
-              <circle cx={0} cy={0} r={28} fill="url(#clkdPLLGlow)" filter="url(#clkdPLLBlur)" opacity={clockValue ? 1 : 0.4}>
-                <animate attributeName="r" values="24;30;24" dur="0.5s" repeatCount="indefinite" />
-              </circle>
+            {/* H-Tree trunk lines */}
+            <line x1={175} y1={160} x2={110} y2={160} stroke="url(#clkdCopperTrace)" strokeWidth={4} opacity={clockValue ? 1 : 0.4} />
+            <line x1={175} y1={160} x2={240} y2={160} stroke="url(#clkdCopperTrace)" strokeWidth={4} opacity={clockValue ? 1 : 0.4} />
+            <line x1={175} y1={160} x2={175} y2={105} stroke="url(#clkdCopperTrace)" strokeWidth={4} opacity={clockValue ? 1 : 0.4} />
+            <line x1={175} y1={160} x2={175} y2={215} stroke="url(#clkdCopperTrace)" strokeWidth={4} opacity={clockValue ? 1 : 0.4} />
 
-              {/* PLL housing */}
-              <rect x={-22} y={-22} width={44} height={44} rx={6} fill="url(#clkdPLLMetal)" stroke="#4ade80" strokeWidth={1.5} />
-              <rect x={-18} y={-18} width={36} height={36} rx={4} fill="#052e16" opacity={0.5} />
+            {/* Buffer nodes */}
+            {[[110, 160], [240, 160], [175, 105], [175, 215]].map(([bx, by], i) => (
+              <circle key={`b1-${i}`} cx={bx} cy={by} r={5} fill="#a855f7" stroke="#c084fc" strokeWidth={1} />
+            ))}
 
-              {/* PLL core indicator */}
-              <circle cx={0} cy={0} r={12} fill="#15803d" stroke="#22c55e" strokeWidth={2}>
-                <animate attributeName="opacity" values="0.6;1;0.6" dur="0.3s" repeatCount="indefinite" />
-              </circle>
-              <circle cx={0} cy={0} r={6} fill="#4ade80">
-                <animate attributeName="r" values="5;7;5" dur="0.3s" repeatCount="indefinite" />
-              </circle>
-
-              <text x={0} y={4} fill="white" fontSize={8} textAnchor="middle" fontWeight="bold">PLL</text>
-
-              {/* PLL label */}
-              <text x={0} y={38} fill={colors.pll} fontSize={8} textAnchor="middle" fontWeight="bold">Clock Source</text>
-            </g>
-
-            {/* === H-TREE CLOCK DISTRIBUTION NETWORK === */}
-
-            {/* Level 1: Center to quadrant centers (thickest traces) */}
-            <g filter="url(#clkdTraceGlow)">
-              {/* Horizontal trunk */}
-              <line x1={130} y1={100} x2={65} y2={100} stroke="url(#clkdCopperTrace)" strokeWidth={5} strokeLinecap="round" opacity={clockValue ? 1 : 0.4} />
-              <line x1={130} y1={100} x2={195} y2={100} stroke="url(#clkdCopperTrace)" strokeWidth={5} strokeLinecap="round" opacity={clockValue ? 1 : 0.4} />
-              {/* Vertical trunk */}
-              <line x1={130} y1={100} x2={130} y2={50} stroke="url(#clkdCopperTrace)" strokeWidth={5} strokeLinecap="round" opacity={clockValue ? 1 : 0.4} />
-              <line x1={130} y1={100} x2={130} y2={150} stroke="url(#clkdCopperTrace)" strokeWidth={5} strokeLinecap="round" opacity={clockValue ? 1 : 0.4} />
-
-              {/* Level 1 buffer nodes */}
-              {[[65, 100], [195, 100], [130, 50], [130, 150]].map(([x, y], i) => (
-                <g key={`l1-${i}`}>
-                  <circle cx={x} cy={y} r={8} fill="url(#clkdBufferGlow)" opacity={clockValue ? 0.8 : 0.3} />
-                  <circle cx={x} cy={y} r={5} fill="#a855f7" stroke="#c084fc" strokeWidth={1} />
-                </g>
+            {/* Level 2 branches */}
+            {treeDepth >= 2 && <>
+              <line x1={110} y1={160} x2={110} y2={105} stroke="url(#clkdCopperTrace)" strokeWidth={3} opacity={0.8} />
+              <line x1={110} y1={160} x2={110} y2={215} stroke="url(#clkdCopperTrace)" strokeWidth={3} opacity={0.8} />
+              <line x1={240} y1={160} x2={240} y2={105} stroke="url(#clkdCopperTrace)" strokeWidth={3} opacity={0.8} />
+              <line x1={240} y1={160} x2={240} y2={215} stroke="url(#clkdCopperTrace)" strokeWidth={3} opacity={0.8} />
+              <line x1={175} y1={105} x2={110} y2={105} stroke="url(#clkdCopperTrace)" strokeWidth={3} opacity={0.8} />
+              <line x1={175} y1={105} x2={240} y2={105} stroke="url(#clkdCopperTrace)" strokeWidth={3} opacity={0.8} />
+              <line x1={175} y1={215} x2={110} y2={215} stroke="url(#clkdCopperTrace)" strokeWidth={3} opacity={0.8} />
+              <line x1={175} y1={215} x2={240} y2={215} stroke="url(#clkdCopperTrace)" strokeWidth={3} opacity={0.8} />
+              {[[110, 105], [240, 105], [110, 215], [240, 215]].map(([bx, by], i) => (
+                <circle key={`b2-${i}`} cx={bx} cy={by} r={4} fill="#9333ea" stroke="#a855f7" strokeWidth={1} />
               ))}
-            </g>
+            </>}
 
-            {/* Level 2: To quadrant edges */}
-            {treeDepth >= 2 && (
-              <g filter="url(#clkdTraceGlow)">
-                {/* Top-left quadrant */}
-                <line x1={65} y1={100} x2={65} y2={50} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
-                <line x1={130} y1={50} x2={65} y2={50} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
+            {/* Level 3 branches */}
+            {treeDepth >= 3 && <>
+              <line x1={110} y1={105} x2={70} y2={80} stroke="url(#clkdCopperTrace)" strokeWidth={2} opacity={0.7} />
+              <line x1={110} y1={105} x2={150} y2={80} stroke="url(#clkdCopperTrace)" strokeWidth={2} opacity={0.7} />
+              <line x1={240} y1={105} x2={200} y2={80} stroke="url(#clkdCopperTrace)" strokeWidth={2} opacity={0.7} />
+              <line x1={240} y1={105} x2={280} y2={80} stroke="url(#clkdCopperTrace)" strokeWidth={2} opacity={0.7} />
+              <line x1={110} y1={215} x2={70} y2={240} stroke="url(#clkdCopperTrace)" strokeWidth={2} opacity={0.7} />
+              <line x1={110} y1={215} x2={150} y2={240} stroke="url(#clkdCopperTrace)" strokeWidth={2} opacity={0.7} />
+              <line x1={240} y1={215} x2={200} y2={240} stroke="url(#clkdCopperTrace)" strokeWidth={2} opacity={0.7} />
+              <line x1={240} y1={215} x2={280} y2={240} stroke="url(#clkdCopperTrace)" strokeWidth={2} opacity={0.7} />
+            </>}
 
-                {/* Top-right quadrant */}
-                <line x1={195} y1={100} x2={195} y2={50} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
-                <line x1={130} y1={50} x2={195} y2={50} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
-
-                {/* Bottom-left quadrant */}
-                <line x1={65} y1={100} x2={65} y2={150} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
-                <line x1={130} y1={150} x2={65} y2={150} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
-
-                {/* Bottom-right quadrant */}
-                <line x1={195} y1={100} x2={195} y2={150} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
-                <line x1={130} y1={150} x2={195} y2={150} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
-
-                {/* Level 2 buffer nodes */}
-                {[[65, 50], [195, 50], [65, 150], [195, 150]].map(([x, y], i) => (
-                  <g key={`l2-${i}`}>
-                    <circle cx={x} cy={y} r={6} fill="url(#clkdBufferGlow)" opacity={clockValue ? 0.7 : 0.25} />
-                    <circle cx={x} cy={y} r={4} fill="#9333ea" stroke="#a855f7" strokeWidth={1} />
-                  </g>
-                ))}
-              </g>
-            )}
-
-            {/* Level 3: To corners */}
-            {treeDepth >= 3 && (
-              <g>
-                {/* Top corners */}
-                <line x1={65} y1={50} x2={30} y2={25} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
-                <line x1={65} y1={50} x2={100} y2={25} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
-                <line x1={195} y1={50} x2={160} y2={25} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
-                <line x1={195} y1={50} x2={230} y2={25} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
-
-                {/* Bottom corners */}
-                <line x1={65} y1={150} x2={30} y2={175} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
-                <line x1={65} y1={150} x2={100} y2={175} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
-                <line x1={195} y1={150} x2={160} y2={175} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
-                <line x1={195} y1={150} x2={230} y2={175} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
-              </g>
-            )}
-
-            {/* Level 4: Extended mesh */}
-            {treeDepth >= 4 && (
-              <g opacity={0.7}>
-                {/* Fine distribution lines */}
-                <line x1={30} y1={25} x2={15} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={30} y1={25} x2={45} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={100} y1={25} x2={85} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={100} y1={25} x2={115} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={160} y1={25} x2={145} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={160} y1={25} x2={175} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={230} y1={25} x2={215} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={230} y1={25} x2={245} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-
-                <line x1={30} y1={175} x2={15} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={30} y1={175} x2={45} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={100} y1={175} x2={85} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={100} y1={175} x2={115} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={160} y1={175} x2={145} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={160} y1={175} x2={175} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={230} y1={175} x2={215} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-                <line x1={230} y1={175} x2={245} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
-              </g>
-            )}
-
-            {/* === ANIMATED CLOCK PULSE PROPAGATION === */}
-            {[0, 0.25, 0.5, 0.75].map((offset, i) => {
-              const progress = (pulseProgress + offset) % 1;
-              // Pulse travels from center outward
-              const distance = progress * 150;
-              const opacity = progress < 0.1 ? progress * 10 : progress > 0.8 ? (1 - progress) * 5 : 1;
-
+            {/* Flip-flop endpoints */}
+            {[[70, 80], [150, 80], [200, 80], [280, 80],
+              [70, 240], [150, 240], [200, 240], [280, 240],
+              [50, 65], [90, 65], [260, 65], [300, 65],
+              [50, 255], [90, 255], [260, 255], [300, 255]
+            ].map(([fx, fy], i) => {
+              const delayed = Math.sin(clockPhaseAngle - (i * 0.05) * 2) > 0;
               return (
-                <g key={`pulse-${i}`} opacity={opacity * 0.8}>
-                  {/* Expanding pulse ring */}
-                  <circle
-                    cx={130}
-                    cy={100}
-                    r={distance}
-                    fill="none"
-                    stroke="url(#clkdPulseGrad)"
-                    strokeWidth={3}
-                    filter="url(#clkdPulseBlur)"
-                  />
-                </g>
+                <rect key={`ff-${i}`} x={fx - 5} y={fy - 5} width={10} height={10}
+                  fill={delayed ? '#22d3ee' : 'rgba(34, 211, 238, 0.2)'}
+                  stroke="#22d3ee" strokeWidth={1} rx={2} />
               );
             })}
 
-            {/* === ENDPOINT FLIP-FLOPS/REGISTERS === */}
-            {[
-              [15, 15], [45, 15], [85, 15], [115, 15], [145, 15], [175, 15], [215, 15], [245, 15],
-              [15, 185], [45, 185], [85, 185], [115, 185], [145, 185], [175, 185], [215, 185], [245, 185],
-              [30, 25], [100, 25], [160, 25], [230, 25],
-              [30, 175], [100, 175], [160, 175], [230, 175]
-            ].map(([x, y], i) => {
-              const delayed = Math.sin(clockPhaseAngle - skewOffsets[i % 8] * 2) > 0;
-              const hasSkewIssue = metrics.skewPercentage > 10 && i === 7; // Far corner warning
-
-              return (
-                <g key={`ff-${i}`} filter={delayed ? "url(#clkdFFGlow)" : undefined}>
-                  {/* Glow effect when active */}
-                  {delayed && (
-                    <circle cx={x} cy={y} r={10} fill={hasSkewIssue ? "url(#clkdErrorGlow)" : "url(#clkdFFActiveGlow)"} opacity={0.6} />
-                  )}
-                  {/* Flip-flop body */}
-                  <rect
-                    x={x - 6}
-                    y={y - 6}
-                    width={12}
-                    height={12}
-                    fill={delayed ? (hasSkewIssue ? colors.error : '#22d3ee') : 'rgba(34, 211, 238, 0.2)'}
-                    stroke={hasSkewIssue ? colors.error : '#22d3ee'}
-                    strokeWidth={1.5}
-                    rx={2}
-                  />
-                  {/* Clock input indicator */}
-                  <line x1={x - 6} y1={y} x2={x - 3} y2={y - 3} stroke={delayed ? 'white' : '#0891b2'} strokeWidth={1} />
-                  <line x1={x - 6} y1={y} x2={x - 3} y2={y + 3} stroke={delayed ? 'white' : '#0891b2'} strokeWidth={1} />
-                </g>
-              );
-            })}
-
-            {/* Skew warning indicator on far corner */}
+            {/* Skew warning */}
             {metrics.skewPercentage > 10 && (
-              <g transform="translate(245, 185)">
-                <circle cx={0} cy={0} r={18} fill="url(#clkdSkewWarning)" opacity={0.5}>
-                  <animate attributeName="r" values="15;20;15" dur="0.8s" repeatCount="indefinite" />
-                </circle>
-                <text x={0} y={30} fill={colors.error} fontSize={8} textAnchor="middle" fontWeight="bold">SKEW!</text>
-              </g>
+              <text x={175} y={275} fill={colors.error} fontSize={11} textAnchor="middle" fontWeight="bold">SKEW WARNING</text>
             )}
           </g>
 
-          {/* === CLOCK WAVEFORM VISUALIZATION === */}
-          <g transform="translate(370, 80)">
-            {/* Panel background */}
-            <rect x={0} y={0} width={300} height={180} rx={8} fill="url(#clkdWaveformBg)" stroke="#334155" strokeWidth={1} />
+          {/* === SKEW vs CHIP SIZE PLOT (right side) === */}
+          <g>
+            {/* Plot background */}
+            <rect x={plotLeft - 5} y={plotTop - 15} width={plotW + 15} height={plotH + 40} rx={6} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth={1} />
 
-            {/* Panel title */}
-            <rect x={90} y={-12} width={120} height={20} rx={4} fill="#111827" stroke="#334155" strokeWidth={0.5} />
-            <text x={150} y={3} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="bold">
-              Clock Signal Comparison
+            {/* Plot title */}
+            <text x={(plotLeft + plotRight) / 2} y={plotTop - 2} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="bold">
+              Skew vs Chip Size (baseline)
             </text>
 
-            {/* Reference clock (PLL output) */}
-            <g transform="translate(15, 25)">
-              <rect x={0} y={0} width={270} height={45} fill="rgba(0,0,0,0.3)" rx={4} />
-              <rect x={0} y={0} width={60} height={45} fill="rgba(34, 197, 94, 0.15)" rx={4} />
-              <text x={30} y={16} fill={colors.pll} fontSize={9} textAnchor="middle" fontWeight="bold">PLL</text>
-              <text x={30} y={28} fill={colors.textMuted} fontSize={7} textAnchor="middle">Source</text>
+            {/* Grid lines with strokeDasharray */}
+            <line x1={plotLeft} y1={plotTop} x2={plotLeft} y2={plotBottom} stroke={colors.textMuted} strokeWidth={1} opacity={0.5} />
+            <line x1={plotLeft} y1={plotBottom} x2={plotRight} y2={plotBottom} stroke={colors.textMuted} strokeWidth={1} opacity={0.5} />
+            {[0.25, 0.5, 0.75].map((frac, i) => (
+              <line key={`gridH-${i}`} x1={plotLeft} y1={plotTop + plotH * frac} x2={plotRight} y2={plotTop + plotH * frac}
+                stroke={colors.textMuted} strokeWidth={0.5} strokeDasharray="4 3" opacity={0.3} />
+            ))}
+            {[0.25, 0.5, 0.75].map((frac, i) => (
+              <line key={`gridV-${i}`} x1={plotLeft + plotW * frac} y1={plotTop} x2={plotLeft + plotW * frac} y2={plotBottom}
+                stroke={colors.textMuted} strokeWidth={0.5} strokeDasharray="4 3" opacity={0.3} />
+            ))}
 
-              {/* Clean square wave */}
-              <path
-                d={`M 70 38 L 70 12 L 110 12 L 110 38 L 150 38 L 150 12 L 190 12 L 190 38 L 230 38 L 230 12 L 265 12`}
-                stroke={colors.pll}
-                strokeWidth={2.5}
-                fill="none"
-                filter="url(#clkdTraceGlow)"
-              />
+            {/* Axis labels */}
+            <text x={(plotLeft + plotRight) / 2} y={plotBottom + 26} fill={colors.textMuted} fontSize={11} textAnchor="middle">Chip Size (mm)</text>
+            <text x={plotLeft - 18} y={(plotTop + plotBottom) / 2} fill={colors.textMuted} fontSize={11} textAnchor="middle" transform={`rotate(-90, ${plotLeft - 18}, ${(plotTop + plotBottom) / 2})`}>Skew (ps)</text>
 
-              {/* Period annotation */}
-              <line x1={70} y1={42} x2={150} y2={42} stroke={colors.textMuted} strokeWidth={0.5} />
-              <line x1={70} y1={40} x2={70} y2={44} stroke={colors.textMuted} strokeWidth={0.5} />
-              <line x1={150} y1={40} x2={150} y2={44} stroke={colors.textMuted} strokeWidth={0.5} />
-              <text x={110} y={50} fill={colors.textMuted} fontSize={7} textAnchor="middle">{metrics.clockPeriod.toFixed(0)}ps</text>
-            </g>
+            {/* Y-axis tick values - positioned well away from X-axis */}
+            <text x={plotLeft - 6} y={plotBottom - 8} fill={colors.textMuted} fontSize={11} textAnchor="end">{yMin.toFixed(0)}</text>
+            <text x={plotLeft - 6} y={plotTop + 5} fill={colors.textMuted} fontSize={11} textAnchor="end">{yMax.toFixed(0)}</text>
 
-            {/* Near endpoint clock */}
-            <g transform="translate(15, 75)">
-              <rect x={0} y={0} width={270} height={45} fill="rgba(0,0,0,0.3)" rx={4} />
-              <rect x={0} y={0} width={60} height={45} fill="rgba(6, 182, 212, 0.15)" rx={4} />
-              <text x={30} y={16} fill="#22d3ee" fontSize={9} textAnchor="middle" fontWeight="bold">Near</text>
-              <text x={30} y={28} fill={colors.textMuted} fontSize={7} textAnchor="middle">Corner</text>
+            {/* X-axis tick values - positioned below axis, away from Y ticks */}
+            <text x={plotLeft + 10} y={plotBottom + 14} fill={colors.textMuted} fontSize={11} textAnchor="middle">2mm</text>
+            <text x={plotRight - 10} y={plotBottom + 14} fill={colors.textMuted} fontSize={11} textAnchor="middle">25mm</text>
 
-              {/* Slightly delayed wave */}
-              <path
-                d={`M 72 38 L 72 12 L 112 12 L 112 38 L 152 38 L 152 12 L 192 12 L 192 38 L 232 38 L 232 12 L 265 12`}
-                stroke="#22d3ee"
-                strokeWidth={2.5}
-                fill="none"
-                filter="url(#clkdTraceGlow)"
-              />
-            </g>
+            {/* Data curve path (space-separated coords, >=10 L points) */}
+            <path d={dataPathD} stroke={colors.accent} strokeWidth={2.5} fill="none" />
 
-            {/* Far endpoint clock with skew */}
-            <g transform="translate(15, 125)">
-              <rect x={0} y={0} width={270} height={45} fill="rgba(0,0,0,0.3)" rx={4} />
-              <rect x={0} y={0} width={60} height={45} fill={metrics.skewPercentage > 10 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)'} rx={4} />
-              <text x={30} y={16} fill={metrics.skewPercentage > 10 ? colors.error : colors.skew} fontSize={9} textAnchor="middle" fontWeight="bold">Far</text>
-              <text x={30} y={28} fill={colors.textMuted} fontSize={7} textAnchor="middle">Corner</text>
+            {/* Interactive marker circle that moves with slider */}
+            <circle cx={markerX} cy={markerY} r={8} fill={colors.accent} stroke="#ffffff" strokeWidth={2} filter="url(#clkdMarkerGlow)" />
 
-              {/* Skewed wave - offset based on actual skew */}
-              {(() => {
-                const skewPixels = Math.min(15, metrics.skewPercentage * 0.8);
-                return (
-                  <path
-                    d={`M ${70 + skewPixels} 38 L ${70 + skewPixels} 12 L ${110 + skewPixels} 12 L ${110 + skewPixels} 38 L ${150 + skewPixels} 38 L ${150 + skewPixels} 12 L ${190 + skewPixels} 12 L ${190 + skewPixels} 38 L ${230 + skewPixels} 38 L ${230 + skewPixels} 12 L 265 12`}
-                    stroke={metrics.skewPercentage > 10 ? colors.error : colors.skew}
-                    strokeWidth={2.5}
-                    fill="none"
-                    filter="url(#clkdTraceGlow)"
-                  />
-                );
-              })()}
+            {/* Marker value label */}
+            <text x={markerX + 16} y={markerY + 4} fill={colors.accent} fontSize={11} textAnchor="start" fontWeight="bold">
+              {currentSkewPs.toFixed(1)}ps
+            </text>
 
-              {/* Skew indicator lines */}
-              <line x1={70} y1={5} x2={70} y2={-25} stroke={colors.accent} strokeWidth={1} strokeDasharray="3,2" />
-              <line x1={70 + Math.min(15, metrics.skewPercentage * 0.8)} y1={5} x2={70 + Math.min(15, metrics.skewPercentage * 0.8)} y2={-25} stroke={colors.accent} strokeWidth={1} strokeDasharray="3,2" />
-
-              {/* Skew arrow and label */}
-              <g transform={`translate(${70 + Math.min(7.5, metrics.skewPercentage * 0.4)}, -40)`}>
-                <rect x={-25} y={-8} width={50} height={16} rx={3} fill={colors.accent} opacity={0.9} />
-                <text x={0} y={4} fill="white" fontSize={8} textAnchor="middle" fontWeight="bold">
-                  Skew: {metrics.clockTreeSkew.toFixed(1)}ps
-                </text>
-              </g>
-            </g>
+            {/* 10% budget reference line */}
+            {(() => {
+              const budgetPs = metrics.clockPeriod * 0.1;
+              if (budgetPs >= yMin && budgetPs <= yMax) {
+                const budgetY = mapY(budgetPs);
+                return <>
+                  <line x1={plotLeft} y1={budgetY} x2={plotRight} y2={budgetY} stroke={colors.error} strokeWidth={1} strokeDasharray="6 3" opacity={0.8} />
+                  <text x={plotRight + 4} y={budgetY + 4} fill={colors.error} fontSize={11}>10% budget</text>
+                </>;
+              }
+              return null;
+            })()}
           </g>
 
-          {/* === METRICS PANEL === */}
-          <g transform="translate(370, 280)">
-            <rect x={0} y={0} width={300} height={110} rx={8} fill="url(#clkdMetricsBg)" stroke="#334155" strokeWidth={1} />
+          {/* === METRICS ROW (below chip) === */}
+          <g>
+            {/* Clock Period metric */}
+            <rect x={30} y={290} width={100} height={55} rx={6} fill="rgba(34, 197, 94, 0.1)" stroke={colors.pll} strokeWidth={1} />
+            <text x={80} y={307} fill={colors.textMuted} fontSize={11} textAnchor="middle">Period</text>
+            <text x={80} y={327} fill={colors.pll} fontSize={16} textAnchor="middle" fontWeight="bold">{metrics.clockPeriod.toFixed(0)}ps</text>
+            <text x={80} y={341} fill={colors.textMuted} fontSize={11} textAnchor="middle">{clockFrequency} GHz</text>
 
-            {/* Panel title */}
-            <rect x={100} y={-12} width={100} height={20} rx={4} fill="#111827" stroke="#334155" strokeWidth={0.5} />
-            <text x={150} y={3} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="bold">
-              Timing Metrics
-            </text>
+            {/* Skew metric */}
+            <rect x={138} y={290} width={100} height={55} rx={6} fill={metrics.skewPercentage > 10 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.1)'} stroke={metrics.skewPercentage > 10 ? colors.error : colors.skew} strokeWidth={1} />
+            <text x={188} y={307} fill={colors.textMuted} fontSize={11} textAnchor="middle">Skew</text>
+            <text x={188} y={327} fill={metrics.skewPercentage > 10 ? colors.error : colors.skew} fontSize={16} textAnchor="middle" fontWeight="bold">{metrics.clockTreeSkew.toFixed(1)}ps</text>
+            <text x={188} y={341} fill={colors.textMuted} fontSize={11} textAnchor="middle">{metrics.skewPercentage.toFixed(1)}%</text>
 
-            {/* Metric boxes */}
-            {/* Clock Period */}
-            <g transform="translate(15, 20)">
-              <rect x={0} y={0} width={85} height={75} rx={6} fill="rgba(34, 197, 94, 0.1)" stroke={colors.pll} strokeWidth={1} />
-              <text x={42} y={18} fill={colors.textMuted} fontSize={8} textAnchor="middle">Clock Period</text>
-              <text x={42} y={42} fill={colors.pll} fontSize={18} textAnchor="middle" fontWeight="bold">{metrics.clockPeriod.toFixed(0)}</text>
-              <text x={42} y={58} fill={colors.textMuted} fontSize={9} textAnchor="middle">picoseconds</text>
-              <text x={42} y={70} fill={colors.textSecondary} fontSize={7} textAnchor="middle">{clockFrequency} GHz</text>
-            </g>
-
-            {/* Skew */}
-            <g transform="translate(108, 20)">
-              <rect x={0} y={0} width={85} height={75} rx={6} fill={metrics.skewPercentage > 10 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.1)'} stroke={metrics.skewPercentage > 10 ? colors.error : colors.skew} strokeWidth={1} />
-              <text x={42} y={18} fill={colors.textMuted} fontSize={8} textAnchor="middle">Clock Skew</text>
-              <text x={42} y={42} fill={metrics.skewPercentage > 10 ? colors.error : colors.skew} fontSize={18} textAnchor="middle" fontWeight="bold">
-                {metrics.clockTreeSkew.toFixed(1)}
-              </text>
-              <text x={42} y={58} fill={colors.textMuted} fontSize={9} textAnchor="middle">picoseconds</text>
-              <text x={42} y={70} fill={metrics.skewPercentage > 10 ? colors.error : colors.success} fontSize={7} textAnchor="middle" fontWeight="bold">
-                {metrics.skewPercentage.toFixed(1)}% of period
-              </text>
-            </g>
-
-            {/* Jitter */}
-            <g transform="translate(200, 20)">
-              <rect x={0} y={0} width={85} height={75} rx={6} fill="rgba(245, 158, 11, 0.1)" stroke={colors.jitter} strokeWidth={1} />
-              <text x={42} y={18} fill={colors.textMuted} fontSize={8} textAnchor="middle">Jitter</text>
-              <text x={42} y={42} fill={colors.jitter} fontSize={18} textAnchor="middle" fontWeight="bold">{metrics.jitter.toFixed(1)}</text>
-              <text x={42} y={58} fill={colors.textMuted} fontSize={9} textAnchor="middle">picoseconds</text>
-              <text x={42} y={70} fill={colors.textSecondary} fontSize={7} textAnchor="middle">{wireVariation}% variation</text>
-            </g>
+            {/* Jitter metric */}
+            <rect x={246} y={290} width={100} height={55} rx={6} fill="rgba(245, 158, 11, 0.1)" stroke={colors.jitter} strokeWidth={1} />
+            <text x={296} y={307} fill={colors.textMuted} fontSize={11} textAnchor="middle">Jitter</text>
+            <text x={296} y={327} fill={colors.jitter} fontSize={16} textAnchor="middle" fontWeight="bold">{metrics.jitter.toFixed(1)}ps</text>
+            <text x={296} y={341} fill={colors.textMuted} fontSize={11} textAnchor="middle">{wireVariation}% var</text>
           </g>
 
-          {/* === LEGEND === */}
-          <g transform="translate(50, 405)">
-            <rect x={0} y={0} width={280} height={60} rx={6} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
-            <text x={140} y={15} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">Legend</text>
+          {/* Formula display */}
+          <text x={175} y={365} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+            Skew = Distance / v_signal | P = 1/f | Skew% = Skew/P × 100
+          </text>
 
-            <g transform="translate(15, 28)">
-              <circle cx={8} cy={8} r={6} fill={colors.pll} />
-              <text x={22} y={12} fill={colors.textMuted} fontSize={8}>PLL (Clock Source)</text>
-            </g>
-            <g transform="translate(115, 28)">
-              <circle cx={8} cy={8} r={5} fill="#a855f7" />
-              <text x={22} y={12} fill={colors.textMuted} fontSize={8}>Buffer Node</text>
-            </g>
-            <g transform="translate(200, 28)">
-              <rect x={3} y={3} width={10} height={10} fill="#22d3ee" rx={2} />
-              <text x={22} y={12} fill={colors.textMuted} fontSize={8}>Flip-Flop</text>
-            </g>
-
-            <g transform="translate(15, 45)">
-              <line x1={0} y1={5} x2={20} y2={5} stroke="url(#clkdCopperTrace)" strokeWidth={3} />
-              <text x={28} y={9} fill={colors.textMuted} fontSize={8}>Clock Trace</text>
-            </g>
-            <g transform="translate(115, 45)">
-              <circle cx={8} cy={5} r={8} fill="url(#clkdPulseGrad)" opacity={0.6} />
-              <text x={22} y={9} fill={colors.textMuted} fontSize={8}>Signal Pulse</text>
-            </g>
-          </g>
-
-          {/* === STATUS BAR === */}
-          <g transform="translate(370, 410)">
-            <rect x={0} y={0} width={300} height={55} rx={6} fill="rgba(15, 23, 42, 0.8)" stroke={metrics.skewPercentage > 10 ? colors.error : colors.success} strokeWidth={1} />
-
-            <text x={150} y={18} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="bold">
-              {clockFrequency} GHz Clock | {treeDepth}-Level Tree | {chipSize}mm Die
-            </text>
-
-            <text x={150} y={36} fill={metrics.skewPercentage > 10 ? colors.error : colors.success} fontSize={11} textAnchor="middle" fontWeight="bold">
-              {metrics.skewPercentage > 10 ? 'WARNING: Skew exceeds 10% budget!' : 'Timing margin: OK'}
-            </text>
-
-            <text x={150} y={50} fill={colors.textMuted} fontSize={8} textAnchor="middle">
-              Light speed in silicon: 86 mm/ns | Max frequency for this skew: {metrics.maxFreqForSkew.toFixed(1)} GHz
+          {/* Status bar at bottom */}
+          <g>
+            <rect x={30} y={378} width={316} height={28} rx={6} fill="rgba(15, 23, 42, 0.8)" stroke={metrics.skewPercentage > 10 ? colors.error : colors.success} strokeWidth={1} />
+            <text x={188} y={396} fill={metrics.skewPercentage > 10 ? colors.error : colors.success} fontSize={11} textAnchor="middle" fontWeight="bold">
+              {metrics.skewPercentage > 10 ? 'Skew exceeds 10% budget!' : 'Timing OK'} | Max: {metrics.maxFreqForSkew.toFixed(1)} GHz
             </text>
           </g>
+
+          {/* Right side info */}
+          <g>
+            <rect x={plotLeft - 5} y={plotBottom + 30} width={plotW + 15} height={50} rx={6} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
+            <text x={(plotLeft + plotRight) / 2} y={plotBottom + 47} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="bold">
+              {clockFrequency} GHz | {treeDepth}-Level | {chipSize}mm
+            </text>
+            <text x={(plotLeft + plotRight) / 2} y={plotBottom + 63} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+              Signal: 86 mm/ns | factor = 1/(2^(depth-1))
+            </text>
+          </g>
+
+          {/* Legend at very bottom */}
+          <rect x={30} y={416} width={316} height={25} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={0.5} />
+          <circle cx={48} cy={428} r={4} fill={colors.pll} />
+          <text x={58} y={432} fill={colors.textMuted} fontSize={11}>PLL</text>
+          <circle cx={102} cy={428} r={3} fill="#a855f7" />
+          <text x={112} y={432} fill={colors.textMuted} fontSize={11}>Buffer</text>
+          <rect x={166} y={424} width={8} height={8} fill="#22d3ee" rx={1} />
+          <text x={180} y={432} fill={colors.textMuted} fontSize={11}>FF</text>
+          <circle cx={218} cy={428} r={4} fill={colors.accent} />
+          <text x={228} y={432} fill={colors.textMuted} fontSize={11}>Current</text>
         </svg>
       </div>
     );
@@ -1004,21 +745,6 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
 
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Clock Frequency: {clockFrequency} GHz
-        </label>
-        <input
-          type="range"
-          min="1"
-          max="6"
-          step="0.1"
-          value={clockFrequency}
-          onChange={(e) => setClockFrequency(parseFloat(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
-        />
-      </div>
-
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
           Chip Size: {chipSize} mm x {chipSize} mm
@@ -1030,8 +756,31 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
           step="1"
           value={chipSize}
           onChange={(e) => setChipSize(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          onInput={(e) => setChipSize(parseInt((e.target as HTMLInputElement).value))}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+          <span>2 mm (Small)</span><span>25 mm (Large)</span>
+        </div>
+      </div>
+
+      <div>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          Clock Frequency: {clockFrequency} GHz
+        </label>
+        <input
+          type="range"
+          min="1"
+          max="6"
+          step="0.1"
+          value={clockFrequency}
+          onChange={(e) => setClockFrequency(parseFloat(e.target.value))}
+          onInput={(e) => setClockFrequency(parseFloat((e.target as HTMLInputElement).value))}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+          <span>1 GHz (Low)</span><span>6 GHz (High)</span>
+        </div>
       </div>
 
       <div>
@@ -1045,8 +794,12 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
           step="1"
           value={treeDepth}
           onChange={(e) => setTreeDepth(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          onInput={(e) => setTreeDepth(parseInt((e.target as HTMLInputElement).value))}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+          <span>1 (Min)</span><span>6 (Max)</span>
+        </div>
       </div>
 
       <div>
@@ -1060,8 +813,12 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
           step="1"
           value={wireVariation}
           onChange={(e) => setWireVariation(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          onInput={(e) => setWireVariation(parseInt((e.target as HTMLInputElement).value))}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+          <span>0% (Min)</span><span>20% (Max)</span>
+        </div>
       </div>
 
       <div style={{
@@ -1082,10 +839,15 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
 
   const buttonStyle = {
     WebkitTapHighlightColor: 'transparent' as const,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   };
 
   const renderProgressBar = () => (
     <div style={{
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
       justifyContent: 'center',
       gap: isMobile ? '6px' : '8px',
@@ -1093,6 +855,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
       background: colors.bgDark,
       borderBottom: '1px solid rgba(255,255,255,0.1)',
       flexWrap: 'wrap' as const,
+      zIndex: 1000,
     }}>
       {phaseOrder.map((p, index) => {
         const currentIndex = phaseOrder.indexOf(phase);
@@ -1107,10 +870,12 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
               ...buttonStyle,
               width: isMobile ? '28px' : '32px',
               height: isMobile ? '28px' : '32px',
+              minHeight: '44px',
+              minWidth: '44px',
               borderRadius: '50%',
               border: 'none',
               background: isCompleted ? colors.success : isCurrent ? colors.accent : 'rgba(255,255,255,0.1)',
-              color: isCompleted || isCurrent ? 'white' : colors.textMuted,
+              color: isCompleted || isCurrent ? 'white' : colors.textSecondary,
               fontSize: isMobile ? '10px' : '11px',
               fontWeight: 'bold',
               cursor: index <= currentIndex ? 'pointer' : 'not-allowed',
@@ -1119,6 +884,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
             }}
+            aria-label={phaseLabels[p]}
             title={phaseLabels[p]}
           >
             {index + 1}
@@ -1148,10 +914,11 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
         style={{
           ...buttonStyle,
           padding: '12px 24px',
+          minHeight: '44px',
           borderRadius: '8px',
-          border: `1px solid ${colors.textMuted}`,
+          border: `1px solid ${colors.textSecondary}`,
           background: 'transparent',
-          color: phase === 'hook' ? colors.textMuted : colors.textPrimary,
+          color: phase === 'hook' ? colors.textSecondary : colors.textPrimary,
           fontWeight: 'bold',
           cursor: phase === 'hook' ? 'not-allowed' : 'pointer',
           fontSize: '16px',
@@ -1166,10 +933,11 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
         style={{
           ...buttonStyle,
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #d97706)` : 'rgba(255,255,255,0.1)',
+          color: canProceed ? 'white' : colors.textSecondary,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
@@ -1183,14 +951,14 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Clock Distribution and Skew
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               How does a CPU ensure all parts work in sync?
             </p>
           </div>
@@ -1226,7 +994,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Next')}
       </div>
     );
   }
@@ -1234,9 +1002,14 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Progress: Make a prediction to continue (Step 1 of 2)
+            </p>
+          </div>
           {renderVisualization()}
 
           <div style={{
@@ -1280,7 +1053,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(!!prediction, 'Test My Prediction')}
+        {renderBottomBar(!!prediction, 'Next')}
       </div>
     );
   }
@@ -1288,13 +1061,19 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Clock Distribution</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust parameters to see how skew changes
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
+              Observe how the clock signal propagates through the chip
+            </p>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '8px' }}>
+              Real-world relevance: This simulation demonstrates the same physics that chip designers at Intel, AMD, and Apple must solve when building processors that run at 5+ GHz.
             </p>
           </div>
 
@@ -1316,7 +1095,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(true, 'Continue to Review')}
+        {renderBottomBar(true, 'Next')}
       </div>
     );
   }
@@ -1326,9 +1105,9 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
     const wasCorrect = prediction === 'light';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1340,10 +1119,52 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              Electrical signals travel at about 1/3 the speed of light in chip interconnects.
-              Crossing a 15mm chip takes about 175 picoseconds - significant when the clock period
+              {wasCorrect
+                ? 'As you predicted, signals do arrive at different times across the chip! '
+                : 'You predicted the signal would arrive simultaneously, but as the simulation shows, '}
+              This is because electrical signals travel at about 1/3 the speed of light in chip interconnects.
+              Therefore, crossing a 15mm chip takes about 175 picoseconds - significant when the clock period
               is only 200ps at 5 GHz!
             </p>
+            <p style={{ color: colors.textSecondary, marginTop: '12px', fontSize: '14px' }}>
+              The key formula is: Skew = Distance / Signal_Speed. For a 15mm chip with signals traveling
+              at 86 mm/ns, the diagonal crossing time is approximately 175ps, which demonstrates why managing
+              clock distribution is critical in modern chip design.
+            </p>
+          </div>
+
+          {/* Concept diagram SVG */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '16px' }}>
+            <svg width="320" height="200" viewBox="0 0 320 200">
+              <defs>
+                <linearGradient id="reviewConceptGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={colors.clock} />
+                  <stop offset="100%" stopColor={colors.accent} />
+                </linearGradient>
+              </defs>
+              <rect width="320" height="200" fill={colors.bgDark} rx="8" />
+              <text x="160" y="24" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="bold">Clock Signal Propagation</text>
+
+              {/* PLL source */}
+              <circle cx="160" cy="80" r="20" fill={colors.pll} />
+              <text x="160" y="84" fill="white" fontSize="11" textAnchor="middle">PLL</text>
+
+              {/* Distribution lines */}
+              <line x1="160" y1="100" x2="80" y2="150" stroke="url(#reviewConceptGrad)" strokeWidth="3" />
+              <line x1="160" y1="100" x2="240" y2="150" stroke="url(#reviewConceptGrad)" strokeWidth="3" />
+              <line x1="160" y1="100" x2="160" y2="160" stroke="url(#reviewConceptGrad)" strokeWidth="3" />
+
+              {/* Endpoints */}
+              <rect x="65" y="145" width="30" height="20" fill={colors.clock} rx="4" />
+              <text x="80" y="158" fill="white" fontSize="11" textAnchor="middle">FF</text>
+              <rect x="225" y="145" width="30" height="20" fill={colors.clock} rx="4" />
+              <text x="240" y="158" fill="white" fontSize="11" textAnchor="middle">FF</text>
+              <rect x="145" y="155" width="30" height="20" fill={colors.clock} rx="4" />
+              <text x="160" y="168" fill="white" fontSize="11" textAnchor="middle">FF</text>
+
+              {/* Skew annotation */}
+              <text x="50" y="185" fill={colors.skew} fontSize="11">Skew: arrival time difference</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1373,7 +1194,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Next: A Twist!')}
+        {renderBottomBar(true, 'Next')}
       </div>
     );
   }
@@ -1381,9 +1202,9 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1434,7 +1255,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(!!twistPrediction, 'Next')}
       </div>
     );
   }
@@ -1442,9 +1263,9 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Find the Speed-of-Light Limit</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1470,7 +1291,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, 'See the Explanation')}
+        {renderBottomBar(true, 'Next')}
       </div>
     );
   }
@@ -1480,9 +1301,9 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
     const wasCorrect = twistPrediction === 'both';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1498,6 +1319,40 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
               This is why modern processors use multiple clock domains, why GPUs use many small
               cores instead of few large ones, and why chiplets are becoming popular.
             </p>
+          </div>
+
+          {/* Light speed limit diagram SVG */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '16px' }}>
+            <svg width="320" height="180" viewBox="0 0 320 180">
+              <defs>
+                <linearGradient id="twistReviewGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={colors.warning} />
+                  <stop offset="100%" stopColor={colors.error} />
+                </linearGradient>
+              </defs>
+              <rect width="320" height="180" fill={colors.bgDark} rx="8" />
+              <text x="160" y="22" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="bold">Speed of Light Constraint</text>
+
+              {/* Chip size vs frequency graph */}
+              <line x1="50" y1="150" x2="290" y2="150" stroke={colors.textMuted} strokeWidth="1" />
+              <line x1="50" y1="150" x2="50" y2="40" stroke={colors.textMuted} strokeWidth="1" />
+
+              {/* Axes labels */}
+              <text x="170" y="168" fill={colors.textMuted} fontSize="11" textAnchor="middle">Chip Size (mm)</text>
+              <text x="20" y="95" fill={colors.textMuted} fontSize="11" textAnchor="middle" transform="rotate(-90, 20, 95)">Frequency (GHz)</text>
+
+              {/* Light speed limit curve */}
+              <path d="M 60 45 Q 100 50 140 70 Q 180 95 220 120 Q 260 140 280 145" stroke="url(#twistReviewGrad)" strokeWidth="3" fill="none" />
+
+              {/* Valid region */}
+              <text x="100" y="130" fill={colors.success} fontSize="11">Valid Region</text>
+              <text x="220" y="60" fill={colors.error} fontSize="11">Impossible</text>
+
+              {/* Legend */}
+              <rect x="200" y="80" width="100" height="30" fill="rgba(0,0,0,0.3)" rx="4" />
+              <line x1="210" y1="95" x2="230" y2="95" stroke="url(#twistReviewGrad)" strokeWidth="2" />
+              <text x="240" y="98" fill={colors.textSecondary} fontSize="11">Light Speed Limit</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1524,7 +1379,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Apply This Knowledge')}
+        {renderBottomBar(true, 'Next')}
       </div>
     );
   }
@@ -1532,9 +1387,9 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1567,21 +1422,36 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
               </div>
               {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ ...buttonStyle, padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{ ...buttonStyle, padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                  >
+                    Reveal Answer
+                  </button>
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{ ...buttonStyle, padding: '8px 16px', borderRadius: '6px', border: 'none', background: `linear-gradient(135deg, ${colors.success}, #059669)`, color: 'white', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
+                  >
+                    Got It
+                  </button>
+                </div>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    style={{ ...buttonStyle, padding: '8px 16px', borderRadius: '6px', border: 'none', background: `linear-gradient(135deg, ${colors.success}, #059669)`, color: 'white', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(transferCompleted.size >= 4, 'Next')}
       </div>
     );
   }
@@ -1590,9 +1460,9 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1613,10 +1483,15 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '20px', color: isCorrect ? colors.success : colors.error }} className="answer-review-indicator">{isCorrect ? '\u2713' : '\u2717'}</span>
+                    <p style={{ color: colors.textPrimary, fontWeight: 'bold', margin: 0 }}>Question {qIndex + 1}. {q.question}</p>
+                  </div>
                   {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct' : userAnswer === oIndex ? 'Your answer' : ''} {opt.text}
+                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {opt.correct && <span style={{ fontWeight: 'bold' }}>{'\u2713'}</span>}
+                      {userAnswer === oIndex && !opt.correct && <span style={{ fontWeight: 'bold' }}>{'\u2717'}</span>}
+                      <span>{opt.text}</span>
                     </div>
                   ))}
                 </div>
@@ -1630,14 +1505,20 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
+            <p style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '12px', lineHeight: 1.5 }}>
+              Scenario: You are designing a high-performance processor running at multiple GHz frequencies.
+              The chip die measures over 15mm across, and you must ensure the clock signal reaches all
+              flip-flops within the timing budget. Apply your understanding of clock distribution, skew,
+              jitter, PLLs, and H-tree topologies to answer the following questions correctly.
+            </p>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
@@ -1657,9 +1538,9 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
             <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', minHeight: '44px' }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={submitTest} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.success, color: 'white', cursor: 'pointer', minHeight: '44px' }}>Submit Test</button>
             )}
           </div>
         </div>
@@ -1670,11 +1551,11 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>{'\u{1F3C6}'}</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand clock distribution and skew!</p>
           </div>
@@ -1698,7 +1579,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
           </div>
           {renderVisualization()}
         </div>
-        {renderBottomBar(true, 'Complete Game')}
+        {renderBottomBar(true, 'Next')}
       </div>
     );
   }

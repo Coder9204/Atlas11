@@ -393,8 +393,8 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#cbd5e1',
     border: '#2a2a3a',
     laminar: '#22D3EE',
     turbulent: '#F97316',
@@ -461,7 +461,39 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1000,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>🌊</span>
+        <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Laminar vs Turbulent Flow</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+          {phaseLabels[phase]}
+        </span>
+        <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+          ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+        </span>
+      </div>
+    </nav>
+  );
 
   // Progress bar component
   const renderProgressBar = () => (
@@ -503,9 +535,22 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            minHeight: '44px',
+            minWidth: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           aria-label={phaseLabels[p]}
-        />
+        >
+          <span style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            display: 'block',
+          }} />
+        </button>
       ))}
     </div>
   );
@@ -525,8 +570,10 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         {hookStep === 0 && (
@@ -626,14 +673,17 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
               </div>
             </div>
 
-            {faucetFlow > 30 && (
-              <button
-                onClick={() => { playSound('click'); setHookStep(1); }}
-                style={primaryButtonStyle}
-              >
-                What Causes This?
-              </button>
-            )}
+            <button
+              onClick={() => { playSound('click'); setHookStep(1); }}
+              style={{
+                ...primaryButtonStyle,
+                opacity: faucetFlow > 30 ? 1 : 0.5,
+                cursor: faucetFlow > 30 ? 'pointer' : 'not-allowed',
+              }}
+              disabled={faucetFlow <= 30}
+            >
+              Start Exploring
+            </button>
           </>
         )}
 
@@ -695,7 +745,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Explore the Physics
+              Continue to Predict
             </button>
           </>
         )}
@@ -718,10 +768,25 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress indicator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '16px',
+          }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Step 1 of 1
+            </span>
+          </div>
+
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -781,6 +846,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -829,10 +895,12 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Reynolds Number Lab
           </h2>
@@ -1032,12 +1100,51 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   border: `1px solid ${showDyeInjection ? colors.accent : colors.border}`,
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  fontSize: '13px'
+                  fontSize: '13px',
+                  minHeight: '44px',
                 }}
               >
                 {showDyeInjection ? 'Dye Injection: ON' : 'Dye Injection: OFF'}
               </button>
             </div>
+          </div>
+
+          {/* Legend panel */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '16px',
+            justifyContent: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: colors.laminar }} />
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Laminar Flow (Re &lt; 2300)</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: colors.warning }} />
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Transition (2300-4000)</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: colors.turbulent }} />
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Turbulent Flow (Re &gt; 4000)</span>
+            </div>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.success }}>Real-World Relevance:</strong> Engineers use Reynolds number calculations daily to design everything from aircraft wings to blood vessel stents to oil pipelines. Understanding flow regimes is critical for optimizing efficiency and safety.
+            </p>
           </div>
 
           {/* Discovery prompt */}
@@ -1072,15 +1179,18 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const userPredictedCorrect = prediction === 'a';
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Flow Regimes
           </h2>
@@ -1107,14 +1217,16 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
           </div>
 
           <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
+            background: userPredictedCorrect ? `${colors.success}11` : `${colors.warning}11`,
+            border: `1px solid ${userPredictedCorrect ? colors.success : colors.warning}33`,
             borderRadius: '12px',
             padding: '20px',
             marginBottom: '24px',
           }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Key Insight: Your Prediction Was About Viscosity!
+            <h3 style={{ ...typo.h3, color: userPredictedCorrect ? colors.success : colors.warning, marginBottom: '12px' }}>
+              {userPredictedCorrect
+                ? "Your prediction was correct! Water becomes turbulent more easily."
+                : "Revisiting your prediction: The key insight is about viscosity!"}
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
               Water (low viscosity) becomes turbulent more easily than honey (high viscosity) at the same velocity.
@@ -1164,7 +1276,9 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1229,6 +1343,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1274,7 +1389,9 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
@@ -1305,7 +1422,8 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                     borderRadius: '8px',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    fontWeight: objectShape === shape ? '600' : '400'
+                    fontWeight: objectShape === shape ? '600' : '400',
+                    minHeight: '44px',
                   }}
                 >
                   {shape === 'sphere' ? 'Sphere (Golf Ball)' : shape === 'streamlined' ? 'Streamlined' : 'Flat Plate'}
@@ -1449,7 +1567,9 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1524,19 +1644,27 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0', overflowY: 'auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} explored)
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1563,6 +1691,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1641,6 +1770,29 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                 </div>
               ))}
             </div>
+
+            {/* Got It button for within-phase navigation */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Move to next app or stay on current
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginTop: '16px',
+                background: completedApps[selectedApp] ? colors.bgSecondary : `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+                color: completedApps[selectedApp] ? colors.textSecondary : 'white',
+              }}
+            >
+              {completedApps[selectedApp] ? 'Reviewed' : 'Got It'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1667,7 +1819,9 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
@@ -1723,7 +1877,9 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1789,6 +1945,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1826,6 +1983,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Previous
@@ -1844,6 +2002,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next
@@ -1869,6 +2028,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1893,8 +2053,10 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -1950,6 +2112,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
               background: 'transparent',
               color: colors.textSecondary,
               cursor: 'pointer',
+              minHeight: '44px',
             }}
           >
             Play Again
@@ -1960,6 +2123,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
               ...primaryButtonStyle,
               textDecoration: 'none',
               display: 'inline-block',
+              minHeight: '44px',
             }}
           >
             Return to Dashboard

@@ -377,12 +377,12 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast for accessibility
+    textMuted: '#cbd5e1', // High contrast for accessibility
     border: '#2a2a3a',
     magnet: '#dc2626',
     magnetBlue: '#3b82f6',
-    aluminum: '#94a3b8',
+    aluminum: '#e2e8f0', // High contrast
     copper: '#f97316',
     plastic: '#84cc16',
     wood: '#a16207',
@@ -458,7 +458,34 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 20px',
+      zIndex: 1000,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>&#129522;</span>
+        <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Eddy Current Pendulum</span>
+      </div>
+      <div className="text-muted text-secondary" style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
+    </nav>
+  );
 
   // Progress bar component
   const renderProgressBar = () => (
@@ -500,22 +527,36 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            minHeight: '44px',
+            minWidth: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           aria-label={phaseLabels[p]}
-        />
+        >
+          <span style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            display: 'block',
+          }} />
+        </button>
       ))}
     </div>
   );
 
   // Pendulum Visualization SVG
-  const PendulumVisualization = ({ showLabels = true }: { showLabels?: boolean }) => {
+  const PendulumVisualization = ({ showLabels = true, isStatic = false }: { showLabels?: boolean; isStatic?: boolean }) => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 300 : 360;
     const pivotX = width / 2;
     const pivotY = 50;
     const pendulumLength = isMobile ? 160 : 200;
 
-    const angleRad = (pendulumAngle * Math.PI) / 180;
+    const displayAngle = isStatic ? 45 : pendulumAngle;
+    const angleRad = (displayAngle * Math.PI) / 180;
     const bobX = pivotX + Math.sin(angleRad) * pendulumLength;
     const bobY = pivotY + Math.cos(angleRad) * pendulumLength;
 
@@ -524,7 +565,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     const sheetHeight = isMobile ? 60 : 75;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="magnetNorth" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#fca5a5" />
@@ -660,6 +701,19 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
             </text>
           </>
         )}
+
+        {/* Legend */}
+        <g transform={`translate(10, ${height - 80})`}>
+          <text x="0" y="0" fill={colors.textSecondary} fontSize="10" fontWeight="600">Legend:</text>
+          <rect x="0" y="8" width="12" height="12" fill="url(#magnetNorth)" rx="2" />
+          <text x="16" y="18" fill={colors.textSecondary} fontSize="9">N Pole (Red)</text>
+          <rect x="0" y="24" width="12" height="12" fill="url(#magnetSouth)" rx="2" />
+          <text x="16" y="34" fill={colors.textSecondary} fontSize="9">S Pole (Blue)</text>
+          <rect x="0" y="40" width="12" height="12" fill={getMaterialColor(materialType)} rx="2" />
+          <text x="16" y="50" fill={colors.textSecondary} fontSize="9">Pendulum Bob</text>
+          <circle cx="6" cy="62" r="5" fill="none" stroke={colors.accent} strokeWidth="1.5" strokeDasharray="3,2" />
+          <text x="16" y="66" fill={colors.textSecondary} fontSize="9">Eddy Currents</text>
+        </g>
       </svg>
     );
   };
@@ -679,8 +733,11 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -688,7 +745,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
           marginBottom: '24px',
           animation: 'pulse 2s infinite',
         }}>
-          🧲🔄
+          &#129522;&#128260;
         </div>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
@@ -702,7 +759,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "What if you could stop a speeding train with magnets, even though the wheels aren't magnetic? Discover the <span style={{ color: colors.accent }}>mysterious force</span> that brakes without touching."
+          &quot;What if you could stop a speeding train with magnets, even though the wheels aren&apos;t magnetic? Discover the <span style={{ color: colors.accent }}>mysterious force</span> that brakes without touching.&quot;
         </p>
 
         <div style={{
@@ -714,7 +771,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Swing an aluminum plate through a magnetic field. Even though aluminum isn't magnetic at all - a magnet won't stick to it - something strange happens. The plate slows down dramatically, as if moving through invisible honey."
+            &quot;Swing an aluminum plate through a magnetic field. Even though aluminum isn&apos;t magnetic at all - a magnet won&apos;t stick to it - something strange happens. The plate slows down dramatically, as if moving through invisible honey.&quot;
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
             - Electromagnetic Phenomenon
@@ -746,10 +803,13 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -758,7 +818,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
+              Make Your Prediction - Step 1 of 3
             </p>
           </div>
 
@@ -766,6 +826,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
             An aluminum pendulum swings through a gap between two strong magnets. What will happen?
           </h2>
 
+          {/* Static SVG Visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -773,27 +834,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🧲</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Strong Magnets</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>Aluminum</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>NOT Magnetic</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>?</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>What happens?</p>
-              </div>
-            </div>
+            <PendulumVisualization showLabels={false} isStatic={true} />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -809,6 +850,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -854,16 +896,45 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Eddy Current Pendulum
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
             Compare different materials swinging through the magnetic field
           </p>
+
+          {/* Observation Guidance */}
+          <div style={{
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}40`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Watch how different materials behave when swinging through the magnetic field. Notice how conductors (aluminum, copper) slow down while insulators (plastic, wood) swing freely.
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.success }}>Why This Matters:</strong> This principle is used in real-world applications like high-speed train brakes, metal detectors at airports, and induction cooktops. Engineers design these systems using eddy current technology because the braking force is proportional to velocity - the faster you go, the stronger the brake!
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -891,7 +962,8 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
                       border: `2px solid ${materialType === mat ? getMaterialColor(mat) : colors.border}`,
                       borderRadius: '8px',
                       cursor: 'pointer',
-                      textAlign: 'center'
+                      textAlign: 'center',
+                      minHeight: '44px',
                     }}
                   >
                     <div style={{
@@ -1021,13 +1093,29 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Lenz's Law: Nature's Magnetic Brake
           </h2>
+
+          {/* Reference to prediction */}
+          <div style={{
+            background: `${colors.accent}11`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}33`,
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Your Prediction:</strong> You predicted what would happen when an aluminum pendulum swings through a magnetic field. As you observed in the experiment, the result shows exactly how eddy currents work!
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1074,7 +1162,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
           >
             Try the Twist
           </button>
@@ -1098,10 +1186,13 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1171,6 +1262,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1197,7 +1289,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
           {twistPrediction && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
+              style={{ ...primaryButtonStyle, minHeight: '44px' }}
             >
               Test the Slits
             </button>
@@ -1216,16 +1308,32 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Solid vs Slotted Sheet
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
             Toggle slits on the metal sheet and compare the braking effect
           </p>
+
+          {/* Observation Guidance */}
+          <div style={{
+            background: `${colors.warning}15`,
+            border: `1px solid ${colors.warning}40`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.warning }}>Observe:</strong> Compare how the pendulum behaves with and without slits. Notice how slits dramatically reduce the braking effect by interrupting eddy current paths.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1389,10 +1497,13 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Slits Weaken the Brake
           </h2>
@@ -1467,10 +1578,13 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1658,17 +1772,36 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
             </div>
           </div>
 
+          {/* Got It button - always visible */}
+          <div style={{ marginBottom: '16px' }}>
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
+            >
+              Got It
+            </button>
+          </div>
+
+          {/* Take the Knowledge Test button - appears when all apps are completed */}
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
+              style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
             >
               Take the Knowledge Test
             </button>
           )}
 
           {!allAppsCompleted && (
-            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+            <p className="text-muted" style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
               Explore all 4 applications to continue ({completedApps.filter(c => c).length}/4 completed)
             </p>
           )}
@@ -1688,10 +1821,13 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1744,10 +1880,13 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1967,8 +2106,11 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{

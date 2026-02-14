@@ -138,8 +138,14 @@ const realWorldApps = [
 ];
 
 const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhase = 'hook', onPhaseComplete }) => {
-  // Gold standard: String phase system
-  const [phase, setPhase] = useState<Phase>((gamePhase as Phase) || 'hook');
+  // Gold standard: String phase system with invalid phase handling
+  const getValidPhase = (p: string | undefined): Phase => {
+    if (p && phaseOrder.includes(p as Phase)) {
+      return p as Phase;
+    }
+    return 'hook';
+  };
+  const [phase, setPhase] = useState<Phase>(getValidPhase(gamePhase));
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -149,6 +155,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppIndex, setActiveAppIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   // Simulation state
   const [springConstant, setSpringConstant] = useState(100); // N/m
@@ -438,10 +445,10 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
       connection: "A drawn bow is essentially a bent spring. The archer does work against the bow's restoring force, storing energy as PE = ½kx². Upon release, nearly all this energy transfers to the arrow's kinetic energy.",
       howItWorks: "When you draw a bow, you're deforming the limbs (like compressing a spring). The draw weight increases with distance due to the limb's spring constant. Modern compound bows use cams to optimize the force curve for maximum energy storage with comfortable draw.",
       stats: [
-        "Olympic bows store ~40-50 Joules when drawn",
-        "Compound bows can store 80+ Joules efficiently",
-        "Arrows can reach 90+ m/s (200+ mph)",
-        "Energy transfer efficiency: 70-85%"
+        "50 Joules stored in Olympic bows when drawn",
+        "80+ Joules in compound bows efficiently",
+        "90 m/s arrow velocity (200 mph)",
+        "85% energy transfer efficiency"
       ],
       examples: [
         "Olympic recurve bows with precise limb design",
@@ -462,10 +469,10 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
       connection: "When a car hits a bump, the spring compresses, storing energy as PE = ½kx². Without this energy storage, the bump force would transfer directly to passengers. The spring acts as a temporary energy buffer.",
       howItWorks: "Springs compress under load, storing bump energy. Shock absorbers (dampers) then convert this stored energy to heat, preventing continuous bouncing. The spring-damper combination provides both absorption and control.",
       stats: [
-        "Typical car spring: k = 20,000-50,000 N/m",
-        "Each corner absorbs 10-100 J per bump",
-        "F1 cars: Springs cycle 100+ times per second",
-        "Active systems adjust in milliseconds"
+        "50000 N/m typical car spring constant",
+        "100 J absorbed per bump at each corner",
+        "100× per second F1 spring cycles",
+        "5 ms active system adjustment time"
       ],
       examples: [
         "MacPherson strut systems in passenger cars",
@@ -486,10 +493,10 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
       connection: "A tennis ball compresses on impact, storing PE = ½kx². The racket strings also store energy. Maximum energy return occurs when both release their stored energy in phase, maximizing ball speed.",
       howItWorks: "Modern sports equipment uses materials with high energy return ratios. Running shoe foams, racket strings, and golf club faces are all designed to store impact energy and return it with minimal loss.",
       stats: [
-        "Tennis strings store 10-20 J per stroke",
-        "Running shoes return 60-90% of impact energy",
-        "Golf drivers: Ball compression stores ~30 J",
-        "Trampoline beds return 85%+ of jump energy"
+        "20 J stored in tennis strings per stroke",
+        "90% energy return in running shoes",
+        "30 J stored in golf ball compression",
+        "85% trampoline energy return"
       ],
       examples: [
         "Nike ZoomX foam with 85%+ energy return",
@@ -510,10 +517,10 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
       connection: "A wound mainspring stores energy as PE = ½kθ² (rotational analog). This energy can be released slowly over time to power mechanisms, from watches to electric grid stabilizers.",
       howItWorks: "Mechanical energy storage uses elastic deformation to store energy without chemical reactions or electrical losses. Energy is stored by doing work to compress/twist the elastic element, then recovered when it returns to equilibrium.",
       stats: [
-        "Watch mainsprings store ~1-2 Joules",
-        "Industrial springs can store megajoules",
-        "Flywheel-spring hybrids store 100+ kWh",
-        "Spring motors can power devices for hours"
+        "2 J stored in watch mainsprings",
+        "1000000 J in industrial springs (megajoules)",
+        "100 kWh flywheel-spring hybrid storage",
+        "48 hours of spring motor power"
       ],
       examples: [
         "Mechanical watch mainsprings (40+ hour power reserve)",
@@ -564,7 +571,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
 
     return (
     <div className="relative" style={{ width, height: height + 60 }}>
-      <svg width={width} height={height} className="overflow-visible">
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
         <defs>
           {/* Premium metallic spring gradient with 6 color stops */}
           <linearGradient id="epeSpringMetal" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -818,6 +825,15 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
             )}
           </g>
         )}
+
+        {/* SVG Text Labels for educational clarity */}
+        <text x={pivotX} y={pivotY + springLength + 25} textAnchor="middle" fill="#78350f" fontSize="12" fontWeight="bold">1 kg</text>
+        <text x={pivotX + 55} y={pivotY + springLength / 2} fill="#e2e8f0" fontSize="11">Spring</text>
+        <text x={pivotX} y={pivotY + springLength + 55} textAnchor="middle" fill="#e2e8f0" fontSize="11">Mass Block</text>
+        <text x={width - 15} y="25" textAnchor="end" fill="#e2e8f0" fontSize="11">k = {springConstant} N/m</text>
+        {showEnergyBars && (
+          <text x="60" y={height - 65} textAnchor="middle" fill="#e2e8f0" fontSize="11">Elastic PE</text>
+        )}
       </svg>
 
       {/* External text labels using typo system */}
@@ -900,15 +916,15 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
     'review': 'Review',
     'twist_predict': 'Twist',
     'twist_play': 'Twist Lab',
-    'twist_review': 'Discovery',
-    'transfer': 'Apply',
+    'twist_review': 'Insight',
+    'transfer': 'Transfer',
     'test': 'Test',
     'mastery': 'Mastery'
   };
 
   // Phase renders
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6 text-center">
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6 text-center" style={{ lineHeight: '1.6' }}>
       {/* Premium Badge */}
       <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6">
         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -980,12 +996,67 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
     </div>
   );
 
+  // Static spring visualization for predict phase (no animation)
+  const renderStaticSpring = (width: number, height: number) => {
+    const pivotX = width / 2;
+    const pivotY = 40;
+    const baseLength = 100;
+    const staticDisp = 0.15;
+    const compressionPixels = staticDisp * 400;
+    const springLength = baseLength + compressionPixels;
+    const coils = 12;
+    const coilHeight = springLength / coils;
+    const amplitude = 25;
+
+    let springPath = `M ${pivotX} ${pivotY}`;
+    for (let i = 0; i < coils; i++) {
+      const y1 = pivotY + i * coilHeight + coilHeight / 4;
+      const y2 = pivotY + i * coilHeight + coilHeight / 2;
+      const y3 = pivotY + i * coilHeight + coilHeight * 3 / 4;
+      const y4 = pivotY + (i + 1) * coilHeight;
+      springPath += ` Q ${pivotX + amplitude} ${y1} ${pivotX} ${y2}`;
+      springPath += ` Q ${pivotX - amplitude} ${y3} ${pivotX} ${y4}`;
+    }
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+        <defs>
+          <linearGradient id="staticSpringMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#059669" />
+            <stop offset="50%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#059669" />
+          </linearGradient>
+          <linearGradient id="staticMassBlock" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#b45309" />
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width={width} height={height} fill="#0f172a" rx="8" />
+        <rect x={pivotX - 40} y="15" width="80" height="25" fill="#4b5563" rx="4" />
+        <path d={springPath} fill="none" stroke="url(#staticSpringMetal)" strokeWidth="5" strokeLinecap="round" />
+        <rect x={pivotX - 30} y={pivotY + springLength} width="60" height="40" rx="6" fill="url(#staticMassBlock)" />
+        <text x={pivotX} y={pivotY + springLength + 25} textAnchor="middle" fill="#78350f" fontSize="12" fontWeight="bold">1 kg</text>
+        <text x={pivotX + 55} y={pivotY + springLength / 2} fill="#e2e8f0" fontSize="11">Spring</text>
+        <text x={pivotX + 60} y={pivotY + springLength / 2 + 14} fill="#e2e8f0" fontSize="11">x = 15 cm</text>
+        <text x={width - 20} y="30" textAnchor="end" fill="#e2e8f0" fontSize="11">k = 100 N/m</text>
+      </svg>
+    );
+  };
+
   const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>Make Your Prediction</h2>
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6" style={{ lineHeight: '1.6' }}>
+      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-4`} style={{ color: '#f1f5f9' }}>Make Your Prediction</h2>
+
+      {/* Progress indicator */}
+      <div style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '16px' }}>Step 1 of 2: Initial Prediction</div>
+
+      {/* Static diagram */}
+      <div className="mb-4">
+        {renderStaticSpring(isMobile ? 280 : 320, isMobile ? 200 : 220)}
+      </div>
 
       <div className="bg-slate-800/50 rounded-2xl p-4 md:p-6 max-w-2xl mb-6">
-        <p className="text-base md:text-lg text-slate-300 mb-4">
+        <p className="text-base md:text-lg mb-4" style={{ color: '#e2e8f0' }}>
           You compress a spring by 10 cm and it stores 5 Joules of energy.
         </p>
         <p className="text-base md:text-lg text-emerald-400 font-medium">
@@ -1004,19 +1075,30 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
             key={option.id}
             onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'C'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
+            style={{
+              padding: '16px',
+              borderRadius: '12px',
+              textAlign: 'left',
+              transition: 'all 0.3s',
+              minHeight: '44px',
+              background: showPredictionFeedback && selectedPrediction === option.id
+                ? option.id === 'C' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'
                 : showPredictionFeedback && option.id === 'C'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-            style={{ zIndex: 10 }}
+                ? 'rgba(16, 185, 129, 0.4)'
+                : selectedPrediction === option.id
+                ? 'rgba(16, 185, 129, 0.3)'
+                : 'rgba(51, 65, 85, 0.5)',
+              border: showPredictionFeedback && (selectedPrediction === option.id || option.id === 'C')
+                ? option.id === 'C' ? '2px solid #34d399' : selectedPrediction === option.id ? '2px solid #f87171' : '2px solid transparent'
+                : selectedPrediction === option.id
+                ? '2px solid #10b981'
+                : '2px solid transparent',
+              zIndex: 10,
+              cursor: showPredictionFeedback ? 'default' : 'pointer',
+            }}
           >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
+            <span style={{ fontWeight: 'bold', color: '#ffffff' }}>{option.id}.</span>
+            <span style={{ color: '#e2e8f0', marginLeft: '8px' }}>{option.text}</span>
           </button>
         ))}
       </div>
@@ -1024,17 +1106,26 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
       {showPredictionFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Energy goes up with the SQUARE of displacement!
+            Energy goes up with the SQUARE of displacement!
           </p>
-          <p className="text-slate-400 text-sm mt-2">
-            Double the compression = 2² = 4× the energy. This is because PE = ½kx²
+          <p style={{ color: '#cbd5e1', fontSize: '14px', marginTop: '8px' }}>
+            Double the compression = 2 squared = 4x the energy. This is because PE = 1/2 k x squared
           </p>
           <button
             onClick={() => goToPhase('play')}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
-            style={{ zIndex: 10 }}
+            style={{
+              marginTop: '16px',
+              padding: '12px 24px',
+              background: 'linear-gradient(to right, #059669, #0d9488)',
+              color: '#ffffff',
+              fontWeight: '600',
+              borderRadius: '12px',
+              minHeight: '44px',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
-            Explore the Physics →
+            Explore the Physics
           </button>
         </div>
       )}
@@ -1042,8 +1133,38 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
   );
 
   const renderPlay = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-4`}>Elastic Energy Laboratory</h2>
+    <div className="flex flex-col items-center p-4 md:p-6" style={{ lineHeight: '1.6' }}>
+      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-4`} style={{ color: '#f1f5f9' }}>Elastic Energy Laboratory</h2>
+
+      {/* Observation guidance */}
+      <div style={{
+        background: 'rgba(16, 185, 129, 0.1)',
+        border: '1px solid rgba(16, 185, 129, 0.3)',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        marginBottom: '16px',
+        maxWidth: '600px',
+        width: '100%'
+      }}>
+        <p style={{ color: '#6ee7b7', fontSize: '14px', fontWeight: '500' }}>
+          Observe: Adjust the spring constant and compression to see how energy changes. Watch how doubling compression quadruples the stored energy!
+        </p>
+      </div>
+
+      {/* Real-world relevance */}
+      <div style={{
+        background: 'rgba(59, 130, 246, 0.1)',
+        border: '1px solid rgba(59, 130, 246, 0.3)',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        marginBottom: '16px',
+        maxWidth: '600px',
+        width: '100%'
+      }}>
+        <p style={{ color: '#93c5fd', fontSize: '14px', fontWeight: '500' }}>
+          Real-world application: This same principle powers everything from archery bows to car suspensions to mechanical watches. Understanding elastic potential energy helps engineers design better springs for countless applications.
+        </p>
+      </div>
 
       <div className={`grid ${isMobile ? 'grid-cols-1' : 'md:grid-cols-2'} gap-4 max-w-4xl w-full`}>
         {/* Spring visualization */}
@@ -1055,7 +1176,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
         <div className="space-y-4">
           {/* Spring constant slider */}
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: '#e2e8f0' }}>
               Spring Constant (k): {springConstant} N/m
             </label>
             <input
@@ -1068,9 +1189,10 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
                 setSpringConstant(parseInt(e.target.value));
                 onGameEvent?.({ type: 'parameter_changed', data: { springConstant: parseInt(e.target.value) } });
               }}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+              style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: '#10b981' }}
             />
-            <div className="flex justify-between text-xs text-slate-500 mt-1">
+            <div className="flex justify-between text-xs mt-1" style={{ color: '#cbd5e1' }}>
               <span>Soft (50)</span>
               <span>Stiff (300)</span>
             </div>
@@ -1078,7 +1200,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
 
           {/* Displacement slider */}
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: '#e2e8f0' }}>
               Compression: {(displacement * 100).toFixed(0)} cm
             </label>
             <input
@@ -1091,9 +1213,10 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
                 setDisplacement(parseInt(e.target.value) / 100);
                 onGameEvent?.({ type: 'spring_compressed', data: { displacement: parseInt(e.target.value) / 100 } });
               }}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+              style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: '#10b981' }}
             />
-            <div className="flex justify-between text-xs text-slate-500 mt-1">
+            <div className="flex justify-between text-xs mt-1" style={{ color: '#cbd5e1' }}>
               <span>0 cm</span>
               <span>30 cm</span>
             </div>
@@ -1102,9 +1225,9 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
           {/* Energy calculation */}
           <div className="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 rounded-xl p-4">
             <h3 className="text-lg font-semibold text-emerald-400 mb-2">Energy Calculation</h3>
-            <div className="font-mono text-slate-300 space-y-1">
-              <p>PE = ½ × k × x²</p>
-              <p>PE = ½ × {springConstant} × {displacement.toFixed(2)}²</p>
+            <div className="font-mono space-y-1" style={{ color: '#e2e8f0' }}>
+              <p>PE = 1/2 x k x x squared</p>
+              <p>PE = 1/2 x {springConstant} x {displacement.toFixed(2)} squared</p>
               <p className="text-emerald-400 text-xl font-bold">PE = {elasticPE.toFixed(3)} J</p>
             </div>
           </div>
@@ -1114,21 +1237,34 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
             <button
               onClick={() => startRelease()}
               disabled={displacement < 0.03}
-              className={`flex-1 py-3 rounded-xl font-semibold transition-colors ${
-                displacement >= 0.03 ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-slate-600 text-slate-400'
-              }`}
-              style={{ zIndex: 10 }}
+              style={{
+                flex: 1,
+                padding: '12px',
+                borderRadius: '12px',
+                fontWeight: '600',
+                minHeight: '44px',
+                background: displacement >= 0.03 ? '#d97706' : '#475569',
+                color: displacement >= 0.03 ? '#ffffff' : '#e2e8f0',
+                border: 'none',
+                cursor: displacement >= 0.03 ? 'pointer' : 'default',
+              }}
             >
-              🚀 Release Spring
+              Release Spring
             </button>
             <button
               onClick={() => setShowEnergyBars(!showEnergyBars)}
-              className={`px-4 py-3 rounded-xl font-semibold transition-colors ${
-                showEnergyBars ? 'bg-emerald-600 text-white' : 'bg-slate-600 text-slate-300'
-              }`}
-              style={{ zIndex: 10 }}
+              style={{
+                padding: '12px 16px',
+                borderRadius: '12px',
+                fontWeight: '600',
+                minHeight: '44px',
+                background: showEnergyBars ? '#059669' : '#475569',
+                color: '#ffffff',
+                border: 'none',
+                cursor: 'pointer',
+              }}
             >
-              ⚡
+              Energy
             </button>
           </div>
         </div>
@@ -1137,24 +1273,51 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
       {/* Key insight */}
       <div className="bg-gradient-to-r from-emerald-900/40 to-teal-900/40 rounded-xl p-4 mt-6 max-w-2xl">
         <h3 className="text-lg font-semibold text-emerald-400 mb-2">Key Discovery</h3>
-        <p className="text-slate-300 text-sm">
-          <strong>PE = ½kx²</strong> — Energy grows with displacement SQUARED! Double the compression = 4× the energy. This is why springs are such effective energy storage devices.
+        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+          <strong>PE = 1/2 k x squared</strong> - Energy grows with displacement SQUARED! Double the compression = 4x the energy. This is why springs are such effective energy storage devices.
         </p>
       </div>
 
       <button
         onClick={() => goToPhase('review')}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
-        style={{ zIndex: 10 }}
+        style={{
+          marginTop: '24px',
+          padding: '12px 24px',
+          background: 'linear-gradient(to right, #059669, #0d9488)',
+          color: '#ffffff',
+          fontWeight: '600',
+          borderRadius: '12px',
+          minHeight: '44px',
+          border: 'none',
+          cursor: 'pointer',
+        }}
       >
-        Review the Concepts →
+        Review the Concepts
       </button>
     </div>
   );
 
   const renderReview = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
+    <div className="flex flex-col items-center p-4 md:p-6" style={{ lineHeight: '1.6' }}>
       <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>Elastic Potential Energy Explained</h2>
+
+      {/* Reference to user's prediction - always show to connect learning */}
+      <div style={{
+        background: selectedPrediction === 'C' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+        border: selectedPrediction === 'C' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(245, 158, 11, 0.3)',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        marginBottom: '16px',
+        maxWidth: '600px',
+        width: '100%',
+        textAlign: 'center',
+      }}>
+        <p style={{ color: selectedPrediction === 'C' ? '#6ee7b7' : '#fcd34d', fontSize: '14px', fontWeight: '500' }}>
+          {selectedPrediction === 'C'
+            ? 'As you predicted, doubling compression quadruples the stored energy due to the x² relationship.'
+            : 'As you observed in the simulation, doubling compression quadruples energy - this is the key insight from PE = ½kx².'}
+        </p>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-4 max-w-4xl">
         <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-5">
@@ -1209,8 +1372,39 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
   );
 
   const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6">
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6" style={{ lineHeight: '1.6' }}>
       <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-purple-400 mb-6`}>The Twist Challenge</h2>
+
+      {/* Static SVG visualization for twist concept */}
+      <div className="mb-4">
+        <svg width={isMobile ? 280 : 320} height={isMobile ? 160 : 180} viewBox={`0 0 ${isMobile ? 280 : 320} ${isMobile ? 160 : 180}`} style={{ display: 'block' }}>
+          <defs>
+            <linearGradient id="twistSpringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#d946ef" />
+              <stop offset="100%" stopColor="#a855f7" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="100%" height="100%" fill="#0f172a" rx="8" />
+          {/* Title at top */}
+          <text x="160" y="18" textAnchor="middle" fill="#c4b5fd" fontSize="12" fontWeight="bold">Spring Compression Comparison</text>
+          {/* Wall */}
+          <rect x="20" y="40" width="15" height="100" fill="#4b5563" rx="2" />
+          {/* Spring 1 (1mm compression) - wider Y oscillation for visibility */}
+          <path d="M 35 70 Q 55 25 75 70 Q 95 115 115 70 Q 135 25 155 70" fill="none" stroke="url(#twistSpringGrad)" strokeWidth="4" strokeLinecap="round" />
+          <rect x="155" y="55" width="30" height="30" rx="4" fill="#fbbf24" />
+          <text x="170" y="75" textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">1kg</text>
+          {/* Arrow and label for 1mm */}
+          <line x1="155" y1="100" x2="35" y2="100" stroke="#22c55e" strokeWidth="1" strokeDasharray="3" />
+          <text x="95" y="120" textAnchor="middle" fill="#22c55e" fontSize="11">x = 1mm → 50J</text>
+          {/* Question mark for 2mm */}
+          <text x="250" y="75" textAnchor="middle" fill="#c084fc" fontSize="24" fontWeight="bold">?</text>
+          <text x="250" y="95" textAnchor="middle" fill="#e2e8f0" fontSize="11">x = 2mm → ??J</text>
+          {/* Bottom annotation */}
+          <line x1="20" y1="155" x2="300" y2="155" stroke="#334155" strokeWidth="1" />
+          <text x="160" y="170" textAnchor="middle" fill="#94a3b8" fontSize="10">How does doubling compression affect stored energy?</text>
+        </svg>
+      </div>
 
       <div className="bg-slate-800/50 rounded-2xl p-4 md:p-6 max-w-2xl mb-6">
         <p className="text-base md:text-lg text-slate-300 mb-4">
@@ -1232,19 +1426,26 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
             key={option.id}
             onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'B'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
+            style={{
+              padding: '16px',
+              borderRadius: '12px',
+              textAlign: 'left',
+              transition: 'all 0.3s',
+              minHeight: '44px',
+              zIndex: 10,
+              background: showTwistFeedback && twistPrediction === option.id
+                ? option.id === 'B' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'
                 : showTwistFeedback && option.id === 'B'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-            style={{ zIndex: 10 }}
+                ? 'rgba(16, 185, 129, 0.4)'
+                : 'rgba(51, 65, 85, 0.5)',
+              border: showTwistFeedback && (twistPrediction === option.id || option.id === 'B')
+                ? option.id === 'B' ? '2px solid #34d399' : twistPrediction === option.id ? '2px solid #f87171' : '2px solid transparent'
+                : '2px solid transparent',
+              cursor: showTwistFeedback ? 'default' : 'pointer',
+            }}
           >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
+            <span style={{ fontWeight: 'bold', color: '#ffffff' }}>{option.id}.</span>
+            <span style={{ color: '#e2e8f0', marginLeft: '8px' }}>{option.text}</span>
           </button>
         ))}
       </div>
@@ -1259,10 +1460,20 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
           </p>
           <button
             onClick={() => goToPhase('twist_play')}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-            style={{ zIndex: 10 }}
+            style={{
+              marginTop: '16px',
+              padding: '12px 24px',
+              background: 'linear-gradient(to right, #9333ea, #db2777)',
+              color: '#ffffff',
+              fontWeight: '600',
+              borderRadius: '12px',
+              minHeight: '44px',
+              border: 'none',
+              cursor: 'pointer',
+              zIndex: 10,
+            }}
           >
-            Explore This Effect →
+            Explore This Effect
           </button>
         </div>
       )}
@@ -1270,8 +1481,23 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
   );
 
   const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
+    <div className="flex flex-col items-center p-4 md:p-6" style={{ lineHeight: '1.6' }}>
       <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-purple-400 mb-4`}>Work-Energy Deep Dive</h2>
+
+      {/* Observation guidance */}
+      <div style={{
+        background: 'rgba(139, 92, 246, 0.1)',
+        border: '1px solid rgba(139, 92, 246, 0.3)',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        marginBottom: '16px',
+        maxWidth: '600px',
+        width: '100%'
+      }}>
+        <p style={{ color: '#c4b5fd', fontSize: '14px', fontWeight: '500' }}>
+          Observe: Study the force-displacement graph. Notice how the area under the line (work done) forms a triangle, leading to the quadratic relationship in the energy formula.
+        </p>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl mb-6">
         <div className="bg-slate-800/50 rounded-2xl p-4">
@@ -1282,14 +1508,14 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
             <line x1="30" y1="120" x2="180" y2="120" stroke="#64748b" strokeWidth="2" />
             <line x1="30" y1="120" x2="30" y2="20" stroke="#64748b" strokeWidth="2" />
             {/* Labels */}
-            <text x="105" y="140" fill="#94a3b8" fontSize="10" textAnchor="middle">Displacement (x)</text>
-            <text x="15" y="70" fill="#94a3b8" fontSize="10" transform="rotate(-90, 15, 70)">Force (F)</text>
+            <text x="105" y="140" fill="#e2e8f0" fontSize="11" textAnchor="middle">Displacement (x)</text>
+            <text x="15" y="70" fill="#e2e8f0" fontSize="11" transform="rotate(-90, 15, 70)">Force (F)</text>
             {/* F = kx line */}
             <line x1="30" y1="120" x2="170" y2="30" stroke="#22c55e" strokeWidth="3" />
             <text x="130" y="50" fill="#22c55e" fontSize="11">F = kx</text>
             {/* Shaded area (work) */}
             <polygon points="30,120 170,120 170,30" fill="#22c55e" opacity="0.2" />
-            <text x="100" y="100" fill="#22c55e" fontSize="10" fontWeight="bold">Work = Area</text>
+            <text x="100" y="100" fill="#22c55e" fontSize="11" fontWeight="bold">Work = Area</text>
           </svg>
         </div>
 
@@ -1329,7 +1555,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
   );
 
   const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
+    <div className="flex flex-col items-center p-4 md:p-6" style={{ lineHeight: '1.6' }}>
       <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-purple-400 mb-6`}>Key Discovery</h2>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl mb-6">
@@ -1361,8 +1587,13 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
   );
 
   const renderTransfer = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>Real-World Applications</h2>
+    <div className="flex flex-col items-center p-4 md:p-6" style={{ lineHeight: '1.6' }}>
+      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-4`} style={{ color: '#f1f5f9' }}>Real-World Applications</h2>
+
+      {/* Progress indicator */}
+      <div style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '16px' }}>
+        App {activeAppIndex + 1} of {transferApps.length} | {completedApps.size}/{transferApps.length} completed
+      </div>
 
       {/* App tabs */}
       <div className="flex flex-wrap gap-2 mb-6 justify-center">
@@ -1370,14 +1601,20 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
           <button
             key={index}
             onClick={() => setActiveAppIndex(index)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppIndex === index
-                ? `bg-gradient-to-r ${app.color} text-white`
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontWeight: '500',
+              minHeight: '44px',
+              background: activeAppIndex === index
+                ? 'linear-gradient(to right, #059669, #0d9488)'
                 : completedApps.has(index)
-                ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-            style={{ zIndex: 10 }}
+                ? 'rgba(16, 185, 129, 0.3)'
+                : '#334155',
+              color: activeAppIndex === index ? '#ffffff' : completedApps.has(index) ? '#34d399' : '#e2e8f0',
+              border: completedApps.has(index) && activeAppIndex !== index ? '1px solid #10b981' : 'none',
+              cursor: 'pointer',
+            }}
           >
             {app.icon} {app.short}
           </button>
@@ -1389,40 +1626,40 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
         <div className="flex items-center gap-3 mb-4">
           <span className="text-4xl">{transferApps[activeAppIndex].icon}</span>
           <div>
-            <h3 className="text-xl font-bold text-white">{transferApps[activeAppIndex].title}</h3>
-            <p className="text-sm text-slate-400">{transferApps[activeAppIndex].tagline}</p>
+            <h3 className="text-xl font-bold" style={{ color: '#f1f5f9' }}>{transferApps[activeAppIndex].title}</h3>
+            <p className="text-sm" style={{ color: '#cbd5e1' }}>{transferApps[activeAppIndex].tagline}</p>
           </div>
         </div>
 
-        <p className="text-slate-300 mb-4">{transferApps[activeAppIndex].description}</p>
+        <p style={{ color: '#e2e8f0', marginBottom: '16px' }}>{transferApps[activeAppIndex].description}</p>
 
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div className="bg-slate-900/50 rounded-xl p-3">
             <h4 className="text-sm font-semibold text-emerald-400 mb-2">Physics Connection</h4>
-            <p className="text-slate-400 text-sm">{transferApps[activeAppIndex].connection}</p>
+            <p style={{ color: '#cbd5e1', fontSize: '14px' }}>{transferApps[activeAppIndex].connection}</p>
           </div>
 
           <div className="bg-slate-900/50 rounded-xl p-3">
             <h4 className="text-sm font-semibold text-amber-400 mb-2">How It Works</h4>
-            <p className="text-slate-400 text-sm">{transferApps[activeAppIndex].howItWorks}</p>
+            <p style={{ color: '#cbd5e1', fontSize: '14px' }}>{transferApps[activeAppIndex].howItWorks}</p>
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div className="bg-slate-900/50 rounded-xl p-3">
             <h4 className="text-sm font-semibold text-cyan-400 mb-2">Key Stats</h4>
-            <ul className="text-slate-400 text-sm space-y-1">
+            <ul style={{ color: '#cbd5e1', fontSize: '14px' }} className="space-y-1">
               {transferApps[activeAppIndex].stats.map((stat, i) => (
-                <li key={i}>• {stat}</li>
+                <li key={i}>- {stat}</li>
               ))}
             </ul>
           </div>
 
           <div className="bg-slate-900/50 rounded-xl p-3">
             <h4 className="text-sm font-semibold text-purple-400 mb-2">Examples</h4>
-            <ul className="text-slate-400 text-sm space-y-1">
+            <ul style={{ color: '#cbd5e1', fontSize: '14px' }} className="space-y-1">
               {transferApps[activeAppIndex].examples.map((ex, i) => (
-                <li key={i}>• {ex}</li>
+                <li key={i}>- {ex}</li>
               ))}
             </ul>
           </div>
@@ -1432,7 +1669,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
           <h4 className="text-sm font-semibold text-pink-400 mb-2">Industry Leaders</h4>
           <div className="flex flex-wrap gap-2">
             {transferApps[activeAppIndex].companies.map((company, i) => (
-              <span key={i} className="px-3 py-1 bg-slate-800 rounded-full text-slate-300 text-sm">
+              <span key={i} className="px-3 py-1 bg-slate-800 rounded-full text-sm" style={{ color: '#e2e8f0' }}>
                 {company}
               </span>
             ))}
@@ -1441,169 +1678,278 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
 
         <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-xl p-3">
           <h4 className="text-sm font-semibold text-blue-400 mb-2">Future Impact</h4>
-          <p className="text-slate-400 text-sm">{transferApps[activeAppIndex].futureImpact}</p>
+          <p style={{ color: '#cbd5e1', fontSize: '14px' }}>{transferApps[activeAppIndex].futureImpact}</p>
         </div>
 
         {!completedApps.has(activeAppIndex) && (
           <button
             onClick={() => handleAppComplete(activeAppIndex)}
-            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors w-full"
-            style={{ zIndex: 10 }}
+            style={{
+              marginTop: '16px',
+              padding: '12px',
+              width: '100%',
+              background: '#059669',
+              color: '#ffffff',
+              borderRadius: '8px',
+              fontWeight: '500',
+              minHeight: '44px',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
-            Mark as Understood
+            Got It - Mark as Understood
           </button>
         )}
       </div>
 
-      {/* Progress */}
+      {/* Progress dots */}
       <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
+        <span style={{ color: '#cbd5e1' }}>Progress:</span>
         <div className="flex gap-1">
           {transferApps.map((_, i) => (
             <div
               key={i}
-              className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`}
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                background: completedApps.has(i) ? '#10b981' : '#475569',
+              }}
             />
           ))}
         </div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
+        <span style={{ color: '#cbd5e1' }}>{completedApps.size}/{transferApps.length}</span>
       </div>
 
       {/* Next Application button */}
       {activeAppIndex < transferApps.length - 1 && (
         <button
           onClick={() => setActiveAppIndex(activeAppIndex + 1)}
-          className="mt-4 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl transition-all duration-300"
-          style={{ zIndex: 10 }}
+          style={{
+            marginTop: '16px',
+            padding: '12px 24px',
+            background: '#475569',
+            color: '#ffffff',
+            fontWeight: '600',
+            borderRadius: '12px',
+            minHeight: '44px',
+            border: 'none',
+            cursor: 'pointer',
+          }}
         >
-          Next Application →
+          Next Application
         </button>
       )}
 
       {completedApps.size >= 4 && (
         <button
           onClick={() => goToPhase('test')}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
-          style={{ zIndex: 10 }}
+          style={{
+            marginTop: '24px',
+            padding: '12px 24px',
+            background: 'linear-gradient(to right, #059669, #0d9488)',
+            color: '#ffffff',
+            fontWeight: '600',
+            borderRadius: '12px',
+            minHeight: '44px',
+            border: 'none',
+            cursor: 'pointer',
+          }}
         >
-          Take the Knowledge Test →
+          Take the Knowledge Test
         </button>
       )}
     </div>
   );
 
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>Knowledge Assessment</h2>
+  const renderTest = () => {
+    const answeredCount = testAnswers.filter(a => a !== -1).length;
 
-      {!showTestResults ? (
-        <div className="space-y-4 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-slate-400 text-sm italic mb-2">{q.scenario}</p>
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                    style={{ zIndex: 10 }}
-                  >
-                    {option.text}
-                  </button>
+    return (
+      <div className="flex flex-col items-center p-4 md:p-6" style={{ lineHeight: '1.6' }}>
+        <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-4`} style={{ color: '#f1f5f9' }}>Knowledge Assessment</h2>
+
+        {!showTestResults ? (
+          <div className="space-y-4 max-w-2xl w-full">
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px',
+              padding: '12px 16px',
+              background: 'rgba(30, 41, 59, 0.8)',
+              borderRadius: '12px',
+            }}>
+              <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: '500' }}>
+                Question {currentQuestionIndex + 1} of {testQuestions.length}
+              </span>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {testQuestions.map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      background: testAnswers[i] !== -1 ? '#10b981' : i === currentQuestionIndex ? '#3b82f6' : '#475569',
+                    }}
+                  />
                 ))}
               </div>
+              <span style={{ color: '#cbd5e1', fontSize: '14px' }}>
+                {answeredCount}/{testQuestions.length} answered
+              </span>
             </div>
-          ))}
 
-          <button
-            onClick={() => {
-              setShowTestResults(true);
-              onGameEvent?.({ type: 'test_completed', data: { score: calculateScore() } });
-            }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500'
-            }`}
-            style={{ zIndex: 10 }}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="max-w-2xl w-full">
-          <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
-            <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Score: {calculateScore()}/10
-            </h3>
-            <p className="text-slate-300 mb-6">
-              {calculateScore() >= 7
-                ? 'Excellent! You\'ve mastered Elastic Potential Energy!'
-                : 'Keep studying! Review the concepts and try again.'}
-            </p>
-
-            {calculateScore() >= 7 ? (
-              <button
-                onClick={() => goToPhase('mastery')}
-                className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
-                style={{ zIndex: 10 }}
-              >
-                Claim Your Mastery Badge →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setShowTestResults(false);
-                  setTestAnswers(Array(10).fill(-1));
-                  goToPhase('review');
-                }}
-                className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
-                style={{ zIndex: 10 }}
-              >
-                Review & Try Again
-              </button>
-            )}
-          </div>
-
-          {/* Show explanations */}
-          <div className="space-y-3">
-            <h4 className="text-lg font-semibold text-slate-300">Review Answers:</h4>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = q.options[userAnswer]?.correct;
-              return (
-                <div key={qIndex} className={`p-4 rounded-xl ${isCorrect ? 'bg-emerald-900/30 border border-emerald-600' : 'bg-red-900/30 border border-red-600'}`}>
-                  <p className="text-sm text-slate-400 mb-1">Q{qIndex + 1}: {q.question}</p>
-                  <p className={`text-sm ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
-                    Your answer: {q.options[userAnswer]?.text}
-                  </p>
-                  {!isCorrect && (
-                    <p className="text-sm text-emerald-400">
-                      Correct: {q.options.find(o => o.correct)?.text}
-                    </p>
-                  )}
-                  <p className="text-xs text-slate-500 mt-2">{q.explanation}</p>
+            {testQuestions.map((q, qIndex) => (
+              <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4" style={{ borderRadius: '12px' }}>
+                <p style={{ color: '#cbd5e1', fontSize: '14px', fontStyle: 'italic', marginBottom: '8px' }}>{q.scenario}</p>
+                <p style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '12px' }}>
+                  Q{qIndex + 1} of {testQuestions.length}: {q.question}
+                </p>
+                <div className="grid gap-2">
+                  {q.options.map((option, oIndex) => (
+                    <button
+                      key={oIndex}
+                      onClick={() => {
+                        handleTestAnswer(qIndex, oIndex);
+                        setCurrentQuestionIndex(qIndex);
+                      }}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '8px',
+                        textAlign: 'left',
+                        fontSize: '14px',
+                        minHeight: '44px',
+                        background: testAnswers[qIndex] === oIndex ? '#059669' : 'rgba(51, 65, 85, 0.5)',
+                        color: testAnswers[qIndex] === oIndex ? '#ffffff' : '#e2e8f0',
+                        border: testAnswers[qIndex] === oIndex ? '2px solid #34d399' : '2px solid transparent',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {String.fromCharCode(65 + oIndex)}) {option.text}
+                    </button>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            ))}
+
+            <button
+              onClick={() => {
+                setShowTestResults(true);
+                onGameEvent?.({ type: 'test_completed', data: { score: calculateScore() } });
+              }}
+              disabled={testAnswers.includes(-1)}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                fontWeight: '600',
+                fontSize: '18px',
+                minHeight: '52px',
+                background: testAnswers.includes(-1) ? '#334155' : 'linear-gradient(to right, #059669, #0d9488)',
+                color: testAnswers.includes(-1) ? '#64748b' : '#ffffff',
+                border: 'none',
+                cursor: testAnswers.includes(-1) ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Submit Answers
+            </button>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        ) : (
+          <div className="max-w-2xl w-full" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          paddingBottom: '100px',
+          paddingTop: '48px',
+          flex: 1,
+          paddingTop: '48px',
+            <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
+              <div className="text-6xl mb-4">{calculateScore() >= 7 ? 'Excellent!' : 'Keep Learning'}</div>
+              <h3 className="text-2xl font-bold mb-2" style={{ color: '#f1f5f9' }}>
+                Score: {calculateScore()}/10
+              </h3>
+              <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>
+                {calculateScore() >= 7
+                  ? 'You have mastered Elastic Potential Energy!'
+                  : 'Review the concepts and try again.'}
+              </p>
+
+              {calculateScore() >= 7 ? (
+                <button
+                  onClick={() => goToPhase('mastery')}
+                  style={{
+                    padding: '16px 32px',
+                    background: 'linear-gradient(to right, #059669, #0d9488)',
+                    color: '#ffffff',
+                    fontWeight: '600',
+                    borderRadius: '12px',
+                    minHeight: '52px',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setShowTestResults(false);
+                    setTestAnswers(Array(10).fill(-1));
+                    setCurrentQuestionIndex(0);
+                    goToPhase('review');
+                  }}
+                  style={{
+                    padding: '16px 32px',
+                    background: 'linear-gradient(to right, #059669, #0d9488)',
+                    color: '#ffffff',
+                    fontWeight: '600',
+                    borderRadius: '12px',
+                    minHeight: '52px',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Review and Try Again
+                </button>
+              )}
+            </div>
+
+            {/* Show explanations */}
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold" style={{ color: '#e2e8f0' }}>Review Answers:</h4>
+              {testQuestions.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const isCorrect = q.options[userAnswer]?.correct;
+                return (
+                  <div key={qIndex} style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    background: isCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    border: isCorrect ? '1px solid #10b981' : '1px solid #ef4444',
+                  }}>
+                    <p style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '4px' }}>Question {qIndex + 1}: {q.question}</p>
+                    <p style={{ color: isCorrect ? '#34d399' : '#f87171', fontSize: '14px' }}>
+                      Your answer: {q.options[userAnswer]?.text}
+                    </p>
+                    {!isCorrect && (
+                      <p style={{ color: '#34d399', fontSize: '14px' }}>
+                        Correct: {q.options.find(o => o.correct)?.text}
+                      </p>
+                    )}
+                    <p style={{ color: '#e2e8f0', fontSize: '12px', marginTop: '8px' }}>{q.explanation}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6 text-center">
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6 text-center" style={{ lineHeight: '1.6' }}>
       <div className="bg-gradient-to-br from-emerald-900/50 via-teal-900/50 to-cyan-900/50 rounded-3xl p-6 md:p-8 max-w-2xl">
         <div className="text-7xl md:text-8xl mb-6">🔋</div>
         <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-white mb-4`}>
@@ -1656,7 +2002,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{ minHeight: '100vh', background: '#0a0f1a', color: '#ffffff', position: 'relative', overflow: 'hidden' }}>
       {/* Premium Background Layers */}
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/50 via-transparent to-teal-950/50" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/20 via-transparent to-transparent" />
@@ -1666,33 +2012,107 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
       <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
       <div className="absolute top-3/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
 
-      {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-slate-400`}>
+      {/* Navigation bar - Fixed position with proper z-index */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        backdropFilter: 'blur(12px)',
+        background: 'rgba(15, 23, 42, 0.85)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', maxWidth: '896px', margin: '0 auto' }}>
+          <span style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: '500', color: '#cbd5e1' }}>
             Elastic Potential Energy
           </span>
-          <div className="flex gap-1.5 items-center">
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }} data-testid="nav-dots">
             {phaseOrder.map((p) => (
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p ? 'bg-emerald-500 w-6' : phaseOrder.indexOf(p) < phaseOrder.indexOf(phase) ? 'bg-emerald-500 w-2' : 'bg-slate-600 w-2'
-                }`}
+                data-nav-dot={p}
+                aria-label={`Go to ${phaseLabels[p]} phase`}
+                style={{
+                  height: '8px',
+                  borderRadius: '9999px',
+                  width: phase === p ? '24px' : '8px',
+                  background: phase === p ? '#10b981' : phaseOrder.indexOf(p) < phaseOrder.indexOf(phase) ? '#10b981' : '#475569',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  minHeight: '8px',
+                }}
                 title={phaseLabels[p]}
-                style={{ zIndex: 10 }}
               />
             ))}
           </div>
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-500`}>
+          <span style={{ fontSize: isMobile ? '12px' : '14px', color: '#e2e8f0' }}>
             {phaseLabels[phase]}
           </span>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 pt-14 pb-8">
+      {/* Bottom navigation bar */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: 'rgba(15, 23, 42, 0.95)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.3)',
+        padding: '12px 16px',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', maxWidth: '896px', margin: '0 auto' }}>
+          <button
+            onClick={() => {
+              const currentIndex = phaseOrder.indexOf(phase);
+              if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
+            }}
+            disabled={phaseOrder.indexOf(phase) === 0}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '12px',
+              fontWeight: '600',
+              minHeight: '44px',
+              background: phaseOrder.indexOf(phase) === 0 ? '#334155' : '#475569',
+              color: phaseOrder.indexOf(phase) === 0 ? '#64748b' : '#e2e8f0',
+              border: 'none',
+              cursor: phaseOrder.indexOf(phase) === 0 ? 'default' : 'pointer',
+              opacity: phaseOrder.indexOf(phase) === 0 ? 0.5 : 1,
+            }}
+          >
+            Back
+          </button>
+          <button
+            onClick={() => {
+              const currentIndex = phaseOrder.indexOf(phase);
+              if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
+            }}
+            disabled={phaseOrder.indexOf(phase) === phaseOrder.length - 1 || phase === 'test'}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '12px',
+              fontWeight: '600',
+              minHeight: '44px',
+              background: (phaseOrder.indexOf(phase) === phaseOrder.length - 1 || phase === 'test') ? '#334155' : 'linear-gradient(to right, #059669, #0d9488)',
+              color: (phaseOrder.indexOf(phase) === phaseOrder.length - 1 || phase === 'test') ? '#64748b' : '#ffffff',
+              border: 'none',
+              cursor: (phaseOrder.indexOf(phase) === phaseOrder.length - 1 || phase === 'test') ? 'not-allowed' : 'pointer',
+              opacity: phase === 'test' ? 0.4 : 1,
+            }}
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      {/* Main content with proper padding for fixed nav */}
+      <div style={{ position: 'relative', zIndex: 10, paddingTop: '56px', paddingBottom: '80px', overflowY: 'auto', flex: 1 }}>
         {phase === 'hook' && renderHook()}
         {phase === 'predict' && renderPredict()}
         {phase === 'play' && renderPlay()}

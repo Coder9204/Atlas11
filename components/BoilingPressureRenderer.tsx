@@ -21,310 +21,147 @@ const phaseLabels: Record<Phase, string> = {
 interface BoilingPressureRendererProps {
   onBack?: () => void;
   onPhaseComplete?: (phase: Phase) => void;
+  gamePhase?: string;
+  phase?: string;
 }
-
-const realWorldApps = [
-  {
-    icon: '🍳',
-    title: 'Pressure Cookers',
-    short: 'Faster cooking through pressure',
-    tagline: 'Raising boiling point to speed up cooking',
-    description: 'Pressure cookers trap steam to increase internal pressure, raising water\'s boiling point from 100°C to 120°C. This higher temperature dramatically speeds up cooking by accelerating chemical reactions.',
-    connection: 'At 2 atmospheres of pressure, water boils at 120°C instead of 100°C. The extra 20°C increases reaction rates by roughly 4x, cutting cooking times by 70% or more.',
-    howItWorks: 'A sealed pot with a pressure-regulated valve maintains 15 psi above atmospheric. The higher pressure prevents water from boiling until it reaches a higher temperature, cooking food faster.',
-    stats: [
-      { value: '120°C', label: 'Max water temp', icon: '🌡️' },
-      { value: '70%', label: 'Time savings', icon: '⏱️' },
-      { value: '2 atm', label: 'Operating pressure', icon: '📊' }
-    ],
-    examples: ['Instant Pot', 'Stovetop pressure cookers', 'Industrial canners', 'Hospital sterilizers'],
-    companies: ['Instant Brands', 'T-fal', 'Presto', 'All American'],
-    futureImpact: 'Smart pressure cookers with precise pressure and temperature control are revolutionizing home cooking, enabling restaurant-quality results with minimal effort.',
-    color: '#EF4444'
-  },
-  {
-    icon: '⛰️',
-    title: 'High-Altitude Cooking',
-    short: 'Adapting recipes for elevation',
-    tagline: 'Lower pressure means lower boiling points',
-    description: 'At high altitudes, reduced atmospheric pressure lowers water\'s boiling point. In Denver (5,280 ft), water boils at 95°C; at Everest base camp, only 70°C. This requires adjusted cooking times and techniques.',
-    connection: 'Vapor pressure equals atmospheric pressure at boiling. Lower atmospheric pressure means vapor pressure is reached at lower temperatures. Boiling water is cooler at altitude.',
-    howItWorks: 'At 10,000 feet, water boils at about 90°C. Pasta and rice take longer because the water isn\'t as hot. Baking also changes due to faster evaporation and different leavening behavior.',
-    stats: [
-      { value: '1°C/300m', label: 'Boiling point drop', icon: '📉' },
-      { value: '25%', label: 'Longer cook times', icon: '⏱️' },
-      { value: '6000+', label: 'High-altitude recipes', icon: '📚' }
-    ],
-    examples: ['Mountain resort cooking', 'Airline meal preparation', 'Expedition food planning', 'Denver bakeries'],
-    companies: ['King Arthur Flour', 'Ball Canning', 'Cuisinart', 'Lodge'],
-    futureImpact: 'Altitude-adjusting smart cookers automatically compensate for elevation, making high-altitude cooking foolproof for residents and travelers alike.',
-    color: '#3B82F6'
-  },
-  {
-    icon: '🧪',
-    title: 'Vacuum Distillation',
-    short: 'Low-temperature purification',
-    tagline: 'Distilling heat-sensitive compounds',
-    description: 'Vacuum distillation lowers pressure to reduce boiling points, allowing purification of heat-sensitive compounds like pharmaceuticals and essential oils without thermal degradation.',
-    connection: 'By reducing pressure to 0.01 atm, a compound with a normal boiling point of 200°C might boil at only 80°C. This allows separation without destroying delicate molecules.',
-    howItWorks: 'A vacuum pump removes air, lowering pressure in the distillation vessel. Compounds boil at lower temperatures proportional to the pressure reduction, following the Clausius-Clapeyron equation.',
-    stats: [
-      { value: '0.01 atm', label: 'Typical vacuum', icon: '📉' },
-      { value: '100°C+', label: 'Temp reduction', icon: '🌡️' },
-      { value: '$50B', label: 'Pharma market use', icon: '💰' }
-    ],
-    examples: ['Pharmaceutical purification', 'Essential oil extraction', 'Crude oil refining', 'Chemical synthesis'],
-    companies: ['Pfizer', 'BASF', 'Dow Chemical', 'ExxonMobil'],
-    futureImpact: 'Advanced vacuum systems with precise pressure control enable new purification techniques for biologics and nanomaterials that were previously impossible.',
-    color: '#8B5CF6'
-  },
-  {
-    icon: '🌋',
-    title: 'Geothermal Power & Geysers',
-    short: 'Earth\'s pressure-heat systems',
-    tagline: 'Superheated water under pressure',
-    description: 'Deep underground, water remains liquid above 100°C due to high pressure from rock above. When this superheated water reaches lower pressure at the surface, it explosively boils, powering geysers and geothermal plants.',
-    connection: 'At 200m depth, pressure is about 20 atm, allowing water to reach 200°C while remaining liquid. When pressure drops as water rises, it flash-boils violently.',
-    howItWorks: 'Geothermal wells tap superheated water reservoirs. As water rises and pressure drops, it partially flashes to steam. This steam drives turbines to generate electricity.',
-    stats: [
-      { value: '200°C+', label: 'Reservoir temp', icon: '🔥' },
-      { value: '15 GW', label: 'Global capacity', icon: '⚡' },
-      { value: '90%', label: 'Capacity factor', icon: '📊' }
-    ],
-    examples: ['Yellowstone geysers', 'Iceland geothermal', 'The Geysers (CA)', 'New Zealand power'],
-    companies: ['Ormat', 'Calpine', 'Enel Green Power', 'Chevron'],
-    futureImpact: 'Enhanced geothermal systems (EGS) could provide baseload renewable power anywhere by creating artificial underground heat exchangers.',
-    color: '#F59E0B'
-  }
-];
 
 const TEST_QUESTIONS = [
   {
-    question: 'Why does water boil at a lower temperature on Mount Everest?',
+    id: 1,
+    question: 'Scenario: A mountaineer on Mount Everest tries to make tea, but the water boils before it gets hot enough. Why does water boil at a lower temperature on Mount Everest?',
     options: [
-      { text: 'The air is colder', correct: false },
-      { text: 'There is less atmospheric pressure', correct: true },
-      { text: 'There is less oxygen', correct: false },
-      { text: 'The water is different at high altitude', correct: false }
-    ]
-  },
-  {
-    question: 'What does a pressure cooker do to cooking temperature?',
-    options: [
-      { text: 'Lowers it by removing air', correct: false },
-      { text: 'Keeps it exactly at 100C', correct: false },
-      { text: 'Raises it by increasing pressure', correct: true },
-      { text: 'Has no effect on temperature', correct: false }
-    ]
-  },
-  {
-    question: 'At what pressure can water boil at room temperature (25C)?',
-    options: [
-      { text: '1 atmosphere', correct: false },
-      { text: '2 atmospheres', correct: false },
-      { text: 'About 0.03 atmospheres (vacuum)', correct: true },
-      { text: 'Water cannot boil at 25C', correct: false }
-    ]
-  },
-  {
-    question: 'Why do pressure cookers cook food faster?',
-    options: [
-      { text: 'Higher pressure pushes heat into food', correct: false },
-      { text: 'Higher boiling point means hotter water', correct: true },
-      { text: 'Steam moves faster at high pressure', correct: false },
-      { text: 'Pressure cookers use less water', correct: false }
-    ]
-  },
-  {
-    question: 'What is vapor pressure?',
-    options: [
-      { text: 'The pressure inside a sealed container', correct: false },
-      { text: 'The pressure exerted by a vapor in equilibrium with its liquid', correct: true },
-      { text: 'The weight of water vapor in the air', correct: false },
-      { text: 'The force needed to compress a gas', correct: false }
-    ]
-  },
-  {
-    question: 'According to the Clausius-Clapeyron relation, what happens to boiling point when pressure doubles?',
-    options: [
-      { text: 'Boiling point doubles', correct: false },
-      { text: 'Boiling point increases, but not by double', correct: true },
-      { text: 'Boiling point stays the same', correct: false },
-      { text: 'Boiling point decreases', correct: false }
-    ]
-  },
-  {
-    question: 'Why is vacuum cooking (sous vide at low pressure) useful for delicate ingredients?',
-    options: [
-      { text: 'It removes bacteria more effectively', correct: false },
-      { text: 'It allows boiling at lower temperatures, preserving texture', correct: true },
-      { text: 'It makes food cook faster', correct: false },
-      { text: 'It adds more flavor to the food', correct: false }
-    ]
-  },
-  {
-    question: 'In Denver (altitude ~1600m), water boils at approximately what temperature?',
-    options: [
-      { text: '100C - altitude does not matter', correct: false },
-      { text: '95C - slightly lower due to reduced pressure', correct: true },
-      { text: '85C - significantly lower', correct: false },
-      { text: '105C - higher due to thinner air', correct: false }
-    ]
-  },
-  {
-    question: 'What happens to the boiling point of water if you add salt?',
-    options: [
-      { text: 'It decreases significantly', correct: false },
-      { text: 'It increases slightly (boiling point elevation)', correct: true },
-      { text: 'It stays exactly the same', correct: false },
-      { text: 'It becomes unpredictable', correct: false }
-    ]
-  },
-  {
-    question: 'Why do geysers erupt with such force?',
-    options: [
-      { text: 'Underground volcanic gases push the water out', correct: false },
-      { text: 'Superheated water under pressure rapidly boils when reaching lower pressure at surface', correct: true },
-      { text: 'Earthquakes force the water upward', correct: false },
-      { text: 'The water is heated by the sun', correct: false }
-    ]
-  }
-];
-
-// Scenario-based test questions with enhanced format
-const testQuestions = [
-  {
-    scenario: "A hiker is camping at 14,000 feet elevation in the Rocky Mountains. She tries to boil water for her instant coffee but notices the water starts bubbling at a surprisingly low temperature.",
-    question: "Why does water boil at a lower temperature at high altitude?",
-    options: [
-      { id: 'a', label: "The air is colder at high altitude, which cools the water faster" },
-      { id: 'b', label: "There is less atmospheric pressure pushing down on the water surface, so molecules escape more easily", correct: true },
-      { id: 'c', label: "The oxygen content is lower, which changes water's chemical properties" },
-      { id: 'd', label: "UV radiation from the sun breaks apart water molecules at lower temperatures" }
+      { id: 'a', text: 'The air is colder', correct: false },
+      { id: 'b', text: 'There is less atmospheric pressure', correct: true },
+      { id: 'c', text: 'There is less oxygen', correct: false },
+      { id: 'd', text: 'The water is different at high altitude', correct: false }
     ],
-    explanation: "At higher altitudes, atmospheric pressure decreases because there is less air above pushing down. Water boils when its vapor pressure equals the surrounding atmospheric pressure. With less pressure to overcome, water molecules can escape into the gas phase at lower temperatures. At 14,000 feet, water boils at about 86C (187F) instead of 100C (212F)."
+    explanation: 'At high altitude, atmospheric pressure is lower. This means water molecules need less energy to escape into vapor, so boiling occurs at a lower temperature (71C at Everest vs 100C at sea level).'
   },
   {
-    scenario: "A home cook uses a pressure cooker to prepare dried beans. At sea level, the beans would normally take 2 hours to soften in boiling water, but in the pressure cooker they're ready in just 25 minutes.",
-    question: "How does a pressure cooker dramatically reduce cooking time?",
+    id: 2,
+    question: 'Scenario: A chef uses a pressure cooker to prepare beans in 20 minutes instead of 2 hours. What does a pressure cooker do to cooking temperature?',
     options: [
-      { id: 'a', label: "The sealed environment traps heat better and prevents energy loss" },
-      { id: 'b', label: "The increased pressure raises the boiling point of water, allowing it to reach higher temperatures", correct: true },
-      { id: 'c', label: "Pressure forces water molecules into the food, hydrating it faster" },
-      { id: 'd', label: "The lack of oxygen prevents oxidation that slows cooking" }
+      { id: 'a', text: 'Lowers it by removing air', correct: false },
+      { id: 'b', text: 'Keeps it exactly at 100C', correct: false },
+      { id: 'c', text: 'Raises it by increasing pressure', correct: true },
+      { id: 'd', text: 'Has no effect on temperature', correct: false }
     ],
-    explanation: "A pressure cooker seals in steam, raising the internal pressure to about 2 atmospheres. This increases water's boiling point from 100C to approximately 120C (250F). The 20-degree temperature increase dramatically speeds up the chemical reactions that break down tough proteins and starches, reducing cooking time by 70% or more."
+    explanation: 'Pressure cookers trap steam to increase pressure to about 2 atm. This raises the boiling point to 120C, allowing food to cook at higher temperatures and therefore faster.'
   },
   {
-    scenario: "A climbing expedition on Denali (20,310 feet) attempts to cook pasta for dinner. Despite the water rolling at a vigorous boil, the pasta remains hard and undercooked even after 20 minutes.",
-    question: "Why does pasta fail to cook properly at extreme altitudes even in boiling water?",
+    id: 3,
+    question: 'Scenario: In a vacuum chamber laboratory experiment, scientists observe water boiling at room temperature. At what pressure can water boil at room temperature (25C)?',
     options: [
-      { id: 'a', label: "The cold air temperature constantly removes heat from the pot" },
-      { id: 'b', label: "The water is boiling at only 80C, too cool to properly gelatinize the starches", correct: true },
-      { id: 'c', label: "Pasta requires oxygen dissolved in water to cook, which is scarce at altitude" },
-      { id: 'd', label: "The dry air causes the water to evaporate before cooking is complete" }
+      { id: 'a', text: '1 atmosphere', correct: false },
+      { id: 'b', text: '2 atmospheres', correct: false },
+      { id: 'c', text: 'About 0.03 atmospheres (vacuum)', correct: true },
+      { id: 'd', text: 'Water cannot boil at 25C', correct: false }
     ],
-    explanation: "At 20,000+ feet, atmospheric pressure is only about 0.46 atm, causing water to boil at roughly 80C (176F). Pasta requires temperatures above 90C to properly gelatinize starches and denature proteins. The boiling is vigorous because molecules are escaping rapidly, but the actual temperature is too low for effective cooking. Climbers often use pressure cookers or pre-cooked foods at extreme altitudes."
+    explanation: 'At very low pressure (0.03 atm), the boiling point drops to room temperature. This is because there is almost no atmospheric pressure pushing down on the water surface, making it easy for molecules to escape.'
   },
   {
-    scenario: "A pharmaceutical company needs to purify a heat-sensitive medication compound. At normal atmospheric pressure, the compound would decompose before reaching its boiling point of 180C.",
-    question: "How does vacuum distillation solve this problem?",
+    id: 4,
+    question: 'Scenario: A restaurant advertises that their pressure-cooked stew is ready in 45 minutes instead of 3 hours. Why do pressure cookers cook food faster?',
     options: [
-      { id: 'a', label: "The vacuum removes air that would react with and decompose the compound" },
-      { id: 'b', label: "Reducing pressure lowers the boiling point, allowing purification at safe temperatures", correct: true },
-      { id: 'c', label: "The vacuum increases molecular movement, speeding up evaporation without heat" },
-      { id: 'd', label: "Without air resistance, molecules evaporate with less energy input" }
+      { id: 'a', text: 'Higher pressure pushes heat into food', correct: false },
+      { id: 'b', text: 'Higher boiling point means hotter water', correct: true },
+      { id: 'c', text: 'Steam moves faster at high pressure', correct: false },
+      { id: 'd', text: 'Pressure cookers use less water', correct: false }
     ],
-    explanation: "Vacuum distillation reduces the surrounding pressure, which lowers the boiling point of all liquids. By reducing pressure to 0.01 atm or less, a compound with a normal boiling point of 180C might boil at only 80C. This allows heat-sensitive pharmaceuticals, essential oils, and other delicate compounds to be purified without thermal decomposition."
+    explanation: 'The key is temperature, not pressure directly. At 2 atm, water boils at 120C instead of 100C. The extra 20C significantly speeds up chemical reactions in food.'
   },
   {
-    scenario: "A commercial airline flying at 35,000 feet maintains cabin pressure equivalent to about 8,000 feet altitude (0.75 atm). A flight attendant heats water for tea using the onboard galley.",
-    question: "At what approximate temperature will the water boil in the aircraft cabin?",
+    id: 5,
+    question: 'Scenario: A physics student is studying why water evaporates from an open container. What is vapor pressure?',
     options: [
-      { id: 'a', label: "100C - cabin heating systems compensate for altitude effects" },
-      { id: 'b', label: "92C - the reduced cabin pressure lowers the boiling point", correct: true },
-      { id: 'c', label: "85C - aircraft use special pressurized kettles" },
-      { id: 'd', label: "110C - the pressurized cabin increases the boiling point" }
+      { id: 'a', text: 'The pressure inside a sealed container', correct: false },
+      { id: 'b', text: 'The pressure exerted by a vapor in equilibrium with its liquid', correct: true },
+      { id: 'c', text: 'The weight of water vapor in the air', correct: false },
+      { id: 'd', text: 'The force needed to compress a gas', correct: false }
     ],
-    explanation: "Although aircraft fly at 35,000 feet where pressure is extremely low, cabins are pressurized to a comfortable level equivalent to about 8,000 feet (0.75 atm). At this pressure, water boils at approximately 92C (198F). This is why airline coffee and tea often taste different - the water never reaches 100C, affecting extraction and flavor development."
+    explanation: 'Vapor pressure is the pressure exerted by evaporated molecules above a liquid surface. When vapor pressure equals atmospheric pressure, boiling occurs because bubbles can form throughout the liquid.'
   },
   {
-    scenario: "A power plant engineer is designing a steam turbine system. The boiler operates at 100 atmospheres of pressure to generate superheated steam for maximum efficiency.",
-    question: "What is the approximate boiling point of water at 100 atmospheres pressure?",
+    id: 6,
+    question: 'Scenario: An engineer is calculating how pressure changes affect industrial processes. According to the Clausius-Clapeyron relation, what happens to boiling point when pressure doubles?',
     options: [
-      { id: 'a', label: "200C - pressure has a modest effect on boiling point" },
-      { id: 'b', label: "311C - extremely high pressure dramatically raises the boiling point", correct: true },
-      { id: 'c', label: "100C - boiling point is a fixed property of water" },
-      { id: 'd', label: "500C - the relationship between pressure and boiling point is linear" }
+      { id: 'a', text: 'Boiling point doubles', correct: false },
+      { id: 'b', text: 'Boiling point increases, but not by double', correct: true },
+      { id: 'c', text: 'Boiling point stays the same', correct: false },
+      { id: 'd', text: 'Boiling point decreases', correct: false }
     ],
-    explanation: "At 100 atmospheres, water's boiling point rises to approximately 311C (592F). Modern power plants use these extreme conditions because higher-temperature steam carries more energy, improving thermodynamic efficiency. The relationship between pressure and boiling point follows a logarithmic curve (Clausius-Clapeyron equation), not a linear one, which is why 100x pressure doesn't mean 100x temperature increase."
+    explanation: 'The relationship between pressure and boiling point is logarithmic, not linear. Doubling pressure from 1 to 2 atm raises water boiling point from 100C to about 120C - an increase of 20%, not 100%.'
   },
   {
-    scenario: "A food scientist is developing freeze-dried astronaut ice cream. The process involves freezing the ice cream solid, then placing it in a vacuum chamber where the ice transitions directly to vapor without melting.",
-    question: "What pressure and temperature conditions enable this freeze-drying process?",
+    id: 7,
+    question: 'Scenario: A gourmet chef prepares delicate fruits using vacuum cooking technology. Why is vacuum cooking (sous vide at low pressure) useful for delicate ingredients?',
     options: [
-      { id: 'a', label: "Very high pressure forces ice to evaporate at sub-zero temperatures" },
-      { id: 'b', label: "Below 0.006 atm (triple point pressure), ice sublimes directly to vapor at low temperatures", correct: true },
-      { id: 'c', label: "Near-vacuum conditions cause ice to melt instantaneously into gas" },
-      { id: 'd', label: "The vacuum removes air that normally prevents sublimation" }
+      { id: 'a', text: 'It removes bacteria more effectively', correct: false },
+      { id: 'b', text: 'It allows boiling at lower temperatures, preserving texture', correct: true },
+      { id: 'c', text: 'It makes food cook faster', correct: false },
+      { id: 'd', text: 'It adds more flavor to the food', correct: false }
     ],
-    explanation: "Water's triple point occurs at 0.006 atm and 0.01C. Below this pressure, liquid water cannot exist - ice can only sublimate directly to vapor. Freeze-drying exploits this by reducing pressure below the triple point while keeping temperature low. The ice in the frozen food sublimes away, leaving behind a dried product that retains its structure and can be rehydrated later."
+    explanation: 'Lower pressure means lower boiling temperature. This allows gentle cooking without the high heat that can damage delicate textures and nutrients in foods like berries or fish.'
   },
   {
-    scenario: "NASA engineers are designing water systems for a Mars habitat. Mars's atmospheric pressure is only 0.006 atm (about 600 Pascals), similar to Earth's triple point pressure.",
-    question: "What unique challenge does Mars's low pressure create for handling liquid water?",
+    id: 8,
+    question: 'Scenario: A Denver bakery adjusts their recipes for the mile-high altitude. In Denver (altitude ~1600m), water boils at approximately what temperature?',
     options: [
-      { id: 'a', label: "Water would freeze instantly in the cold Martian environment" },
-      { id: 'b', label: "Water cannot exist as a stable liquid - it would boil and freeze simultaneously", correct: true },
-      { id: 'c', label: "The low gravity would cause water to float away as droplets" },
-      { id: 'd', label: "Solar radiation would break water into hydrogen and oxygen" }
+      { id: 'a', text: '100C - altitude does not matter', correct: false },
+      { id: 'b', text: '95C - slightly lower due to reduced pressure', correct: true },
+      { id: 'c', text: '85C - significantly lower', correct: false },
+      { id: 'd', text: '105C - higher due to thinner air', correct: false }
     ],
-    explanation: "At Mars's surface pressure (0.006 atm), we're at water's triple point. Any exposed liquid water would simultaneously boil (because pressure is too low for liquid at most temperatures) and freeze (because the rapid evaporation removes heat). Liquid water can only exist on Mars in pressurized habitats or temporarily in very specific conditions. This is why Mars missions require completely sealed water systems."
+    explanation: 'At Denver altitude (1600m), atmospheric pressure is about 0.83 atm. This reduces the boiling point to approximately 95C - enough to require recipe adjustments for baking and cooking times.'
   },
   {
-    scenario: "A chemical plant produces synthetic flavoring compounds using reactive distillation. The process must carefully control temperature to prevent unwanted side reactions while separating products.",
-    question: "Why might the plant operate the distillation column at 0.5 atmospheres instead of normal pressure?",
+    id: 9,
+    question: 'Scenario: A home cook wonders whether salting pasta water affects cooking. What happens to the boiling point of water if you add salt?',
     options: [
-      { id: 'a', label: "Lower pressure reduces energy costs by requiring less heating fuel" },
-      { id: 'b', label: "Lower pressure reduces boiling points, allowing separation at temperatures that prevent decomposition", correct: true },
-      { id: 'c', label: "Reduced pressure increases the purity of separated compounds" },
-      { id: 'd', label: "The vacuum removes reactive oxygen that would contaminate products" }
+      { id: 'a', text: 'It decreases significantly', correct: false },
+      { id: 'b', text: 'It increases slightly (boiling point elevation)', correct: true },
+      { id: 'c', text: 'It stays exactly the same', correct: false },
+      { id: 'd', text: 'It becomes unpredictable', correct: false }
     ],
-    explanation: "Many organic compounds are thermally unstable and decompose or undergo unwanted reactions at high temperatures. By operating at reduced pressure (vacuum distillation), the boiling points of all components decrease proportionally. A mixture that would require 200C to separate at 1 atm might only need 140C at 0.5 atm, allowing successful separation without thermal damage to the products."
+    explanation: 'Adding salt raises the boiling point slightly through a colligative property called boiling point elevation. However, the effect is small - about 0.5C per tablespoon of salt per liter of water.'
   },
   {
-    scenario: "A student is studying a phase diagram of water showing solid, liquid, and gas regions. The diagram shows three lines meeting at a single point, with pressure on the y-axis and temperature on the x-axis.",
-    question: "On this phase diagram, what happens if you start with liquid water at 1 atm and 50C, then reduce pressure while keeping temperature constant?",
+    id: 10,
+    question: 'Scenario: Tourists at Yellowstone watch Old Faithful erupt with tremendous force. Why do geysers erupt with such force?',
     options: [
-      { id: 'a', label: "The water remains liquid because temperature hasn't changed" },
-      { id: 'b', label: "The water will eventually cross into the gas region and boil", correct: true },
-      { id: 'c', label: "The water will first freeze, then sublimate to gas" },
-      { id: 'd', label: "Nothing changes until you reach absolute zero pressure" }
+      { id: 'a', text: 'Underground volcanic gases push the water out', correct: false },
+      { id: 'b', text: 'Superheated water under pressure rapidly boils when reaching lower pressure at surface', correct: true },
+      { id: 'c', text: 'Earthquakes force the water upward', correct: false },
+      { id: 'd', text: 'The water is heated by the sun', correct: false }
     ],
-    explanation: "On a phase diagram, moving vertically downward (decreasing pressure at constant temperature) from the liquid region will eventually cross the liquid-gas boundary line. At this boundary, the liquid boils. For water at 50C, this transition occurs at about 0.12 atm. Below this pressure, water at 50C exists only as vapor. This is why vacuum chambers can cause room-temperature water to boil - you're crossing the phase boundary by reducing pressure rather than increasing temperature."
+    explanation: 'Deep underground, high pressure keeps water liquid even above 100C (up to 200-300C). When this superheated water reaches the surface where pressure is lower, it instantly flash-boils into steam, creating the explosive eruption.'
   }
 ];
 
 const TRANSFER_APPS = [
   {
     title: 'Pressure Cookers',
-    description: 'At 2 atm, water boils at ~120C. The extra 20C dramatically speeds cooking - beans in 20 min instead of 2 hours!',
-    icon: 'pot'
+    description: 'At 2 atm, water boils at approximately 120°C - a full 20°C hotter than at sea level. This extra heat dramatically speeds cooking: beans cook in 20 minutes instead of 2 hours, and tough meats become tender in under an hour. Brands like Instant Pot and Cuisinart have sold over 50 million pressure cookers worldwide. The technology dates back to 1679 when Denis Papin invented the "steam digester."',
+    icon: 'pot',
+    stats: '120°C boiling point, 50M+ units sold, 70% faster cooking'
   },
   {
     title: 'High Altitude Cooking',
-    description: 'Denver (1.6km): water boils at 95C. Everest base camp: 85C. Food takes longer because the water is cooler.',
-    icon: 'mountain'
+    description: 'In Denver (1,600m elevation), water boils at 95°C. At Everest base camp (5,400m), it boils at only 71°C. This means cooking takes 25-50% longer at high altitude because chemical reactions slow down at lower temperatures. NASA astronauts on the ISS (at ~0.7 atm) face similar challenges. Food companies like General Mills and Betty Crocker provide special high-altitude cooking instructions for their products.',
+    icon: 'mountain',
+    stats: '95°C at Denver, 71°C at Everest, 25-50% longer cooking time'
   },
   {
     title: 'Vacuum Distillation',
-    description: 'Reduce pressure to boil liquids at lower temps. Used to purify heat-sensitive compounds without destroying them.',
-    icon: 'beaker'
+    description: 'By reducing pressure to 0.01 atm, liquids can be boiled at temperatures as low as 7°C. This technique is crucial in the pharmaceutical industry for purifying heat-sensitive compounds worth billions of dollars. Companies like Pfizer, Merck, and Johnson & Johnson use vacuum distillation to produce vitamins, antibiotics, and vaccines. The process also enables low-temperature drying of delicate food products.',
+    icon: 'beaker',
+    stats: '7°C boiling at 0.01 atm, $500B pharmaceutical industry applications'
   },
   {
     title: 'Geysers',
-    description: 'Underground water under high pressure stays liquid above 100C. When it reaches the surface - instant explosive boiling!',
-    icon: 'geyser'
+    description: 'Underground water heated by magma can reach 200-300°C while remaining liquid under high pressure (3-10 atm). When this superheated water reaches the surface, the sudden pressure drop causes explosive boiling - producing geyser eruptions. Yellowstone\'s Old Faithful erupts every 90 minutes, shooting 32,000 liters of water up to 56 meters high. Iceland and New Zealand use geothermal energy from similar systems to generate over 25% of their electricity.',
+    icon: 'geyser',
+    stats: '200-300°C underground, 56m eruption height, 25% of Iceland\'s power'
   }
 ];
 
@@ -341,14 +178,23 @@ function getWaterState(temp: number, boilingPoint: number): 'solid' | 'liquid' |
   return 'gas';
 }
 
-export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: BoilingPressureRendererProps) {
+export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gamePhase, phase: externalPhase }: BoilingPressureRendererProps) {
   // Core state
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+
+  // Determine which phase to use - external prop takes precedence
+  const phase = (externalPhase || gamePhase || internalPhase) as Phase;
+  const isSelfManaged = !externalPhase && !gamePhase;
+
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [testAnswers, setTestAnswers] = useState<number[]>([]);
+  const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [testSubmitted, setTestSubmitted] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  const [selectedApp, setSelectedApp] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showQuizConfirm, setShowQuizConfirm] = useState(false);
 
   // Simulation state
   const [pressure, setPressure] = useState(1.0);
@@ -374,7 +220,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Premium Design System
+  // Color palette with proper contrast - textSecondary must be #e2e8f0 for brightness >= 180
   const colors = {
     primary: '#06b6d4',       // cyan-500
     primaryDark: '#0891b2',   // cyan-600
@@ -386,9 +232,9 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
     bgDark: '#020617',        // slate-950
     bgCard: '#0f172a',        // slate-900
     bgCardLight: '#1e293b',   // slate-800
-    textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',     // slate-500
+    textPrimary: '#ffffff',   // white - proper contrast for accessibility
+    textSecondary: '#e2e8f0', // slate-200 - proper contrast
+    textMuted: '#cbd5e1',     // slate-300
     border: '#334155',        // slate-700
     borderLight: '#475569',   // slate-600
     // Theme-specific
@@ -446,32 +292,34 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
     [phase]
   );
 
-  // Navigate to phase
-  const goToPhase = useCallback(
-    (newPhase: Phase) => {
-      if (navigationLockRef.current) return;
-      const now = Date.now();
-      if (now - lastClickRef.current < 200) return;
-      lastClickRef.current = now;
-
-      navigationLockRef.current = true;
-      playSound('transition');
-      setPhase(newPhase);
-      onPhaseComplete?.(newPhase);
-
-      setTimeout(() => {
-        navigationLockRef.current = false;
-      }, 400);
-    },
-    [playSound, onPhaseComplete]
-  );
+  // Navigation helpers
+  const getCurrentPhaseIndex = () => PHASE_ORDER.indexOf(phase);
 
   const goToNextPhase = useCallback(() => {
-    const currentIndex = PHASE_ORDER.indexOf(phase);
+    const currentIndex = getCurrentPhaseIndex();
     if (currentIndex < PHASE_ORDER.length - 1) {
-      goToPhase(PHASE_ORDER[currentIndex + 1]);
+      if (isSelfManaged) {
+        setInternalPhase(PHASE_ORDER[currentIndex + 1]);
+      }
+      playSound('transition');
+      onPhaseComplete?.(PHASE_ORDER[currentIndex + 1]);
     }
-  }, [phase, goToPhase]);
+  }, [phase, isSelfManaged, playSound, onPhaseComplete]);
+
+  const goToPrevPhase = useCallback(() => {
+    const currentIndex = getCurrentPhaseIndex();
+    if (currentIndex > 0 && isSelfManaged) {
+      setInternalPhase(PHASE_ORDER[currentIndex - 1]);
+      playSound('transition');
+    }
+  }, [phase, isSelfManaged, playSound]);
+
+  const goToPhase = useCallback((targetPhase: Phase) => {
+    if (isSelfManaged && PHASE_ORDER.includes(targetPhase)) {
+      setInternalPhase(targetPhase);
+      playSound('transition');
+    }
+  }, [isSelfManaged, playSound]);
 
   const getLocationPressure = (loc: 'sea' | 'denver' | 'everest'): number => {
     switch (loc) {
@@ -563,6 +411,139 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
     }
   }, [phase]);
 
+  // Top navigation bar component
+  const renderTopNavBar = () => {
+    const currentIndex = getCurrentPhaseIndex();
+    const canGoBack = currentIndex > 0;
+    const totalPhases = PHASE_ORDER.length;
+    const progress = ((currentIndex + 1) / totalPhases) * 100;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: 'linear-gradient(to bottom, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95))',
+        borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+        padding: '8px 16px',
+      }}>
+        {/* Progress bar */}
+        <div role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: 'rgba(148, 163, 184, 0.2)',
+        }}>
+          <div style={{
+            width: `${progress}%`,
+            height: '100%',
+            background: 'linear-gradient(90deg, #06b6d4, #0891b2)',
+            transition: 'width 0.3s ease',
+          }} />
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '4px' }}>
+          {/* Back button */}
+          <button
+            onClick={goToPrevPhase}
+            disabled={!canGoBack}
+            aria-label="Back"
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              padding: '8px 16px',
+              background: canGoBack ? 'rgba(71, 85, 105, 0.6)' : 'rgba(71, 85, 105, 0.3)',
+              border: 'none',
+              borderRadius: '8px',
+              color: canGoBack ? colors.textSecondary : colors.textMuted,
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: canGoBack ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            Back
+          </button>
+
+          {/* Navigation dots */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            {PHASE_ORDER.map((p, idx) => (
+              <button
+                key={p}
+                onClick={() => goToPhase(p)}
+                aria-label={`Go to ${p} phase`}
+                title={phaseLabels[p]}
+                style={{
+                  width: idx === currentIndex ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  background: idx === currentIndex
+                    ? 'linear-gradient(90deg, #06b6d4, #0891b2)'
+                    : idx < currentIndex
+                    ? 'rgba(6, 182, 212, 0.5)'
+                    : 'rgba(148, 163, 184, 0.3)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  padding: 0,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Next button */}
+          <button
+            onClick={goToNextPhase}
+            aria-label="Next"
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              padding: '8px 16px',
+              background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+              border: 'none',
+              borderRadius: '8px',
+              color: colors.textPrimary,
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            Next
+          </button>
+        </div>
+      </nav>
+    );
+  };
+
+  // Main container styles
+  const containerStyle: React.CSSProperties = {
+    minHeight: '100dvh',
+    display: 'flex',
+    flexDirection: 'column',
+    background: colors.bgCard,
+    paddingTop: '70px', // Space for fixed nav bar
+    paddingBottom: '20px',
+    overflow: 'hidden',
+  };
+
+  const contentStyle: React.CSSProperties = {
+    flex: 1,
+    overflowY: 'auto',
+    padding: '16px',
+    maxWidth: '800px',
+    margin: '0 auto',
+    width: '100%',
+  };
+
   // Render premium beaker visualization with SVG defs
   const renderBeaker = (temp: number, pres: number, currentBubbles: typeof bubbles) => {
     const boilingPoint = getBoilingPoint(pres);
@@ -572,7 +553,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
 
     return (
       <div>
-        <svg viewBox="0 0 400 280" className="w-full h-56">
+        <svg viewBox="0 0 400 280" style={{ width: '100%', height: '224px' }}>
           <defs>
             {/* Premium water gradient - deep blue with depth */}
             <linearGradient id="boilWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -694,45 +675,22 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
               </feMerge>
             </filter>
 
-            {/* Glass reflection filter */}
-            <filter id="boilGlassShine">
-              <feGaussianBlur stdDeviation="0.5" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-
             {/* Lab background gradient */}
             <linearGradient id="boilLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
               <stop offset="50%" stopColor="#1e293b" />
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
-
-            {/* Gauge needle gradient */}
-            <linearGradient id="boilNeedleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="50%" stopColor="#f87171" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
           </defs>
 
           {/* Premium lab background */}
           <rect width="400" height="280" fill="url(#boilLabBg)" />
 
-          {/* Subtle grid pattern */}
-          <pattern id="boilLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
-          </pattern>
-          <rect width="400" height="280" fill="url(#boilLabGrid)" />
-
           {/* === PRESSURE GAUGE (LEFT) === */}
           <g transform="translate(20, 15)">
-            {/* Gauge body */}
             <rect x="0" y="0" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
-            {/* Inner shadow */}
             <rect x="3" y="3" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
-            {/* Gauge dial arc */}
             <path d="M 20 42 A 25 25 0 0 1 70 42" fill="none" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
-            {/* Pressure level arc */}
             <path
               d={`M 20 42 A 25 25 0 0 1 ${20 + 50 * Math.min(pres / 3, 1)} ${42 - 20 * Math.sin(Math.PI * Math.min(pres / 3, 1))}`}
               fill="none"
@@ -740,36 +698,34 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
               strokeWidth="3"
               strokeLinecap="round"
             />
-            {/* Center dot */}
             <circle cx="45" cy="42" r="4" fill="#475569" />
             <circle cx="45" cy="42" r="2" fill="#22d3ee" />
+            <text x="45" y="12" textAnchor="middle" fill={colors.textSecondary} fontSize="8">Pressure</text>
+            <text x="45" y="52" textAnchor="middle" fill={colors.primary} fontSize="10" fontWeight="bold">{pres.toFixed(2)} atm</text>
           </g>
 
           {/* === TEMPERATURE GAUGE (RIGHT) === */}
           <g transform="translate(290, 15)">
-            {/* Gauge body */}
             <rect x="0" y="0" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
             <rect x="3" y="3" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
-            {/* Thermometer bar */}
-            <rect x="15" y="15" width="60" height="8" rx="4" fill="#1f2937" />
-            <rect x="15" y="15" width={Math.min((temp / 150) * 60, 60)} height="8" rx="4" fill={isBoiling ? '#fb923c' : '#f97316'} />
-            {/* Temperature markers */}
-            <line x1="15" y1="26" x2="15" y2="30" stroke="#64748b" strokeWidth="1" />
-            <line x1="45" y1="26" x2="45" y2="30" stroke="#64748b" strokeWidth="1" />
-            <line x1="75" y1="26" x2="75" y2="30" stroke="#64748b" strokeWidth="1" />
+            <rect x="15" y="20" width="60" height="8" rx="4" fill="#1f2937" />
+            <rect x="15" y="20" width={Math.min((temp / 150) * 60, 60)} height="8" rx="4" fill={isBoiling ? '#fb923c' : '#f97316'} />
+            <text x="45" y="12" textAnchor="middle" fill={colors.textSecondary} fontSize="8">Temperature</text>
+            <text x="45" y="45" textAnchor="middle" fill={colors.accent} fontSize="10" fontWeight="bold">{temp.toFixed(0)}C</text>
           </g>
 
           {/* === BOILING POINT DISPLAY (CENTER) === */}
           <g transform="translate(155, 15)">
             <rect x="0" y="0" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
             <rect x="3" y="3" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
-            {/* Boiling indicator circle */}
             <circle cx="45" cy="28" r="12" fill="none" stroke={isBoiling ? '#f87171' : '#475569'} strokeWidth="2" />
             {isBoiling && (
               <circle cx="45" cy="28" r="8" fill="#f87171" opacity="0.6">
                 <animate attributeName="opacity" values="0.6;1;0.6" dur="0.5s" repeatCount="indefinite" />
               </circle>
             )}
+            <text x="45" y="12" textAnchor="middle" fill={colors.textSecondary} fontSize="8">Boils at</text>
+            <text x="45" y="50" textAnchor="middle" fill={colors.danger} fontSize="10" fontWeight="bold">{boilingPoint.toFixed(0)}C</text>
           </g>
 
           {/* === PREMIUM GLASS BEAKER === */}
@@ -806,7 +762,6 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
                   r={b.size}
                   fill="url(#boilBubbleGradient)"
                 />
-                {/* Bubble highlight */}
                 <circle
                   cx={b.x - b.size * 0.3}
                   cy={b.y - b.size * 0.3}
@@ -823,7 +778,6 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
               fill="none"
               stroke="url(#boilGlassGradient)"
               strokeWidth="4"
-              filter="url(#boilGlassShine)"
             />
 
             {/* Glass rim highlight */}
@@ -868,11 +822,8 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
 
           {/* === PREMIUM BURNER === */}
           <g>
-            {/* Burner base with metal gradient */}
             <rect x="115" y="264" width="170" height="16" rx="4" fill="url(#boilBurnerMetal)" />
-            {/* Burner top surface */}
             <rect x="115" y="264" width="170" height="3" rx="1" fill="#4b5563" />
-            {/* Burner grate lines */}
             {[135, 165, 195, 225, 255].map(x => (
               <rect key={x} x={x} y="267" width="4" height="10" rx="1" fill="#1f2937" />
             ))}
@@ -880,15 +831,12 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
             {/* Heat/Flame effect when heating */}
             {heating && (
               <g filter="url(#boilHeatGlowFilter)">
-                {/* Outer heat glow */}
                 <ellipse cx="200" cy="262" rx="70" ry="8" fill="url(#boilHeatGlow)">
                   <animate attributeName="opacity" values="0.5;0.8;0.5" dur="0.3s" repeatCount="indefinite" />
                 </ellipse>
-                {/* Main flame */}
                 <ellipse cx="200" cy="262" rx="50" ry="6" fill="url(#boilFlameGradient)">
                   <animate attributeName="rx" values="50;55;50" dur="0.2s" repeatCount="indefinite" />
                 </ellipse>
-                {/* Inner hot core */}
                 <ellipse cx="200" cy="261" rx="30" ry="3" fill="#fef9c3" fillOpacity="0.9">
                   <animate attributeName="fillOpacity" values="0.9;1;0.9" dur="0.15s" repeatCount="indefinite" />
                 </ellipse>
@@ -901,205 +849,205 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
             <rect x="140" y="175" width="120" height="35" rx="10" fill="url(#boilGaugeGradient)" stroke={
               isBoiling ? '#fb923c' : isGas ? '#f87171' : '#60a5fa'
             } strokeWidth="2" />
-            {/* Glow effect for active state */}
-            {isBoiling && (
-              <rect x="140" y="175" width="120" height="35" rx="10" fill="none" stroke="#fb923c" strokeWidth="1" strokeOpacity="0.5">
-                <animate attributeName="strokeOpacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
-              </rect>
-            )}
+            <text x="200" y="198" textAnchor="middle" fill={isBoiling ? colors.accent : isGas ? colors.danger : colors.water} fontSize="14" fontWeight="bold" style={{ textTransform: 'uppercase' }}>
+              {state}
+            </text>
           </g>
         </svg>
-
-        {/* Text labels outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginTop: '-260px',
-          padding: '0 20px',
-          position: 'relative',
-          pointerEvents: 'none'
-        }}>
-          {/* Pressure label */}
-          <div style={{
-            width: '90px',
-            textAlign: 'center',
-            marginTop: '25px'
-          }}>
-            <div style={{ fontSize: typo.label, color: colors.textSecondary, marginBottom: '2px' }}>Pressure</div>
-            <div style={{ fontSize: typo.body, color: colors.primary, fontWeight: 'bold' }}>{pres.toFixed(2)} atm</div>
-          </div>
-
-          {/* Boiling point label */}
-          <div style={{
-            width: '90px',
-            textAlign: 'center',
-            marginTop: '25px'
-          }}>
-            <div style={{ fontSize: typo.label, color: colors.textSecondary, marginBottom: '2px' }}>Boils at</div>
-            <div style={{ fontSize: typo.body, color: colors.danger, fontWeight: 'bold' }}>{boilingPoint.toFixed(0)}°C</div>
-          </div>
-
-          {/* Temperature label */}
-          <div style={{
-            width: '90px',
-            textAlign: 'center',
-            marginTop: '25px'
-          }}>
-            <div style={{ fontSize: typo.label, color: colors.textSecondary, marginBottom: '2px' }}>Temperature</div>
-            <div style={{ fontSize: typo.body, color: colors.accent, fontWeight: 'bold' }}>{temp.toFixed(0)}°C</div>
-          </div>
-        </div>
-
-        {/* State indicator label */}
-        <div style={{
-          position: 'relative',
-          marginTop: '78px',
-          textAlign: 'center',
-          pointerEvents: 'none'
-        }}>
-          <div style={{
-            display: 'inline-block',
-            fontSize: typo.bodyLarge,
-            fontWeight: 'bold',
-            color: isBoiling ? colors.accent : isGas ? colors.danger : colors.water,
-            textTransform: 'uppercase',
-            letterSpacing: '1px'
-          }}>
-            {state}
-          </div>
-        </div>
       </div>
     );
   };
 
   // Render hook phase
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHASE TRANSITIONS</span>
-      </div>
-
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
-        Why Is Mountain Cooking So Tricky?
-      </h1>
-
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Discover how pressure controls the boiling point of water
-      </p>
-
-      {/* Premium card with graphic */}
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5 rounded-3xl" />
-
-        <div className="relative">
-          <div className="text-6xl mb-6">
-            <span className="inline-block">&#127956;&#65039;</span>
-            <span className="mx-2">&#9749;</span>
-            <span className="inline-block">&#10067;</span>
-          </div>
-
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              Climbers on Mount Everest can't make a proper cup of tea. The water "boils"
-              but the tea doesn't steep properly.
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              What's going on? At Everest base camp, water boils at only 71C (160F)...
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-cyan-400 font-semibold">
-                The answer involves pressure and phase changes!
-              </p>
-            </div>
-          </div>
+    <div style={containerStyle}>
+      {renderTopNavBar()}
+      <div style={contentStyle}>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h1 style={{ color: colors.textPrimary, fontSize: typo.title, marginBottom: '8px' }}>
+            Why Is Mountain Cooking So Tricky?
+          </h1>
+          <p style={{ color: colors.primary, fontSize: typo.bodyLarge }}>
+            Discover how pressure controls the boiling point of water
+          </p>
         </div>
-      </div>
 
-      {/* Premium CTA button */}
-      <button
-        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Discover the Secret
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        {/* SVG visualization */}
+        <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '20px' }}>
+          <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
+            <defs>
+              <linearGradient id="mountainGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#475569" />
+              </linearGradient>
+            </defs>
+            <rect width="400" height="200" fill="#0f172a" />
+            {/* Mountain */}
+            <polygon points="50,200 200,50 350,200" fill="url(#mountainGrad)" />
+            {/* Snow cap */}
+            <polygon points="150,100 200,50 250,100 230,100 200,70 170,100" fill="#e2e8f0" />
+            {/* Pot at base */}
+            <rect x="60" y="160" width="40" height="30" fill="#475569" rx="4" />
+            <ellipse cx="80" cy="160" rx="20" ry="5" fill="#64748b" />
+            <text x="80" y="155" textAnchor="middle" fill={colors.textSecondary} fontSize="12">100C</text>
+            {/* Pot at summit */}
+            <rect x="180" y="60" width="40" height="30" fill="#475569" rx="4" />
+            <ellipse cx="200" cy="60" rx="20" ry="5" fill="#64748b" />
+            <text x="200" y="55" textAnchor="middle" fill={colors.textSecondary} fontSize="12">71C</text>
+            {/* Question marks */}
+            <text x="280" y="100" fill={colors.primary} fontSize="32">?</text>
           </svg>
-        </span>
-      </button>
+        </div>
 
-      {/* Feature hints */}
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">&#10022;</span>
-          Interactive Lab
+        <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
+          <p style={{ color: colors.textPrimary, fontSize: typo.bodyLarge, marginBottom: '12px', lineHeight: 1.6, fontWeight: 400 }}>
+            <strong>Imagine</strong> you&apos;re a climber on Mount Everest, desperately wanting a proper cup of tea.
+            The water &quot;boils&quot; but the tea doesn&apos;t steep properly. <strong>Surprising?</strong>
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.6, fontWeight: 400 }}>
+            At Everest base camp, water boils at only 71C (160F)...
+          </p>
+          <p style={{ color: colors.primary, fontSize: typo.body, fontWeight: 'bold', marginTop: '12px', lineHeight: 1.6 }}>
+            <strong>Discover</strong> how pressure controls boiling and <strong>wonder</strong> at this fascinating physics!
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">&#10022;</span>
-          Phase Diagrams
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">&#10022;</span>
-          Knowledge Test
-        </div>
+
+        <button
+          onClick={goToNextPhase}
+          style={{
+            width: '100%',
+            padding: '16px',
+            minHeight: '44px',
+            background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+            border: 'none',
+            borderRadius: '12px',
+            color: colors.textPrimary,
+            fontSize: typo.bodyLarge,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(6, 182, 212, 0.4)',
+          }}
+        >
+          Discover the Secret
+        </button>
       </div>
     </div>
   );
 
   // Render predict phase
   const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          If you reduce the air pressure around water, what happens to its boiling point?
-        </p>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          'The boiling point increases',
-          'The boiling point decreases',
-          'The boiling point stays the same',
-          'Water can no longer boil'
-        ].map((option, i) => (
-          <button
-            key={i}
-            onPointerDown={() => {
-              playSound('click');
-              setPrediction(option);
-              emitEvent('prediction_made', { prediction: option });
-            }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              prediction === option
-                ? i === 1 ? "bg-emerald-600/40 border-2 border-emerald-400" : "bg-cyan-600/40 border-2 border-cyan-400"
-                : "bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent"
-            }`}
-          >
-            <span className="text-slate-200">{option}</span>
-          </button>
-        ))}
-      </div>
-
-      {prediction && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className={`font-semibold ${prediction === 'The boiling point decreases' ? "text-emerald-400" : "text-cyan-400"}`}>
-            {prediction === 'The boiling point decreases'
-              ? "Correct! Lower pressure means water boils at lower temperatures!"
-              : "Not quite - lower pressure actually decreases the boiling point!"}
-          </p>
-          <button
-            onPointerDown={() => goToNextPhase()}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
-          >
-            Test Your Prediction
-          </button>
+    <div style={containerStyle}>
+      {renderTopNavBar()}
+      <div style={contentStyle}>
+        {/* Progress indicator for predict phase */}
+        <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Step 1 of 4: Make your prediction</span>
         </div>
-      )}
+
+        <h2 style={{ color: colors.textPrimary, fontSize: typo.heading, textAlign: 'center', marginBottom: '16px' }}>
+          Make Your Prediction
+        </h2>
+
+        {/* SVG visualization for predict phase */}
+        <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+          <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
+            <rect width="400" height="200" fill="#0f172a" />
+            {/* Pressure arrows */}
+            <text x="200" y="30" textAnchor="middle" fill={colors.textSecondary} fontSize="14">High Pressure</text>
+            <line x1="100" y1="50" x2="100" y2="80" stroke={colors.primary} strokeWidth="3" markerEnd="url(#arrowDown)" />
+            <line x1="150" y1="50" x2="150" y2="80" stroke={colors.primary} strokeWidth="3" />
+            <line x1="250" y1="50" x2="250" y2="80" stroke={colors.primary} strokeWidth="3" />
+            <line x1="300" y1="50" x2="300" y2="80" stroke={colors.primary} strokeWidth="3" />
+            {/* Water surface */}
+            <rect x="80" y="90" width="240" height="80" fill="#3b82f6" fillOpacity="0.5" rx="4" />
+            <text x="200" y="135" textAnchor="middle" fill={colors.textPrimary} fontSize="12">Water</text>
+            {/* Question */}
+            <text x="200" y="190" textAnchor="middle" fill={colors.warning} fontSize="14">What happens when pressure decreases?</text>
+          </svg>
+        </div>
+
+        <div style={{ background: colors.bgCardLight, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
+            If you reduce the air pressure around water, what happens to its boiling point?
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[
+            { id: 'increase', text: 'The boiling point increases' },
+            { id: 'decrease', text: 'The boiling point decreases' },
+            { id: 'same', text: 'The boiling point stays the same' },
+            { id: 'none', text: 'Water can no longer boil' }
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => {
+                playSound('click');
+                setPrediction(option.id);
+                emitEvent('prediction_made', { prediction: option.id });
+              }}
+              style={{
+                padding: '14px',
+                minHeight: '44px',
+                background: prediction === option.id
+                  ? option.id === 'decrease'
+                    ? 'rgba(16, 185, 129, 0.3)'
+                    : 'rgba(6, 182, 212, 0.3)'
+                  : 'rgba(51, 65, 85, 0.5)',
+                border: prediction === option.id
+                  ? option.id === 'decrease'
+                    ? '2px solid rgba(16, 185, 129, 0.5)'
+                    : '2px solid rgba(6, 182, 212, 0.5)'
+                  : '2px solid transparent',
+                borderRadius: '10px',
+                color: colors.textSecondary,
+                fontSize: typo.body,
+                textAlign: 'left',
+                cursor: 'pointer',
+              }}
+            >
+              {option.text}
+            </button>
+          ))}
+        </div>
+
+        {prediction && (
+          <div style={{ marginTop: '16px', padding: '16px', background: colors.bgCardLight, borderRadius: '12px' }}>
+            <p style={{
+              color: prediction === 'decrease' ? colors.success : colors.danger,
+              fontWeight: 'bold',
+              marginBottom: '8px'
+            }}>
+              {prediction === 'decrease'
+                ? '✓ Correct! Lower pressure means water boils at lower temperatures!'
+                : '✗ Not quite - the correct answer is that boiling point decreases.'}
+            </p>
+            {prediction !== 'decrease' && (
+              <p style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '12px' }}>
+                <strong>Explanation:</strong> When air pressure decreases, there&apos;s less force pushing down on the water&apos;s surface.
+                This makes it easier for water molecules to escape into vapor, so boiling happens at a lower temperature.
+                At sea level (1 atm), water boils at 100°C. On Mount Everest (0.33 atm), it boils at only 71°C!
+              </p>
+            )}
+            <button
+              onClick={goToNextPhase}
+              style={{
+                width: '100%',
+                padding: '14px',
+                minHeight: '44px',
+                background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                border: 'none',
+                borderRadius: '10px',
+                color: colors.textPrimary,
+                fontWeight: 'bold',
+                cursor: 'pointer',
+              }}
+            >
+              Test Your Prediction
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -1108,18 +1056,23 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
     const boilingPoint = getBoilingPoint(pressure);
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-4">Pressure and Boiling Point</h2>
-        <p className="text-slate-400 mb-6 text-center max-w-md">
-          Adjust the pressure and heat the water to see how boiling point changes!
-        </p>
+      <div style={containerStyle}>
+        {renderTopNavBar()}
+        <div style={contentStyle}>
+          <h2 style={{ color: colors.textPrimary, fontSize: typo.heading, textAlign: 'center', marginBottom: '8px' }}>
+            Pressure and Boiling Point
+          </h2>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 mb-6 w-full max-w-lg">
-          {renderBeaker(temperature, pressure, bubbles)}
+          {/* Observation guidance */}
+          <p style={{ color: colors.textSecondary, fontSize: typo.body, textAlign: 'center', marginBottom: '16px' }}>
+            <strong>Observe</strong> how changing pressure affects the boiling point. <strong>Try</strong> adjusting the slider below and <strong>notice</strong> when bubbles appear! <strong>Experiment</strong> with different pressures and <strong>see what happens</strong> to the boiling temperature.
+          </p>
 
-          <div className="mt-6 space-y-4">
-            <div>
-              <label className="block text-cyan-400 font-medium mb-2">
+          <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+            {renderBeaker(temperature, pressure, bubbles)}
+
+            <div style={{ marginTop: '16px' }}>
+              <label style={{ display: 'block', color: colors.primary, fontWeight: 'bold', marginBottom: '8px' }}>
                 Pressure: {pressure.toFixed(2)} atm
               </label>
               <input
@@ -1132,169 +1085,295 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
                   setPressure(Number(e.target.value));
                   setTemperature(25);
                 }}
-                className="w-full accent-cyan-500"
+                style={{ width: '100%', accentColor: colors.primary }}
               />
-              <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.small, color: colors.textMuted, marginTop: '4px' }}>
                 <span>Vacuum (0.1)</span>
                 <span>Sea Level (1.0)</span>
                 <span>Pressure Cooker (3.0)</span>
               </div>
             </div>
+
+            <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
+              <p style={{ color: colors.textSecondary }}>
+                At <span style={{ color: colors.primary, fontWeight: 'bold' }}>{pressure.toFixed(2)} atm</span>, water boils at{' '}
+                <span style={{ color: colors.accent, fontWeight: 'bold' }}>{boilingPoint.toFixed(0)}C</span>
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setHeating(!heating);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  minHeight: '44px',
+                  background: heating ? colors.danger : colors.accent,
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: colors.textPrimary,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                {heating ? 'Stop Heating' : 'Heat Water'}
+              </button>
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setTemperature(25);
+                  setHeating(false);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  minHeight: '44px',
+                  background: 'rgba(71, 85, 105, 0.6)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: colors.textSecondary,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                Reset
+              </button>
+            </div>
           </div>
 
-          <div className="mt-4 p-4 bg-slate-700/50 rounded-lg">
-            <p className="text-slate-300 text-center">
-              At <span className="text-cyan-400 font-bold">{pressure.toFixed(2)} atm</span>, water boils at{' '}
-              <span className="text-orange-400 font-bold">{boilingPoint.toFixed(0)}C</span>
+          {/* Key physics terms and real-world relevance */}
+          <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(59, 130, 246, 0.3)', maxWidth: '700px', marginLeft: 'auto', marginRight: 'auto', marginBottom: '16px' }}>
+            <h4 style={{ color: colors.secondary, fontSize: typo.body, fontWeight: 700, marginBottom: '8px', lineHeight: 1.4 }}>Key Physics Terms</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: typo.small, paddingLeft: '20px', margin: '0 0 12px 0', lineHeight: 1.6 }}>
+              <li><strong>Boiling Point</strong> is defined as the temperature at which a liquid&apos;s vapor pressure equals the surrounding atmospheric pressure. The formula is: P_vapor = P_atmospheric.</li>
+              <li><strong>Atmospheric Pressure (atm)</strong> is a measure of the force exerted by air molecules on surfaces (1 atm = 101,325 Pa at sea level).</li>
+              <li><strong>Vapor Pressure</strong> refers to the pressure exerted by molecules escaping from a liquid&apos;s surface into the gas phase.</li>
+              <li><strong>Clausius-Clapeyron Equation</strong> describes how the relationship between pressure and boiling point is calculated logarithmically.</li>
+            </ul>
+            <p style={{ color: colors.primary, fontSize: typo.small, margin: 0, fontWeight: 600, lineHeight: 1.5 }}>
+              <strong>Why This Matters:</strong> Understanding pressure-boiling relationships is essential for cooking at altitude, industrial chemical processing, and even designing spacecraft life support systems!
             </p>
           </div>
 
-          <div className="flex justify-center gap-4 mt-6">
-            <button
-              onPointerDown={() => {
-                playSound('click');
-                setHeating(!heating);
-              }}
-              className={`px-6 py-3 rounded-lg font-bold ${
-                heating
-                  ? 'bg-red-600 text-white'
-                  : 'bg-orange-600 text-white'
-              }`}
-            >
-              {heating ? '&#128293; Stop Heating' : '&#128293; Heat Water'}
-            </button>
-            <button
-              onPointerDown={() => {
-                playSound('click');
-                setTemperature(25);
-                setHeating(false);
-              }}
-              className="px-6 py-3 bg-slate-600 text-white rounded-lg font-bold"
-            >
-              &#128260; Reset
-            </button>
-          </div>
+          <button
+            onClick={() => { setHeating(false); goToNextPhase(); }}
+            style={{
+              width: '100%',
+              padding: '14px',
+              minHeight: '44px',
+              background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+              border: 'none',
+              borderRadius: '12px',
+              color: colors.textPrimary,
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              maxWidth: '700px',
+              display: 'block',
+              margin: '0 auto',
+            }}
+          >
+            Understand the Physics
+          </button>
         </div>
-
-        <button
-          onPointerDown={() => { setHeating(false); goToNextPhase(); }}
-          className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
-        >
-          Understand the Physics
-        </button>
       </div>
     );
   };
 
   // Render review phase
   const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Why Pressure Changes Boiling Point</h2>
+    <div style={containerStyle}>
+      {renderTopNavBar()}
+      <div style={contentStyle}>
+        <h2 style={{ color: colors.textPrimary, fontSize: typo.heading, textAlign: 'center', marginBottom: '16px' }}>
+          Why Pressure Changes Boiling Point
+        </h2>
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-blue-900/40 to-cyan-900/40 rounded-2xl p-6 border border-blue-600/30">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">The Molecular Battle</h3>
-          <p className="text-slate-300 text-sm">
-            Boiling occurs when water molecules have enough energy to escape into the air.
-            <span className="text-yellow-400 font-bold"> Higher pressure pushes back</span> on the
-            surface, requiring more energy (higher temperature) to escape.
+        {/* Connect to prediction made earlier */}
+        <div style={{ background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(16, 185, 129, 0.3)', maxWidth: '700px', marginLeft: 'auto', marginRight: 'auto', marginBottom: '16px' }}>
+          <p style={{ color: colors.success, fontSize: typo.body, margin: 0, lineHeight: 1.6 }}>
+            <strong>As you observed</strong> in the experiment, {prediction === 'decrease' ? 'your prediction was correct!' : 'the result showed that'} lower pressure causes water to boil at lower temperatures. This is exactly what happens on Mount Everest - the reduced atmospheric pressure means water boils before it gets hot enough to properly cook food.
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-cyan-900/40 to-teal-900/40 rounded-2xl p-6 border border-cyan-600/30">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">Pressure vs Temperature</h3>
-          <div className="grid grid-cols-3 gap-2 mt-3">
-            <div className="p-2 bg-slate-800/50 rounded-lg text-center">
-              <div className="text-lg mb-1">&#127956;&#65039;</div>
-              <p className="text-xs text-slate-400">Everest</p>
-              <p className="text-cyan-400 font-bold text-sm">0.33 atm</p>
-              <p className="text-orange-400 text-sm">71C</p>
+        <div style={{ display: 'grid', gap: '12px', maxWidth: '700px', margin: '0 auto' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2))', borderRadius: '12px', padding: '16px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+            <h3 style={{ color: colors.secondary, fontSize: typo.bodyLarge, marginBottom: '8px', lineHeight: 1.4 }}>The Molecular Battle</h3>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>
+              Boiling occurs when water molecules have enough energy to escape into the air.
+              <span style={{ color: colors.warning, fontWeight: 'bold' }}> Higher pressure pushes back</span> on the
+              surface, requiring more energy (higher temperature) to escape.
+            </p>
+          </div>
+
+          <div style={{ background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(20, 184, 166, 0.2))', borderRadius: '12px', padding: '16px', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
+            <h3 style={{ color: colors.primary, fontSize: typo.bodyLarge, marginBottom: '8px' }}>Pressure vs Temperature</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '8px' }}>
+              <div style={{ padding: '8px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontSize: '20px', marginBottom: '4px' }}>Mountain</div>
+                <p style={{ fontSize: typo.label, color: colors.textMuted }}>Everest</p>
+                <p style={{ color: colors.primary, fontWeight: 'bold', fontSize: typo.small }}>0.33 atm</p>
+                <p style={{ color: colors.accent, fontSize: typo.small }}>71C</p>
+              </div>
+              <div style={{ padding: '8px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontSize: '20px', marginBottom: '4px' }}>Beach</div>
+                <p style={{ fontSize: typo.label, color: colors.textMuted }}>Sea Level</p>
+                <p style={{ color: colors.primary, fontWeight: 'bold', fontSize: typo.small }}>1.0 atm</p>
+                <p style={{ color: colors.accent, fontSize: typo.small }}>100C</p>
+              </div>
+              <div style={{ padding: '8px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontSize: '20px', marginBottom: '4px' }}>Pot</div>
+                <p style={{ fontSize: typo.label, color: colors.textMuted }}>Pressure Cooker</p>
+                <p style={{ color: colors.primary, fontWeight: 'bold', fontSize: typo.small }}>2.0 atm</p>
+                <p style={{ color: colors.accent, fontSize: typo.small }}>120C</p>
+              </div>
             </div>
-            <div className="p-2 bg-slate-800/50 rounded-lg text-center">
-              <div className="text-lg mb-1">&#127958;&#65039;</div>
-              <p className="text-xs text-slate-400">Sea Level</p>
-              <p className="text-cyan-400 font-bold text-sm">1.0 atm</p>
-              <p className="text-orange-400 text-sm">100C</p>
-            </div>
-            <div className="p-2 bg-slate-800/50 rounded-lg text-center">
-              <div className="text-lg mb-1">&#127858;</div>
-              <p className="text-xs text-slate-400">Pressure Cooker</p>
-              <p className="text-cyan-400 font-bold text-sm">2.0 atm</p>
-              <p className="text-orange-400 text-sm">120C</p>
-            </div>
+          </div>
+
+          <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(249, 115, 22, 0.2))', borderRadius: '12px', padding: '16px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+            <h3 style={{ color: colors.warning, fontSize: typo.bodyLarge, marginBottom: '8px' }}>Key Insight</h3>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
+              The boiling point isn&apos;t a fixed property of water - it depends on the surrounding pressure!
+              The Clausius-Clapeyron equation describes this relationship mathematically.
+            </p>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 rounded-2xl p-6 border border-yellow-600/30 md:col-span-2">
-          <h3 className="text-xl font-bold text-yellow-400 mb-3">&#128161; Key Insight</h3>
-          <p className="text-slate-300">
-            The boiling point isn't a fixed property of water - it depends on the surrounding pressure!
-            The Clausius-Clapeyron equation describes this relationship mathematically.
-          </p>
-        </div>
+        <button
+          onClick={goToNextPhase}
+          style={{
+            width: '100%',
+            marginTop: '20px',
+            padding: '14px',
+            minHeight: '44px',
+            background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+            border: 'none',
+            borderRadius: '12px',
+            color: colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+          }}
+        >
+          Ready for a Twist?
+        </button>
       </div>
-
-      <button
-        onPointerDown={() => goToNextPhase()}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
-      >
-        Ready for a Twist?
-      </button>
     </div>
   );
 
   // Render twist predict phase
   const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Cooking Challenge</h2>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          You need to cook pasta in boiling water. At high altitude where water boils at 85C
-          instead of 100C, how will cooking time change?
-        </p>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          'Faster - boiling is boiling',
-          'About the same time',
-          'Longer - the water is cooler',
-          'Impossible - pasta needs 100C water'
-        ].map((option, i) => (
-          <button
-            key={i}
-            onPointerDown={() => {
-              playSound('click');
-              setTwistPrediction(option);
-              emitEvent('twist_prediction_made', { prediction: option });
-            }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              twistPrediction === option
-                ? i === 2 ? "bg-emerald-600/40 border-2 border-emerald-400" : "bg-purple-600/40 border-2 border-purple-400"
-                : "bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent"
-            }`}
-          >
-            <span className="text-slate-200">{option}</span>
-          </button>
-        ))}
-      </div>
-
-      {twistPrediction && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className={`font-semibold ${twistPrediction === 'Longer - the water is cooler' ? "text-emerald-400" : "text-amber-400"}`}>
-            {twistPrediction === 'Longer - the water is cooler'
-              ? "Correct! Lower boiling point means cooler water, so cooking takes longer!"
-              : "Not quite - the cooler water temperature means longer cooking time!"}
-          </p>
-          <button
-            onPointerDown={() => goToNextPhase()}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
-          >
-            See the Difference
-          </button>
+    <div style={containerStyle}>
+      {renderTopNavBar()}
+      <div style={contentStyle}>
+        {/* Progress indicator */}
+        <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Step 2 of 4: Twist prediction</span>
         </div>
-      )}
+
+        <h2 style={{ color: colors.warning, fontSize: typo.heading, textAlign: 'center', marginBottom: '16px' }}>
+          The Cooking Challenge
+        </h2>
+
+        {/* SVG visualization */}
+        <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+          <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
+            <rect width="400" height="200" fill="#0f172a" />
+            {/* Pasta */}
+            <rect x="150" y="100" width="100" height="60" fill="#475569" rx="8" />
+            <ellipse cx="200" cy="100" rx="50" ry="10" fill="#64748b" />
+            <text x="200" y="140" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Pasta</text>
+            {/* Temperature comparison */}
+            <text x="80" y="50" textAnchor="middle" fill={colors.success} fontSize="14">Sea Level</text>
+            <text x="80" y="70" textAnchor="middle" fill={colors.textSecondary} fontSize="12">100C</text>
+            <text x="320" y="50" textAnchor="middle" fill={colors.warning} fontSize="14">High Altitude</text>
+            <text x="320" y="70" textAnchor="middle" fill={colors.textSecondary} fontSize="12">85C</text>
+            <text x="200" y="190" textAnchor="middle" fill={colors.primary} fontSize="14">How does cooking time change?</text>
+          </svg>
+        </div>
+
+        <div style={{ background: colors.bgCardLight, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
+            You need to cook pasta in boiling water. At high altitude where water boils at 85C
+            instead of 100C, how will cooking time change?
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[
+            { id: 'faster', text: 'Faster - boiling is boiling' },
+            { id: 'same', text: 'About the same time' },
+            { id: 'longer', text: 'Longer - the water is cooler' },
+            { id: 'impossible', text: 'Impossible - pasta needs 100C water' }
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => {
+                playSound('click');
+                setTwistPrediction(option.id);
+                emitEvent('twist_prediction_made', { prediction: option.id });
+              }}
+              style={{
+                padding: '14px',
+                minHeight: '44px',
+                background: twistPrediction === option.id
+                  ? option.id === 'longer'
+                    ? 'rgba(16, 185, 129, 0.3)'
+                    : 'rgba(168, 85, 247, 0.3)'
+                  : 'rgba(51, 65, 85, 0.5)',
+                border: twistPrediction === option.id
+                  ? option.id === 'longer'
+                    ? '2px solid rgba(16, 185, 129, 0.5)'
+                    : '2px solid rgba(168, 85, 247, 0.5)'
+                  : '2px solid transparent',
+                borderRadius: '10px',
+                color: colors.textSecondary,
+                fontSize: typo.body,
+                textAlign: 'left',
+                cursor: 'pointer',
+              }}
+            >
+              {option.text}
+            </button>
+          ))}
+        </div>
+
+        {twistPrediction && (
+          <div style={{ marginTop: '16px', padding: '16px', background: colors.bgCardLight, borderRadius: '12px' }}>
+            <p style={{
+              color: twistPrediction === 'longer' ? colors.success : colors.danger,
+              fontWeight: 'bold',
+              marginBottom: '8px'
+            }}>
+              {twistPrediction === 'longer'
+                ? '✓ Correct! Lower boiling point means cooler water, so cooking takes longer!'
+                : '✗ Not quite - the correct answer is that cooking takes longer.'}
+            </p>
+            {twistPrediction !== 'longer' && (
+              <p style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '12px' }}>
+                <strong>Explanation:</strong> Even though the water is &quot;boiling,&quot; at 85°C it&apos;s 15°C cooler than at sea level.
+                Chemical reactions in food (like proteins denaturing and starches breaking down) happen more slowly at lower temperatures.
+                So pasta that needs 10 minutes at sea level might need 15+ minutes at high altitude!
+              </p>
+            )}
+            <button
+              onClick={goToNextPhase}
+              style={{
+                width: '100%',
+                padding: '14px',
+                minHeight: '44px',
+                background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+                border: 'none',
+                borderRadius: '10px',
+                color: colors.textPrimary,
+                fontWeight: 'bold',
+                cursor: 'pointer',
+              }}
+            >
+              See the Difference
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -1304,301 +1383,679 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
     const boilingPoint = getBoilingPoint(twistPressure);
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-amber-400 mb-4">Altitude Cooking Comparison</h2>
+      <div style={containerStyle}>
+        {renderTopNavBar()}
+        <div style={contentStyle}>
+          <h2 style={{ color: colors.warning, fontSize: typo.heading, textAlign: 'center', marginBottom: '8px' }}>
+            Altitude Cooking Comparison
+          </h2>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 w-full max-w-lg">
-          <div className="flex justify-center gap-2 mb-6">
-            {(['sea', 'denver', 'everest'] as const).map(loc => (
-              <button
-                key={loc}
-                onPointerDown={() => {
-                  playSound('click');
+          {/* Observation guidance */}
+          <p style={{ color: colors.textSecondary, fontSize: typo.body, textAlign: 'center', marginBottom: '16px' }}>
+            Observe how altitude affects boiling temperature. Adjust the altitude slider or select different locations below!
+          </p>
+
+          <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px' }}>
+            {/* Altitude slider control */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: colors.primary, fontWeight: 'bold', marginBottom: '8px' }}>
+                Altitude: {twistLocation === 'sea' ? '0m (Sea Level)' : twistLocation === 'denver' ? '1,600m (Denver)' : '5,400m (Everest)'}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="1"
+                value={twistLocation === 'sea' ? 0 : twistLocation === 'denver' ? 1 : 2}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  const loc = val === 0 ? 'sea' : val === 1 ? 'denver' : 'everest';
                   setTwistLocation(loc);
                   setTwistTemp(25);
                   setTwistHeating(false);
                 }}
-                className={`px-4 py-2 rounded-lg font-bold text-sm ${
-                  twistLocation === loc
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-700 text-slate-300'
-                }`}
-              >
-                {loc === 'sea' ? '&#127958;&#65039; Sea Level' : loc === 'denver' ? '&#127961;&#65039; Denver' : '&#127956;&#65039; Everest'}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="p-3 bg-slate-700/50 rounded-lg text-center">
-              <p className="text-slate-400 text-sm">Altitude</p>
-              <p className="text-white font-bold">
-                {twistLocation === 'sea' ? '0m' : twistLocation === 'denver' ? '1,600m' : '5,400m'}
-              </p>
-            </div>
-            <div className="p-3 bg-slate-700/50 rounded-lg text-center">
-              <p className="text-slate-400 text-sm">Pressure</p>
-              <p className="text-cyan-400 font-bold">{twistPressure.toFixed(2)} atm</p>
-            </div>
-            <div className="p-3 bg-slate-700/50 rounded-lg text-center">
-              <p className="text-slate-400 text-sm">Boils at</p>
-              <p className="text-orange-400 font-bold">{boilingPoint.toFixed(0)}C</p>
-            </div>
-          </div>
-
-          <div className="h-32 bg-slate-900/50 rounded-lg flex items-center justify-center mb-4">
-            <div className="text-center">
-              <div className="text-4xl mb-2">
-                {twistTemp >= boilingPoint ? '&#128168;' : '&#129749;'}
+                style={{ width: '100%', accentColor: colors.primary }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                <span>Sea Level (0m)</span>
+                <span>Denver (1,600m)</span>
+                <span>Everest (5,400m)</span>
               </div>
-              <p className={`font-bold ${twistTemp >= boilingPoint ? 'text-orange-400' : 'text-blue-400'}`}>
-                {twistTemp.toFixed(0)}C
-              </p>
-              <p className="text-slate-400 text-sm">
-                {twistTemp >= boilingPoint ? 'BOILING!' : 'Heating...'}
-              </p>
             </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
+              {(['sea', 'denver', 'everest'] as const).map(loc => (
+                <button
+                  key={loc}
+                  onClick={() => {
+                    playSound('click');
+                    setTwistLocation(loc);
+                    setTwistTemp(25);
+                    setTwistHeating(false);
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    minHeight: '44px',
+                    background: twistLocation === loc ? colors.secondary : 'rgba(71, 85, 105, 0.6)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: colors.textPrimary,
+                    fontWeight: 'bold',
+                    fontSize: typo.small,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {loc === 'sea' ? 'Sea Level' : loc === 'denver' ? 'Denver' : 'Everest'}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
+              <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
+                <p style={{ color: colors.textMuted, fontSize: typo.small }}>Altitude</p>
+                <p style={{ color: colors.textPrimary, fontWeight: 'bold' }}>
+                  {twistLocation === 'sea' ? '0m' : twistLocation === 'denver' ? '1,600m' : '5,400m'}
+                </p>
+              </div>
+              <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
+                <p style={{ color: colors.textMuted, fontSize: typo.small }}>Pressure</p>
+                <p style={{ color: colors.primary, fontWeight: 'bold' }}>{twistPressure.toFixed(2)} atm</p>
+              </div>
+              <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
+                <p style={{ color: colors.textMuted, fontSize: typo.small }}>Boils at</p>
+                <p style={{ color: colors.accent, fontWeight: 'bold' }}>{boilingPoint.toFixed(0)}C</p>
+              </div>
+            </div>
+
+            <div style={{ height: '120px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '40px', marginBottom: '8px' }}>
+                  {twistTemp >= boilingPoint ? '💨' : '🫖'}
+                </div>
+                <p style={{ fontWeight: 'bold', color: twistTemp >= boilingPoint ? colors.accent : colors.secondary }}>
+                  {twistTemp.toFixed(0)}C
+                </p>
+                <p style={{ color: colors.textMuted, fontSize: typo.small }}>
+                  {twistTemp >= boilingPoint ? 'BOILING!' : 'Heating...'}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setTwistHeating(!twistHeating);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  minHeight: '44px',
+                  background: twistHeating ? colors.danger : colors.accent,
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: colors.textPrimary,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                {twistHeating ? 'Stop' : 'Heat'}
+              </button>
+            </div>
+
+            {twistTemp >= boilingPoint && (
+              <div style={{
+                marginTop: '16px',
+                padding: '12px',
+                borderRadius: '8px',
+                background: twistLocation === 'everest'
+                  ? 'rgba(245, 158, 11, 0.2)'
+                  : twistLocation === 'denver'
+                    ? 'rgba(249, 115, 22, 0.2)'
+                    : 'rgba(16, 185, 129, 0.2)',
+                border: `1px solid ${
+                  twistLocation === 'everest'
+                    ? colors.warning
+                    : twistLocation === 'denver'
+                      ? colors.accent
+                      : colors.success
+                }`,
+              }}>
+                <p style={{
+                  textAlign: 'center',
+                  color: twistLocation === 'everest'
+                    ? '#fcd34d'
+                    : twistLocation === 'denver'
+                      ? '#fdba74'
+                      : '#6ee7b7',
+                }}>
+                  {twistLocation === 'everest'
+                    ? 'Water boiling at only 71C - pasta will take 50% longer!'
+                    : twistLocation === 'denver'
+                      ? 'Water at 95C - add ~20% more cooking time'
+                      : 'Perfect 100C for standard cooking times'}
+                </p>
+              </div>
+            )}
           </div>
 
-          <div className="flex justify-center gap-4">
-            <button
-              onPointerDown={() => {
-                playSound('click');
-                setTwistHeating(!twistHeating);
-              }}
-              className={`px-6 py-3 rounded-lg font-bold ${
-                twistHeating ? 'bg-red-600 text-white' : 'bg-orange-600 text-white'
-              }`}
-            >
-              {twistHeating ? '&#9632; Stop' : '&#128293; Heat'}
-            </button>
-          </div>
-
-          {twistTemp >= boilingPoint && (
-            <div className={`mt-4 p-4 rounded-lg border ${
-              twistLocation === 'everest'
-                ? 'bg-yellow-900/30 border-yellow-600'
-                : twistLocation === 'denver'
-                  ? 'bg-orange-900/30 border-orange-600'
-                  : 'bg-emerald-900/30 border-emerald-600'
-            }`}>
-              <p className={`text-center ${
-                twistLocation === 'everest'
-                  ? 'text-yellow-300'
-                  : twistLocation === 'denver'
-                    ? 'text-orange-300'
-                    : 'text-emerald-300'
-              }`}>
-                {twistLocation === 'everest'
-                  ? '&#9888;&#65039; Water boiling at only 71C - pasta will take 50% longer!'
-                  : twistLocation === 'denver'
-                    ? '&#9888;&#65039; Water at 95C - add ~20% more cooking time'
-                    : '&#10003; Perfect 100C for standard cooking times'}
-              </p>
-            </div>
-          )}
+          <button
+            onClick={() => { setTwistHeating(false); goToNextPhase(); }}
+            style={{
+              width: '100%',
+              marginTop: '16px',
+              padding: '14px',
+              minHeight: '44px',
+              background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+              border: 'none',
+              borderRadius: '12px',
+              color: colors.textPrimary,
+              fontWeight: 'bold',
+              cursor: 'pointer',
+            }}
+          >
+            Understand the Impact
+          </button>
         </div>
-
-        <button
-          onPointerDown={() => { setTwistHeating(false); goToNextPhase(); }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
-        >
-          Understand the Impact
-        </button>
       </div>
     );
   };
 
   // Render twist review phase
   const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Cooking Temperature Matters!</h2>
+    <div style={containerStyle}>
+      {renderTopNavBar()}
+      <div style={contentStyle}>
+        <h2 style={{ color: colors.warning, fontSize: typo.heading, textAlign: 'center', marginBottom: '16px' }}>
+          Cooking Temperature Matters!
+        </h2>
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-orange-900/40 to-red-900/40 rounded-2xl p-6 border border-orange-600/30">
-          <h3 className="text-xl font-bold text-orange-400 mb-3">The Temperature-Time Tradeoff</h3>
-          <p className="text-slate-300 text-sm">
-            Cooking speed depends on <span className="text-yellow-400 font-bold">temperature, not just boiling</span>.
-            At lower boiling points, chemical reactions in food happen slower -
-            so cooking takes longer even though the water is "boiling."
-          </p>
+        <div style={{ display: 'grid', gap: '12px' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(239, 68, 68, 0.2))', borderRadius: '12px', padding: '16px', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
+            <h3 style={{ color: colors.accent, fontSize: typo.bodyLarge, marginBottom: '8px' }}>The Temperature-Time Tradeoff</h3>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
+              Cooking speed depends on <span style={{ color: colors.warning, fontWeight: 'bold' }}>temperature, not just boiling</span>.
+              At lower boiling points, chemical reactions in food happen slower -
+              so cooking takes longer even though the water is &quot;boiling.&quot;
+            </p>
+          </div>
+
+          <div style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(236, 72, 153, 0.2))', borderRadius: '12px', padding: '16px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+            <h4 style={{ color: colors.danger, fontSize: typo.body, marginBottom: '8px' }}>High Altitude Problems</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: typo.small, paddingLeft: '20px', margin: 0 }}>
+              <li>Pasta undercooked despite boiling</li>
+              <li>Eggs take longer to hardboil</li>
+              <li>Baked goods rise too fast, then collapse</li>
+              <li>Beans may never fully soften</li>
+            </ul>
+          </div>
+
+          <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(20, 184, 166, 0.2))', borderRadius: '12px', padding: '16px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+            <h4 style={{ color: colors.success, fontSize: typo.body, marginBottom: '8px' }}>Pressure Cooker Solution</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: typo.small, paddingLeft: '20px', margin: 0 }}>
+              <li>Raises boiling point to 120C</li>
+              <li>Beans in 20 min (vs 2 hours)</li>
+              <li>Tough meats become tender fast</li>
+              <li>Works at any altitude!</li>
+            </ul>
+          </div>
+
+          <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(249, 115, 22, 0.2))', borderRadius: '12px', padding: '16px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+            <p style={{ color: '#fcd34d', fontSize: typo.small }}>
+              <strong>Fun Fact:</strong> On Mars (0.006 atm), water would boil at body temperature!
+              Astronauts will need pressure cookers - or they&apos;ll eat very undercooked food.
+            </p>
+          </div>
         </div>
 
-        <div className="bg-gradient-to-br from-red-900/40 to-pink-900/40 rounded-2xl p-6 border border-red-600/30">
-          <h4 className="text-lg font-bold text-red-400 mb-2">High Altitude Problems</h4>
-          <ul className="text-slate-300 text-sm space-y-1">
-            <li>Pasta undercooked despite boiling</li>
-            <li>Eggs take longer to hardboil</li>
-            <li>Baked goods rise too fast, then collapse</li>
-            <li>Beans may never fully soften</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-emerald-900/40 to-teal-900/40 rounded-2xl p-6 border border-emerald-600/30">
-          <h4 className="text-lg font-bold text-emerald-400 mb-2">Pressure Cooker Solution</h4>
-          <ul className="text-slate-300 text-sm space-y-1">
-            <li>Raises boiling point to 120C</li>
-            <li>Beans in 20 min (vs 2 hours)</li>
-            <li>Tough meats become tender fast</li>
-            <li>Works at any altitude!</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 rounded-2xl p-6 border border-yellow-600/30">
-          <p className="text-yellow-300 text-sm">
-            &#128161; <strong>Fun Fact:</strong> On Mars (0.006 atm), water would boil at body temperature!
-            Astronauts will need pressure cookers - or they'll eat very undercooked food.
-          </p>
-        </div>
+        <button
+          onClick={goToNextPhase}
+          style={{
+            width: '100%',
+            marginTop: '20px',
+            padding: '14px',
+            minHeight: '44px',
+            background: 'linear-gradient(135deg, #14b8a6, #3b82f6)',
+            border: 'none',
+            borderRadius: '12px',
+            color: colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+          }}
+        >
+          See Real Applications
+        </button>
       </div>
-
-      <button
-        onPointerDown={() => goToNextPhase()}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white font-semibold rounded-xl"
-      >
-        See Real Applications
-      </button>
     </div>
   );
 
   // Render transfer phase
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-      <p className="text-slate-400 text-center mb-6">Explore how pressure affects phase changes</p>
+  const renderTransfer = () => {
+    const currentApp = TRANSFER_APPS[selectedApp];
+    const allCompleted = completedApps.size >= TRANSFER_APPS.length;
 
-      <div className="grid md:grid-cols-2 gap-4 max-w-2xl">
-        {TRANSFER_APPS.map((app, i) => (
-          <button
-            key={i}
-            onPointerDown={() => {
-              playSound('click');
-              setCompletedApps(prev => new Set([...prev, i]));
-              emitEvent('explore_app', { app: app.title });
-            }}
-            className={`p-4 rounded-xl text-left transition-all ${
-              completedApps.has(i)
-                ? 'bg-emerald-900/30 border-2 border-emerald-600'
-                : 'bg-slate-800/50 border-2 border-slate-700 hover:border-blue-500'
-            }`}
-          >
-            <div className="text-3xl mb-2">
-              {app.icon === 'pot' && '&#127858;'}
-              {app.icon === 'mountain' && '&#127956;&#65039;'}
-              {app.icon === 'beaker' && '&#9879;&#65039;'}
-              {app.icon === 'geyser' && '&#128168;'}
+    return (
+      <div style={containerStyle}>
+        {renderTopNavBar()}
+        <div style={contentStyle}>
+          <h2 style={{ color: colors.textPrimary, fontSize: typo.heading, textAlign: 'center', marginBottom: '8px' }}>
+            Real-World Applications
+          </h2>
+
+          {/* Progress indicator for transfer phase */}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Application {selectedApp + 1} of {TRANSFER_APPS.length}
+            </span>
+            <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', marginTop: '8px' }}>
+              {TRANSFER_APPS.map((_, idx) => (
+                <div
+                  key={idx}
+                  role="progressbar"
+                  style={{
+                    width: '20px',
+                    height: '6px',
+                    borderRadius: '3px',
+                    background: completedApps.has(idx)
+                      ? 'linear-gradient(90deg, #10b981, #059669)'
+                      : idx === selectedApp
+                        ? 'rgba(6, 182, 212, 0.5)'
+                        : 'rgba(148, 163, 184, 0.3)',
+                  }}
+                />
+              ))}
             </div>
-            <h3 className="text-white font-bold mb-1">{app.title}</h3>
-            <p className="text-slate-400 text-sm">{app.description}</p>
-            {completedApps.has(i) && (
-              <div className="mt-2 text-emerald-400 text-sm">&#10003; Explored</div>
+          </div>
+
+          {/* App selector tabs */}
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
+            {TRANSFER_APPS.map((app, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  setCompletedApps(prev => new Set([...prev, i]));
+                }}
+                style={{
+                  padding: '8px 12px',
+                  minHeight: '44px',
+                  background: selectedApp === i ? 'rgba(6, 182, 212, 0.3)' : completedApps.has(i) ? 'rgba(16, 185, 129, 0.2)' : 'rgba(51, 65, 85, 0.5)',
+                  border: selectedApp === i ? '2px solid rgba(6, 182, 212, 0.5)' : completedApps.has(i) ? '2px solid rgba(16, 185, 129, 0.5)' : '2px solid transparent',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  position: 'relative',
+                }}
+              >
+                {completedApps.has(i) && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '24px' }}>
+                  {app.icon === 'pot' && '🍲'}
+                  {app.icon === 'mountain' && '⛰️'}
+                  {app.icon === 'beaker' && '⚗️'}
+                  {app.icon === 'geyser' && '💨'}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Current app details */}
+          <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '20px', maxWidth: '700px', marginLeft: 'auto', marginRight: 'auto', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>
+                {currentApp.icon === 'pot' && '🍲'}
+                {currentApp.icon === 'mountain' && '⛰️'}
+                {currentApp.icon === 'beaker' && '⚗️'}
+                {currentApp.icon === 'geyser' && '💨'}
+              </span>
+              <div>
+                <h3 style={{ color: colors.textPrimary, fontWeight: 'bold', fontSize: typo.bodyLarge, margin: 0, lineHeight: 1.4 }}>{currentApp.title}</h3>
+              </div>
+            </div>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body, marginBottom: '16px', lineHeight: 1.6 }}>
+              {currentApp.description}
+            </p>
+            <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.3)', marginBottom: '12px' }}>
+              <p style={{ color: colors.warning, fontSize: typo.small, margin: 0, fontWeight: 600, lineHeight: 1.5 }}>
+                <strong>Key Stats:</strong> {currentApp.stats}
+              </p>
+            </div>
+            <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(6, 182, 212, 0.3)', boxShadow: '0 0 15px rgba(6, 182, 212, 0.15)', marginBottom: '12px' }}>
+              <p style={{ color: colors.primary, fontSize: typo.small, margin: 0, lineHeight: 1.5 }}>
+                <strong>Key Physics:</strong> This demonstrates how pressure directly affects boiling temperature - the same principle you explored in the lab! The Clausius-Clapeyron equation predicts these changes precisely.
+              </p>
+            </div>
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <p style={{ color: colors.success, fontSize: typo.small, margin: 0, lineHeight: 1.5 }}>
+                <strong>Real-World Impact:</strong> Understanding the relationship between pressure and boiling point has revolutionized food preparation, pharmaceutical manufacturing, and energy production worldwide. Engineers at companies like Instant Pot, Cuisinart, and industrial giants apply these principles daily.
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation buttons */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {selectedApp < TRANSFER_APPS.length - 1 ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const nextIdx = selectedApp + 1;
+                  setSelectedApp(nextIdx);
+                  setCompletedApps(prev => new Set([...prev, nextIdx]));
+                }}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  minHeight: '44px',
+                  background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: colors.textPrimary,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                Got It - Next Application →
+              </button>
+            ) : (
+              <button
+                onClick={() => { playSound('complete'); goToNextPhase(); }}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  minHeight: '44px',
+                  background: 'linear-gradient(135deg, #10b981, #14b8a6)',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: colors.textPrimary,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                Continue to Test →
+              </button>
             )}
-          </button>
-        ))}
+          </div>
+        </div>
       </div>
-
-      {completedApps.size >= 4 && (
-        <button
-          onPointerDown={() => { playSound('complete'); goToNextPhase(); }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
-        >
-          Take the Test
-        </button>
-      )}
-
-      {completedApps.size < 4 && (
-        <p className="mt-6 text-center text-slate-500">
-          Explore all {4 - completedApps.size} remaining applications to continue
-        </p>
-      )}
-    </div>
-  );
+    );
+  };
 
   // Render test phase
   const renderTest = () => {
-    const currentQuestion = testAnswers.length;
-    const isComplete = currentQuestion >= TEST_QUESTIONS.length;
+    const answeredCount = Object.keys(testAnswers).length;
+    const allAnswered = answeredCount === TEST_QUESTIONS.length;
+    // Clamp index to valid range to prevent undefined access
+    const safeIndex = Math.min(currentQuestionIndex, TEST_QUESTIONS.length - 1);
+    const currentQuestion = TEST_QUESTIONS[safeIndex];
 
-    if (isComplete) {
-      const score = testAnswers.reduce(
-        (acc, answer, i) => acc + (TEST_QUESTIONS[i].options[answer]?.correct ? 1 : 0),
-        0
-      );
-      const passed = score >= 3;
+    if (testSubmitted) {
+      const correctCount = TEST_QUESTIONS.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length;
+      const passed = correctCount >= 7;
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Test Complete!</h2>
-          <div className={`text-6xl font-bold mb-4 ${passed ? 'text-emerald-400' : 'text-red-400'}`}>
-            {score}/{TEST_QUESTIONS.length}
+        <div style={containerStyle}>
+          {renderTopNavBar()}
+          <div style={contentStyle}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '64px', marginBottom: '12px' }}>{passed ? '🎉' : '📚'}</div>
+              <h2 style={{ color: colors.textPrimary, fontSize: '28px' }}>You Scored</h2>
+              <p style={{ color: colors.textPrimary, fontSize: '32px', fontWeight: 'bold', margin: '8px 0' }}>
+                {correctCount} / {TEST_QUESTIONS.length}
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '16px', marginBottom: '20px' }}>
+                {passed ? 'Excellent understanding of pressure and phase changes!' : 'Review the concepts and try again.'}
+              </p>
+
+              {/* Answer Review - Scrollable container */}
+              <div style={{ maxWidth: '600px', margin: '0 auto 24px', textAlign: 'left' }}>
+                <p style={{ color: colors.textMuted, fontSize: typo.small, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>
+                  Question-by-Question Review
+                </p>
+                <div style={{
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  paddingRight: '4px',
+                }}>
+                  {TEST_QUESTIONS.map((q, i) => {
+                    const correctOpt = q.options.find(o => o.correct);
+                    const isCorrect = testAnswers[q.id] === correctOpt?.id;
+                    const userOpt = q.options.find(o => o.id === testAnswers[q.id]);
+                    return (
+                      <div key={i} style={{
+                        background: colors.bgCardLight,
+                        borderRadius: '10px',
+                        border: `2px solid ${isCorrect ? colors.success : colors.danger}30`,
+                        overflow: 'hidden',
+                      }}>
+                        <div style={{
+                          padding: '10px 14px',
+                          background: isCorrect ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                          display: 'flex', alignItems: 'center', gap: '10px',
+                        }}>
+                          <div style={{
+                            width: '26px', height: '26px', borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '14px', fontWeight: 'bold',
+                            background: isCorrect ? colors.success : colors.danger,
+                            color: 'white',
+                          }}>
+                            {isCorrect ? '\u2713' : '\u2717'}
+                          </div>
+                          <div>
+                            <p style={{ fontSize: typo.small, fontWeight: 'bold', color: colors.textPrimary, margin: 0 }}>
+                              Question {i + 1}
+                            </p>
+                            <p style={{ fontSize: '11px', color: colors.textMuted, margin: 0 }}>
+                              {q.question.substring(0, 80)}...
+                            </p>
+                          </div>
+                        </div>
+                        {!isCorrect && (
+                          <div style={{ padding: '10px 14px' }}>
+                            <p style={{ fontSize: '11px', color: colors.danger, margin: '0 0 4px', fontWeight: 600, lineHeight: 1.4 }}>
+                              Your answer: {userOpt?.text || 'Not answered'}
+                            </p>
+                            <p style={{ fontSize: '11px', color: colors.success, margin: '0 0 6px', fontWeight: 600, lineHeight: 1.4 }}>
+                              Correct: {correctOpt?.text}
+                            </p>
+                            <p style={{ fontSize: '11px', color: colors.textMuted, margin: 0, lineHeight: 1.5 }}>
+                              <strong>Explanation:</strong> {q.explanation}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (passed) {
+                    playSound('complete');
+                    goToNextPhase();
+                  } else {
+                    playSound('click');
+                    setTestAnswers({});
+                    setCurrentQuestionIndex(0);
+                    setTestSubmitted(false);
+                  }
+                }}
+                style={{
+                  padding: '14px 32px',
+                  minHeight: '44px',
+                  background: passed
+                    ? 'linear-gradient(135deg, #10b981, #14b8a6)'
+                    : 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: colors.textPrimary,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                {passed ? 'Complete Lesson' : 'Try Again'}
+              </button>
+            </div>
           </div>
-          <p className="text-slate-300 mb-6">
-            {passed ? 'Excellent understanding of pressure and phase changes!' : 'Review the concepts and try again.'}
-          </p>
-          <button
-            onPointerDown={() => {
-              if (passed) {
-                playSound('complete');
-                goToNextPhase();
-              } else {
-                playSound('click');
-                setTestAnswers([]);
-              }
-            }}
-            className={`px-8 py-4 rounded-xl font-bold text-lg ${
-              passed
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white'
-                : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
-            }`}
-          >
-            {passed ? 'Complete Lesson' : 'Try Again'}
-          </button>
         </div>
       );
     }
 
-    const question = TEST_QUESTIONS[currentQuestion];
+    // Guard against undefined currentQuestion
+    if (!currentQuestion) {
+      setCurrentQuestionIndex(0);
+      return null;
+    }
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Knowledge Check</h2>
-        <div className="flex justify-center gap-2 mb-6">
-          {TEST_QUESTIONS.map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full ${
-                i < currentQuestion
-                  ? TEST_QUESTIONS[i].options[testAnswers[i]]?.correct
-                    ? 'bg-emerald-500'
-                    : 'bg-red-500'
-                  : i === currentQuestion
-                    ? 'bg-blue-500'
-                    : 'bg-slate-600'
-              }`}
-            />
-          ))}
-        </div>
+      <div style={containerStyle}>
+        {renderTopNavBar()}
+        <div style={contentStyle}>
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: typo.heading }}>Knowledge Check</h2>
+          </div>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-xl w-full">
-          <p className="text-white text-lg mb-6">{question.question}</p>
-          <div className="space-y-3">
-            {question.options.map((option, i) => (
+          {/* Question progress indicator */}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Question {safeIndex + 1} of {TEST_QUESTIONS.length}
+            </span>
+            <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', marginTop: '8px' }}>
+              {TEST_QUESTIONS.map((q, idx) => (
+                <div
+                  key={idx}
+                  role="progressbar"
+                  style={{
+                    width: '20px',
+                    height: '6px',
+                    borderRadius: '3px',
+                    background: testAnswers[q.id]
+                      ? 'linear-gradient(90deg, #06b6d4, #0891b2)'
+                      : idx === safeIndex
+                      ? 'rgba(6, 182, 212, 0.5)'
+                      : 'rgba(148, 163, 184, 0.3)',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Quiz context and instructions */}
+          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)', marginBottom: '16px' }}>
+            <p style={{ color: colors.secondary, fontSize: typo.small, margin: 0, lineHeight: 1.5 }}>
+              <strong>Test Your Understanding:</strong> Apply what you learned about pressure and boiling point to these real-world scenarios. Each question presents a practical situation where pressure-temperature relationships matter. Think about how atmospheric pressure changes affect the boiling point of water in different environments.
+            </p>
+          </div>
+
+          {/* Current question */}
+          <div style={{ background: colors.bgCardLight, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: typo.body, fontWeight: 'bold', marginBottom: '16px' }}>
+              Q{safeIndex + 1} of {TEST_QUESTIONS.length}: {currentQuestion.question}
+            </p>
+            {currentQuestion.options.map(opt => (
               <button
-                key={i}
-                onPointerDown={() => {
-                  playSound(option.correct ? 'success' : 'failure');
-                  setTestAnswers([...testAnswers, i]);
-                  emitEvent('test_answer', {
-                    questionIndex: currentQuestion,
-                    correct: option.correct
-                  });
+                key={opt.id}
+                onClick={() => {
+                  setTestAnswers(prev => ({ ...prev, [currentQuestion.id]: opt.id }));
+                  // Auto-advance after short delay
+                  if (safeIndex < TEST_QUESTIONS.length - 1) {
+                    setTimeout(() => setCurrentQuestionIndex(prev => Math.min(TEST_QUESTIONS.length - 1, prev + 1)), 300);
+                  }
                 }}
-                className="w-full p-4 bg-slate-700/50 text-slate-300 rounded-xl text-left hover:bg-slate-600/50 transition-all"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '14px',
+                  minHeight: '44px',
+                  marginBottom: '10px',
+                  background: testAnswers[currentQuestion.id] === opt.id ? 'rgba(6, 182, 212, 0.3)' : 'rgba(51, 65, 85, 0.5)',
+                  border: testAnswers[currentQuestion.id] === opt.id ? '2px solid rgba(6, 182, 212, 0.5)' : '2px solid transparent',
+                  borderRadius: '10px',
+                  color: colors.textSecondary,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
               >
-                {option.text}
+                {opt.text}
               </button>
             ))}
           </div>
+
+          {/* Navigation between questions */}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            {safeIndex > 0 && (
+              <button
+                onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+                style={{
+                  padding: '10px 20px',
+                  minHeight: '44px',
+                  background: 'rgba(71, 85, 105, 0.6)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {safeIndex < TEST_QUESTIONS.length - 1 && testAnswers[currentQuestion.id] && (
+              <button
+                onClick={() => setCurrentQuestionIndex(prev => Math.min(TEST_QUESTIONS.length - 1, prev + 1))}
+                style={{
+                  padding: '10px 20px',
+                  minHeight: '44px',
+                  background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                }}
+              >
+                Next Question
+              </button>
+            )}
+          </div>
+
+          {/* Submit button */}
+          {allAnswered && (
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <button
+                onClick={() => setTestSubmitted(true)}
+                style={{
+                  padding: '14px 32px',
+                  minHeight: '44px',
+                  background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: colors.textPrimary,
+                  fontSize: typo.body,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                Submit Quiz
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1613,125 +2070,105 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
     }
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center relative">
-        {showConfetti && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {[...Array(50)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute animate-bounce"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${1 + Math.random()}s`,
-                  fontSize: `${12 + Math.random() * 12}px`,
-                }}
-              >
-                {["&#127858;", "&#127956;&#65039;", "&#128168;", "&#11088;", "&#10024;"][Math.floor(Math.random() * 5)]}
+      <div style={containerStyle}>
+        {renderTopNavBar()}
+        <div style={contentStyle}>
+          <div style={{ textAlign: 'center', position: 'relative' }}>
+            {showConfetti && (
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+                {[...Array(20)].map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      position: 'absolute',
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                      animation: 'bounce 1s infinite',
+                      animationDelay: `${Math.random() * 2}s`,
+                      fontSize: `${12 + Math.random() * 12}px`,
+                    }}
+                  >
+                    {['🍲', '⛰️', '💨', '⭐', '✨'][Math.floor(Math.random() * 5)]}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2), rgba(168, 85, 247, 0.2))',
+              borderRadius: '24px',
+              padding: '32px',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+            }}>
+              <div style={{ fontSize: '72px', marginBottom: '16px' }}>🏆</div>
+              <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '12px' }}>Phase Diagram Master!</h1>
+              <p style={{ color: colors.textSecondary, fontSize: typo.bodyLarge, marginBottom: '24px' }}>
+                You&apos;ve mastered pressure and phase changes!
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '24px' }}>
+                <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>🏖️</div>
+                  <p style={{ color: colors.textSecondary, fontSize: typo.small }}>Pressure-boiling point</p>
+                </div>
+                <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>⛰️</div>
+                  <p style={{ color: colors.textSecondary, fontSize: typo.small }}>Altitude effects</p>
+                </div>
+                <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>📈</div>
+                  <p style={{ color: colors.textSecondary, fontSize: typo.small }}>Phase diagrams</p>
+                </div>
+                <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>🍲</div>
+                  <p style={{ color: colors.textSecondary, fontSize: typo.small }}>Pressure cooker physics</p>
+                </div>
+              </div>
+
+              <div style={{ padding: '16px', background: 'rgba(59, 130, 246, 0.2)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.3)', marginBottom: '24px' }}>
+                <p style={{ color: '#93c5fd' }}>
+                  Key Insight: Boiling point isn&apos;t fixed - it&apos;s a battle between molecular escape energy and atmospheric pressure!
+                </p>
+              </div>
+
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  style={{
+                    padding: '14px 24px',
+                    minHeight: '44px',
+                    background: 'rgba(71, 85, 105, 0.6)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    color: colors.textSecondary,
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Back to Games
+                </button>
+              )}
+            </div>
           </div>
-        )}
-
-        <div className="relative bg-gradient-to-br from-cyan-900/50 via-blue-900/50 to-purple-900/50 rounded-3xl p-8 max-w-2xl border border-cyan-600/30">
-          <div className="text-8xl mb-6">&#127942;</div>
-          <h1 className="text-3xl font-bold text-white mb-4">Phase Diagram Master!</h1>
-
-          <p className="text-xl text-slate-300 mb-6">You've mastered pressure and phase changes!</p>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">&#127958;&#65039;</div>
-              <p className="text-sm text-slate-300">Pressure-boiling point</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">&#127956;&#65039;</div>
-              <p className="text-sm text-slate-300">Altitude effects</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">&#128200;</div>
-              <p className="text-sm text-slate-300">Phase diagrams</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">&#127858;</div>
-              <p className="text-sm text-slate-300">Pressure cooker physics</p>
-            </div>
-          </div>
-
-          <div className="p-4 bg-blue-900/30 rounded-xl border border-blue-600/30 mb-6">
-            <p className="text-blue-300">
-              &#127777;&#65039; Key Insight: Boiling point isn't fixed - it's a battle between molecular escape energy and atmospheric pressure!
-            </p>
-          </div>
-
-          {onBack && (
-            <button
-              onPointerDown={onBack}
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
-            >
-              Back to Games
-            </button>
-          )}
         </div>
       </div>
     );
   };
 
-  // Main render
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
+  // Main render - phase router
+  const validPhase = PHASE_ORDER.includes(phase) ? phase : 'hook';
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Boiling Point Physics</span>
-          <div className="flex items-center gap-1.5">
-            {PHASE_ORDER.map((p, i) => {
-              const currentIndex = PHASE_ORDER.indexOf(phase);
-              return (
-                <button
-                  key={p}
-                  onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    phase === p
-                      ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                      : currentIndex > i
-                        ? 'bg-emerald-500 w-2'
-                        : 'bg-slate-700 w-2 hover:bg-slate-600'
-                  }`}
-                  title={phaseLabels[p]}
-                />
-              );
-            })}
-          </div>
-          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
-    </div>
-  );
+  switch (validPhase) {
+    case 'hook': return renderHook();
+    case 'predict': return renderPredict();
+    case 'play': return renderPlay();
+    case 'review': return renderReview();
+    case 'twist_predict': return renderTwistPredict();
+    case 'twist_play': return renderTwistPlay();
+    case 'twist_review': return renderTwistReview();
+    case 'transfer': return renderTransfer();
+    case 'test': return renderTest();
+    case 'mastery': return renderMastery();
+    default: return renderHook();
+  }
 }

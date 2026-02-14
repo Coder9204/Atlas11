@@ -1,7 +1,50 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+type Phase =
+  | 'hook'
+  | 'predict'
+  | 'play'
+  | 'review'
+  | 'twist_predict'
+  | 'twist_play'
+  | 'twist_review'
+  | 'transfer'
+  | 'test'
+  | 'mastery';
+
+const PHASES: Phase[] = [
+  'hook',
+  'predict',
+  'play',
+  'review',
+  'twist_predict',
+  'twist_play',
+  'twist_review',
+  'transfer',
+  'test',
+  'mastery',
+];
+
+const PHASE_LABELS: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Explore Twist',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery',
+};
+
 interface CMPPlanarizationRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: Phase;
+  gamePhase?: Phase;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -26,11 +69,50 @@ const colors = {
 };
 
 const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
-  phase,
+  phase: initialPhase,
+  gamePhase: initialGamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase management - use gamePhase or phase prop, default to 'hook'
+  const [phase, setPhase] = useState<Phase>(() => {
+    const propPhase = initialGamePhase || initialPhase;
+    if (propPhase && PHASES.includes(propPhase)) {
+      return propPhase;
+    }
+    return 'hook';
+  });
+
+  // Sync phase with prop changes
+  useEffect(() => {
+    const propPhase = initialGamePhase || initialPhase;
+    if (propPhase && PHASES.includes(propPhase) && propPhase !== phase) {
+      setPhase(propPhase);
+    }
+  }, [initialGamePhase, initialPhase]);
+
+  // Navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    setPhase(p);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx < PHASES.length - 1) {
+      goToPhase(PHASES[idx + 1]);
+    } else if (onPhaseComplete) {
+      onPhaseComplete();
+    }
+  }, [phase, goToPhase, onPhaseComplete]);
+
+  const goBack = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(PHASES[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
   const [isMobile, setIsMobile] = useState(false);
 
   // Responsive detection
@@ -60,12 +142,12 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   const [polishPressure, setPolishPressure] = useState(50); // 0-100
   const [slurrySelectivity, setSlurrySelectivity] = useState(50); // Cu:Oxide selectivity
   const [isAnimating, setIsAnimating] = useState(false);
-  const [showDefects, setShowDefects] = useState(false);
 
   // Phase-specific state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -91,7 +173,6 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     // Initial topography heights (nm) - representing copper and oxide regions
     const initialCopperHeight = 150;
     const initialOxideHeight = 100;
-    const initialStep = initialCopperHeight - initialOxideHeight;
 
     // Preston equation: Removal rate = k * P * V
     // k depends on slurry chemistry, V is velocity (constant), P is pressure
@@ -163,33 +244,41 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   const transferApplications = [
     {
       title: 'Copper Damascene Interconnects',
-      description: 'Modern chips use copper wiring embedded in trenches, then polished flat.',
+      description: 'Modern chips at Intel, TSMC, and Samsung use copper wiring embedded in oxide trenches, then polished flat by Applied Materials and Ebara CMP tools. This revolutionary damascene process replaced the traditional aluminum etch method in the late 1990s. The process requires precise control of removal rates across the entire 300mm wafer surface. CMP tools spin at 30-100 RPM while applying 1-7 PSI of downforce pressure. Chemical slurries cost $500-$2000 per liter and are precisely engineered for copper-to-oxide selectivity ratios of 50:1 or higher.',
       question: 'Why did the industry switch from aluminum to copper damascene?',
-      answer: 'Copper has 40% lower resistance than aluminum, enabling faster, lower-power chips. But copper cannot be etched cleanly, so damascene (fill + CMP) is required. CMP makes copper wiring possible!',
+      answer: 'Copper has 40% lower resistance than aluminum, enabling faster, lower-power chips. But copper cannot be etched cleanly, so damascene (fill + CMP) is required. CMP makes copper wiring possible! The transition saved approximately 30% in power consumption at the same performance level.',
+      stats: ['40% lower resistance', '15+ metal layers', '<2nm uniformity', '300mm wafers', '$500B market'],
+      companies: ['Intel', 'TSMC', 'Samsung', 'Applied Materials'],
     },
     {
       title: 'Shallow Trench Isolation (STI)',
-      description: 'Transistors are isolated by oxide-filled trenches that must be perfectly flat.',
+      description: 'Transistors at GlobalFoundries and UMC are isolated by oxide-filled trenches that must be perfectly flat. CMP tools from Cabot Microelectronics enable this process. STI replaced the older LOCOS isolation method in the 1990s because it enables tighter transistor spacing. The trenches are typically 200-400nm deep and require oxide fill followed by CMP planarization. Modern STI CMP achieves within-wafer non-uniformity below 2% across the entire 300mm surface. The process removes approximately 200-500nm of oxide material in 60-120 seconds.',
       question: 'What happens if STI CMP is not flat?',
-      answer: 'Uneven STI causes variation in transistor threshold voltage and gate length. This creates circuit timing variations and potential failures. STI CMP uniformity directly affects chip yield.',
+      answer: 'Uneven STI causes variation in transistor threshold voltage and gate length. This creates circuit timing variations and potential failures. STI CMP uniformity directly affects chip yield. Even a 5nm variation in step height can cause 10% variation in transistor performance.',
+      stats: ['<1nm step height', '99.9% yield target', '300mm wafers', '200-400nm depth', '2% uniformity'],
+      companies: ['GlobalFoundries', 'UMC', 'Cabot Microelectronics'],
     },
     {
       title: '3D NAND Memory',
-      description: '3D NAND has 100+ stacked layers, each requiring planarization.',
+      description: '3D NAND from Samsung, Micron, and SK Hynix has 200+ stacked layers, each requiring CMP planarization using slurries from Fujimi and CMC Materials. This technology enables storage densities of 1000+ gigabits per die. Each layer adds approximately 30nm to the overall stack height, requiring precise planarization to maintain lithography focus. The cumulative CMP time for a single 3D NAND wafer can exceed 60 minutes. Manufacturing costs are $10-15 per die with CMP representing approximately 8% of total processing costs.',
       question: 'How does CMP affect 3D NAND layer stacking?',
-      answer: 'Each layer must be perfectly flat before the next is deposited. Cumulative topography would cause focus issues in lithography and layer shorts. CMP enables the multi-layer stacking that makes 3D NAND possible.',
+      answer: 'Each layer must be perfectly flat before the next is deposited. Cumulative topography would cause focus issues in lithography and layer shorts. CMP enables the multi-layer stacking that makes 3D NAND possible. Without CMP, layer count would be limited to fewer than 30 layers.',
+      stats: ['200+ layers', '1000+ CMP steps', '2TB+ capacity', '30nm per layer', '$15 per die'],
+      companies: ['Samsung', 'Micron', 'SK Hynix', 'Fujimi'],
     },
     {
       title: 'Advanced Packaging',
-      description: 'Chiplets and advanced packages use Through-Silicon Vias (TSVs) that require CMP.',
+      description: 'Chiplets from AMD, NVIDIA, and Apple use Through-Silicon Vias (TSVs) that require precision CMP by equipment from Tokyo Electron and DISCO. TSVs are typically 5-50 micrometers in diameter and 50-100 micrometers deep. The copper overburden after electroplating can be 2-5 micrometers thick and must be removed with sub-50nm uniformity. Advanced packages like AMD EPYC processors contain over 2000 TSV connections. The CMP process for TSV reveal operates at lower pressures (1-3 PSI) to avoid damaging the delicate via structures.',
       question: 'Why is CMP critical for TSV technology?',
-      answer: 'TSVs are copper-filled holes through the silicon. After filling, excess copper must be removed precisely to the silicon surface. Under-polish leaves shorts; over-polish damages the TSVs. CMP uniformity determines packaging yield.',
+      answer: 'TSVs are copper-filled holes through the silicon. After filling, excess copper must be removed precisely to the silicon surface. Under-polish leaves shorts; over-polish damages the TSVs. CMP uniformity determines packaging yield and enables the 2.5D and 3D chip stacking that powers modern AI accelerators.',
+      stats: ['<50nm uniformity', '2000+ TSVs per chip', '2.5D/3D stacking', '5-50um diameter', '100um depth'],
+      companies: ['AMD', 'NVIDIA', 'Apple', 'Tokyo Electron'],
     },
   ];
 
   const testQuestions = [
     {
-      question: 'What does CMP stand for in semiconductor manufacturing?',
+      question: 'In semiconductor fabrication facilities worldwide, a critical planarization process is used between every metal layer deposition step. What does CMP stand for in semiconductor manufacturing?',
       options: [
         { text: 'Chemical Mechanical Planarization (or Polishing)', correct: true },
         { text: 'Copper Metal Processing', correct: false },
@@ -198,7 +287,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       ],
     },
     {
-      question: 'The Preston equation describes CMP removal rate as proportional to:',
+      question: 'Engineers at Applied Materials developed the fundamental physics model for CMP material removal rates. The Preston equation describes CMP removal rate as proportional to:',
       options: [
         { text: 'Temperature only', correct: false },
         { text: 'Pressure times velocity (k x P x V)', correct: true },
@@ -207,7 +296,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       ],
     },
     {
-      question: 'CMP uses slurry that contains:',
+      question: 'CMP slurries are complex chemical formulations that cost $500-$2000 per liter and are critical to the process. CMP uses slurry that contains:',
       options: [
         { text: 'Only water', correct: false },
         { text: 'Abrasive particles and chemical agents', correct: true },
@@ -216,7 +305,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       ],
     },
     {
-      question: '"Dishing" in CMP refers to:',
+      question: 'When a CMP process runs too long on copper damascene structures, a characteristic defect pattern appears. "Dishing" in CMP refers to:',
       options: [
         { text: 'The shape of the polishing pad', correct: false },
         { text: 'Copper surface receding below the oxide level', correct: true },
@@ -225,7 +314,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       ],
     },
     {
-      question: '"Erosion" in CMP refers to:',
+      question: 'In areas with high metal density, the surrounding dielectric material can be affected by extended polishing times. "Erosion" in CMP refers to:',
       options: [
         { text: 'Pad wear', correct: false },
         { text: 'Excessive oxide loss in dense metal regions', correct: true },
@@ -234,7 +323,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       ],
     },
     {
-      question: 'Selectivity in CMP slurry means:',
+      question: 'CMP slurry chemistry is carefully engineered to remove different materials at controlled rates using oxidizers and complexing agents. Selectivity in CMP slurry means:',
       options: [
         { text: 'The slurry only works on certain wafers', correct: false },
         { text: 'Different materials remove at different rates', correct: true },
@@ -243,7 +332,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       ],
     },
     {
-      question: 'Why is planarization critical for multi-layer chips?',
+      question: 'Modern logic chips have 15+ metal layers, each requiring precise surface preparation before the next layer can be patterned. Why is planarization critical for multi-layer chips?',
       options: [
         { text: 'It makes the chip look better', correct: false },
         { text: 'Flat surfaces enable accurate lithography on subsequent layers', correct: true },
@@ -252,7 +341,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       ],
     },
     {
-      question: 'The endpoint of CMP (when to stop polishing) is typically detected by:',
+      question: 'Stopping the CMP process at exactly the right moment is critical - too early leaves excess material, too late causes defects. The endpoint of CMP (when to stop polishing) is typically detected by:',
       options: [
         { text: 'Visual inspection only', correct: false },
         { text: 'Optical or motor current monitoring', correct: true },
@@ -261,7 +350,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       ],
     },
     {
-      question: 'Over-polishing in copper CMP causes:',
+      question: 'Process engineers must carefully balance removal time against defect formation in copper CMP applications. Over-polishing in copper CMP causes:',
       options: [
         { text: 'Better flatness', correct: false },
         { text: 'Dishing, erosion, and increased resistance', correct: true },
@@ -270,7 +359,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       ],
     },
     {
-      question: 'The damascene process combines:',
+      question: 'The damascene process revolutionized copper interconnect manufacturing when introduced by IBM in 1997. The damascene process combines:',
       options: [
         { text: 'Etching copper patterns', correct: false },
         { text: 'Trenching, filling with copper, then CMP to remove excess', correct: true },
@@ -286,104 +375,6 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     setTestAnswers(newAnswers);
   };
 
-  // ============================================================================
-  // REAL WORLD APPLICATIONS - Industry applications of CMP technology
-  // ============================================================================
-  const realWorldApps = [
-    {
-      icon: "🔬",
-      title: "Advanced Logic Chips",
-      short: "Sub-5nm Processors",
-      tagline: "Enabling the smallest transistors ever made",
-      description: "Modern processors at 5nm, 3nm, and beyond require extreme planarization precision. Each of the 15+ metal layers must be atomically flat to allow the next layer's lithography to achieve nanometer-scale resolution. Without CMP, the cumulative topography would make sub-10nm patterning impossible.",
-      connection: "Just like our simulation shows copper and oxide reaching the same level, real processors need every metal interconnect layer polished to within 1-2nm uniformity. The dishing and erosion defects we explored directly impact transistor performance—excessive dishing increases wire resistance, slowing chip operation.",
-      howItWorks: "Multiple CMP steps are used per metal layer: first a barrier CMP removes excess tantalum/titanium liner, then copper CMP removes the bulk metal, and finally a buff CMP achieves the final surface finish. Each step uses different slurries optimized for that material. In-situ endpoint detection monitors optical reflectivity changes as copper clears from the oxide surface, stopping at precisely the right moment.",
-      stats: [
-        { val: "<2nm", label: "Surface uniformity requirement" },
-        { val: "15+", label: "Metal layers requiring CMP" },
-        { val: "100B+", label: "Transistors per chip" }
-      ],
-      examples: [
-        "Apple M-series processors in MacBooks and iPhones",
-        "AMD EPYC server processors with 3D V-Cache",
-        "NVIDIA H100 AI accelerator chips",
-        "Qualcomm Snapdragon mobile processors"
-      ],
-      companies: ["TSMC", "Samsung", "Intel", "GlobalFoundries", "Applied Materials"],
-      futureImpact: "As chips move to 2nm and below with gate-all-around transistors, CMP precision requirements will tighten further. New slurry chemistries using ceria and novel abrasives will enable atomic-level planarization, while AI-controlled CMP tools will adapt in real-time to wafer-to-wafer variations.",
-      color: "#3b82f6"
-    },
-    {
-      icon: "💾",
-      title: "3D NAND Flash Memory",
-      short: "High-Density Storage",
-      tagline: "Stacking memory layers to the sky",
-      description: "3D NAND flash stacks over 200 memory cell layers vertically, and each layer requires CMP planarization. Without perfectly flat surfaces between layers, the vertical channels that connect all layers would fail to align, causing memory cell defects and yield loss.",
-      connection: "Our simulation demonstrated how over-polishing causes dishing and erosion. In 3D NAND, these defects accumulate across hundreds of layers. Even 1nm of non-uniformity per layer creates 200nm of cumulative error—enough to cause complete device failure. The optimal polish endpoint we explored is critical for every single layer.",
-      howItWorks: "3D NAND uses alternating oxide and nitride layers deposited as a stack, then etched with deep high-aspect-ratio holes. After filling these holes with channel material, CMP planarizes the surface. Later, the nitride is removed and replaced with tungsten wordlines, requiring another CMP step. The cycle repeats for each tier of the 3D structure, with CMP uniformity directly determining how many layers can be stacked.",
-      stats: [
-        { val: "200+", label: "Stacked memory layers" },
-        { val: "1000+", label: "CMP steps per wafer" },
-        { val: "2TB+", label: "Capacity per chip" }
-      ],
-      examples: [
-        "Samsung 236-layer V-NAND in SSDs",
-        "Micron 232-layer NAND in data center drives",
-        "SK Hynix 238-layer NAND for enterprise storage",
-        "Western Digital BiCS Flash in consumer SSDs"
-      ],
-      companies: ["Samsung", "Micron", "SK Hynix", "Western Digital", "Kioxia"],
-      futureImpact: "The race to 500+ layer 3D NAND will require revolutionary CMP advances. Bonded-wafer architectures may stack separately-fabricated wafers, each requiring ultra-precise CMP for bonding. New planarization techniques may enable atomic-layer control across entire 300mm wafers.",
-      color: "#10b981"
-    },
-    {
-      icon: "📡",
-      title: "MEMS Devices",
-      short: "Micro-Electro-Mechanical Systems",
-      tagline: "Where mechanical precision meets semiconductor scale",
-      description: "MEMS sensors—accelerometers, gyroscopes, pressure sensors, and microphones—combine mechanical moving parts with electronic circuits. CMP creates the flat surfaces needed for both the mechanical structures and the integrated electronics, enabling sensors in every smartphone and automobile.",
-      connection: "Our fork-balancing exploration of surfaces applies directly to MEMS. The moving mechanical elements must operate on surfaces flat to within nanometers, or friction and stiction cause failure. The selectivity between materials we explored allows CMP to create precisely stepped surfaces for mechanical gaps and hinges.",
-      howItWorks: "MEMS fabrication uses CMP at multiple stages: first to planarize the CMOS electronics, then to create the mechanical layer surfaces, and finally to release the moving structures. Sacrificial oxide layers are deposited and polished flat, then later removed to free the mechanical elements. CMP uniformity directly determines the gap spacing and thus the sensitivity of the final sensor.",
-      stats: [
-        { val: "<50nm", label: "Mechanical gap precision" },
-        { val: "10B+", label: "MEMS sensors shipped yearly" },
-        { val: "6-axis", label: "Inertial sensing capability" }
-      ],
-      examples: [
-        "iPhone accelerometer and gyroscope for motion sensing",
-        "Automotive airbag deployment sensors",
-        "Blood pressure monitoring MEMS transducers",
-        "Digital microphones in smart speakers"
-      ],
-      companies: ["Bosch", "STMicroelectronics", "TDK InvenSense", "Analog Devices", "Texas Instruments"],
-      futureImpact: "Next-generation MEMS will integrate more sensors with more electronics on single chips. Advanced CMP will enable MEMS-on-CMOS integration where mechanical elements are built directly atop logic circuits. Atomic-scale surface control will create MEMS with unprecedented sensitivity for medical implants and quantum sensors.",
-      color: "#f59e0b"
-    },
-    {
-      icon: "🌈",
-      title: "Optical Components",
-      short: "Silicon Photonics",
-      tagline: "Guiding light on a chip",
-      description: "Silicon photonics integrates optical waveguides, modulators, and detectors with electronic circuits. Light traveling through waveguides is extremely sensitive to surface roughness—any imperfection scatters photons and causes signal loss. CMP creates the atomically smooth surfaces that confine and guide light across chips.",
-      connection: "The planarization quality score from our simulation directly relates to optical loss. Surface roughness from incomplete CMP causes light scattering, while dishing in waveguide cores degrades mode confinement. The nanometer-level control we explored is essential for photonic devices to function.",
-      howItWorks: "Silicon photonic waveguides are formed by etching silicon and then cladding with oxide. CMP planarizes the oxide cladding to create a flat surface for subsequent layers. For hybrid integration with III-V lasers, CMP enables wafer bonding by creating surfaces flat to sub-nanometer levels. The chemical component of CMP is particularly important for achieving low-roughness surfaces that minimize optical scattering.",
-      stats: [
-        { val: "<0.5nm", label: "Surface roughness requirement" },
-        { val: "800Gbps", label: "Data rates achieved" },
-        { val: "90%", label: "Lower power than electrical I/O" }
-      ],
-      examples: [
-        "Data center optical transceivers for AI clusters",
-        "LIDAR sensors for autonomous vehicles",
-        "Biosensors using photonic ring resonators",
-        "Quantum computing photonic interconnects"
-      ],
-      companies: ["Intel", "Cisco", "Broadcom", "Marvell", "Ayar Labs"],
-      futureImpact: "Co-packaged optics will bring photonics directly onto processor packages, requiring CMP-enabled heterogeneous integration. Quantum photonics will demand even lower surface roughness for single-photon waveguides. CMP advances will enable photonic chips that process light with the same complexity as electronic chips process electrons.",
-      color: "#ec4899"
-    }
-  ];
-
   const submitTest = () => {
     let score = 0;
     testQuestions.forEach((q, i) => {
@@ -397,13 +388,207 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
+  // ============================================================================
+  // PROGRESS BAR AND NAVIGATION
+  // ============================================================================
+
+  const currentPhaseIndex = PHASES.indexOf(phase);
+  const progressPercent = ((currentPhaseIndex + 1) / PHASES.length) * 100;
+
+  const renderProgressBar = () => (
+    <nav
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(8px)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+      }}
+      role="navigation"
+      aria-label="Phase navigation"
+    >
+      {/* Progress bar */}
+      <div
+        style={{ height: '3px', background: 'rgba(255,255,255,0.1)', width: '100%' }}
+        role="progressbar"
+        aria-valuenow={progressPercent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Progress: ${currentPhaseIndex + 1} of ${PHASES.length} phases`}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${progressPercent}%`,
+            background: `linear-gradient(90deg, ${colors.accent}, #f472b6)`,
+            transition: 'width 0.3s ease',
+          }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px' }}>
+        {/* Back button */}
+        <button
+          onClick={goBack}
+          disabled={currentPhaseIndex === 0}
+          aria-label="Go to previous phase"
+          style={{
+            minHeight: '44px',
+            minWidth: '44px',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: 'none',
+            background: currentPhaseIndex === 0 ? 'transparent' : 'rgba(255,255,255,0.1)',
+            color: currentPhaseIndex === 0 ? colors.textMuted : colors.textSecondary,
+            cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
+            opacity: currentPhaseIndex === 0 ? 0.5 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '14px',
+            fontWeight: 500,
+          }}
+        >
+          <span style={{ fontSize: '16px' }}>&#8592;</span> Back
+        </button>
+
+        {/* Navigation dots */}
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }} role="tablist" aria-label="Phase dots">
+          {PHASES.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              role="tab"
+              aria-selected={i === currentPhaseIndex}
+              aria-label={`${PHASE_LABELS[p]}${i < currentPhaseIndex ? ' (completed)' : i === currentPhaseIndex ? ' (current)' : ''}`}
+              style={{
+                minHeight: '44px',
+                minWidth: '24px',
+                padding: '8px 4px',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span
+                style={{
+                  width: i === currentPhaseIndex ? '20px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: i === currentPhaseIndex
+                    ? colors.accent
+                    : i < currentPhaseIndex
+                    ? colors.success
+                    : 'rgba(255,255,255,0.2)',
+                  transition: 'all 0.2s ease',
+                }}
+              />
+            </button>
+          ))}
+          <span style={{ marginLeft: '8px', fontSize: '12px', color: colors.textSecondary }}>
+            {currentPhaseIndex + 1}/{PHASES.length}
+          </span>
+        </div>
+
+        {/* Phase label */}
+        <div
+          style={{
+            padding: '6px 12px',
+            borderRadius: '16px',
+            background: 'rgba(236, 72, 153, 0.2)',
+            color: colors.accent,
+            fontSize: '12px',
+            fontWeight: 600,
+          }}
+        >
+          {PHASE_LABELS[phase]}
+        </div>
+      </div>
+    </nav>
+  );
+
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Next') => (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 20px',
+        background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(8px)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 100,
+      }}
+    >
+      <button
+        onClick={goBack}
+        disabled={currentPhaseIndex === 0}
+        style={{
+          minHeight: '44px',
+          padding: '12px 20px',
+          borderRadius: '10px',
+          border: '1px solid rgba(255,255,255,0.2)',
+          background: 'transparent',
+          color: currentPhaseIndex === 0 ? colors.textMuted : colors.textSecondary,
+          cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
+          opacity: currentPhaseIndex === 0 ? 0.5 : 1,
+          fontSize: '14px',
+          fontWeight: 500,
+          transition: 'all 0.2s ease',
+        }}
+      >
+        &#8592; Back
+      </button>
+
+      <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+        {PHASE_LABELS[phase]}
+      </span>
+
+      <button
+        onClick={goNext}
+        disabled={!canGoNext}
+        style={{
+          minHeight: '44px',
+          padding: '12px 24px',
+          borderRadius: '10px',
+          border: 'none',
+          background: canGoNext
+            ? `linear-gradient(135deg, ${colors.accent}, #f472b6)`
+            : 'rgba(255,255,255,0.1)',
+          color: canGoNext ? 'white' : colors.textMuted,
+          cursor: canGoNext ? 'pointer' : 'not-allowed',
+          fontSize: '14px',
+          fontWeight: 600,
+          boxShadow: canGoNext ? '0 4px 12px rgba(236, 72, 153, 0.3)' : 'none',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        {nextLabel} &#8594;
+      </button>
+    </div>
+  );
+
+  // ============================================================================
+  // VISUALIZATION
+  // ============================================================================
+
   const renderVisualization = (interactive: boolean, showDefectMode: boolean = false) => {
     const width = 500;
-    const height = 420;
+    const height = 350;
     const result = calculateCMPResult();
 
     // Cross-section dimensions
-    const baseY = 280;
+    const baseY = 250;
     const scale = 1.5;
 
     // Feature positions
@@ -420,48 +605,15 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     const removalAnimOffset = isAnimating ? Math.sin(Date.now() / 100) * 2 : 0;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        {/* Labels outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          width: '100%',
-          maxWidth: '550px',
-          padding: '0 8px',
-          marginBottom: '4px'
-        }}>
-          <span style={{
-            color: colors.textPrimary,
-            fontSize: typo.body,
-            fontWeight: 'bold'
-          }}>
-            CMP Planarization Process
-          </span>
-          <span style={{
-            color: colors.accent,
-            fontSize: typo.small
-          }}>
-            Time: {polishTime}% | Pressure: {polishPressure}%
-          </span>
-        </div>
-
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ borderRadius: '12px', maxWidth: '550px' }}
+          style={{ borderRadius: '12px', maxWidth: '550px', background: 'rgba(0,0,0,0.3)' }}
         >
           <defs>
-            {/* Premium background gradient */}
-            <linearGradient id="cmpBackgroundGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="25%" stopColor="#0a0f1a" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="75%" stopColor="#0a0f1a" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
-
             {/* Premium copper gradient with metallic sheen */}
             <linearGradient id="cmpCopperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#fcd34d" />
@@ -515,14 +667,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
               <stop offset="100%" stopColor="#be185d" stopOpacity="0.4" />
             </radialGradient>
 
-            {/* Wafer surface reflection gradient */}
-            <linearGradient id="cmpWaferReflection" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
-              <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
-            </linearGradient>
-
-            {/* Planarity indicator gradient */}
+            {/* Planarity indicator gradients */}
             <linearGradient id="cmpPlanarityGood" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#059669" />
               <stop offset="50%" stopColor="#10b981" />
@@ -541,16 +686,8 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
               <stop offset="100%" stopColor="#f87171" />
             </linearGradient>
 
-            {/* Glow filters using feGaussianBlur + feMerge pattern */}
-            <filter id="cmpCopperGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="cmpOxideGlow" x="-50%" y="-50%" width="200%" height="200%">
+            {/* Glow filters */}
+            <filter id="cmpGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
@@ -558,118 +695,60 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
               </feMerge>
             </filter>
 
-            <filter id="cmpSlurryGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="cmpDefectGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="cmpPadShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="4" result="shadow" />
-              <feOffset dx="0" dy="4" in="shadow" result="offsetShadow" />
-              <feMerge>
-                <feMergeNode in="offsetShadow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Animated slurry pattern */}
+            {/* Slurry pattern */}
             <pattern id="cmpSlurryPattern" x="0" y="0" width="15" height="15" patternUnits="userSpaceOnUse">
               <circle cx="5" cy="5" r="2" fill="url(#cmpSlurryParticle)" />
               <circle cx="12" cy="10" r="1.5" fill="url(#cmpSlurryParticle)" opacity="0.7" />
               <circle cx="3" cy="12" r="1" fill="url(#cmpSlurryParticle)" opacity="0.5" />
             </pattern>
-
-            {/* Lab grid pattern */}
-            <pattern id="cmpLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-            </pattern>
-
-            {/* Arrow marker */}
-            <marker id="cmpMoveArrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-              <polygon points="0 0, 8 4, 0 8" fill="#94a3b8" />
-            </marker>
-
-            {/* Material removal particles gradient */}
-            <radialGradient id="cmpRemovalParticle" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fcd34d" stopOpacity="1" />
-              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-            </radialGradient>
           </defs>
 
-          {/* Premium background */}
-          <rect width={width} height={height} fill="url(#cmpBackgroundGrad)" />
-          <rect width={width} height={height} fill="url(#cmpLabGrid)" />
+          {/* Background grid */}
+          <rect width={width} height={height} fill="#030712" />
+          {Array.from({ length: 25 }).map((_, i) => (
+            <line key={`vgrid-${i}`} x1={i * 20} y1={0} x2={i * 20} y2={height} stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          ))}
+          {Array.from({ length: 18 }).map((_, i) => (
+            <line key={`hgrid-${i}`} x1={0} y1={i * 20} x2={width} y2={i * 20} stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          ))}
 
-          {/* Polishing pad (above wafer) with premium styling */}
+          {/* Title label in SVG */}
+          <text x={width / 2} y={25} textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
+            CMP Planarization Cross-Section
+          </text>
+
+          {/* Polishing pad (above wafer) */}
           {polishTime > 0 && polishTime < 100 && (
-            <g filter="url(#cmpPadShadow)">
-              {/* Pad body with texture */}
-              <rect x={50} y={55} width={300} height={35} fill="url(#cmpPadGrad)" rx={6} />
-              {/* Pad surface texture lines */}
-              {[0, 1, 2, 3, 4, 5].map(i => (
-                <line
-                  key={i}
-                  x1={60 + i * 50}
-                  y1={60}
-                  x2={60 + i * 50}
-                  y2={85}
-                  stroke="rgba(255,255,255,0.1)"
-                  strokeWidth={1}
-                />
-              ))}
-              {/* Pad highlight */}
-              <rect x={50} y={55} width={300} height={4} fill="rgba(255,255,255,0.2)" rx={2} />
-
-              {/* Slurry layer with glow */}
-              <g filter="url(#cmpSlurryGlow)">
-                <rect x={50} y={90} width={300} height={25} fill="url(#cmpSlurryPattern)" opacity={0.8} />
-              </g>
-
-              {/* Material removal effect - animated particles */}
+            <g>
+              <rect x={50} y={45} width={300} height={30} fill="url(#cmpPadGrad)" rx={4} />
+              <text x={200} y={65} textAnchor="middle" fill={colors.textSecondary} fontSize="10">Polishing Pad</text>
+              {/* Slurry layer */}
+              <rect x={50} y={75} width={300} height={20} fill="url(#cmpSlurryPattern)" opacity={0.8} />
+              <text x={200} y={88} textAnchor="middle" fill="#f9a8d4" fontSize="9">Slurry</text>
+              {/* Removal particles when animating */}
               {isAnimating && (
-                <g>
+                <g filter="url(#cmpGlow)">
                   {[0, 1, 2, 3, 4].map(i => (
                     <circle
                       key={i}
                       cx={100 + i * 50 + removalAnimOffset}
-                      cy={115 + Math.sin(Date.now() / 200 + i) * 5}
+                      cy={95 + Math.sin(Date.now() / 200 + i) * 5}
                       r={3}
-                      fill="url(#cmpRemovalParticle)"
-                      filter="url(#cmpSlurryGlow)"
+                      fill="#fcd34d"
                     />
                   ))}
                 </g>
               )}
-
-              {/* Movement arrows */}
-              <g opacity={0.8}>
-                <line x1={80} y1={72} x2={140} y2={72} stroke="#94a3b8" strokeWidth={2} markerEnd="url(#cmpMoveArrow)" />
-                <line x1={210} y1={72} x2={270} y2={72} stroke="#94a3b8" strokeWidth={2} markerEnd="url(#cmpMoveArrow)" />
-              </g>
             </g>
           )}
 
-          {/* Substrate base with premium gradient */}
-          <rect x={50} y={baseY} width={320} height={50} fill="url(#cmpSubstrateGrad)" rx={2} />
-          {/* Substrate texture */}
-          <rect x={50} y={baseY} width={320} height={2} fill="rgba(255,255,255,0.05)" />
+          {/* Substrate base */}
+          <rect x={50} y={baseY} width={320} height={40} fill="url(#cmpSubstrateGrad)" rx={2} />
+          <text x={210} y={baseY + 25} textAnchor="middle" fill={colors.textMuted} fontSize="10">Silicon Substrate</text>
 
-          {/* Barrier layer with gradient */}
+          {/* Barrier layer */}
           <rect x={50} y={baseY - 12} width={320} height={12} fill="url(#cmpBarrierGrad)" rx={1} />
-          {/* Barrier highlight */}
-          <rect x={50} y={baseY - 12} width={320} height={2} fill="rgba(255,255,255,0.2)" />
+          <text x={400} y={baseY - 3} textAnchor="start" fill={colors.barrier} fontSize="9">Barrier</text>
 
           {/* Features with dynamic heights based on polish */}
           {features.map((feature, i) => {
@@ -681,10 +760,9 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             const dishingAmount = feature.type === 'copper' && result.dishing > 0 ? result.dishing * 0.5 : 0;
 
             const featureGrad = feature.type === 'copper' ? 'url(#cmpCopperGrad)' : 'url(#cmpOxideGrad)';
-            const featureFilter = feature.type === 'copper' ? 'url(#cmpCopperGlow)' : 'url(#cmpOxideGlow)';
 
             return (
-              <g key={i} filter={featureFilter}>
+              <g key={i}>
                 <rect
                   x={feature.x}
                   y={baseY - 12 - currentHeight + dishingAmount}
@@ -693,16 +771,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
                   fill={featureGrad}
                   rx={2}
                 />
-                {/* Surface reflection */}
-                <rect
-                  x={feature.x}
-                  y={baseY - 12 - currentHeight + dishingAmount}
-                  width={feature.width}
-                  height={3}
-                  fill="url(#cmpWaferReflection)"
-                  rx={1}
-                />
-                {/* Dishing visualization */}
+                {/* Dishing curve visualization */}
                 {feature.type === 'copper' && dishingAmount > 5 && (
                   <path
                     d={`M ${feature.x} ${baseY - 12 - currentHeight + dishingAmount}
@@ -726,6 +795,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             strokeDasharray="6,4"
             opacity={0.6}
           />
+          <text x={385} y={baseY - 12 - 150 * scale / 1.5 + 4} fill={colors.textMuted} fontSize="9">Initial</text>
 
           {/* Target surface line */}
           <line
@@ -738,9 +808,41 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             strokeDasharray="6,4"
             opacity={0.7}
           />
+          <text x={385} y={baseY - 12 - 100 * scale / 1.5 + 4} fill={colors.success} fontSize="9">Target</text>
 
-          {/* Planarity indicator bar */}
-          <g transform="translate(50, 340)">
+          {/* Legend */}
+          <g transform="translate(400, 120)">
+            <text x={0} y={0} fill={colors.textSecondary} fontSize="10" fontWeight="bold">Legend</text>
+            <rect x={0} y={8} width={16} height={10} fill="url(#cmpCopperGrad)" rx={2} />
+            <text x={22} y={17} fill={colors.copper} fontSize="9">Copper</text>
+            <rect x={0} y={24} width={16} height={10} fill="url(#cmpOxideGrad)" rx={2} />
+            <text x={22} y={33} fill={colors.oxide} fontSize="9">Oxide</text>
+          </g>
+
+          {/* Metrics panel */}
+          <g transform="translate(400, 170)">
+            <text x={0} y={0} fill={colors.textSecondary} fontSize="10" fontWeight="bold">Metrics</text>
+            <text x={0} y={16} fill={colors.textPrimary} fontSize="9">Step: {result.currentStep.toFixed(0)} nm</text>
+            <text x={0} y={30} fill={result.dishing < 10 ? colors.success : colors.error} fontSize="9">Dish: {result.dishing.toFixed(1)} nm</text>
+            <text x={0} y={44} fill={result.erosion < 10 ? colors.success : colors.warning} fontSize="9">Eros: {result.erosion.toFixed(1)} nm</text>
+            <text x={0} y={58} fill={colors.textMuted} fontSize="9">NU: {result.nonUniformity.toFixed(1)}%</text>
+          </g>
+
+          {/* Status indicator */}
+          <text
+            x={440}
+            y={245}
+            textAnchor="middle"
+            fill={result.isComplete ? colors.success : result.isOverPolished ? colors.error : colors.warning}
+            fontSize="10"
+            fontWeight="bold"
+          >
+            {result.isComplete ? 'OPTIMAL' : result.isOverPolished ? 'OVER-POLISH' : 'IN PROGRESS'}
+          </text>
+
+          {/* Planarity bar */}
+          <g transform="translate(50, 310)">
+            <text x={0} y={-5} fill={colors.textSecondary} fontSize="9">Planarity: {result.planarityScore.toFixed(0)}%</text>
             <rect x={0} y={0} width={320} height={8} fill="rgba(255,255,255,0.1)" rx={4} />
             <rect
               x={0}
@@ -752,161 +854,28 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             />
           </g>
 
-          {/* Defect indicators with glow */}
+          {/* Defect indicators with labels */}
           {showDefectMode && result.isOverPolished && (
-            <g filter="url(#cmpDefectGlow)">
+            <g>
               {result.dishing > 15 && (
                 <g>
-                  <circle cx={185} cy={baseY - 70} r={16} fill={colors.error} opacity={0.4} />
-                  <circle cx={185} cy={baseY - 70} r={10} fill={colors.error} opacity={0.6} />
+                  <circle cx={185} cy={baseY - 70} r={12} fill={colors.error} opacity={0.4} />
+                  <text x={185} y={baseY - 55} textAnchor="middle" fill={colors.error} fontSize="9" fontWeight="bold">Dishing</text>
                 </g>
               )}
               {result.erosion > 10 && (
                 <g>
-                  <circle cx={285} cy={baseY - 70} r={16} fill={colors.warning} opacity={0.4} />
-                  <circle cx={285} cy={baseY - 70} r={10} fill={colors.warning} opacity={0.6} />
+                  <circle cx={285} cy={baseY - 70} r={12} fill={colors.warning} opacity={0.4} />
+                  <text x={285} y={baseY - 55} textAnchor="middle" fill={colors.warning} fontSize="9" fontWeight="bold">Erosion</text>
                 </g>
               )}
             </g>
           )}
-
-          {/* Before/After comparison panel */}
-          <g transform="translate(380, 50)">
-            <rect x={0} y={0} width={110} height={95} fill="rgba(0,0,0,0.5)" rx={8} stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
-
-            {/* Before */}
-            <rect x={5} y={20} width={100} height={30} fill="rgba(0,0,0,0.3)" rx={4} />
-            <rect x={15} y={32} width={25} height={12} fill="url(#cmpCopperGrad)" rx={1} />
-            <rect x={40} y={38} width={15} height={6} fill="url(#cmpOxideGrad)" rx={1} />
-            <rect x={55} y={32} width={25} height={12} fill="url(#cmpCopperGrad)" rx={1} />
-
-            {/* After */}
-            <rect x={5} y={55} width={100} height={30} fill="rgba(0,0,0,0.3)" rx={4} />
-            <rect x={15} y={70} width={25} height={6} fill="url(#cmpCopperGrad)" rx={1} />
-            <rect x={40} y={70} width={15} height={6} fill="url(#cmpOxideGrad)" rx={1} />
-            <rect x={55} y={70} width={25} height={6} fill="url(#cmpCopperGrad)" rx={1} />
-          </g>
-
-          {/* Legend panel */}
-          <g transform="translate(380, 155)">
-            <rect x={0} y={0} width={110} height={50} fill="rgba(0,0,0,0.5)" rx={8} stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
-            <rect x={10} y={12} width={16} height={10} fill="url(#cmpCopperGrad)" rx={2} />
-            <rect x={10} y={28} width={16} height={10} fill="url(#cmpOxideGrad)" rx={2} />
-          </g>
-
-          {/* Metrics panel with premium styling */}
-          <rect x={380} y={215} width={110} height={130} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} strokeOpacity={0.5} />
-
-          {/* Status indicator */}
-          <rect
-            x={385}
-            y={295}
-            width={100}
-            height={45}
-            fill={result.isComplete ? 'rgba(16, 185, 129, 0.2)' : result.isOverPolished ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
-            rx={6}
-          />
         </svg>
 
-        {/* Labels outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          width: '100%',
-          maxWidth: '550px',
-          padding: '0 8px',
-          marginTop: '4px'
-        }}>
-          {/* Left side labels */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {polishTime > 0 && polishTime < 100 && (
-              <>
-                <span style={{ color: colors.textMuted, fontSize: typo.label }}>Polishing Pad</span>
-                <span style={{ color: colors.accent, fontSize: typo.label }}>Slurry (abrasive + chemistry)</span>
-              </>
-            )}
-          </div>
-          {/* Right side labels */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'right' }}>
-            <span style={{ color: colors.textMuted, fontSize: typo.label }}>Initial</span>
-            <span style={{ color: colors.success, fontSize: typo.label }}>Target</span>
-          </div>
-        </div>
-
-        {/* Before/After labels */}
-        <div style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: '550px',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          marginTop: '-380px',
-          paddingRight: '8px',
-          pointerEvents: 'none'
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '110px', paddingLeft: '8px' }}>
-            <span style={{ color: colors.textSecondary, fontSize: typo.label, textAlign: 'center', marginTop: '50px' }}>Topography</span>
-            <span style={{ color: colors.textMuted, fontSize: typo.label, textAlign: 'center', marginTop: '8px' }}>Before CMP</span>
-            <span style={{ color: colors.textMuted, fontSize: typo.label, textAlign: 'center', marginTop: '20px' }}>After CMP</span>
-            <span style={{ color: colors.textSecondary, fontSize: typo.label, textAlign: 'center', marginTop: '20px' }}>Legend</span>
-            <span style={{ color: colors.copper, fontSize: typo.label, marginTop: '4px', marginLeft: '30px' }}>Copper</span>
-            <span style={{ color: colors.oxide, fontSize: typo.label, marginLeft: '30px' }}>Oxide</span>
-            <span style={{ color: colors.textSecondary, fontSize: typo.label, textAlign: 'center', marginTop: '15px' }}>CMP Metrics</span>
-            <span style={{ color: colors.textPrimary, fontSize: typo.label, marginLeft: '8px' }}>Step: {result.currentStep.toFixed(0)} nm</span>
-            <span style={{ color: result.dishing < 10 ? colors.success : colors.error, fontSize: typo.label, marginLeft: '8px' }}>Dish: {result.dishing.toFixed(1)} nm</span>
-            <span style={{ color: result.erosion < 10 ? colors.success : colors.warning, fontSize: typo.label, marginLeft: '8px' }}>Eros: {result.erosion.toFixed(1)} nm</span>
-            <span style={{ color: colors.textMuted, fontSize: typo.label, marginLeft: '8px' }}>NU: {result.nonUniformity.toFixed(1)}%</span>
-            <span style={{
-              color: result.isComplete ? colors.success : result.isOverPolished ? colors.error : colors.warning,
-              fontSize: typo.small,
-              fontWeight: 'bold',
-              textAlign: 'center',
-              marginTop: '8px'
-            }}>
-              {result.isComplete ? 'OPTIMAL' : result.isOverPolished ? 'OVER-POLISH' : 'IN PROGRESS'}
-            </span>
-            <span style={{ color: colors.textMuted, fontSize: typo.label, textAlign: 'center' }}>
-              Planarity: {result.planarityScore.toFixed(0)}%
-            </span>
-          </div>
-        </div>
-
-        {/* Defect labels */}
-        {showDefectMode && result.isOverPolished && (
-          <div style={{
-            position: 'relative',
-            width: '100%',
-            maxWidth: '550px',
-            display: 'flex',
-            justifyContent: 'center',
-            marginTop: '130px',
-            gap: '80px',
-            pointerEvents: 'none'
-          }}>
-            {result.dishing > 15 && (
-              <span style={{ color: colors.error, fontSize: typo.small, fontWeight: 'bold' }}>Dishing</span>
-            )}
-            {result.erosion > 10 && (
-              <span style={{ color: colors.warning, fontSize: typo.small, fontWeight: 'bold' }}>Erosion</span>
-            )}
-          </div>
-        )}
-
-        {/* Substrate label */}
-        <div style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: '550px',
-          display: 'flex',
-          justifyContent: 'center',
-          marginTop: showDefectMode && result.isOverPolished ? '20px' : '180px',
-          pointerEvents: 'none'
-        }}>
-          <span style={{ color: colors.textMuted, fontSize: typo.label }}>Silicon Substrate</span>
-        </div>
-
+        {/* Control buttons */}
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
             <button
               onClick={() => {
                 setPolishTime(0);
@@ -914,6 +883,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
               }}
               disabled={isAnimating}
               style={{
+                minHeight: '44px',
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
@@ -922,8 +892,6 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: isAnimating ? 'not-allowed' : 'pointer',
                 fontSize: typo.body,
-                boxShadow: isAnimating ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
-                WebkitTapHighlightColor: 'transparent',
               }}
             >
               {isAnimating ? 'Polishing...' : 'Start CMP'}
@@ -931,6 +899,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             <button
               onClick={() => { setPolishTime(0); setIsAnimating(false); }}
               style={{
+                minHeight: '44px',
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
@@ -939,7 +908,6 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: typo.body,
-                WebkitTapHighlightColor: 'transparent',
               }}
             >
               Reset
@@ -951,11 +919,12 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   };
 
   const renderControls = (showDefects: boolean = false) => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Polish Time: {polishTime}%
-        </label>
+    <div data-testid="controls-container" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '550px', margin: '0 auto' }}>
+      <div data-testid="polish-time-control" style={{ marginBottom: '4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <label style={{ color: colors.textSecondary }}>Polish Time - Controls how long the polishing process runs</label>
+          <span data-testid="polish-time-value" style={{ color: colors.accent, fontWeight: 'bold' }}>{polishTime}%</span>
+        </div>
         <input
           type="range"
           min="0"
@@ -963,14 +932,21 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           step="1"
           value={polishTime}
           onChange={(e) => { setPolishTime(parseInt(e.target.value)); setIsAnimating(false); }}
-          style={{ width: '100%' }}
+          style={{
+            width: '100%',
+            accentColor: colors.accent,
+            height: '8px',
+            cursor: 'pointer',
+          }}
+          aria-label={`Polish Time: ${polishTime}%`}
         />
       </div>
 
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Polish Pressure: {polishPressure}%
-        </label>
+      <div data-testid="polish-pressure-control" style={{ marginBottom: '4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <label style={{ color: colors.textSecondary }}>Polish Pressure - Higher pressure increases removal rate</label>
+          <span data-testid="polish-pressure-value" style={{ color: colors.accent, fontWeight: 'bold' }}>{polishPressure}%</span>
+        </div>
         <input
           type="range"
           min="20"
@@ -978,15 +954,22 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           step="5"
           value={polishPressure}
           onChange={(e) => setPolishPressure(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{
+            width: '100%',
+            accentColor: colors.accent,
+            height: '8px',
+            cursor: 'pointer',
+          }}
+          aria-label={`Polish Pressure: ${polishPressure}%`}
         />
       </div>
 
       {showDefects && (
-        <div>
-          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-            Slurry Selectivity (Cu:Oxide): {slurrySelectivity}%
-          </label>
+        <div data-testid="slurry-selectivity-control" style={{ marginBottom: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <label style={{ color: colors.textSecondary }}>Slurry Selectivity (Cu:Oxide)</label>
+            <span data-testid="slurry-selectivity-value" style={{ color: colors.accent, fontWeight: 'bold' }}>{slurrySelectivity}%</span>
+          </div>
           <input
             type="range"
             min="20"
@@ -994,166 +977,146 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             step="5"
             value={slurrySelectivity}
             onChange={(e) => setSlurrySelectivity(parseInt(e.target.value))}
-            style={{ width: '100%' }}
+            style={{
+              width: '100%',
+              accentColor: colors.accent,
+              height: '8px',
+              cursor: 'pointer',
+            }}
+            aria-label={`Slurry Selectivity: ${slurrySelectivity}%`}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted, marginTop: '4px' }}>
             <span>Cu slower</span>
             <span>Balanced</span>
             <span>Cu faster</span>
           </div>
         </div>
       )}
-
-      <div style={{
-        background: 'rgba(236, 72, 153, 0.2)',
-        padding: '12px',
-        borderRadius: '8px',
-        borderLeft: `3px solid ${colors.accent}`,
-      }}>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          Goal: Remove copper overfill and create flat surface
-        </div>
-        <div style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '4px' }}>
-          Watch for: Dishing (too much Cu removal), Erosion (oxide loss)
-        </div>
-      </div>
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
+  // ============================================================================
+  // PHASE RENDERS
+  // ============================================================================
+
+  // Main container wrapper
+  const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto', marginTop: '60px', marginBottom: '70px', padding: '16px' }}>
+        {children}
+      </div>
     </div>
   );
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              CMP Planarization
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Why do chips "polish" between layers?
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Think of a layer cake: if you spread frosting unevenly, the next layer will be
-                tilted. Chips have 15+ layers - without flattening each one, the whole structure
-                would become impossible to pattern accurately.
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                CMP (Chemical Mechanical Planarization) uses a polishing pad and chemical slurry
-                to create atomically flat surfaces between layers.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(236, 72, 153, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Watch how CMP removes the high spots and creates a flat surface!
-              </p>
-            </div>
-          </div>
+      <PageWrapper>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h1 style={{ color: colors.accent, fontSize: typo.title, marginBottom: '8px' }}>
+            CMP Planarization
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: typo.bodyLarge }}>
+            Why do chips "polish" between layers?
+          </p>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
+
+        {renderVisualization(true)}
+
+        <div style={{
+          background: colors.bgCard,
+          padding: '20px',
+          borderRadius: '12px',
+          marginTop: '16px',
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: typo.body, lineHeight: 1.6, marginBottom: '12px' }}>
+            Think of a layer cake: if you spread frosting unevenly, the next layer will be
+            tilted. Chips have 15+ layers - without flattening each one, the whole structure
+            would become impossible to pattern accurately.
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
+            CMP (Chemical Mechanical Planarization) uses a polishing pad and chemical slurry
+            to create atomically flat surfaces between layers.
+          </p>
+        </div>
+
+        <div style={{
+          background: 'rgba(236, 72, 153, 0.2)',
+          padding: '16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.accent}`,
+          marginTop: '16px',
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: typo.small }}>
+            Watch how CMP removes the high spots and creates a flat surface!
+          </p>
+        </div>
+
+        {renderBottomBar(true, 'Start Discovery')}
+      </PageWrapper>
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
+      <PageWrapper>
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Make Your Prediction</h2>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
+            Observe the visualization and think about what will happen
+          </p>
+        </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The CMP Process:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              The wafer is pressed against a rotating pad while chemical slurry flows. The slurry
-              contains abrasive particles and chemicals that selectively react with the surface.
-              High spots experience more pressure and remove faster.
-            </p>
-          </div>
+        {renderVisualization(false)}
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              How does CMP create a flat surface?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{
+          background: colors.bgCard,
+          padding: '16px',
+          borderRadius: '12px',
+          marginTop: '16px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: typo.body }}>The CMP Process:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.5 }}>
+            The wafer is pressed against a rotating pad while chemical slurry flows. The slurry
+            contains abrasive particles and chemicals that selectively react with the surface.
+            High spots experience more pressure and remove faster.
+          </p>
+        </div>
+
+        <div style={{ marginTop: '16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: typo.body }}>
+            How does CMP create a flat surface?
+          </h3>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '12px' }}>
+            Select your prediction below:
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {predictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPrediction(p.id)}
+                style={{
+                  minHeight: '44px',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: prediction === p.id ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: typo.small,
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
+
+        {renderBottomBar(!!prediction, 'Test My Prediction')}
+      </PageWrapper>
     );
   }
 
@@ -1161,10 +1124,11 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', marginTop: '60px', marginBottom: '70px', padding: '16px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore CMP Planarization</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
               Find the optimal polish time to achieve flatness
             </p>
           </div>
@@ -1174,20 +1138,35 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
 
           <div style={{
             background: colors.bgCard,
-            margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            marginTop: '16px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>What to observe:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Run CMP to 100% and observe the final state</li>
               <li>Try to find the optimal stopping point (step = 0)</li>
-              <li>Increase pressure and observe the removal rate</li>
+              <li>When you increase pressure, you will observe the removal rate increases</li>
               <li>Note the relationship between copper and oxide heights</li>
             </ul>
           </div>
+
+          <div style={{
+            background: 'rgba(236, 72, 153, 0.15)',
+            padding: '16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+            marginTop: '16px',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.small, fontWeight: 'bold' }}>Why This Matters:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0 }}>
+              This is used in real manufacturing at Intel, TSMC, and Samsung to create flat surfaces for advanced chips.
+              Without CMP, modern 5nm and 3nm processors would be impossible to manufacture.
+              Every smartphone and computer relies on this process.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, 'Continue')}
       </div>
     );
   }
@@ -1197,151 +1176,187 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     const wasCorrect = prediction === 'selective';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              CMP removes high spots faster because they experience more pressure against the pad.
-              The slurry chemistry also provides selectivity between different materials.
+      <PageWrapper>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+          marginBottom: '16px',
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary, fontSize: typo.body, marginBottom: '8px' }}>
+            {wasCorrect
+              ? 'As you predicted, CMP removes high spots faster because they experience more pressure against the pad.'
+              : 'You predicted differently, but what you observed shows that CMP removes high spots faster due to pressure differences.'}
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
+            The slurry chemistry also provides selectivity between different materials, as you saw in the simulation.
+          </p>
+        </div>
+
+        {/* Review SVG diagram */}
+        <svg width="100%" height="180" viewBox="0 0 400 180" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '500px', display: 'block', margin: '0 auto 16px' }}>
+          <defs>
+            <linearGradient id="reviewCopperGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+            <linearGradient id="reviewOxideGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+          </defs>
+          <rect width="400" height="180" fill="#0f172a" rx="8" />
+          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">CMP Mechanism</text>
+
+          {/* Before */}
+          <text x="100" y="50" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Before CMP</text>
+          <rect x="50" y="60" width="40" height="50" fill="url(#reviewCopperGrad)" />
+          <rect x="90" y="80" width="20" height="30" fill="url(#reviewOxideGrad)" />
+          <rect x="110" y="60" width="40" height="50" fill="url(#reviewCopperGrad)" />
+          <text x="100" y="125" textAnchor="middle" fill={colors.textMuted} fontSize="9">High Cu spots</text>
+
+          {/* Arrow */}
+          <text x="200" y="85" textAnchor="middle" fill={colors.accent} fontSize="20">→</text>
+          <text x="200" y="105" textAnchor="middle" fill={colors.textSecondary} fontSize="9">Polish</text>
+
+          {/* After */}
+          <text x="300" y="50" textAnchor="middle" fill={colors.textSecondary} fontSize="10">After CMP</text>
+          <rect x="250" y="80" width="40" height="30" fill="url(#reviewCopperGrad)" />
+          <rect x="290" y="80" width="20" height="30" fill="url(#reviewOxideGrad)" />
+          <rect x="310" y="80" width="40" height="30" fill="url(#reviewCopperGrad)" />
+          <text x="300" y="125" textAnchor="middle" fill={colors.success} fontSize="9">Flat surface!</text>
+
+          {/* Legend */}
+          <rect x="50" y="150" width="12" height="8" fill="url(#reviewCopperGrad)" />
+          <text x="68" y="158" fill={colors.copper} fontSize="9">Copper</text>
+          <rect x="120" y="150" width="12" height="8" fill="url(#reviewOxideGrad)" />
+          <text x="138" y="158" fill={colors.oxide} fontSize="9">Oxide</text>
+        </svg>
+
+        <div style={{
+          background: colors.bgCard,
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.body }}>The Physics of CMP</h3>
+          <div style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Preston Equation:</strong> The removal
+              rate follows R = k x P x V, where P is pressure and V is velocity. High spots see
+              more pressure, so they remove faster until the surface is flat.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Chemical Component:</strong> The slurry
+              contains chemicals that soften or oxidize the surface, making mechanical removal easier.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Selectivity:</strong> Slurry chemistry
+              can be tuned to remove copper faster than oxide, or vice versa.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of CMP</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Preston Equation:</strong> The removal
-                rate follows R = k x P x V, where P is pressure and V is velocity. High spots see
-                more pressure, so they remove faster until the surface is flat.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Chemical Component:</strong> The slurry
-                contains chemicals that soften or oxidize the surface, making mechanical removal easier.
-                Different chemicals target different materials.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Selectivity:</strong> Slurry chemistry
-                can be tuned to remove copper faster than oxide, or vice versa. This helps control
-                the endpoint and minimize defects.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Result:</strong> Nanometer-level flatness
-                across a 300mm wafer, enabling precise lithography on subsequent layers.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
+
+        {renderBottomBar(true, 'Next: A Twist!')}
+      </PageWrapper>
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What happens with too much polishing?
-            </p>
-          </div>
+      <PageWrapper>
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
+            What happens with too much polishing?
+          </p>
+        </div>
 
-          {renderVisualization(false, true)}
+        {renderVisualization(false, true)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Over-Polish Defects:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              If polishing continues past the optimal point, defects appear. "Dishing" occurs when
-              soft copper polishes faster than surrounding oxide. "Erosion" happens when oxide in
-              dense copper regions wears away. Both hurt chip performance.
-            </p>
-          </div>
+        <div style={{
+          background: colors.bgCard,
+          padding: '16px',
+          borderRadius: '12px',
+          marginTop: '16px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: typo.body }}>Over-Polish Defects:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.5 }}>
+            If polishing continues past the optimal point, defects appear. "Dishing" occurs when
+            soft copper polishes faster than surrounding oxide. "Erosion" happens when oxide in
+            dense copper regions wears away.
+          </p>
+        </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What happens with excessive CMP?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{ marginTop: '16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: typo.body }}>
+            What happens with excessive CMP?
+          </h3>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '12px' }}>
+            Select your prediction:
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {twistPredictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setTwistPrediction(p.id)}
+                style={{
+                  minHeight: '44px',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                  background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: typo.small,
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
+
+        {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
+      </PageWrapper>
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Over-Polish Effects</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Polish beyond optimal and observe dishing/erosion
-            </p>
-          </div>
-
-          {renderVisualization(true, true)}
-          {renderControls(true)}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Past 70% polish time, dishing and erosion increase rapidly. These defects increase
-              wire resistance (dishing) and can cause reliability failures (erosion thinning).
-              Finding the optimal endpoint is critical!
-            </p>
-          </div>
+      <PageWrapper>
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Over-Polish Effects</h2>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
+            Polish beyond optimal and observe dishing/erosion
+          </p>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
+
+        {renderVisualization(true, true)}
+        {renderControls(true)}
+
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.warning}`,
+          marginTop: '16px',
+        }}>
+          <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.body }}>Key Observation:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
+            Past 70% polish time, dishing and erosion increase rapidly. These defects increase
+            wire resistance (dishing) and can cause reliability failures (erosion thinning).
+          </p>
+        </div>
+
+        {renderBottomBar(true, 'See Explanation')}
+      </PageWrapper>
     );
   }
 
@@ -1350,118 +1365,233 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     const wasCorrect = twistPrediction === 'dishing';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Over-polishing causes dishing (copper recesses) and erosion (oxide thinning).
-              These defects increase resistance and create reliability problems. CMP endpoint
-              detection is critical for production yield.
+      <PageWrapper>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+          marginBottom: '16px',
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary, fontSize: typo.body }}>
+            Over-polishing causes dishing (copper recesses) and erosion (oxide thinning).
+            These defects increase resistance and create reliability problems.
+          </p>
+        </div>
+
+        {/* Review SVG for twist */}
+        <svg width="100%" height="160" viewBox="0 0 400 160" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '500px', display: 'block', margin: '0 auto 16px' }}>
+          <rect width="400" height="160" fill="#0f172a" rx="8" />
+          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">CMP Defect Mechanisms</text>
+
+          {/* Dishing */}
+          <text x="100" y="50" textAnchor="middle" fill={colors.error} fontSize="10" fontWeight="bold">Dishing</text>
+          <rect x="50" y="60" width="100" height="30" fill="#60a5fa" />
+          <path d="M 70 60 Q 100 75 130 60" fill="#f59e0b" />
+          <text x="100" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="9">Cu sinks below oxide</text>
+
+          {/* Erosion */}
+          <text x="300" y="50" textAnchor="middle" fill={colors.warning} fontSize="10" fontWeight="bold">Erosion</text>
+          <rect x="250" y="70" width="100" height="20" fill="#60a5fa" />
+          <rect x="260" y="60" width="30" height="30" fill="#f59e0b" />
+          <rect x="310" y="60" width="30" height="30" fill="#f59e0b" />
+          <text x="300" y="120" textAnchor="middle" fill={colors.textMuted} fontSize="9">Oxide thins in dense Cu</text>
+
+          {/* Legend */}
+          <rect x="130" y="140" width="12" height="8" fill="#f59e0b" />
+          <text x="148" y="148" fill={colors.copper} fontSize="9">Copper</text>
+          <rect x="200" y="140" width="12" height="8" fill="#60a5fa" />
+          <text x="218" y="148" fill={colors.oxide} fontSize="9">Oxide</text>
+        </svg>
+
+        <div style={{
+          background: colors.bgCard,
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.warning, marginBottom: '12px', fontSize: typo.body }}>CMP Defect Mechanisms</h3>
+          <div style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Dishing:</strong> Copper is softer
+              than oxide and polishes faster. Wide copper features "dish" inward.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Erosion:</strong> In areas with
+              dense copper, the surrounding oxide also gets attacked.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Control:</strong> Endpoint detection
+              uses optical reflectivity or motor current to stop at the optimal point.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>CMP Defect Mechanisms</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Dishing:</strong> Copper is softer
-                than oxide and polishes faster. Wide copper features "dish" inward as the softer
-                material removes more under the same pressure.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Erosion:</strong> In areas with
-                dense copper, the pad conforms to the copper surface and also attacks the
-                surrounding oxide, thinning it excessively.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Control:</strong> Endpoint detection
-                uses optical reflectivity or motor current changes to stop at the optimal point.
-                Slurry chemistry and pad design also help minimize defects.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
+
+        {renderBottomBar(true, 'Apply Knowledge')}
+      </PageWrapper>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              CMP enables every multi-layer semiconductor device
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
-          </div>
+    const currentApp = transferApplications[currentTransferApp];
+    const allCompleted = transferCompleted.size >= transferApplications.length;
 
+    return (
+      <PageWrapper>
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Real-World Applications</h2>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
+            CMP enables every multi-layer semiconductor device
+          </p>
+          <p style={{ color: colors.textMuted, fontSize: typo.label, marginTop: '8px' }}>
+            Application {currentTransferApp + 1} of {transferApplications.length}
+          </p>
+        </div>
+
+        {/* App tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', padding: '4px' }}>
           {transferApplications.map((app, index) => (
-            <div
+            <button
               key={index}
+              onClick={() => setCurrentTransferApp(index)}
               style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                minHeight: '44px',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: currentTransferApp === index ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                background: transferCompleted.has(index) ? 'rgba(16, 185, 129, 0.2)' : currentTransferApp === index ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
+                color: transferCompleted.has(index) ? colors.success : currentTransferApp === index ? colors.accent : colors.textSecondary,
+                cursor: 'pointer',
+                fontSize: typo.label,
+                fontWeight: 500,
+                whiteSpace: 'nowrap',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(236, 72, 153, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
+              {transferCompleted.has(index) ? '✓ ' : ''}{index + 1}
+            </button>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
+
+        {/* Current app card */}
+        <div style={{
+          background: colors.bgCard,
+          padding: '20px',
+          borderRadius: '12px',
+          border: transferCompleted.has(currentTransferApp) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: typo.body }}>{currentApp.title}</h3>
+            {transferCompleted.has(currentTransferApp) && <span style={{ color: colors.success, fontSize: typo.small }}>Complete</span>}
+          </div>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '12px' }}>{currentApp.description}</p>
+
+          {/* Stats */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+            {currentApp.stats.map((stat, i) => (
+              <span key={i} style={{ padding: '4px 8px', borderRadius: '4px', background: 'rgba(236, 72, 153, 0.2)', color: colors.accent, fontSize: typo.label }}>
+                {stat}
+              </span>
+            ))}
+          </div>
+
+          {/* Companies */}
+          <p style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '12px' }}>
+            Key players: {currentApp.companies.join(', ')}
+          </p>
+
+          <div style={{ background: 'rgba(236, 72, 153, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+            <p style={{ color: colors.accent, fontSize: typo.small, fontWeight: 'bold' }}>{currentApp.question}</p>
+          </div>
+
+          {!transferCompleted.has(currentTransferApp) ? (
+            <button
+              onClick={() => {
+                setTransferCompleted(new Set([...transferCompleted, currentTransferApp]));
+              }}
+              style={{
+                minHeight: '44px',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.accent}`,
+                background: 'rgba(236, 72, 153, 0.1)',
+                color: colors.accent,
+                cursor: 'pointer',
+                fontSize: typo.small,
+                fontWeight: 500,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Got It - Reveal Answer
+            </button>
+          ) : (
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+              <p style={{ color: colors.textPrimary, fontSize: typo.small }}>{currentApp.answer}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation within transfer */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
+          <button
+            onClick={() => setCurrentTransferApp(Math.max(0, currentTransferApp - 1))}
+            disabled={currentTransferApp === 0}
+            style={{
+              minHeight: '44px',
+              padding: '12px 20px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.2)',
+              background: 'transparent',
+              color: currentTransferApp === 0 ? colors.textMuted : colors.textSecondary,
+              cursor: currentTransferApp === 0 ? 'not-allowed' : 'pointer',
+              opacity: currentTransferApp === 0 ? 0.5 : 1,
+              fontSize: typo.small,
+            }}
+          >
+            &#8592; Previous App
+          </button>
+          {currentTransferApp < transferApplications.length - 1 ? (
+            <button
+              onClick={() => setCurrentTransferApp(currentTransferApp + 1)}
+              style={{
+                minHeight: '44px',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.accent}, #f472b6)`,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: typo.small,
+                fontWeight: 500,
+              }}
+            >
+              Next App &#8594;
+            </button>
+          ) : (
+            <button
+              onClick={goNext}
+              disabled={!allCompleted}
+              style={{
+                minHeight: '44px',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                border: 'none',
+                background: allCompleted ? `linear-gradient(135deg, ${colors.success}, #059669)` : 'rgba(255,255,255,0.1)',
+                color: allCompleted ? 'white' : colors.textMuted,
+                cursor: allCompleted ? 'pointer' : 'not-allowed',
+                fontSize: typo.small,
+                fontWeight: 500,
+              }}
+            >
+              {allCompleted ? 'Take the Test &#8594;' : `Complete all ${transferApplications.length} apps`}
+            </button>
+          )}
+        </div>
+
+        {renderBottomBar(allCompleted, 'Take the Test')}
+      </PageWrapper>
     );
   }
 
@@ -1469,173 +1599,211 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You understand CMP planarization!' : 'Review the material and try again.'}
-              </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+        <PageWrapper>
+          <div style={{
+            background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            padding: '24px',
+            borderRadius: '12px',
+            textAlign: 'center',
+            marginBottom: '16px',
+          }}>
+            <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+              {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ color: colors.textSecondary, marginTop: '8px', fontSize: typo.small }}>
+              {testScore >= 8 ? 'You understand CMP planarization!' : 'Review the material and try again.'}
+            </p>
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
+
+          {testQuestions.map((q, qIndex) => {
+            const userAnswer = testAnswers[qIndex];
+            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            return (
+              <div key={qIndex} style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`, marginBottom: '12px' }}>
+                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold', fontSize: typo.small }}>Q{qIndex + 1}. {q.question}</p>
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontSize: typo.small }}>
+                    {opt.correct ? '✓ ' : userAnswer === oIndex ? '✗ ' : ''}{opt.text}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+
+          {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review Material')}
+        </PageWrapper>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
-            </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button
-                  key={oIndex}
-                  onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {opt.text}
-                </button>
-              ))}
-            </div>
+      <PageWrapper>
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: typo.heading }}>Knowledge Test</h2>
+            <span style={{ color: colors.textSecondary, fontSize: typo.body, fontWeight: 'bold' }}>
+              Question {currentTestQuestion + 1} of {testQuestions.length}
+            </span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-              disabled={currentTestQuestion === 0}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
-                background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Previous
-            </button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
+
+          <p style={{ color: colors.textMuted, fontSize: typo.small, marginBottom: '12px' }}>
+            Test your understanding of CMP planarization concepts. Select the best answer for each question below.
+          </p>
+
+          {/* Progress dots */}
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
+            {testQuestions.map((_, i) => (
               <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                key={i}
+                onClick={() => setCurrentTestQuestion(i)}
                 style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: colors.accent,
-                  color: 'white',
+                  flex: 1,
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)',
                   cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={submitTest}
-                disabled={testAnswers.includes(null)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
-                  color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
+                  padding: 0,
+                  transition: 'background 0.2s ease',
+                }}
+                aria-label={`Question ${i + 1}${testAnswers[i] !== null ? ' (answered)' : ''}`}
+              />
+            ))}
+          </div>
+
+          <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: typo.body, lineHeight: 1.5 }}>{currentQ.question}</p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {currentQ.options.map((opt, oIndex) => (
+              <button
+                key={oIndex}
+                onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+                style={{
+                  minHeight: '44px',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: typo.small,
                 }}
               >
-                Submit Test
+                {opt.text}
               </button>
-            )}
+            ))}
           </div>
         </div>
-      </div>
+
+        {/* Question navigation */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
+          <button
+            onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+            disabled={currentTestQuestion === 0}
+            style={{
+              minHeight: '44px',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.textMuted}`,
+              background: 'transparent',
+              color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+              cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+              fontSize: typo.small,
+            }}
+          >
+            Previous
+          </button>
+          {currentTestQuestion < testQuestions.length - 1 ? (
+            <button
+              onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+              style={{
+                minHeight: '44px',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: typo.small,
+              }}
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              onClick={submitTest}
+              disabled={testAnswers.includes(null)}
+              style={{
+                minHeight: '44px',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                color: 'white',
+                cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                fontSize: typo.small,
+              }}
+            >
+              Submit Test
+            </button>
+          )}
+        </div>
+
+        {renderBottomBar(false, '')}
+      </PageWrapper>
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>CMP Icon</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand CMP planarization</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>CMP combines chemical and mechanical action</li>
-              <li>Preston equation: R = k x P x V</li>
-              <li>Selectivity between materials via slurry chemistry</li>
-              <li>Dishing and erosion defects from over-polish</li>
-              <li>Endpoint detection is critical for yield</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(236, 72, 153, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Advanced CMP includes multi-step polishing with different slurries, zone-based pressure
-              control for uniformity, and in-situ metrology for real-time endpoint detection.
-              CMP consumables (slurry and pads) are a multi-billion dollar industry enabling
-              continued chip scaling!
-            </p>
-          </div>
-          {renderVisualization(true, true)}
+      <PageWrapper>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎓</div>
+          <h1 style={{ color: colors.success, marginBottom: '8px', fontSize: typo.title }}>Mastery Achieved!</h1>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body }}>You understand CMP planarization</p>
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
+
+        <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.body }}>Key Concepts Mastered:</h3>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontSize: typo.small }}>
+            <li>CMP combines chemical and mechanical action</li>
+            <li>Preston equation: R = k x P x V</li>
+            <li>Selectivity between materials via slurry chemistry</li>
+            <li>Dishing and erosion defects from over-polish</li>
+            <li>Endpoint detection is critical for yield</li>
+          </ul>
+        </div>
+
+        <div style={{ background: 'rgba(236, 72, 153, 0.2)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.body }}>Beyond the Basics:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>
+            Advanced CMP includes multi-step polishing with different slurries, zone-based pressure
+            control for uniformity, and in-situ metrology for real-time endpoint detection.
+          </p>
+        </div>
+
+        {renderVisualization(true, true)}
+
+        {renderBottomBar(true, 'Complete Game')}
+      </PageWrapper>
     );
   }
 
-  return null;
+  // Fallback - render hook phase
+  return (
+    <PageWrapper>
+      <div style={{ textAlign: 'center', padding: '40px' }}>
+        <h1 style={{ color: colors.textPrimary }}>CMP Planarization</h1>
+        <p style={{ color: colors.textSecondary }}>Loading...</p>
+      </div>
+      {renderBottomBar(true, 'Start')}
+    </PageWrapper>
+  );
 };
 
 export default CMPPlanarizationRenderer;

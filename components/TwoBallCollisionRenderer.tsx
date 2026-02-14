@@ -139,6 +139,8 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [showTestResults, setShowTestResults] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [questionConfirmed, setQuestionConfirmed] = useState(false);
 
   // Animation ref
   const animationRef = useRef<number | null>(null);
@@ -453,7 +455,9 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
         fontSize: typo.heading,
         fontWeight: 800,
         color: colors.textPrimary,
-        margin: 0,
+        marginTop: 0,
+        marginLeft: 0,
+        marginRight: 0,
         marginBottom: subtitle ? '8px' : 0
       }}>{title}</h2>
       {subtitle && <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>{subtitle}</p>}
@@ -1328,6 +1332,23 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
         Experiments run: {experimentsRun} (try both types!)
       </div>
 
+      {/* Educational explanation */}
+      <div className="bg-slate-800/30 rounded-xl p-4 mb-4 border border-slate-700/50">
+        <h4 className="font-semibold text-white text-sm mb-2">Understanding Collisions</h4>
+        <p className="text-slate-300 text-sm leading-relaxed">
+          <strong>When you increase the mass</strong>, the ball carries more momentum (p = mv).
+          This affects how velocity is transferred during collision. Higher mass means more impact force.
+        </p>
+        <p className="text-slate-300 text-sm leading-relaxed mt-2">
+          <strong>Momentum is calculated as:</strong> p = mass x velocity. This formula describes how
+          the motion of an object relates to both its mass and speed.
+        </p>
+        <p className="text-slate-300 text-sm leading-relaxed mt-2">
+          <strong>Why this matters:</strong> Collision physics is important for car crash safety design,
+          sports equipment engineering, and particle physics research.
+        </p>
+      </div>
+
       {renderBottomBar(() => goToPhase('review'), experimentsRun >= 2, 'Understand the Physics')}
     </div>
   );
@@ -1335,6 +1356,22 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   const renderReview = () => (
     <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
       {renderSectionHeader('Step 3 • Understand', 'Conservation Laws', 'The fundamental rules of collisions')}
+
+      {/* Connection to prediction/observation */}
+      <div style={{
+        padding: typo.cardPadding,
+        borderRadius: '12px',
+        marginBottom: typo.sectionGap,
+        background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.secondary}10 100%)`,
+        border: `1px solid ${colors.primary}30`
+      }}>
+        <p style={{ fontSize: typo.body, color: colors.textPrimary, lineHeight: 1.6 }}>
+          <strong>As you observed</strong> in the experiment, elastic and inelastic collisions behave very differently.
+          {prediction === 'momentum_only'
+            ? " Your prediction was correct! Momentum is always conserved, but energy only in elastic collisions."
+            : " The result confirms what happens in real physics."}
+        </p>
+      </div>
 
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 mb-5">
         <svg viewBox="0 0 300 200" className="w-full h-44 mb-4">
@@ -1953,10 +1990,31 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   ];
 
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
+    if (questionConfirmed) return; // Don't allow changing after confirming
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
     setTestAnswers(newAnswers);
-    playSound(optionIndex === testQuestions[questionIndex].options.findIndex(o => o.correct) ? 'success' : 'failure');
+    playSound('click');
+  };
+
+  const handleConfirmAnswer = () => {
+    if (testAnswers[currentQuestionIndex] === null) return;
+    setQuestionConfirmed(true);
+    const correctIndex = testQuestions[currentQuestionIndex].options.findIndex(opt => opt.correct);
+    if (testAnswers[currentQuestionIndex] === correctIndex) {
+      playSound('success');
+    } else {
+      playSound('failure');
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < testQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setQuestionConfirmed(false);
+    } else {
+      setShowTestResults(true);
+    }
   };
 
   const calculateTestScore = () => {
@@ -1968,52 +2026,121 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   };
 
   const renderTest = () => {
-    const allAnswered = testAnswers.every(a => a !== null);
+    const q = testQuestions[currentQuestionIndex];
+    const correctIndex = q.options.findIndex(opt => opt.correct);
+    const isCorrect = testAnswers[currentQuestionIndex] === correctIndex;
 
     if (showTestResults) {
       const score = calculateTestScore();
       return (
         <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          {renderSectionHeader('Step 8 • Results', 'Test Complete', `You scored ${score}/10`)}
+          {renderSectionHeader('Step 8 • Results', 'Test Complete!', `You scored ${score}/10`)}
 
-          <div className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-6 mb-6">
-            <div className="text-6xl mb-4">
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>
               {score >= 8 ? '🏆' : score >= 6 ? '🌟' : '📚'}
             </div>
-            <div className="text-4xl font-bold text-indigo-600 mb-2">{score * 10}%</div>
-            <p className="text-indigo-800">
+            <div style={{ fontSize: '36px', fontWeight: 700, color: colors.primary, marginBottom: '8px' }}>{score * 10}%</div>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
               {score >= 8 ? 'Excellent! Collision physics mastered!' :
                score >= 6 ? 'Good grasp of conservation laws!' :
                'Review the concepts and try again!'}
             </p>
           </div>
 
-          <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
-            {testQuestions.map((q, i) => {
-              const isCorrect = testAnswers[i] !== null && q.options[testAnswers[i]!].correct;
-              return (
-                <div
-                  key={i}
-                  className={`p-3 rounded-lg text-left ${isCorrect ? 'bg-green-50' : 'bg-red-50'}`}
-                >
-                  <div className="flex items-start gap-2">
-                    <span>{isCorrect ? '✓' : '✗'}</span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">Q{i+1}: {q.question}</p>
-                      {!isCorrect && (
-                        <p className="text-xs text-gray-600 mt-1">{q.explanation}</p>
-                      )}
+          {/* Answer Review with scrollable container */}
+          <div style={{
+            maxHeight: '300px',
+            overflowY: 'auto',
+            marginBottom: '24px',
+            padding: '4px'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {testQuestions.map((question, i) => {
+                const correctIdx = question.options.findIndex(opt => opt.correct);
+                const wasCorrect = testAnswers[i] === correctIdx;
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      textAlign: 'left',
+                      background: wasCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      border: `1px solid ${wasCorrect ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                      <span style={{ fontSize: '18px', flexShrink: 0 }}>{wasCorrect ? '✓' : '✗'}</span>
+                      <div>
+                        <p style={{ fontSize: typo.small, fontWeight: 600, color: colors.textPrimary, marginBottom: '4px' }}>
+                          Question {i+1}: {question.question}
+                        </p>
+                        {!wasCorrect && (
+                          <p style={{ fontSize: typo.label, color: colors.textSecondary, lineHeight: 1.5 }}>
+                            {question.explanation}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
-          {renderBottomBar(() => {
-            setTestScore(score);
-            goToPhase('mastery');
-          }, true, 'Complete Lesson')}
+          {/* Navigation buttons for results page */}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onPointerDown={(e) => {
+                e.preventDefault();
+                setShowTestResults(false);
+                setTestAnswers(Array(10).fill(null));
+                setCurrentQuestionIndex(0);
+                setQuestionConfirmed(false);
+              }}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                fontSize: typo.body,
+                background: colors.bgCardLight,
+                color: colors.textSecondary,
+                border: `1px solid ${colors.border}`,
+                cursor: 'pointer',
+                minHeight: '48px'
+              }}
+            >
+              Try Again
+            </button>
+            <button
+              onPointerDown={(e) => {
+                e.preventDefault();
+                setTestScore(score);
+                goToPhase('mastery');
+              }}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                fontSize: typo.body,
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                minHeight: '48px',
+                boxShadow: `0 4px 20px ${colors.primary}40`
+              }}
+            >
+              Complete Lesson
+            </button>
+          </div>
         </div>
       );
     }
@@ -2035,97 +2162,168 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
             fontWeight: 800,
             marginBottom: '8px',
             color: colors.textPrimary
-          }}>Question 1 of 10</h2>
-          <p style={{
-            fontSize: typo.small,
-            color: colors.textSecondary,
-            margin: 0
-          }}>{testAnswers.filter(a => a !== null).length}/10 answered</p>
+          }}>Question {currentQuestionIndex + 1} of 10</h2>
+
+          {/* Progress dots */}
+          <div style={{ display: 'flex', gap: '4px', marginTop: '12px' }}>
+            {testQuestions.map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestionIndex
+                    ? colors.primary
+                    : testAnswers[i] !== null
+                      ? colors.success
+                      : colors.bgCardLight
+                }}
+              />
+            ))}
+          </div>
         </div>
 
+        {/* Current question */}
         <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: typo.sectionGap,
-          maxHeight: '400px',
-          overflowY: 'auto',
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          background: colors.bgCard,
+          border: `1px solid ${colors.border}`,
           marginBottom: typo.sectionGap
         }}>
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} style={{
-              padding: typo.cardPadding,
-              borderRadius: '12px',
-              background: colors.bgCard,
-              border: `1px solid ${colors.border}`
+          <p style={{
+            fontSize: typo.small,
+            fontStyle: 'italic',
+            marginBottom: '8px',
+            color: colors.textMuted,
+            lineHeight: 1.5
+          }}>{q.scenario}</p>
+          <p style={{
+            fontWeight: 700,
+            fontSize: typo.body,
+            marginBottom: '16px',
+            color: colors.textPrimary,
+            lineHeight: 1.5
+          }}>{q.question}</p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {q.options.map((opt, oIndex) => {
+              const isSelected = testAnswers[currentQuestionIndex] === oIndex;
+              const showCorrect = questionConfirmed && opt.correct;
+              const showIncorrect = questionConfirmed && isSelected && !opt.correct;
+
+              return (
+                <button
+                  key={oIndex}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleTestAnswer(currentQuestionIndex, oIndex);
+                  }}
+                  disabled={questionConfirmed}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '10px',
+                    textAlign: 'left',
+                    fontSize: typo.body,
+                    fontWeight: isSelected ? 700 : 400,
+                    lineHeight: 1.4,
+                    background: showCorrect ? 'rgba(34, 197, 94, 0.2)'
+                      : showIncorrect ? 'rgba(239, 68, 68, 0.2)'
+                      : isSelected ? 'rgba(59, 130, 246, 0.3)'
+                      : colors.bgCardLight,
+                    border: showCorrect ? '2px solid #22c55e'
+                      : showIncorrect ? '2px solid #ef4444'
+                      : isSelected ? '2px solid #3b82f6'
+                      : '2px solid transparent',
+                    color: colors.textSecondary,
+                    cursor: questionConfirmed ? 'default' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px'
+                  }}
+                >
+                  <span>{String.fromCharCode(65 + oIndex)}) {opt.text}</span>
+                  {showCorrect && <span style={{ marginLeft: 'auto' }}>✓</span>}
+                  {showIncorrect && <span style={{ marginLeft: 'auto' }}>✗</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Explanation shown after confirming */}
+          {questionConfirmed && (
+            <div style={{
+              marginTop: '16px',
+              padding: '16px',
+              borderRadius: '8px',
+              background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+              border: isCorrect ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)'
             }}>
               <p style={{
-                fontSize: typo.small,
-                fontStyle: 'italic',
+                color: isCorrect ? '#22c55e' : '#ef4444',
+                fontWeight: 600,
                 marginBottom: '8px',
-                color: colors.textMuted,
                 lineHeight: 1.5
-              }}>{q.scenario}</p>
-              <p style={{
-                fontWeight: 700,
-                fontSize: typo.body,
-                marginBottom: '12px',
-                color: colors.textPrimary,
-                lineHeight: 1.5
-              }}>{qIndex + 1}. {q.question}</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {q.options.map((opt, oIndex) => {
-                  const isSelected = testAnswers[qIndex] === oIndex;
-                  return (
-                    <button
-                      key={oIndex}
-                      onClick={() => handleTestAnswer(qIndex, oIndex)}
-                      onPointerDown={(e) => {
-                        e.preventDefault();
-                        handleTestAnswer(qIndex, oIndex);
-                      }}
-                      style={{
-                        padding: '12px 16px',
-                        borderRadius: '10px',
-                        textAlign: 'left',
-                        fontSize: typo.body,
-                        fontWeight: isSelected ? 700 : 400,
-                        lineHeight: 1.4,
-                        background: isSelected ? '#22c55e20' : colors.bgCardLight,
-                        border: `2px solid ${isSelected ? '#22c55e' : 'transparent'}`,
-                        color: isSelected ? '#f8fafc' : colors.textSecondary,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px'
-                      }}
-                    >
-                      <span style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        background: isSelected ? '#22c55e' : 'transparent',
-                        border: `2px solid ${isSelected ? '#22c55e' : colors.border}`,
-                        color: isSelected ? 'white' : colors.textMuted,
-                        fontSize: '14px',
-                        fontWeight: 700
-                      }}>
-                        {isSelected ? '✓' : String.fromCharCode(65 + oIndex)}
-                      </span>
-                      <span>{opt.text}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              }}>
+                {isCorrect ? 'Correct!' : 'Incorrect'}
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>
+                {q.explanation}
+              </p>
             </div>
-          ))}
+          )}
         </div>
 
-        {renderBottomBar(() => setShowTestResults(true), allAnswered, 'Submit Answers')}
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+          {!questionConfirmed ? (
+            <button
+              onClick={(e) => { e.preventDefault(); handleConfirmAnswer(); }}
+              disabled={testAnswers[currentQuestionIndex] === null}
+              style={{
+                flex: 1,
+                maxWidth: '300px',
+                padding: '16px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                fontSize: typo.body,
+                lineHeight: 1.5,
+                border: 'none',
+                cursor: testAnswers[currentQuestionIndex] === null ? 'not-allowed' : 'pointer',
+                background: testAnswers[currentQuestionIndex] === null
+                  ? colors.bgCardLight
+                  : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
+                color: testAnswers[currentQuestionIndex] === null ? colors.textMuted : 'white',
+                opacity: testAnswers[currentQuestionIndex] === null ? 0.6 : 1,
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Check Answer
+            </button>
+          ) : (
+            <button
+              onClick={(e) => { e.preventDefault(); handleNextQuestion(); }}
+              style={{
+                flex: 1,
+                maxWidth: '300px',
+                padding: '16px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                fontSize: typo.body,
+                lineHeight: 1.5,
+                border: 'none',
+                cursor: 'pointer',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
+                color: 'white',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {currentQuestionIndex < testQuestions.length - 1 ? 'Next Question' : 'See Results'}
+            </button>
+          )}
+        </div>
       </div>
     );
   };

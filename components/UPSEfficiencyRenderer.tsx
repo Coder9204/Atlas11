@@ -365,16 +365,44 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
   const batteryEfficiency = batteryChemistry === 'lithium' ? 0.95 : 0.80;
   const roundTripLoss = (1 - batteryEfficiency) * 100;
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component (fixed position, high z-index)
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>⚡</span>
+        <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
+          UPS Efficiency
+        </span>
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '56px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 999,
     }}>
       <div style={{
         height: '100%',
@@ -412,7 +440,7 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
     </div>
   );
 
-  // Primary button style
+  // Primary button style (minHeight: 44px for touch targets)
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
     color: 'white',
@@ -424,21 +452,27 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // Wire visualization component
-  const WireVisualization = () => {
+  const WireVisualization = ({ isStatic = false, staticVoltage = 12, staticCurrent = 833, staticLoss = 6944, staticLossPercent = 69.44 }: { isStatic?: boolean; staticVoltage?: number; staticCurrent?: number; staticLoss?: number; staticLossPercent?: number } = {}) => {
     const width = isMobile ? 320 : 450;
     const height = 200;
-    const wireThickness = Math.max(2, Math.min(30, current / 30));
-    const heatGlow = Math.min(1, wireLossPercent / 10);
+    const displayCurrent = isStatic ? staticCurrent : current;
+    const displayVoltage = isStatic ? staticVoltage : voltage;
+    const displayLoss = isStatic ? staticLoss : wireLoss;
+    const displayLossPercent = isStatic ? staticLossPercent : wireLossPercent;
+    const displayDelivered = isStatic ? (10000 - staticLoss) : deliveredPower;
+    const wireThickness = Math.max(2, Math.min(30, displayCurrent / 30));
+    const heatGlow = Math.min(1, displayLossPercent / 10);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* UPS */}
         <rect x="20" y="60" width="80" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
         <text x="60" y="95" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="600">UPS</text>
-        <text x="60" y="115" fill={colors.accent} fontSize="14" textAnchor="middle" fontWeight="700">{voltage}V</text>
+        <text x="60" y="115" fill={colors.accent} fontSize="14" textAnchor="middle" fontWeight="700">{displayVoltage}V</text>
 
         {/* Wire with current animation */}
         <g>
@@ -463,8 +497,8 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
             strokeWidth={wireThickness}
             strokeLinecap="round"
           />
-          {/* Current flow animation */}
-          {[0, 1, 2, 3, 4].map(i => (
+          {/* Current flow animation (only when not static) */}
+          {!isStatic && [0, 1, 2, 3, 4].map(i => (
             <circle
               key={i}
               cx={100 + ((animationFrame * 3 + i * 50) % (width - 200))}
@@ -479,21 +513,21 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
         {/* Load */}
         <rect x={width - 100} y="60" width="80" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.power} strokeWidth="2" />
         <text x={width - 60} y="95" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="600">LOAD</text>
-        <text x={width - 60} y="115" fill={colors.power} fontSize="14" textAnchor="middle" fontWeight="700">{(deliveredPower / 1000).toFixed(1)}kW</text>
+        <text x={width - 60} y="115" fill={colors.power} fontSize="14" textAnchor="middle" fontWeight="700">{(displayDelivered / 1000).toFixed(1)}kW</text>
 
         {/* Current label */}
         <text x={width / 2} y="80" fill={colors.current} fontSize="14" textAnchor="middle" fontWeight="600">
-          {current.toFixed(0)}A
+          {displayCurrent.toFixed(0)}A
         </text>
 
         {/* Loss indicator */}
-        <text x={width / 2} y="140" fill={wireLossPercent > 5 ? colors.error : colors.textSecondary} fontSize="12" textAnchor="middle">
-          Cable Loss: {wireLoss.toFixed(0)}W ({wireLossPercent.toFixed(1)}%)
+        <text x={width / 2} y="140" fill={displayLossPercent > 5 ? colors.error : colors.textSecondary} fontSize="12" textAnchor="middle">
+          Cable Loss: {displayLoss.toFixed(0)}W ({displayLossPercent.toFixed(1)}%)
         </text>
 
-        {wireLossPercent > 5 && (
+        {displayLossPercent > 5 && (
           <text x={width / 2} y="160" fill={colors.error} fontSize="11" textAnchor="middle">
-            🔥 Significant heat generation!
+            Significant heat generation!
           </text>
         )}
       </svg>
@@ -515,8 +549,11 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -561,7 +598,7 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Discover I²R →
+          Discover I²R
         </button>
 
         {renderNavDots()}
@@ -582,10 +619,13 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -602,7 +642,7 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
             A 10kW load can be powered at 12V or 24V. What happens to the current when you double the voltage?
           </h2>
 
-          {/* Visual diagram */}
+          {/* Static Visual diagram with SVG */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -610,16 +650,19 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
             textAlign: 'center',
           }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <WireVisualization isStatic={true} staticVoltage={12} staticCurrent={833} staticLoss={6944} staticLossPercent={69.44} />
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ ...typo.h2, color: colors.voltage }}>12V</div>
-                <div style={{ ...typo.body, color: colors.textMuted }}>Low Voltage</div>
+                <div style={{ ...typo.body, color: '#e2e8f0' }}>Low Voltage</div>
                 <div style={{ ...typo.h3, color: colors.current }}>???A</div>
               </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>vs</div>
+              <div style={{ fontSize: '32px', color: '#e2e8f0' }}>vs</div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ ...typo.h2, color: colors.voltage }}>24V</div>
-                <div style={{ ...typo.body, color: colors.textMuted }}>Higher Voltage</div>
+                <div style={{ ...typo.body, color: '#e2e8f0' }}>Higher Voltage</div>
                 <div style={{ ...typo.h3, color: colors.current }}>???A</div>
               </div>
             </div>
@@ -642,6 +685,7 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -687,16 +731,33 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Voltage vs Cable Losses
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
             Adjust the distribution voltage and watch what happens to current and losses
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}40`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+              Observe how current and cable losses change as you adjust the voltage slider. Notice the I squared relationship.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -822,10 +883,13 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The I²R Revelation
           </h2>
@@ -930,10 +994,13 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',

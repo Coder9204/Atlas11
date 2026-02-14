@@ -417,7 +417,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
     const vToY = (v: number) => margin.top + chartHeight * (1 - v / customVdd);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="highRegionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor={colors.logicHigh} stopOpacity="0.3" />
@@ -602,7 +602,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
       gap: '8px',
       padding: '16px 0',
     }}>
-      {phaseOrder.map((p, i) => (
+      {validPhases.map((p, i) => (
         <button
           key={p}
           onClick={() => goToPhase(p)}
@@ -611,12 +611,25 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: validPhases.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            minHeight: '44px',
+            minWidth: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           aria-label={phaseLabels[p]}
-        />
+        >
+          <span style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            background: validPhases.indexOf(phase) >= i ? colors.accent : colors.border,
+            display: 'block',
+          }} />
+        </button>
       ))}
     </div>
   );

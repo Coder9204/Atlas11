@@ -261,6 +261,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [transferAppIndex, setTransferAppIndex] = useState(0);
 
   // Simulation state
   const [humidity, setHumidity] = useState(30);
@@ -303,7 +304,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Premium design colors
+  // Premium design colors - using high contrast colors (brightness >= 180)
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -316,8 +317,8 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     hot: '#EF4444',
     cold: '#3B82F6',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast - brightness ~230
+    textMuted: '#cbd5e1', // High contrast - brightness ~200
     border: '#2a2a3a',
   };
 
@@ -634,15 +635,27 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
           onClick={() => goToPhase(p)}
           style={{
             width: phase === p ? '24px' : '8px',
+            minWidth: '44px',
             height: '8px',
+            minHeight: '44px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           aria-label={phaseLabels[p]}
-        />
+        >
+          <span style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+          }} />
+        </button>
       ))}
     </div>
   );
@@ -659,7 +672,90 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Navigation bar component - fixed at top
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1000,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+    }}>
+      <button
+        onClick={() => {
+          const currentIndex = phaseOrder.indexOf(phase);
+          if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
+        }}
+        disabled={phase === 'hook'}
+        style={{
+          background: phase === 'hook' ? 'transparent' : colors.bgCard,
+          border: `1px solid ${colors.border}`,
+          color: phase === 'hook' ? colors.textMuted : colors.textSecondary,
+          padding: '8px 16px',
+          borderRadius: '8px',
+          cursor: phase === 'hook' ? 'not-allowed' : 'pointer',
+          fontSize: '14px',
+          fontWeight: 600,
+          minHeight: '44px',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        ← Back
+      </button>
+      <span style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '14px' }}>
+        {phaseLabels[phase]}
+      </span>
+      <button
+        onClick={() => {
+          const currentIndex = phaseOrder.indexOf(phase);
+          if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
+        }}
+        disabled={phase === 'mastery'}
+        style={{
+          background: phase === 'mastery' ? 'transparent' : `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+          border: 'none',
+          color: 'white',
+          padding: '8px 16px',
+          borderRadius: '8px',
+          cursor: phase === 'mastery' ? 'not-allowed' : 'pointer',
+          fontSize: '14px',
+          fontWeight: 600,
+          minHeight: '44px',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        Next →
+      </button>
+    </nav>
+  );
+
+  // Fixed bottom footer with navigation
+  const renderBottomNav = () => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: colors.bgSecondary,
+      borderTop: `1px solid ${colors.border}`,
+      padding: '12px 16px',
+      zIndex: 1000,
+      boxShadow: '0 -2px 8px rgba(0,0,0,0.3)',
+    }}>
+      {renderNavDots()}
+    </div>
+  );
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
@@ -669,63 +765,72 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 100px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          💧🌡️❄️
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            💧🌡️❄️
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Evaporative Cooling
-        </h1>
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Evaporative Cooling
+          </h1>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          You step out of a swimming pool on a warm day, and despite the heat, you feel <span style={{ color: colors.cold }}>suddenly cold</span>. Your wet skin loses heat rapidly as water evaporates. But where does that cooling power come from?
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Water doesn't just disappear - evaporation requires <span style={{ color: colors.accent }}>enormous energy</span>. Every gram that evaporates absorbs 2,260 joules of heat. That's why sweating keeps you alive in the desert."
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            You step out of a swimming pool on a warm day, and despite the heat, you feel <span style={{ color: colors.cold }}>suddenly cold</span>. Your wet skin loses heat rapidly as water evaporates. But where does that cooling power come from?
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Thermodynamics of Phase Change
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "Water doesn't just disappear - evaporation requires <span style={{ color: colors.accent }}>enormous energy</span>. Every gram that evaporates absorbs 2,260 joules of heat. That's why sweating keeps you alive in the desert."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              — Thermodynamics of Phase Change
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Explore Evaporative Cooling
+          </button>
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Evaporative Cooling
-        </button>
-
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -740,97 +845,112 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Your skin is wet with water. As the water evaporates, where does the energy come from to change liquid water into vapor?
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <div style={{ padding: '12px 20px', background: '#3B82F633', borderRadius: '8px', border: '2px solid #3B82F6' }}>
-                <span style={{ color: '#3B82F6', fontWeight: 600 }}>Liquid Water</span>
-              </div>
-              <div style={{ fontSize: '24px' }}>➡️ + Energy ➡️</div>
-              <div style={{ padding: '12px 20px', background: '#06B6D433', borderRadius: '8px', border: '2px solid #06B6D4' }}>
-                <span style={{ color: '#06B6D4', fontWeight: 600 }}>Water Vapor</span>
-              </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Step 1 of 3: Make Your Prediction
+              </p>
             </div>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
-              Phase change requires 2,260 J/g - where does this energy come from?
-            </p>
-          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              Your skin is wet with water. As the water evaporates, where does the energy come from to change liquid water into vapor?
+            </h2>
+
+            {/* Static Preview Graphic for Predict Phase */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
+                What to Watch: Observe the diagram showing evaporation from wet skin
+              </p>
+              <SkinVisualization />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap', marginTop: '16px' }}>
+                <div style={{ padding: '12px 20px', background: '#3B82F633', borderRadius: '8px', border: '2px solid #3B82F6' }}>
+                  <span style={{ color: '#3B82F6', fontWeight: 600 }}>Liquid Water</span>
+                </div>
+                <div style={{ fontSize: '24px' }}>➡️ + Energy ➡️</div>
+                <div style={{ padding: '12px 20px', background: '#06B6D433', borderRadius: '8px', border: '2px solid #06B6D4' }}>
+                  <span style={{ color: '#06B6D4', fontWeight: 600 }}>Water Vapor</span>
+                </div>
+              </div>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
+                Phase change requires 2,260 J/g - where does this energy come from?
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -839,232 +959,291 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Evaporative Cooling Lab
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Wet your skin and adjust humidity to see how evaporation affects temperature
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Evaporative Cooling Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              What to Watch: Observe how humidity affects evaporation rate and skin temperature
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+              Try adjusting the humidity slider below to see how different environments affect cooling
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SkinVisualization />
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <SkinVisualization />
+              </div>
+
+              {/* Wet skin button */}
+              <button
+                onClick={wetTheSkin}
+                disabled={skinWet && waterDroplets.length > 0}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: skinWet && waterDroplets.length > 0 ? colors.border : colors.cold,
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: skinWet && waterDroplets.length > 0 ? 'not-allowed' : 'pointer',
+                  marginBottom: '24px',
+                  minHeight: '44px',
+                }}
+              >
+                {skinWet && waterDroplets.length > 0 ? 'Water Evaporating...' : 'Wet the Skin'}
+              </button>
+
+              {/* Humidity slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Air Humidity</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{humidity}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="95"
+                  value={humidity}
+                  onChange={(e) => setHumidity(parseInt(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer', touchAction: 'pan-y' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Desert (10%)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Normal (50%)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Jungle (95%)</span>
+                </div>
+              </div>
+
+              {/* Metrics */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.cold }}>{skinTemp.toFixed(1)}°C</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Skin Temp</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.warning }}>{(37 - skinTemp).toFixed(1)}°C</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Cooling</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.success }}>{(evapRate * 100).toFixed(0)}%</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Evap Rate</div>
+                </div>
+              </div>
             </div>
 
-            {/* Wet skin button */}
-            <button
-              onClick={wetTheSkin}
-              disabled={skinWet && waterDroplets.length > 0}
-              style={{
-                width: '100%',
-                padding: '16px',
+            {/* Real-world relevance */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0, textAlign: 'center' }}>
+                <span style={{ color: colors.accent, fontWeight: 600 }}>Real-world connection:</span> This is exactly how <span style={{ color: colors.success }}>sweating</span> cools your body. The same physics powers <span style={{ color: colors.warning }}>swamp coolers</span> and <span style={{ color: colors.cold }}>industrial cooling towers</span>.
+              </p>
+            </div>
+
+            {/* Discovery feedback */}
+            {skinWet && humidity < 50 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
                 borderRadius: '12px',
-                border: 'none',
-                background: skinWet && waterDroplets.length > 0 ? colors.border : colors.cold,
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 600,
-                cursor: skinWet && waterDroplets.length > 0 ? 'not-allowed' : 'pointer',
+                padding: '16px',
                 marginBottom: '24px',
-              }}
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0, textAlign: 'center' }}>
+                  Fast evaporation! Your skin is losing heat rapidly - that's why you feel cold.
+                </p>
+              </div>
+            )}
+
+            {skinWet && humidity > 80 && (
+              <div style={{
+                background: `${colors.warning}22`,
+                border: `1px solid ${colors.warning}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+              }}>
+                <p style={{ ...typo.body, color: colors.warning, margin: 0, textAlign: 'center' }}>
+                  High humidity! Evaporation is slow - the air is too saturated to accept more vapor.
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              {skinWet && waterDroplets.length > 0 ? 'Water Evaporating...' : 'Wet the Skin'}
+              Understand the Physics
             </button>
-
-            {/* Humidity slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Air Humidity</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{humidity}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="95"
-                value={humidity}
-                onChange={(e) => setHumidity(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Desert (10%)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Normal (50%)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Jungle (95%)</span>
-              </div>
-            </div>
-
-            {/* Metrics */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.cold }}>{skinTemp.toFixed(1)}°C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Skin Temp</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{(37 - skinTemp).toFixed(1)}°C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Cooling</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{(evapRate * 100).toFixed(0)}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Evap Rate</div>
-              </div>
-            </div>
           </div>
-
-          {/* Discovery feedback */}
-          {skinWet && humidity < 50 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0, textAlign: 'center' }}>
-                Fast evaporation! Your skin is losing heat rapidly - that's why you feel cold.
-              </p>
-            </div>
-          )}
-
-          {skinWet && humidity > 80 && (
-            <div style={{
-              background: `${colors.warning}22`,
-              border: `1px solid ${colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-            }}>
-              <p style={{ ...typo.body, color: colors.warning, margin: 0, textAlign: 'center' }}>
-                High humidity! Evaporation is slow - the air is too saturated to accept more vapor.
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionLabels: Record<string, string> = {
+      'a': 'the surrounding air provides the energy',
+      'b': 'your skin provides the energy - water "steals" heat from your body',
+      'c': 'the water itself has stored energy',
+    };
+
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Physics of Evaporative Cooling
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              The Physics of Evaporative Cooling
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
-              Latent Heat of Vaporization
-            </h3>
+            {/* Reference user's prediction */}
+            {prediction && (
+              <div style={{
+                background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+                border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+              }}>
+                <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
+                  {prediction === 'b'
+                    ? `You predicted correctly that ${predictionLabels[prediction]}! The experiment confirmed your intuition.`
+                    : `You predicted that ${predictionLabels[prediction] || 'something else'}. The experiment showed that your skin actually provides the energy - water absorbs heat as it evaporates!`
+                  }
+                </p>
+              </div>
+            )}
+
             <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              textAlign: 'center',
-              marginBottom: '16px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
             }}>
-              <code style={{ fontSize: '20px', color: colors.textPrimary }}>Lv = 2,260 J/g (water)</code>
-            </div>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              Converting liquid water to vapor requires enormous energy - 2,260 joules per gram. This energy comes from whatever is in contact with the water. When sweat evaporates, that energy comes from <span style={{ color: colors.accent }}>your skin</span>.
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '16px' }}>
-              Why Fast Molecules Escape First
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              In liquid water, molecules move at different speeds. Only the <span style={{ color: colors.hot }}>fastest-moving</span> (hottest) molecules have enough energy to escape as vapor. They leave behind the <span style={{ color: colors.cold }}>slower-moving</span> (cooler) molecules. This is why evaporation cools!
-            </p>
-          </div>
-
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Humidity's Role
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
-                <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>Low Humidity (Desert)</p>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>Lots of "room" for vapor - fast evaporation - strong cooling</p>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
+                Latent Heat of Vaporization
+              </h3>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+                marginBottom: '16px',
+              }}>
+                <code style={{ fontSize: '20px', color: colors.textPrimary }}>Lv = 2,260 J/g (water)</code>
               </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
-                <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>High Humidity (Jungle)</p>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>Air already "full" - slow evaporation - weak cooling</p>
+              <p style={{ ...typo.body, color: colors.textSecondary }}>
+                Converting liquid water to vapor requires enormous energy - 2,260 joules per gram. This energy comes from whatever is in contact with the water. When sweat evaporates, that energy comes from <span style={{ color: colors.accent }}>your skin</span>.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '16px' }}>
+                Why Fast Molecules Escape First
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary }}>
+                In liquid water, molecules move at different speeds. Only the <span style={{ color: colors.hot }}>fastest-moving</span> (hottest) molecules have enough energy to escape as vapor. They leave behind the <span style={{ color: colors.cold }}>slower-moving</span> (cooler) molecules. This is why evaporation cools!
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Humidity's Role
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
+                  <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>Low Humidity (Desert)</p>
+                  <p style={{ ...typo.small, color: colors.textSecondary }}>Lots of "room" for vapor - fast evaporation - strong cooling</p>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
+                  <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>High Humidity (Jungle)</p>
+                  <p style={{ ...typo.small, color: colors.textSecondary }}>Air already "full" - slow evaporation - weak cooling</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover a Surprising Twist
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Discover a Surprising Twist
+            </button>
+          </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1079,86 +1258,102 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Wind Speed
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                New Variable: Wind Speed
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            You have wet skin. Someone starts blowing air across it (like a fan). Humidity stays the same. What happens to the cooling effect?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              You have wet skin. Someone starts blowing air across it (like a fan). Humidity stays the same. What happens to the cooling effect?
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '8px' }}>💨 ➡️ 💧</div>
-            <p style={{ ...typo.small, color: colors.textMuted }}>Wind blowing across wet skin</p>
-          </div>
+            {/* Static Preview Graphic for Twist Predict Phase */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
+                What to Watch: Observe how wind affects evaporation
+              </p>
+              <SkinVisualization showWind={true} />
+              <div style={{ fontSize: '48px', margin: '16px 0 8px' }}>💨 ➡️ 💧</div>
+              <p style={{ ...typo.small, color: colors.textMuted }}>Wind blowing across wet skin</p>
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                See Wind Effect in Action
               </button>
-            ))}
+            )}
           </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See Wind Effect in Action
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1172,113 +1367,126 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '8px', textAlign: 'center' }}>
-            Wind & Evaporative Cooling
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust wind speed and see how it affects cooling
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '8px', textAlign: 'center' }}>
+              Wind & Evaporative Cooling
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              What to Watch: Observe how wind affects evaporation rate and cooling
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust the wind speed slider to see the effect on skin temperature
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SkinVisualization showWind={true} />
-            </div>
-
-            {/* Make skin wet for this phase */}
-            {!skinWet && (
-              <button
-                onClick={wetTheSkin}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: colors.cold,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  marginBottom: '20px',
-                }}
-              >
-                Wet the Skin
-              </button>
-            )}
-
-            {/* Wind speed slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Wind Speed</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{windSpeed} m/s</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                value={windSpeed}
-                onChange={(e) => setWindSpeed(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Still Air</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Light Breeze</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Strong Wind</span>
-              </div>
-            </div>
-
-            {/* Comparison */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '12px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>No Wind</div>
-                <div style={{ ...typo.h3, color: colors.cold }}>{noWindTemp.toFixed(1)}°C</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <SkinVisualization showWind={true} />
               </div>
+
+              {/* Make skin wet for this phase */}
+              {!skinWet && (
+                <button
+                  onClick={wetTheSkin}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: colors.cold,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    marginBottom: '20px',
+                    minHeight: '44px',
+                  }}
+                >
+                  Wet the Skin
+                </button>
+              )}
+
+              {/* Wind speed slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Wind Speed</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{windSpeed} m/s</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  value={windSpeed}
+                  onChange={(e) => setWindSpeed(parseInt(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer', touchAction: 'pan-y' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Still Air</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Light Breeze</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Strong Wind</span>
+                </div>
+              </div>
+
+              {/* Comparison */}
               <div style={{
-                background: windSpeed > 0 ? `${colors.warning}22` : colors.bgSecondary,
-                border: windSpeed > 0 ? `1px solid ${colors.warning}` : 'none',
-                borderRadius: '8px',
-                padding: '16px',
-                textAlign: 'center',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '12px',
               }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>With Wind</div>
-                <div style={{ ...typo.h3, color: colors.cold }}>{withWindTemp.toFixed(1)}°C</div>
-                {windSpeed > 0 && (
-                  <div style={{ ...typo.small, color: colors.warning, marginTop: '4px' }}>
-                    {(noWindTemp - withWindTemp).toFixed(1)}°C extra cooling!
-                  </div>
-                )}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>No Wind</div>
+                  <div style={{ ...typo.h3, color: colors.cold }}>{noWindTemp.toFixed(1)}°C</div>
+                </div>
+                <div style={{
+                  background: windSpeed > 0 ? `${colors.warning}22` : colors.bgSecondary,
+                  border: windSpeed > 0 ? `1px solid ${colors.warning}` : 'none',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>With Wind</div>
+                  <div style={{ ...typo.h3, color: colors.cold }}>{withWindTemp.toFixed(1)}°C</div>
+                  {windSpeed > 0 && (
+                    <div style={{ ...typo.small, color: colors.warning, marginTop: '4px' }}>
+                      {(noWindTemp - withWindTemp).toFixed(1)}°C extra cooling!
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand Deep Principles
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand Deep Principles
+            </button>
+          </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1287,297 +1495,352 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '24px', textAlign: 'center' }}>
-            The Boundary Layer Effect
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '24px', textAlign: 'center' }}>
+              The Boundary Layer Effect
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '28px' }}>🌫️</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>The Saturated Layer Problem</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '28px' }}>🌫️</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>The Saturated Layer Problem</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Right above wet skin, a thin layer of air becomes nearly saturated with water vapor. This "boundary layer" is at near 100% humidity, slowing further evaporation even when ambient humidity is low.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Right above wet skin, a thin layer of air becomes nearly saturated with water vapor. This "boundary layer" is at near 100% humidity, slowing further evaporation even when ambient humidity is low.
-              </p>
+
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '28px' }}>💨</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Wind Sweeps It Away</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Wind continuously replaces this saturated boundary layer with drier ambient air. Fresh dry air contacts the wet surface, allowing rapid evaporation. Result: <span style={{ color: colors.accent }}>more cooling at the same humidity!</span>
+                </p>
+              </div>
+
+              <div style={{
+                background: `${colors.warning}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.warning}33`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '28px' }}>🌡️</span>
+                  <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>Wind Chill Effect</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  This is why wind feels colder than still air at the same temperature. It's not that the air is colder - wind removes heat faster by:
+                </p>
+                <ul style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
+                  <li>Increasing evaporation from wet surfaces</li>
+                  <li>Breaking up the insulating air layer near skin</li>
+                  <li>Faster convective heat transfer</li>
+                </ul>
+              </div>
             </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '28px' }}>💨</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Wind Sweeps It Away</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Wind continuously replaces this saturated boundary layer with drier ambient air. Fresh dry air contacts the wet surface, allowing rapid evaporation. Result: <span style={{ color: colors.accent }}>more cooling at the same humidity!</span>
-              </p>
-            </div>
-
-            <div style={{
-              background: `${colors.warning}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.warning}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '28px' }}>🌡️</span>
-                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>Wind Chill Effect</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                This is why wind feels colder than still air at the same temperature. It's not that the air is colder - wind removes heat faster by:
-              </p>
-              <ul style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
-                <li>Increasing evaporation from wet surfaces</li>
-                <li>Breaking up the insulating air layer near skin</li>
-                <li>Faster convective heat transfer</li>
-              </ul>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications
+            </button>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    const app = realWorldApps[selectedApp];
+    const app = realWorldApps[transferAppIndex];
     const allAppsCompleted = completedApps.every(c => c);
+
+    const handleGotIt = () => {
+      playSound('success');
+      const newCompleted = [...completedApps];
+      newCompleted[transferAppIndex] = true;
+      setCompletedApps(newCompleted);
+      if (transferAppIndex < realWorldApps.length - 1) {
+        setTransferAppIndex(transferAppIndex + 1);
+      }
+    };
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
+            {/* Progress indicator */}
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <span style={{ ...typo.body, color: colors.textSecondary }}>
+                Application {transferAppIndex + 1} of {realWorldApps.length}
+              </span>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px' }}>
+                {realWorldApps.map((_, i) => (
+                  <div key={i} style={{
+                    width: '12px',
+                    height: '12px',
                     borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
-                  </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.short}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                    background: completedApps[i] ? colors.success : i === transferAppIndex ? colors.accent : colors.border,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }} onClick={() => setTransferAppIndex(i)} />
+                ))}
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
-
-            {/* Physics connection */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                Physics Connection:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            {/* How it works */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
-                How It Works:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.howItWorks}
-              </p>
-            </div>
-
-            {/* Stats */}
+            {/* App selector */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '12px',
-              marginBottom: '16px',
+              marginBottom: '24px',
             }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setTransferAppIndex(i);
+                    setSelectedApp(i);
+                  }}
+                  style={{
+                    background: transferAppIndex === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${transferAppIndex === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    minHeight: '44px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.short}
+                  </div>
+                </button>
               ))}
             </div>
 
-            {/* Examples */}
-            <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
-                Examples:
-              </h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {app.examples.map((ex, i) => (
-                  <span key={i} style={{
-                    background: colors.bgSecondary,
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    ...typo.small,
-                    color: colors.textSecondary,
-                  }}>
-                    {ex}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Companies */}
-            <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
-                Key Companies:
-              </h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {app.companies.map((co, i) => (
-                  <span key={i} style={{
-                    background: `${app.color}22`,
-                    border: `1px solid ${app.color}44`,
-                    padding: '4px 10px',
-                    borderRadius: '6px',
-                    ...typo.small,
-                    color: app.color,
-                  }}>
-                    {co}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Future Impact */}
+            {/* Selected app details */}
             <div style={{
-              background: `${colors.success}11`,
-              border: `1px solid ${colors.success}33`,
-              borderRadius: '8px',
-              padding: '16px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
             }}>
-              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
-                Future Impact:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.futureImpact}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
               </p>
+
+              {/* Physics connection */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  Physics Connection:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              {/* How it works */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                  How It Works:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.howItWorks}
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Examples */}
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
+                  Examples:
+                </h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {app.examples.map((ex, i) => (
+                    <span key={i} style={{
+                      background: colors.bgSecondary,
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      ...typo.small,
+                      color: colors.textSecondary,
+                    }}>
+                      {ex}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Companies */}
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
+                  Key Companies:
+                </h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {app.companies.map((co, i) => (
+                    <span key={i} style={{
+                      background: `${app.color}22`,
+                      border: `1px solid ${app.color}44`,
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      ...typo.small,
+                      color: app.color,
+                    }}>
+                      {co}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Future Impact */}
+              <div style={{
+                background: `${colors.success}11`,
+                border: `1px solid ${colors.success}33`,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                  Future Impact:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.futureImpact}
+                </p>
+              </div>
+
+              {/* Got It button */}
+              {!completedApps[transferAppIndex] && (
+                <button
+                  onClick={handleGotIt}
+                  style={{
+                    ...primaryButtonStyle,
+                    width: '100%',
+                    background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                  }}
+                >
+                  Got It! {transferAppIndex < realWorldApps.length - 1 ? '→ Next Application' : ''}
+                </button>
+              )}
             </div>
-          </div>
 
-          {/* Progress indicator */}
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <span style={{ ...typo.small, color: colors.textMuted }}>
-              Explored: {completedApps.filter(c => c).length}/4 applications
-            </span>
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
           </div>
-
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1588,54 +1851,63 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          height: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
+          {renderNavBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🎉' : '📚'}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '80px 24px 100px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '80px',
+                marginBottom: '24px',
+              }}>
+                {passed ? '🎉' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You\'ve mastered Evaporative Cooling!'
+                  : 'Review the concepts and try again.'}
+              </p>
+
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review & Try Again
+                </button>
+              )}
             </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You\'ve mastered Evaporative Cooling!'
-                : 'Review the concepts and try again.'}
-            </p>
-
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
           </div>
-          {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1644,23 +1916,31 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} style={{
@@ -1713,6 +1993,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1750,6 +2031,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Previous
@@ -1768,6 +2050,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next
@@ -1793,15 +2076,17 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
               </button>
             )}
           </div>
+          </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1810,113 +2095,122 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          padding: '80px 24px 100px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
         }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+          <div style={{
+            fontSize: '100px',
+            marginBottom: '24px',
+            animation: 'bounce 1s infinite',
+          }}>
+            🏆
+          </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Cooling Master!
-        </h1>
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Cooling Master!
+          </h1>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You've mastered evaporative cooling - one of nature's most powerful heat transfer mechanisms. From sweating to swamp coolers to power plant cooling towers, this physics shapes our world.
-        </p>
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+            You've mastered evaporative cooling - one of nature's most powerful heat transfer mechanisms. From sweating to swamp coolers to power plant cooling towers, this physics shapes our world.
+          </p>
 
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Mastered:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              You Mastered:
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+              {[
+                'Latent heat of vaporization (2,260 J/g)',
+                'Why humidity limits evaporative cooling',
+                'The wind chill effect and boundary layers',
+                'Human thermoregulation via sweating',
+                'Industrial cooling tower physics',
+                'Data center evaporative cooling',
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: colors.success }}>✓</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
             {[
-              'Latent heat of vaporization (2,260 J/g)',
-              'Why humidity limits evaporative cooling',
-              'The wind chill effect and boundary layers',
-              'Human thermoregulation via sweating',
-              'Industrial cooling tower physics',
-              'Data center evaporative cooling',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              { icon: '💧', label: 'Latent Heat' },
+              { icon: '💨', label: 'Wind Chill' },
+              { icon: '🌡️', label: 'Humidity' },
+              { icon: '❄️', label: 'Phase Change' },
+            ].map((badge, i) => (
+              <div key={i} style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px 8px',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{badge.icon}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>{badge.label}</div>
               </div>
             ))}
           </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              Play Again
+            </button>
+            <a
+              href="/"
+              style={{
+                ...primaryButtonStyle,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Return to Dashboard
+            </a>
+          </div>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '12px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          {[
-            { icon: '💧', label: 'Latent Heat' },
-            { icon: '💨', label: 'Wind Chill' },
-            { icon: '🌡️', label: 'Humidity' },
-            { icon: '❄️', label: 'Phase Change' },
-          ].map((badge, i) => (
-            <div key={i} style={{
-              background: colors.bgSecondary,
-              borderRadius: '12px',
-              padding: '16px 8px',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: '28px', marginBottom: '4px' }}>{badge.icon}</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>{badge.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

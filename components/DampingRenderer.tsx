@@ -579,7 +579,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-        <svg width={svgWidth} height={svgHeight} style={{ borderRadius: '16px', border: `1px solid ${colors.border}` }}>
+        <svg width="100%" height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="xMidYMid meet" style={{ borderRadius: '16px', border: `1px solid ${colors.border}`, maxWidth: `${svgWidth}px` }}>
           <defs>
             <linearGradient id="dampBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1a1a24"/>
@@ -643,13 +643,16 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
           <rect width={svgWidth} height={svgHeight} fill="url(#dampBgGrad)"/>
 
+          {/* SVG title */}
+          <title>Damped Oscillation Visualization</title>
+
           {/* Grid lines group */}
-          <g opacity="0.08">
+          <g opacity="0.15">
             {[...Array(6)].map((_, i) => (
-              <line key={`h${i}`} x1="0" y1={i * svgHeight / 5} x2={svgWidth} y2={i * svgHeight / 5} stroke="#71717a" strokeWidth="0.5"/>
+              <line key={`h${i}`} x1="0" y1={i * svgHeight / 5} x2={svgWidth} y2={i * svgHeight / 5} stroke="#71717a" strokeWidth="0.5" strokeDasharray="4,4"/>
             ))}
             {[...Array(8)].map((_, i) => (
-              <line key={`v${i}`} x1={i * svgWidth / 7} y1="0" x2={i * svgWidth / 7} y2={svgHeight} stroke="#71717a" strokeWidth="0.5"/>
+              <line key={`v${i}`} x1={i * svgWidth / 7} y1="0" x2={i * svgWidth / 7} y2={svgHeight} stroke="#71717a" strokeWidth="0.5" strokeDasharray="4,4"/>
             ))}
           </g>
 
@@ -667,7 +670,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           <g opacity={dampOpacity}>
             <circle cx={svgWidth - 30} cy={30} r={12 + dampingRatio * 8} fill="url(#dampIndicatorGrad)" />
             <circle cx={svgWidth - 30} cy={30} r={4} fill={dampColor} />
-            <path d={`M ${svgWidth - 42} 30 Q ${svgWidth - 36} ${30 - dampingRatio * 10} ${svgWidth - 30} 30 Q ${svgWidth - 24} ${30 + dampingRatio * 10} ${svgWidth - 18} 30`} fill="none" stroke={dampColor} strokeWidth="1.5" />
+            <path d={`M ${svgWidth - 42} ${centerY - 30} Q ${svgWidth - 36} ${centerY - 30 - Math.max(dampingRatio * 30, 30)} ${svgWidth - 30} ${centerY - 30} Q ${svgWidth - 24} ${centerY - 30 + Math.max(dampingRatio * 30, 30)} ${svgWidth - 18} ${centerY - 30}`} fill="none" stroke={dampColor} strokeWidth="1.5" />
           </g>
 
           {isOscillating && dampingRatio < 1 && (
@@ -693,8 +696,8 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
               for (let i = 0; i < springCoils; i++) {
                 const x1 = 22 + (i + 0.25) * coilWidth;
                 const x2 = 22 + (i + 0.75) * coilWidth;
-                const y1 = centerY + (i % 2 === 0 ? 20 : -20);
-                const y2 = centerY + (i % 2 === 0 ? -20 : 20);
+                const y1 = centerY + (i % 2 === 0 ? 35 : -35);
+                const y2 = centerY + (i % 2 === 0 ? -35 : 35);
                 path += ` L ${x1} ${y1} L ${x2} ${y2}`;
               }
               path += ` L ${displayX - massSize / 2} ${centerY}`;
@@ -727,11 +730,38 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             </g>
           )}
 
+          {/* Damped oscillation reference curve showing amplitude envelope */}
+          <path
+            d={(() => {
+              const curvePoints: string[] = [];
+              const omega0 = 2 * Math.PI;
+              const gamma = dampingRatio * omega0;
+              const numPts = 40;
+              const tMax = 4;
+              for (let i = 0; i <= numPts; i++) {
+                const t = (i / numPts) * tMax;
+                const amp = 80 * Math.exp(-gamma * t) * Math.cos(omega0 * Math.sqrt(Math.max(0, 1 - dampingRatio * dampingRatio)) * t);
+                const px = 30 + (t / tMax) * (svgWidth - 60);
+                const py = centerY - amp;
+                curvePoints.push(`${px} ${py}`);
+              }
+              return `M ${curvePoints.join(' L ')}`;
+            })()}
+            fill="none"
+            stroke={dampColor}
+            strokeWidth="1.5"
+            opacity="0.35"
+            strokeLinecap="round"
+          />
+
           {/* Labels group */}
           <g>
-            <text x={equilibriumX} y={centerY + 55} fill="#71717a" fontSize="9" textAnchor="middle">Equilibrium</text>
-            <text x={30} y={centerY + 55} fill="#71717a" fontSize="9" textAnchor="start">Wall</text>
-            <text x={svgWidth - 30} y={svgHeight - 8} fill={dampColor} fontSize="8" textAnchor="middle">zeta={dampingRatio.toFixed(2)}</text>
+            <text x={equilibriumX} y={centerY + 55} fill="#71717a" fontSize="11" textAnchor="middle">Equilibrium</text>
+            <text x={30} y={centerY + 55} fill="#71717a" fontSize="11" textAnchor="start">Wall</text>
+            <text x={svgWidth - 30} y={svgHeight - 8} fill={dampColor} fontSize="11" textAnchor="middle">zeta={dampingRatio.toFixed(2)}</text>
+            {/* Axis labels */}
+            <text x={svgWidth / 2} y={svgHeight - 4} fill="#71717a" fontSize="11" textAnchor="middle" fontWeight="600">Position (time)</text>
+            <text x={8} y={18} fill="#71717a" fontSize="11" textAnchor="start" fontWeight="600">Amplitude</text>
           </g>
         </svg>
 
@@ -747,23 +777,29 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             borderRadius: '12px',
             border: `1px solid ${colors.border}`
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '90px', fontWeight: 500 }}>Damping (zeta):</span>
-              <input
-                type="range"
-                min="0.05"
-                max="2"
-                step="0.05"
-                value={dampingRatio}
-                onChange={(e) => {
-                  setDampingRatio(Number(e.target.value));
-                  stopOscillation();
-                }}
-                style={{ flex: 1, accentColor: colors.primary }}
-              />
-              <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '45px', fontWeight: 600 }}>
-                {dampingRatio.toFixed(2)}
-              </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '90px', fontWeight: 500 }}>Damping coefficient (zeta):</span>
+                <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '45px', fontWeight: 600 }}>
+                  {dampingRatio.toFixed(2)}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '11px', color: colors.textMuted, minWidth: '28px' }}>Low</span>
+                <input
+                  type="range"
+                  min="0.05"
+                  max="2"
+                  step="0.05"
+                  value={dampingRatio}
+                  onChange={(e) => {
+                    setDampingRatio(Number(e.target.value));
+                    stopOscillation();
+                  }}
+                  style={{ touchAction: 'pan-y', width: '100%', flex: 1, accentColor: colors.primary }}
+                />
+                <span style={{ fontSize: '11px', color: colors.textMuted, minWidth: '28px', textAlign: 'right' }}>High</span>
+              </div>
             </div>
 
             <button
@@ -864,7 +900,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
       {/* SVG visualization for predict phase */}
       <div style={{ marginBottom: '24px' }}>
-        <svg width="360" height="200" viewBox="0 0 360 200">
+        <svg width="100%" height="200" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '360px' }}>
           <defs>
             <linearGradient id="predDampBg" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1a1a24" />
@@ -911,13 +947,13 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
           {/* Equilibrium line */}
           <line x1="190" y1="50" x2="190" y2="150" stroke="#71717a" strokeWidth="1.5" strokeDasharray="6,4" opacity="0.5" />
-          <text x="190" y="165" fill="#71717a" fontSize="10" textAnchor="middle">Equilibrium</text>
+          <text x="190" y="165" fill="#71717a" fontSize="11" textAnchor="middle">Equilibrium</text>
 
           {/* Arrow showing pull */}
           <g>
             <line x1="210" y1="100" x2="270" y2="100" stroke={colors.warning} strokeWidth="2.5" strokeLinecap="round" />
             <polygon points="270,100 260,94 260,106" fill={colors.warning} />
-            <text x="240" y="90" fill={colors.warning} fontSize="10" textAnchor="middle" fontWeight="600">Pull</text>
+            <text x="240" y="90" fill={colors.warning} fontSize="11" textAnchor="middle" fontWeight="600">Pull</text>
           </g>
 
           {/* Question marks */}
@@ -985,6 +1021,18 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
         </div>
       </div>
 
+      {/* Educational explanation (cause-effect and real-world relevance) */}
+      <div style={{ padding: '16px', background: colors.bgCardLight, borderRadius: '12px', marginBottom: '16px', border: `1px solid ${colors.border}` }}>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.7 }}>
+          <strong style={{ color: colors.textPrimary }}>Try it:</strong> When you increase the damping coefficient,
+          oscillation amplitude decreases faster. This is important in real-world applications like car suspension
+          and building design. Compare the reference curve to see how damping changes the response.
+        </p>
+        <p style={{ fontSize: '13px', color: colors.primary, margin: '8px 0 0', fontFamily: 'monospace', fontWeight: 600 }}>
+          A(t) = A0 × e^(-zeta × omega0 × t)
+        </p>
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
         {renderOscillator(true)}
       </div>
@@ -1012,6 +1060,11 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           <h3 style={{ fontSize: '22px', color: wasCorrect ? colors.success : colors.accent, marginTop: '12px', fontWeight: 700 }}>
             {wasCorrect ? 'Correct! Exponential decay it is!' : 'The amplitude decays exponentially!'}
           </h3>
+          <p style={{ fontSize: '15px', color: colors.textSecondary, marginTop: '8px' }}>
+            {wasCorrect
+              ? 'Your prediction was correct! As you observed in the experiment, the amplitude decreases exponentially over time.'
+              : 'As you observed in the experiment, the oscillation amplitude decreases exponentially - not linearly or suddenly.'}
+          </p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
@@ -1099,7 +1152,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
       {/* SVG visualization for twist predict phase */}
       <div style={{ marginBottom: '24px' }}>
-        <svg width="360" height="180" viewBox="0 0 360 180">
+        <svg width="100%" height="180" viewBox="0 0 360 180" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '360px' }}>
           <defs>
             <linearGradient id="twistBg" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1a1a24" />
@@ -1135,7 +1188,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
           {/* Bump */}
           <ellipse cx="180" cy="140" rx="30" ry="10" fill="#4a4a58" />
-          <text x="180" y="175" fill="#71717a" fontSize="10" textAnchor="middle">Pothole!</text>
+          <text x="180" y="175" fill="#71717a" fontSize="11" textAnchor="middle">Pothole!</text>
 
           {/* Car body */}
           <rect x="130" y="90" width="100" height="40" rx="8" fill="url(#carBody)" filter="url(#twistGlow)" />
@@ -1148,8 +1201,8 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           <circle cx="205" cy="135" r="6" fill="#555" />
 
           {/* Suspension springs */}
-          <path d="M 155 130 L 150 120 L 160 118 L 150 116 L 160 114 L 155 110" fill="none" stroke="url(#suspGrad)" strokeWidth="2" />
-          <path d="M 205 130 L 200 120 L 210 118 L 200 116 L 210 114 L 205 110" fill="none" stroke="url(#suspGrad)" strokeWidth="2" />
+          <path d="M 155 130 L 148 110 L 162 100 L 148 90 L 162 80 L 155 65" fill="none" stroke="url(#suspGrad)" strokeWidth="2" />
+          <path d="M 205 130 L 198 110 L 212 100 L 198 90 L 212 80 L 205 65" fill="none" stroke="url(#suspGrad)" strokeWidth="2" />
 
           {/* Question marks */}
           <g>
@@ -1334,8 +1387,12 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           <span style={{ fontSize: '28px' }}>🌍</span>
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Real-World Applications</h2>
         </div>
-        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: '0 0 16px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: '0 0 8px', lineHeight: 1.6 }}>
           Damping engineering in everyday life
+        </p>
+        {/* Progress indicator (P.6) */}
+        <p style={{ fontSize: '14px', color: colors.accent, margin: '0 0 16px', fontWeight: 600 }}>
+          Application {activeApp + 1} of {realWorldApps.length} ({completedApps.size} completed)
         </p>
 
         {/* Tab navigation */}
@@ -1429,7 +1486,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             ))}
           </div>
 
-          {/* Mark as Read Button */}
+          {/* Got It Button (P.1) */}
           <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}` }}>
             {!completedApps.has(activeApp) ? (
               <button
@@ -1455,11 +1512,11 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                   position: 'relative' as const
                 }}
               >
-                Mark as Read
+                Got It! Continue →
               </button>
             ) : (
               <div style={{ padding: '16px', background: `${colors.success}15`, borderRadius: '12px', border: `1px solid ${colors.success}40`, textAlign: 'center' }}>
-                <span style={{ fontSize: '15px', color: colors.success, fontWeight: 600 }}>Completed</span>
+                <span style={{ fontSize: '15px', color: colors.success, fontWeight: 600 }}>✓ Completed</span>
               </div>
             )}
           </div>
@@ -1766,8 +1823,8 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
         <span style={{ fontSize: '14px', fontWeight: 500, color: colors.primary }}>{phaseLabels[phase]}</span>
       </div>
 
-      {/* Main content */}
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+      {/* Main content with overflow-y for scrolling (L.2) */}
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
         {renderPhase()}
       </div>
 

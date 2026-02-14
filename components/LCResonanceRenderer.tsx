@@ -443,12 +443,12 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
       disabled={disabled}
       style={{
         padding: isMobile ? '14px 20px' : '16px 28px',
-        minHeight: '48px',
-        minWidth: '48px',
+        minHeight: '44px',
+        minWidth: '44px',
         background: variant === 'primary'
           ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
           : variant === 'secondary' ? colors.bgElevated : 'transparent',
-        color: colors.textPrimary,
+        color: '#e2e8f0',
         border: variant === 'ghost' ? `1px solid ${colors.bgElevated}` : 'none',
         borderRadius: '12px',
         fontSize: isMobile ? '14px' : '16px',
@@ -475,6 +475,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
     color?: string;
   }> = ({ label, value, min, max, unit, hint, onChange, color = colors.primary }) => {
     const [isDragging, setIsDragging] = useState(false);
+    const sliderId = `slider-${label.replace(/\s+/g, '-').toLowerCase()}`;
 
     return (
       <div style={{
@@ -484,36 +485,49 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
         border: `1px solid ${isDragging ? color : colors.bgElevated}`,
         transition: 'border-color 0.2s'
       }}>
-        <div style={{
-          fontSize: isMobile ? '12px' : '14px',
-          fontWeight: 600,
-          color: colors.textPrimary,
-          marginBottom: '8px',
-          textTransform: 'uppercase'
-        }}>
+        <label
+          htmlFor={sliderId}
+          style={{
+            display: 'block',
+            fontSize: isMobile ? '12px' : '14px',
+            fontWeight: 600,
+            color: '#e2e8f0',
+            marginBottom: '8px',
+            textTransform: 'uppercase'
+          }}
+        >
           {label}
-        </div>
+        </label>
 
-        <div style={{
-          fontSize: isMobile ? '28px' : '36px',
-          fontWeight: 700,
-          color: color,
-          marginBottom: '12px',
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: '4px'
-        }}>
-          <span>{value}</span>
-          <span style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary }}>{unit}</span>
+        <div
+          data-testid={`${sliderId}-value`}
+          aria-live="polite"
+          style={{
+            fontSize: isMobile ? '28px' : '36px',
+            fontWeight: 700,
+            color: color,
+            marginBottom: '12px',
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '4px'
+          }}
+        >
+          <span>Current: {value}</span>
+          <span style={{ fontSize: isMobile ? '16px' : '20px', color: '#e2e8f0' }}>{unit}</span>
         </div>
 
         <div style={{ height: '48px', display: 'flex', alignItems: 'center' }}>
           <input
+            id={sliderId}
             type="range"
             min={min}
             max={max}
             step={1}
             value={value}
+            aria-valuemin={min}
+            aria-valuemax={max}
+            aria-valuenow={value}
+            aria-label={`${label}: ${value}${unit}`}
             onChange={(e) => onChange(parseInt(e.target.value))}
             onPointerDown={() => setIsDragging(true)}
             onPointerUp={() => setIsDragging(false)}
@@ -531,7 +545,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
           display: 'flex',
           justifyContent: 'space-between',
           fontSize: '12px',
-          color: colors.textMuted,
+          color: '#e2e8f0',
           marginTop: '4px'
         }}>
           <span>{min}{unit}</span>
@@ -540,7 +554,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
 
         <div style={{
           fontSize: isMobile ? '12px' : '13px',
-          color: colors.textSecondary,
+          color: '#e2e8f0',
           marginTop: '10px',
           padding: '10px 12px',
           backgroundColor: `${color}10`,
@@ -670,9 +684,9 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             </linearGradient>
 
             <linearGradient id="lcrWire" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="50%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#94a3b8" />
+              <stop offset="0%" stopColor="#e2e8f0" />
+              <stop offset="50%" stopColor="#cbd5e1" />
+              <stop offset="100%" stopColor="#e2e8f0" />
             </linearGradient>
 
             <linearGradient id="lcrBackground" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -987,17 +1001,68 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
   const renderPredict = () => (
     <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-        <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600, textTransform: 'uppercase' }}>
-          Step 2 of 10 - Make a Prediction
-        </span>
+        {/* Progress indicator */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '12px'
+        }}>
+          <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600, textTransform: 'uppercase' }}>
+            Step 2 of 10 - Make a Prediction
+          </span>
+          <span style={{ fontSize: '11px', color: '#e2e8f0' }}>
+            (Prediction 1 of 1)
+          </span>
+        </div>
 
         <h2 style={{
           fontSize: isMobile ? '22px' : '28px',
-          color: colors.textPrimary,
+          color: '#e2e8f0',
           margin: '12px 0 20px'
         }}>
           A coil and capacitor are connected together. What happens when we send different frequency signals through them?
         </h2>
+
+        {/* Static LC Circuit SVG Preview */}
+        <div style={{
+          backgroundColor: colors.bgSurface,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '16px'
+        }}>
+          <svg
+            width="100%"
+            height="150"
+            viewBox="0 0 400 150"
+            style={{ display: 'block' }}
+          >
+            <defs>
+              <linearGradient id="predictCapGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#93c5fd" />
+                <stop offset="100%" stopColor="#3b82f6" />
+              </linearGradient>
+              <linearGradient id="predictCoilGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fcd34d" />
+                <stop offset="100%" stopColor="#f97316" />
+              </linearGradient>
+            </defs>
+            <rect width="400" height="150" fill="#0f172a" rx="8" />
+            {/* Circuit frame */}
+            <rect x="80" y="30" width="240" height="90" rx="4" fill="none" stroke="#64748b" strokeWidth="3" />
+            {/* Capacitor */}
+            <rect x="110" y="50" width="40" height="8" rx="2" fill="url(#predictCapGrad)" />
+            <rect x="110" y="67" width="40" height="8" rx="2" fill="url(#predictCapGrad)" />
+            <text x="130" y="95" textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="600">C</text>
+            {/* Inductor coils */}
+            {[0, 1, 2, 3].map(i => (
+              <ellipse key={i} cx={230 + i * 15} cy="62" rx="7" ry="14" fill="none" stroke="url(#predictCoilGrad)" strokeWidth="4" />
+            ))}
+            <text x="260" y="95" textAnchor="middle" fill="#f97316" fontSize="12" fontWeight="600">L</text>
+            {/* Label */}
+            <text x="200" y="135" textAnchor="middle" fill="#e2e8f0" fontSize="11">LC Circuit (Static Preview)</text>
+          </svg>
+        </div>
 
         <div style={{
           padding: '16px',
@@ -1005,7 +1070,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
           borderRadius: '12px',
           marginBottom: '24px'
         }}>
-          <p style={{ color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+          <p style={{ color: '#e2e8f0', margin: 0, lineHeight: 1.6 }}>
             An inductor (coil) and capacitor are connected in parallel. We sweep through different signal frequencies and measure the circuit's response.
           </p>
         </div>
@@ -1021,6 +1086,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
               onClick={() => { setPrediction(opt.id); playSound('click'); }}
               style={{
                 padding: '16px',
+                minHeight: '44px',
                 background: prediction === opt.id ? `${colors.primary}20` : colors.bgSurface,
                 border: prediction === opt.id ? `2px solid ${colors.primary}` : `1px solid ${colors.bgElevated}`,
                 borderRadius: '12px',
@@ -1033,8 +1099,8 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             >
               <span style={{ fontSize: '28px' }}>{opt.icon}</span>
               <div>
-                <div style={{ color: colors.textPrimary, fontWeight: 600 }}>{opt.label}</div>
-                <div style={{ color: colors.textMuted, fontSize: '13px' }}>{opt.desc}</div>
+                <div style={{ color: '#e2e8f0', fontWeight: 600 }}>{opt.label}</div>
+                <div style={{ color: '#e2e8f0', fontSize: '13px' }}>{opt.desc}</div>
               </div>
               {prediction === opt.id && (
                 <span style={{ marginLeft: 'auto', color: colors.primary }}>✓</span>
@@ -1063,16 +1129,29 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
         <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600 }}>
           Step 3 of 10 - Interactive Experiment
         </span>
-        <h2 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, margin: '4px 0' }}>
+        <h2 style={{ fontSize: isMobile ? '18px' : '22px', color: '#e2e8f0', margin: '4px 0' }}>
           LC RESONANCE TUNER
         </h2>
-        <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0 }}>
+        <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0 }}>
           Adjust L and C to tune to different radio stations
         </p>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          {/* Observation guidance */}
+          <div style={{
+            padding: '12px 16px',
+            backgroundColor: `${colors.primary}15`,
+            borderRadius: '10px',
+            marginBottom: '16px',
+            border: `1px solid ${colors.primary}40`
+          }}>
+            <p style={{ fontSize: '14px', color: '#e2e8f0', margin: 0, fontWeight: 500 }}>
+              Observe: Watch how the resonant frequency changes as you adjust the capacitance and inductance values. Try to tune to different radio stations!
+            </p>
+          </div>
+
           {/* Visualization */}
           <div style={{
             backgroundColor: colors.bgSurface,
@@ -1090,7 +1169,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             borderRadius: '12px',
             marginBottom: '16px'
           }}>
-            <div style={{ fontSize: '11px', color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
+            <div style={{ fontSize: '11px', color: '#e2e8f0', marginBottom: '8px', fontWeight: 600 }}>
               AM RADIO BAND - Tune to a station:
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -1110,8 +1189,8 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
                     }}
                   >
                     <div style={{ fontSize: '16px' }}>{station.genre}</div>
-                    <div style={{ fontSize: '11px', color: colors.textPrimary, fontWeight: 600 }}>{station.freq}</div>
-                    <div style={{ fontSize: '9px', color: colors.textMuted }}>{station.name}</div>
+                    <div style={{ fontSize: '11px', color: '#e2e8f0', fontWeight: 600 }}>{station.freq}</div>
+                    <div style={{ fontSize: '9px', color: '#e2e8f0' }}>{station.name}</div>
                   </div>
                 );
               })}
@@ -1277,16 +1356,29 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
         <span style={{ fontSize: '11px', color: colors.accent, fontWeight: 600 }}>
           Step 6 of 10 - Twist Experiment
         </span>
-        <h2 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, margin: '4px 0' }}>
+        <h2 style={{ fontSize: isMobile ? '18px' : '22px', color: '#e2e8f0', margin: '4px 0' }}>
           FREQUENCY vs L and C
         </h2>
-        <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0 }}>
+        <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0 }}>
           Watch how changing L or C shifts the resonant frequency
         </p>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          {/* Observation guidance */}
+          <div style={{
+            padding: '12px 16px',
+            backgroundColor: `${colors.accent}15`,
+            borderRadius: '10px',
+            marginBottom: '16px',
+            border: `1px solid ${colors.accent}40`
+          }}>
+            <p style={{ fontSize: '14px', color: '#e2e8f0', margin: 0, fontWeight: 500 }}>
+              Observe: Try doubling the capacitance - does the frequency halve? Notice the square root relationship: frequency changes by sqrt(2) when you double C or L.
+            </p>
+          </div>
+
           <div style={{
             backgroundColor: colors.bgSurface,
             borderRadius: '12px',
@@ -1304,13 +1396,13 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             textAlign: 'center',
             marginBottom: '16px'
           }}>
-            <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '8px' }}>
+            <div style={{ fontSize: '12px', color: '#e2e8f0', marginBottom: '8px' }}>
               RESONANT FREQUENCY
             </div>
             <div style={{ fontSize: '48px', fontWeight: 700, color: colors.resonance }}>
               {resonantFrequency} kHz
             </div>
-            <div style={{ fontSize: '14px', color: colors.textMuted, marginTop: '8px' }}>
+            <div style={{ fontSize: '14px', color: '#e2e8f0', marginTop: '8px' }}>
               f0 = 1 / (2pi x sqrt({inductance}uH x {capacitance}pF))
             </div>
           </div>
@@ -1390,15 +1482,27 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
   const renderTransfer = () => {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <span style={{ fontSize: '11px', color: colors.success, fontWeight: 600 }}>
-            Step 8 of 10 - Real-World Applications
-          </span>
+          {/* Progress indicator */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '4px'
+          }}>
+            <span style={{ fontSize: '11px', color: colors.success, fontWeight: 600 }}>
+              Step 8 of 10 - Real-World Applications
+            </span>
+            <span style={{ fontSize: '11px', color: '#e2e8f0' }}>
+              (Application {selectedApp + 1} of {realWorldApps.length})
+            </span>
+          </div>
 
-          <h2 style={{ fontSize: isMobile ? '22px' : '28px', color: colors.textPrimary, margin: '12px 0 24px' }}>
+          <h2 style={{ fontSize: isMobile ? '22px' : '28px', color: '#e2e8f0', margin: '12px 0 24px' }}>
             LC Resonance is Everywhere
           </h2>
 
@@ -1424,6 +1528,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
                   border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.bgElevated}`,
                   borderRadius: '12px',
                   padding: '16px 8px',
+                  minHeight: '44px',
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
@@ -1446,7 +1551,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ fontSize: '11px', color: colors.textPrimary, fontWeight: 500 }}>
+                <div style={{ fontSize: '11px', color: '#e2e8f0', fontWeight: 500 }}>
                   {a.title.split(' ').slice(0, 2).join(' ')}
                 </div>
               </button>
@@ -1464,12 +1569,12 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
               <span style={{ fontSize: '48px' }}>{app.icon}</span>
               <div>
-                <h3 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <h3 style={{ fontSize: isMobile ? '18px' : '22px', color: '#e2e8f0', margin: 0 }}>{app.title}</h3>
                 <p style={{ fontSize: '13px', color: app.color, margin: 0 }}>{app.tagline}</p>
               </div>
             </div>
 
-            <p style={{ fontSize: '15px', color: colors.textSecondary, marginBottom: '16px', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '15px', color: '#e2e8f0', marginBottom: '16px', lineHeight: 1.6 }}>
               {app.description}
             </p>
 
@@ -1482,7 +1587,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
               <h4 style={{ fontSize: '12px', color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How LC Resonance Connects:
               </h4>
-              <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0 }}>
+              <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0 }}>
                 {app.connection}
               </p>
             </div>
@@ -1491,6 +1596,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1501,16 +1607,48 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
                   <div style={{ fontSize: '18px', fontWeight: 700, color: app.color }}>{stat.value}</div>
-                  <div style={{ fontSize: '11px', color: colors.textMuted }}>{stat.label}</div>
+                  <div style={{ fontSize: '11px', color: '#e2e8f0' }}>{stat.label}</div>
                 </div>
               ))}
             </div>
+
+            {/* Got It button for current app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Move to next uncompleted app if available
+                const nextUncompleted = completedApps.findIndex((c, i) => !c && i !== selectedApp);
+                if (nextUncompleted !== -1) {
+                  setSelectedApp(nextUncompleted);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '14px',
+                minHeight: '44px',
+                borderRadius: '10px',
+                border: 'none',
+                background: completedApps[selectedApp] ? colors.success : app.color,
+                color: 'white',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              {completedApps[selectedApp] ? '✓ Got It!' : 'Got It - Continue'}
+            </button>
           </div>
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
             <Button variant="ghost" onClick={goBack}>Back</Button>
             <Button onClick={goNext} disabled={!allAppsCompleted}>
-              {allAppsCompleted ? 'Take the Test' : `Explore ${4 - completedApps.filter(c => c).length} more`}
+              {allAppsCompleted ? 'Take the Test' : `Explore ${4 - completedCount} more`}
             </Button>
           </div>
 
@@ -1581,9 +1719,21 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             alignItems: 'center',
             marginBottom: '24px',
           }}>
-            <span style={{ fontSize: '12px', color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                fontSize: '14px',
+                fontWeight: 700,
+                color: colors.accent,
+                backgroundColor: `${colors.accent}20`,
+                padding: '4px 10px',
+                borderRadius: '6px',
+              }}>
+                Q{currentQuestion + 1}
+              </span>
+              <span style={{ fontSize: '12px', color: '#e2e8f0' }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+            </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} style={{
@@ -1608,13 +1758,13 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             marginBottom: '16px',
             borderLeft: `3px solid ${colors.accent}`,
           }}>
-            <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+            <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0, lineHeight: 1.6 }}>
               {question.scenario}
             </p>
           </div>
 
           {/* Question */}
-          <h3 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, marginBottom: '20px', lineHeight: 1.4 }}>
+          <h3 style={{ fontSize: isMobile ? '18px' : '22px', color: '#e2e8f0', marginBottom: '20px', lineHeight: 1.4 }}>
             {question.question}
           </h3>
 
@@ -1838,6 +1988,38 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
     }
   };
 
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      backgroundColor: colors.bgSurface,
+      borderBottom: `1px solid ${colors.bgElevated}`,
+      padding: '12px 16px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '20px' }}>📻</span>
+        <span style={{ fontWeight: 600, color: colors.textPrimary, fontSize: '14px' }}>
+          LC Resonance Tuning
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '12px', color: '#e2e8f0' }}>
+          {phaseLabels[phase]}
+        </span>
+        <span style={{ fontSize: '12px', color: '#e2e8f0' }}>
+          ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+        </span>
+      </div>
+    </nav>
+  );
+
   return (
     <div style={{
       height: '100vh',
@@ -1847,11 +2029,17 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
       color: colors.textPrimary,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
+      {/* Fixed navigation bar */}
+      {renderNavBar()}
+
+      {/* Spacer for fixed nav */}
+      <div style={{ height: '52px', flexShrink: 0 }} />
+
       {/* Progress bar */}
       {renderProgressBar()}
 
       {/* Main content */}
-      <div style={{ flex: 1, overflow: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {renderPhase()}
       </div>
     </div>

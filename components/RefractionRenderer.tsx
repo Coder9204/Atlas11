@@ -325,8 +325,8 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#E5E7EB',
+    textMuted: '#D1D5DB',
     border: '#2a2a3a',
     water: '#60a5fa',
     straw: '#fbbf24',
@@ -338,6 +338,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
     h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
     body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
     small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+    caption: { fontSize: '12px', fontWeight: 400, lineHeight: 1.4, color: 'rgba(255, 255, 255, 0.6)' },
   };
 
   // Phase navigation
@@ -391,7 +392,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
     const waterSurfaceY = glassTop + glassHeight - waterHeight;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
@@ -753,6 +754,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
             </div>
             <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
+            <p style={{ ...typo.caption, marginBottom: '8px' }}>Physics of Light</p>
             <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
               The Broken Straw Illusion
             </h1>
@@ -918,7 +920,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
               Explore Refraction
             </h2>
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-              Adjust the controls to see how viewing angle and material affect the apparent break.
+              This visualization demonstrates how light bends at the water surface. Adjust the controls to see how viewing angle and material affect the apparent break. Understanding refraction is important in real-world applications like eyeglasses, cameras, and fiber optics.
             </p>
 
             <div style={{
@@ -948,6 +950,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                     height: '8px',
                     borderRadius: '4px',
                     cursor: 'pointer',
+                    accentColor: colors.accent,
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -977,6 +980,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                     height: '8px',
                     borderRadius: '4px',
                     cursor: 'pointer',
+                    accentColor: colors.accent,
                   }}
                 />
               </div>
@@ -998,6 +1002,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                     height: '8px',
                     borderRadius: '4px',
                     cursor: 'pointer',
+                    accentColor: colors.water,
                   }}
                 />
               </div>
@@ -1105,8 +1110,8 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
               border: `1px solid ${prediction === 'b' ? colors.success : colors.error}44`,
             }}>
               <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.error, margin: 0 }}>
-                {prediction === 'b' ? '✓ Correct! ' : '✗ Not quite! '}
-                Moving your viewing angle changes the apparent break more because it changes the path light takes through the refracting surface.
+                {prediction === 'b' ? '✓ Your prediction was correct! ' : '✗ Your prediction was close, but... '}
+                As you observed in the experiment, moving your viewing angle changes the apparent break more because it changes the path light takes through the refracting surface.
               </p>
             </div>
 
@@ -1395,6 +1400,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                     height: '8px',
                     borderRadius: '4px',
                     cursor: 'pointer',
+                    accentColor: colors.accent,
                   }}
                 />
               </div>
@@ -1712,6 +1718,64 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                   {app.futureImpact}
                 </p>
               </div>
+
+              {/* Got It button for current app */}
+              {!completedApps[selectedApp] && (
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    const newCompleted = [...completedApps];
+                    newCompleted[selectedApp] = true;
+                    setCompletedApps(newCompleted);
+                    // Auto-advance to next uncompleted app
+                    const nextUncompleted = newCompleted.findIndex((c, i) => !c && i > selectedApp);
+                    if (nextUncompleted !== -1) {
+                      setSelectedApp(nextUncompleted);
+                    } else {
+                      const firstUncompleted = newCompleted.findIndex(c => !c);
+                      if (firstUncompleted !== -1) {
+                        setSelectedApp(firstUncompleted);
+                      }
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    marginTop: '16px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: `linear-gradient(135deg, ${app.color} 0%, ${colors.accent} 100%)`,
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    minHeight: '52px',
+                  }}
+                >
+                  Got It! Next App →
+                </button>
+              )}
+
+              {completedApps[selectedApp] && (
+                <div style={{
+                  width: '100%',
+                  padding: '16px',
+                  marginTop: '16px',
+                  borderRadius: '12px',
+                  background: colors.bgSecondary,
+                  color: colors.success,
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                }}>
+                  ✓ Completed
+                </div>
+              )}
+
+              {/* Progress indicator */}
+              <p style={{ textAlign: 'center', color: colors.textPrimary, fontSize: '14px', marginTop: '16px' }}>
+                Application {selectedApp + 1} of {realWorldApps.length} — {completedApps.filter(c => c).length} of {realWorldApps.length} completed
+              </p>
             </div>
 
             {allAppsCompleted && (

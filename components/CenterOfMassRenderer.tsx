@@ -331,8 +331,8 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#E5E7EB',
+    textMuted: '#D1D5DB',
     border: '#2a2a3a',
   };
 
@@ -403,7 +403,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
     const wobble = Math.sin(animationFrame * 0.1) * (stability.stable ? 1 : 3);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="forkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#9CA3AF" />
@@ -774,8 +774,11 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Balance Explorer
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Toggle the center of mass indicator to see why the fork stays balanced.
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
+            This visualization shows how the center of mass determines stability. Watch how changing the pivot height affects the balance.
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            When you increase the pivot height, the system becomes more stable because the COM stays below the pivot. This is important in real-world engineering - it's why race cars sit low and why ships carry ballast at the bottom.
           </p>
 
           {/* Main visualization */}
@@ -839,7 +842,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                 max="80"
                 value={pivotHeight}
                 onChange={(e) => setPivotHeight(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent }}
               />
             </div>
 
@@ -951,6 +954,23 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                 When the COM is <span style={{ color: colors.error }}>above the pivot point</span>: Gravity creates a <strong>destabilizing torque</strong>. Any tilt causes it to fall further - like balancing a pencil on your finger.
               </p>
             </div>
+          </div>
+
+          {/* Mathematical relationship */}
+          <div style={{
+            background: colors.bgSecondary,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>The Stability Equation:</p>
+            <p style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>
+              <span style={{ color: colors.accent, fontWeight: 700 }}>Torque</span> = <span style={{ color: colors.warning, fontWeight: 700 }}>Force</span> × <span style={{ color: '#3B82F6', fontWeight: 700 }}>Distance</span>
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+              The formula shows that stability is proportional to how far the COM is below the pivot.
+            </p>
           </div>
 
           <div style={{
@@ -1323,9 +1343,14 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            App {selectedApp + 1} of {realWorldApps.length} - {completedApps.filter(c => c).length} completed
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1447,6 +1472,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
               background: `${app.color}11`,
               borderRadius: '8px',
               padding: '12px',
+              marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: app.color, marginBottom: '4px', fontWeight: 600 }}>
                 Future Impact:
@@ -1455,6 +1481,33 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                 {app.futureImpact}
               </p>
             </div>
+
+            {/* Got It button for each app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Move to next app if not last
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: completedApps[selectedApp] ? colors.success : app.color,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+                ...typo.body,
+              }}
+            >
+              {completedApps[selectedApp] ? 'Got It! ✓' : 'Got It - Continue'}
+            </button>
           </div>
 
           {allAppsCompleted && (

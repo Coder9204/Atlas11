@@ -363,8 +363,8 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // Improved contrast (was #9CA3AF)
+    textMuted: '#e2e8f0', // Improved contrast (was #6B7280)
     border: '#2a2a3a',
     zero: '#374151', // Gray for zeros
     nonZero: '#8B5CF6', // Purple for non-zeros
@@ -451,12 +451,14 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         gap: '16px',
       }}>
         <svg
-          width={size}
-          height={size}
+          width="100%"
+          height="auto"
+          viewBox={`0 0 ${size} ${size}`}
           style={{
             background: colors.bgSecondary,
             borderRadius: '8px',
             padding: '8px',
+            maxWidth: `${size}px`,
           }}
         >
           {sparseMatrix.map((row, i) =>
@@ -640,24 +642,44 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
-      height: '4px',
+      height: '60px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 20px',
+      borderBottom: `1px solid ${colors.border}`,
     }}>
+      <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
+        Sparsity in Neural Networks
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]}
+      </div>
       <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: colors.bgPrimary,
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+          background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+    </nav>
   );
 
   // Navigation dots
@@ -699,6 +721,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -716,9 +739,11 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '84px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{
           fontSize: '64px',
@@ -783,10 +808,12 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -909,15 +936,20 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Explore Sparse Matrices
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Adjust sparsity level and see how computation changes
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Observe how more zeros reduce the number of required computations
           </p>
 
           {/* Main visualization */}
@@ -1092,10 +1124,12 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Sparsity Enables Efficiency
           </h2>
@@ -1185,10 +1219,12 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1288,15 +1324,20 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Structured vs Unstructured Sparsity
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Compare the effective speedup between patterns
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Observe how structured patterns achieve better real-world speedups
           </p>
 
           <div style={{
@@ -1439,10 +1480,12 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Structure Matters for Hardware
           </h2>
@@ -1514,16 +1557,19 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1660,7 +1706,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1716,7 +1762,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',

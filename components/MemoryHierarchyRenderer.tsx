@@ -401,16 +401,37 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
     }
   }, [phase, goToPhase, phaseOrder]);
 
-  // Progress bar component
-  const renderProgressBar = () => (
+  // Navigation bar component
+  const renderNavBar = () => (
     <div style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      borderBottom: `1px solid ${colors.border}`,
+    }}>
+      <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Memory Hierarchy Latency</span>
+      <span style={{ color: colors.textSecondary, fontSize: '14px' }}>{phaseLabels[phase]}</span>
+    </div>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '56px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -436,6 +457,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
           style={{
             width: phase === p ? '24px' : '8px',
             height: '8px',
+            minHeight: '44px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
@@ -460,6 +482,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // Memory Hierarchy Visualization
@@ -469,7 +492,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
     const levels = Object.entries(MEMORY_SPECS);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="memL1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#fca5a5" />
@@ -508,7 +531,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
         {/* CPU chip */}
         <g transform={`translate(${width/2 - 40}, 40)`}>
           <rect x="0" y="0" width="80" height="30" rx="4" fill="#334155" stroke="#475569" strokeWidth="2" />
-          <text x="40" y="20" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="bold">CPU</text>
+          <text x="40" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">CPU</text>
         </g>
 
         {/* Memory pyramid */}
@@ -556,7 +579,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               <text
                 x={x + 12}
                 y={baseY + (levelHeight - 10) / 2 + 4}
-                fill={isActive ? '#ffffff' : '#94a3b8'}
+                fill={isActive ? '#ffffff' : '#e2e8f0'}
                 fontSize="12"
                 fontWeight="bold"
               >
@@ -598,7 +621,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
         {/* Stats panel */}
         <g transform={`translate(${width - 120}, ${height - 70})`}>
           <rect x="0" y="0" width="110" height="60" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
-          <text x="55" y="18" textAnchor="middle" fill="#94a3b8" fontSize="9">ACTIVE LEVEL</text>
+          <text x="55" y="18" textAnchor="middle" fill="#e2e8f0" fontSize="9">ACTIVE LEVEL</text>
           <text x="55" y="36" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">{activeLevel}</text>
           <text x="55" y="52" textAnchor="middle" fill={effectiveLatency > 50 ? colors.error : colors.success} fontSize="10">
             {effectiveLatency >= 1000 ? `${effectiveLatency / 1000}k` : effectiveLatency} cycles
@@ -653,6 +676,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
                 textTransform: 'capitalize',
                 fontSize: '12px',
                 fontWeight: accessPattern === pattern ? 600 : 400,
+                minHeight: '44px',
               }}
             >
               {pattern}
@@ -735,59 +759,68 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          padding: '80px 24px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          🧠💾
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🧠💾
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Memory Hierarchy Latency
-        </h1>
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Memory Hierarchy Latency
+          </h1>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "CPUs run at <span style={{ color: colors.l1 }}>4-5 GHz</span>, but RAM only runs at <span style={{ color: colors.ram }}>3200 MHz</span>. If the CPU waited for RAM every time it needed data, it would spend <span style={{ color: colors.error }}>99% of its time doing nothing</span>."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "L1: 1 cycle | L2: 4 cycles | L3: 12 cycles | RAM: 100+ cycles"
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "CPUs run at <span style={{ color: colors.l1 }}>4-5 GHz</span>, but RAM only runs at <span style={{ color: colors.ram }}>3200 MHz</span>. If the CPU waited for RAM every time it needed data, it would spend <span style={{ color: colors.error }}>99% of its time doing nothing</span>."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            Each level trades speed for capacity - why can't we just have one big, fast memory?
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "L1: 1 cycle | L2: 4 cycles | L3: 12 cycles | RAM: 100+ cycles"
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              Each level trades speed for capacity - why can't we just have one big, fast memory?
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Explore Memory Hierarchy
+          </button>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Memory Hierarchy
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -805,80 +838,90 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Why do computers have multiple memory levels (L1, L2, L3, RAM) instead of one?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              Why do computers have multiple memory levels (L1, L2, L3, RAM) instead of one?
+            </h2>
 
-          {/* Preview visualization */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <MemoryVisualization />
-          </div>
+            {/* Preview visualization */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <MemoryVisualization />
+            </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -889,151 +932,207 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Memory Hierarchy Lab
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust working set size and access pattern to see how latency changes
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Memory Hierarchy Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust working set size and access pattern to see how latency changes
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <MemoryVisualization />
+            {/* Real-world relevance */}
+            <div style={{
+              background: `${colors.success}11`,
+              border: `1px solid ${colors.success}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                <strong>Real-world application:</strong> Game engines and databases optimize data layouts to maximize cache hits. Understanding memory hierarchy can mean the difference between 30 FPS and 144 FPS in games.
+              </p>
             </div>
 
-            {renderControls()}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <MemoryVisualization />
+              </div>
+
+              {renderControls()}
+            </div>
+
+            {/* Discovery prompts */}
+            {effectiveLatency > 50 && (
+              <div style={{
+                background: `${colors.warning}22`,
+                border: `1px solid ${colors.warning}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                  Notice how latency jumps 100x when data spills out of L3 cache to RAM!
+                </p>
+              </div>
+            )}
+
+            {accessPattern === 'random' && (
+              <div style={{
+                background: `${colors.error}22`,
+                border: `1px solid ${colors.error}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                  Random access causes many cache misses - sequential patterns work better!
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics
+            </button>
           </div>
 
-          {/* Discovery prompts */}
-          {effectiveLatency > 50 && (
-            <div style={{
-              background: `${colors.warning}22`,
-              border: `1px solid ${colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                Notice how latency jumps 100x when data spills out of L3 cache to RAM!
-              </p>
-            </div>
-          )}
-
-          {accessPattern === 'random' && (
-            <div style={{
-              background: `${colors.error}22`,
-              border: `1px solid ${colors.error}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
-                Random access causes many cache misses - sequential patterns work better!
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionLabels: Record<string, string> = {
+      'a': 'One large, fast memory would be simpler and better',
+      'b': 'Multiple levels exist only to reduce manufacturing cost',
+      'c': 'Physics requires a speed vs. size trade-off at each level',
+      'd': "It's an outdated design from older computers",
+    };
+    const correctPrediction = prediction === 'c';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Memory Hierarchy Exists
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Why Memory Hierarchy Exists
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Fundamental Physics Constraint:</strong>
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                Fast memory requires <span style={{ color: colors.l1 }}>6 transistors per bit</span> (SRAM) and must be physically close to the CPU. You literally <span style={{ color: colors.error }}>cannot build 64GB of L1-speed memory</span> - the signals couldn't travel fast enough across that distance.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>The Speed-Capacity Trade-off:</strong>
-              </p>
-              <p>
-                Each memory level sacrifices speed for capacity. L1 is tiny but instant. RAM is huge but 100x slower. The hierarchy exploits <span style={{ color: colors.success }}>locality of reference</span> - most programs access the same data repeatedly.
-              </p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: `${colors.l1}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.l1}33`,
-            }}>
-              <h3 style={{ ...typo.h3, color: colors.l1, marginBottom: '8px' }}>
-                Temporal Locality
-              </h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Data accessed recently is likely to be accessed again soon. Loops accessing the same variables benefit from cache.
-              </p>
-            </div>
+            {/* Prediction feedback */}
+            {prediction && (
+              <div style={{
+                background: correctPrediction ? `${colors.success}22` : `${colors.warning}22`,
+                border: `1px solid ${correctPrediction ? colors.success : colors.warning}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+              }}>
+                <p style={{ ...typo.body, color: correctPrediction ? colors.success : colors.warning, margin: 0 }}>
+                  {correctPrediction
+                    ? `Your prediction was correct! "${predictionLabels[prediction]}" - Physics fundamentally constrains what's possible.`
+                    : `Your prediction "${predictionLabels[prediction]}" was a common misconception. The real answer is physics constraints.`}
+                </p>
+              </div>
+            )}
 
             <div style={{
-              background: `${colors.l2}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.l2}33`,
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
             }}>
-              <h3 style={{ ...typo.h3, color: colors.l2, marginBottom: '8px' }}>
-                Spatial Locality
-              </h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Data near recently accessed data is likely to be accessed. Arrays processed sequentially benefit from 64-byte cache lines.
-              </p>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Fundamental Physics Constraint:</strong>
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  Fast memory requires <span style={{ color: colors.l1 }}>6 transistors per bit</span> (SRAM) and must be physically close to the CPU. You literally <span style={{ color: colors.error }}>cannot build 64GB of L1-speed memory</span> - the signals couldn't travel fast enough across that distance.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>The Speed-Capacity Trade-off:</strong>
+                </p>
+                <p>
+                  Each memory level sacrifices speed for capacity. L1 is tiny but instant. RAM is huge but 100x slower. The hierarchy exploits <span style={{ color: colors.success }}>locality of reference</span> - most programs access the same data repeatedly.
+                </p>
+              </div>
             </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: `${colors.l1}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.l1}33`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.l1, marginBottom: '8px' }}>
+                  Temporal Locality
+                </h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Data accessed recently is likely to be accessed again soon. Loops accessing the same variables benefit from cache.
+                </p>
+              </div>
+
+              <div style={{
+                background: `${colors.l2}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.l2}33`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.l2, marginBottom: '8px' }}>
+                  Spatial Locality
+                </h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Data near recently accessed data is likely to be accessed. Arrays processed sequentially benefit from 64-byte cache lines.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Discover the AI Twist
+            </button>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover the AI Twist
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1051,96 +1150,106 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: AI Workloads
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A 7B parameter LLM is 28GB. L3 cache is only 32MB. What happens during inference?
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', color: colors.l3 }}>32 MB</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>L3 Cache</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', color: colors.error }}>28 GB</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>7B Model Weights</p>
-              </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                New Variable: AI Workloads
+              </p>
             </div>
-            <p style={{ ...typo.small, color: colors.warning, marginTop: '16px' }}>
-              Model is 875x larger than L3 cache!
-            </p>
-          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A 7B parameter LLM is 28GB. L3 cache is only 32MB. What happens during inference?
+            </h2>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '36px', color: colors.l3 }}>32 MB</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>L3 Cache</p>
+                </div>
+                <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '36px', color: colors.error }}>28 GB</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>7B Model Weights</p>
+                </div>
+              </div>
+              <p style={{ ...typo.small, color: colors.warning, marginTop: '16px' }}>
+                Model is 875x larger than L3 cache!
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                See AI Memory Patterns
               </button>
-            ))}
+            )}
           </div>
 
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See AI Memory Patterns
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1151,75 +1260,84 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            AI Memory Access Lab
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Explore why LLM inference is memory-bound
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              AI Memory Access Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Explore why LLM inference is memory-bound
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <MemoryVisualization />
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <MemoryVisualization />
+              </div>
+
+              {renderControls()}
             </div>
 
-            {renderControls()}
+            <div style={{
+              background: `${colors.warning}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}33`,
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
+                Why AI is Memory-Bound
+              </h3>
+              <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px', lineHeight: 1.8 }}>
+                <li>7B model = 28GB weights, each used ONCE per token</li>
+                <li>No temporal locality - weights rarely reused</li>
+                <li>Streaming pattern = memory bandwidth is the limit</li>
+                <li>H100 has 80GB HBM3 @ 3.35 TB/s for this reason</li>
+              </ul>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+                Solutions
+              </h3>
+              <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px', lineHeight: 1.8 }}>
+                <li><strong>Quantization:</strong> 4-bit weights = 4x less bandwidth needed</li>
+                <li><strong>Batching:</strong> Reuse weights across multiple inputs</li>
+                <li><strong>KV Cache:</strong> Store attention results in faster memory</li>
+                <li><strong>Speculative Decoding:</strong> Overlap memory access with computation</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Deep Insight
+            </button>
           </div>
 
-          <div style={{
-            background: `${colors.warning}11`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}33`,
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
-              Why AI is Memory-Bound
-            </h3>
-            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px', lineHeight: 1.8 }}>
-              <li>7B model = 28GB weights, each used ONCE per token</li>
-              <li>No temporal locality - weights rarely reused</li>
-              <li>Streaming pattern = memory bandwidth is the limit</li>
-              <li>H100 has 80GB HBM3 @ 3.35 TB/s for this reason</li>
-            </ul>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
-              Solutions
-            </h3>
-            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px', lineHeight: 1.8 }}>
-              <li><strong>Quantization:</strong> 4-bit weights = 4x less bandwidth needed</li>
-              <li><strong>Batching:</strong> Reuse weights across multiple inputs</li>
-              <li><strong>KV Cache:</strong> Store attention results in faster memory</li>
-              <li><strong>Speculative Decoding:</strong> Overlap memory access with computation</li>
-            </ul>
-          </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Deep Insight
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1230,82 +1348,91 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Memory Bandwidth: The AI Bottleneck
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Memory Bandwidth: The AI Bottleneck
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: `${colors.error}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.error}33`,
-            }}>
-              <h3 style={{ ...typo.h3, color: colors.error, marginBottom: '8px' }}>
-                The Problem
-              </h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                LLM inference is fundamentally memory-bound. Each token requires reading ALL model weights from memory. A 70B model at FP16 = 140GB read per token!
-              </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: `${colors.error}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.error}33`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.error, marginBottom: '8px' }}>
+                  The Problem
+                </h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  LLM inference is fundamentally memory-bound. Each token requires reading ALL model weights from memory. A 70B model at FP16 = 140GB read per token!
+                </p>
+              </div>
+
+              <div style={{
+                background: `${colors.success}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.success}33`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>
+                  Arithmetic Intensity
+                </h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  FLOPS per byte loaded = Arithmetic Intensity. Higher is better. LLMs at batch=1: ~1 FLOP/byte. Matrix multiply with large batches: ~200 FLOPS/byte.
+                </p>
+              </div>
+
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>
+                  Hardware Evolution
+                </h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  GPUs evolved from gaming (compute-bound) to AI (memory-bound). Modern AI chips prioritize HBM bandwidth over raw FLOPS. The H100 has 3.35 TB/s bandwidth - more than 10x a gaming GPU.
+                </p>
+              </div>
+
+              <div style={{
+                background: `${colors.l3}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.l3}33`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.l3, marginBottom: '8px' }}>
+                  The Memory Wall
+                </h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  CPU speed doubles every 2 years, but memory bandwidth only improves ~10% per year. This growing gap is called the "memory wall" and is the defining challenge of modern computing.
+                </p>
+              </div>
             </div>
 
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>
-                Arithmetic Intensity
-              </h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                FLOPS per byte loaded = Arithmetic Intensity. Higher is better. LLMs at batch=1: ~1 FLOP/byte. Matrix multiply with large batches: ~200 FLOPS/byte.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>
-                Hardware Evolution
-              </h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                GPUs evolved from gaming (compute-bound) to AI (memory-bound). Modern AI chips prioritize HBM bandwidth over raw FLOPS. The H100 has 3.35 TB/s bandwidth - more than 10x a gaming GPU.
-              </p>
-            </div>
-
-            <div style={{
-              background: `${colors.l3}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.l3}33`,
-            }}>
-              <h3 style={{ ...typo.h3, color: colors.l3, marginBottom: '8px' }}>
-                The Memory Wall
-              </h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                CPU speed doubles every 2 years, but memory bandwidth only improves ~10% per year. This growing gap is called the "memory wall" and is the defining challenge of modern computing.
-              </p>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications
+            </button>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1314,136 +1441,183 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    Y
-                  </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
-              </div>
-            </div>
-
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
+            {/* Progress indicator */}
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Application {selectedApp + 1} of {realWorldApps.length} - Explore all to continue
             </p>
 
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Memory Hierarchy Connects:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
+            {/* App selector */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '12px',
+              marginBottom: '24px',
             }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    minHeight: '44px',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      Y
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
+                  </div>
+                </button>
               ))}
             </div>
+
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How Memory Hierarchy Connects:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Got It button */}
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  if (selectedApp < realWorldApps.length - 1) {
+                    setSelectedApp(selectedApp + 1);
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: `1px solid ${app.color}`,
+                  background: completedApps[selectedApp] ? `${colors.success}22` : `${app.color}22`,
+                  color: completedApps[selectedApp] ? colors.success : app.color,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  minHeight: '44px',
+                }}
+              >
+                {completedApps[selectedApp] ? 'Completed' : 'Got It'}
+              </button>
+            </div>
+
+            {allAppsCompleted ? (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            ) : (
+              <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+                {completedCount} of {realWorldApps.length} applications explored
+              </p>
+            )}
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1456,52 +1630,61 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🏆' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand memory hierarchy and its impact on performance!'
-                : 'Review the concepts and try again.'}
-            </p>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '80px',
+            padding: '80px 24px 24px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '80px',
+                marginBottom: '24px',
+              }}>
+                {passed ? '🏆' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You understand memory hierarchy and its impact on performance!'
+                  : 'Review the concepts and try again.'}
+              </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
-            )}
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review and Try Again
+                </button>
+              )}
+            </div>
+            {renderNavDots()}
           </div>
-          {renderNavDots()}
         </div>
       );
     }
@@ -1512,162 +1695,175 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          padding: '80px 24px 24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion
+                      ? colors.accent
+                      : testAnswers[i]
+                        ? colors.success
+                        : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+              {question.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {question.options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
+                </button>
               ))}
+            </div>
+
+            {/* Navigation */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white',
+                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                    minHeight: '44px',
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                    minHeight: '44px',
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1680,95 +1876,105 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          padding: '80px 24px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Memory Hierarchy Master!
-        </h1>
-
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand why fast and big memory can't coexist, and how this shapes everything from CPU design to AI inference.
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'Speed vs capacity trade-off at each level',
-              'Cache hits vs misses and their impact',
-              'Temporal and spatial locality principles',
-              'AI workloads are memory-bound',
-              'Bandwidth determines LLM inference speed',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>Y</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
-              </div>
-            ))}
+          <div style={{
+            fontSize: '100px',
+            marginBottom: '24px',
+            animation: 'bounce 1s infinite',
+          }}>
+            🏆
           </div>
-        </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        <div style={{
-          background: `${colors.accent}11`,
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <p style={{ ...typo.body, color: colors.accent, margin: 0, fontStyle: 'italic' }}>
-            "The memory wall is the defining challenge of modern computing."
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Memory Hierarchy Master!
+          </h1>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+            You now understand why fast and big memory can't coexist, and how this shapes everything from CPU design to AI inference.
           </p>
-        </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              You Learned:
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+              {[
+                'Speed vs capacity trade-off at each level',
+                'Cache hits vs misses and their impact',
+                'Temporal and spatial locality principles',
+                'AI workloads are memory-bound',
+                'Bandwidth determines LLM inference speed',
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: colors.success }}>Y</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        {renderNavDots()}
+          <div style={{
+            background: `${colors.accent}11`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
+            <p style={{ ...typo.body, color: colors.accent, margin: 0, fontStyle: 'italic' }}>
+              "The memory wall is the defining challenge of modern computing."
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              Play Again
+            </button>
+            <a
+              href="/"
+              style={{
+                ...primaryButtonStyle,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Return to Dashboard
+            </a>
+          </div>
+
+          {renderNavDots()}
+        </div>
       </div>
     );
   }

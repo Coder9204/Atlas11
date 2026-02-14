@@ -375,11 +375,21 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
               <stop offset="0%" stopColor="#7f1d1d" />
               <stop offset="100%" stopColor="#991b1b" />
             </linearGradient>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="2" stdDeviation="2" floodOpacity="0.3"/>
+            </filter>
           </defs>
 
           {/* Module frame */}
           <rect x={startX - 15} y={startY - 15} width={(cellWidth + cellGap) * 3 + 20} height={(cellHeight + cellGap) * 2 + 20}
-                fill="rgba(0,0,0,0.3)" rx="8" stroke="#4b5563" strokeWidth="2" />
+                fill="rgba(0,0,0,0.3)" rx="8" stroke="#4b5563" strokeWidth="2" filter="url(#shadow)" />
 
           {/* Cells */}
           {cells.map((cell, idx) => {
@@ -497,7 +507,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
           </g>
 
           {/* Module specs */}
-          <g transform="translate(250, 55)">
+          <g transform="translate(250, 150)">
             <rect x="0" y="0" width="130" height="90" fill="rgba(0,0,0,0.5)" rx="8" stroke={colors.accent} strokeWidth="1" />
             <text x="65" y="18" fill={colors.textSecondary} fontSize="10" textAnchor="middle">STRING OUTPUT</text>
 
@@ -602,7 +612,8 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
           step="0.5"
           value={ribbonResistance}
           onChange={(e) => setRibbonResistance(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          aria-label="Ribbon Resistance slider"
+          style={{ width: '100%', accentColor: colors.accent, background: 'rgba(245, 158, 11, 0.2)' }}
         />
       </div>
 
@@ -617,7 +628,8 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
           step="0.5"
           value={encapsulantTransmission}
           onChange={(e) => setEncapsulantTransmission(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          aria-label="Encapsulant Transmission slider"
+          style={{ width: '100%', accentColor: colors.accent, background: 'rgba(245, 158, 11, 0.2)' }}
         />
       </div>
 
@@ -789,12 +801,17 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
   // Progress bar component
   const renderProgressBar = () => (
     <div style={{
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '12px 16px',
       background: colors.bgDark,
       borderBottom: `1px solid rgba(255,255,255,0.1)`,
+      zIndex: 1000,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <button
@@ -802,12 +819,14 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
           disabled={currentIdx === 0}
           style={{
             padding: '8px 12px',
+            minHeight: '44px',
             borderRadius: '6px',
             border: 'none',
             background: currentIdx > 0 ? 'rgba(255,255,255,0.1)' : 'transparent',
             color: currentIdx > 0 ? colors.textPrimary : colors.textMuted,
             cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
             fontSize: '14px',
+            transition: 'all 0.3s ease',
           }}
         >
           Back
@@ -817,6 +836,8 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         {phaseOrder.map((p, i) => (
           <div
             key={p}
+            role="button"
+            aria-label={`${phaseLabels[p]} phase`}
             onClick={() => i <= currentIdx && goToPhase(p)}
             style={{
               width: i === currentIdx ? '24px' : '8px',
@@ -824,7 +845,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
               borderRadius: '4px',
               background: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
               cursor: i <= currentIdx ? 'pointer' : 'default',
-              transition: 'all 0.3s',
+              transition: 'all 0.3s ease',
             }}
           />
         ))}
@@ -866,6 +887,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         disabled={currentIdx === 0}
         style={{
           padding: '12px 24px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: `1px solid ${colors.textMuted}`,
           background: 'transparent',
@@ -875,6 +897,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
           fontSize: '14px',
           opacity: currentIdx > 0 ? 1 : 0.5,
           WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.3s ease',
         }}
       >
         Back
@@ -887,14 +910,16 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         disabled={!canProceed}
         style={{
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #d97706)` : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : colors.textMuted,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
           WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.3s ease',
         }}
       >
         {buttonText}
@@ -905,9 +930,9 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Cell-to-Module Losses
@@ -926,12 +951,12 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 A solar module connects many cells in series. 6 cells at 0.68V each should give
                 4.08V, right? But real modules lose power to ribbon resistance, cell mismatch,
                 and optical absorption. Let's see where the watts go!
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                 Understanding these losses is key to module design and optimization.
               </p>
             </div>
@@ -942,13 +967,13 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
                 Watch how losses accumulate as current flows through the string!
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Exploring')}
       </div>
     );
   }
@@ -956,9 +981,12 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Step 1 of 2: Make your prediction</span>
+          </div>
           {renderVisualization(false)}
 
           <div style={{
@@ -986,6 +1014,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -994,6 +1023,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                     textAlign: 'left',
                     fontSize: '14px',
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   {p.label}
@@ -1010,13 +1040,25 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Module Builder</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Explore how interconnects and encapsulation affect power
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.2)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.solar}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+              Observe how the power loss breakdown changes as you adjust the sliders below. This is important for real-world solar module design and engineering - every 1% improvement in CTM ratio is useful for increasing power output and reducing cost per watt in the industry.
             </p>
           </div>
 
@@ -1048,9 +1090,9 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     const wasCorrect = prediction === 'significant';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1061,12 +1103,15 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Multiple loss mechanisms combine to reduce module power by 3-8% compared to the sum
-              of individual cell powers. Understanding and minimizing these losses is crucial for
+            <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
+              As you predicted, multiple loss mechanisms combine to reduce module power by 3-8% compared to the sum
+              of individual cell powers. You saw how ribbons, optics, and mismatch each contribute. Understanding and minimizing these losses is crucial for
               high-performance modules!
             </p>
           </div>
+
+          {/* Visual diagram for review phase */}
+          {renderVisualization(false)}
 
           <div style={{
             background: colors.bgCard,
@@ -1075,23 +1120,23 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Cell-to-Module Loss Mechanisms</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
+              <p style={{ marginBottom: '12px', fontWeight: 'normal' }}>
                 <strong style={{ color: colors.textPrimary }}>Ribbon Resistance (1-2%):</strong> Solder
                 joints and ribbon cross-section create series resistance. P = I^2R scales with current
                 squared, so high-current cells lose more.
               </p>
-              <p style={{ marginBottom: '12px' }}>
+              <p style={{ marginBottom: '12px', fontWeight: 'normal' }}>
                 <strong style={{ color: colors.textPrimary }}>Optical Losses (3-5%):</strong> Glass
                 absorbs ~2%, EVA absorbs ~1-2%, and there's reflection at each interface. Premium
                 low-iron glass and high-transmission EVA recover 1-2%.
               </p>
-              <p style={{ marginBottom: '12px' }}>
+              <p style={{ marginBottom: '12px', fontWeight: 'normal' }}>
                 <strong style={{ color: colors.textPrimary }}>Mismatch (0-3%):</strong> Series cells
                 are limited by the weakest. Even small current variations cause losses. Cell binning
                 minimizes this.
               </p>
-              <p>
+              <p style={{ fontWeight: 'normal' }}>
                 <strong style={{ color: colors.textPrimary }}>CTM Ratio:</strong> Modern modules
                 achieve 95-98% CTM. Some designs exceed 100% by capturing edge light with white
                 backsheets or reflective frames!
@@ -1107,14 +1152,15 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
               What happens when ONE cell is slightly weaker?
             </p>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Step 1 of 2: Make your prediction</span>
           </div>
 
           {renderVisualization(false, true)}
@@ -1143,6 +1189,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1151,6 +1198,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                     textAlign: 'left',
                     fontSize: '14px',
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   {p.label}
@@ -1167,13 +1215,25 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Weak Cell Problem</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Add a weak cell and see the whole string suffer
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.2)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.solar}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+              Observe how adding a weak cell affects the entire string's power output.
             </p>
           </div>
 
@@ -1205,9 +1265,9 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     const wasCorrect = twistPrediction === 'worse';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1218,12 +1278,15 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
               One weak cell limits the entire string! In series, current must be the same through
               all cells, so the weakest cell becomes the bottleneck. This is why manufacturers
               carefully bin cells and why bypass diodes are essential.
             </p>
           </div>
+
+          {/* Visual diagram for twist_review phase */}
+          {renderVisualization(false, true)}
 
           <div style={{
             background: colors.bgCard,
@@ -1232,18 +1295,18 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Series Connection Problem</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
+              <p style={{ marginBottom: '12px', fontWeight: 'normal' }}>
                 <strong style={{ color: colors.textPrimary }}>Current Limiting:</strong> In a series
                 circuit, the same current flows through all cells. One cell producing 8.5A forces
                 all cells to operate at 8.5A - wasting the capacity of the 10.5A cells.
               </p>
-              <p style={{ marginBottom: '12px' }}>
+              <p style={{ marginBottom: '12px', fontWeight: 'normal' }}>
                 <strong style={{ color: colors.textPrimary }}>Power Loss:</strong> If 5 cells could
                 produce 10.5A but are forced to 8.5A, the loss is 5 × (10.5-8.5) × 0.68 = 6.8W from
                 mismatch alone - about 20% of module power!
               </p>
-              <p>
+              <p style={{ fontWeight: 'normal' }}>
                 <strong style={{ color: colors.textPrimary }}>Solutions:</strong> Cell binning ensures
                 similar currents. Bypass diodes let current skip severely limited cells (with some
                 voltage loss). Half-cut cells reduce mismatch impact to half the module.
@@ -1259,18 +1322,18 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              CTM optimization matters in commercial module manufacturing
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
+              CTM optimization matters because it directly affects the economics of solar energy. A 1% improvement in CTM ratio saves $2-5M per GW of production, which is why manufacturers invest heavily in precision cell matching, premium encapsulants, and quality control.
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+              Application {transferCompleted.size + 1} of {transferApplications.length} - Complete all to unlock the test
             </p>
           </div>
 
@@ -1294,24 +1357,65 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
               </div>
               {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      padding: '8px 16px',
+                      minHeight: '44px',
+                      borderRadius: '6px',
+                      border: `1px solid ${colors.accent}`,
+                      background: 'transparent',
+                      color: colors.accent,
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    Reveal Answer
+                  </button>
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      padding: '8px 16px',
+                      minHeight: '44px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                    }}
+                  >
+                    Got It
+                  </button>
+                </div>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', marginBottom: '12px' }}>{app.answer}</p>
+                  <button
+                    onClick={() => {}}
+                    style={{
+                      padding: '8px 16px',
+                      minHeight: '44px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      WebkitTapHighlightColor: 'transparent',
+                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                    }}
+                  >
+                    Continue
+                  </button>
                 </div>
               )}
             </div>
@@ -1326,9 +1430,9 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1366,21 +1470,27 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
               <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
             </div>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', fontWeight: 400 }}>
+              Test your understanding of cell-to-module (CTM) losses in solar modules. These questions cover series connections, ribbon resistance, mismatch losses, and optimization strategies that are critical for real-world module manufacturing and power output maximization.
+            </p>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s ease' }} />
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+                Q{currentTestQuestion + 1} of {testQuestions.length}
+              </p>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 400 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
@@ -1389,6 +1499,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                   onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1397,6 +1508,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                     textAlign: 'left',
                     fontSize: '14px',
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   {opt.text}
@@ -1410,12 +1522,14 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
               disabled={currentTestQuestion === 0}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.textMuted}`,
                 background: 'transparent',
                 color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.3s ease',
               }}
             >
               Previous
@@ -1425,12 +1539,14 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                 onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: colors.accent,
+                  background: `linear-gradient(135deg, ${colors.accent}, #d97706)`,
                   color: 'white',
                   cursor: 'pointer',
                   WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 Next
@@ -1441,12 +1557,14 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                 disabled={testAnswers.includes(null)}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                  background: testAnswers.includes(null) ? colors.textMuted : `linear-gradient(135deg, ${colors.success}, #059669)`,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
                   WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 Submit Test
@@ -1461,13 +1579,13 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }} role="img" aria-label="trophy">{'\u{1F3C6}'}</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered cell-to-module losses!</p>
+            <p style={{ color: colors.textSecondary, marginBottom: '24px', fontWeight: 400 }}>You've mastered cell-to-module losses!</p>
           </div>
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>

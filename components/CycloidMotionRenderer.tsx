@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 interface CycloidMotionRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
+const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+type PhaseType = typeof PHASES[number];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#cbd5e1', // Changed from #94a3b8 for better contrast (brightness >= 180)
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -23,14 +27,38 @@ const colors = {
   point: '#ef4444',
   cycloid: '#10b981',
   ground: '#475569',
+  // High contrast primary action colors
+  primaryAction: '#22d3ee', // Brighter cyan for primary actions
+  primaryActionHover: '#67e8f9',
 };
 
 const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
-  phase,
+  phase: phaseProp,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Use gamePhase if provided, otherwise phase, default to 'hook'
+  const getValidPhase = (p: string | undefined): PhaseType => {
+    if (p && PHASES.includes(p as PhaseType)) {
+      return p as PhaseType;
+    }
+    return 'hook';
+  };
+
+  const initialPhase = getValidPhase(gamePhase || phaseProp);
+  const [currentPhase, setCurrentPhase] = useState<PhaseType>(initialPhase);
+
+  // Update phase when props change
+  useEffect(() => {
+    const newPhase = getValidPhase(gamePhase || phaseProp);
+    setCurrentPhase(newPhase);
+  }, [gamePhase, phaseProp]);
+
+  const phase = currentPhase;
+  const currentPhaseIndex = PHASES.indexOf(phase);
+
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -62,6 +90,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
   // Game parameters
   const [showTrace, setShowTrace] = useState(true);
   const [tracePointRadius, setTracePointRadius] = useState(1.0);  // 1.0 = rim, 0.5 = midpoint, 0 = center
+  const [sliderValue, setSliderValue] = useState(100);  // 0-100 range for slider
   const [showVelocityVectors, setShowVelocityVectors] = useState(false);
 
   // Trace history
@@ -73,8 +102,10 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistResult, setShowTwistResult] = useState(false);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
+  const [confirmedAnswers, setConfirmedAnswers] = useState<boolean[]>(new Array(10).fill(false));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
@@ -158,120 +189,120 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
 
   const transferApplications = [
     {
-      title: 'Train Wheel Paradox',
-      description: 'Train wheel flanges extend below the rail surface. The bottom of the flange actually moves backward relative to the ground - faster than the train!',
+      title: 'Train Wheel Engineering at BNSF Railway',
+      description: 'At BNSF Railway, engineers study cycloid motion to understand the train wheel paradox. Train wheel flanges extend about 25mm below the rail surface. When a train travels at 100 km/h, the bottom of the flange actually moves backward relative to the ground at speeds up to 15 km/h!',
       question: 'How can part of a moving train move backward?',
-      answer: 'Points below the wheel\'s contact point have negative velocity relative to ground. The flange at radius r > R traces a prolate cycloid, momentarily moving backward. This doesn\'t violate physics - it\'s just reference frame geometry!',
+      answer: 'Points below the wheel\'s contact point have negative velocity relative to ground. The flange at radius r > R traces a prolate cycloid, momentarily moving backward. This principle is used by Union Pacific, CSX Transportation, and Norfolk Southern for wheel design optimization. About 85% of rail wear occurs at the flange-rail interface.',
     },
     {
-      title: 'Bicycle Valve Motion',
-      description: 'Watch a bicycle valve stem as the wheel rolls. It traces a cycloid, speeding up at the top and stopping at the bottom.',
+      title: 'Bicycle Dynamics at Shimano Research',
+      description: 'Shimano and SRAM engineers study valve stem motion for wheel balancing. On a bicycle traveling at 30 km/h, the valve traces a cycloid path, reaching 60 km/h at the top (2x wheel center speed) while instantaneously stopping at ground contact.',
       question: 'When is the valve moving fastest? When is it stationary?',
-      answer: 'The valve is stationary when touching the ground (instantaneous zero velocity). It\'s fastest at the top, moving at 2× the bike\'s speed! This is why the top of a rolling wheel appears blurred in photos while the bottom is sharp.',
+      answer: 'The valve is stationary when touching the ground (instantaneous zero velocity). It\'s fastest at the top, moving at 2x the bike\'s speed! This principle is why high-speed camera footage at Trek and Specialized shows the top of a rolling wheel appears blurred while the bottom is sharp. Over 500 million bicycles use this principle worldwide.',
     },
     {
-      title: 'Tautochrone Problem',
-      description: 'Galileo noticed pendulums aren\'t perfectly isochronous (period depends slightly on amplitude). Huygens discovered the cycloid solves this.',
+      title: 'Tautochrone Problem - Huygens Clock Design',
+      description: 'In 1673, Christiaan Huygens discovered that a ball rolling on a cycloid takes exactly the same time regardless of starting height. This discovery led to the development of precision clocks at companies like Rolex and Patek Philippe, achieving accuracy within 2 seconds per day.',
       question: 'Why does a ball rolling on a cycloid take the same time regardless of starting height?',
-      answer: 'The cycloid\'s curve exactly compensates for different starting positions. Higher starts have steeper initial slopes, accelerating the ball more. The math works out to equal time for all starting points - perfect isochrony.',
+      answer: 'The cycloid\'s curve exactly compensates for different starting positions. Higher starts have steeper initial slopes (up to 90 degrees), accelerating the ball more. The math works out to equal time for all starting points - about 1.57 seconds for a 1-meter cycloid under Earth\'s gravity (9.8 m/s²). This isochronous property is used in seismographs by organizations like USGS.',
     },
     {
-      title: 'Gear Tooth Design',
-      description: 'Cycloidal gear teeth were used before involute gears. The rolling motion ensures smooth power transfer with minimal sliding friction.',
+      title: 'Cycloidal Gear Manufacturing at Nabtesco',
+      description: 'Nabtesco Corporation, the world\'s leading manufacturer of precision gears, produces over 60% of the cycloidal reducers used in industrial robots. Companies like FANUC, ABB, and KUKA rely on these gears for robotic arm joints, achieving positioning accuracy of 0.01mm.',
       question: 'Why do cycloidal gears produce smooth motion?',
-      answer: 'Cycloidal curves arise from rolling motion. When gear teeth are shaped as cycloids, they mesh with pure rolling contact - no sliding friction. This was crucial before precision manufacturing made involute gears practical.',
+      answer: 'Cycloidal curves arise from rolling motion. When gear teeth are shaped as cycloids, they mesh with pure rolling contact - achieving 95% efficiency compared to 80% for standard gears. This technology is crucial for the $50 billion industrial robotics industry, with applications in Tesla\'s Gigafactories and Amazon\'s fulfillment centers.',
     },
   ];
 
   const testQuestions = [
     {
-      question: 'What curve does a point on a wheel\'s rim trace as it rolls without slipping?',
+      question: 'A scientist at NASA is studying the motion of Mars rover wheels. As the wheel rolls across the Martian surface without slipping, what curve does a point on the wheel\'s rim trace?',
       options: [
-        { text: 'Circle', correct: false },
-        { text: 'Cycloid', correct: true },
-        { text: 'Parabola', correct: false },
-        { text: 'Sine wave', correct: false },
+        { text: 'A) Circle - the point simply rotates around the center', correct: false },
+        { text: 'B) Cycloid - a looping curve with cusps at ground contact', correct: true },
+        { text: 'C) Parabola - similar to a projectile path', correct: false },
+        { text: 'D) Sine wave - a smooth oscillating pattern', correct: false },
       ],
     },
     {
-      question: 'What is "rolling without slipping"?',
+      question: 'An automotive engineer at Tesla is designing regenerative braking. They need to understand "rolling without slipping." Which definition correctly describes this fundamental concept?',
       options: [
-        { text: 'The wheel spins freely without touching ground', correct: false },
-        { text: 'The contact point has zero velocity relative to ground', correct: true },
-        { text: 'The wheel doesn\'t rotate at all', correct: false },
-        { text: 'There is no friction between wheel and ground', correct: false },
+        { text: 'A) The wheel spins freely without touching ground', correct: false },
+        { text: 'B) The contact point has zero velocity relative to ground', correct: true },
+        { text: 'C) The wheel doesn\'t rotate at all during motion', correct: false },
+        { text: 'D) There is no friction between wheel and ground', correct: false },
       ],
     },
     {
-      question: 'At what point on a rolling wheel is velocity momentarily zero?',
+      question: 'A bicycle racer is analyzing their wheel dynamics at 40 km/h. At what point on the rolling wheel is velocity momentarily zero relative to the ground?',
       options: [
-        { text: 'At the center', correct: false },
-        { text: 'At the top', correct: false },
-        { text: 'At the contact point with ground', correct: true },
-        { text: 'Nowhere - all points are always moving', correct: false },
+        { text: 'A) At the center (hub) of the wheel', correct: false },
+        { text: 'B) At the top of the wheel', correct: false },
+        { text: 'C) At the contact point with ground', correct: true },
+        { text: 'D) Nowhere - all points are always moving forward', correct: false },
       ],
     },
     {
-      question: 'If a wheel\'s center moves at speed v, how fast is the top of the wheel moving?',
+      question: 'A high-speed camera at Shimano research lab films a wheel whose center moves at speed v. How fast is the top of the wheel moving relative to the ground?',
       options: [
-        { text: 'v (same as center)', correct: false },
-        { text: '2v (twice the center speed)', correct: true },
-        { text: 'v/2 (half the center speed)', correct: false },
-        { text: '0 (it\'s stationary)', correct: false },
+        { text: 'A) v (same as center) - all points move together', correct: false },
+        { text: 'B) 2v (twice the center speed)', correct: true },
+        { text: 'C) v/2 (half the center speed)', correct: false },
+        { text: 'D) 0 (it\'s stationary like the bottom)', correct: false },
       ],
     },
     {
-      question: 'What is a "curtate cycloid"?',
+      question: 'A Rolex watchmaker is designing precision escapement mechanisms. They study a "curtate cycloid." What is this curve?',
       options: [
-        { text: 'A cycloid traced by a point inside the wheel rim', correct: true },
-        { text: 'A cycloid traced by a point outside the wheel', correct: false },
-        { text: 'A cycloid traced very slowly', correct: false },
-        { text: 'A cycloid traced on a curved surface', correct: false },
+        { text: 'A) A cycloid traced by a point inside the wheel rim (r < R)', correct: true },
+        { text: 'B) A cycloid traced by a point outside the wheel (r > R)', correct: false },
+        { text: 'C) A cycloid traced very slowly at low angular velocity', correct: false },
+        { text: 'D) A cycloid traced on a curved rather than flat surface', correct: false },
       ],
     },
     {
-      question: 'Why does a cycloid have a "cusp" (pointed corner) at the bottom?',
+      question: 'An MIT physics student observes that a cycloid has a "cusp" (pointed corner) at the bottom. Why does this sharp point form?',
       options: [
-        { text: 'The wheel bounces at this point', correct: false },
-        { text: 'The tracing point has zero velocity here', correct: true },
-        { text: 'Friction creates a sharp corner', correct: false },
-        { text: 'It\'s an optical illusion', correct: false },
+        { text: 'A) The wheel bounces slightly at this point', correct: false },
+        { text: 'B) The tracing point has zero velocity here', correct: true },
+        { text: 'C) Friction creates a sharp corner in the path', correct: false },
+        { text: 'D) It\'s an optical illusion from the camera angle', correct: false },
       ],
     },
     {
-      question: 'For a wheel of radius R moving with angular velocity ω, what is v_center?',
+      question: 'A robotics engineer at FANUC is calculating motor requirements. For a wheel of radius R = 0.5m moving with angular velocity ω = 4 rad/s, what is the center velocity v_center?',
       options: [
-        { text: 'ωR', correct: true },
-        { text: 'ω/R', correct: false },
-        { text: '2ωR', correct: false },
-        { text: 'ω + R', correct: false },
+        { text: 'A) ωR = 2 m/s', correct: true },
+        { text: 'B) ω/R = 8 rad/m', correct: false },
+        { text: 'C) 2ωR = 4 m/s', correct: false },
+        { text: 'D) ω + R = 4.5 units (mixed)', correct: false },
       ],
     },
     {
-      question: 'The brachistochrone (fastest descent path) is related to the cycloid because:',
+      question: 'In 1696, Johann Bernoulli posed the brachistochrone problem. A ball must roll from point A to lower point B. The fastest path is related to the cycloid because:',
       options: [
-        { text: 'Cycloids are straight lines', correct: false },
-        { text: 'An inverted cycloid minimizes travel time under gravity', correct: true },
-        { text: 'Wheels naturally roll in cycloids', correct: false },
-        { text: 'Cycloids conserve energy', correct: false },
+        { text: 'A) Cycloids are actually straight lines in disguise', correct: false },
+        { text: 'B) An inverted cycloid minimizes travel time under gravity', correct: true },
+        { text: 'C) Wheels naturally roll in cycloid paths', correct: false },
+        { text: 'D) Cycloids conserve more energy than other paths', correct: false },
       ],
     },
     {
-      question: 'If you photographed a rolling bicycle wheel, which part would appear sharpest?',
+      question: 'A sports photographer at the Tour de France uses a 1/500s shutter. When photographing a bicycle wheel rolling at 50 km/h, which part would appear sharpest in the image?',
       options: [
-        { text: 'The top of the wheel', correct: false },
-        { text: 'The hub at the center', correct: false },
-        { text: 'The bottom (contact point)', correct: true },
-        { text: 'All parts appear equally blurred', correct: false },
+        { text: 'A) The top of the wheel - moving fastest', correct: false },
+        { text: 'B) The hub at the center - rotation axis', correct: false },
+        { text: 'C) The bottom (contact point) - momentarily stationary', correct: true },
+        { text: 'D) All parts appear equally blurred', correct: false },
       ],
     },
     {
-      question: 'What\'s the relationship between distance traveled and wheel rotation?',
+      question: 'A surveyor\'s wheel has radius R = 0.159m (circumference = 1m). After exactly one complete rotation, what distance has the wheel traveled along the ground?',
       options: [
-        { text: 'Distance = 2πR per rotation (circumference)', correct: true },
-        { text: 'Distance = πR per rotation', correct: false },
-        { text: 'Distance = R per rotation', correct: false },
-        { text: 'No consistent relationship', correct: false },
+        { text: 'A) 2πR = 1m (one circumference)', correct: true },
+        { text: 'B) πR = 0.5m (half circumference)', correct: false },
+        { text: 'C) R = 0.159m (one radius)', correct: false },
+        { text: 'D) No consistent relationship exists', correct: false },
       ],
     },
   ];
@@ -285,7 +316,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
   const submitTest = () => {
     let score = 0;
     testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]].correct) {
+      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
         score++;
       }
     });
@@ -294,22 +325,157 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
+  // Navigation functions
+  const goToNextPhase = () => {
+    const nextIndex = currentPhaseIndex + 1;
+    if (nextIndex < PHASES.length) {
+      setCurrentPhase(PHASES[nextIndex]);
+    }
+    if (onPhaseComplete) onPhaseComplete();
+  };
+
+  const goToPrevPhase = () => {
+    const prevIndex = currentPhaseIndex - 1;
+    if (prevIndex >= 0) {
+      setCurrentPhase(PHASES[prevIndex]);
+    }
+  };
+
+  const goToPhase = (index: number) => {
+    if (index >= 0 && index < PHASES.length) {
+      setCurrentPhase(PHASES[index]);
+    }
+  };
+
+  // Navigation bar component - fixed at TOP
+  const renderNavBar = () => (
+    <nav
+      aria-label="Game navigation"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 16px',
+        background: colors.bgDark,
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1000,
+      }}
+    >
+      <button
+        onClick={goToPrevPhase}
+        disabled={currentPhaseIndex === 0}
+        aria-label="Back"
+        style={{
+          padding: '10px 20px',
+          minHeight: '44px',
+          minWidth: '44px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: currentPhaseIndex === 0 ? colors.textMuted : colors.textSecondary,
+          cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
+          fontWeight: 'bold',
+          fontSize: '14px',
+        }}
+      >
+        Back
+      </button>
+
+      {/* Progress bar */}
+      <div
+        role="progressbar"
+        aria-valuenow={currentPhaseIndex + 1}
+        aria-valuemin={1}
+        aria-valuemax={PHASES.length}
+        aria-label={`Progress: phase ${currentPhaseIndex + 1} of ${PHASES.length}`}
+        style={{
+          display: 'flex',
+          gap: '4px',
+          flex: 1,
+          maxWidth: '300px',
+          margin: '0 16px',
+        }}
+      >
+        {PHASES.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(i)}
+            aria-label={`Go to ${p} phase`}
+            aria-current={i === currentPhaseIndex ? 'step' : undefined}
+            style={{
+              flex: 1,
+              height: '8px',
+              borderRadius: '4px',
+              background: i < currentPhaseIndex
+                ? colors.success
+                : i === currentPhaseIndex
+                ? colors.accent
+                : 'rgba(255,255,255,0.2)',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              minWidth: '20px',
+            }}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={goToNextPhase}
+        aria-label="Next"
+        disabled={phase === 'test' && !testSubmitted}
+        style={{
+          padding: '10px 20px',
+          minHeight: '44px',
+          minWidth: '44px',
+          borderRadius: '8px',
+          border: 'none',
+          background: (phase === 'test' && !testSubmitted)
+            ? colors.textMuted
+            : `linear-gradient(135deg, ${colors.primaryAction}, ${colors.accent})`,
+          color: 'white',
+          cursor: (phase === 'test' && !testSubmitted) ? 'not-allowed' : 'pointer',
+          opacity: (phase === 'test' && !testSubmitted) ? 0.4 : 1,
+          fontWeight: 'bold',
+          fontSize: '14px',
+          transition: 'all 0.2s ease',
+          boxShadow: (phase === 'test' && !testSubmitted) ? 'none' : '0 2px 8px rgba(6, 182, 212, 0.3)',
+        }}
+      >
+        Next
+      </button>
+    </nav>
+  );
+
   const renderVisualization = (interactive: boolean) => {
     const width = 500;
     const height = 380;
 
-    const center = getWheelCenter(theta);
-    const tracingPoint = getPointOnWheel(theta, tracePointRadius);
-    const velocity = getVelocityAtPoint(theta, tracePointRadius);
+    // Use a display angle so the visualization shows a meaningful state
+    // when the slider changes (at theta=0, advance to show a partial roll)
+    const displayTheta = theta === 0 ? Math.PI * 0.5 + tracePointRadius * Math.PI : theta;
+    const center = getWheelCenter(displayTheta);
+    const tracingPoint = getPointOnWheel(displayTheta, tracePointRadius);
+    const velocity = getVelocityAtPoint(displayTheta, tracePointRadius);
+
+    // Color mapping based on tracePointRadius
+    const radiusColor = tracePointRadius >= 0.8 ? '#ef4444' : tracePointRadius >= 0.4 ? '#f59e0b' : '#3b82f6';
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div key="viz-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <svg
+          key="main-svg"
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '550px' }}
+          role="img"
+          aria-label="Cycloid motion visualization showing a wheel rolling on a surface with a tracing point"
         >
           {/* Premium defs section with gradients and filters */}
           <defs>
@@ -481,6 +647,23 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
           {/* Premium background */}
           <rect width={width} height={height} fill="url(#cycBgGradient)" />
 
+          {/* Grid lines for visual reference */}
+          {[0.25, 0.5, 0.75].map(frac => (
+            <line key={`hgrid-${frac}`} x1={0} y1={groundY * frac} x2={width} y2={groundY * frac} stroke="#334155" strokeWidth={0.5} opacity={0.4} strokeDasharray="4,4" />
+          ))}
+          {[0.2, 0.4, 0.6, 0.8].map(frac => (
+            <line key={`vgrid-${frac}`} x1={width * frac} y1={0} x2={width * frac} y2={groundY} stroke="#334155" strokeWidth={0.5} opacity={0.4} strokeDasharray="4,4" />
+          ))}
+
+          {/* Tick marks along X axis */}
+          {[100, 200, 300, 400].map(x => (
+            <line key={`tick-${x}`} x1={x} y1={groundY - 4} x2={x} y2={groundY + 4} stroke="#64748b" strokeWidth={1} opacity={0.6} />
+          ))}
+
+          {/* Axis labels */}
+          <text x={width / 2} y={groundY + 45} fill={colors.textMuted} fontSize="11" textAnchor="middle">Distance (horizontal position)</text>
+          <text x={12} y={groundY / 2} fill={colors.textMuted} fontSize="11" textAnchor="middle" transform={`rotate(-90, 12, ${groundY / 2})`}>Height (velocity reference)</text>
+
           {/* Subtle grid pattern for depth */}
           <pattern id="cycGrid" width="25" height="25" patternUnits="userSpaceOnUse">
             <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.2" />
@@ -495,6 +678,9 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
           <line x1={0} y1={groundY} x2={width} y2={groundY} stroke="url(#cycGroundLine)" strokeWidth={3} />
           <line x1={0} y1={groundY + 1} x2={width} y2={groundY + 1} stroke="#1e293b" strokeWidth={1} />
 
+          {/* Ground label */}
+          <text x={width - 10} y={groundY + 20} fill={colors.textSecondary} fontSize="12" textAnchor="end">Ground Surface</text>
+
           {/* Trace path with gradient and glow */}
           {showTrace && tracePoints.length > 1 && (
             <path
@@ -508,14 +694,14 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
             />
           )}
 
-          {/* Static cycloid preview (if not playing) */}
-          {!isPlaying && theta === 0 && (
+          {/* Static cycloid preview - always visible */}
+          <g>
             <path
               d={Array.from({ length: 100 }, (_, i) => {
                 const t = (i / 100) * 4 * Math.PI;
                 const x = startX + wheelRadius * (t - Math.sin(t) * tracePointRadius);
                 const y = groundY - wheelRadius * (1 - Math.cos(t) * tracePointRadius);
-                return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
               }).join(' ')}
               fill="none"
               stroke={colors.cycloid}
@@ -523,7 +709,22 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
               strokeDasharray="6,4"
               opacity={0.5}
             />
-          )}
+            <text x={startX + 10} y={30} fill={colors.cycloid} fontSize="11" opacity={0.7}>Cycloid Path (r={tracePointRadius.toFixed(1)}R)</text>
+            {/* Reference baseline cycloid for comparison */}
+            <path
+              d={Array.from({ length: 100 }, (_, i) => {
+                const t = (i / 100) * 4 * Math.PI;
+                const x = startX + wheelRadius * (t - Math.sin(t));
+                const y = groundY - wheelRadius * (1 - Math.cos(t));
+                return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+              }).join(' ')}
+              fill="none"
+              stroke={colors.cycloid}
+              strokeWidth={0.8}
+              strokeDasharray="2,3"
+              opacity={tracePointRadius < 0.9 ? 0.25 : 0}
+            />
+          </g>
 
           {/* Wheel outer glow */}
           <circle
@@ -546,6 +747,9 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
             stroke="url(#cycWheelRim)"
             strokeWidth={4}
           />
+
+          {/* Wheel label */}
+          <text x={center.x} y={center.y - wheelRadius - 15} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Rolling Wheel (r={tracePointRadius.toFixed(1)}R)</text>
 
           {/* Wheel inner ring for depth */}
           <circle
@@ -589,13 +793,14 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
             r={4}
             fill="#93c5fd"
           />
+          <text x={center.x - 15} y={center.y + 20} fill={colors.textSecondary} fontSize="11" textAnchor="end">Center</text>
 
           {/* Tracing point with premium glow */}
           <circle
             cx={tracingPoint.x}
             cy={tracingPoint.y}
             r={10}
-            fill="url(#cycPointGradient)"
+            fill={radiusColor}
             filter="url(#cycPointGlow)"
           />
           {/* Inner highlight on tracing point */}
@@ -606,6 +811,8 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
             fill="#fecaca"
             opacity={0.6}
           />
+          {/* Tracing point label */}
+          <text x={tracingPoint.x + 15} y={tracingPoint.y - 18} fill={radiusColor} fontSize="11" fontWeight="bold">Tracing Point (r={tracePointRadius.toFixed(1)}R)</text>
 
           {/* Velocity vectors with gradients */}
           {showVelocityVectors && (
@@ -621,6 +828,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
                 strokeLinecap="round"
                 markerEnd="url(#cycArrowYellow)"
               />
+              <text x={center.x + 40} y={center.y - 5} fill="#fbbf24" fontSize="11">v_center</text>
 
               {/* Point velocity */}
               <line
@@ -633,6 +841,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
                 strokeLinecap="round"
                 markerEnd="url(#cycArrowGreen)"
               />
+              <text x={tracingPoint.x + velocity.vx / 3 + 5} y={tracingPoint.y + velocity.vy / 3} fill="#34d399" fontSize="11">v_point</text>
             </g>
           )}
 
@@ -655,21 +864,25 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
                 strokeWidth={2}
                 opacity={0.7}
               />
+              <text x={tracingPoint.x} y={groundY + 30} fill="#f87171" fontSize="11" textAnchor="middle">Contact Point (v=0)</text>
             </g>
           )}
         </svg>
 
-        {/* Legend moved outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          gap: isMobile ? '12px' : '20px',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          padding: '8px 16px',
-          background: 'rgba(30, 41, 59, 0.6)',
-          borderRadius: '8px',
-          maxWidth: '500px'
-        }}>
+        {/* Legend section */}
+        <div
+          aria-label="Legend"
+          style={{
+            display: 'flex',
+            gap: isMobile ? '12px' : '20px',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            padding: '8px 16px',
+            background: 'rgba(30, 41, 59, 0.6)',
+            borderRadius: '8px',
+            maxWidth: '500px'
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{
               width: '10px',
@@ -677,7 +890,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #60a5fa, #2563eb)'
             }} />
-            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Wheel center</span>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Wheel center - moves in straight line</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{
@@ -687,7 +900,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
               background: 'linear-gradient(135deg, #f87171, #dc2626)',
               boxShadow: '0 0 6px rgba(239, 68, 68, 0.5)'
             }} />
-            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Tracing point</span>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Tracing point - follows cycloid path</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{
@@ -696,27 +909,34 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
               borderRadius: '2px',
               background: 'linear-gradient(90deg, #10b981, #6ee7b7, #10b981)'
             }} />
-            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Cycloid path</span>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Cycloid path - curve traced by point</span>
           </div>
         </div>
 
-        {/* Speed display moved outside SVG */}
+        {/* Speed display moved outside SVG - comparison layout */}
         <div style={{
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '2px',
-          padding: '6px 12px',
+          flexDirection: 'row',
+          justifyContent: 'center',
+          gap: '16px',
+          padding: '8px 16px',
           background: 'rgba(6, 182, 212, 0.1)',
           borderRadius: '6px',
           border: '1px solid rgba(6, 182, 212, 0.2)'
         }}>
-          <span style={{ fontSize: typo.body, color: colors.textSecondary }}>
-            Point speed: <strong style={{ color: colors.accent }}>{velocity.speed.toFixed(1)}</strong> units
-          </span>
-          <span style={{ fontSize: typo.label, color: colors.textMuted }}>
-            (Center = 1.0 unit)
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            <span style={{ fontSize: typo.label, color: colors.textMuted }}>Reference (center)</span>
+            <span style={{ fontSize: typo.body, color: colors.textSecondary }}>
+              <strong style={{ color: '#3b82f6' }}>1.0</strong> units
+            </span>
+          </div>
+          <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            <span style={{ fontSize: typo.label, color: colors.textMuted }}>Current point (r={tracePointRadius.toFixed(2)}R)</span>
+            <span style={{ fontSize: typo.body, color: colors.textSecondary }}>
+              <strong style={{ color: radiusColor }}>{velocity.speed.toFixed(1)}</strong> units
+            </span>
+          </div>
         </div>
 
         {interactive && (
@@ -725,6 +945,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
               onClick={() => setIsPlaying(!isPlaying)}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: isPlaying
@@ -745,6 +966,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
               onClick={resetSimulation}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
                 background: 'rgba(6, 182, 212, 0.1)',
@@ -763,47 +985,49 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
   };
 
   const renderControls = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Tracing Point Position: {tracePointRadius === 1 ? 'Rim' : tracePointRadius === 0.5 ? 'Midpoint' : 'Center'}
-        </label>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.1"
-          value={tracePointRadius}
-          onChange={(e) => {
-            setTracePointRadius(parseFloat(e.target.value));
-            resetSimulation();
-          }}
-          style={{ width: '100%' }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
-          <span>Center (no loop)</span>
-          <span>Rim (full cycloid)</span>
-        </div>
+    <div style={{
+      padding: '16px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px',
+      background: 'rgba(30, 41, 59, 0.8)',
+      borderRadius: '12px',
+      margin: '0 16px',
+      border: '1px solid rgba(6, 182, 212, 0.2)'
+    }}>
+      <h4 style={{ color: colors.textPrimary, margin: 0, fontWeight: 600, fontSize: '16px' }}>Controls</h4>
+      <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+        <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px' }}>Radius: {sliderValue}% ({tracePointRadius === 1 ? 'Rim' : tracePointRadius >= 0.5 ? 'Midpoint' : tracePointRadius === 0 ? 'Center' : 'Inner'})</label>
+        <input type="range" min={0} max={100} value={sliderValue} onChange={(e) => { setSliderValue(Number(e.target.value)); setTracePointRadius(Number(e.target.value) / 100); }} style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.accent }} aria-label="Tracing point radius slider" />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginTop: '4px' }}><span>0</span><span>100</span></div>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-        <label style={{ color: colors.textSecondary }}>
+      <div style={{
+        display: 'flex',
+        gap: '16px',
+        flexWrap: 'wrap',
+        background: 'rgba(15, 23, 42, 0.6)',
+        padding: '12px',
+        borderRadius: '8px',
+        border: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        <label style={{ color: colors.textSecondary, display: 'flex', alignItems: 'center', minHeight: '44px', fontWeight: 400 }}>
           <input
             type="checkbox"
             checked={showTrace}
             onChange={(e) => setShowTrace(e.target.checked)}
-            style={{ marginRight: '8px' }}
+            style={{ marginRight: '8px', width: '20px', height: '20px' }}
           />
-          Show trace
+          Show trace path
         </label>
-        <label style={{ color: colors.textSecondary }}>
+        <label style={{ color: colors.textSecondary, display: 'flex', alignItems: 'center', minHeight: '44px', fontWeight: 400 }}>
           <input
             type="checkbox"
             checked={showVelocityVectors}
             onChange={(e) => setShowVelocityVectors(e.target.checked)}
-            style={{ marginRight: '8px' }}
+            style={{ marginRight: '8px', width: '20px', height: '20px' }}
           />
-          Show velocity
+          Show velocity vectors
         </label>
       </div>
 
@@ -813,7 +1037,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         borderRadius: '8px',
         borderLeft: `3px solid ${colors.accent}`,
       }}>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
+        <div style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>
           {tracePointRadius === 1 && 'Rim point traces a true cycloid with cusps.'}
           {tracePointRadius > 0 && tracePointRadius < 1 && 'Inner point traces a curtate cycloid (wavy, no cusps).'}
           {tracePointRadius === 0 && 'Center traces a straight line (no curve).'}
@@ -822,266 +1046,193 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
     </div>
   );
 
-  // Real-world applications data for the transfer phase
-  const realWorldApps = [
-    {
-      icon: '⚙️',
-      title: 'Gear Tooth Design',
-      short: 'Mechanical engineering',
-      tagline: 'Smooth power transfer through rolling contact',
-      description: 'Cycloidal gear teeth were the gold standard before involute gears. The mathematical curve ensures that meshing teeth maintain pure rolling contact, eliminating sliding friction and reducing wear. Clock mechanisms and precision instruments still use cycloidal gears for their smooth, quiet operation.',
-      connection: 'When gear teeth are shaped as cycloids, they replicate the rolling-without-slipping motion of a wheel on a surface. Each tooth rolls against its mating tooth rather than sliding, transferring rotational energy with minimal friction losses.',
-      howItWorks: 'The generating circle rolls along the pitch circle to create the tooth profile. The epicycloid forms the addendum (top) and the hypocycloid forms the dedendum (bottom). When two such gears mesh, their teeth engage with pure rolling contact at every point.',
-      stats: [
-        { value: '0%', label: 'Sliding friction at contact' },
-        { value: '98%', label: 'Mechanical efficiency' },
-        { value: '400+', label: 'Years of proven use' },
-      ],
-      examples: [
-        'Mechanical clock escapements',
-        'Roots-type superchargers',
-        'Precision instrument drives',
-        'Historical windmill gearing',
-      ],
-      companies: ['Rolex', 'Eaton', 'Patek Philippe', 'Seiko', 'Hamilton'],
-      futureImpact: 'Modern CNC machining enables complex cycloidal profiles impossible to cut historically. New applications include micro-electromechanical systems (MEMS), surgical robots, and ultra-quiet electric vehicle transmissions where noise reduction is paramount.',
-      color: '#3b82f6',
-    },
-    {
-      icon: '🎢',
-      title: 'Roller Coaster Loop Design',
-      short: 'Amusement park engineering',
-      tagline: 'Thrills without the danger of circular loops',
-      description: 'Early roller coasters used circular loops, but riders experienced dangerous G-forces at the bottom and near-weightlessness at the top. The clothoid (a cousin of the cycloid) and cycloid-inspired curves revolutionized coaster design by varying the radius to maintain comfortable, consistent G-forces throughout the loop.',
-      connection: 'The cycloid\'s unique property of isochronism (equal-time descent) inspired engineers to study curves that optimize acceleration. This led to loop shapes where the rate of curvature change matches the physics of circular motion.',
-      howItWorks: 'Instead of a constant radius, modern loops use a teardrop or clothoid shape. The radius is smallest at the top where velocity is lowest, and largest at the bottom where velocity is highest. This keeps centripetal acceleration (and G-forces) roughly constant.',
-      stats: [
-        { value: '3-4 G', label: 'Controlled G-force range' },
-        { value: '60%', label: 'Smaller than circular equivalent' },
-        { value: '0', label: 'Dangerous force spikes' },
-      ],
-      examples: [
-        'Vertical loop inversions',
-        'Cobra roll elements',
-        'Immelmann turns',
-        'Dive loop maneuvers',
-      ],
-      companies: ['Bolliger & Mabillard', 'Intamin', 'Vekoma', 'Mack Rides'],
-      futureImpact: 'Computer simulation now optimizes entire track layouts for the smoothest possible ride. Future coasters may use magnetic propulsion with dynamically adjusted curves, personalizing the experience in real-time based on rider preferences.',
-      color: '#ef4444',
-    },
-    {
-      icon: '📐',
-      title: 'Brachistochrone Problem',
-      short: 'Optimal path mathematics',
-      tagline: 'The fastest path isn\'t always the shortest',
-      description: 'In 1696, Johann Bernoulli challenged mathematicians: What curve between two points allows a ball to roll down in minimum time? The answer stunned everyone - an inverted cycloid. Even when the cycloid path is longer than a straight line, a ball reaches the destination faster due to optimal acceleration.',
-      connection: 'The cycloid emerges naturally from rolling motion. Its arc length, curvature, and gravitational acceleration combine perfectly so that initial steep descent builds speed quickly, then a gentler curve maintains that speed to the endpoint.',
-      howItWorks: 'The cycloid\'s slope is steepest at the start, maximizing early acceleration. As the ball gains speed, the curve flattens to use that velocity efficiently. The mathematics (calculus of variations) proves no other curve is faster.',
-      stats: [
-        { value: '1696', label: 'Year problem was posed' },
-        { value: '5', label: 'Famous mathematicians who solved it' },
-        { value: '∞', label: 'Applications in optimization' },
-      ],
-      examples: [
-        'Ski jump ramp profiles',
-        'Water slide design',
-        'Particle accelerator injection',
-        'Spacecraft trajectory planning',
-      ],
-      companies: ['CERN', 'NASA', 'SpaceX', 'WhiteWater West', 'ProSlide'],
-      futureImpact: 'The brachistochrone principle extends to any optimization problem involving trade-offs between distance and speed. AI path-planning algorithms use these insights for drone delivery routes, autonomous vehicle navigation, and robotic arm movements.',
-      color: '#10b981',
-    },
-    {
-      icon: '🕰️',
-      title: 'Cycloidal Pendulum Clocks',
-      short: 'Precision horology',
-      tagline: 'Perfect timekeeping through mathematical curves',
-      description: 'Christiaan Huygens discovered in 1659 that a pendulum swinging along a cycloidal path has perfectly constant period regardless of amplitude. He invented cycloidal "cheeks" that constrain the pendulum bob to follow this curve, creating the first truly isochronous timepiece.',
-      connection: 'The cycloid is the tautochrone - the curve of equal time. A ball released from any height on an inverted cycloid reaches the bottom in exactly the same time. This property makes cycloid-constrained pendulums immune to amplitude variations.',
-      howItWorks: 'Curved metal plates (cycloidal cheeks) are mounted at the pendulum pivot. As the pendulum swings wide, the string wraps against these cheeks, effectively shortening the pendulum length. This shortening exactly compensates for the longer arc, maintaining constant period.',
-      stats: [
-        { value: '1659', label: 'Year Huygens made discovery' },
-        { value: '±0.5s', label: 'Daily accuracy achieved' },
-        { value: '100%', label: 'Amplitude independence' },
-      ],
-      examples: [
-        'Marine chronometers',
-        'Observatory regulators',
-        'Grandfather clocks',
-        'Scientific timing instruments',
-      ],
-      companies: ['Huygens original', 'John Harrison', 'Breguet', 'Shortt-Synchronome'],
-      futureImpact: 'While quartz and atomic clocks surpassed mechanical accuracy, the principle of using geometry to compensate for physical variations inspires modern engineering. MEMS oscillators and optical lattice clocks use analogous mathematical principles for stability.',
-      color: '#f59e0b',
-    },
-  ];
-
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
+  // Page wrapper as inline function (not a component, to avoid remount on re-render)
+  const wrapPage = (children: React.ReactNode) => (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderNavBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px', transition: 'all 0.3s ease' }}>
+        {children}
+      </div>
     </div>
   );
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              ⚙️ The Dancing Point
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              What path does a point on a rolling wheel actually trace?
+      wrapPage(<>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
+            The Dancing Point
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
+            Let's explore what happens when a wheel rolls - what path does a point trace?
+          </p>
+        </div>
+
+        {renderVisualization(true)}
+
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{
+            background: colors.bgCard,
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              When a wheel rolls, its center moves in a straight line. But a point on the rim?
+              It dances through the air, tracing one of mathematics' most beautiful curves.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              This curve - the cycloid - has fascinated mathematicians for 400 years.
             </p>
           </div>
 
-          {renderVisualization(true)}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                When a wheel rolls, its center moves in a straight line. But a point on the rim?
-                It dances through the air, tracing one of mathematics' most beautiful curves.
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                This curve - the cycloid - has fascinated mathematicians for 400 years.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(6, 182, 212, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                💡 Watch the red point as the wheel rolls!
-              </p>
-            </div>
+          <div style={{
+            background: 'rgba(6, 182, 212, 0.2)',
+            padding: '16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              Watch the red point as the wheel rolls!
+            </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction →')}
-      </div>
+      </>)
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
+    const answeredCount = prediction ? 1 : 0;
+    const totalQuestions = 1;
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
+      wrapPage(<>
+        {/* Progress indicator */}
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Progress: {answeredCount} of {totalQuestions} prediction made
+          </p>
+        </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 What You're Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A wheel with a red point marked on its rim. The wheel will roll along the ground
-              without slipping (no skidding). The green dashed line shows a preview of the path.
-            </p>
-          </div>
+        {renderVisualization(false)}
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              🤔 What shape does the red point trace as the wheel rolls?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            A wheel with a red point marked on its rim. The wheel will roll along the ground
+            without slipping (no skidding). The green dashed line shows a preview of the path.
+          </p>
+        </div>
+
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            What shape does the red point trace as the wheel rolls?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {predictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  minHeight: '44px',
+                  borderRadius: '8px',
+                  border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: prediction === p.id ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
-      </div>
+      </>)
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the Cycloid</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Watch how different points on the wheel trace different curves
-            </p>
-          </div>
+      wrapPage(<>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the Cycloid</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Watch how different points on the wheel trace different curves
+          </p>
+        </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
+        {/* Observation guidance */}
+        <div style={{
+          background: 'rgba(6, 182, 212, 0.15)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.accent}`,
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+            <strong style={{ color: colors.accent }}>Observe:</strong> Notice how the tracing point slows down near the ground and speeds up at the top. This is the key to understanding rolling motion!
+          </p>
+        </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>🔬 Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Rim point (1.0) - true cycloid with cusps</li>
-              <li>Midpoint (0.5) - curtate cycloid (wavy)</li>
-              <li>Center (0.0) - straight line!</li>
-              <li>Enable velocity to see speed changes</li>
-            </ul>
+        {/* Real-world relevance callout */}
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.15)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.success}`,
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+            <strong style={{ color: colors.success }}>Why This Matters:</strong> Understanding cycloid motion is important in real-world engineering applications - from designing gear teeth to calculating the fastest descent paths used in roller coaster design.
+          </p>
+        </div>
+
+        {renderVisualization(true)}
+
+        <div style={{
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          background: 'rgba(30, 41, 59, 0.8)',
+          borderRadius: '12px',
+          margin: '0 16px',
+          border: '1px solid rgba(6, 182, 212, 0.2)'
+        }}>
+          <h4 style={{ color: colors.textPrimary, margin: 0, fontWeight: 600, fontSize: '16px' }}>Controls</h4>
+          <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px' }}>Radius: {sliderValue}% ({tracePointRadius === 1 ? 'Rim' : tracePointRadius >= 0.5 ? 'Midpoint' : tracePointRadius === 0 ? 'Center' : 'Inner'})</label>
+            <input type="range" min={0} max={100} value={sliderValue} onChange={(e) => { setSliderValue(Number(e.target.value)); setTracePointRadius(Number(e.target.value) / 100); }} style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.accent }} aria-label="Tracing point radius slider" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginTop: '4px' }}><span>0</span><span>100</span></div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review →')}
-      </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+          <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Rim point (1.0) - true cycloid with cusps</li>
+            <li>Midpoint (0.5) - curtate cycloid (wavy)</li>
+            <li>Center (0.0) - straight line!</li>
+            <li>Enable velocity to see speed changes</li>
+          </ul>
+        </div>
+      </>)
     );
   }
 
@@ -1090,143 +1241,208 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
     const wasCorrect = prediction === 'cycloid';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              The point traces a cycloid - a looping curve that touches the ground at regular intervals!
+      wrapPage(<>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Your prediction was correct!' : 'Not quite what you predicted!'}
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            As you observed, the point traces a cycloid - a looping curve that touches the ground at regular intervals!
+          </p>
+        </div>
+
+        {/* SVG diagram for review */}
+        <div style={{ margin: '16px', display: 'flex', justifyContent: 'center' }}>
+          <svg width="300" height="150" viewBox="0 0 300 150" style={{ background: colors.bgDark, borderRadius: '8px' }}>
+            <text x="150" y="20" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Velocity Distribution on Rolling Wheel</text>
+            <circle cx="150" cy="85" r="40" fill="none" stroke={colors.wheel} strokeWidth="2" />
+            <circle cx="150" cy="85" r="4" fill={colors.wheel} />
+            <text x="165" y="88" fill={colors.textSecondary} fontSize="11">v = omega * R</text>
+            {/* Top arrow - 2v */}
+            <line x1="150" y1="45" x2="200" y2="45" stroke={colors.success} strokeWidth="2" markerEnd="url(#arrowG)" />
+            <text x="205" y="48" fill={colors.success} fontSize="11">2v (top)</text>
+            {/* Bottom point - 0 */}
+            <circle cx="150" cy="125" r="4" fill={colors.error} />
+            <text x="165" y="140" fill={colors.error} fontSize="11">v = 0 (contact)</text>
+            <defs>
+              <marker id="arrowG" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 z" fill={colors.success} />
+              </marker>
+            </defs>
+          </svg>
+        </div>
+
+        {/* Key Insight Callout */}
+        <div style={{
+          background: 'rgba(6, 182, 212, 0.15)',
+          margin: '16px',
+          padding: '16px 20px',
+          borderRadius: '12px',
+          border: `2px solid ${colors.accent}`,
+          boxShadow: '0 0 20px rgba(6, 182, 212, 0.2)',
+          transition: 'all 0.3s ease',
+        }}>
+          <h4 style={{ color: colors.primaryAction, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '20px' }}>&#128161;</span> Key Insight
+          </h4>
+          <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.6, margin: 0 }}>
+            The cycloid is the <strong>only curve</strong> where a point on a rolling wheel touches the ground with zero velocity. This creates the distinctive "cusp" shape at each contact point!
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Understanding Rolling Without Slipping</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>The Constraint:</strong> For rolling without
+              slipping, the contact point has zero velocity relative to the ground. The wheel doesn't
+              skid - it "grips" the surface.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Velocity Distribution:</strong> The bottom
+              of the wheel is momentarily stationary, while the top moves at 2x the center's speed.
+              This creates the characteristic looping path.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>The Cusp:</strong> When the rim point touches
+              the ground, it has zero velocity - creating a sharp "cusp" in the curve. This is unique
+              to the true cycloid!
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 Understanding Rolling Without Slipping</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>The Constraint:</strong> For rolling without
-                slipping, the contact point has zero velocity relative to the ground. The wheel doesn't
-                skid - it "grips" the surface.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Velocity Distribution:</strong> The bottom
-                of the wheel is momentarily stationary, while the top moves at 2× the center's speed.
-                This creates the characteristic looping path.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>The Cusp:</strong> When the rim point touches
-                the ground, it has zero velocity - creating a sharp "cusp" in the curve. This is unique
-                to the true cycloid!
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist! →')}
-      </div>
+
+        {/* Step tracker for progressive disclosure */}
+        <div style={{
+          margin: '16px',
+          padding: '12px 16px',
+          background: 'rgba(30, 41, 59, 0.6)',
+          borderRadius: '8px',
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '8px',
+          alignItems: 'center',
+        }}>
+          <span style={{ color: colors.textMuted, fontSize: '12px' }}>Step 4 of 10:</span>
+          <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Review complete - ready for the twist!</span>
+        </div>
+      </>)
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
+    const answeredCount = twistPrediction ? 1 : 0;
+    const totalQuestions = 1;
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>🔄 The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What if we track a point inside the wheel, not on the rim?
-            </p>
-          </div>
+      wrapPage(<>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+          <p style={{ color: colors.textSecondary }}>
+            What if we track a point inside the wheel, not on the rim?
+          </p>
+          <p style={{ color: colors.textMuted, fontSize: '14px', marginTop: '8px' }}>
+            Progress: {answeredCount} of {totalQuestions} prediction made
+          </p>
+        </div>
 
-          {renderVisualization(false)}
+        {renderVisualization(false)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              Imagine moving the red point inward - halfway between the rim and the center.
-              This point still rotates with the wheel but at a smaller radius.
-            </p>
-          </div>
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            Imagine moving the red point inward - halfway between the rim and the center.
+            This point still rotates with the wheel but at a smaller radius.
+          </p>
+        </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              🤔 What curve does an interior point trace?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            What curve does an interior point trace?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {twistPredictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setTwistPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  minHeight: '44px',
+                  borderRadius: '8px',
+                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                  background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction →')}
-      </div>
+      </>)
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Point Position</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Move the tracing point to different radii
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>💡 Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Interior points never touch the ground, so they trace smooth waves (curtate cycloid)
-              instead of curves with cusps. Only the rim creates the true cycloid!
-            </p>
-          </div>
+      wrapPage(<>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Point Position</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Move the tracing point to different radii
+          </p>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation →')}
-      </div>
+
+        {/* Observation guidance */}
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.15)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.warning}`,
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+            <strong style={{ color: colors.warning }}>Observe:</strong> Compare curves at different radii. Notice how interior points never touch the ground - they trace smooth waves instead of cusped cycloids!
+          </p>
+        </div>
+
+        {renderVisualization(true)}
+        {renderControls()}
+
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.warning}`,
+        }}>
+          <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Interior points never touch the ground, so they trace smooth waves (curtate cycloid)
+            instead of curves with cusps. Only the rim creates the true cycloid!
+          </p>
+        </div>
+      </>)
     );
   }
 
@@ -1235,129 +1451,260 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
     const wasCorrect = twistPrediction === 'curtate';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Interior points trace a "curtate cycloid" - a smooth wave that never touches the ground!
+      wrapPage(<>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            Interior points trace a "curtate cycloid" - a smooth wave that never touches the ground!
+          </p>
+        </div>
+
+        {/* SVG diagram for twist review */}
+        <div style={{ margin: '16px', display: 'flex', justifyContent: 'center' }}>
+          <svg width="350" height="120" viewBox="0 0 350 120" style={{ background: colors.bgDark, borderRadius: '8px' }}>
+            <text x="175" y="15" fill={colors.textSecondary} fontSize="11" textAnchor="middle">The Cycloid Family</text>
+            {/* True cycloid */}
+            <path d="M 20 80 Q 50 20 80 80 Q 110 20 140 80" fill="none" stroke={colors.cycloid} strokeWidth="2" />
+            <text x="80" y="100" fill={colors.cycloid} fontSize="11" textAnchor="middle">Cycloid (r=R)</text>
+            {/* Curtate cycloid */}
+            <path d="M 150 70 Q 180 40 210 70 Q 240 40 270 70" fill="none" stroke={colors.warning} strokeWidth="2" />
+            <text x="210" y="100" fill={colors.warning} fontSize="11" textAnchor="middle">Curtate (r&lt;R)</text>
+            {/* Labels */}
+            <circle cx="80" cy="80" r="3" fill={colors.error} />
+            <text x="80" y="115" fill={colors.textMuted} fontSize="11" textAnchor="middle">cusp</text>
+          </svg>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Cycloid Family</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Cycloid:</strong> Traced by a point on
+              the rim (r = R). Has cusps where velocity = 0.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Curtate Cycloid:</strong> Traced by a
+              point inside (r {"<"} R). Smooth waves, never touches ground.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Prolate Cycloid:</strong> Traced by a
+              point outside the wheel (like a train wheel flange, r {">"} R). Loops that dip below
+              the rolling surface!
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>🔬 The Cycloid Family</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Cycloid:</strong> Traced by a point on
-                the rim (r = R). Has cusps where velocity = 0.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Curtate Cycloid:</strong> Traced by a
-                point inside (r {"<"} R). Smooth waves, never touches ground.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Prolate Cycloid:</strong> Traced by a
-                point outside the wheel (like a train wheel flange, r {">"} R). Loops that dip below
-                the rolling surface!
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge →')}
-      </div>
+      </>)
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const currentApp = transferApplications[currentTransferApp];
+    const completedCount = transferCompleted.size;
+    const totalApps = transferApplications.length;
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              🌍 Real-World Applications
-            </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Cycloids appear in surprising places
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+      wrapPage(<>
+        <div style={{ padding: '16px' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+            Cycloids appear in surprising places across engineering, physics, and manufacturing
+          </p>
+          {/* Progress indicator */}
+          <p style={{ color: colors.textMuted, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+            Progress: Application {currentTransferApp + 1} of {totalApps} ({completedCount} completed)
+          </p>
+        </div>
+
+        {/* Overview of cycloid applications */}
+        <div style={{
+          background: 'rgba(6, 182, 212, 0.1)',
+          margin: '0 16px 16px 16px',
+          padding: '16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.accent}`,
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+            The cycloid curve, first studied by Galileo in 1599, has been called the Helen of Geometry due to the fierce debates it inspired among mathematicians. Today, cycloid motion principles are critical in industries worth over $200 billion globally, from precision watchmaking at Rolex and Patek Philippe to industrial robotics at FANUC and ABB. Train wheels at BNSF Railway, bicycle dynamics at Shimano, and gear manufacturing at Nabtesco Corporation all rely on understanding how points on rolling wheels trace these remarkable curves. The fundamental equation x = R(t - sin t), y = R(1 - cos t) describes one of the most elegant curves in mathematics.
+          </p>
+        </div>
+
+        {/* Current application card */}
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          border: transferCompleted.has(currentTransferApp) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '18px' }}>{currentApp.title}</h3>
+            {transferCompleted.has(currentTransferApp) && (
+              <span style={{ color: colors.success, fontSize: '20px' }}>&#10003;</span>
+            )}
+          </div>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>
+            {currentApp.description}
+          </p>
+          <div style={{
+            background: 'rgba(6, 182, 212, 0.1)',
+            padding: '12px',
+            borderRadius: '8px',
+            marginBottom: '12px',
+          }}>
+            <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
+              {currentApp.question}
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
+          {!transferCompleted.has(currentTransferApp) ? (
+            <button
+              onClick={() => setTransferCompleted(new Set([...transferCompleted, currentTransferApp]))}
               style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                padding: '12px 20px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.accent}`,
+                background: 'transparent',
+                color: colors.accent,
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && (
-                  <span style={{ color: colors.success }}>✓</span>
-                )}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>
-                {app.description}
-              </p>
+              Reveal Answer
+            </button>
+          ) : (
+            <>
               <div style={{
-                background: 'rgba(6, 182, 212, 0.1)',
+                background: 'rgba(16, 185, 129, 0.1)',
                 padding: '12px',
                 borderRadius: '8px',
-                marginBottom: '8px',
+                borderLeft: `3px solid ${colors.success}`,
+                marginBottom: '12px',
               }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
-                  💭 {app.question}
-                </p>
+                <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6 }}>{currentApp.answer}</p>
               </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  padding: '12px',
+              <button
+                onClick={() => {
+                  if (currentTransferApp < transferApplications.length - 1) {
+                    setCurrentTransferApp(currentTransferApp + 1);
+                  }
+                }}
+                style={{
+                  padding: '12px 20px',
+                  minHeight: '44px',
                   borderRadius: '8px',
-                  borderLeft: `3px solid ${colors.success}`,
-                }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
+                  border: 'none',
+                  background: colors.success,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                }}
+              >
+                Got It
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Navigation between apps */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 16px 16px 16px', gap: '12px' }}>
+          <button
+            onClick={() => setCurrentTransferApp(Math.max(0, currentTransferApp - 1))}
+            disabled={currentTransferApp === 0}
+            style={{
+              padding: '12px 20px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.textMuted}`,
+              background: 'transparent',
+              color: currentTransferApp === 0 ? colors.textMuted : colors.textSecondary,
+              cursor: currentTransferApp === 0 ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            Previous App
+          </button>
+
+          {currentTransferApp < totalApps - 1 ? (
+            <button
+              onClick={() => setCurrentTransferApp(currentTransferApp + 1)}
+              style={{
+                padding: '12px 20px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold',
+              }}
+            >
+              Next App
+            </button>
+          ) : (
+            <button
+              onClick={goToNextPhase}
+              disabled={completedCount < totalApps}
+              style={{
+                padding: '12px 20px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: completedCount >= totalApps ? colors.success : colors.textMuted,
+                color: 'white',
+                cursor: completedCount >= totalApps ? 'pointer' : 'not-allowed',
+                fontSize: '14px',
+                fontWeight: 'bold',
+              }}
+            >
+              Got It - Continue
+            </button>
+          )}
+        </div>
+
+        {/* App indicator dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '8px' }}>
+          {transferApplications.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentTransferApp(i)}
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                border: 'none',
+                background: transferCompleted.has(i)
+                  ? colors.success
+                  : i === currentTransferApp
+                  ? colors.accent
+                  : 'rgba(255,255,255,0.3)',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+              aria-label={`Go to application ${i + 1}`}
+            />
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test →')}
-      </div>
+      </>)
     );
   }
 
@@ -1365,249 +1712,360 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>
-                {testScore} / 10
-              </p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You\'ve mastered cycloid motion!' : 'Review the material and try again.'}
-              </p>
-            </div>
-
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-
-              return (
-                <div
-                  key={qIndex}
-                  style={{
-                    background: colors.bgCard,
-                    margin: '16px',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
-                  }}
-                >
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>
-                    {qIndex + 1}. {q.question}
-                  </p>
-                  {q.options.map((opt, oIndex) => (
-                    <div
-                      key={oIndex}
-                      style={{
-                        padding: '8px 12px',
-                        marginBottom: '4px',
-                        borderRadius: '6px',
-                        background: opt.correct
-                          ? 'rgba(16, 185, 129, 0.2)'
-                          : userAnswer === oIndex
-                          ? 'rgba(239, 68, 68, 0.2)'
-                          : 'transparent',
-                        color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary,
-                      }}
-                    >
-                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+        wrapPage(<>
+          <div style={{
+            background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            margin: '16px',
+            padding: '24px',
+            borderRadius: '12px',
+            textAlign: 'center',
+          }}>
+            <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+              {testScore >= 8 ? 'Excellent! Test Complete!' : 'Test Complete! Keep Learning!'}
+            </h2>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>
+              You scored {testScore} / 10
+            </p>
+            <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+              {testScore >= 8 ? 'You\'ve mastered cycloid motion!' : 'Review the material and try again.'}
+            </p>
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
-        </div>
+
+          {/* Answer review */}
+          <div style={{ padding: '0 16px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>Answer Review:</h3>
+          </div>
+          {testQuestions.map((q, qIndex) => {
+            const userAnswer = testAnswers[qIndex];
+            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+
+            return (
+              <div
+                key={qIndex}
+                style={{
+                  background: colors.bgCard,
+                  margin: '8px 16px',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{
+                    color: isCorrect ? colors.success : colors.error,
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                  }}>
+                    {isCorrect ? '✓' : '✗'}
+                  </span>
+                  <span style={{ color: colors.textMuted, fontSize: '12px' }}>Q{qIndex + 1}</span>
+                </div>
+                <p style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '14px' }}>
+                  {q.question}
+                </p>
+                {q.options.map((opt, oIndex) => (
+                  <div
+                    key={oIndex}
+                    style={{
+                      padding: '6px 10px',
+                      marginBottom: '4px',
+                      borderRadius: '6px',
+                      background: opt.correct
+                        ? 'rgba(16, 185, 129, 0.2)'
+                        : userAnswer === oIndex
+                        ? 'rgba(239, 68, 68, 0.2)'
+                        : 'transparent',
+                      color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textMuted,
+                      fontSize: '13px',
+                    }}
+                  >
+                    {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </>)
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
+    const answeredCount = testAnswers.filter(a => a !== null).length;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>
-                {currentTestQuestion + 1} / {testQuestions.length}
-              </span>
-            </div>
+      wrapPage(<>
+        <div style={{ padding: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
+            <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>
+              Question {currentTestQuestion + 1} of {testQuestions.length}
+            </span>
+          </div>
 
-            <div style={{
-              display: 'flex',
-              gap: '4px',
-              marginBottom: '24px',
-            }}>
-              {testQuestions.map((_, i) => (
-                <div
-                  key={i}
-                  onClick={() => setCurrentTestQuestion(i)}
-                  style={{
-                    flex: 1,
-                    height: '4px',
-                    borderRadius: '2px',
-                    background: testAnswers[i] !== null
-                      ? colors.accent
-                      : i === currentTestQuestion
-                      ? colors.textMuted
-                      : 'rgba(255,255,255,0.1)',
-                    cursor: 'pointer',
-                  }}
-                />
-              ))}
-            </div>
+          {/* Progress bar */}
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            marginBottom: '16px',
+          }}>
+            {testQuestions.map((_, i) => (
+              <div
+                key={i}
+                onClick={() => setCurrentTestQuestion(i)}
+                style={{
+                  flex: 1,
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: testAnswers[i] !== null
+                    ? colors.accent
+                    : i === currentTestQuestion
+                    ? colors.textMuted
+                    : 'rgba(255,255,255,0.1)',
+                  cursor: 'pointer',
+                }}
+              />
+            ))}
+          </div>
 
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>
-                {currentQ.question}
-              </p>
-            </div>
+          {/* Progress text */}
+          <p style={{ color: colors.textMuted, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+            Progress: {answeredCount} of {testQuestions.length} questions answered
+          </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
+          <div style={{
+            background: colors.bgCard,
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ color: colors.accent, fontSize: '14px', marginBottom: '8px', fontWeight: 'bold' }}>
+              Q{currentTestQuestion + 1} of {testQuestions.length}
+            </p>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>
+              {currentQ.question}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {currentQ.options.map((opt, oIndex) => {
+              const isSelected = testAnswers[currentTestQuestion] === oIndex;
+              const isConfirmed = confirmedAnswers[currentTestQuestion];
+              const isCorrectOption = opt.correct;
+
+              let optionBg = 'transparent';
+              let optionBorder = '1px solid rgba(255,255,255,0.2)';
+              let optionColor = colors.textPrimary;
+
+              if (isConfirmed) {
+                if (isCorrectOption) {
+                  optionBg = 'rgba(16, 185, 129, 0.2)';
+                  optionBorder = `2px solid ${colors.success}`;
+                  optionColor = colors.success;
+                } else if (isSelected) {
+                  optionBg = 'rgba(239, 68, 68, 0.2)';
+                  optionBorder = `2px solid ${colors.error}`;
+                  optionColor = colors.error;
+                }
+              } else if (isSelected) {
+                optionBg = 'rgba(6, 182, 212, 0.2)';
+                optionBorder = `2px solid ${colors.accent}`;
+              }
+
+              return (
                 <button
                   key={oIndex}
-                  onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+                  onClick={() => !isConfirmed && handleTestAnswer(currentTestQuestion, oIndex)}
+                  disabled={isConfirmed}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
-                    border: testAnswers[currentTestQuestion] === oIndex
-                      ? `2px solid ${colors.accent}`
-                      : '1px solid rgba(255,255,255,0.2)',
-                    background: testAnswers[currentTestQuestion] === oIndex
-                      ? 'rgba(6, 182, 212, 0.2)'
-                      : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
+                    border: optionBorder,
+                    background: optionBg,
+                    color: optionColor,
+                    cursor: isConfirmed ? 'default' : 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
                   }}
                 >
+                  {isConfirmed && isCorrectOption && '✓ '}
+                  {isConfirmed && isSelected && !isCorrectOption && '✗ '}
                   {opt.text}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-              disabled={currentTestQuestion === 0}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
-                background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-              }}
-            >
-              ← Previous
-            </button>
-
-            {currentTestQuestion < testQuestions.length - 1 ? (
+          {/* Check Answer button */}
+          {testAnswers[currentTestQuestion] !== null && !confirmedAnswers[currentTestQuestion] && (
+            <div style={{ padding: '16px', textAlign: 'center' }}>
               <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                onClick={() => {
+                  const newConfirmed = [...confirmedAnswers];
+                  newConfirmed[currentTestQuestion] = true;
+                  setConfirmedAnswers(newConfirmed);
+                }}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: colors.accent,
+                  background: `linear-gradient(135deg, ${colors.warning}, #d97706)`,
                   color: 'white',
                   cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
                 }}
               >
-                Next →
+                Check Answer
               </button>
-            ) : (
-              <button
-                onClick={submitTest}
-                disabled={testAnswers.includes(null)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
-                  color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Feedback after confirmation */}
+          {confirmedAnswers[currentTestQuestion] && (
+            <div style={{
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '8px',
+              background: currentQ.options[testAnswers[currentTestQuestion]!]?.correct
+                ? 'rgba(16, 185, 129, 0.2)'
+                : 'rgba(239, 68, 68, 0.2)',
+              borderLeft: `4px solid ${currentQ.options[testAnswers[currentTestQuestion]!]?.correct ? colors.success : colors.error}`,
+            }}>
+              <p style={{
+                color: currentQ.options[testAnswers[currentTestQuestion]!]?.correct ? colors.success : colors.error,
+                fontWeight: 'bold',
+                marginBottom: '8px',
+              }}>
+                {currentQ.options[testAnswers[currentTestQuestion]!]?.correct ? '✓ Correct!' : '✗ Incorrect'}
+              </p>
+              {!currentQ.options[testAnswers[currentTestQuestion]!]?.correct && (
+                <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                  The correct answer is: {currentQ.options.find(o => o.correct)?.text}
+                </p>
+              )}
+            </div>
+          )}
         </div>
-      </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
+          <button
+            onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+            disabled={currentTestQuestion === 0}
+            style={{
+              padding: '12px 24px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.textMuted}`,
+              background: 'transparent',
+              color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+              cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+            }}
+          >
+            &#8592; Previous
+          </button>
+
+          {currentTestQuestion < testQuestions.length - 1 ? (
+            <button
+              onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+              disabled={!confirmedAnswers[currentTestQuestion]}
+              style={{
+                padding: '12px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: confirmedAnswers[currentTestQuestion] ? colors.accent : colors.textMuted,
+                color: 'white',
+                cursor: confirmedAnswers[currentTestQuestion] ? 'pointer' : 'not-allowed',
+              }}
+            >
+              Next Question &#8594;
+            </button>
+          ) : (
+            <button
+              onClick={submitTest}
+              disabled={!confirmedAnswers.every(c => c)}
+              style={{
+                padding: '12px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: confirmedAnswers.every(c => c) ? colors.success : colors.textMuted,
+                color: 'white',
+                cursor: confirmedAnswers.every(c => c) ? 'pointer' : 'not-allowed',
+              }}
+            >
+              Submit Test
+            </button>
+          )}
+        </div>
+      </>)
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
-              You've mastered cycloid motion and rolling without slipping
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Rolling without slipping constraint (v = ωR)</li>
-              <li>Velocity distribution on a rolling wheel</li>
-              <li>The cycloid curve and its properties</li>
-              <li>Curtate and prolate cycloids</li>
-              <li>Applications from trains to the brachistochrone</li>
-            </ul>
-          </div>
-
-          <div style={{
-            background: 'rgba(6, 182, 212, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🚀 Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              The cycloid was called "the Helen of geometry" because of the mathematical
-              feuds it inspired. It's the solution to both the brachistochrone (fastest
-              descent) and tautochrone (equal time) problems - a remarkable mathematical
-              coincidence that connects rolling motion to optimal paths!
-            </p>
-          </div>
-
-          {renderVisualization(true)}
+      wrapPage(<>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>&#127942;</div>
+          <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+          <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
+            You've mastered cycloid motion and rolling without slipping
+          </p>
         </div>
-        {renderBottomBar(false, true, 'Complete Game →')}
-      </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Rolling without slipping constraint (v = omega R)</li>
+            <li>Velocity distribution on a rolling wheel</li>
+            <li>The cycloid curve and its properties</li>
+            <li>Curtate and prolate cycloids</li>
+            <li>Applications from trains to the brachistochrone</li>
+          </ul>
+        </div>
+
+        <div style={{
+          background: 'rgba(6, 182, 212, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+            The cycloid was called "the Helen of geometry" because of the mathematical
+            feuds it inspired. It's the solution to both the brachistochrone (fastest
+            descent) and tautochrone (equal time) problems - a remarkable mathematical
+            coincidence that connects rolling motion to optimal paths!
+          </p>
+        </div>
+
+        {renderVisualization(true)}
+      </>)
     );
   }
 
-  return null;
+  // Default fallback - should never reach here, but return hook phase content
+  return (
+    wrapPage(<>
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+          The Dancing Point
+        </h1>
+        <p style={{ color: colors.textSecondary, fontSize: '18px' }}>
+          What path does a point on a rolling wheel actually trace?
+        </p>
+      </div>
+      {renderVisualization(true)}
+    </>)
+  );
 };
 
 export default CycloidMotionRenderer;

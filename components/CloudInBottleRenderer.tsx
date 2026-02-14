@@ -661,7 +661,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         : 'Released - Ready';
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
         <svg viewBox="0 0 300 260" style={{ width: '100%', maxWidth: '350px', height: 'auto' }}>
           <defs>
             {/* Premium glass bottle gradient with transparency effect */}
@@ -884,17 +884,17 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           {/* Water at bottom with shimmer */}
           <g filter="url(#cloudWaterShimmer)">
             <path
-              d={`M${150 - bottleWidth/2 * compression + 5},${50 + bottleHeight - 20}
+              d={`M${150 - bottleWidth/2 * compression + 5},${50 + bottleHeight - 70}
                   L${150 - bottleWidth/2 * compression + 5},${50 + bottleHeight + 15}
                   Q${150},${50 + bottleHeight + 18} ${150 + bottleWidth/2 * compression - 5},${50 + bottleHeight + 15}
-                  L${150 + bottleWidth/2 * compression - 5},${50 + bottleHeight - 20}
+                  L${150 + bottleWidth/2 * compression - 5},${50 + bottleHeight - 70}
                   Z`}
               fill="url(#cloudWaterGradient)"
             />
             {/* Water surface highlight */}
             <ellipse
               cx="150"
-              cy={50 + bottleHeight - 18}
+              cy={50 + bottleHeight - 68}
               rx={bottleWidth/2 * compression - 10}
               ry="3"
               fill="#93c5fd"
@@ -1052,14 +1052,14 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           )}
 
           {/* Educational labels */}
-          <text x="150" y="18" fontSize="10" fill="#e2e8f0" textAnchor="middle" fontWeight="600">Plastic Bottle</text>
-          <text x="260" y="245" fontSize="9" fill="#60a5fa" textAnchor="middle">Water vapor</text>
-          <text x="40" y="245" fontSize="9" fill="#94a3b8" textAnchor="middle">Moist air</text>
+          <text x="150" y="18" fontSize="11" fill="#e2e8f0" textAnchor="middle" fontWeight="600">Plastic Bottle</text>
+          <text x="260" y="245" fontSize="11" fill="#60a5fa" textAnchor="middle">Water vapor</text>
+          <text x="40" y="245" fontSize="11" fill="#94a3b8" textAnchor="middle">Moist air</text>
           {cloudDensity > 20 && (
             <text x="150" y="125" fontSize="11" fill="#ffffff" textAnchor="middle" fontWeight="700">CLOUD!</text>
           )}
           {hasNuclei && cloudDensity <= 20 && (
-            <text x="150" y="75" fontSize="9" fill="#94a3b8" textAnchor="middle">Smoke particles</text>
+            <text x="150" y="75" fontSize="11" fill="#94a3b8" textAnchor="middle">Smoke particles</text>
           )}
         </svg>
 
@@ -1166,9 +1166,9 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       <text x="240" y="110" fontSize="24" fill="#f59e0b" fontWeight="bold">?</text>
       {/* Labels */}
       <text x="150" y="185" fontSize="11" fill="#94a3b8" textAnchor="middle">Bottle with moist air + smoke</text>
-      <text x="230" y="50" fontSize="10" fill="#cbd5e1" textAnchor="start">Squeeze</text>
-      <text x="230" y="65" fontSize="10" fill="#cbd5e1" textAnchor="start">then</text>
-      <text x="230" y="80" fontSize="10" fill="#3b82f6" textAnchor="start" fontWeight="600">Release!</text>
+      <text x="230" y="50" fontSize="11" fill="#cbd5e1" textAnchor="start">Squeeze</text>
+      <text x="230" y="65" fontSize="11" fill="#cbd5e1" textAnchor="start">then</text>
+      <text x="230" y="80" fontSize="11" fill="#3b82f6" textAnchor="start" fontWeight="600">Release!</text>
     </svg>
   );
 
@@ -1243,10 +1243,139 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
     </div>
   );
 
+  const renderSaturationChart = () => {
+    // Build saturation curve: cloud density vs humidity at current temperature
+    // Chart area: x from 60 to 370 (humidity 40-100%), y from 30 to 220 (density 0-100%)
+    const chartLeft = 60;
+    const chartRight = 370;
+    const chartTop = 30;
+    const chartBottom = 220;
+    const chartW = chartRight - chartLeft;
+    const chartH = chartBottom - chartTop;
+
+    // Generate 15 data points for the saturation curve
+    const curvePoints: { x: number; y: number }[] = [];
+    for (let i = 0; i <= 14; i++) {
+      const h = 40 + (i / 14) * 60; // humidity from 40 to 100
+      const dewPointDrop = 100 * 0.15; // max drop at zero pressure (released)
+      const effectiveTemp = temperature - dewPointDrop;
+      const saturationTemp = temperature - (100 - h) * 0.5;
+      let density = 0;
+      if (effectiveTemp < saturationTemp) {
+        const ss = saturationTemp - effectiveTemp;
+        density = hasNuclei ? Math.min(100, ss * 10) : Math.min(30, ss * 3);
+      }
+      const px = chartLeft + (i / 14) * chartW;
+      const py = chartBottom - (density / 100) * chartH;
+      curvePoints.push({ x: px, y: py });
+    }
+
+    // Current humidity marker position
+    const markerX = chartLeft + ((humidity - 40) / 60) * chartW;
+    const markerY = chartBottom - (cloudDensity / 100) * chartH;
+
+    const pathD = curvePoints.map((p, i) =>
+      `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`
+    ).join(' ');
+
+    // Fill area under curve
+    const fillD = pathD + ` L ${curvePoints[curvePoints.length - 1].x.toFixed(1)} ${chartBottom} L ${curvePoints[0].x.toFixed(1)} ${chartBottom} Z`;
+
+    return (
+      <svg viewBox="0 0 420 290" style={{ width: '100%', maxWidth: '420px', height: 'auto' }}>
+        <defs>
+          <linearGradient id="chartCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#06b6d4" />
+          </linearGradient>
+          <linearGradient id="chartFillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
+          </linearGradient>
+          <radialGradient id="chartMarkerGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </radialGradient>
+          <filter id="chartGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <rect width="420" height="290" fill="#0f172a" rx="8" />
+
+        {/* Grid lines */}
+        <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke="#475569" strokeWidth="1" opacity="0.6" />
+        <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke="#475569" strokeWidth="1" opacity="0.6" />
+        {[0, 25, 50, 75, 100].map((v, i) => {
+          const gy = chartBottom - (v / 100) * chartH;
+          return <line key={`gy-${i}`} x1={chartLeft} y1={gy} x2={chartRight} y2={gy} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />;
+        })}
+        {[40, 60, 80, 100].map((v, i) => {
+          const gx = chartLeft + ((v - 40) / 60) * chartW;
+          return <line key={`gx-${i}`} x1={gx} y1={chartTop} x2={gx} y2={chartBottom} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />;
+        })}
+
+        {/* Tick marks */}
+        {[0, 50, 100].map((v, i) => {
+          const ty = chartBottom - (v / 100) * chartH;
+          return (
+            <g key={`ty-${i}`}>
+              <line x1={chartLeft - 5} y1={ty} x2={chartLeft} y2={ty} stroke="#94a3b8" strokeWidth="1" opacity="0.8" />
+              <text x={chartLeft - 8} y={ty + 4} fontSize="11" fill="#94a3b8" textAnchor="end">{v}</text>
+            </g>
+          );
+        })}
+        {[40, 60, 80, 100].map((v, i) => {
+          const tx = chartLeft + ((v - 40) / 60) * chartW;
+          return (
+            <g key={`tx-${i}`}>
+              <line x1={tx} y1={chartBottom} x2={tx} y2={chartBottom + 5} stroke="#94a3b8" strokeWidth="1" opacity="0.8" />
+              <text x={tx} y={chartBottom + 18} fontSize="11" fill="#94a3b8" textAnchor="middle">{v}%</text>
+            </g>
+          );
+        })}
+
+        {/* Axis labels */}
+        <text x={215} y={chartBottom + 36} fontSize="12" fill="#60a5fa" textAnchor="middle">Humidity (%)</text>
+        <text x={20} y={chartBottom + 36} fontSize="11" fill="#60a5fa" textAnchor="start">Density</text>
+
+        {/* Fill area under curve */}
+        <path d={fillD} fill="url(#chartFillGrad)" />
+
+        {/* Saturation curve path */}
+        <path d={pathD} fill="none" stroke="url(#chartCurveGrad)" strokeWidth="2.5" />
+
+        {/* Marker glow */}
+        <circle cx={markerX} cy={markerY} r="12" fill="url(#chartMarkerGlow)" />
+
+        {/* Current value marker */}
+        <circle cx={markerX} cy={markerY} r="5" fill="#f59e0b" stroke="#ffffff" strokeWidth="1.5" filter="url(#chartGlow)" />
+
+        {/* Chart title */}
+        <text x={150} y={18} fontSize="13" fill="#e2e8f0" textAnchor="middle" fontWeight="600">Cloud Density vs Humidity</text>
+
+        {/* Temperature label */}
+        <text x={chartRight} y={18} fontSize="11" fill="#ef4444" textAnchor="end">T = {temperature}°C</text>
+
+        {/* Formula */}
+        <text x={215} y={chartBottom + 54} fontSize="11" fill="#94a3b8" textAnchor="middle">P = nRT/V | T_drop = dP × 0.15°C</text>
+      </svg>
+    );
+  };
+
   const renderPlay = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Cloud Lab</h2>
       <p style={{ color: '#cbd5e1', marginBottom: '24px' }}>Squeeze and release to make clouds!</p>
+
+      {/* Saturation curve chart */}
+      <div style={{ marginBottom: '16px', width: '100%', maxWidth: '400px' }}>
+        {renderSaturationChart()}
+      </div>
 
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
         {renderBottleVisualization()}
@@ -1312,7 +1441,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Humidity</span>
-            <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '14px' }}>{humidity}%</span>
+            <span style={{ height: '20px', color: '#3b82f6', fontWeight: 600, fontSize: '14px' }}>{humidity}%</span>
           </div>
           <input
             type="range"
@@ -1320,9 +1449,9 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
             max="100"
             value={humidity}
             onChange={(e) => setHumidity(Number(e.target.value))}
-            style={{
+            style={{ touchAction: 'pan-y',
               width: '100%',
-              height: '8px',
+              height: '20px',
               borderRadius: '4px',
               background: `linear-gradient(to right, #3b82f6 ${(humidity - 40) / 60 * 100}%, #475569 ${(humidity - 40) / 60 * 100}%)`,
               cursor: 'pointer',
@@ -1337,7 +1466,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Temperature</span>
-            <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '14px' }}>{temperature}°C</span>
+            <span style={{ height: '20px', color: '#ef4444', fontWeight: 600, fontSize: '14px' }}>{temperature}°C</span>
           </div>
           <input
             type="range"
@@ -1345,9 +1474,9 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
             max="35"
             value={temperature}
             onChange={(e) => setTemperature(Number(e.target.value))}
-            style={{
+            style={{ touchAction: 'pan-y',
               width: '100%',
-              height: '8px',
+              height: '20px',
               borderRadius: '4px',
               background: `linear-gradient(to right, #ef4444 ${(temperature - 10) / 25 * 100}%, #475569 ${(temperature - 10) / 25 * 100}%)`,
               cursor: 'pointer',
@@ -1404,6 +1533,42 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         </div>
       </div>
 
+      {/* Visualization explanation */}
+      <div style={{ background: 'rgba(139, 92, 246, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', marginBottom: '16px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+        <p style={{ color: '#8b5cf6', fontWeight: 600, marginBottom: '8px' }}>What This Shows</p>
+        <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6 }}>
+          This visualization demonstrates adiabatic cooling - the same process that creates real clouds in the atmosphere. The bottle shows how pressure changes cause temperature changes without heat transfer.
+        </p>
+      </div>
+
+      {/* Cause-effect explanation */}
+      <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', marginBottom: '16px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+        <p style={{ color: '#22c55e', fontWeight: 600, marginBottom: '8px' }}>How Controls Affect Clouds</p>
+        <ul style={{ color: '#cbd5e1', fontSize: '14px', margin: 0, paddingLeft: '20px', lineHeight: 1.6 }}>
+          <li>When you increase humidity, cloud formation becomes easier because more water vapor is available</li>
+          <li>When you decrease temperature, less cooling is needed to reach dew point</li>
+          <li>As you change the nuclei setting, you control whether vapor has surfaces to condense on</li>
+        </ul>
+      </div>
+
+      {/* Physics terms */}
+      <div style={{ background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', marginBottom: '16px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+        <p style={{ color: '#f59e0b', fontWeight: 600, marginBottom: '8px' }}>Key Terms Defined</p>
+        <ul style={{ color: '#cbd5e1', fontSize: '14px', margin: 0, paddingLeft: '20px', lineHeight: 1.6 }}>
+          <li><strong>Adiabatic cooling</strong> is defined as the temperature drop that occurs when gas expands without exchanging heat with its surroundings</li>
+          <li><strong>Dew point</strong> refers to the temperature at which air becomes saturated and condensation begins</li>
+          <li><strong>Condensation nuclei</strong> refers to tiny particles that provide surfaces for water vapor to condense onto</li>
+        </ul>
+      </div>
+
+      {/* Real-world relevance */}
+      <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', marginBottom: '16px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+        <p style={{ color: '#3b82f6', fontWeight: 600, marginBottom: '8px' }}>Why This Matters</p>
+        <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6 }}>
+          Understanding cloud formation is essential for weather forecasting, climate science, and even aviation safety. This same physics explains fog, contrails, and precipitation - processes that affect billions of people daily.
+        </p>
+      </div>
+
       {/* Instructions */}
       <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
         <p style={{ color: '#3b82f6', fontWeight: 600, marginBottom: '8px' }}>How It Works</p>
@@ -1426,7 +1591,10 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
 
   const renderReview = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '24px' }}>Why Clouds Form</h2>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '16px' }}>Why Clouds Form</h2>
+      <p style={{ color: '#94a3b8', fontSize: '16px', marginBottom: '24px', textAlign: 'center' }}>
+        As you predicted earlier, cloud formation requires specific conditions. You observed how releasing pressure causes rapid cooling - this is the key mechanism!
+      </p>
 
       {/* Three requirements */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px', width: '100%', marginBottom: '24px' }}>
@@ -1515,8 +1683,8 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         <circle cx="65" cy="60" r="2" fill="#94a3b8" opacity="0.45" />
         {/* Cloud forming */}
         <ellipse cx="55" cy="55" rx="20" ry="15" fill="url(#twistCloud)" />
-        <text x="55" y="140" fontSize="10" fill="#22c55e" textAnchor="middle" fontWeight="600">With Smoke</text>
-        <text x="55" y="155" fontSize="9" fill="#94a3b8" textAnchor="middle">Cloud forms!</text>
+        <text x="55" y="140" fontSize="11" fill="#22c55e" textAnchor="middle" fontWeight="600">With Smoke</text>
+        <text x="55" y="155" fontSize="11" fill="#94a3b8" textAnchor="middle">Cloud forms!</text>
       </g>
 
       {/* Arrow */}
@@ -1528,8 +1696,8 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         <rect x="40" y="5" width="30" height="18" fill="url(#twistBottleGlass)" stroke="#8b5cf6" strokeWidth="2" rx="3" />
         {/* No smoke, no cloud - just empty */}
         <text x="55" y="70" fontSize="16" fill="#f59e0b" textAnchor="middle" fontWeight="bold">?</text>
-        <text x="55" y="140" fontSize="10" fill="#8b5cf6" textAnchor="middle" fontWeight="600">Without Smoke</text>
-        <text x="55" y="155" fontSize="9" fill="#94a3b8" textAnchor="middle">What happens?</text>
+        <text x="55" y="140" fontSize="11" fill="#8b5cf6" textAnchor="middle" fontWeight="600">Without Smoke</text>
+        <text x="55" y="155" fontSize="11" fill="#94a3b8" textAnchor="middle">What happens?</text>
       </g>
     </svg>
   );

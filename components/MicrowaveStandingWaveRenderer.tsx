@@ -489,16 +489,41 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
     }
   }, [phase, goToPhase, phaseOrder]);
 
-  // Progress bar component
-  const renderProgressBar = () => (
+  // Navigation bar component with fixed positioning
+  const renderNavBar = () => (
     <div style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      borderBottom: `1px solid ${colors.border}`,
+    }}>
+      <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
+        Microwave Standing Wave
+      </span>
+      <span style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </span>
+    </div>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 56,
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -548,6 +573,145 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Standing wave SVG visualization
+  const renderStandingWaveSVG = (interactive: boolean = false, showLabels: boolean = true) => {
+    const svgWidth = 400;
+    const svgHeight = 300;
+    const waveAmplitude = 40;
+    const numPoints = 100;
+
+    // Generate standing wave pattern
+    const generateWavePath = (phase: number, yOffset: number) => {
+      let path = '';
+      for (let i = 0; i <= numPoints; i++) {
+        const x = (i / numPoints) * svgWidth;
+        const normalizedX = i / numPoints;
+        const standingWaveAmplitude = Math.abs(Math.sin(normalizedX * Math.PI * 3 + animPhase)) * Math.sin(phase);
+        const y = yOffset + standingWaveAmplitude * waveAmplitude;
+        path += (i === 0 ? 'M' : 'L') + `${x},${y}`;
+      }
+      return path;
+    };
+
+    // Calculate hotspot positions
+    const hotspots = [];
+    for (let i = 0; i < 4; i++) {
+      const x = (i * svgWidth) / 3;
+      hotspots.push({ x, isAntinode: i % 2 === 1 });
+    }
+
+    return (
+      <svg
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+        style={{ width: '100%', maxWidth: '400px', height: 'auto' }}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <defs>
+          <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.accent} />
+            <stop offset="100%" stopColor={colors.success} />
+          </linearGradient>
+          <linearGradient id="hotGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0.2" />
+          </linearGradient>
+          <linearGradient id="coldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect x="0" y="0" width={svgWidth} height={svgHeight} fill={colors.bgCard} rx="8" />
+
+        {/* Microwave cavity walls */}
+        <g id="cavity-walls">
+          <rect x="20" y="60" width={svgWidth - 40} height="180" fill="none" stroke="#6B7280" strokeWidth="3" rx="4" />
+          <text x="30" y="50" fill={colors.textSecondary} fontSize="12" fontWeight="500">Metal Cavity</text>
+        </g>
+
+        {/* Hot spots (antinodes) and cold spots (nodes) */}
+        <g id="intensity-zones">
+          {[0, 1, 2, 3].map((i) => {
+            const x = 20 + (i * (svgWidth - 40)) / 3;
+            const isAntinode = i % 2 === 1;
+            return (
+              <g key={i}>
+                <rect
+                  x={x - 15}
+                  y="70"
+                  width="30"
+                  height="160"
+                  fill={isAntinode ? 'url(#hotGradient)' : 'url(#coldGradient)'}
+                  opacity="0.5"
+                />
+                {showLabels && (
+                  <text
+                    x={x}
+                    y="250"
+                    fill={isAntinode ? '#ef4444' : '#3b82f6'}
+                    fontSize="10"
+                    textAnchor="middle"
+                    fontWeight="600"
+                  >
+                    {isAntinode ? 'HOT' : 'COLD'}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </g>
+
+        {/* Standing wave pattern */}
+        <g id="standing-wave">
+          <path
+            d={generateWavePath(1, 150)}
+            fill="none"
+            stroke="url(#waveGradient)"
+            strokeWidth="3"
+            opacity="0.9"
+          />
+          <path
+            d={generateWavePath(-1, 150)}
+            fill="none"
+            stroke="url(#waveGradient)"
+            strokeWidth="3"
+            opacity="0.5"
+            strokeDasharray="5,5"
+          />
+        </g>
+
+        {/* Wavelength indicator */}
+        <g id="wavelength-marker">
+          <line x1="85" y1="270" x2="200" y2="270" stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowEnd)" />
+          <line x1="200" y1="270" x2="315" y2="270" stroke={colors.accent} strokeWidth="2" />
+          <text x="200" y="290" fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="600">
+            lambda/2 = {(wavelength / 2).toFixed(1)} cm
+          </text>
+        </g>
+
+        {/* Labels */}
+        <g id="labels">
+          <text x={svgWidth / 2} y="25" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="700">
+            Standing Wave Pattern
+          </text>
+          {interactive && (
+            <text x={svgWidth / 2} y="42" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+              Adjust frequency to change pattern
+            </text>
+          )}
+        </g>
+
+        {/* Food representation in center */}
+        <g id="food-item">
+          <ellipse cx={svgWidth / 2} cy="150" rx="35" ry="25" fill="#92400E" stroke="#78350F" strokeWidth="2" />
+          <text x={svgWidth / 2} y="155" fill="#FEF3C7" fontSize="10" textAnchor="middle">Food</text>
+        </g>
+      </svg>
+    );
   };
 
   // ---------------------------------------------------------------------------
@@ -565,8 +729,10 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -632,10 +798,13 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -652,7 +821,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             Microwaves bounce back and forth inside the oven. What happens when waves reflect off the metal walls?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG Diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -660,27 +829,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px' }}>📡</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Magnetron</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>~</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.accent }}>Metal Cavity</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Waves Bounce</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>~</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px' }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Result</p>
-              </div>
-            </div>
+            {renderStandingWaveSVG(false, false)}
           </div>
 
           {/* Options */}
@@ -697,6 +846,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -755,16 +905,30 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Standing Wave Laboratory
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '24px' }}>
             Adjust parameters to see how standing waves create hot spots and cold spots.
           </p>
+
+          {/* SVG Visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            {renderStandingWaveSVG(true, true)}
+          </div>
 
           {/* Controls panel */}
           <div style={{
@@ -907,6 +1071,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                   color: 'white',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 {isCooking ? 'Stop' : 'Start Cooking'}
@@ -921,6 +1086,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                   color: 'white',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Turntable: {turntableOn ? 'ON' : 'OFF'}
@@ -940,11 +1106,25 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                   color: colors.textSecondary,
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Reset
               </button>
             </div>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.body, color: '#e2e8f0', margin: 0 }}>
+              <strong style={{ color: colors.success }}>Real-World Application:</strong> The same standing wave physics that creates microwave hot spots is used in particle accelerators at CERN to accelerate particles to near light speed, and in antenna design to optimize signal transmission.
+            </p>
           </div>
 
           {/* Discovery prompt */}
@@ -981,13 +1161,31 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Standing Waves
           </h2>
+
+          {/* Reference user's prediction */}
+          <div style={{
+            background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: '#e2e8f0', margin: 0 }}>
+              {prediction === 'b'
+                ? 'Your prediction was correct! Standing waves do form with fixed hot spots and cold spots.'
+                : `You predicted "${prediction === 'a' ? 'random chaos' : 'energy concentrates in center'}". Let's see why standing waves actually create fixed patterns of hot and cold spots.`}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -995,7 +1193,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
+            <div style={{ ...typo.body, color: '#e2e8f0' }}>
               <p style={{ marginBottom: '16px' }}>
                 <strong style={{ color: colors.textPrimary }}>Standing Waves = Interference Pattern</strong>
               </p>
@@ -1082,10 +1280,13 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1127,6 +1328,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{

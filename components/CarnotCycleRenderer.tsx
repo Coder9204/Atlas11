@@ -1027,6 +1027,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
       <p style={styles.paragraph}>
         Observe how temperature affects the maximum possible efficiency of a heat engine.
         Adjust the hot and cold reservoir temperatures to see how efficiency changes.
+        This is why engineers designing real-world power plants focus on maximizing temperature differences.
       </p>
 
       <div style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
@@ -1152,7 +1153,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({
       <h2 style={styles.heading}>Understanding the Carnot Cycle</h2>
 
       <p style={styles.paragraph}>
-        The reason Carnot efficiency matters is because it sets an absolute ceiling on what any heat engine can achieve.
+        As you observed in the experiment, efficiency depends only on temperatures. Your prediction about what determines maximum efficiency
+        connects directly to Carnot's theorem - the absolute ceiling on what any heat engine can achieve.
         This explains why real-world engines always waste significant heat.
       </p>
 

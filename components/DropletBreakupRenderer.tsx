@@ -40,7 +40,7 @@ const colors = {
 
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
 
   border: '#334155',
   borderLight: '#475569',
@@ -512,7 +512,7 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
           </div>
         )}
 
-        <svg viewBox={`0 0 ${width} ${height - 50}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }}>
+        <svg viewBox={`0 0 ${width} ${height - 50}`} role="img" aria-label="Droplet breakup visualization" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }}>
           <defs>
             {/* Premium background gradient */}
             <linearGradient id="dropLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -987,13 +987,20 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
                 {/* Cylinder with gradient */}
                 <rect x="14" y="30" width="28" height="16" fill={colors.textMuted} rx="4" opacity="0.8" />
                 <rect x="14" y="30" width="28" height="3" fill="#94a3b8" rx="2" opacity="0.5" />
+                <text x="28" y="55" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Cylinder</text>
 
                 {/* Spheres with 3D effect */}
                 <circle cx="22" cy="65" r="9" fill="url(#dropWaterDroplet)" />
                 <circle cx="19" cy="62" r="3" fill="url(#dropHighlight)" />
                 <circle cx="42" cy="68" r="7" fill="url(#dropWaterDroplet)" />
                 <circle cx="40" cy="66" r="2.5" fill="url(#dropHighlight)" />
+                <text x={isMobile ? 65 : 75} y="68" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Spheres</text>
               </g>
+
+              {/* Direct labels on main visualization */}
+              <text x={width / 2 + 40} y="85" fill={colors.textSecondary} fontSize="11" textAnchor="start">Stream</text>
+              <text x={width / 2 + 40} y="165" fill={colors.textSecondary} fontSize="11" textAnchor="start">Necking</text>
+              <text x={width / 2 + 40} y="230" fill={colors.textSecondary} fontSize="11" textAnchor="start">Droplets</text>
             </>
           )}
         </svg>

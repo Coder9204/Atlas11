@@ -28,7 +28,7 @@ interface SoluteData {
 
 const solutes: SoluteData[] = [
   { name: 'Ammonium Nitrate', formula: 'NH4NO3', bondEnergy: 25.7, hydrationEnergy: -0.3, netEnergy: 25.4, color: '#60a5fa', tempChange: -8 },
-  { name: 'Sodium Chloride', formula: 'NaCl', bondEnergy: 3.9, hydrationEnergy: -3.8, netEnergy: 0.1, color: '#94a3b8', tempChange: -0.5 },
+  { name: 'Sodium Chloride', formula: 'NaCl', bondEnergy: 3.9, hydrationEnergy: -3.8, netEnergy: 0.1, color: '#e2e8f0', tempChange: -0.5 },
   { name: 'Calcium Chloride', formula: 'CaCl2', bondEnergy: -17.4, hydrationEnergy: -64.6, netEnergy: -82, color: '#f97316', tempChange: 12 },
   { name: 'Sodium Hydroxide', formula: 'NaOH', bondEnergy: -20.5, hydrationEnergy: -23.4, netEnergy: -43.9, color: '#ef4444', tempChange: 8 },
 ];
@@ -538,13 +538,13 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                 <div style={{ fontSize: typo.small, color: '#f97316', fontWeight: '600' }}>
                   +{solute.bondEnergy.toFixed(1)}
                 </div>
-                <div style={{ fontSize: typo.label, color: '#94a3b8' }}>Bond Breaking</div>
+                <div style={{ fontSize: typo.label, color: '#e2e8f0' }}>Bond Breaking</div>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: typo.small, color: '#3b82f6', fontWeight: '600' }}>
                   {solute.hydrationEnergy.toFixed(1)}
                 </div>
-                <div style={{ fontSize: typo.label, color: '#94a3b8' }}>Hydration</div>
+                <div style={{ fontSize: typo.label, color: '#e2e8f0' }}>Hydration</div>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{
@@ -554,7 +554,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                 }}>
                   {solute.netEnergy > 0 ? '+' : ''}{solute.netEnergy.toFixed(1)}
                 </div>
-                <div style={{ fontSize: typo.label, color: '#94a3b8' }}>Net kJ/mol</div>
+                <div style={{ fontSize: typo.label, color: '#e2e8f0' }}>Net kJ/mol</div>
               </div>
             </div>
           </div>
@@ -581,11 +581,11 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
 
             {/* Glass beaker gradient with depth */}
             <linearGradient id="endoBeakerGlass" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.8" />
               <stop offset="15%" stopColor="#64748b" stopOpacity="0.6" />
               <stop offset="50%" stopColor="#475569" stopOpacity="0.4" />
               <stop offset="85%" stopColor="#64748b" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#e2e8f0" stopOpacity="0.8" />
             </linearGradient>
 
             {/* Cold water gradient (blue tones) */}
@@ -898,7 +898,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             }}>
               {waterTemp.toFixed(1)}°C
             </div>
-            <div style={{ fontSize: typo.small, color: '#94a3b8' }}>
+            <div style={{ fontSize: typo.small, color: '#e2e8f0' }}>
               {isMixing ? `Dissolving: ${mixProgress.toFixed(0)}%` : mixProgress >= 100 ? 'Complete!' : 'Ready to mix'}
             </div>
           </div>
@@ -907,43 +907,71 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
     );
   };
 
-  // Fixed footer navigation
-  const renderFooter = (canProceed: boolean, buttonText: string) => (
-    <div style={{
+  // Phase order for navigation
+  const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+
+  // Fixed BOTTOM navigation bar with Back and Next buttons
+  const renderNavBar = (canProceed: boolean, buttonText: string) => (
+    <nav style={{
       position: 'fixed',
       bottom: 0,
       left: 0,
       right: 0,
-      zIndex: 1000,
-      minHeight: '72px',
+      zIndex: 1001,
+      minHeight: '60px',
       background: 'rgba(30, 41, 59, 0.98)',
       borderTop: '1px solid rgba(148, 163, 184, 0.2)',
       boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
-      padding: '16px 20px',
+      padding: '10px 20px',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
     }}>
-      <div style={{ color: '#94a3b8', fontSize: '14px' }}>
+      <button
+        onClick={() => {
+          if (currentPhaseIndex > 0) {
+            onPhaseComplete?.();
+          }
+        }}
+        disabled={currentPhaseIndex === 0}
+        aria-label="Back"
+        style={{
+          padding: '12px 24px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: '1px solid rgba(148, 163, 184, 0.3)',
+          background: currentPhaseIndex === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)',
+          color: currentPhaseIndex === 0 ? '#64748b' : '#e2e8f0',
+          fontWeight: '600',
+          cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
+          fontSize: '14px'
+        }}
+      >
+        Back
+      </button>
+      <div style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: '500' }}>
         Endothermic & Exothermic
       </div>
       <button
         onClick={onPhaseComplete}
         disabled={!canProceed}
+        aria-label="Next"
         style={{
-          padding: '12px 32px',
+          padding: '12px 24px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: canProceed ? 'linear-gradient(to right, #3b82f6, #2563eb)' : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : '#64748b',
-          fontWeight: 'bold',
+          fontWeight: '600',
           cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px'
+          fontSize: '14px'
         }}
       >
         {buttonText}
       </button>
-    </div>
+    </nav>
   );
 
   // ============================================================================
@@ -1048,7 +1076,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // Render hook phase
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', overflowY: 'auto' }}>
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -1083,7 +1111,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             Can Mixing Make a Liquid Colder or Hotter?
           </h1>
 
-          <p style={{ fontSize: '18px', color: '#94a3b8', maxWidth: '500px', marginBottom: '40px' }}>
+          <p style={{ fontSize: '18px', color: '#e2e8f0', maxWidth: '500px', marginBottom: '40px' }}>
             Discover the energy battle inside every dissolving crystal
           </p>
 
@@ -1106,7 +1134,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                 But some salts make it <span style={{ color: '#3b82f6', fontWeight: 'bold' }}>colder</span>,
                 while others make it <span style={{ color: '#ef4444', fontWeight: 'bold' }}>hotter</span>!
               </p>
-              <p style={{ fontSize: '16px', color: '#94a3b8', lineHeight: '1.6' }}>
+              <p style={{ fontSize: '16px', color: '#e2e8f0', lineHeight: '1.6' }}>
                 The same process - dissolving - but opposite effects. How can this be?
               </p>
               <p style={{ fontSize: '16px', color: '#f59e0b', fontWeight: '600' }}>
@@ -1130,7 +1158,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </div>
           </div>
         </div>
-        {renderFooter(true, 'Make a Prediction →')}
+        {renderNavBar(true, 'Make a Prediction →')}
       </div>
     );
   }
@@ -1138,9 +1166,36 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // Render predict phase
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingTop: '80px', paddingBottom: '100px', overflowY: 'auto' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Make Your Prediction</h2>
+
+          {/* Static SVG diagram for predict phase */}
+          <div style={{ marginBottom: '24px' }}>
+            <svg viewBox="0 0 300 150" style={{ width: '100%', maxWidth: '300px' }}>
+              <defs>
+                <linearGradient id="predictBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0f172a" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
+              </defs>
+              <rect width="300" height="150" fill="url(#predictBg)" rx="8" />
+              {/* Cold beaker */}
+              <rect x="30" y="40" width="60" height="70" fill="rgba(59, 130, 246, 0.3)" stroke="#3b82f6" strokeWidth="2" rx="4" />
+              <text x="60" y="85" fill="#60a5fa" fontSize="10" textAnchor="middle">Cold</text>
+              <text x="60" y="100" fill="#e2e8f0" fontSize="8" textAnchor="middle">NH4NO3</text>
+              <text x="60" y="30" fill="#60a5fa" fontSize="8" textAnchor="middle">Endothermic</text>
+              {/* Hot beaker */}
+              <rect x="210" y="40" width="60" height="70" fill="rgba(239, 68, 68, 0.3)" stroke="#ef4444" strokeWidth="2" rx="4" />
+              <text x="240" y="85" fill="#f87171" fontSize="10" textAnchor="middle">Hot</text>
+              <text x="240" y="100" fill="#e2e8f0" fontSize="8" textAnchor="middle">CaCl2</text>
+              <text x="240" y="30" fill="#f87171" fontSize="8" textAnchor="middle">Exothermic</text>
+              {/* Question mark */}
+              <text x="150" y="85" fill="#fbbf24" fontSize="32" textAnchor="middle">?</text>
+              <text x="150" y="120" fill="#e2e8f0" fontSize="9" textAnchor="middle">What determines this?</text>
+            </svg>
+          </div>
+
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '640px', marginBottom: '24px' }}>
             <p style={{ fontSize: '18px', color: '#cbd5e1', marginBottom: '16px' }}>
               When ammonium nitrate (NH4NO3) dissolves in water, the water gets very cold.
@@ -1163,6 +1218,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                 disabled={showPredictionFeedback}
                 style={{
                   padding: '16px',
+                  minHeight: '44px',
                   borderRadius: '12px',
                   textAlign: 'left',
                   transition: 'all 0.3s',
@@ -1191,7 +1247,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </div>
           )}
         </div>
-        {renderFooter(showPredictionFeedback, 'Explore in the Lab →')}
+        {renderNavBar(showPredictionFeedback, 'Explore in the Lab →')}
       </div>
     );
   }
@@ -1199,15 +1255,16 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // Render play phase
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingTop: '80px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>Dissolution Energy Lab</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '16px' }}>Select a solute and watch the energy balance determine temperature change!</p>
+          <p style={{ color: '#e2e8f0', marginBottom: '8px' }}>Select a solute and watch the energy balance determine temperature change!</p>
+          <p style={{ color: '#60a5fa', fontSize: '14px', marginBottom: '16px' }}>This is how cold packs and hot packs work - the same chemistry powers real-world heating and cooling products!</p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px', maxWidth: '640px', width: '100%' }}>
             {/* Solute selector */}
             <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px' }}>
-              <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Select Solute:</label>
+              <label style={{ color: '#e2e8f0', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Select Solute:</label>
               <div style={{ display: 'grid', gap: '8px' }}>
                 {solutes.map((s, i) => (
                   <button
@@ -1233,7 +1290,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
 
             {/* Amount slider */}
             <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px' }}>
-              <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+              <label style={{ color: '#e2e8f0', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
                 Amount: {soluteAmount}g in 100mL water
               </label>
               <input
@@ -1267,7 +1324,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                     border: 'none',
                     cursor: isMixing || mixProgress >= 100 ? 'not-allowed' : 'pointer',
                     background: isMixing || mixProgress >= 100 ? '#475569' : 'linear-gradient(to right, #3b82f6, #2563eb)',
-                    color: isMixing || mixProgress >= 100 ? '#94a3b8' : 'white'
+                    color: isMixing || mixProgress >= 100 ? '#e2e8f0' : 'white'
                   }}
                 >
                   {isMixing ? 'Mixing...' : mixProgress >= 100 ? 'Done!' : 'Add & Mix'}
@@ -1315,13 +1372,13 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                   : `Hydration released more energy than breaking bonds required. Net: ${solutes[selectedSolute].netEnergy.toFixed(1)} kJ/mol released to water.`
                 }
               </p>
-              <p style={{ color: '#94a3b8', fontSize: '13px', marginTop: '8px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '13px', marginTop: '8px' }}>
                 Temperature changed by: <strong style={{ color: waterTemp < 25 ? '#3b82f6' : '#ef4444' }}>{(waterTemp - 25).toFixed(1)}C</strong>
               </p>
             </div>
           )}
         </div>
-        {renderFooter(true, 'Learn the Science →')}
+        {renderNavBar(true, 'Learn the Science →')}
       </div>
     );
   }
@@ -1329,9 +1386,60 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // Render review phase
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingTop: '80px', paddingBottom: '100px', overflowY: 'auto' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>The Science of Dissolution Energy</h2>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>The Science of Dissolution Energy</h2>
+
+          {/* Reference user's prediction */}
+          {selectedPrediction && (
+            <div style={{
+              background: selectedPrediction === 'B' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              maxWidth: '640px',
+              border: `1px solid ${selectedPrediction === 'B' ? '#10b981' : '#ef4444'}`
+            }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+                You predicted that <strong>{selectedPrediction === 'B' ? 'the balance between bond-breaking energy and hydration energy' : 'other factors'}</strong> determine whether dissolving creates heat or absorbs it.
+                {selectedPrediction === 'B' ? ' You were right!' : ' Let\'s see why the energy balance is the real answer.'}
+              </p>
+            </div>
+          )}
+
+          {/* SVG diagram for review */}
+          <div style={{ marginBottom: '24px' }}>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px' }}>
+              <defs>
+                <linearGradient id="reviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0f172a" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
+              </defs>
+              <rect width="400" height="200" fill="url(#reviewBg)" rx="8" />
+              {/* Bond breaking (left) */}
+              <rect x="30" y="50" width="100" height="100" fill="rgba(249, 115, 22, 0.2)" stroke="#f97316" strokeWidth="2" rx="8" />
+              <text x="80" y="80" fill="#f97316" fontSize="11" textAnchor="middle" fontWeight="bold">Bond Breaking</text>
+              <text x="80" y="100" fill="#e2e8f0" fontSize="10" textAnchor="middle">Absorbs Energy</text>
+              <text x="80" y="120" fill="#fbbf24" fontSize="12" textAnchor="middle">+E (Endo)</text>
+              {/* Plus sign */}
+              <text x="155" y="105" fill="#e2e8f0" fontSize="24" textAnchor="middle">+</text>
+              {/* Hydration (middle) */}
+              <rect x="180" y="50" width="100" height="100" fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" strokeWidth="2" rx="8" />
+              <text x="230" y="80" fill="#3b82f6" fontSize="11" textAnchor="middle" fontWeight="bold">Hydration</text>
+              <text x="230" y="100" fill="#e2e8f0" fontSize="10" textAnchor="middle">Releases Energy</text>
+              <text x="230" y="120" fill="#60a5fa" fontSize="12" textAnchor="middle">-E (Exo)</text>
+              {/* Equals sign */}
+              <text x="305" y="105" fill="#e2e8f0" fontSize="24" textAnchor="middle">=</text>
+              {/* Net result (right) */}
+              <rect x="330" y="50" width="55" height="100" fill="rgba(16, 185, 129, 0.2)" stroke="#10b981" strokeWidth="2" rx="8" />
+              <text x="357" y="85" fill="#10b981" fontSize="10" textAnchor="middle" fontWeight="bold">Net</text>
+              <text x="357" y="105" fill="#e2e8f0" fontSize="9" textAnchor="middle">Result</text>
+              <text x="357" y="125" fill="#22c55e" fontSize="10" textAnchor="middle">Hot/Cold</text>
+              {/* Legend */}
+              <text x="200" y="175" fill="#e2e8f0" fontSize="10" textAnchor="middle">Energy Balance = Temperature Change</text>
+            </svg>
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', maxWidth: '900px' }}>
             <div style={{ background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(234, 179, 8, 0.2))', borderRadius: '16px', padding: '24px', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
@@ -1359,19 +1467,19 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '14px' }}>
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
                   <p style={{ color: '#60a5fa', fontWeight: '600' }}>If Lattice Energy {'>'} Hydration Energy:</p>
-                  <p style={{ color: '#94a3b8' }}>Net energy absorbed = ENDOTHERMIC</p>
+                  <p style={{ color: '#e2e8f0' }}>Net energy absorbed = ENDOTHERMIC</p>
                   <p style={{ color: '#3b82f6' }}>Solution gets COLDER</p>
                 </div>
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
                   <p style={{ color: '#f87171', fontWeight: '600' }}>If Hydration Energy {'>'} Lattice Energy:</p>
-                  <p style={{ color: '#94a3b8' }}>Net energy released = EXOTHERMIC</p>
+                  <p style={{ color: '#e2e8f0' }}>Net energy released = EXOTHERMIC</p>
                   <p style={{ color: '#ef4444' }}>Solution gets HOTTER</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        {renderFooter(true, 'Discover a Twist →')}
+        {renderNavBar(true, 'Discover a Twist →')}
       </div>
     );
   }
@@ -1379,7 +1487,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // Render twist predict phase
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingTop: '80px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Ranking Twist</h2>
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '640px', marginBottom: '24px' }}>
@@ -1438,7 +1546,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </div>
           )}
         </div>
-        {renderFooter(showTwistFeedback, 'Compare All Salts →')}
+        {renderNavBar(showTwistFeedback, 'Compare All Salts →')}
       </div>
     );
   }
@@ -1448,10 +1556,10 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
     const sortedSolutes = [...solutes].sort((a, b) => b.netEnergy - a.netEnergy);
 
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingTop: '80px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '16px' }}>Compare the "Heat Effect" of Different Salts</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '24px' }}>See how each salt compares in their energy balance!</p>
+          <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>See how each salt compares in their energy balance!</p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', maxWidth: '900px', width: '100%', marginBottom: '24px' }}>
             {sortedSolutes.map((s, i) => (
@@ -1462,9 +1570,9 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                 border: `2px solid ${s.color}`,
                 textAlign: 'center'
               }}>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>#{i + 1} {s.netEnergy > 0 ? 'COOLING' : 'HEATING'}</div>
+                <div style={{ fontSize: '12px', color: '#e2e8f0', marginBottom: '4px' }}>#{i + 1} {s.netEnergy > 0 ? 'COOLING' : 'HEATING'}</div>
                 <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>{s.name}</div>
-                <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '12px' }}>{s.formula}</div>
+                <div style={{ fontSize: '13px', color: '#e2e8f0', marginBottom: '12px' }}>{s.formula}</div>
 
                 <div style={{
                   padding: '8px',
@@ -1499,7 +1607,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </p>
           </div>
         </div>
-        {renderFooter(true, 'See Full Explanation →')}
+        {renderNavBar(true, 'See Full Explanation →')}
       </div>
     );
   }
@@ -1507,7 +1615,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // Render twist review phase
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingTop: '80px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Energy Balance Determines Everything</h2>
 
@@ -1517,7 +1625,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
               <p style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '12px' }}>
                 <strong>NH4NO3 (Ammonium Nitrate):</strong> The classic cold pack material. Its lattice energy far exceeds hydration energy, absorbing heat aggressively.
               </p>
-              <p style={{ color: '#94a3b8', fontSize: '13px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '13px' }}>
                 Also: Potassium chloride (KCl), ammonium chloride (NH4Cl)
               </p>
             </div>
@@ -1527,20 +1635,20 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
               <p style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '12px' }}>
                 <strong>CaCl2 (Calcium Chloride):</strong> Hot pack material and ice melt. Its high hydration energy dominates, releasing lots of heat.
               </p>
-              <p style={{ color: '#94a3b8', fontSize: '13px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '13px' }}>
                 Also: Sodium hydroxide (NaOH), magnesium chloride (MgCl2)
               </p>
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.2), rgba(100, 116, 139, 0.2))', borderRadius: '16px', padding: '24px', border: '1px solid rgba(148, 163, 184, 0.3)', gridColumn: 'span 2' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '12px' }}>⚖️ Nearly Neutral</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#e2e8f0', marginBottom: '12px' }}>⚖️ Nearly Neutral</h3>
               <p style={{ color: '#cbd5e1', fontSize: '14px' }}>
                 <strong>NaCl (Table Salt):</strong> Almost perfect balance between lattice and hydration energy. Slight endothermic effect (-0.5C per 10g) is barely noticeable. This is why salt water doesn't feel hot or cold!
               </p>
             </div>
           </div>
         </div>
-        {renderFooter(true, 'Explore Applications →')}
+        {renderNavBar(true, 'Explore Applications →')}
       </div>
     );
   }
@@ -1548,7 +1656,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // Render transfer phase
   if (phase === 'transfer') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingTop: '80px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Real-World Applications</h2>
 
@@ -1579,14 +1687,15 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
               <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{applications[activeAppTab].title}</h3>
             </div>
             <p style={{ fontSize: '16px', color: '#cbd5e1', marginBottom: '12px' }}>{applications[activeAppTab].description}</p>
-            <p style={{ fontSize: '14px', color: '#94a3b8' }}>{applications[activeAppTab].details}</p>
+            <p style={{ fontSize: '14px', color: '#e2e8f0' }}>{applications[activeAppTab].details}</p>
 
             {!completedApps.has(activeAppTab) && (
               <button
                 onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
                 style={{
                   marginTop: '16px',
-                  padding: '8px 16px',
+                  padding: '12px 24px',
+                  minHeight: '44px',
                   background: '#10b981',
                   color: 'white',
                   borderRadius: '8px',
@@ -1595,22 +1704,22 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                   cursor: 'pointer'
                 }}
               >
-                Mark as Understood
+                Got It
               </button>
             )}
           </div>
 
           <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: '#94a3b8' }}>Progress:</span>
+            <span style={{ color: '#e2e8f0' }}>Progress:</span>
             <div style={{ display: 'flex', gap: '4px' }}>
               {applications.map((_, i) => (
                 <div key={i} style={{ width: '12px', height: '12px', borderRadius: '50%', background: completedApps.has(i) ? '#10b981' : '#475569' }} />
               ))}
             </div>
-            <span style={{ color: '#94a3b8' }}>{completedApps.size}/4</span>
+            <span style={{ color: '#e2e8f0' }}>{completedApps.size}/4</span>
           </div>
         </div>
-        {renderFooter(completedApps.size >= 4, 'Take the Test →')}
+        {renderNavBar(completedApps.size >= 4, 'Take the Test →')}
       </div>
     );
   }
@@ -1621,7 +1730,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
 
     if (showTestResults) {
       return (
-        <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingTop: '80px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
             <div style={{
               background: score >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1659,7 +1768,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                       marginBottom: '4px',
                       borderRadius: '6px',
                       background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                      color: opt.correct ? '#10b981' : userAnswer === oIndex ? '#ef4444' : '#94a3b8'
+                      color: opt.correct ? '#10b981' : userAnswer === oIndex ? '#ef4444' : '#e2e8f0'
                     }}>
                       {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
                     </div>
@@ -1668,18 +1777,18 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
               );
             })}
           </div>
-          {renderFooter(score >= 8, score >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
+          {renderNavBar(score >= 8, score >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingTop: '80px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', width: '100%', maxWidth: '640px' }}>
             <h2 style={{ color: 'white', fontSize: '20px' }}>Knowledge Test</h2>
-            <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            <span style={{ color: '#e2e8f0' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', width: '100%', maxWidth: '640px' }}>
@@ -1777,7 +1886,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // Render mastery phase
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingTop: '80px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', textAlign: 'center' }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2), rgba(239, 68, 68, 0.2))',
@@ -1811,7 +1920,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </div>
           </div>
         </div>
-        {renderFooter(true, 'Complete Game →')}
+        {renderNavBar(true, 'Complete Game →')}
       </div>
     );
   }

@@ -7,15 +7,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 // ============================================================================
 
 interface StickSlipRendererProps {
-  phase: string;
+  phase?: string;
+  gamePhase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Color palette with proper contrast
 const realWorldApps = [
   {
-    icon: '🌍',
+    icon: '\u{1F30D}',
     title: 'Earthquake Prediction',
     short: 'Understanding seismic cycles through stick-slip',
     tagline: 'The earth builds up stress, then releases',
@@ -23,9 +25,9 @@ const realWorldApps = [
     connection: 'Stick-slip mechanics directly model earthquake physics. Faults "stick" for decades as plates push against them, then "slip" catastrophically when stress exceeds static friction.',
     howItWorks: 'GPS and seismometers monitor ground deformation. Paleoseismology dates past earthquakes. Models use static friction to estimate stress accumulation and predict when faults might fail.',
     stats: [
-      { value: '500yr', label: 'Major quake cycle', icon: '📅' },
-      { value: 'M9.0', label: 'Max subduction quake', icon: '📊' },
-      { value: '3cm/yr', label: 'Typical plate motion', icon: '🌏' }
+      { value: '500yr', label: 'Major quake cycle', icon: '\u{1F4C5}' },
+      { value: 'M9.0', label: 'Max subduction quake', icon: '\u{1F4CA}' },
+      { value: '3cm/yr', label: 'Typical plate motion', icon: '\u{1F30F}' }
     ],
     examples: ['San Andreas Fault', 'Japan Trench', 'Himalayan Front', 'Cascadia Subduction'],
     companies: ['USGS', 'Japan Meteorological Agency', 'GeoNet', 'UNAVCO'],
@@ -33,7 +35,7 @@ const realWorldApps = [
     color: '#ef4444'
   },
   {
-    icon: '🎻',
+    icon: '\u{1F3BB}',
     title: 'Bowed String Instruments',
     short: 'Creating music through controlled stick-slip',
     tagline: 'Making strings sing',
@@ -41,17 +43,17 @@ const realWorldApps = [
     connection: 'The bow sticks to the string, deflecting it until kinetic friction takes over and it slips back. This cycle repeats hundreds of times per second, driving the string vibration.',
     howItWorks: 'Rosin increases static friction between horsehair and string. The Helmholtz motion creates a kink that travels along the string. Bow pressure and speed control tone quality.',
     stats: [
-      { value: '440Hz', label: 'A string frequency', icon: '🎵' },
-      { value: '100g', label: 'Typical bow pressure', icon: '⚖️' },
-      { value: '0.5m/s', label: 'Bow speed', icon: '🏃' }
+      { value: '440Hz', label: 'A string frequency', icon: '\u{1F3B5}' },
+      { value: '100g', label: 'Typical bow pressure', icon: '\u{2696}' },
+      { value: '0.5m/s', label: 'Bow speed', icon: '\u{1F3C3}' }
     ],
     examples: ['Violin technique', 'Cello bowing', 'Bass fiddle', 'Chinese erhu'],
-    companies: ['Stradivari', 'Pirastro', 'Thomastik-Infeld', 'D\'Addario'],
+    companies: ['Stradivari', 'Pirastro', 'Thomastik-Infeld', "D'Addario"],
     futureImpact: 'Robotic bowing systems will enable new musical instruments and help train students by precisely reproducing the stick-slip dynamics of master musicians.',
     color: '#f59e0b'
   },
   {
-    icon: '🚗',
+    icon: '\u{1F697}',
     title: 'Brake Squeal',
     short: 'Unwanted stick-slip in braking systems',
     tagline: 'When friction makes noise',
@@ -59,9 +61,9 @@ const realWorldApps = [
     connection: 'The negative slope of friction vs. velocity can cause instability. When friction drops as speed increases, stick-slip oscillations grow into audible squealing.',
     howItWorks: 'Pad material alternates between sticking and slipping on the rotor. This self-excited vibration couples to structural resonances. Chamfers, shims, and special compounds reduce squeal.',
     stats: [
-      { value: '1-16kHz', label: 'Squeal frequency', icon: '🔊' },
-      { value: '-$1B', label: 'Annual warranty costs', icon: '💰' },
-      { value: '0.35', label: 'Target friction coefficient', icon: '📊' }
+      { value: '1-16kHz', label: 'Squeal frequency', icon: '\u{1F50A}' },
+      { value: '-$1B', label: 'Annual warranty costs', icon: '\u{1F4B0}' },
+      { value: '0.35', label: 'Target friction coefficient', icon: '\u{1F4CA}' }
     ],
     examples: ['Automotive disc brakes', 'Motorcycle brakes', 'Industrial machinery', 'Aircraft landing gear'],
     companies: ['Brembo', 'Akebono', 'Federal-Mogul', 'TMD Friction'],
@@ -69,7 +71,7 @@ const realWorldApps = [
     color: '#3b82f6'
   },
   {
-    icon: '🏔️',
+    icon: '\u{1F3D4}',
     title: 'Glacier Movement',
     short: 'Ice stick-slip on continental scale',
     tagline: 'When ice rivers suddenly surge',
@@ -77,9 +79,9 @@ const realWorldApps = [
     connection: 'Glacial ice sticks to bedrock through frozen debris and pressure, then slips when meltwater lubricates the base. This creates episodic motion similar to earthquake fault behavior.',
     howItWorks: 'Basal friction depends on temperature, water pressure, and sediment type. GPS measures surface velocity. Seismometers detect "icequakes" during slip events. Models predict future behavior.',
     stats: [
-      { value: '10km/yr', label: 'Surge velocity', icon: '🏃' },
-      { value: 'M7', label: 'Largest glacial quake', icon: '📊' },
-      { value: '3m/yr', label: 'Potential sea rise', icon: '🌊' }
+      { value: '10km/yr', label: 'Surge velocity', icon: '\u{1F3C3}' },
+      { value: 'M7', label: 'Largest glacial quake', icon: '\u{1F4CA}' },
+      { value: '3m/yr', label: 'Potential sea rise', icon: '\u{1F30A}' }
     ],
     examples: ['Antarctic ice streams', 'Greenland outlet glaciers', 'Alaskan tidewater glaciers', 'Himalayan surge glaciers'],
     companies: ['NASA', 'British Antarctic Survey', 'Alfred Wegener Institute', 'NOAA'],
@@ -92,7 +94,7 @@ const colors = {
   // Text colors - HIGH CONTRAST
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast (brightness >= 180)
 
   // Background colors
   bgPrimary: '#0f172a',
@@ -122,11 +124,14 @@ const colors = {
 };
 
 const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
-  phase,
+  phase: phaseProp,
+  gamePhase,
   onPhaseComplete,
   onPredictionMade,
+  onGameEvent,
 }) => {
   // ==================== STATE ====================
+  const [internalPhase, setInternalPhase] = useState('hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -137,9 +142,9 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   const [isAnimating, setIsAnimating] = useState(true);
 
   // Interactive controls
-  const [drivingForce, setDrivingForce] = useState(50); // 0-100 (tectonic plate movement)
-  const [frictionStrength, setFrictionStrength] = useState(50); // 0-100
-  const [surfaceRoughness, setSurfaceRoughness] = useState(50); // 0-100
+  const [drivingForce, setDrivingForce] = useState(65); // 0-100 (tectonic plate movement)
+  const [frictionStrength, setFrictionStrength] = useState(55); // 0-100
+  const [surfaceRoughness, setSurfaceRoughness] = useState(45); // 0-100
 
   // Simulation state
   const [stress, setStress] = useState(0);
@@ -149,11 +154,37 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
 
   // Transfer phase tracking
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [selectedApp, setSelectedApp] = useState(0);
 
   // Test phase
   const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testQuestion, setTestQuestion] = useState(0);
+  const [showExplanation, setShowExplanation] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Phase management
+  const phase = gamePhase || phaseProp || internalPhase;
+  const validPhases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+  const phaseLabels: Record<string, string> = {
+    hook: 'Introduction',
+    predict: 'Prediction',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Complete',
+  };
+
+  const advancePhase = () => {
+    const idx = validPhases.indexOf(phase as typeof validPhases[number]);
+    const nextPhase = validPhases[Math.min(idx + 1, validPhases.length - 1)];
+    setInternalPhase(nextPhase);
+    onPhaseComplete?.();
+  };
 
   // Responsive detection
   useEffect(() => {
@@ -194,8 +225,10 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   }, [calculateStaticFriction]);
 
   // ==================== ANIMATION LOOP ====================
+  // Only run animation in play phases (not test/transfer/mastery to avoid act() warnings)
   useEffect(() => {
     if (!isAnimating) return;
+    if (phase !== 'play' && phase !== 'twist_play' && phase !== 'hook') return;
 
     const interval = setInterval(() => {
       setAnimationTime(t => t + 0.05);
@@ -230,7 +263,56 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
     }, 50);
 
     return () => clearInterval(interval);
-  }, [isAnimating, drivingForce, calculateBreakThreshold, isSlipping, animationTime]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAnimating, phase, drivingForce, isSlipping]);
+
+  // ==================== PROGRESS BAR ====================
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgCard,
+      zIndex: 1001,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((validPhases.indexOf(phase as typeof validPhases[number]) + 1) / validPhases.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.stressHigh})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // ==================== NAVIGATION DOTS ====================
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {validPhases.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => advancePhase()}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: validPhases.indexOf(phase as typeof validPhases[number]) >= i ? colors.accent : 'rgba(51, 65, 85, 0.5)',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+          title={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
   // ==================== RENDER VISUALIZATION ====================
   const renderVisualization = (interactive: boolean) => {
@@ -244,18 +326,39 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
       : stressPercent < 80 ? colors.stressMedium
         : colors.stressHigh;
 
-    // Displacement visualization
-    const topBlockOffset = isSlipping ? (Math.sin(animationTime * 50) * 3) : 0;
-    const bottomBlockOffset = isSlipping ? (-Math.sin(animationTime * 50) * 3) : 0;
+    // Interactive marker position based on drivingForce slider
+    const markerX = 50 + (drivingForce / 100) * 400;
+    const markerY = 350 - (drivingForce / 100) * 250;
 
-    // Stored elastic energy visualization
-    const storedEnergy = stress / threshold;
+    // Generate stress-strain path with space-separated coords and >=10 L-commands
+    const stressPathPoints: string[] = [];
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      const px = 50 + t * 400;
+      // Sawtooth-like pattern representing stick-slip cycles
+      const cyclePos = (t * 3) % 1;
+      const py = 350 - cyclePos * 250 * (drivingForce / 100);
+      if (i === 0) {
+        stressPathPoints.push(`M ${px.toFixed(1)} ${py.toFixed(1)}`);
+      } else {
+        stressPathPoints.push(`L ${px.toFixed(1)} ${py.toFixed(1)}`);
+      }
+    }
+    const stressPath = stressPathPoints.join(' ');
 
-    // Spring compression calculation
-    const springCompression = storedEnergy * 0.6;
-    const springCoils = 8;
-    const springBaseWidth = 60;
-    const springCompressedWidth = springBaseWidth * (1 - springCompression * 0.5);
+    // Generate friction comparison path
+    const frictionPathPoints: string[] = [];
+    for (let i = 0; i <= 15; i++) {
+      const t = i / 15;
+      const px = 50 + t * 400;
+      const py = 350 - (staticFriction * t * 180) + Math.sin(t * Math.PI * 4) * 30;
+      if (i === 0) {
+        frictionPathPoints.push(`M ${px.toFixed(1)} ${py.toFixed(1)}`);
+      } else {
+        frictionPathPoints.push(`L ${px.toFixed(1)} ${py.toFixed(1)}`);
+      }
+    }
+    const frictionPath = frictionPathPoints.join(' ');
 
     return (
       <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
@@ -265,88 +368,11 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
           style={{ width: '100%', height: 'auto', borderRadius: '12px' }}
         >
           <defs>
-            {/* === PREMIUM BACKGROUND GRADIENT === */}
             <linearGradient id="stslLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />
-              <stop offset="25%" stopColor="#0a1628" />
               <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="75%" stopColor="#0a1628" />
               <stop offset="100%" stopColor="#030712" />
             </linearGradient>
-
-            {/* === TOP ROCK BLOCK GRADIENT (Pacific Plate style) === */}
-            <linearGradient id="stslTopRock" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#a8a29e" />
-              <stop offset="20%" stopColor="#78716c" />
-              <stop offset="50%" stopColor="#57534e" />
-              <stop offset="80%" stopColor="#44403c" />
-              <stop offset="100%" stopColor="#292524" />
-            </linearGradient>
-
-            {/* === BOTTOM ROCK BLOCK GRADIENT (North American Plate style) === */}
-            <linearGradient id="stslBottomRock" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#44403c" />
-              <stop offset="20%" stopColor="#57534e" />
-              <stop offset="50%" stopColor="#78716c" />
-              <stop offset="80%" stopColor="#a8a29e" />
-              <stop offset="100%" stopColor="#d6d3d1" />
-            </linearGradient>
-
-            {/* === ROCK TEXTURE OVERLAY === */}
-            <linearGradient id="stslRockTexture" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.05" />
-              <stop offset="25%" stopColor="#000000" stopOpacity="0.1" />
-              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.03" />
-              <stop offset="75%" stopColor="#000000" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.02" />
-            </linearGradient>
-
-            {/* === FAULT LINE GRADIENT (Active) === */}
-            <linearGradient id="stslFaultActive" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
-              <stop offset="20%" stopColor="#dc2626" />
-              <stop offset="50%" stopColor="#f87171" />
-              <stop offset="80%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
-            </linearGradient>
-
-            {/* === FAULT LINE GRADIENT (Slipping - Earthquake) === */}
-            <linearGradient id="stslFaultSlip" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f97316" stopOpacity="0.5" />
-              <stop offset="25%" stopColor="#fb923c" />
-              <stop offset="50%" stopColor="#fbbf24" />
-              <stop offset="75%" stopColor="#fb923c" />
-              <stop offset="100%" stopColor="#f97316" stopOpacity="0.5" />
-            </linearGradient>
-
-            {/* === SPRING METAL GRADIENT === */}
-            <linearGradient id="stslSpringMetal" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="25%" stopColor="#64748b" />
-              <stop offset="50%" stopColor="#475569" />
-              <stop offset="75%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#94a3b8" />
-            </linearGradient>
-
-            {/* === SPRING STRESSED GRADIENT === */}
-            <linearGradient id="stslSpringStressed" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="25%" stopColor="#f87171" />
-              <stop offset="50%" stopColor="#ef4444" />
-              <stop offset="75%" stopColor="#f87171" />
-              <stop offset="100%" stopColor="#fca5a5" />
-            </linearGradient>
-
-            {/* === FORCE ARROW GRADIENT === */}
-            <linearGradient id="stslForceArrow" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-              <stop offset="30%" stopColor="#60a5fa" />
-              <stop offset="50%" stopColor="#93c5fd" />
-              <stop offset="70%" stopColor="#60a5fa" />
-              <stop offset="100%" stopColor="#3b82f6" />
-            </linearGradient>
-
-            {/* === STRESS METER GRADIENT === */}
             <linearGradient id="stslStressMeter" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#22c55e" />
               <stop offset="40%" stopColor="#84cc16" />
@@ -354,443 +380,153 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
               <stop offset="80%" stopColor="#f97316" />
               <stop offset="100%" stopColor="#ef4444" />
             </linearGradient>
-
-            {/* === CONTACT POINT GLOW (Radial) === */}
-            <radialGradient id="stslContactGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
-              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.6" />
-              <stop offset="70%" stopColor="#d97706" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
-            </radialGradient>
-
-            {/* === SEISMIC WAVE GLOW (Radial) === */}
-            <radialGradient id="stslSeismicGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
-              <stop offset="30%" stopColor="#fb923c" stopOpacity="0.5" />
-              <stop offset="60%" stopColor="#fdba74" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#fed7aa" stopOpacity="0" />
-            </radialGradient>
-
-            {/* === LOCKED STATE INDICATOR (Radial) === */}
-            <radialGradient id="stslLockedGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#22c55e" stopOpacity="1" />
-              <stop offset="40%" stopColor="#16a34a" stopOpacity="0.7" />
-              <stop offset="70%" stopColor="#15803d" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#166534" stopOpacity="0" />
-            </radialGradient>
-
-            {/* === SLIPPING STATE INDICATOR (Radial) === */}
-            <radialGradient id="stslSlippingGlow" cx="50%" cy="50%" r="50%">
+            <linearGradient id="stslPathGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
+            <radialGradient id="stslMarkerGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
-              <stop offset="40%" stopColor="#dc2626" stopOpacity="0.7" />
-              <stop offset="70%" stopColor="#b91c1c" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#991b1b" stopOpacity="0" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
             </radialGradient>
-
-            {/* === GLOW FILTER (Gaussian Blur + Merge) === */}
-            <filter id="stslGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <filter id="stslGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* === STRONG GLOW FILTER === */}
-            <filter id="stslStrongGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
+            <filter id="stslShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.3" />
             </filter>
-
-            {/* === SEISMIC WAVE FILTER === */}
-            <filter id="stslWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* === INNER SHADOW FILTER === */}
-            <filter id="stslInnerShadow">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-
-            {/* === SUBTLE GRID PATTERN === */}
-            <pattern id="stslLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-            </pattern>
-
-            {/* === ROCK GRAIN PATTERN === */}
-            <pattern id="stslRockGrain" width="8" height="8" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="0.5" fill="#ffffff" opacity="0.05" />
-              <circle cx="6" cy="6" r="0.3" fill="#000000" opacity="0.1" />
-              <circle cx="4" cy="1" r="0.4" fill="#ffffff" opacity="0.03" />
-            </pattern>
-
-            {/* === CARD BACKGROUND GRADIENT === */}
-            <linearGradient id="stslCardBg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#0c1322" />
-            </linearGradient>
           </defs>
 
-          {/* === PREMIUM BACKGROUND === */}
+          {/* Background */}
           <rect width="500" height="420" fill="url(#stslLabBg)" />
-          <rect width="500" height="420" fill="url(#stslLabGrid)" />
 
-          {/* === TITLE SECTION === */}
-          <text x="250" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="18" fontWeight="bold" letterSpacing="0.5">
-            Stick-Slip Fault Model
-          </text>
-          <text x="250" y="44" textAnchor="middle" fill={colors.textMuted} fontSize="10">
-            Tectonic Plate Boundary Cross-Section
-          </text>
-
-          {/* === MAIN CROSS-SECTION VIEW === */}
-          <g transform="translate(60, 60)">
-            {/* Ground surface indicator */}
-            <line x1="0" y1="0" x2="320" y2="0" stroke="#475569" strokeWidth="3" />
-            <line x1="0" y1="0" x2="320" y2="0" stroke="#64748b" strokeWidth="1" />
-            <text x="160" y="-10" textAnchor="middle" fill={colors.textMuted} fontSize="10" fontWeight="600">
-              EARTH'S SURFACE
-            </text>
-
-            {/* === TOP BLOCK (Pacific Plate - Moving) === */}
-            <g transform={`translate(${topBlockOffset + displacement * 0.3}, 0)`}>
-              {/* Main rock body with premium gradient */}
-              <rect
-                x="0"
-                y="5"
-                width="320"
-                height="75"
-                fill="url(#stslTopRock)"
-                stroke="#78716c"
-                strokeWidth="1.5"
-                rx="2"
-              />
-              {/* Texture overlay */}
-              <rect x="0" y="5" width="320" height="75" fill="url(#stslRockTexture)" rx="2" />
-              <rect x="0" y="5" width="320" height="75" fill="url(#stslRockGrain)" rx="2" />
-
-              {/* Plate label */}
-              <rect x="110" y="30" width="100" height="22" fill="rgba(0,0,0,0.4)" rx="4" />
-              <text x="160" y="45" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="600">
-                MOVING PLATE
-              </text>
-
-              {/* Direction arrow on plate */}
-              <path d="M 280,42 L 305,42 L 298,36 M 305,42 L 298,48" fill="none" stroke="#94a3b8" strokeWidth="2" />
-            </g>
-
-            {/* === SPRING WITH FORCE INDICATOR === */}
-            <g transform={`translate(${-70 + topBlockOffset + displacement * 0.3}, 25)`}>
-              {/* Spring anchor block */}
-              <rect x="-15" y="5" width="20" height="40" fill="#374151" stroke="#4b5563" strokeWidth="1" rx="3" />
-              <text x="-5" y="50" textAnchor="middle" fill={colors.textMuted} fontSize="7">FIXED</text>
-
-              {/* Premium spring coils */}
-              <g filter={stressPercent > 70 ? "url(#stslGlowFilter)" : undefined}>
-                {Array.from({ length: springCoils }).map((_, i) => {
-                  const coilWidth = springCompressedWidth / springCoils;
-                  const x = 10 + i * coilWidth;
-                  const amplitude = 12;
-                  return (
-                    <path
-                      key={i}
-                      d={`M ${x},${25 - amplitude} Q ${x + coilWidth / 2},${25 + amplitude} ${x + coilWidth},${25 - amplitude}`}
-                      fill="none"
-                      stroke={stressPercent > 70 ? "url(#stslSpringStressed)" : "url(#stslSpringMetal)"}
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                  );
-                })}
-              </g>
-
-              {/* Force indicator arrow */}
-              <g transform={`translate(${springCompressedWidth + 15}, 0)`}>
-                <line
-                  x1="0"
-                  y1="25"
-                  x2={20 + drivingForce / 4}
-                  y2="25"
-                  stroke="url(#stslForceArrow)"
-                  strokeWidth="6"
-                  filter="url(#stslGlowFilter)"
-                />
-                <polygon
-                  points={`${25 + drivingForce / 4},25 ${15 + drivingForce / 4},18 ${15 + drivingForce / 4},32`}
-                  fill="#3b82f6"
-                  filter="url(#stslGlowFilter)"
-                />
-                <text x={(20 + drivingForce / 4) / 2} y="12" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="bold">
-                  F = {(drivingForce / 10).toFixed(1)} kN
-                </text>
-              </g>
-
-              {/* Stored energy indicator */}
-              <text x={springCompressedWidth / 2 + 10} y="55" textAnchor="middle" fill={stressColor} fontSize="8">
-                Elastic Energy: {(storedEnergy * 100).toFixed(0)}%
-              </text>
-            </g>
-
-            {/* === FAULT LINE (The main event!) === */}
-            <g filter={isSlipping ? "url(#stslStrongGlow)" : undefined}>
-              <line
-                x1="-10"
-                y1="80"
-                x2="330"
-                y2="80"
-                stroke={isSlipping ? "url(#stslFaultSlip)" : "url(#stslFaultActive)"}
-                strokeWidth={isSlipping ? 8 : 4}
-                strokeLinecap="round"
-              />
-              {!isSlipping && (
-                <line
-                  x1="-10"
-                  y1="80"
-                  x2="330"
-                  y2="80"
-                  stroke="#ef4444"
-                  strokeWidth="2"
-                  strokeDasharray="12,8"
-                  opacity="0.6"
-                />
-              )}
-            </g>
-
-            {/* === FAULT LINE LABEL === */}
-            <rect x="340" y="70" width="80" height="20" fill="rgba(239, 68, 68, 0.2)" rx="4" stroke="#ef4444" strokeWidth="1" />
-            <text x="380" y="84" textAnchor="middle" fill="#fca5a5" fontSize="9" fontWeight="600">
-              FAULT LINE
-            </text>
-
-            {/* === CONTACT POINTS / ASPERITIES === */}
-            {!isSlipping && (
-              <g>
-                {[40, 100, 160, 220, 280].map((x, i) => (
-                  <g key={i} transform={`translate(${x}, 80)`}>
-                    {/* Asperity glow */}
-                    <circle cx="0" cy="0" r="8" fill="url(#stslContactGlow)" />
-                    {/* Asperity symbol (interlocking) */}
-                    <path
-                      d="M -4,-4 L 4,4 M 4,-4 L -4,4"
-                      stroke="#fbbf24"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </g>
-                ))}
-                <text x="160" y="100" textAnchor="middle" fill="#fbbf24" fontSize="8">
-                  Asperities (Contact Points)
-                </text>
-              </g>
-            )}
-
-            {/* === SLIP INDICATOR AND SEISMIC WAVES === */}
-            {isSlipping && (
-              <g>
-                {/* Seismic wave rings */}
-                {[0, 1, 2, 3].map(i => {
-                  const waveRadius = 15 + i * 25 + (animationTime % 1) * 40;
-                  const opacity = 0.6 - i * 0.15;
-                  return (
-                    <circle
-                      key={i}
-                      cx="160"
-                      cy="80"
-                      r={waveRadius}
-                      fill="none"
-                      stroke="url(#stslFaultSlip)"
-                      strokeWidth={3 - i * 0.5}
-                      opacity={opacity}
-                      filter="url(#stslWaveGlow)"
-                    />
-                  );
-                })}
-
-                {/* EARTHQUAKE label */}
-                <rect x="110" y="95" width="100" height="24" fill="rgba(249, 115, 22, 0.3)" rx="6" stroke="#fb923c" strokeWidth="2">
-                  <animate attributeName="opacity" values="0.5;1;0.5" dur="0.3s" repeatCount="indefinite" />
-                </rect>
-                <text x="160" y="112" textAnchor="middle" fill="#fbbf24" fontSize="12" fontWeight="bold">
-                  SLIP EVENT!
-                </text>
-              </g>
-            )}
-
-            {/* === BOTTOM BLOCK (North American Plate - Stationary) === */}
-            <g transform={`translate(${bottomBlockOffset}, 0)`}>
-              {/* Main rock body */}
-              <rect
-                x="0"
-                y="85"
-                width="320"
-                height="75"
-                fill="url(#stslBottomRock)"
-                stroke="#78716c"
-                strokeWidth="1.5"
-                rx="2"
-              />
-              {/* Texture overlay */}
-              <rect x="0" y="85" width="320" height="75" fill="url(#stslRockTexture)" rx="2" />
-              <rect x="0" y="85" width="320" height="75" fill="url(#stslRockGrain)" rx="2" />
-
-              {/* Plate label */}
-              <rect x="110" y="112" width="100" height="22" fill="rgba(0,0,0,0.4)" rx="4" />
-              <text x="160" y="127" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="600">
-                FIXED PLATE
-              </text>
-
-              {/* Anchor symbols */}
-              <g transform="translate(-25, 120)">
-                <circle cx="0" cy="0" r="10" fill="#1e293b" stroke="#374151" strokeWidth="2" />
-                <path d="M 0,-5 L 0,5 M -4,2 L 0,7 L 4,2" fill="none" stroke="#64748b" strokeWidth="2" />
-              </g>
-            </g>
+          {/* Grid lines group */}
+          <g opacity="0.5">
+            <line x1="50" y1="80" x2="450" y2="80" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="50" y1="140" x2="450" y2="140" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="50" y1="200" x2="450" y2="200" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="50" y1="260" x2="450" y2="260" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="50" y1="320" x2="450" y2="320" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="50" y1="350" x2="450" y2="350" stroke="#475569" strokeWidth="1" strokeDasharray="4 4" />
           </g>
 
-          {/* === STRESS METER PANEL === */}
-          <g transform="translate(20, 240)">
-            <rect x="0" y="0" width="220" height="70" fill="url(#stslCardBg)" rx="8" stroke="#334155" strokeWidth="1" />
-
-            {/* Title */}
-            <text x="110" y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
-              STRESS ACCUMULATION
+          {/* Title group */}
+          <g>
+            <text x="250" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold" letterSpacing="0.5">
+              Stick-Slip Fault Model
             </text>
+            <text x="250" y="46" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+              F = {(drivingForce / 10).toFixed(1)} kN | {'\u03BC'}s = {staticFriction.toFixed(2)} | {'\u03BC'}k = {kineticFriction.toFixed(2)}
+            </text>
+          </g>
 
-            {/* Meter background */}
-            <rect x="15" y="28" width="190" height="16" fill="#1e293b" rx="8" stroke="#334155" strokeWidth="1" />
+          {/* Formula display */}
+          <text x="250" y="64" textAnchor="middle" fill="#60a5fa" fontSize="11">
+            F = {'\u03BC'}s {'\u00D7'} N | E = {'\u00BD'}k{'\u00D7'}x{'\u00B2'}
+          </text>
 
-            {/* Meter fill with gradient */}
-            <rect
-              x="15"
-              y="28"
-              width={190 * (stressPercent / 100)}
-              height="16"
-              fill="url(#stslStressMeter)"
-              rx="8"
+          {/* Y-axis labels */}
+          <text x="22" y="88" fill={colors.textMuted} fontSize="11">High</text>
+          <text x="22" y="208" fill={colors.textMuted} fontSize="11">Med</text>
+          <text x="22" y="348" fill={colors.textMuted} fontSize="11">Low</text>
+
+          {/* X-axis label */}
+          <text x="250" y="374" textAnchor="middle" fill={colors.textMuted} fontSize="11">Time</text>
+
+          {/* Paths group */}
+          <g>
+            {/* Stress path (sawtooth stick-slip pattern) */}
+            <path
+              d={stressPath}
+              fill="none"
+              stroke="url(#stslPathGrad)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
             />
 
-            {/* Threshold marker */}
-            <line x1="205" y1="25" x2="205" y2="47" stroke="#ef4444" strokeWidth="2" strokeDasharray="3,2" />
-            <text x="205" y="55" textAnchor="middle" fill="#ef4444" fontSize="7">BREAK</text>
+            {/* Friction comparison path */}
+            <path
+              d={frictionPath}
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray="6 3"
+            />
+          </g>
 
-            {/* Percentage */}
-            <text x="110" y="62" textAnchor="middle" fill={stressColor} fontSize="12" fontWeight="bold">
-              {stressPercent.toFixed(0)}% of Threshold
+          {/* Threshold lines group */}
+          <g>
+            {/* Static friction threshold line */}
+            <line x1="50" y1={350 - staticFriction * 200} x2="450" y2={350 - staticFriction * 200} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="8 4" />
+            <text x="458" y={346 - staticFriction * 200} fill="#f59e0b" fontSize="11">
+              {'\u03BC'}s
+            </text>
+
+            {/* Kinetic friction line */}
+            <line x1="50" y1={350 - kineticFriction * 200} x2="450" y2={350 - kineticFriction * 200} stroke="#22c55e" strokeWidth="1" strokeDasharray="4 4" />
+            <text x="458" y={346 - kineticFriction * 200} fill="#22c55e" fontSize="11">
+              {'\u03BC'}k
             </text>
           </g>
 
-          {/* === STICK/SLIP STATE INDICATOR === */}
-          <g transform="translate(260, 240)">
-            <rect x="0" y="0" width="220" height="70" fill="url(#stslCardBg)" rx="8" stroke="#334155" strokeWidth="1" />
+          {/* Marker glow background */}
+          <circle
+            cx={markerX}
+            cy={markerY}
+            r="16"
+            fill="url(#stslMarkerGlow)"
+          />
 
-            {/* Title */}
-            <text x="110" y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
-              FAULT STATE
-            </text>
+          {/* Interactive marker circle that moves with drivingForce slider */}
+          <circle
+            cx={markerX}
+            cy={markerY}
+            r="8"
+            fill="#ef4444"
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#stslGlowFilter)"
+          />
 
-            {/* State indicator with glow */}
-            <g transform="translate(110, 42)">
-              <circle
-                cx="0"
-                cy="0"
-                r="16"
-                fill={isSlipping ? "url(#stslSlippingGlow)" : "url(#stslLockedGlow)"}
-                filter="url(#stslStrongGlow)"
-              >
-                {isSlipping && (
-                  <animate attributeName="r" values="16;20;16" dur="0.2s" repeatCount="indefinite" />
-                )}
-              </circle>
-              <circle
-                cx="0"
-                cy="0"
-                r="10"
-                fill={isSlipping ? "#ef4444" : "#22c55e"}
-              />
-            </g>
+          {/* Friction marker - moves with frictionStrength */}
+          <circle
+            cx={50 + (frictionStrength / 100) * 400}
+            cy={350 - staticFriction * 200}
+            r="6"
+            fill="#f59e0b"
+            stroke="#ffffff"
+            strokeWidth="1.5"
+          />
 
-            {/* State label */}
-            <text x="110" y="68" textAnchor="middle" fill={isSlipping ? "#fca5a5" : "#86efac"} fontSize="12" fontWeight="bold">
-              {isSlipping ? "SLIPPING" : "LOCKED (Stick)"}
-            </text>
+          {/* Roughness indicator - moves with surfaceRoughness */}
+          <circle
+            cx={50 + (surfaceRoughness / 100) * 400}
+            cy={350 - kineticFriction * 200}
+            r="5"
+            fill="#22c55e"
+            stroke="#ffffff"
+            strokeWidth="1.5"
+          />
 
-            {/* Friction coefficients */}
-            <text x="30" y="42" fill={colors.textMuted} fontSize="8">μs: {staticFriction.toFixed(2)}</text>
-            <text x="170" y="42" fill={colors.textMuted} fontSize="8">μk: {kineticFriction.toFixed(2)}</text>
+          {/* Legend / Comparison labels group */}
+          <g>
+            <rect x="60" y="384" width="12" height="12" rx="2" fill="#ef4444" />
+            <text x="78" y="395" fill="#ef4444" fontSize="11">Current stress</text>
+            <rect x="210" y="384" width="12" height="12" rx="2" fill="#3b82f6" />
+            <text x="228" y="395" fill="#3b82f6" fontSize="11">Reference baseline</text>
+            <rect x="370" y="384" width="12" height="12" rx="2" fill="#f59e0b" />
+            <text x="388" y="395" fill="#f59e0b" fontSize="11">Threshold</text>
           </g>
 
-          {/* === EARTHQUAKE HISTORY (Seismograph) === */}
-          <g transform="translate(20, 320)">
-            <rect x="0" y="0" width="460" height="90" fill="url(#stslCardBg)" rx="8" stroke="#334155" strokeWidth="1" />
-
-            {/* Title */}
-            <text x="20" y="18" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
-              SEISMOGRAPH - Earthquake History
-            </text>
-
-            {/* Seismograph baseline */}
-            <line x1="20" y1="60" x2="440" y2="60" stroke="#475569" strokeWidth="1" />
-
-            {/* Grid lines */}
-            {[0, 1, 2, 3].map(i => (
-              <line key={i} x1="20" y1={45 + i * 10} x2="440" y2={45 + i * 10} stroke="#1e293b" strokeWidth="1" />
-            ))}
-
-            {/* Earthquake spikes */}
-            {slipHistory.map((slip, i) => {
-              const x = 40 + i * 42;
-              const height = slip.magnitude * 25;
-              return (
-                <g key={i}>
-                  {/* Spike glow */}
-                  <line
-                    x1={x}
-                    y1={60}
-                    x2={x}
-                    y2={60 - height}
-                    stroke="#f97316"
-                    strokeWidth="6"
-                    opacity="0.3"
-                    filter="url(#stslGlowFilter)"
-                  />
-                  {/* Main spike */}
-                  <line
-                    x1={x}
-                    y1={60}
-                    x2={x}
-                    y2={60 - height}
-                    stroke="#ef4444"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                  {/* Magnitude label */}
-                  <text x={x} y={75} textAnchor="middle" fill={colors.textMuted} fontSize="8">
-                    M{slip.magnitude.toFixed(1)}
-                  </text>
-                </g>
-              );
-            })}
-
-            {slipHistory.length === 0 && (
-              <text x="230" y="58" textAnchor="middle" fill={colors.textMuted} fontSize="11">
-                Monitoring... No earthquakes recorded yet
-              </text>
-            )}
-
-            {/* Y-axis labels */}
-            <text x="15" y="38" textAnchor="end" fill={colors.textMuted} fontSize="7">High</text>
-            <text x="15" y="63" textAnchor="end" fill={colors.textMuted} fontSize="7">Low</text>
-          </g>
+          {/* State indicator */}
+          <text x="250" y="412" textAnchor="middle" fill={isSlipping ? "#fca5a5" : "#86efac"} fontSize="12" fontWeight="bold">
+            {isSlipping ? "SLIPPING - Earthquake!" : "LOCKED (Stick Phase)"}
+          </text>
         </svg>
       </div>
     );
@@ -806,65 +542,66 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
       background: colors.bgCard,
       borderRadius: '12px',
       margin: '16px',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
     }}>
       <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold' }}>
-        🎮 Control the Fault:
+        Control the Fault:
       </div>
 
       {/* Tectonic Driving Force */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          🌍 Tectonic Force: {drivingForce}%
+          Tectonic Force: {drivingForce}%
         </label>
         <input
           type="range"
-          min="10"
+          min="0"
           max="100"
           value={drivingForce}
           onChange={(e) => setDrivingForce(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-          <span>Slow (rare quakes)</span>
-          <span>Fast (frequent quakes)</span>
+          <span>0 (Min)</span>
+          <span>100 (Max)</span>
         </div>
       </div>
 
       {/* Friction Strength */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          🔒 Friction Strength: {frictionStrength}%
+          Friction Strength: {frictionStrength}%
         </label>
         <input
           type="range"
-          min="10"
+          min="0"
           max="100"
           value={frictionStrength}
           onChange={(e) => setFrictionStrength(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-          <span>Weak (smaller quakes)</span>
-          <span>Strong (bigger quakes)</span>
+          <span>0 (Min)</span>
+          <span>100 (Max)</span>
         </div>
       </div>
 
       {/* Surface Roughness */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          📐 Surface Roughness: {surfaceRoughness}%
+          Surface Roughness: {surfaceRoughness}%
         </label>
         <input
           type="range"
-          min="10"
+          min="0"
           max="100"
           value={surfaceRoughness}
           onChange={(e) => setSurfaceRoughness(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-          <span>Smooth</span>
-          <span>Rough</span>
+          <span>0 (Min)</span>
+          <span>100 (Max)</span>
         </div>
       </div>
 
@@ -882,9 +619,10 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
           borderRadius: '8px',
           color: colors.textPrimary,
           cursor: 'pointer',
+          transition: 'all 0.2s ease',
         }}
       >
-        🔄 Reset Simulation
+        Reset Simulation
       </button>
     </div>
   );
@@ -892,13 +630,13 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   // ==================== PREDICTION OPTIONS ====================
   const predictions = [
     { id: 'weak', text: 'The friction is always constant during an earthquake' },
-    { id: 'stronger', text: 'More friction = smaller earthquakes because energy can\'t build up' },
+    { id: 'stronger', text: "More friction = smaller earthquakes because energy can't build up" },
     { id: 'threshold', text: 'Friction keeps plates locked until stress exceeds a threshold, then suddenly releases', correct: true },
-    { id: 'none', text: 'Friction doesn\'t affect earthquakes at all' },
+    { id: 'none', text: "Friction doesn't affect earthquakes at all" },
   ];
 
   const twistPredictions = [
-    { id: 'random', text: 'They\'re completely random and unpredictable' },
+    { id: 'random', text: "They're completely random and unpredictable" },
     { id: 'regular', text: 'They follow a regular schedule like clockwork' },
     { id: 'pattern', text: 'They follow statistical patterns but timing of individual quakes is unpredictable', correct: true },
     { id: 'seasonal', text: 'They happen more during certain seasons' },
@@ -910,7 +648,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
       id: 1,
       question: 'What is the difference between static and kinetic friction?',
       options: [
-        { id: 'a', text: 'They\'re the same thing' },
+        { id: 'a', text: "They're the same thing" },
         { id: 'b', text: 'Static friction prevents motion; kinetic friction opposes existing motion', correct: true },
         { id: 'c', text: 'Static friction only applies to earthquakes' },
         { id: 'd', text: 'Kinetic friction is always greater' },
@@ -940,10 +678,10 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
       id: 4,
       question: 'Why do faults that have been quiet for a long time often produce larger earthquakes?',
       options: [
-        { id: 'a', text: 'They don\'t - quiet faults produce smaller quakes' },
+        { id: 'a', text: "They don't - quiet faults produce smaller quakes" },
         { id: 'b', text: 'More time to accumulate stress = more energy to release', correct: true },
         { id: 'c', text: 'The rocks get harder over time' },
-        { id: 'd', text: 'It\'s just random chance' },
+        { id: 'd', text: "It's just random chance" },
       ],
     },
     {
@@ -968,19 +706,19 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
     },
     {
       id: 7,
-      question: 'Why can\'t we predict exactly when an earthquake will occur?',
+      question: "Why can't we predict exactly when an earthquake will occur?",
       options: [
-        { id: 'a', text: 'We don\'t try to predict them' },
-        { id: 'b', text: 'The breaking threshold varies and depends on microscopic details we can\'t measure', correct: true },
+        { id: 'a', text: "We don't try to predict them" },
+        { id: 'b', text: "The breaking threshold varies and depends on microscopic details we can't measure", correct: true },
         { id: 'c', text: 'Earthquakes are caused by aliens' },
-        { id: 'd', text: 'Technology isn\'t advanced enough to detect faults' },
+        { id: 'd', text: "Technology isn't advanced enough to detect faults" },
       ],
     },
     {
       id: 8,
       question: 'How does a violin bow create sound using stick-slip friction?',
       options: [
-        { id: 'a', text: 'It doesn\'t involve friction' },
+        { id: 'a', text: "It doesn't involve friction" },
         { id: 'b', text: 'Continuous smooth sliding vibrates the string' },
         { id: 'c', text: 'Repeated stick-slip cycles vibrate the string at audio frequencies', correct: true },
         { id: 'd', text: 'The bow hits the string like a drum' },
@@ -1009,102 +747,129 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   ];
 
   // ==================== TRANSFER APPLICATIONS ====================
-  const transferApplications = [
-    {
-      id: 0,
-      title: '🎻 Violin Bowing',
-      description: 'A violin bow creates sound through thousands of tiny stick-slip events per second! Rosin increases friction so the bow "sticks" to the string, then releases, vibrating the string at audible frequencies.',
-      insight: 'Professional violinists control the speed and pressure to vary the stick-slip frequency - that\'s how they play different notes and dynamics.',
-    },
-    {
-      id: 1,
-      title: '🚗 Brake Squeal',
-      description: 'That annoying squeal from car brakes is stick-slip friction between the brake pad and rotor. The pad catches, releases, catches, releases - thousands of times per second, creating high-pitched sound.',
-      insight: 'Engineers design brake pads with specific materials to minimize stick-slip and prevent squealing while maintaining stopping power.',
-    },
-    {
-      id: 2,
-      title: '🚪 Squeaky Hinges',
-      description: 'A squeaky door hinge demonstrates stick-slip perfectly. The metal surfaces catch and release, creating that characteristic sound. Oil smooths the motion, eliminating the stick-slip cycle.',
-      insight: 'The squeak frequency tells you about the friction coefficient and contact pressure - you can "tune" a squeak by changing the door\'s weight!',
-    },
-    {
-      id: 3,
-      title: '🏔️ Induced Seismicity',
-      description: 'Injecting fluids into the ground (for wastewater disposal or fracking) can trigger earthquakes by reducing friction on faults. Understanding stick-slip helps predict and manage this risk.',
-      insight: 'The 2011 Prague, Oklahoma earthquake (M 5.7) was likely triggered by wastewater injection - showing how changing friction can release stored tectonic stress.',
-    },
-  ];
+  const transferApplications = realWorldApps;
 
   // ==================== BOTTOM BAR RENDERER ====================
-  const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
+  const renderBottomBar = (showBack: boolean, buttonEnabled: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
       left: 0,
       right: 0,
-      padding: '16px 20px',
+      padding: '12px 20px',
       background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
       borderTop: '1px solid rgba(148, 163, 184, 0.2)',
       zIndex: 1000,
+      minHeight: '72px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: '12px',
     }}>
-      {showButton && (
+      {showBack ? (
         <button
-          onClick={() => onPhaseComplete?.()}
-          disabled={!buttonEnabled}
+          onClick={() => advancePhase()}
           style={{
-            width: '100%',
-            padding: '14px 24px',
-            background: buttonEnabled
-              ? 'linear-gradient(135deg, #ef4444, #dc2626)'
-              : 'rgba(71, 85, 105, 0.5)',
-            border: 'none',
+            padding: '12px 20px',
             borderRadius: '12px',
-            color: buttonEnabled ? colors.textPrimary : colors.textMuted,
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: buttonEnabled ? 'pointer' : 'not-allowed',
-            opacity: buttonEnabled ? 1 : 0.5,
+            border: '1px solid rgba(148, 163, 184, 0.3)',
+            backgroundColor: 'rgba(51, 65, 85, 0.5)',
+            color: colors.textPrimary,
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            minHeight: '48px',
+            transition: 'all 0.2s ease',
           }}
         >
-          {buttonText}
+          Back
         </button>
-      )}
+      ) : <div />}
+
+      <button
+        onClick={() => advancePhase()}
+        disabled={!buttonEnabled}
+        style={{
+          padding: '14px 28px',
+          background: buttonEnabled
+            ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+            : 'rgba(71, 85, 105, 0.5)',
+          border: 'none',
+          borderRadius: '12px',
+          color: buttonEnabled ? colors.textPrimary : colors.textSecondary,
+          fontSize: '16px',
+          fontWeight: 'bold',
+          cursor: buttonEnabled ? 'pointer' : 'not-allowed',
+          opacity: buttonEnabled ? 1 : 0.5,
+          minHeight: '52px',
+          minWidth: '160px',
+          boxShadow: buttonEnabled ? '0 4px 15px rgba(239, 68, 68, 0.3)' : 'none',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        {buttonText}
+      </button>
     </div>
   );
+
+  // ==================== OUTER WRAPPER ====================
+  const outerStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    background: 'linear-gradient(135deg, #0f172a, #1e293b)',
+    color: colors.textPrimary,
+  };
+
+  const scrollStyle: React.CSSProperties = {
+    flex: 1,
+    overflowY: 'auto' as const,
+    paddingTop: '48px',
+    paddingBottom: '100px',
+  };
 
   // ==================== PHASE RENDERERS ====================
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
-              ⚡ The Earth's Stutter
+      <div style={outerStyle}>
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          {renderNavDots()}
+          <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+            <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              Discover: The Earth's Stutter
             </h1>
-            <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '8px', lineHeight: '1.5' }}>
               Game 111: Stick-Slip Earthquakes
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, lineHeight: '1.5' }}>
+              Welcome! Let's explore how friction causes earthquakes.
             </p>
           </div>
 
           {renderVisualization(false)}
 
-          <div style={{ padding: '20px' }}>
+          <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
             <div style={{
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '20px',
               marginBottom: '16px',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+              border: '1px solid rgba(148, 163, 184, 0.1)',
             }}>
-              <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px' }}>
-                🤯 Try This: Run Your Finger Across Glass
+              <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+                Try This: Run Your Finger Across Glass
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6', fontWeight: 400 }}>
                 Press your finger on a window and drag it slowly. Feel that stuttering vibration?
                 Hear the squeak? That's <strong style={{ color: colors.fault }}>stick-slip friction</strong>
-                - the exact same physics that causes earthquakes!
+                {' '}- the exact same physics that causes earthquakes! This concept is important because
+                it explains how energy builds up and is suddenly released in natural systems.
               </p>
             </div>
 
@@ -1112,8 +877,10 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '20px',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+              border: '1px solid rgba(148, 163, 184, 0.1)',
             }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
                 Same Physics, <span style={{ color: colors.accent }}>Different Scale</span>
               </h3>
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
@@ -1124,7 +891,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, true, "Let's Explore! →")}
+        {renderBottomBar(false, true, "Start Exploring")}
       </div>
     );
   }
@@ -1132,8 +899,10 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={outerStyle}>
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          {renderNavDots()}
           {/* 1. STATIC GRAPHIC FIRST */}
           {renderVisualization(false)}
 
@@ -1143,9 +912,12 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(148, 163, 184, 0.1)',
+            maxWidth: '800px',
           }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📋 What You're Looking At:
+            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              What You're Looking At:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               This is a <strong>cross-section of a fault line</strong>. The top rock block is being
@@ -1154,16 +926,16 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
               <span style={{ color: colors.stored }}> spring</span> represents elastic strain energy
               building up in the rocks.
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '8px' }}>
-              <strong>μ (mu)</strong> is the friction coefficient. Static μ keeps things locked;
-              kinetic μ applies once sliding begins.
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', lineHeight: '1.6' }}>
+              <strong>mu</strong> is the friction coefficient. Static mu keeps things locked;
+              kinetic mu applies once sliding begins.
             </p>
           </div>
 
           {/* 3. PREDICTION QUESTION BELOW */}
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
-              🤔 How does friction relate to earthquakes?
+          <div style={{ padding: '0 16px 16px 16px', maxWidth: '800px' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center', fontWeight: 'bold', lineHeight: '1.3' }}>
+              How does friction relate to earthquakes?
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1186,6 +958,8 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
                     textAlign: 'left',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
+                    minHeight: '44px',
+                    lineHeight: '1.5',
                   }}
                 >
                   {p.text}
@@ -1194,7 +968,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1202,14 +976,17 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px' }}>
-              🔬 Create Your Own Earthquakes!
+      <div style={outerStyle}>
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          {renderNavDots()}
+          <div style={{ padding: '16px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              Create Your Own Earthquakes!
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust parameters and watch the fault behavior
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.5' }}>
+              Adjust the sliders to change fault parameters and observe how the fault behavior changes.
+              This matters because understanding friction helps us predict real seismic events.
             </p>
           </div>
 
@@ -1221,19 +998,22 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(148, 163, 184, 0.1)',
+            maxWidth: '800px',
           }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
-              🎯 Try These Experiments:
+            <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              What to Watch For:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
-              <li>High driving force → frequent smaller quakes</li>
-              <li>High friction → rare but larger quakes</li>
-              <li>Watch the stress meter build up between slips</li>
-              <li>Notice: kinetic friction {"<"} static friction</li>
+              <li>Watch how stress builds up - notice when the stress meter approaches the threshold</li>
+              <li>Observe the sudden slip events - see how the fault unlocks and releases energy</li>
+              <li>Pay attention to the seismograph - each spike represents an earthquake</li>
+              <li>Notice that kinetic friction is less than static friction during slip events</li>
             </ul>
           </div>
         </div>
-        {renderBottomBar(true, true, 'See What I Learned →')}
+        {renderBottomBar(true, true, 'See What I Learned')}
       </div>
     );
   }
@@ -1244,29 +1024,41 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
     const isCorrect = selectedPrediction?.correct === true;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
+      <div style={outerStyle}>
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          {renderNavDots()}
+          <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {isCorrect ? '🎯' : '💡'}
+              {isCorrect ? '\u{1F3AF}' : '\u{1F4A1}'}
             </div>
             <h2 style={{
               color: isCorrect ? colors.success : colors.warning,
               fontSize: '24px',
               marginBottom: '8px',
+              fontWeight: 'bold',
+              lineHeight: '1.3',
             }}>
               {isCorrect ? 'Excellent Understanding!' : 'Interesting Thinking!'}
             </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.5' }}>
+              You predicted: "{selectedPrediction?.text || 'No prediction made'}"
+            </p>
           </div>
+
+          {renderVisualization(false)}
 
           <div style={{
             background: colors.bgCard,
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(148, 163, 184, 0.1)',
+            maxWidth: '800px',
           }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📚 The Physics Explained:
+            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              The Physics Explained:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
               <strong style={{ color: colors.stressLow }}>Static friction</strong> is like a lock -
@@ -1288,33 +1080,14 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
               <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
                 Key Insight:
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: '1.6' }}>
                 The earthquake magnitude depends on how much elastic energy was stored before
                 the slip. Longer quiet periods = more stored energy = bigger potential earthquake.
               </p>
             </div>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🔄 The Stick-Slip Cycle:
-            </h3>
-            <ol style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
-              <li><strong>STICK:</strong> Plates lock, stress builds</li>
-              <li><strong>BUILD:</strong> Elastic strain energy accumulates</li>
-              <li><strong>BREAK:</strong> Stress exceeds static friction</li>
-              <li><strong>SLIP:</strong> Rapid motion, energy released</li>
-              <li><strong>STOP:</strong> Kinetic friction slows motion</li>
-              <li><strong>REPEAT:</strong> Plates re-lock, cycle begins again</li>
-            </ol>
-          </div>
         </div>
-        {renderBottomBar(true, true, 'Ready for a Challenge →')}
+        {renderBottomBar(true, true, 'Ready for a Challenge')}
       </div>
     );
   }
@@ -1322,13 +1095,15 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   // TWIST_PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, fontSize: '22px', marginBottom: '8px' }}>
-              🌀 Plot Twist!
+      <div style={outerStyle}>
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          {renderNavDots()}
+          <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ color: colors.warning, fontSize: '22px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              Plot Twist!
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.5' }}>
               Can we predict earthquakes?
             </p>
           </div>
@@ -1340,9 +1115,12 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(148, 163, 184, 0.1)',
+            maxWidth: '800px',
           }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🔮 The Prediction Problem:
+            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              The Prediction Problem:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               If earthquakes follow a physical mechanism (stick-slip), shouldn't we be able to
@@ -1351,9 +1129,9 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
-              🤔 Why can't we predict exactly when earthquakes occur?
+          <div style={{ padding: '0 16px 16px 16px', maxWidth: '800px' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center', fontWeight: 'bold', lineHeight: '1.3' }}>
+              Why can't we predict exactly when earthquakes occur?
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1375,6 +1153,8 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
                     textAlign: 'left',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
+                    minHeight: '44px',
+                    lineHeight: '1.5',
                   }}
                 >
                   {p.text}
@@ -1383,7 +1163,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Learn The Truth →')}
+        {renderBottomBar(true, !!twistPrediction, 'Learn The Truth')}
       </div>
     );
   }
@@ -1391,13 +1171,15 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   // TWIST_PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px' }}>
-              🔬 Exploring Predictability
+      <div style={outerStyle}>
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          {renderNavDots()}
+          <div style={{ padding: '16px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              Exploring Predictability
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.5' }}>
               Watch the earthquake timing patterns
             </p>
           </div>
@@ -1410,9 +1192,12 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(148, 163, 184, 0.1)',
+            maxWidth: '800px',
           }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
-              💡 Key Observations:
+            <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              Key Observations:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
               <li>Watch the earthquake history - is timing regular?</li>
@@ -1422,7 +1207,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(true, true, 'See The Full Picture →')}
+        {renderBottomBar(true, true, 'See The Full Picture')}
       </div>
     );
   }
@@ -1433,16 +1218,20 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
     const isCorrect = selectedTwist?.correct === true;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
+      <div style={outerStyle}>
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          {renderNavDots()}
+          <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {isCorrect ? '🎯' : '🤯'}
+              {isCorrect ? '\u{1F3AF}' : '\u{1F92F}'}
             </div>
             <h2 style={{
               color: isCorrect ? colors.success : colors.accent,
               fontSize: '24px',
               marginBottom: '8px',
+              fontWeight: 'bold',
+              lineHeight: '1.3',
             }}>
               {isCorrect ? 'Scientific Insight!' : 'The Prediction Paradox!'}
             </h2>
@@ -1453,9 +1242,12 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(148, 163, 184, 0.1)',
+            maxWidth: '800px',
           }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🎲 Statistical Patterns, Not Schedules:
+            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              Statistical Patterns, Not Schedules:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
               Earthquakes follow statistical patterns - we can say things like "there's a 30%
@@ -1475,101 +1267,119 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(148, 163, 184, 0.1)',
+            maxWidth: '800px',
           }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🏆 What We CAN Predict:
+            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              What We CAN Predict:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
-              • <strong>Where:</strong> We know fault locations well<br />
-              • <strong>How big (maximum):</strong> Fault length limits magnitude<br />
-              • <strong>Probability:</strong> Statistical likelihood over decades<br />
-              • <strong>After first shake:</strong> Aftershock patterns are more predictable
+              <strong>Where:</strong> We know fault locations well<br />
+              <strong>How big (maximum):</strong> Fault length limits magnitude<br />
+              <strong>Probability:</strong> Statistical likelihood over decades<br />
+              <strong>After first shake:</strong> Aftershock patterns are more predictable
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'See Real Applications →')}
+        {renderBottomBar(true, true, 'See Real Applications')}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    const allCompleted = transferCompleted.size >= 4;
+    const allCompleted = transferCompleted.size >= transferApplications.length;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
-              🌍 Real-World Applications
+      <div style={outerStyle}>
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          {renderNavDots()}
+          <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Explore all {transferApplications.length} applications to continue
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.5' }}>
+              App {Math.min(transferCompleted.size + 1, transferApplications.length)} of {transferApplications.length} - Explore all to continue
             </p>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '8px',
-              marginTop: '12px',
-            }}>
-              {transferApplications.map((_, i) => (
-                <div
-                  key={i}
-                  style={{
-                    width: '12px',
-                    height: '12px',
-                    borderRadius: '50%',
-                    background: transferCompleted.has(i) ? colors.success : 'rgba(71, 85, 105, 0.5)',
-                  }}
-                />
-              ))}
-            </div>
           </div>
 
-          {transferApplications.map((app) => (
+          {transferApplications.map((app, idx) => (
             <div
-              key={app.id}
-              onClick={() => {
-                setTransferCompleted(prev => new Set([...prev, app.id]));
-              }}
+              key={idx}
               style={{
-                background: transferCompleted.has(app.id)
+                background: transferCompleted.has(idx)
                   ? 'rgba(16, 185, 129, 0.1)'
                   : colors.bgCard,
-                border: transferCompleted.has(app.id)
+                border: transferCompleted.has(idx)
                   ? '2px solid rgba(16, 185, 129, 0.3)'
                   : '2px solid transparent',
                 margin: '12px 16px',
                 padding: '16px',
                 borderRadius: '12px',
                 cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                maxWidth: '800px',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px', margin: 0 }}>
-                  {app.title}
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px', margin: 0, fontWeight: 'bold', lineHeight: '1.3' }}>
+                  {app.icon} {app.title}
                 </h3>
-                {transferCompleted.has(app.id) && (
-                  <span style={{ color: colors.success, fontSize: '18px' }}>✓</span>
+                {transferCompleted.has(idx) && (
+                  <span style={{ color: colors.success, fontSize: '18px' }}>Completed</span>
                 )}
               </div>
               <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginTop: '8px' }}>
                 {app.description}
               </p>
-              <div style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                borderRadius: '6px',
-                padding: '10px',
-                marginTop: '10px',
-              }}>
-                <p style={{ color: colors.accent, fontSize: '12px', margin: 0 }}>
-                  💡 {app.insight}
-                </p>
+
+              {/* Stats for each app */}
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', marginTop: '12px', flexWrap: 'wrap' }}>
+                {app.stats.map((stat, si) => (
+                  <div key={si} style={{
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    textAlign: 'center',
+                    flex: '1',
+                    minWidth: '80px',
+                    border: '1px solid rgba(148, 163, 184, 0.1)',
+                  }}>
+                    <div style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 'bold' }}>{stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '10px' }}>{stat.label}</div>
+                  </div>
+                ))}
               </div>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTransferCompleted(prev => new Set([...prev, idx]));
+                }}
+                style={{
+                  marginTop: '12px',
+                  padding: '10px 20px',
+                  background: transferCompleted.has(idx)
+                    ? 'rgba(16, 185, 129, 0.2)'
+                    : 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: colors.textPrimary,
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  width: '100%',
+                }}
+              >
+                {transferCompleted.has(idx) ? 'Got It' : 'Got It'}
+              </button>
             </div>
           ))}
         </div>
-        {renderBottomBar(true, allCompleted, allCompleted ? 'Take the Test →' : `Explore ${4 - transferCompleted.size} More`)}
+        {renderBottomBar(true, allCompleted, allCompleted ? 'Take the Test' : `Explore ${transferApplications.length - transferCompleted.size} More`)}
       </div>
     );
   }
@@ -1587,49 +1397,52 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
       const score = Math.round((correctCount / testQuestions.length) * 100);
 
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{ padding: '20px', textAlign: 'center' }}>
+        <div style={outerStyle}>
+          {renderProgressBar()}
+          <div style={scrollStyle}>
+            {renderNavDots()}
+            <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-                {score >= 80 ? '🏆' : score >= 60 ? '📚' : '💪'}
+                {score >= 80 ? '\u{1F3C6}' : score >= 60 ? '\u{1F4DA}' : '\u{1F4AA}'}
               </div>
-              <h2 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
+              <h2 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3' }}>
                 {score}% Score
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
-                {correctCount} of {testQuestions.length} correct
+              <p style={{ color: colors.textSecondary, fontSize: '16px', lineHeight: '1.5' }}>
+                You scored {correctCount}/{testQuestions.length} correct
               </p>
             </div>
 
             {testQuestions.map((q, idx) => {
               const correctOption = q.options.find(o => o.correct);
               const userAnswer = testAnswers[q.id];
-              const isCorrect = userAnswer === correctOption?.id;
+              const isCorrectAnswer = userAnswer === correctOption?.id;
 
               return (
                 <div
                   key={q.id}
                   style={{
-                    background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    border: `1px solid ${isCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                    background: isCorrectAnswer ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    border: `1px solid ${isCorrectAnswer ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
                     margin: '12px 16px',
                     padding: '14px',
                     borderRadius: '10px',
+                    maxWidth: '800px',
                   }}
                 >
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '16px' }}>
-                      {isCorrect ? '✓' : '✗'}
+                    <span style={{ color: isCorrectAnswer ? colors.success : colors.error, fontSize: '16px' }}>
+                      {isCorrectAnswer ? '\u2713' : '\u2717'}
                     </span>
                     <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold' }}>
-                      Q{idx + 1}
+                      Question {idx + 1} of {testQuestions.length}
                     </span>
                   </div>
-                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0', lineHeight: '1.5' }}>
                     {q.question}
                   </p>
-                  {!isCorrect && (
-                    <p style={{ color: colors.success, fontSize: '11px', margin: 0 }}>
+                  {!isCorrectAnswer && (
+                    <p style={{ color: colors.success, fontSize: '11px', margin: 0, lineHeight: '1.5' }}>
                       Correct: {correctOption?.text}
                     </p>
                   )}
@@ -1637,20 +1450,22 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(true, true, score >= 70 ? 'Complete! 🎉' : 'Review & Continue →')}
+          {renderBottomBar(true, true, score >= 70 ? 'Complete!' : 'Review & Continue')}
         </div>
       );
     }
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
-              📝 Knowledge Check
+      <div style={outerStyle}>
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          {renderNavDots()}
+          <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              Knowledge Check
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              {answeredCount} of {testQuestions.length} answered
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.5' }}>
+              Question {Math.min(answeredCount + 1, testQuestions.length)} of {testQuestions.length} - {answeredCount} answered
             </p>
           </div>
 
@@ -1662,10 +1477,13 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
                 margin: '12px 16px',
                 padding: '16px',
                 borderRadius: '12px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                border: '1px solid rgba(148, 163, 184, 0.1)',
+                maxWidth: '800px',
               }}
             >
-              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>
-                {idx + 1}. {q.question}
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', lineHeight: '1.5' }}>
+                Question {idx + 1} of {testQuestions.length}: {q.question}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {q.options.map((option) => (
@@ -1675,7 +1493,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
                     style={{
                       padding: '10px 14px',
                       background: testAnswers[q.id] === option.id
-                        ? 'rgba(239, 68, 68, 0.3)'
+                        ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(220, 38, 38, 0.3))'
                         : 'rgba(51, 65, 85, 0.5)',
                       border: testAnswers[q.id] === option.id
                         ? '1px solid rgba(239, 68, 68, 0.5)'
@@ -1685,6 +1503,8 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
                       fontSize: '13px',
                       textAlign: 'left',
                       cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      lineHeight: '1.5',
                     }}
                   >
                     {option.text}
@@ -1694,37 +1514,43 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             </div>
           ))}
         </div>
-        {allAnswered ? (
-          <div style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '16px 20px',
-            background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
-            borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-            zIndex: 1000,
-          }}>
-            <button
-              onClick={() => setTestSubmitted(true)}
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                border: 'none',
-                borderRadius: '12px',
-                color: colors.textPrimary,
-                fontSize: '16px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
-            >
-              Submit Answers
-            </button>
-          </div>
-        ) : (
-          renderBottomBar(false, false, '')
-        )}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '12px 20px',
+          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+          zIndex: 1000,
+          minHeight: '72px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <button
+            onClick={() => setTestSubmitted(true)}
+            style={{
+              padding: '14px 28px',
+              background: answeredCount > 0
+                ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                : 'rgba(71, 85, 105, 0.5)',
+              border: 'none',
+              borderRadius: '12px',
+              color: colors.textPrimary,
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: answeredCount > 0 ? 'pointer' : 'not-allowed',
+              opacity: answeredCount > 0 ? 1 : 0.5,
+              minHeight: '52px',
+              minWidth: '160px',
+              boxShadow: answeredCount > 0 ? '0 4px 15px rgba(239, 68, 68, 0.3)' : 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Submit Answers
+          </button>
+        </div>
       </div>
     );
   }
@@ -1732,14 +1558,16 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '72px', marginBottom: '16px' }}>🏆</div>
-            <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
+      <div style={outerStyle}>
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          {renderNavDots()}
+          <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+            <div style={{ fontSize: '72px', marginBottom: '16px' }}>{'\u{1F3C6}'}</div>
+            <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3' }}>
               Seismology Master!
             </h1>
-            <p style={{ color: colors.accent, fontSize: '16px' }}>
+            <p style={{ color: colors.accent, fontSize: '16px', lineHeight: '1.5' }}>
               You've mastered earthquake physics
             </p>
           </div>
@@ -1749,13 +1577,16 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(148, 163, 184, 0.1)',
+            maxWidth: '800px',
           }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>
-              🎓 What You've Learned:
+            <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              What You've Learned:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '2', paddingLeft: '20px', margin: 0 }}>
               <li>Static friction locks faults until threshold</li>
-              <li>Kinetic friction {"<"} static friction = sudden slip</li>
+              <li>Kinetic friction is less than static friction, allowing sudden slip</li>
               <li>Longer quiet periods = more stored energy</li>
               <li>Same physics: earthquakes to violin music</li>
               <li>Statistical prediction possible, exact timing isn't</li>
@@ -1768,9 +1599,11 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
             border: '1px solid rgba(239, 68, 68, 0.3)',
+            boxShadow: '0 4px 15px rgba(239, 68, 68, 0.1)',
+            maxWidth: '800px',
           }}>
-            <h3 style={{ color: colors.accent, fontSize: '16px', marginBottom: '12px' }}>
-              🚀 Feel It Around You:
+            <h3 style={{ color: colors.accent, fontSize: '16px', marginBottom: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+              Feel It Around You:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               Run your finger across a window pane, listen to a squeaky door, or watch a violin
@@ -1780,15 +1613,45 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Complete Game →')}
+        {renderBottomBar(true, true, 'Complete Game')}
       </div>
     );
   }
 
-  // Default fallback
+  // Default fallback - render hook phase
   return (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <p style={{ color: colors.textSecondary }}>Loading phase: {phase}...</p>
+    <div style={outerStyle}>
+      {renderProgressBar()}
+      <div style={scrollStyle}>
+        {renderNavDots()}
+        <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+          <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3' }}>
+            Discover: The Earth's Stutter
+          </h1>
+          <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '8px', lineHeight: '1.5' }}>
+            Game 111: Stick-Slip Earthquakes
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, lineHeight: '1.5' }}>
+            Welcome! Let's explore how friction causes earthquakes.
+          </p>
+        </div>
+        {renderVisualization(false)}
+        <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(148, 163, 184, 0.1)',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6', fontWeight: 400 }}>
+              Stick-slip friction causes earthquakes. Press your finger on glass and drag slowly -
+              that stuttering vibration uses the exact same physics!
+            </p>
+          </div>
+        </div>
+      </div>
+      {renderBottomBar(false, true, "Start Exploring")}
     </div>
   );
 };

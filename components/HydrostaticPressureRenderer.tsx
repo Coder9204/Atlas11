@@ -770,7 +770,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
         border: `1px solid ${colors.bgHover}`,
         marginBottom: '32px'
       }}>
-        <svg width={isMobile ? 260 : 320} height={140} style={{ display: 'block', margin: '0 auto' }}>
+        <svg width={isMobile ? 260 : 320} height={140} viewBox={`0 0 ${isMobile ? 260 : 320} 140`} style={{ display: 'block', margin: '0 auto' }}>
           <defs>
             <linearGradient id="hookWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.3" />
@@ -820,7 +820,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
         marginBottom: '32px',
         textAlign: 'left'
       }}>
-        <p style={{ fontSize: typo.body, color: colors.textTertiary, fontStyle: 'italic', margin: 0, lineHeight: 1.5 }}>
+        <p style={{ fontSize: typo.body, color: colors.textSecondary, fontStyle: 'italic', margin: 0, lineHeight: 1.5 }}>
           "Every 10 meters of water adds about 1 atmosphere of pressure - the same pressure as our entire atmosphere."
         </p>
         <p style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '8px', marginBottom: 0 }}>
@@ -841,7 +841,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
           borderRadius: '16px',
           cursor: 'pointer',
           boxShadow: `0 8px 32px ${colors.primary}50`,
-          transition: 'transform 0.2s, box-shadow 0.2s'
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          minHeight: '44px'
         }}
       >
         Discover Why
@@ -876,14 +877,19 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
         <h2 style={{ fontSize: typo.heading, fontWeight: 700, color: colors.textPrimary, marginBottom: '8px', lineHeight: 1.2 }}>
           Why Does Pressure Increase With Depth?
         </h2>
-        <p style={{ fontSize: typo.body, color: colors.textSecondary, marginBottom: '28px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: typo.body, color: colors.textSecondary, marginBottom: '16px', lineHeight: 1.5 }}>
           What causes the crushing pressure that divers experience deep underwater?
+        </p>
+        <p style={{ fontSize: typo.body, color: colors.textSecondary, marginBottom: '28px', lineHeight: 1.5 }}>
+          Think about what happens as you dive deeper into a swimming pool or the ocean. Consider the force that acts on everything - how much will the pressure change at different depths?
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
           {options.map(opt => (
             <button
               key={opt.id}
+              role="option"
+              aria-selected={prediction === opt.id}
               onClick={() => {
                 if (prediction !== opt.id) {
                   playSound('click');
@@ -901,13 +907,14 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                 border: `2px solid ${prediction === opt.id ? colors.success : 'transparent'}`,
                 borderRadius: '16px',
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                minHeight: '44px'
               }}
             >
               <span style={{ fontSize: '28px' }}>{opt.icon}</span>
               <div style={{ flex: 1 }}>
                 <p style={{ color: colors.textPrimary, fontWeight: 600, fontSize: typo.body, margin: 0 }}>{opt.label}</p>
-                <p style={{ color: colors.textTertiary, fontSize: typo.small, margin: '4px 0 0' }}>{opt.desc}</p>
+                <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: '4px 0 0' }}>{opt.desc}</p>
               </div>
               {prediction === opt.id && <span style={{ color: colors.success, fontSize: '22px' }}>✓</span>}
             </button>
@@ -927,7 +934,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
               border: 'none',
               borderRadius: '16px',
               cursor: 'pointer',
-              boxShadow: `0 6px 24px ${colors.primary}40`
+              boxShadow: `0 6px 24px ${colors.primary}40`,
+              minHeight: '44px'
             }}
           >
             Explore the Depths
@@ -957,6 +965,9 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
         </h1>
         <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>
           Adjust the depth slider and watch pressure change in real-time
+        </p>
+        <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: '8px 0 0' }}>
+          Real-world relevance: This is exactly how dive computers calculate decompression schedules for scuba divers, helping them avoid the bends by tracking pressure at depth.
         </p>
       </div>
 
@@ -992,6 +1003,11 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
               </div>
               <input
                 type="range"
+                role="slider"
+                aria-label="Depth control"
+                aria-valuemin={0}
+                aria-valuemax={50}
+                aria-valuenow={depth}
                 min="0"
                 max="50"
                 value={depth}
@@ -1107,7 +1123,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
               background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
               border: 'none',
               borderRadius: '16px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              minHeight: '44px'
             }}
           >
             Learn the Equation
@@ -1196,7 +1213,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
 
       {/* Quick reference table */}
       <div style={{ background: colors.bgSurface, borderRadius: '14px', padding: '18px', marginBottom: '28px' }}>
-        <p style={{ color: colors.textTertiary, fontWeight: 600, margin: '0 0 14px', fontSize: typo.body }}>
+        <p style={{ color: colors.textSecondary, fontWeight: 600, margin: '0 0 14px', fontSize: typo.body }}>
           Quick Reference (Fresh Water)
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
@@ -1239,7 +1256,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
           background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`,
           border: 'none',
           borderRadius: '16px',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          minHeight: '44px'
         }}
       >
         A Surprising Paradox
@@ -1293,6 +1311,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
           {options.map(opt => (
             <button
               key={opt.id}
+              role="option"
+              aria-selected={twistPrediction === opt.id}
               onClick={() => {
                 if (twistPrediction !== opt.id) {
                   playSound('click');
@@ -1307,11 +1327,12 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                 border: `2px solid ${twistPrediction === opt.id ? colors.warning : 'transparent'}`,
                 borderRadius: '16px',
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                minHeight: '44px'
               }}
             >
               <p style={{ color: colors.textPrimary, fontWeight: 600, fontSize: typo.body, margin: 0 }}>{opt.label}</p>
-              <p style={{ color: colors.textTertiary, fontSize: typo.small, margin: '4px 0 0' }}>{opt.desc}</p>
+              <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: '4px 0 0' }}>{opt.desc}</p>
             </button>
           ))}
         </div>
@@ -1328,7 +1349,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
               background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`,
               border: 'none',
               borderRadius: '16px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              minHeight: '44px'
             }}
           >
             Test Your Prediction
@@ -1482,7 +1504,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                 background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`,
                 border: 'none',
                 borderRadius: '16px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                minHeight: '44px'
               }}
             >
               Understand the Paradox
@@ -1586,7 +1609,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
           background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
           border: 'none',
           borderRadius: '16px',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          minHeight: '44px'
         }}
       >
         See Real-World Applications
@@ -1751,10 +1775,11 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                 background: `linear-gradient(135deg, ${app.color} 0%, ${app.color}cc 100%)`,
                 border: 'none',
                 borderRadius: '14px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                minHeight: '44px'
               }}
             >
-              {isLastApp ? 'Complete & Take Test' : 'Continue'}
+              {isLastApp ? 'Got It - Take Test' : 'Got It'}
             </button>
           )}
 
@@ -1780,10 +1805,11 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
               border: 'none',
               borderRadius: '18px',
               cursor: 'pointer',
-              boxShadow: `0 8px 32px ${colors.primary}50`
+              boxShadow: `0 8px 32px ${colors.primary}50`,
+              minHeight: '44px'
             }}
           >
-            Take the Knowledge Test
+            Got It - Take the Knowledge Test
           </button>
         )}
       </div>
@@ -1810,6 +1836,9 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
             padding: '8px 14px',
             borderRadius: '24px'
           }}>
+            Question {currentQuestion + 1} of 10
+          </span>
+          <span className="sr-only" style={{ position: 'absolute', left: '-9999px' }}>
             Question {currentQuestion + 1} of 10
           </span>
           <span style={{
@@ -1843,7 +1872,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
             padding: '16px',
             marginBottom: '20px'
           }}>
-            <p style={{ color: colors.textTertiary, fontSize: typo.small, margin: 0, lineHeight: 1.6 }}>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0, lineHeight: 1.6 }}>
               {q.scenario}
             </p>
           </div>
@@ -1937,7 +1966,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
               border: 'none',
               borderRadius: '12px',
               cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
-              opacity: currentQuestion === 0 ? 0.5 : 1
+              opacity: currentQuestion === 0 ? 0.5 : 1,
+              minHeight: '44px'
             }}
           >
             Back
@@ -1957,7 +1987,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                 color: colors.textSecondary,
                 border: 'none',
                 borderRadius: '12px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                minHeight: '44px'
               }}
             >
               Next
@@ -1977,13 +2008,14 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                 color: '#fff',
                 border: 'none',
                 borderRadius: '12px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                minHeight: '44px'
               }}
             >
               Complete
             </button>
           ) : (
-            <span style={{ fontSize: typo.small, color: colors.textMuted, alignSelf: 'center' }}>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary, alignSelf: 'center' }}>
               Answer all to continue
             </span>
           )}
@@ -2086,7 +2118,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                   background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
                   border: 'none',
                   borderRadius: '16px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '44px'
                 }}
               >
                 Return to Dashboard
@@ -2101,10 +2134,11 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                   background: 'transparent',
                   border: `1px solid ${colors.bgHover}`,
                   borderRadius: '16px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '44px'
                 }}
               >
-                Review Lesson
+                Play Again
               </button>
             </>
           ) : (
@@ -2119,7 +2153,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                   background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`,
                   border: 'none',
                   borderRadius: '16px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '44px'
                 }}
               >
                 Retake Test
@@ -2134,21 +2169,23 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                   background: 'transparent',
                   border: `1px solid ${colors.bgHover}`,
                   borderRadius: '16px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '44px'
                 }}
               >
-                Review Lesson
+                Play Again
               </button>
               <button
                 onClick={handleReturnToDashboard}
                 style={{
                   padding: '14px',
                   fontSize: typo.small,
-                  color: colors.textMuted,
+                  color: colors.textSecondary,
                   background: 'transparent',
                   border: 'none',
                   textDecoration: 'underline',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '44px'
                 }}
               >
                 Return to Dashboard
@@ -2215,8 +2252,11 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
         background: `${colors.bgSurface}f0`,
         backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${colors.bgHover}`,
-        position: 'relative',
-        zIndex: 50
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000
       }}>
         <span style={{ fontSize: typo.body, fontWeight: 600, color: colors.textPrimary }}>
           Hydrostatic Pressure
@@ -2235,7 +2275,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
         minHeight: 0,
         overflowY: 'auto',
         overflowX: 'hidden',
-        WebkitOverflowScrolling: 'touch'
+        WebkitOverflowScrolling: 'touch',
+        marginTop: '52px'
       }}>
         {renderPhase()}
       </div>

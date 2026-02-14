@@ -293,7 +293,7 @@ export default function HeliumBalloonCarRenderer({
     bgCard: '#0f172a',        // slate-900
     bgCardLight: '#1e293b',   // slate-800
     textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
+    textSecondary: '#e2e8f0', // slate-200 (accessible contrast)
     textMuted: '#64748b',     // slate-500
     border: '#334155',        // slate-700
     borderLight: '#475569',   // slate-600
@@ -738,7 +738,7 @@ export default function HeliumBalloonCarRenderer({
       <button
         onClick={() => goToPhase('predict')}
         className="group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
-        style={{ zIndex: 10 }}
+        style={{ zIndex: 10, minHeight: '44px' }}
       >
         <span className="relative z-10 flex items-center gap-3">
           Make Your Prediction
@@ -761,19 +761,49 @@ export default function HeliumBalloonCarRenderer({
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8">
+      <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8" style={{ overflowY: 'auto' }}>
         <div className="max-w-xl w-full">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-8" style={{ marginBottom: '16px' }}>
             <span className="text-xs font-bold text-purple-400 tracking-widest uppercase mb-2 block">
               YOUR PREDICTION
             </span>
             <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-2">
               Which way does the balloon tilt?
             </h2>
-            <p className="text-slate-400">
+            <p style={{ color: '#e2e8f0' }}>
               When the car accelerates <strong className="text-emerald-400">forward</strong>, what happens to the helium balloon?
             </p>
+          </div>
+
+          {/* Static Preview Image */}
+          <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-6" style={{ marginBottom: '16px' }}>
+            <svg viewBox="0 0 400 140" style={{ width: '100%' }}>
+              {renderSvgDefs()}
+              {/* Road */}
+              <rect x="0" y="110" width="400" height="30" fill="url(#hbcRoadSurface)" />
+              <line x1="0" y1="125" x2="400" y2="125" stroke="#fbbf24" strokeWidth="2" strokeDasharray="20,15" />
+              {/* Car */}
+              <rect x="100" y="55" width="180" height="50" fill="url(#hbcCarBody)" rx="10" />
+              <rect x="115" y="25" width="145" height="40" fill="url(#hbcCarRoof)" rx="8" />
+              <rect x="125" y="32" width="55" height="28" fill="url(#hbcWindowGlass)" rx="4" />
+              <rect x="190" y="32" width="60" height="28" fill="url(#hbcWindowGlass)" rx="4" />
+              {/* Wheels */}
+              <circle cx="140" cy="105" r="16" fill="url(#hbcWheelTire)" />
+              <circle cx="140" cy="105" r="6" fill="url(#hbcWheelHub)" />
+              <circle cx="240" cy="105" r="16" fill="url(#hbcWheelTire)" />
+              <circle cx="240" cy="105" r="6" fill="url(#hbcWheelHub)" />
+              {/* Balloon - static at center */}
+              <line x1="165" y1="55" x2="165" y2="30" stroke="#d8b4fe" strokeWidth="1.5" />
+              <ellipse cx="165" cy="15" rx="14" ry="16" fill="url(#hbcBalloonGloss)" />
+              <text x="165" y="20" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">He</text>
+              {/* Question marks */}
+              <text x="130" y="15" fill="#fbbf24" fontSize="16" fontWeight="bold">?</text>
+              <text x="200" y="15" fill="#fbbf24" fontSize="16" fontWeight="bold">?</text>
+              {/* Acceleration arrow */}
+              <path d="M 300,60 L 340,60" stroke="#22c55e" strokeWidth="3" markerEnd="url(#hbcArrowGreen)" />
+              <text x="320" y="80" textAnchor="middle" fill="#22c55e" fontSize="10" fontWeight="bold">ACCEL</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -785,7 +815,7 @@ export default function HeliumBalloonCarRenderer({
                   setPrediction(p.id);
                   playSound('click');
                 }}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-200 border-2 ${
                   prediction === p.id
                     ? 'border-purple-500 bg-purple-500/10'
@@ -807,7 +837,7 @@ export default function HeliumBalloonCarRenderer({
           <div className="flex gap-3">
             <button
               onClick={goBack}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
             >
               Back
@@ -820,7 +850,7 @@ export default function HeliumBalloonCarRenderer({
                 }
               }}
               disabled={prediction === null}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
                 prediction !== null
                   ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
@@ -842,8 +872,8 @@ export default function HeliumBalloonCarRenderer({
     const pressureIntensity = (carState === 'accelerating' || carState === 'braking') ? 0.8 : 0;
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="max-w-2xl w-full">
+      <div className="flex flex-col items-center px-6 py-8" style={{ overflowY: 'auto' }}>
+        <div className="max-w-2xl w-full" style={{ padding: '16px', gap: '16px', display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
           <div className="text-center mb-6">
             <span className="text-xs font-bold text-purple-400 tracking-widest uppercase mb-2 block">
@@ -852,8 +882,16 @@ export default function HeliumBalloonCarRenderer({
             <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-1">
               Balloon vs Pendulum
             </h2>
-            <p className="text-slate-400">
+            <p style={{ color: '#e2e8f0' }}>
               Watch how they behave differently during acceleration
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 mb-4">
+            <p className="font-semibold text-purple-400 mb-1">Real-World Connection</p>
+            <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+              This same physics explains why helium balloons in cars move forward when accelerating, how weather balloons rise through the atmosphere, and how accelerometers in your smartphone detect motion.
             </p>
           </div>
 
@@ -895,7 +933,7 @@ export default function HeliumBalloonCarRenderer({
           <div className="flex gap-3 justify-center mb-4 flex-wrap">
             <button
               onClick={() => setShowForceVectors(!showForceVectors)}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                 showForceVectors
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50'
@@ -906,7 +944,7 @@ export default function HeliumBalloonCarRenderer({
             </button>
             <button
               onClick={() => setShowPressureGradient(!showPressureGradient)}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                 showPressureGradient
                   ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
@@ -1031,7 +1069,7 @@ export default function HeliumBalloonCarRenderer({
             <button
               onClick={accelerateCar}
               disabled={carState !== 'stopped'}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className={`px-8 py-3 rounded-xl font-semibold transition-all ${
                 carState !== 'stopped'
                   ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
@@ -1043,7 +1081,7 @@ export default function HeliumBalloonCarRenderer({
             {carState === 'constant' && (
               <button
                 onClick={brakeCar}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className="px-8 py-3 rounded-xl font-semibold bg-red-500 text-white hover:bg-red-400 transition-all"
               >
                 Brake
@@ -1052,7 +1090,7 @@ export default function HeliumBalloonCarRenderer({
             {carState === 'stopped' && hasAccelerated && (
               <button
                 onClick={resetSimulation}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className="px-8 py-3 rounded-xl font-semibold bg-slate-600 text-white hover:bg-slate-500 transition-all"
               >
                 Reset
@@ -1064,7 +1102,7 @@ export default function HeliumBalloonCarRenderer({
           <div className="flex gap-3">
             <button
               onClick={goBack}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
             >
               Back
@@ -1079,7 +1117,7 @@ export default function HeliumBalloonCarRenderer({
                 goNext();
               }}
               disabled={!hasAccelerated}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
                 hasAccelerated
                   ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
@@ -1099,9 +1137,11 @@ export default function HeliumBalloonCarRenderer({
   // ============================================================================
   const renderReview = () => {
     const userWasRight = prediction === 1;
+    const predictionLabels = ['backward', 'forward', 'stays still'];
+    const userPredictionText = prediction !== null ? predictionLabels[prediction] : 'unknown';
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
+      <div className="flex flex-col items-center px-6 py-8" style={{ overflowY: 'auto' }}>
         <div className="max-w-xl w-full">
           {/* Result */}
           <div className="text-center mb-8">
@@ -1109,7 +1149,10 @@ export default function HeliumBalloonCarRenderer({
             <h2 className={`text-2xl font-bold mb-2 ${userWasRight ? 'text-emerald-400' : 'text-purple-400'}`}>
               {userWasRight ? 'You predicted correctly!' : 'The balloon moves FORWARD!'}
             </h2>
-            <p className="text-slate-400">Let&apos;s understand why this happens</p>
+            <p style={{ color: '#e2e8f0' }}>
+              You predicted the balloon would move <strong className="text-purple-400">{userPredictionText}</strong>.
+              {userWasRight ? ' Great intuition!' : ' The actual behavior surprised many people!'}
+            </p>
           </div>
 
           {/* Core Concept */}
@@ -1155,14 +1198,14 @@ export default function HeliumBalloonCarRenderer({
           <div className="flex gap-3">
             <button
               onClick={goBack}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
             >
               Back
             </button>
             <button
               onClick={goNext}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25 transition-all"
             >
               Try a Twist
@@ -1208,7 +1251,7 @@ export default function HeliumBalloonCarRenderer({
                   setTwistPrediction(opt.id);
                   playSound('click');
                 }}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-200 border-2 ${
                   twistPrediction === opt.id
                     ? 'border-amber-500 bg-amber-500/10'
@@ -1230,7 +1273,7 @@ export default function HeliumBalloonCarRenderer({
           <div className="flex gap-3">
             <button
               onClick={goBack}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
             >
               Back
@@ -1243,7 +1286,7 @@ export default function HeliumBalloonCarRenderer({
                 }
               }}
               disabled={twistPrediction === null}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
                 twistPrediction !== null
                   ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25'
@@ -1294,18 +1337,18 @@ export default function HeliumBalloonCarRenderer({
                   resetTwist();
                   playSound('click');
                 }}
-                style={{ zIndex: 10 }}
+                style={{
+                  zIndex: 10,
+                  minHeight: '44px',
+                  background: twistMode === mode ? `${mode === 'accelerate' ? '#22c55e' : mode === 'brake' ? '#ef4444' : mode === 'turn_left' ? '#3b82f6' : '#f59e0b'}20` : undefined,
+                  color: twistMode === mode ? getModeColor() : undefined,
+                  borderColor: twistMode === mode ? getModeColor() : undefined,
+                }}
                 className={`px-4 py-2 rounded-lg font-medium text-sm transition-all border ${
                   twistMode === mode
                     ? 'bg-opacity-20 border-opacity-50'
                     : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:bg-slate-700/50'
                 }`}
-                style={{
-                  background: twistMode === mode ? `${mode === 'accelerate' ? '#22c55e' : mode === 'brake' ? '#ef4444' : mode === 'turn_left' ? '#3b82f6' : '#f59e0b'}20` : undefined,
-                  color: twistMode === mode ? getModeColor() : undefined,
-                  borderColor: twistMode === mode ? getModeColor() : undefined,
-                  zIndex: 10,
-                }}
               >
                 {mode === 'accelerate' && 'Accelerate'}
                 {mode === 'brake' && 'Brake'}
@@ -1407,7 +1450,7 @@ export default function HeliumBalloonCarRenderer({
             </button>
             <button
               onClick={resetTwist}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className="px-8 py-3 rounded-xl font-semibold bg-slate-600 text-white hover:bg-slate-500 transition-all"
             >
               Reset
@@ -1418,7 +1461,7 @@ export default function HeliumBalloonCarRenderer({
           <div className="flex gap-3">
             <button
               onClick={goBack}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
             >
               Back
@@ -1433,7 +1476,7 @@ export default function HeliumBalloonCarRenderer({
                 goNext();
               }}
               disabled={twistCarState === 'stopped' && !hasAccelerated}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25 transition-all"
             >
               See the Insight
@@ -1506,14 +1549,14 @@ export default function HeliumBalloonCarRenderer({
           <div className="flex gap-3">
             <button
               onClick={goBack}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
             >
               Back
             </button>
             <button
               onClick={goNext}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all"
             >
               Real World Applications
@@ -1532,11 +1575,11 @@ export default function HeliumBalloonCarRenderer({
     const allRead = completedApps.size >= applications.length;
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="max-w-2xl w-full">
+      <div className="flex flex-col items-center px-6 py-8" style={{ overflowY: 'auto' }}>
+        <div className="max-w-2xl w-full" style={{ padding: '16px', gap: '16px', display: 'flex', flexDirection: 'column' }}>
           {/* Progress indicator */}
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <span className="text-sm text-slate-400">
+          <div className="flex items-center justify-center gap-3 mb-4" style={{ marginBottom: '16px' }}>
+            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>
               {completedApps.size} of {applications.length} applications explored
             </span>
             <div className="flex gap-1.5">
@@ -1566,6 +1609,7 @@ export default function HeliumBalloonCarRenderer({
                   onClick={() => setActiveApp(i)}
                   style={{
                     zIndex: 10,
+                    minHeight: '44px',
                     background: activeApp === i ? a.color : undefined,
                   }}
                   className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
@@ -1639,7 +1683,7 @@ export default function HeliumBalloonCarRenderer({
                     setTimeout(() => setActiveApp(activeApp + 1), 300);
                   }
                 }}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className="w-full py-3 rounded-lg font-semibold bg-emerald-500 text-white hover:bg-emerald-400 transition-colors"
               >
                 Mark &quot;{app.title}&quot; as Read
@@ -1651,26 +1695,29 @@ export default function HeliumBalloonCarRenderer({
             )}
           </div>
 
+          {/* Got It Button - always visible for navigation */}
+          <button
+            onClick={() => goToPhase('test')}
+            style={{
+              zIndex: 10,
+              minHeight: '44px',
+              background: 'linear-gradient(135deg, #a855f7, #3b82f6)',
+              padding: '16px',
+              marginBottom: '16px',
+            }}
+            className="w-full py-3 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all"
+          >
+            Got It
+          </button>
+
           {/* Navigation */}
-          <div className="flex gap-3">
+          <div className="flex gap-3" style={{ gap: '12px' }}>
             <button
               onClick={goBack}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px', padding: '12px 24px' }}
               className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
             >
               Back
-            </button>
-            <button
-              onClick={() => goToPhase('test')}
-              disabled={!allRead}
-              style={{ zIndex: 10 }}
-              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
-                allRead
-                  ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
-                  : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-              }`}
-            >
-              Take the Quiz
             </button>
           </div>
         </div>
@@ -1710,7 +1757,7 @@ export default function HeliumBalloonCarRenderer({
                   goToPhase('review');
                 }
               }}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, minHeight: '44px' }}
               className={`px-8 py-4 rounded-xl font-semibold text-lg ${
                 passed
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
@@ -1725,12 +1772,12 @@ export default function HeliumBalloonCarRenderer({
     }
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="max-w-xl w-full">
+      <div className="flex flex-col items-center px-6 py-8" style={{ overflowY: 'auto' }}>
+        <div className="max-w-xl w-full" style={{ padding: '16px', gap: '16px', display: 'flex', flexDirection: 'column' }}>
           {/* Question Header */}
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-4" style={{ marginBottom: '16px' }}>
             <span className="text-xs font-bold text-purple-400 tracking-widest uppercase">
-              QUESTION {testIndex + 1} OF 10
+              Question {testIndex + 1} of 10
             </span>
             <div className="flex gap-1">
               {testQuestions.map((_, i) => (
@@ -1775,24 +1822,39 @@ export default function HeliumBalloonCarRenderer({
                       playSound(opt.correct ? 'success' : 'failure');
                     }
                   }}
-                  style={{ zIndex: 10 }}
-                  className={`p-4 rounded-xl text-left transition-all border-2 ${
-                    showResult
+                  style={{
+                    zIndex: 10,
+                    minHeight: '44px',
+                    background: showResult
                       ? isCorrect
-                        ? 'bg-emerald-500/10 border-emerald-500'
+                        ? 'rgba(16, 185, 129, 0.1)'
                         : isSelected
-                          ? 'bg-red-500/10 border-red-500'
-                          : 'bg-slate-800/50 border-slate-700'
+                          ? 'rgba(239, 68, 68, 0.1)'
+                          : 'rgba(30, 41, 59, 0.5)'
                       : isSelected
-                        ? 'bg-purple-500/10 border-purple-500'
-                        : 'bg-slate-800/50 border-slate-700 hover:bg-slate-700/50'
-                  }`}
+                        ? 'rgba(168, 85, 247, 0.1)'
+                        : 'rgba(30, 41, 59, 0.5)',
+                    border: showResult
+                      ? isCorrect
+                        ? '2px solid #10b981'
+                        : isSelected
+                          ? '2px solid #ef4444'
+                          : '2px solid #334155'
+                      : isSelected
+                        ? '2px solid #a855f7'
+                        : '2px solid #334155',
+                    transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+                    boxShadow: isSelected ? '0 4px 12px rgba(168, 85, 247, 0.3)' : 'none',
+                  }}
+                  className="p-4 rounded-xl text-left transition-all"
                 >
-                  <span className={`font-bold mr-3 ${
-                    showResult
-                      ? isCorrect ? 'text-emerald-400' : isSelected ? 'text-red-400' : 'text-slate-500'
-                      : 'text-purple-400'
-                  }`}>
+                  <span style={{
+                    fontWeight: 'bold',
+                    marginRight: '12px',
+                    color: showResult
+                      ? isCorrect ? '#10b981' : isSelected ? '#ef4444' : '#64748b'
+                      : isSelected ? '#a855f7' : '#a855f7',
+                  }}>
                     {String.fromCharCode(65 + i)}
                   </span>
                   <span className="text-white">{opt.text}</span>
@@ -1814,7 +1876,7 @@ export default function HeliumBalloonCarRenderer({
             {testIndex > 0 ? (
               <button
                 onClick={() => setTestIndex(testIndex - 1)}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, minHeight: '44px' }}
                 className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
               >
                 Previous
@@ -1824,7 +1886,7 @@ export default function HeliumBalloonCarRenderer({
               testIndex < testQuestions.length - 1 ? (
                 <button
                   onClick={() => setTestIndex(testIndex + 1)}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                   className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-blue-600 text-white"
                 >
                   Next Question
@@ -1835,7 +1897,7 @@ export default function HeliumBalloonCarRenderer({
                     setTestSubmitted(true);
                     emitEvent('test_completed', { score: totalCorrect });
                   }}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                   className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
                 >
                   See Results
@@ -1911,7 +1973,7 @@ export default function HeliumBalloonCarRenderer({
             playSound('complete');
             if (onComplete) onComplete();
           }}
-          style={{ zIndex: 10 }}
+          style={{ zIndex: 10, minHeight: '44px' }}
           className="px-8 py-4 rounded-xl font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/25 transition-all"
         >
           Complete Lesson
@@ -1951,8 +2013,11 @@ export default function HeliumBalloonCarRenderer({
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+      <div
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}
+        className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50"
+      >
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto" style={{ minHeight: '44px' }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-lg">
               Balloon

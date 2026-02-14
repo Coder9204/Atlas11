@@ -318,8 +318,8 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // Bright enough for contrast (brightness >= 180)
+    textMuted: 'rgba(226, 232, 240, 0.7)', // Using rgba for muted colors
     border: '#2a2a3a',
   };
 
@@ -339,7 +339,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Dynamic Lab',
+    twist_play: 'Explore Dynamic',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -461,90 +461,129 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     const maxVisibleRequests = 8;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        {/* Queue area */}
-        <rect x="20" y="40" width={queueWidth} height={height - 80} rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-        <text x="20 + 60" y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Request Queue</text>
-
-        {/* Queue requests */}
-        {queue.slice(0, maxVisibleRequests).map((req, i) => (
-          <g key={req.id}>
-            <rect
-              x={30 + (i % 4) * (requestSize + 4)}
-              y={50 + Math.floor(i / 4) * (requestSize + 4)}
-              width={requestSize}
-              height={requestSize}
-              rx="2"
-              fill={colors.warning}
-              opacity={0.8 + (Math.sin(animationFrame * 0.1 + i) * 0.2)}
-            />
-          </g>
-        ))}
-        {queue.length > maxVisibleRequests && (
-          <text x="80" y={height - 50} fill={colors.textMuted} fontSize="10" textAnchor="middle">
-            +{queue.length - maxVisibleRequests} more
-          </text>
-        )}
-
-        {/* Arrow from queue to GPU */}
-        <path d={`M ${20 + queueWidth + 10} ${height / 2} L ${20 + queueWidth + 40} ${height / 2}`} stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)" />
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         <defs>
+          {/* Gradients for premium visual quality */}
+          <linearGradient id="queueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.warning} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.warning} stopOpacity="0.5" />
+          </linearGradient>
+          <linearGradient id="gpuGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.success} stopOpacity="0.9" />
+            <stop offset="100%" stopColor={colors.success} stopOpacity="0.6" />
+          </linearGradient>
+          <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={colors.bgSecondary} />
+            <stop offset="100%" stopColor={colors.bgPrimary} />
+          </linearGradient>
+          {/* Filter for depth/shadow effect */}
+          <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+            <feOffset dx="1" dy="2" result="offsetblur" />
+            <feComponentTransfer>
+              <feFuncA type="linear" slope="0.3" />
+            </feComponentTransfer>
+            <feMerge>
+              <feMergeNode />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
           </marker>
-        </defs>
-
-        {/* GPU Processing area */}
-        <rect x={20 + queueWidth + 50} y="40" width={gpuWidth} height={height - 80} rx="8" fill={colors.bgSecondary} stroke={processing.length > 0 ? colors.success : colors.border} strokeWidth={processing.length > 0 ? "2" : "1"} />
-        <text x={20 + queueWidth + 50 + gpuWidth / 2} y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">GPU Batch Processing</text>
-
-        {/* Processing requests */}
-        {processing.map((req, i) => (
-          <g key={req.id}>
-            <rect
-              x={20 + queueWidth + 60 + (i % 4) * (requestSize + 8)}
-              y={60 + Math.floor(i / 4) * (requestSize + 8)}
-              width={requestSize + 4}
-              height={requestSize + 4}
-              rx="3"
-              fill={colors.success}
-              style={{
-                animation: 'pulse 0.5s infinite',
-                transformOrigin: 'center'
-              }}
-            />
-          </g>
-        ))}
-        {processing.length === 0 && (
-          <text x={20 + queueWidth + 50 + gpuWidth / 2} y={height / 2} fill={colors.textMuted} fontSize="11" textAnchor="middle">
-            Waiting for batch...
-          </text>
-        )}
-
-        {/* Arrow from GPU to completed */}
-        <path d={`M ${20 + queueWidth + 50 + gpuWidth + 10} ${height / 2} L ${20 + queueWidth + 50 + gpuWidth + 40} ${height / 2}`} stroke={colors.success} strokeWidth="2" markerEnd="url(#arrowhead2)" />
-        <defs>
           <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" fill={colors.success} />
           </marker>
         </defs>
 
-        {/* Completed area */}
-        <rect x={width - completedWidth - 20} y="40" width={completedWidth} height={height - 80} rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-        <text x={width - completedWidth / 2 - 20} y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Completed</text>
+        {/* Background group */}
+        <g className="background-layer">
+          <rect x="0" y="0" width={width} height={height} fill="url(#bgGradient)" rx="12" />
+        </g>
 
-        {/* Completed count */}
-        <text x={width - completedWidth / 2 - 20} y={height / 2} fill={colors.success} fontSize="24" fontWeight="bold" textAnchor="middle">
-          {completed.length}
-        </text>
-        <text x={width - completedWidth / 2 - 20} y={height / 2 + 20} fill={colors.textMuted} fontSize="11" textAnchor="middle">
-          requests
-        </text>
+        {/* Queue area group */}
+        <g className="queue-layer" filter="url(#dropShadow)">
+          <rect x="20" y="40" width={queueWidth} height={height - 80} rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+          <text x={20 + queueWidth / 2} y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Request Queue</text>
 
-        {/* Batch size indicator */}
-        <text x={20 + queueWidth + 50 + gpuWidth / 2} y={height - 30} fill={colors.accent} fontSize="11" textAnchor="middle">
-          Batch Size: {batchSize}
-        </text>
+          {/* Queue requests */}
+          {queue.slice(0, maxVisibleRequests).map((req, i) => (
+            <rect
+              key={req.id}
+              x={30 + (i % 4) * (requestSize + 4)}
+              y={50 + Math.floor(i / 4) * (requestSize + 4)}
+              width={requestSize}
+              height={requestSize}
+              rx="2"
+              fill="url(#queueGradient)"
+              opacity={0.8 + (Math.sin(animationFrame * 0.1 + i) * 0.2)}
+            />
+          ))}
+          {queue.length > maxVisibleRequests && (
+            <text x="80" y={height - 50} fill={colors.textMuted} fontSize="10" textAnchor="middle">
+              +{queue.length - maxVisibleRequests} more
+            </text>
+          )}
+        </g>
+
+        {/* Arrow from queue to GPU */}
+        <g className="arrow-layer">
+          <path d={`M ${20 + queueWidth + 10} ${height / 2} L ${20 + queueWidth + 40} ${height / 2}`} stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)" />
+        </g>
+
+        {/* GPU Processing area group */}
+        <g className="gpu-layer" filter="url(#dropShadow)">
+          <rect x={20 + queueWidth + 50} y="40" width={gpuWidth} height={height - 80} rx="8" fill={colors.bgSecondary} stroke={processing.length > 0 ? colors.success : colors.border} strokeWidth={processing.length > 0 ? "2" : "1"} />
+          <text x={20 + queueWidth + 50 + gpuWidth / 2} y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">GPU Batch Processing</text>
+
+          {/* Processing requests */}
+          {processing.map((req, i) => (
+            <rect
+              key={req.id}
+              x={20 + queueWidth + 60 + (i % 4) * (requestSize + 8)}
+              y={60 + Math.floor(i / 4) * (requestSize + 8)}
+              width={requestSize + 4}
+              height={requestSize + 4}
+              rx="3"
+              fill="url(#gpuGradient)"
+              style={{
+                animation: 'pulse 0.5s infinite',
+                transformOrigin: 'center'
+              }}
+            />
+          ))}
+          {processing.length === 0 && (
+            <text x={20 + queueWidth + 50 + gpuWidth / 2} y={height / 2} fill={colors.textMuted} fontSize="11" textAnchor="middle">
+              Waiting for batch...
+            </text>
+          )}
+        </g>
+
+        {/* Arrow from GPU to completed */}
+        <g className="arrow-layer-2">
+          <path d={`M ${20 + queueWidth + 50 + gpuWidth + 10} ${height / 2} L ${20 + queueWidth + 50 + gpuWidth + 40} ${height / 2}`} stroke={colors.success} strokeWidth="2" markerEnd="url(#arrowhead2)" />
+        </g>
+
+        {/* Completed area group */}
+        <g className="completed-layer" filter="url(#dropShadow)">
+          <rect x={width - completedWidth - 20} y="40" width={completedWidth} height={height - 80} rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+          <text x={width - completedWidth / 2 - 20} y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Completed</text>
+
+          {/* Completed count */}
+          <text x={width - completedWidth / 2 - 20} y={height / 2} fill={colors.success} fontSize="24" fontWeight="bold" textAnchor="middle">
+            {completed.length}
+          </text>
+          <text x={width - completedWidth / 2 - 20} y={height / 2 + 20} fill={colors.textMuted} fontSize="11" textAnchor="middle">
+            requests
+          </text>
+        </g>
+
+        {/* Info layer */}
+        <g className="info-layer">
+          <text x={20 + queueWidth + 50 + gpuWidth / 2} y={height - 30} fill={colors.accent} fontSize="11" textAnchor="middle">
+            Batch Size: {batchSize}
+          </text>
+        </g>
       </svg>
     );
   };
@@ -573,7 +612,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     const currentLat = metrics.avgLatency;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         {/* Grid */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <g key={`grid-${frac}`}>
@@ -654,12 +693,12 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   const renderProgressBar = () => (
     <div style={{
       position: 'fixed',
-      top: 0,
+      top: '40px',
       left: 0,
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 999,
     }}>
       <div style={{
         height: '100%',
@@ -667,33 +706,6 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
         background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
         transition: 'width 0.3s ease',
       }} />
-    </div>
-  );
-
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
     </div>
   );
 
@@ -709,6 +721,165 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Fixed navigation bar at top
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      padding: '8px 16px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}>
+      <span style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]}
+      </span>
+      <div style={{ display: 'flex', gap: '4px' }}>
+        {phaseOrder.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(p)}
+            style={{
+              width: phase === p ? '20px' : '8px',
+              height: '8px',
+              borderRadius: '4px',
+              border: 'none',
+              background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              minHeight: '8px',
+            }}
+            aria-label={phaseLabels[p]}
+            title={phaseLabels[p]}
+          />
+        ))}
+      </div>
+    </nav>
+  );
+
+  // Fixed footer with navigation buttons
+  const renderFooter = (prevLabel?: string, nextLabel?: string, onNext?: () => void, showPrev: boolean = true) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      background: colors.bgSecondary,
+      borderTop: `1px solid ${colors.border}`,
+      padding: '12px 16px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+    }}>
+      {showPrev && phaseOrder.indexOf(phase) > 0 ? (
+        <button
+          onClick={() => goToPhase(phaseOrder[phaseOrder.indexOf(phase) - 1])}
+          style={{
+            background: 'transparent',
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            padding: '12px 20px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            minHeight: '44px',
+          }}
+        >
+          {'\u2190'} {prevLabel || 'Back'}
+        </button>
+      ) : <div />}
+      {onNext && nextLabel && (
+        <button
+          onClick={onNext}
+          style={{
+            ...primaryButtonStyle,
+            minHeight: '44px',
+          }}
+        >
+          {nextLabel} {'\u2192'}
+        </button>
+      )}
+    </div>
+  );
+
+  // Scrollable content wrapper
+  const ScrollableContent: React.FC<{ children: React.ReactNode; paddingTop?: string }> = ({ children, paddingTop = '60px' }) => (
+    <div style={{
+      height: '100vh',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      background: colors.bgPrimary,
+    }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop,
+        paddingBottom: '100px',
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+
+  // Static batching visualization for predict phase
+  const StaticBatchingVisualization = () => {
+    const width = isMobile ? 320 : 500;
+    const height = isMobile ? 200 : 250;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+        {/* Queue area */}
+        <rect x="20" y="40" width="120" height={height - 80} rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+        <text x="80" y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Request Queue</text>
+
+        {/* Sample requests in queue */}
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <rect
+            key={i}
+            x={30 + (i % 4) * 16}
+            y={50 + Math.floor(i / 4) * 16}
+            width="12"
+            height="12"
+            rx="2"
+            fill={colors.warning}
+            opacity="0.8"
+          />
+        ))}
+
+        {/* Arrow */}
+        <path d="M 150 125 L 200 125" stroke={colors.accent} strokeWidth="2" markerEnd="url(#staticArrow)" />
+        <defs>
+          <marker id="staticArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
+          </marker>
+        </defs>
+
+        {/* GPU area */}
+        <rect x="210" y="40" width="150" height={height - 80} rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+        <text x="285" y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">GPU Processing</text>
+        <text x="285" y={height / 2} fill={colors.textMuted} fontSize="11" textAnchor="middle">Batch Size = ?</text>
+
+        {/* Completed area */}
+        <rect x={width - 100} y="40" width="80" height={height - 80} rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+        <text x={width - 60} y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Done</text>
+        <text x={width - 60} y={height / 2} fill={colors.success} fontSize="20" fontWeight="bold" textAnchor="middle">?</text>
+
+        {/* Labels */}
+        <text x={width / 2} y={height - 15} fill={colors.textMuted} fontSize="10" textAnchor="middle">
+          How does batch size affect latency?
+        </text>
+      </svg>
+    );
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -718,64 +889,59 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <ScrollableContent>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            textAlign: 'center',
+            minHeight: 'calc(100vh - 160px)',
+          }}>
+            <div style={{
+              fontSize: '64px',
+              marginBottom: '24px',
+              animation: 'pulse 2s infinite',
+            }}>
+              <span role="img" aria-label="batch">📦</span><span role="img" aria-label="clock">⏱️</span>
+            </div>
+            <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          <span role="img" aria-label="batch">📦</span><span role="img" aria-label="clock">⏱️</span>
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+            <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+              Batching vs Latency
+            </h1>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Batching vs Latency
-        </h1>
+            <p style={{
+              ...typo.body,
+              color: colors.textSecondary,
+              maxWidth: '600px',
+              marginBottom: '32px',
+            }}>
+              Why do ML services sometimes feel instant and other times take seconds? The answer lies in <span style={{ color: colors.accent }}>batching</span>—a tradeoff that powers every AI system at scale.
+            </p>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Why do ML services sometimes feel instant and other times take seconds? The answer lies in <span style={{ color: colors.accent }}>batching</span>—a tradeoff that powers every AI system at scale."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "You can have it fast, or you can have it cheap—but batching lets you find the sweet spot in between."
-          </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — ML Infrastructure Wisdom
-          </p>
-        </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore the Tradeoff
-        </button>
-
-        {renderNavDots()}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '500px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+                You can have it fast, or you can have it cheap—but batching lets you find the sweet spot in between.
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                — ML Infrastructure Wisdom
+              </p>
+            </div>
+          </div>
+        </ScrollableContent>
+        {renderFooter(undefined, 'Start Exploring', () => { playSound('click'); nextPhase(); }, false)}
       </div>
     );
   }
@@ -789,109 +955,91 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <ScrollableContent>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Step 1 of 3: Make Your Prediction
+              </span>
+            </div>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                What to Watch: Observe how batch size affects the time each request must wait before processing
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            An ML service switches from processing one request at a time to batching 8 requests together. What happens to individual request latency?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              An ML service switches from processing one request at a time to batching 8 requests together. What happens to individual request latency?
+            </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>1x</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Single Request</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>8x</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Batch of 8</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>?</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Latency Change?</p>
-              </div>
+            {/* Static visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              display: 'flex',
+              justifyContent: 'center',
+            }}>
+              <StaticBatchingVisualization />
+            </div>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See What Happens
-            </button>
-          )}
-        </div>
-
-        {renderNavDots()}
+        </ScrollableContent>
+        {renderFooter('Back', prediction ? 'See What Happens' : undefined, prediction ? () => { playSound('success'); nextPhase(); } : undefined)}
       </div>
     );
   }
@@ -899,196 +1047,205 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // PLAY PHASE - Interactive Batching Simulation
   if (phase === 'play') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <ScrollableContent>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Batching Simulation
+            </h2>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Batching Simulation
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust batch size and see how it affects throughput and latency
-          </p>
-
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <BatchingVisualization />
-            </div>
-
-            {/* Batch size slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Batch Size</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize} requests</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="16"
-                step="1"
-                value={batchSize}
-                onChange={(e) => setBatchSize(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${(batchSize / 16) * 100}%, ${colors.border} ${(batchSize / 16) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Request rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Request Rate</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="100"
-                step="5"
-                value={requestRate}
-                onChange={(e) => setRequestRate(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Processing time slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Processing Time per Batch</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{processingTime} ms</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="200"
-                step="10"
-                value={processingTime}
-                onChange={(e) => setProcessingTime(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Simulation controls */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <button
-                onClick={() => setIsSimulationRunning(!isSimulationRunning)}
-                style={{
-                  background: isSimulationRunning ? colors.error : colors.success,
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 32px',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isSimulationRunning ? 'Stop Simulation' : 'Start Simulation'}
-              </button>
-            </div>
-
-            {/* Metrics display */}
+            {/* Observation guidance */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{metrics.throughput.toFixed(0)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Max Throughput</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>(req/s)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: metrics.avgLatency > 500 ? colors.error : metrics.avgLatency > 200 ? colors.warning : colors.success }}>
-                  {metrics.avgLatency.toFixed(0)}ms
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: metrics.gpuUtilization > 70 ? colors.success : metrics.gpuUtilization > 40 ? colors.warning : colors.error
-                }}>
-                  {metrics.gpuUtilization.toFixed(0)}%
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>GPU Utilization</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{metrics.queueDepth.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Avg Queue Depth</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Discovery prompt */}
-          {batchSize >= 8 && metrics.gpuUtilization > 60 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
+              background: `${colors.accent}22`,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
-              textAlign: 'center',
+              border: `1px solid ${colors.accent}44`,
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Notice how larger batches increase throughput but also increase latency. This is the core tradeoff!
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                What to Watch: Observe how increasing batch size affects both throughput (good) and latency (tradeoff). Try sliding the batch size to see the effect.
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px', margin: '8px 0 0 0' }}>
+                <strong>Throughput</strong> is the measure of requests processed per second. <strong>Latency</strong> is the measure of time from request arrival to response. This is important for real-world ML systems that need to balance cost efficiency with user experience.
               </p>
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); setIsSimulationRunning(false); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand Why
-          </button>
-        </div>
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <BatchingVisualization />
+              </div>
 
-        {renderNavDots()}
+              {/* Batch size slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Batch Size</span>
+                  <span data-testid="batch-size-value" style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize} requests</span>
+                </div>
+                <div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="16"
+                    step="1"
+                    value={batchSize}
+                    onChange={(e) => setBatchSize(parseInt(e.target.value))}
+                    aria-label="Batch Size"
+                    style={{
+                      width: '100%',
+                      height: '8px',
+                      borderRadius: '4px',
+                      background: `linear-gradient(to right, ${colors.accent} ${(batchSize / 16) * 100}%, ${colors.border} ${(batchSize / 16) * 100}%)`,
+                      cursor: 'pointer',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Request rate slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Request Rate</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
+                </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="100"
+                  step="5"
+                  value={requestRate}
+                  onChange={(e) => setRequestRate(parseInt(e.target.value))}
+                  aria-label="Request Rate"
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Processing time slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Processing Time per Batch</span>
+                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{processingTime} ms</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="200"
+                  step="10"
+                  value={processingTime}
+                  onChange={(e) => setProcessingTime(parseInt(e.target.value))}
+                  aria-label="Processing Time"
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Simulation controls */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <button
+                  onClick={() => setIsSimulationRunning(!isSimulationRunning)}
+                  style={{
+                    background: isSimulationRunning ? colors.error : colors.success,
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 32px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  {isSimulationRunning ? 'Stop Simulation' : 'Start Simulation'}
+                </button>
+              </div>
+
+              {/* Metrics display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+                gap: '12px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{metrics.throughput.toFixed(0)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Max Throughput</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>(req/s)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: metrics.avgLatency > 500 ? colors.error : metrics.avgLatency > 200 ? colors.warning : colors.success }}>
+                    {metrics.avgLatency.toFixed(0)}ms
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    ...typo.h3,
+                    color: metrics.gpuUtilization > 70 ? colors.success : metrics.gpuUtilization > 40 ? colors.warning : colors.error
+                  }}>
+                    {metrics.gpuUtilization.toFixed(0)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>GPU Utilization</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.warning }}>{metrics.queueDepth.toFixed(1)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Avg Queue Depth</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Discovery prompt */}
+            {batchSize >= 8 && metrics.gpuUtilization > 60 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  Notice how larger batches increase throughput but also increase latency. This is the core tradeoff!
+                </p>
+              </div>
+            )}
+          </div>
+        </ScrollableContent>
+        {renderFooter('Back', 'Understand Why', () => { playSound('success'); setIsSimulationRunning(false); nextPhase(); })}
       </div>
     );
   }
@@ -1096,68 +1253,71 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <ScrollableContent>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              The Batching-Latency Tradeoff
+            </h2>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Batching-Latency Tradeoff
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <LatencyThroughputChart />
+            {/* Connection to observation */}
+            <div style={{
+              background: `${colors.success}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.success}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+                As you observed in the experiment, larger batches increased latency while improving throughput. Your prediction about batching's effect on latency was {prediction === 'b' ? 'correct!' : 'a learning opportunity!'}
+              </p>
             </div>
 
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Why does this tradeoff exist?</strong>
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <span style={{ color: colors.accent }}>GPUs are parallel processors.</span> They have thousands of cores designed to work on many operations simultaneously. Processing one request uses only a fraction of this capacity.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <span style={{ color: colors.accent }}>Batching amortizes overhead.</span> Each GPU operation has fixed costs (memory transfers, kernel launches). Larger batches spread this overhead across more requests.
-              </p>
-              <p>
-                <span style={{ color: colors.warning }}>But waiting has a cost.</span> To form a batch, early-arriving requests must wait for later ones. This queue time adds directly to latency.
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <LatencyThroughputChart />
+              </div>
+
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Why does this tradeoff exist?</strong>
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <span style={{ color: colors.accent }}>GPUs are parallel processors.</span> They have thousands of cores designed to work on many operations simultaneously. Processing one request uses only a fraction of this capacity.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <span style={{ color: colors.accent }}>Batching amortizes overhead.</span> Each GPU operation has fixed costs (memory transfers, kernel launches). Larger batches spread this overhead across more requests.
+                </p>
+                <p>
+                  <span style={{ color: colors.warning }}>But waiting has a cost.</span> To form a batch, early-arriving requests must wait for later ones. This queue time adds directly to latency.
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Little's Law
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong>L = lambda x W</strong> — The average number of items in a queue equals the arrival rate times the average wait time. This fundamental relationship governs all batching systems.
               </p>
             </div>
           </div>
-
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Little's Law
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>L = lambda x W</strong> — The average number of items in a queue equals the arrival rate times the average wait time. This fundamental relationship governs all batching systems.
-            </p>
-          </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Dynamic Batching
-          </button>
-        </div>
-
-        {renderNavDots()}
+        </ScrollableContent>
+        {renderFooter('Back', 'Explore Dynamic Batching', () => { playSound('success'); nextPhase(); })}
       </div>
     );
   }
@@ -1171,76 +1331,89 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <ScrollableContent>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Step 2 of 3: New Variable
+              </span>
+            </div>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Challenge: Variable Traffic
-            </p>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                What to Watch: Consider how variable traffic patterns affect the optimal batching strategy
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              Traffic varies from 10 req/s at night to 500 req/s during peak hours. How should the batching strategy adapt?
+            </h2>
+
+            {/* Static visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              display: 'flex',
+              justifyContent: 'center',
+            }}>
+              <StaticBatchingVisualization />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Traffic varies from 10 req/s at night to 500 req/s during peak hours. How should the batching strategy adapt?
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Explore Dynamic Batching
-            </button>
-          )}
-        </div>
-
-        {renderNavDots()}
+        </ScrollableContent>
+        {renderFooter('Back', twistPrediction ? 'Explore Dynamic Batching' : undefined, twistPrediction ? () => { playSound('success'); nextPhase(); } : undefined)}
       </div>
     );
   }
@@ -1248,79 +1421,121 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // TWIST PLAY PHASE - Dynamic Batching
   if (phase === 'twist_play') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <ScrollableContent>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Dynamic Batching with Timeout
+            </h2>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Dynamic Batching with Timeout
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Enable dynamic batching and adjust the timeout to see how it balances throughput and latency
-          </p>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            {/* Dynamic batching toggle */}
+            {/* Observation guidance */}
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
               marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
             }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Static Batching</span>
-              <button
-                onClick={() => setDynamicBatching(!dynamicBatching)}
-                style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: dynamicBatching ? colors.success : colors.border,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
-                }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: dynamicBatching ? '33px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: dynamicBatching ? colors.success : colors.textSecondary, fontWeight: dynamicBatching ? 600 : 400 }}>
-                Dynamic Batching
-              </span>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                What to Watch: Enable dynamic batching and adjust the timeout to see how it balances throughput and latency
+              </p>
             </div>
 
-            {/* Batch timeout slider (only visible when dynamic) */}
-            {dynamicBatching && (
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              {/* Visualization */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <BatchingVisualization />
+              </div>
+
+              {/* Dynamic batching toggle */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px',
+                marginBottom: '24px',
+              }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Static Batching</span>
+                <button
+                  onClick={() => setDynamicBatching(!dynamicBatching)}
+                  style={{
+                    width: '60px',
+                    height: '30px',
+                    borderRadius: '15px',
+                    border: 'none',
+                    background: dynamicBatching ? colors.success : colors.border,
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background 0.3s',
+                    minHeight: '30px',
+                  }}
+                >
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: 'white',
+                    position: 'absolute',
+                    top: '3px',
+                    left: dynamicBatching ? '33px' : '3px',
+                    transition: 'left 0.3s',
+                  }} />
+                </button>
+                <span style={{ ...typo.small, color: dynamicBatching ? colors.success : colors.textSecondary, fontWeight: dynamicBatching ? 600 : 400 }}>
+                  Dynamic Batching
+                </span>
+              </div>
+
+              {/* Batch timeout slider (only visible when dynamic) */}
+              {dynamicBatching && (
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Max Wait Time (Timeout)</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{batchTimeout} ms</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="500"
+                    step="10"
+                    value={batchTimeout}
+                    onChange={(e) => setBatchTimeout(parseInt(e.target.value))}
+                    aria-label="Max Wait Time"
+                    style={{
+                      width: '100%',
+                      height: '8px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Low latency (10ms)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>High throughput (500ms)</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Other sliders */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Max Wait Time (Timeout)</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{batchTimeout} ms</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Max Batch Size</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize}</span>
                 </div>
                 <input
                   type="range"
-                  min="10"
-                  max="500"
-                  step="10"
-                  value={batchTimeout}
-                  onChange={(e) => setBatchTimeout(parseInt(e.target.value))}
+                  min="1"
+                  max="32"
+                  step="1"
+                  value={batchSize}
+                  onChange={(e) => setBatchSize(parseInt(e.target.value))}
+                  aria-label="Max Batch Size"
                   style={{
                     width: '100%',
                     height: '8px',
@@ -1328,108 +1543,75 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
                     cursor: 'pointer',
                   }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Low latency (10ms)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>High throughput (500ms)</span>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Request Rate</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
                 </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="200"
+                  step="5"
+                  value={requestRate}
+                  onChange={(e) => setRequestRate(parseInt(e.target.value))}
+                  aria-label="Request Rate"
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Metrics display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.success }}>{metrics.throughput.toFixed(0)} req/s</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Max Throughput</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: metrics.avgLatency > 300 ? colors.error : metrics.avgLatency > 150 ? colors.warning : colors.success }}>
+                    {metrics.avgLatency.toFixed(0)} ms
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
+                </div>
+              </div>
+            </div>
+
+            {dynamicBatching && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  Dynamic batching with timeout ensures requests never wait forever, even during low traffic!
+                </p>
               </div>
             )}
-
-            {/* Other sliders */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Max Batch Size</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize}</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="32"
-                step="1"
-                value={batchSize}
-                onChange={(e) => setBatchSize(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Request Rate</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="200"
-                step="5"
-                value={requestRate}
-                onChange={(e) => setRequestRate(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Metrics display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{metrics.throughput.toFixed(0)} req/s</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Max Throughput</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: metrics.avgLatency > 300 ? colors.error : metrics.avgLatency > 150 ? colors.warning : colors.success }}>
-                  {metrics.avgLatency.toFixed(0)} ms
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
-              </div>
-            </div>
           </div>
-
-          {dynamicBatching && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Dynamic batching with timeout ensures requests never wait forever, even during low traffic!
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Strategies
-          </button>
-        </div>
-
-        {renderNavDots()}
+        </ScrollableContent>
+        {renderFooter('Back', 'Understand the Strategies', () => { playSound('success'); nextPhase(); })}
       </div>
     );
   }
@@ -1437,89 +1619,79 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <ScrollableContent>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Advanced Batching Strategies
+            </h2>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Advanced Batching Strategies
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>time</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Timeout-Based Batching</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>⏱️</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Timeout-Based Batching</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Process batches when full OR when a <span style={{ color: colors.accent }}>maximum wait time</span> expires. This prevents indefinite waiting during low traffic while still achieving efficiency during high traffic.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Process batches when full OR when a <span style={{ color: colors.accent }}>maximum wait time</span> expires. This prevents indefinite waiting during low traffic while still achieving efficiency during high traffic.
-              </p>
-            </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>loop</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Continuous Batching (LLMs)</h3>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>🔄</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Continuous Batching (LLMs)</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  For auto-regressive models, <span style={{ color: colors.success }}>new requests can join mid-generation</span>. When a sequence finishes, its slot is immediately filled. This maximizes GPU utilization for variable-length outputs.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                For auto-regressive models, <span style={{ color: colors.success }}>new requests can join mid-generation</span>. When a sequence finishes, its slot is immediately filled. This maximizes GPU utilization for variable-length outputs.
-              </p>
-            </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>layers</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Length Bucketing</h3>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>📊</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Length Bucketing</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Group inputs by similar length before batching to <span style={{ color: colors.warning }}>minimize padding waste</span>. Short sequences are batched together, long sequences together. Reduces wasted computation on padding tokens.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Group inputs by similar length before batching to <span style={{ color: colors.warning }}>minimize padding waste</span>. Short sequences are batched together, long sequences together. Reduces wasted computation on padding tokens.
-              </p>
-            </div>
 
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>target</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>SLA-Constrained Batching</h3>
+              <div style={{
+                background: `${colors.success}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.success}33`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>🎯</span>
+                  <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>SLA-Constrained Batching</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  When you have a latency SLA (e.g., p99 &lt; 200ms), work backwards: <strong>Max batch wait = SLA - processing time - safety margin</strong>. The SLA constrains your maximum batch size.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                When you have a latency SLA (e.g., p99 &lt; 200ms), work backwards: <strong>Max batch wait = SLA - processing time - safety margin</strong>. The SLA constrains your maximum batch size.
-              </p>
             </div>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
-        </div>
-
-        {renderNavDots()}
+        </ScrollableContent>
+        {renderFooter('Back', 'See Real-World Applications', () => { playSound('success'); nextPhase(); })}
       </div>
     );
   }
@@ -1528,136 +1700,166 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <ScrollableContent>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
-
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    check
-                  </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
-              </div>
-            </div>
-
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
-
+            {/* Progress indicator */}
             <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: '24px',
             }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                Batching Strategy:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} completed)
+              </span>
             </div>
 
+            {/* App selector */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
               gap: '12px',
+              marginBottom: '24px',
             }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    minHeight: '44px',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
+                  </div>
+                </button>
               ))}
             </div>
+
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  Batching Strategy:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Got It button */}
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  if (selectedApp < realWorldApps.length - 1) {
+                    setSelectedApp(selectedApp + 1);
+                  }
+                }}
+                style={{
+                  background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  width: '100%',
+                  minHeight: '44px',
+                }}
+              >
+                Got It! {selectedApp < realWorldApps.length - 1 ? 'Next App' : ''}
+              </button>
+            </div>
           </div>
-
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
-        </div>
-
-        {renderNavDots()}
+        </ScrollableContent>
+        {renderFooter('Back', 'Continue to Take the Knowledge Test', () => { playSound('success'); nextPhase(); })}
       </div>
     );
   }
@@ -1667,55 +1869,41 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+          {renderNavBar()}
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? 'trophy' : 'books'}
+          <ScrollableContent>
+            <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '80px',
+                marginBottom: '24px',
+              }}>
+                {passed ? '🏆' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You\'ve mastered the batching-latency tradeoff!'
+                  : 'Review the concepts and try again.'}
+              </p>
             </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You\'ve mastered the batching-latency tradeoff!'
-                : 'Review the concepts and try again.'}
-            </p>
-
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
-          </div>
-          {renderNavDots()}
+          </ScrollableContent>
+          {passed ? (
+            renderFooter('Back', 'Complete Lesson', () => { playSound('complete'); nextPhase(); })
+          ) : (
+            renderFooter('Back', 'Review & Try Again', () => {
+              setTestSubmitted(false);
+              setTestAnswers(Array(10).fill(null));
+              setCurrentQuestion(0);
+              setTestScore(0);
+              goToPhase('hook');
+            })
+          )}
         </div>
       );
     }
@@ -1723,165 +1911,165 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <ScrollableContent>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
+                Q{currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion
+                      ? colors.accent
+                      : testAnswers[i]
+                        ? colors.success
+                        : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+              {question.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {question.options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
+                </button>
               ))}
             </div>
+
+            {/* Navigation */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white',
+                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                    minHeight: '44px',
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                    minHeight: '44px',
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
+            </div>
           </div>
-
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
-        </div>
-
-        {renderNavDots()}
+        </ScrollableContent>
       </div>
     );
   }
@@ -1889,88 +2077,90 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <ScrollableContent>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            textAlign: 'center',
+            minHeight: 'calc(100vh - 160px)',
+          }}>
+            <div style={{
+              fontSize: '100px',
+              marginBottom: '24px',
+              animation: 'bounce 1s infinite',
+            }}>
+              <span role="img" aria-label="trophy">🏆</span>
+            </div>
+            <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          <span role="img" aria-label="trophy">🏆</span>
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+            <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+              Batching Master!
+            </h1>
 
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Batching Master!
-        </h1>
+            <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+              You now understand the fundamental tradeoff between batching and latency that powers every ML system at scale.
+            </p>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand the fundamental tradeoff between batching and latency that powers every ML system at scale.
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'Why batching increases throughput but adds latency',
-              'Little\'s Law: L = lambda x W for queue analysis',
-              'Dynamic batching with timeouts',
-              'Continuous batching for LLMs',
-              'SLA-constrained batching strategies',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>check</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '400px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+                You Learned:
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                {[
+                  'Why batching increases throughput but adds latency',
+                  'Little\'s Law: L = lambda x W for queue analysis',
+                  'Dynamic batching with timeouts',
+                  'Continuous batching for LLMs',
+                  'SLA-constrained batching strategies',
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ color: colors.success }}>✓</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                onClick={() => goToPhase('hook')}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                  minHeight: '44px',
+                }}
+              >
+                Play Again
+              </button>
+              <a
+                href="/"
+                style={{
+                  ...primaryButtonStyle,
+                  textDecoration: 'none',
+                  display: 'inline-block',
+                }}
+              >
+                Return to Dashboard
+              </a>
+            </div>
           </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
-        {renderNavDots()}
+        </ScrollableContent>
       </div>
     );
   }

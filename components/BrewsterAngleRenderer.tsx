@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 interface BrewsterAngleRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
+const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#cbd5e1',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -34,11 +37,23 @@ const materials = {
 };
 
 const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
-  phase,
+  phase: phaseProp,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase management
+  const [internalPhase, setInternalPhase] = useState<typeof PHASES[number]>('hook');
+
+  // Determine active phase - prefer gamePhase, then phase prop, then internal state
+  const activePhase = gamePhase || phaseProp || internalPhase;
+
+  // Ensure valid phase (default to hook for invalid phases)
+  const phase = PHASES.includes(activePhase as typeof PHASES[number]) ? activePhase : 'hook';
+
+  const currentPhaseIndex = PHASES.indexOf(phase as typeof PHASES[number]);
+
   const [isMobile, setIsMobile] = useState(false);
 
   // Responsive detection
@@ -64,7 +79,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
   };
 
   // Simulation state
-  const [incidentAngle, setIncidentAngle] = useState(45);
+  const [incidentAngle, setIncidentAngle] = useState(30);
   const [polarizerAngle, setPolarizerAngle] = useState(0);
   const [material, setMaterial] = useState<keyof typeof materials>('glass');
   const [showPolarizer, setShowPolarizer] = useState(true);
@@ -74,10 +89,12 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [checkedAnswers, setCheckedAnswers] = useState<Set<number>>(new Set());
 
   // Calculate physics
   const currentMaterial = materials[material];
@@ -166,6 +183,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         { text: 'The angle at which reflected light becomes completely s-polarized (and p-polarized reflection is zero)', correct: true },
         { text: 'The angle of total internal reflection', correct: false },
       ],
+      explanation: 'Brewster angle is the specific angle at which p-polarized light has zero reflection, leaving only s-polarized light in the reflected beam. This is because the oscillating electric field of p-polarized light at this angle cannot radiate in the reflection direction.',
     },
     {
       question: 'At Brewster angle, what happens to p-polarized light?',
@@ -175,6 +193,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         { text: 'It is converted to s-polarized light', correct: false },
         { text: 'It is absorbed by the surface', correct: false },
       ],
+      explanation: 'At Brewster angle, p-polarized light is completely transmitted into the medium with zero reflection. The reflected and refracted rays are perpendicular to each other, which geometrically prevents p-polarized oscillations from coupling into the reflected direction.',
     },
     {
       question: 'The Brewster angle depends on:',
@@ -184,6 +203,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         { text: 'The thickness of the material', correct: false },
         { text: 'The temperature of the material', correct: false },
       ],
+      explanation: 'Brewster angle is determined by the formula tan(theta_B) = n, where n is the refractive index. Different materials with different refractive indices have different Brewster angles.',
     },
     {
       question: 'Polarized sunglasses reduce glare because:',
@@ -193,6 +213,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         { text: 'They change the Brewster angle of your eyes', correct: false },
         { text: 'They heat up and absorb infrared', correct: false },
       ],
+      explanation: 'Light reflecting off horizontal surfaces (roads, water) near Brewster angle becomes predominantly horizontally polarized. Polarized sunglasses have vertical polarization filters that block this horizontally polarized glare while allowing other light through.',
     },
     {
       question: 'For glass (n = 1.5), Brewster angle is approximately:',
@@ -202,6 +223,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         { text: '56 degrees', correct: true },
         { text: '75 degrees', correct: false },
       ],
+      explanation: 'Using tan(theta_B) = n = 1.5, we get theta_B = arctan(1.5) = 56.3 degrees. This is why photographers often position themselves at roughly this angle when using polarizing filters on glass.',
     },
     {
       question: 'Why are Brewster windows used in lasers?',
@@ -211,6 +233,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         { text: 'To cool the laser cavity', correct: false },
         { text: 'To change the laser color', correct: false },
       ],
+      explanation: 'Brewster windows are tilted at Brewster angle so that p-polarized laser light passes through with zero reflection loss. This maximizes power efficiency and naturally selects a single polarization state for the laser output.',
     },
     {
       question: 'Light reflecting off a lake at a low angle is:',
@@ -220,6 +243,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         { text: 'Mostly horizontally polarized', correct: true },
         { text: 'Mostly vertically polarized', correct: false },
       ],
+      explanation: 'When sunlight reflects off a horizontal water surface at angles near Brewster angle (~53 degrees for water), the reflected light becomes strongly horizontally polarized. This is why polarized sunglasses are so effective at reducing water glare.',
     },
     {
       question: 'The mathematical relationship for Brewster angle is:',
@@ -229,6 +253,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         { text: 'cos(theta) = n', correct: false },
         { text: 'theta = 45 degrees always', correct: false },
       ],
+      explanation: 'The Brewster angle formula is tan(theta_B) = n2/n1, where n2 is the refractive index of the second medium and n1 is the first (usually air, n1=1). This elegant relationship comes from the geometry where reflected and refracted rays are perpendicular.',
     },
     {
       question: 'Water has a lower refractive index than glass. Therefore, water\'s Brewster angle is:',
@@ -238,6 +263,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         { text: 'The same as glass', correct: false },
         { text: 'Undefined for water', correct: false },
       ],
+      explanation: 'Since tan(theta_B) = n, a lower refractive index (water: 1.33 vs glass: 1.52) means a smaller Brewster angle. Water has theta_B = 53.1 degrees, while glass has theta_B = 56.7 degrees.',
     },
     {
       question: 'A polarizing filter is most effective at reducing glare when the viewing angle is:',
@@ -247,6 +273,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         { text: 'Parallel to the surface (grazing angle)', correct: false },
         { text: 'It works equally at all angles', correct: false },
       ],
+      explanation: 'Polarizing filters work best when the reflected light is strongly polarized, which occurs near Brewster angle. At other angles, the reflected light is only partially polarized, so the filter is less effective at blocking it.',
     },
   ];
 
@@ -254,6 +281,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
     setTestAnswers(newAnswers);
+    // Don't auto-check - require explicit Check Answer click
   };
 
   const submitTest = () => {
@@ -269,100 +297,27 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
     if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
 
-  const realWorldApps = [
-    {
-      icon: '🔬',
-      title: 'Laser Cavity Windows',
-      short: 'Zero-loss optics',
-      tagline: 'Where every photon counts',
-      description: 'Brewster windows are optical elements tilted at Brewster angle inside laser cavities. They allow p-polarized laser light to pass through with zero reflection loss, maximizing laser efficiency and naturally selecting a single polarization state for the output beam.',
-      connection: 'At Brewster angle, p-polarized light experiences zero reflection at the air-glass interface. This eliminates power loss at cavity windows and forces the laser to operate with a specific polarization, which is essential for many scientific and industrial applications.',
-      howItWorks: 'The window is mounted at Brewster angle (typically ~56° for glass). When light hits the surface, the reflected and refracted rays are perpendicular. This geometry prevents p-polarized oscillations from coupling into the reflected direction, so 100% of p-polarized light transmits through. Multiple passes through the cavity amplify this polarization selection.',
-      stats: [
-        { value: '0%', label: 'Reflection loss for p-polarized light', icon: '✨' },
-        { value: '99.9%', label: 'Polarization purity achievable', icon: '📊' },
-        { value: '56.7°', label: 'Brewster angle for BK7 glass', icon: '📐' },
-      ],
-      examples: [
-        'HeNe gas lasers with internal Brewster tubes',
-        'Ti:Sapphire ultrafast laser cavities',
-        'CO2 industrial cutting lasers',
-        'Research-grade dye lasers',
-      ],
-      companies: ['Coherent', 'Spectra-Physics', 'Trumpf', 'IPG Photonics', 'Thorlabs'],
-      futureImpact: 'As quantum computing and quantum communication advance, Brewster windows will be crucial for maintaining polarization states in quantum optical systems, enabling more reliable qubit manipulation and entanglement distribution.',
-      color: '#8b5cf6',
-    },
-    {
-      icon: '🕶️',
-      title: 'Polarized Sunglasses',
-      short: 'Glare elimination',
-      tagline: 'See clearly through the glare',
-      description: 'Polarized sunglasses use vertically-oriented polarizing filters to block horizontally polarized light. Since glare from horizontal surfaces like roads, water, and snow is predominantly horizontally polarized due to reflection near Brewster angle, these glasses dramatically reduce eye strain and improve visibility.',
-      connection: 'When sunlight reflects off horizontal surfaces at angles near Brewster angle, the reflected light becomes strongly horizontally polarized (s-polarized). Polarized lenses with vertical transmission axes block this specific polarization while allowing other light through, effectively eliminating glare without darkening the entire scene.',
-      howItWorks: 'The lens contains a polarizing film with molecules aligned in vertical chains. Light waves oscillating horizontally (the glare) are absorbed by these chains, while vertically oscillating light passes through. The effectiveness peaks when viewing surfaces at angles close to Brewster angle, where polarization is strongest.',
-      stats: [
-        { value: '99%', label: 'Glare reduction at optimal angles', icon: '☀️' },
-        { value: '53°', label: 'Brewster angle for water surfaces', icon: '🌊' },
-        { value: '400nm', label: 'UV protection cutoff', icon: '🛡️' },
-      ],
-      examples: [
-        'Fishing glasses for seeing through water surface',
-        'Driving glasses reducing road glare',
-        'Skiing goggles for snow glare reduction',
-        'Boating eyewear for ocean surface visibility',
-      ],
-      companies: ['Ray-Ban', 'Oakley', 'Maui Jim', 'Costa Del Mar', 'Smith Optics'],
-      futureImpact: 'Smart polarized lenses with electronically adjustable polarization axes will allow users to optimize glare reduction in real-time based on viewing angle and light conditions, providing personalized visual comfort for any environment.',
-      color: '#06b6d4',
-    },
-    {
-      icon: '💎',
-      title: 'Optical Coatings',
-      short: 'Thin film design',
-      tagline: 'Engineering light at the nanoscale',
-      description: 'Anti-reflective and specialized optical coatings use thin film interference principles combined with Brewster angle physics to control reflection and transmission. Multi-layer coatings can achieve near-zero reflection across broad wavelength ranges by exploiting polarization-dependent reflection at each interface.',
-      connection: 'Each layer in a thin film coating creates an interface where Fresnel reflection occurs. By understanding how reflection varies with angle and polarization (including Brewster angle effects), engineers design layer thicknesses and materials to create destructive interference for reflected light, minimizing reflection across desired wavelength and angle ranges.',
-      howItWorks: 'Thin films of alternating high and low refractive index materials are deposited on substrates. Each film thickness is typically a quarter wavelength of the target light. Reflections from each interface interfere destructively when the optical path difference equals half wavelengths. For angles near Brewster angle, p-polarized reflection is naturally minimized, while s-polarized light requires more coating layers.',
-      stats: [
-        { value: '<0.1%', label: 'Reflection with premium AR coating', icon: '🔍' },
-        { value: '6-12', label: 'Typical layer count for broadband AR', icon: '📚' },
-        { value: '100nm', label: 'Typical single layer thickness', icon: '📏' },
-      ],
-      examples: [
-        'Camera lens anti-reflective coatings',
-        'Eyeglass AR coatings for clarity',
-        'Solar cell efficiency enhancement coatings',
-        'Laser mirror high-reflector coatings',
-      ],
-      companies: ['Zeiss', 'Leica', 'Nikon', 'Edmund Optics', 'II-VI Incorporated'],
-      futureImpact: 'Metamaterial and nanostructured coatings will enable perfect anti-reflection at any angle, revolutionizing solar energy harvesting, display technology, and stealth applications by achieving properties impossible with conventional thin films.',
-      color: '#10b981',
-    },
-    {
-      icon: '📷',
-      title: 'Photography',
-      short: 'Polarizing filters',
-      tagline: 'Capture the world without glare',
-      description: 'Circular polarizing filters (CPL) are essential tools for photographers to reduce reflections from water, glass, and foliage while enhancing color saturation and contrast. By rotating the filter, photographers can control how much polarized glare is blocked, revealing details hidden beneath reflective surfaces.',
-      connection: 'Light reflecting off non-metallic surfaces at angles near Brewster angle becomes partially polarized. A polarizing filter aligned perpendicular to this polarization blocks the glare while transmitting the unpolarized light from the scene behind the reflection. The filter is most effective when the viewing angle approaches Brewster angle for the reflecting surface.',
-      howItWorks: 'A CPL consists of a linear polarizer followed by a quarter-wave plate. The linear polarizer blocks light polarized in one direction (typically the glare). The quarter-wave plate converts the remaining linearly polarized light to circularly polarized light, ensuring camera autofocus and metering systems work correctly. Rotating the outer ring adjusts which polarization direction is blocked.',
-      stats: [
-        { value: '1-2', label: 'Stops of light reduction', icon: '🌓' },
-        { value: '90°', label: 'Optimal angle from sun for sky darkening', icon: '🌤️' },
-        { value: '35%', label: 'Maximum polarization of clear sky', icon: '🌈' },
-      ],
-      examples: [
-        'Landscape photography with vivid skies',
-        'Architectural shots through windows',
-        'Underwater photography seeing through surface',
-        'Autumn foliage without leaf glare',
-      ],
-      companies: ['B+W', 'Hoya', 'Tiffen', 'Breakthrough Photography', 'NiSi'],
-      futureImpact: 'Computational photography combined with motorized polarizing filters will enable cameras to automatically capture multiple polarization states, allowing post-processing removal of any reflection and even separation of surface and subsurface details for revolutionary imaging capabilities.',
-      color: '#f59e0b',
-    },
-  ];
+  // Navigation functions
+  const goToPhase = (newPhase: typeof PHASES[number]) => {
+    setInternalPhase(newPhase);
+  };
+
+  const goToNextPhase = () => {
+    const nextIndex = currentPhaseIndex + 1;
+    if (nextIndex < PHASES.length) {
+      setInternalPhase(PHASES[nextIndex]);
+    }
+    if (onPhaseComplete) {
+      onPhaseComplete();
+    }
+  };
+
+  const goToPreviousPhase = () => {
+    const prevIndex = currentPhaseIndex - 1;
+    if (prevIndex >= 0) {
+      setInternalPhase(PHASES[prevIndex]);
+    }
+  };
 
   const renderVisualization = (interactive: boolean) => {
     const width = 500;
@@ -662,9 +617,9 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
           />
           <text
             x={hitPoint.x + 8}
-            y={surfaceY - 105}
+            y={surfaceY - 130}
             fill="rgba(255,255,255,0.5)"
-            fontSize={10}
+            fontSize={11}
             fontStyle="italic"
           >
             normal
@@ -905,7 +860,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
               fontWeight="bold"
               filter="url(#brewTextGlow)"
             >
-              Brewster {brewsterAngle.toFixed(1)}°
+              Brewster {brewsterAngle.toFixed(1)}
             </text>
           </g>
 
@@ -925,7 +880,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
             fontWeight="bold"
             filter="url(#brewTextGlow)"
           >
-            {incidentAngle.toFixed(0)}°
+            {incidentAngle.toFixed(0)}
           </text>
 
           {/* === POLARIZER FILTER (if enabled) === */}
@@ -977,10 +932,10 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
                 />
               ))}
               {/* Label */}
-              <text x={0} y={50} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="600">
+              <text x={0} y={48} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="600">
                 Polarizer
               </text>
-              <text x={0} y={62} fill={colors.textMuted} fontSize={9} textAnchor="middle">
+              <text x={0} y={64} fill={colors.textMuted} fontSize={11} textAnchor="middle">
                 {polarizerAngle}°
               </text>
             </g>
@@ -988,41 +943,47 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
 
           {/* === LABELS PANEL === */}
           <g filter="url(#brewSoftShadow)">
-            <rect x={12} y={12} width={165} height={55} rx={8} fill="rgba(15, 23, 42, 0.85)" />
+            <rect x={12} y={12} width={165} height={65} rx={8} fill="rgba(15, 23, 42, 0.85)" />
             <text x={22} y={32} fill={colors.textPrimary} fontSize={13} fontWeight="bold">
               {currentMaterial.name}
             </text>
-            <text x={22} y={48} fill={colors.textSecondary} fontSize={11}>
+            <text x={22} y={62} fill={colors.textSecondary} fontSize={11}>
               n = {n.toFixed(2)} | Brewster: {brewsterAngle.toFixed(1)}°
             </text>
           </g>
 
           {/* === GLARE INTENSITY METER === */}
-          <g transform={`translate(${width - glareWidth - 22}, 14)`} filter="url(#brewSoftShadow)">
-            <rect x={-8} y={-6} width={glareWidth + 16} height={50} rx={8} fill="rgba(15, 23, 42, 0.85)" />
-            <text x={glareWidth / 2} y={8} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="600">
-              Glare Intensity
-            </text>
-            <rect x={0} y={16} width={glareWidth} height={glareHeight} fill="url(#brewGlareBg)" rx={6} />
-            <rect
-              x={0}
-              y={16}
-              width={glareWidth * glareIntensity}
-              height={glareHeight}
-              fill={glareIntensity > 0.5 ? 'url(#brewGlareHigh)' : glareIntensity > 0.2 ? 'url(#brewGlareMedium)' : 'url(#brewGlareLow)'}
-              rx={6}
-            />
-            <text x={glareWidth / 2} y={32} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold">
-              {(glareIntensity * 100).toFixed(0)}%
-            </text>
-          </g>
+          {(() => {
+            const gx = width - glareWidth - 22;
+            const gy = 14;
+            return (
+              <g filter="url(#brewSoftShadow)">
+                <rect x={gx - 8} y={gy - 6} width={glareWidth + 16} height={50} rx={8} fill="rgba(15, 23, 42, 0.85)" />
+                <text x={gx + glareWidth / 2} y={gy + 8} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="600">
+                  Glare Intensity
+                </text>
+                <rect x={gx} y={gy + 16} width={glareWidth} height={glareHeight} fill="url(#brewGlareBg)" rx={6} />
+                <rect
+                  x={gx}
+                  y={gy + 16}
+                  width={glareWidth * glareIntensity}
+                  height={glareHeight}
+                  fill={glareIntensity > 0.5 ? 'url(#brewGlareHigh)' : glareIntensity > 0.2 ? 'url(#brewGlareMedium)' : 'url(#brewGlareLow)'}
+                  rx={6}
+                />
+                <text x={gx + glareWidth / 2} y={gy + 32} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold">
+                  {(glareIntensity * 100).toFixed(0)}%
+                </text>
+              </g>
+            );
+          })()}
 
           {/* === RAY LABELS === */}
           <text
             x={incidentStart.x + 20}
             y={incidentStart.y + 5}
             fill="#fbbf24"
-            fontSize={10}
+            fontSize={11}
             fontWeight="600"
           >
             Incident
@@ -1031,7 +992,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
             x={reflectedEnd.x - 50}
             y={reflectedEnd.y + 5}
             fill="#f97316"
-            fontSize={10}
+            fontSize={11}
             fontWeight="600"
             opacity={0.3 + glareIntensity * 0.7}
           >
@@ -1041,30 +1002,28 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
             x={refractedEnd.x + 8}
             y={refractedEnd.y - 5}
             fill="#3b82f6"
-            fontSize={10}
+            fontSize={11}
             fontWeight="600"
           >
             Refracted
           </text>
 
           {/* === POLARIZATION LEGEND === */}
-          <g transform={`translate(${width - 100}, ${height - 55})`}>
-            <rect x={-8} y={-8} width={96} height={52} rx={6} fill="rgba(15, 23, 42, 0.8)" />
-            <text x={0} y={6} fill={colors.textSecondary} fontSize={9} fontWeight="600">Polarization:</text>
-            <circle cx={8} cy={20} r={4} fill="none" stroke="#10b981" strokeWidth={1.5} />
-            <text x={18} y={24} fill="#10b981" fontSize={9}>S (perpendicular)</text>
-            <line x1={4} y1={35} x2={12} y2={35} stroke="#f59e0b" strokeWidth={1.5} />
-            <text x={18} y={38} fill="#f59e0b" fontSize={9}>P (parallel)</text>
-          </g>
+          <rect x={width - 108} y={height - 63} width={96} height={52} rx={6} fill="rgba(15, 23, 42, 0.8)" />
+          <text x={width - 100} y={height - 49} fill={colors.textSecondary} fontSize={11} fontWeight="600">Polarization:</text>
+          <circle cx={width - 92} cy={height - 35} r={4} fill="none" stroke="#10b981" strokeWidth={1.5} />
+          <text x={width - 82} y={height - 31} fill="#10b981" fontSize={11}>S (perpendicular)</text>
+          <line x1={width - 96} y1={height - 20} x2={width - 88} y2={height - 20} stroke="#f59e0b" strokeWidth={1.5} />
+          <text x={width - 82} y={height - 17} fill="#f59e0b" fontSize={11}>P (parallel)</text>
 
           {/* === STATUS INDICATOR (Near Brewster) === */}
           {nearBrewster && (
-            <g transform={`translate(${width / 2}, ${height - 28})`}>
-              <rect x={-95} y={-14} width={190} height={28} fill="rgba(16, 185, 129, 0.25)" rx={14} stroke={colors.success} strokeWidth={1.5} />
-              <circle cx={-75} cy={0} r={5} fill={colors.success}>
+            <g>
+              <rect x={width / 2 - 95} y={height - 42} width={190} height={28} fill="rgba(16, 185, 129, 0.25)" rx={14} stroke={colors.success} strokeWidth={1.5} />
+              <circle cx={width / 2 - 75} cy={height - 28} r={5} fill={colors.success}>
                 <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
               </circle>
-              <text x={0} y={5} fill={colors.success} fontSize={13} textAnchor="middle" fontWeight="bold">
+              <text x={width / 2} y={height - 23} fill={colors.success} fontSize={13} textAnchor="middle" fontWeight="bold">
                 Near Brewster Angle!
               </text>
             </g>
@@ -1077,6 +1036,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
               onClick={() => setIsAnimating(!isAnimating)}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '10px',
                 border: 'none',
                 background: isAnimating
@@ -1098,6 +1058,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
               onClick={() => { setIncidentAngle(brewsterAngle); setIsAnimating(false); }}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '10px',
                 border: `2px solid ${colors.success}`,
                 background: 'rgba(16, 185, 129, 0.1)',
@@ -1114,6 +1075,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
               onClick={() => { setIncidentAngle(45); setPolarizerAngle(0); setMaterial('glass'); }}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '10px',
                 border: `2px solid ${colors.accent}`,
                 background: 'rgba(139, 92, 246, 0.1)',
@@ -1136,7 +1098,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Incident Angle: {incidentAngle.toFixed(1)}° (Brewster: {brewsterAngle.toFixed(1)}°)
+          Incident Angle: {incidentAngle.toFixed(1)} (Brewster: {brewsterAngle.toFixed(1)})
         </label>
         <input
           type="range"
@@ -1145,13 +1107,13 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
           step="0.5"
           value={incidentAngle}
           onChange={(e) => setIncidentAngle(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', minHeight: '44px', accentColor: colors.accent }}
         />
       </div>
 
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Polarizer Rotation: {polarizerAngle.toFixed(0)}°
+          Polarizer Rotation: {polarizerAngle.toFixed(0)}
         </label>
         <input
           type="range"
@@ -1160,7 +1122,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
           step="1"
           value={polarizerAngle}
           onChange={(e) => setPolarizerAngle(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', minHeight: '44px', accentColor: colors.accent }}
         />
       </div>
 
@@ -1175,6 +1137,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
               onClick={() => setMaterial(m)}
               style={{
                 padding: '8px 16px',
+                minHeight: '44px',
                 borderRadius: '6px',
                 border: material === m ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                 background: material === m ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
@@ -1190,7 +1153,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
       </div>
 
       <div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: colors.textSecondary, cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: colors.textSecondary, cursor: 'pointer', minHeight: '44px' }}>
           <input
             type="checkbox"
             checked={showPolarizer}
@@ -1219,173 +1182,325 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
+  // Navigation bar component - fixed at top
+  const renderNavigationBar = () => (
+    <nav style={{
       position: 'fixed',
-      bottom: 0,
+      top: 0,
       left: 0,
       right: 0,
-      padding: '16px 24px',
+      height: '60px',
       background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
+      borderBottom: '1px solid rgba(255,255,255,0.1)',
       display: 'flex',
-      justifyContent: 'flex-end',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
       zIndex: 1000,
     }}>
       <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        onClick={goToPreviousPhase}
+        disabled={currentPhaseIndex === 0}
+        aria-label="Back"
         style={{
-          padding: '12px 32px',
+          padding: '8px 16px',
+          minHeight: '44px',
           borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: currentPhaseIndex === 0 ? colors.textMuted : colors.textPrimary,
+          cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
           fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
+          fontSize: '14px',
         }}
       >
-        {buttonText}
+        Back
       </button>
+
+      {/* Progress dots */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        {PHASES.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(p)}
+            aria-label={`Go to ${p} phase`}
+            title={p}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              border: 'none',
+              background: i === currentPhaseIndex ? colors.accent : i < currentPhaseIndex ? colors.success : 'rgba(255,255,255,0.2)',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={goToNextPhase}
+        disabled={currentPhaseIndex === PHASES.length - 1}
+        aria-label="Next"
+        style={{
+          padding: '8px 16px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: 'none',
+          background: currentPhaseIndex === PHASES.length - 1 ? 'rgba(255,255,255,0.1)' : colors.accent,
+          color: currentPhaseIndex === PHASES.length - 1 ? colors.textMuted : 'white',
+          cursor: currentPhaseIndex === PHASES.length - 1 ? 'not-allowed' : 'pointer',
+          fontWeight: 'bold',
+          fontSize: '14px',
+        }}
+      >
+        Next
+      </button>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '60px',
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: 'rgba(255,255,255,0.1)',
+      zIndex: 999,
+    }}>
+      <div
+        role="progressbar"
+        aria-valuenow={((currentPhaseIndex + 1) / PHASES.length) * 100}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        style={{
+          height: '100%',
+          width: `${((currentPhaseIndex + 1) / PHASES.length) * 100}%`,
+          background: colors.accent,
+          transition: 'width 0.3s ease',
+        }}
+      />
+    </div>
+  );
+
+  // Main layout wrapper
+  const renderLayout = (content: React.ReactNode) => (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      background: colors.bgPrimary
+    }}>
+      {renderNavigationBar()}
+      {renderProgressBar()}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '70px',
+        paddingBottom: '80px',
+      }}>
+        {content}
+      </div>
     </div>
   );
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              The Glare-Killing Angle
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              At what angle does glare become "most polarizable"?
-            </p>
-          </div>
+    return renderLayout(
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 'normal', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          Introduction
+        </p>
+        <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+          The Glare-Killing Angle
+        </h1>
+        <p style={{ color: colors.textSecondary, fontSize: '18px', fontWeight: 400, marginBottom: '24px' }}>
+          At what angle does glare become most polarizable?
+        </p>
 
-          {renderVisualization(true)}
+        {renderVisualization(true)}
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Shine a light on a glossy surface. Rotate a polarizing filter in front of your
-                eyes and watch the glare change. At certain viewing angles, the polarizer can
-                almost completely eliminate the reflection!
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                This magic angle is called the Brewster angle - and it is the secret behind
-                polarized sunglasses and glare-free optics.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(139, 92, 246, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Click "Sweep Angles" to watch how glare intensity changes with viewing angle!
-              </p>
-            </div>
-          </div>
+        <div style={{
+          background: colors.bgCard,
+          padding: '20px',
+          borderRadius: '12px',
+          marginTop: '16px',
+          marginBottom: '16px',
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 'normal' }}>
+            Shine a light on a glossy surface. Rotate a polarizing filter in front of your
+            eyes and watch the glare change. At certain viewing angles, the polarizer can
+            almost completely eliminate the reflection!
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
+            This magic angle is called the Brewster angle - and it is the secret behind
+            polarized sunglasses and glare-free optics.
+          </p>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+
+        <div style={{
+          background: 'rgba(139, 92, 246, 0.2)',
+          padding: '16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.accent}`,
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'normal' }}>
+            Click Sweep Angles to watch how glare intensity changes with viewing angle!
+          </p>
+        </div>
       </div>
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You Are Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A light ray hitting a glossy surface. The yellow ray is incoming light.
-              The orange ray is reflected light (glare). The blue ray is light entering the material.
-              The glare meter shows how much light is reflected.
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              When you change the viewing angle, what happens to glare reduction with a polarizer?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+    return renderLayout(
+      <>
+        {/* Progress indicator for predict phase */}
+        <div style={{
+          padding: '16px',
+          textAlign: 'center',
+          background: 'rgba(139, 92, 246, 0.1)',
+          borderBottom: '1px solid rgba(139, 92, 246, 0.3)',
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 'normal' }}>
+            Step 1 of 2: Make your prediction
+          </p>
+          {/* Step indicators */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
+            <div style={{ width: '24px', height: '4px', borderRadius: '2px', background: colors.accent }} />
+            <div style={{ width: '24px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)' }} />
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
+
+        {renderVisualization(false)}
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You Are Looking At:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 'normal' }}>
+            A light ray hitting a glossy surface. The yellow ray is incoming light.
+            The orange ray is reflected light (glare). The blue ray is light entering the material.
+            The glare meter shows how much light is reflected.
+          </p>
+        </div>
+
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            When you change the viewing angle, what happens to glare reduction with a polarizer?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {predictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  minHeight: '44px',
+                  borderRadius: '8px',
+                  border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  fontWeight: 'normal',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {prediction && (
+          <div style={{ padding: '0 16px 16px 16px' }}>
+            <button
+              onClick={goToNextPhase}
+              style={{
+                width: '100%',
+                padding: '16px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '16px',
+              }}
+            >
+              Test My Prediction
+            </button>
+          </div>
+        )}
+      </>
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Brewster Angle</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust the angle and polarizer to minimize glare
-            </p>
-          </div>
+    return renderLayout(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Brewster Angle</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
 
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Set angle near 56° for glass - watch p-polarized reflection vanish</li>
-              <li>Rotate polarizer at Brewster angle - glare drops dramatically</li>
-              <li>Compare angles far from Brewster - polarizer is less effective</li>
-              <li>Try "Sweep Angles" to see the intensity curve</li>
-            </ul>
-          </div>
+            Adjust the angle and polarizer to minimize glare. Observe how the reflectance ratio changes with angle.
+          </p>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
+
+        {/* Real-world relevance */}
+        <div style={{
+          background: 'rgba(139, 92, 246, 0.15)',
+          margin: '0 16px 8px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.accent}`,
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+            <strong style={{ color: colors.accent }}>Why This Matters:</strong> This concept is used in industry by companies like Ray-Ban and Oakley for polarized sunglasses, Canon and Nikon for camera filters, and in laser technology for Brewster windows. Understanding this helps engineers design better optical systems.
+          </p>
+        </div>
+
+        {/* Observation guidance */}
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.15)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.success}`,
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+            <strong style={{ color: colors.success }}>Observe:</strong> Watch how the glare intensity changes as you adjust the incident angle. Notice when p-polarized reflectivity approaches zero.
+          </p>
+        </div>
+
+        {renderVisualization(true)}
+        {renderControls()}
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+          <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Set angle near 56 for glass - watch p-polarized reflection vanish</li>
+            <li>Rotate polarizer at Brewster angle - glare drops dramatically</li>
+            <li>Compare angles far from Brewster - polarizer is less effective</li>
+            <li>Try Sweep Angles to see the intensity curve</li>
+          </ul>
+        </div>
+      </>
     );
   }
 
@@ -1393,146 +1508,199 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'brewster';
 
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              There is a specific angle where glare reduction is maximum - the Brewster angle!
+    return renderLayout(
+      <>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary, fontWeight: 'normal' }}>
+            {wasCorrect
+              ? 'As you predicted, there is a specific angle where glare reduction is maximum!'
+              : 'You predicted differently, but the result shows there is a specific angle where glare reduction is maximum.'}
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px', fontWeight: 'normal' }}>
+            This demonstrates the key insight: the Brewster angle is real and predictable.
+          </p>
+        </div>
+
+        {/* Visual diagram for review */}
+        {renderVisualization(false)}
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Understanding the Physics</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 'normal' }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>The Reason:</strong> Because light is a transverse wave,
+              it can oscillate in different directions. When light reflects at an angle, it splits into two
+              polarization components: s-polarized (perpendicular) and p-polarized (parallel to the plane).
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Brewster Discovery:</strong> At a specific
+              angle (tan(theta) = n), the reflected and refracted rays are perpendicular. Therefore,
+              p-polarized light cannot reflect because the oscillation direction aligns with the reflected ray direction.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>The Result:</strong> The reflected light
+              at Brewster angle is 100% s-polarized. This means a polarizer aligned to block s-polarization can
+              eliminate glare completely.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Brewster Angle</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Polarization Split:</strong> When light
-                reflects at an angle, it splits into two polarization components: s-polarized (perpendicular
-                to the plane) and p-polarized (parallel to the plane).
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Brewster's Discovery:</strong> At a specific
-                angle (tan(theta) = n), the reflected and refracted rays are perpendicular. At this angle,
-                p-polarized light cannot reflect - it is all transmitted!
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Polarized Glare:</strong> The reflected light
-                at Brewster angle is 100% s-polarized. A polarizer aligned to block s-polarization can
-                eliminate glare completely.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
+      </>
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What happens when we try different materials?
-            </p>
-          </div>
-
-          {renderVisualization(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              We found the Brewster angle for glass. But water and plastic have different
-              refractive indices. Does the "magic angle" change?
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              For different materials (water, glass, plastic), what happens to Brewster angle?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+    return renderLayout(
+      <>
+        {/* Progress indicator */}
+        <div style={{
+          padding: '16px',
+          textAlign: 'center',
+          background: 'rgba(245, 158, 11, 0.1)',
+          borderBottom: '1px solid rgba(245, 158, 11, 0.3)',
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 'normal' }}>
+            Step 1 of 2: Make your twist prediction
+          </p>
+          {/* Step indicators */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
+            <div style={{ width: '24px', height: '4px', borderRadius: '2px', background: colors.warning }} />
+            <div style={{ width: '24px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)' }} />
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
+
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+          <p style={{ color: colors.textSecondary, fontWeight: 'normal' }}>
+            What happens when we try different materials?
+          </p>
+        </div>
+
+        {renderVisualization(false)}
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 'normal' }}>
+            We found the Brewster angle for glass. But water and plastic have different
+            refractive indices. Does the magic angle change?
+          </p>
+        </div>
+
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            For different materials (water, glass, plastic), what happens to Brewster angle?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {twistPredictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setTwistPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  minHeight: '44px',
+                  borderRadius: '8px',
+                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                  background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  fontWeight: 'normal',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {twistPrediction && (
+          <div style={{ padding: '0 16px 16px 16px' }}>
+            <button
+              onClick={goToNextPhase}
+              style={{
+                width: '100%',
+                padding: '16px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.warning,
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '16px',
+              }}
+            >
+              Test My Prediction
+            </button>
+          </div>
+        )}
+      </>
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Compare Materials</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Switch between water, glass, and plastic to compare Brewster angles
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Water (n=1.33): Brewster angle = 53.1°<br/>
-              Plastic (n=1.49): Brewster angle = 56.1°<br/>
-              Glass (n=1.52): Brewster angle = 56.7°<br/><br/>
-              Higher refractive index means higher Brewster angle!
-            </p>
-          </div>
+    return renderLayout(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Compare Materials</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Switch between water, glass, and plastic to compare Brewster angles
+          </p>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
+
+        {/* Observation guidance */}
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.15)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.warning}`,
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+            <strong style={{ color: colors.warning }}>Observe:</strong> Switch between materials and note how the Brewster angle changes. Higher refractive index means higher Brewster angle.
+          </p>
+        </div>
+
+        {renderVisualization(true)}
+        {renderControls()}
+
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.warning}`,
+        }}>
+          <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Water (n=1.33): Brewster angle = 53.1<br/>
+            Plastic (n=1.49): Brewster angle = 56.1<br/>
+            Glass (n=1.52): Brewster angle = 56.7<br/><br/>
+            Higher refractive index means higher Brewster angle!
+          </p>
+        </div>
+      </>
     );
   }
 
@@ -1540,225 +1708,513 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'different';
 
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Different materials have different Brewster angles based on their refractive index!
+    return renderLayout(
+      <>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            Different materials have different Brewster angles based on their refractive index!
+          </p>
+        </div>
+
+        {/* Visual diagram for twist review */}
+        {renderVisualization(false)}
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Brewster Formula</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>tan(theta_B) = n</strong><br/>
+              The Brewster angle is simply the arctangent of the refractive index.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Physical Meaning:</strong> At Brewster
+              angle, the reflected and refracted rays are exactly 90 apart. This geometry
+              prevents p-polarized oscillations from coupling into the reflected direction.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Practical Impact:</strong> Photographers
+              must adjust their polarizer angle when shooting different surfaces - water vs glass
+              have optimal angles that differ by several degrees!
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Brewster Formula</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>tan(theta_B) = n</strong><br/>
-                The Brewster angle is simply the arctangent of the refractive index.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Physical Meaning:</strong> At Brewster
-                angle, the reflected and refracted rays are exactly 90° apart. This geometry
-                prevents p-polarized oscillations from coupling into the reflected direction.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Practical Impact:</strong> Photographers
-                must adjust their polarizer angle when shooting different surfaces - water vs glass
-                have optimal angles that differ by several degrees!
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
+      </>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Brewster angle physics in photography, lasers, and everyday life
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+    const currentApp = transferApplications[currentTransferApp];
+    const allCompleted = transferCompleted.size >= transferApplications.length;
+
+    return renderLayout(
+      <>
+        <div style={{ padding: '16px' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+            Brewster angle physics is used by companies like Canon, Nikon, Zeiss, and Coherent in their optical products
+          </p>
+
+          {/* Progress indicator for transfer phase */}
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.1)',
+            padding: '12px',
+            borderRadius: '8px',
+            textAlign: 'center',
+            marginBottom: '16px',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              Application {currentTransferApp + 1} of {transferApplications.length} - {transferCompleted.size} completed
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
+          {/* Industry context */}
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.1)',
+            padding: '12px',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.success}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+              <strong style={{ color: colors.success }}>Industry Impact:</strong> The global polarized sunglasses market is worth over $5 billion annually. Polarizing filters reduce glare by up to 99% when aligned correctly. In high-power laser systems, Brewster windows can handle intensities exceeding 10 MW/cm2 without damage. Professional photographers rely on these principles - a quality circular polarizer filter costs $100-300 and can transform outdoor photography by eliminating 95% of reflections from water and glass surfaces.
+            </p>
+          </div>
+
+          {/* Key statistics */}
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.1)',
+            padding: '12px',
+            borderRadius: '8px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Key Numbers:</strong> Glass has a Brewster angle of 56.7 degrees (n=1.52). Water is at 53.1 degrees (n=1.33). Diamond, with n=2.42, has a Brewster angle of approximately 67.5 degrees. These precise angles are critical for optical engineering applications.
+            </p>
+          </div>
+        </div>
+
+        {/* Current application card */}
+        <div
+          style={{
+            background: colors.bgCard,
+            margin: '0 16px 16px 16px',
+            padding: '20px',
+            borderRadius: '12px',
+            border: transferCompleted.has(currentTransferApp) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '18px', margin: 0 }}>{currentApp.title}</h3>
+            {transferCompleted.has(currentTransferApp) && <span style={{ color: colors.success, fontWeight: 'bold' }}>Completed</span>}
+          </div>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>{currentApp.description}</p>
+          <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+            <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{currentApp.question}</p>
+          </div>
+          {!transferCompleted.has(currentTransferApp) ? (
+            <button
+              onClick={() => setTransferCompleted(new Set([...transferCompleted, currentTransferApp]))}
               style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                padding: '12px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.accent}`,
+                background: 'transparent',
+                color: colors.accent,
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Done</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
+              Reveal Answer
+            </button>
+          ) : (
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>{currentApp.answer}</p>
             </div>
+          )}
+        </div>
+
+        {/* Navigation between applications */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 16px 16px 16px', gap: '12px' }}>
+          <button
+            onClick={() => setCurrentTransferApp(Math.max(0, currentTransferApp - 1))}
+            disabled={currentTransferApp === 0}
+            style={{
+              flex: 1,
+              padding: '12px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.textMuted}`,
+              background: 'transparent',
+              color: currentTransferApp === 0 ? colors.textMuted : colors.textPrimary,
+              cursor: currentTransferApp === 0 ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            Previous App
+          </button>
+          {currentTransferApp < transferApplications.length - 1 ? (
+            <button
+              onClick={() => setCurrentTransferApp(currentTransferApp + 1)}
+              style={{
+                flex: 1,
+                padding: '12px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+              }}
+            >
+              Next App
+            </button>
+          ) : (
+            <button
+              onClick={goToNextPhase}
+              disabled={!allCompleted}
+              style={{
+                flex: 1,
+                padding: '12px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: allCompleted ? colors.success : 'rgba(255,255,255,0.1)',
+                color: allCompleted ? 'white' : colors.textMuted,
+                cursor: allCompleted ? 'pointer' : 'not-allowed',
+                fontWeight: 'bold',
+              }}
+            >
+              Got It - Continue
+            </button>
+          )}
+        </div>
+
+        {/* Application dots indicator */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '0 16px 16px 16px' }}>
+          {transferApplications.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentTransferApp(i)}
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                border: 'none',
+                background: i === currentTransferApp
+                  ? colors.accent
+                  : transferCompleted.has(i)
+                    ? colors.success
+                    : 'rgba(255,255,255,0.2)',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            />
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
+      </>
     );
   }
 
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You have mastered Brewster angle!' : 'Review the material and try again.'}
-              </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct:' : userAnswer === oIndex ? 'Your answer:' : ''} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+      return renderLayout(
+        <>
+          <div style={{
+            background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            margin: '16px',
+            padding: '24px',
+            borderRadius: '12px',
+            textAlign: 'center',
+          }}>
+            <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+              Test Complete! {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>You scored {testScore}/10</p>
+            <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+              {testScore >= 8 ? 'You have mastered Brewster angle!' : 'Review the material and try again.'}
+            </p>
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review and Retry')}
-        </div>
+          {testQuestions.map((q, qIndex) => {
+            const userAnswer = testAnswers[qIndex];
+            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            return (
+              <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>Q{qIndex + 1}. {q.question}</p>
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                    {opt.correct ? 'Correct:' : userAnswer === oIndex ? 'Your answer:' : ''} {opt.text}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+          <div style={{ padding: '16px' }}>
+            <button
+              onClick={testScore >= 8 ? goToNextPhase : () => { setTestSubmitted(false); setCurrentTestQuestion(0); setTestAnswers(new Array(10).fill(null)); setCheckedAnswers(new Set()); }}
+              style={{
+                width: '100%',
+                padding: '16px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: testScore >= 8 ? colors.success : colors.accent,
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '16px',
+              }}
+            >
+              {testScore >= 8 ? 'Complete Mastery' : 'Review and Retry'}
+            </button>
+          </div>
+        </>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
-            </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
-                  {opt.text}
+    const isChecked = checkedAnswers.has(currentTestQuestion);
+    const userAnswer = testAnswers[currentTestQuestion];
+    const isCorrect = userAnswer !== null && currentQ.options[userAnswer].correct;
+    const correctIndex = currentQ.options.findIndex(o => o.correct);
+
+    const handleCheckAnswer = () => {
+      if (userAnswer !== null) {
+        setCheckedAnswers(new Set([...checkedAnswers, currentTestQuestion]));
+      }
+    };
+
+    const handleNextQuestion = () => {
+      if (currentTestQuestion < testQuestions.length - 1) {
+        setCurrentTestQuestion(currentTestQuestion + 1);
+      }
+    };
+
+    return renderLayout(
+      <>
+        <div style={{ padding: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ color: colors.textPrimary, margin: 0 }}>Knowledge Test</h2>
+            <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+            {testQuestions.map((_, i) => (
+              <div key={i} onClick={() => !isChecked && setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: checkedAnswers.has(i) ? colors.success : testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: isChecked ? 'default' : 'pointer' }} />
+            ))}
+          </div>
+          <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Question {currentTestQuestion + 1}:</strong> {currentQ.question}
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', fontStyle: 'italic' }}>
+              This question tests your understanding of Brewster angle and polarization physics.
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {currentQ.options.map((opt, oIndex) => {
+              let borderStyle = '1px solid rgba(255,255,255,0.2)';
+              let bgStyle = 'transparent';
+              if (isChecked) {
+                if (opt.correct) {
+                  borderStyle = `2px solid ${colors.success}`;
+                  bgStyle = 'rgba(16, 185, 129, 0.2)';
+                } else if (userAnswer === oIndex) {
+                  borderStyle = `2px solid ${colors.error}`;
+                  bgStyle = 'rgba(239, 68, 68, 0.2)';
+                }
+              } else if (userAnswer === oIndex) {
+                borderStyle = `2px solid ${colors.accent}`;
+                bgStyle = 'rgba(139, 92, 246, 0.2)';
+              }
+              return (
+                <button
+                  key={oIndex}
+                  onClick={() => !isChecked && handleTestAnswer(currentTestQuestion, oIndex)}
+                  disabled={isChecked}
+                  style={{
+                    padding: '16px',
+                    minHeight: '44px',
+                    borderRadius: '8px',
+                    border: borderStyle,
+                    background: bgStyle,
+                    color: colors.textPrimary,
+                    cursor: isChecked ? 'default' : 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px'
+                  }}
+                >
+                  {String.fromCharCode(65 + oIndex)}) {opt.text}
+                  {isChecked && opt.correct && <span style={{ marginLeft: '8px', color: colors.success }}>Correct</span>}
+                  {isChecked && userAnswer === oIndex && !opt.correct && <span style={{ marginLeft: '8px', color: colors.error }}>Your answer</span>}
                 </button>
-              ))}
+              );
+            })}
+          </div>
+
+          {/* Explanation section after checking */}
+          {isChecked && (
+            <div style={{
+              background: isCorrect ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              padding: '16px',
+              borderRadius: '8px',
+              marginTop: '16px',
+              borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
+            }}>
+              <p style={{ color: isCorrect ? colors.success : colors.error, fontWeight: 'bold', marginBottom: '8px' }}>
+                {isCorrect ? 'Correct!' : `Incorrect. The correct answer is ${String.fromCharCode(65 + correctIndex)}.`}
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+                <strong>Explanation:</strong> {currentQ.explanation}
+              </p>
             </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
-            ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
-            )}
-          </div>
+          )}
         </div>
-      </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', gap: '12px' }}>
+          <button
+            onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+            disabled={currentTestQuestion === 0 || isChecked}
+            style={{
+              flex: 1,
+              padding: '12px 24px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.textMuted}`,
+              background: 'transparent',
+              color: (currentTestQuestion === 0 || isChecked) ? colors.textMuted : colors.textPrimary,
+              cursor: (currentTestQuestion === 0 || isChecked) ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            Previous
+          </button>
+          {!isChecked ? (
+            <button
+              onClick={() => {
+                if (userAnswer !== null) {
+                  handleCheckAnswer();
+                }
+              }}
+              style={{
+                flex: 1,
+                padding: '12px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: userAnswer === null ? colors.textMuted : colors.accent,
+                color: 'white',
+                cursor: userAnswer === null ? 'not-allowed' : 'pointer',
+                fontWeight: 'bold',
+              }}
+            >
+              Check Answer
+            </button>
+          ) : (
+            <button
+              onClick={currentTestQuestion < testQuestions.length - 1 ? handleNextQuestion : submitTest}
+              aria-label={currentTestQuestion < testQuestions.length - 1 ? "Next Question" : "Submit Test"}
+              style={{
+                flex: 1,
+                padding: '12px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: currentTestQuestion < testQuestions.length - 1 ? colors.accent : colors.success,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+              }}
+            >
+              {currentTestQuestion < testQuestions.length - 1 ? 'Next Question' : 'Submit Test'}
+            </button>
+          )}
+        </div>
+      </>
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered Brewster angle and polarization-based glare control</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Brewster angle: tan(theta) = n</li>
-              <li>P-polarized light has zero reflection at Brewster angle</li>
-              <li>Reflected light becomes s-polarized at Brewster angle</li>
-              <li>Different materials have different Brewster angles</li>
-              <li>Polarizing filters exploit this for glare reduction</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Brewster angle has applications in laser physics, fiber optics, and even art authentication.
-              Ellipsometry uses Brewster angle principles to measure thin film properties at the nanometer
-              scale. The mathematics connects to Fresnel equations and electromagnetic wave theory!
-            </p>
-          </div>
-          {renderVisualization(true)}
+    return renderLayout(
+      <>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }} role="img" aria-label="trophy">&#127942;</div>
+          <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+          <p style={{ color: colors.textSecondary, marginBottom: '24px', fontWeight: 'normal' }}>You have mastered Brewster angle and polarization-based glare control</p>
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
+        <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Brewster angle: tan(theta) = n</li>
+            <li>P-polarized light has zero reflection at Brewster angle</li>
+            <li>Reflected light becomes s-polarized at Brewster angle</li>
+            <li>Different materials have different Brewster angles</li>
+            <li>Polarizing filters exploit this for glare reduction</li>
+          </ul>
+        </div>
+        <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+            Brewster angle has applications in laser physics, fiber optics, and even art authentication.
+            Ellipsometry uses Brewster angle principles to measure thin film properties at the nanometer
+            scale. The mathematics connects to Fresnel equations and electromagnetic wave theory!
+          </p>
+        </div>
+        {renderVisualization(true)}
+        <div style={{ padding: '16px' }}>
+          <button
+            onClick={onPhaseComplete}
+            style={{
+              width: '100%',
+              padding: '16px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: 'none',
+              background: colors.success,
+              color: 'white',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '16px',
+            }}
+          >
+            Complete Game
+          </button>
+        </div>
+      </>
     );
   }
 
-  return null;
+  // Fallback for invalid phase - render hook
+  return renderLayout(
+    <div style={{ padding: '24px', textAlign: 'center' }}>
+      <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+        The Glare-Killing Angle
+      </h1>
+      <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+        At what angle does glare become most polarizable?
+      </p>
+      {renderVisualization(true)}
+    </div>
+  );
 };
 
 export default BrewsterAngleRenderer;

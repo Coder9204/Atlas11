@@ -408,36 +408,45 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
   const renderProgressBar = () => {
     const currentIdx = phaseOrder.indexOf(phase);
     return (
-      <div style={{
+      <div className="navigation-bar" style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: isMobile ? '10px 12px' : '12px 16px',
         borderBottom: `1px solid ${colors.border}`,
         backgroundColor: colors.bgCard,
-        gap: isMobile ? '12px' : '16px'
+        gap: isMobile ? '12px' : '16px',
+        transition: 'all 0.3s ease'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
-          <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
+          <div className="navigation-dots" style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
             {phaseOrder.map((p, i) => (
-              <div
+              <button
                 key={p}
-                onClick={() => i < currentIdx && goToPhase(p)}
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                aria-label={phaseLabels[p]}
                 style={{
                   height: isMobile ? '10px' : '8px',
                   width: i === currentIdx ? (isMobile ? '20px' : '24px') : (isMobile ? '10px' : '8px'),
                   borderRadius: '5px',
                   backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
-                  cursor: i < currentIdx ? 'pointer' : 'default',
-                  transition: 'all 0.3s',
+                  cursor: i <= currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s ease',
                   minWidth: isMobile ? '10px' : '8px',
-                  minHeight: isMobile ? '10px' : '8px'
+                  minHeight: isMobile ? '10px' : '8px',
+                  border: 'none',
+                  padding: 0
                 }}
                 title={phaseLabels[p]}
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -476,7 +485,12 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
     };
 
     return (
-      <div style={{
+      <div className="navigation-bar" style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -954,7 +968,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
 
             {/* Width dimension annotations */}
             <line x1={50 - targetWidth / 2} y1={62} x2={50 + targetWidth / 2} y2={62} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="2,2" />
-            <text x={50} y={72} fill={colors.textMuted} fontSize={7} textAnchor="middle">Target: {targetWidth}nm</text>
+            <text x={50} y={72} fill={colors.textMuted} fontSize={8} textAnchor="middle">Target: {targetWidth}nm</text>
           </g>
 
           {/* Premium Metrics Panel */}
@@ -1044,43 +1058,43 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
   const renderControls = (showLERControl: boolean = false) => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Focus Position: {focus}% ({focus < 40 ? 'Under-focused' : focus > 60 ? 'Over-focused' : 'Optimal'})
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
+          Focus Position: {focus}% - Controls how sharp the projected image is on the wafer. When you increase focus error, the printed features become blurry. ({focus < 40 ? 'Under-focused' : focus > 60 ? 'Over-focused' : 'Optimal'})
         </label>
         <input type="range" min="0" max="100" step="2" value={focus} onChange={(e) => setFocus(parseInt(e.target.value))} style={{ width: '100%' }} />
       </div>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Exposure Dose: {dose}% ({dose < 40 ? 'Under-exposed' : dose > 60 ? 'Over-exposed' : 'Optimal'})
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
+          Exposure Dose: {dose}% - Controls the light energy hitting the photoresist. Higher doses cause wider features, lower doses cause narrower features. ({dose < 40 ? 'Under-exposed' : dose > 60 ? 'Over-exposed' : 'Optimal'})
         </label>
         <input type="range" min="0" max="100" step="2" value={dose} onChange={(e) => setDose(parseInt(e.target.value))} style={{ width: '100%' }} />
       </div>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Target Linewidth: {targetWidth} nm
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
+          Target Linewidth: {targetWidth} nm - The intended feature size. As features shrink, the process window becomes tighter.
         </label>
         <input type="range" min="20" max="100" step="5" value={targetWidth} onChange={(e) => setTargetWidth(parseInt(e.target.value))} style={{ width: '100%' }} />
       </div>
       {showLERControl && (
         <div>
-          <label style={{ color: colors.textSecondary, display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+          <label style={{ color: colors.textSecondary, display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontWeight: 400 }}>
             <input type="checkbox" checked={enableLER} onChange={(e) => setEnableLER(e.target.checked)} style={{ width: '20px', height: '20px' }} />
-            Enable Line Edge Roughness (LER) Simulation
+            Enable Line Edge Roughness (LER) Simulation - When enabled, you can see how edge roughness increases with process errors.
           </label>
         </div>
       )}
       <div style={{ background: 'rgba(139, 92, 246, 0.2)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.accent}` }}>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>Process Window: Focus within 30-70%, Dose within 30-70%</div>
-        <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>Combined Error = sqrt(FocusErr^2 + DoseErr^2) must be less than 0.7</div>
+        <div style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>Process Window: Focus within 30-70%, Dose within 30-70%</div>
+        <div style={{ color: colors.textSecondary, fontSize: '11px', marginTop: '4px', fontWeight: 400 }}>Combined Error = sqrt(FocusErr^2 + DoseErr^2) must be less than 0.7</div>
       </div>
     </div>
   );
 
   // Wrapper component
   const renderWrapper = (content: React.ReactNode, footer: React.ReactNode) => (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, transition: 'all 0.3s ease' }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', marginTop: '52px', marginBottom: '68px', transition: 'all 0.3s ease' }}>
         {content}
       </div>
       {footer}
@@ -1092,21 +1106,21 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
     return renderWrapper(
       <>
         <div style={{ padding: '24px', textAlign: 'center' }}>
-          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>Lithography Focus & Dose</h1>
-          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>Is chip "printing" like a perfect stamp?</p>
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>Lithography Focus & Dose</h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>Is chip "printing" like a perfect stamp?</p>
         </div>
         {renderVisualization(true)}
         <div style={{ padding: '24px', textAlign: 'center' }}>
           <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
               Imagine projecting a tiny pattern onto a chip using light. It is like using a projector to show a slide, but the "screen" is coated with photosensitive material, and the pattern is nanometers small!
             </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
               What happens when the projector is out of focus? What if the light is too bright or too dim?
             </p>
           </div>
           <div style={{ background: 'rgba(139, 92, 246, 0.2)', padding: '16px', borderRadius: '8px', borderLeft: `3px solid ${colors.accent}` }}>
-            <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
               Adjust the focus and dose sliders to see how chip manufacturing depends on precision!
             </p>
           </div>
@@ -1118,17 +1132,21 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
 
   // PREDICT PHASE
   if (phase === 'predict') {
+    const predictProgress = prediction ? 1 : 0;
     return renderWrapper(
       <>
         {renderVisualization(false)}
         <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
-          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Lithography Process:</h3>
-          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>The Lithography Process:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 400 }}>
             Light passes through a patterned mask, through a lens system, and onto photoresist. Where light hits, the resist changes chemically. The focus determines sharpness, and the dose determines how much the resist is exposed.
           </p>
         </div>
         <div style={{ padding: '0 16px 16px 16px' }}>
-          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>What determines whether the printed pattern is acceptable?</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, margin: 0, fontWeight: 700 }}>What determines whether the printed pattern is acceptable?</h3>
+            <span style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>Progress: {predictProgress} / 1</span>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {predictions.map((p) => (
               <button
@@ -1143,6 +1161,9 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '14px',
+                  transition: 'all 0.2s ease',
+                  minHeight: '44px',
+                  fontWeight: 400
                 }}
               >
                 {p.label}
@@ -1157,22 +1178,43 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
 
   // PLAY PHASE
   if (phase === 'play') {
+    const result = calculateLithoResult();
     return renderWrapper(
       <>
         <div style={{ padding: '16px', textAlign: 'center' }}>
-          <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the Process Window</h2>
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Find the combinations of focus and dose that produce acceptable features</p>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Explore the Process Window</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Find the combinations of focus and dose that produce acceptable features</p>
         </div>
         {renderVisualization(true)}
         {renderControls()}
+        <div style={{ background: 'rgba(139, 92, 246, 0.15)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.accent}` }}>
+          <h4 style={{ color: colors.textSecondary, marginBottom: '8px', fontSize: '14px', fontWeight: 700 }}>Observe what happens:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+            {result.inSpec
+              ? 'The feature is within spec! Notice how both focus and dose are near optimal values.'
+              : result.focusError > 0.3 && result.doseError > 0.3
+                ? 'Both focus and dose are far from optimal. The combined error creates an unacceptable feature.'
+                : result.focusError > 0.3
+                  ? 'Focus is too far from optimal. Notice how the feature edges become blurry.'
+                  : result.doseError > 0.3
+                    ? 'Dose is too far from optimal. Notice how the feature width deviates from target.'
+                    : 'Getting close! Keep adjusting to find the sweet spot.'}
+          </p>
+        </div>
         <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
-          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-          <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Experiments to Try:</h4>
+          <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
             <li>Start at optimal (50/50) then move focus to extremes</li>
             <li>Keep focus optimal, vary dose from 0 to 100</li>
             <li>Find all four corners of the process window</li>
             <li>Try smaller target linewidths - is the window the same?</li>
           </ul>
+        </div>
+        <div style={{ background: 'rgba(16, 185, 129, 0.15)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.success}` }}>
+          <h4 style={{ color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Real-World Connection:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+            Every smartphone chip with billions of transistors is manufactured using this exact process. At TSMC and Samsung fabs, engineers spend weeks optimizing the focus-dose window for each layer. A single nanometer of error can mean millions of defective chips!
+          </p>
         </div>
       </>,
       renderBottomBar(true, true, 'Continue to Review')
@@ -1182,6 +1224,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'window';
+    const userPredictionText = predictions.find(p => p.id === prediction)?.label || 'no prediction';
     return renderWrapper(
       <>
         <div style={{
@@ -1191,22 +1234,65 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
           borderRadius: '12px',
           borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
         }}>
-          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
-          <p style={{ color: colors.textPrimary }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 700 }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, marginBottom: '8px' }}>
+            You predicted: "{userPredictionText}"
+          </p>
+          <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
             Lithography has a finite "process window" - an elliptical region in focus-dose space where features print acceptably. Outside this window, features blur, widen, narrow, or fail entirely.
           </p>
         </div>
+        {/* Visual diagram for review phase */}
+        <div style={{ padding: '16px' }}>
+          <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px' }}>
+            <defs>
+              <radialGradient id="reviewProcessWindow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+                <stop offset="60%" stopColor="#059669" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#047857" stopOpacity="0.2" />
+              </radialGradient>
+            </defs>
+            {/* Axis labels */}
+            <text x="200" y="25" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="700">Process Window Concept</text>
+            <text x="200" y="190" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="400">Focus</text>
+            <text x="25" y="100" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="400" transform="rotate(-90, 25, 100)">Dose</text>
+            {/* Grid */}
+            <line x1="60" y1="50" x2="340" y2="50" stroke={colors.border} strokeWidth="1" />
+            <line x1="60" y1="100" x2="340" y2="100" stroke={colors.border} strokeWidth="1" />
+            <line x1="60" y1="150" x2="340" y2="150" stroke={colors.border} strokeWidth="1" />
+            <line x1="100" y1="40" x2="100" y2="170" stroke={colors.border} strokeWidth="1" />
+            <line x1="200" y1="40" x2="200" y2="170" stroke={colors.border} strokeWidth="1" />
+            <line x1="300" y1="40" x2="300" y2="170" stroke={colors.border} strokeWidth="1" />
+            {/* Process window ellipse */}
+            <ellipse cx="200" cy="100" rx="80" ry="40" fill="url(#reviewProcessWindow)" stroke={colors.success} strokeWidth="2" />
+            {/* Center point */}
+            <circle cx="200" cy="100" r="6" fill={colors.success} />
+            <text x="200" y="130" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="400">Optimal</text>
+            {/* Labels */}
+            <text x="320" y="105" fill={colors.error} fontSize="10" fontWeight="400">Fail Zone</text>
+            <text x="80" y="105" fill={colors.error} fontSize="10" fontWeight="400">Fail Zone</text>
+          </svg>
+        </div>
         <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Lithography</h3>
-          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-            <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary }}>Focus Effect:</strong> Defocus blurs the aerial image (the light pattern at the wafer). This causes features to print with soft edges and incorrect dimensions.</p>
-            <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary }}>Dose Effect:</strong> Photoresist has a threshold response. Too little dose leaves resist behind; too much removes extra resist. The result is features that are too narrow or too wide.</p>
-            <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary }}>Process Window:</strong> The acceptable region forms an ellipse because focus and dose errors combine. Real fabs run extensive focus-dose matrices to characterize and center their process.</p>
-            <p><strong style={{ color: colors.textPrimary }}>Scaling Challenge:</strong> As features shrink, the process window shrinks too. A 5nm error on a 100nm feature is 5%, but on a 10nm feature it is 50%!</p>
+          <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>The Physics of Lithography</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
+            <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Focus Effect:</strong> Defocus blurs the aerial image (the light pattern at the wafer). This causes features to print with soft edges and incorrect dimensions.</p>
+            <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Dose Effect:</strong> Photoresist has a threshold response. Too little dose leaves resist behind; too much removes extra resist. The result is features that are too narrow or too wide.</p>
+            <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Process Window:</strong> The acceptable region forms an ellipse because focus and dose errors combine. Real fabs run extensive focus-dose matrices to characterize and center their process.</p>
+            <p><strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Scaling Challenge:</strong> As features shrink, the process window shrinks too. A 5nm error on a 100nm feature is 5%, but on a 10nm feature it is 50%!</p>
           </div>
         </div>
+        <div style={{ background: 'rgba(139, 92, 246, 0.15)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.accent}` }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Key Formula:</h4>
+          <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, textAlign: 'center', marginBottom: '8px' }}>
+            Combined Error = sqrt(FocusError^2 + DoseError^2)
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400, textAlign: 'center' }}>
+            The relationship between focus and dose errors is proportional to the square root of their combined squares - this creates the elliptical process window shape.
+          </p>
+        </div>
       </>,
-      renderBottomBar(true, true, 'Next: A Twist!')
+      renderBottomBar(true, true, 'Continue to Twist')
     );
   }
 
@@ -1215,18 +1301,18 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
     return renderWrapper(
       <>
         <div style={{ padding: '16px', textAlign: 'center' }}>
-          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-          <p style={{ color: colors.textSecondary }}>What about Line Edge Roughness (LER)?</p>
+          <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>The Twist</h2>
+          <p style={{ color: colors.textSecondary, fontWeight: 400 }}>What about Line Edge Roughness (LER)?</p>
         </div>
         {renderVisualization(false, true)}
         <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
-          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The LER Challenge:</h3>
-          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>The LER Challenge:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 400 }}>
             Even when features print at the correct average width, the edges are not perfectly straight. This "Line Edge Roughness" (LER) causes random variations in transistor behavior. As features shrink, LER becomes a larger fraction of the linewidth!
           </p>
         </div>
         <div style={{ padding: '0 16px 16px 16px' }}>
-          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>What affects Line Edge Roughness most?</h3>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 700 }}>What affects Line Edge Roughness most?</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {twistPredictions.map((p) => (
               <button
@@ -1241,6 +1327,8 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '14px',
+                  minHeight: '44px',
+                  fontWeight: 400
                 }}
               >
                 {p.label}
@@ -1258,15 +1346,21 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
     return renderWrapper(
       <>
         <div style={{ padding: '16px', textAlign: 'center' }}>
-          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Explore Line Edge Roughness</h2>
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Enable LER and observe how process conditions affect edge quality</p>
+          <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>Explore Line Edge Roughness</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Enable LER and observe how process conditions affect edge quality</p>
         </div>
         {renderVisualization(true, true)}
         {renderControls(true)}
         <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.warning}` }}>
-          <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+          <h4 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>Key Observation:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
             LER increases with both defocus and extreme doses. The roughness has both systematic (from aerial image blur) and random (from resist chemistry) components. Modern processes aim for LER below 2-3nm on critical features!
+          </p>
+        </div>
+        <div style={{ background: 'rgba(16, 185, 129, 0.15)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.success}` }}>
+          <h4 style={{ color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Real-World Connection:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+            LER is one of the biggest challenges in EUV lithography for 3nm and smaller nodes. Each transistor gate with rough edges performs slightly differently, reducing chip performance and increasing power consumption.
           </p>
         </div>
       </>,
@@ -1277,6 +1371,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'ler_both';
+    const userTwistPredictionText = twistPredictions.find(p => p.id === twistPrediction)?.label || 'no prediction';
     return renderWrapper(
       <>
         <div style={{
@@ -1286,17 +1381,54 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
           borderRadius: '12px',
           borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
         }}>
-          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
-          <p style={{ color: colors.textPrimary }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 700 }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, marginBottom: '8px' }}>
+            You predicted: "{userTwistPredictionText}"
+          </p>
+          <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
             LER increases with both focus and dose errors! Defocus creates a blurry aerial image that prints with rough edges, while extreme doses cause the resist threshold to be crossed inconsistently.
           </p>
         </div>
+        {/* Visual diagram for twist_review phase */}
+        <div style={{ padding: '16px' }}>
+          <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px' }}>
+            <defs>
+              <linearGradient id="twistLERGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#10b981" />
+                <stop offset="50%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#ef4444" />
+              </linearGradient>
+            </defs>
+            {/* Title */}
+            <text x="200" y="25" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="700">Line Edge Roughness vs Process Conditions</text>
+            {/* Axis labels */}
+            <text x="200" y="190" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="400">Process Error (Focus + Dose)</text>
+            <text x="25" y="100" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="400" transform="rotate(-90, 25, 100)">LER</text>
+            {/* Axis lines */}
+            <line x1="60" y1="160" x2="350" y2="160" stroke={colors.border} strokeWidth="2" />
+            <line x1="60" y1="40" x2="60" y2="160" stroke={colors.border} strokeWidth="2" />
+            {/* LER curve */}
+            <path d="M 60 150 Q 150 140, 200 100 Q 250 60, 350 40" fill="none" stroke="url(#twistLERGradient)" strokeWidth="3" />
+            {/* Good zone */}
+            <rect x="60" y="130" width="80" height="30" fill="rgba(16, 185, 129, 0.2)" rx="4" />
+            <text x="100" y="150" fill={colors.success} fontSize="10" textAnchor="middle" fontWeight="400">Low LER</text>
+            {/* Bad zone */}
+            <rect x="270" y="40" width="80" height="30" fill="rgba(239, 68, 68, 0.2)" rx="4" />
+            <text x="310" y="60" fill={colors.error} fontSize="10" textAnchor="middle" fontWeight="400">High LER</text>
+            {/* Feature illustrations */}
+            <rect x="80" y="80" width="30" height="40" fill={colors.exposed} opacity="0.8" rx="2" />
+            <rect x="290" y="70" width="30" height="50" fill={colors.exposed} opacity="0.8" rx="2" />
+            {/* Rough edges on bad feature */}
+            <path d="M 290 70 Q 288 80, 291 90 Q 287 100, 290 110 Q 288 115, 290 120" fill="none" stroke={colors.exposed} strokeWidth="2" />
+            <path d="M 320 70 Q 322 80, 319 90 Q 323 100, 320 110 Q 322 115, 320 120" fill="none" stroke={colors.exposed} strokeWidth="2" />
+          </svg>
+        </div>
         <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-          <h3 style={{ color: colors.warning, marginBottom: '12px' }}>LER in Modern Manufacturing</h3>
-          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-            <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary }}>Statistical Impact:</strong> LER causes transistor-to-transistor variation in threshold voltage, leakage, and performance. This limits how aggressively chips can be designed.</p>
-            <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary }}>Shot Noise:</strong> At EUV wavelengths, fewer photons hit each feature, causing statistical "shot noise" that directly translates to LER. This is a fundamental limit!</p>
-            <p><strong style={{ color: colors.textPrimary }}>Mitigation:</strong> Advanced resists, post-exposure smoothing, and design rules that tolerate LER help manage this challenge in sub-7nm manufacturing.</p>
+          <h3 style={{ color: colors.warning, marginBottom: '12px', fontWeight: 700 }}>LER in Modern Manufacturing</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
+            <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Statistical Impact:</strong> LER causes transistor-to-transistor variation in threshold voltage, leakage, and performance. This limits how aggressively chips can be designed.</p>
+            <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Shot Noise:</strong> At EUV wavelengths, fewer photons hit each feature, causing statistical "shot noise" that directly translates to LER. This is a fundamental limit!</p>
+            <p><strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Mitigation:</strong> Advanced resists, post-exposure smoothing, and design rules that tolerate LER help manage this challenge in sub-7nm manufacturing.</p>
           </div>
         </div>
       </>,
@@ -1306,36 +1438,140 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const [currentAppIndex, setCurrentAppIndex] = useState(0);
+    const currentApp = realWorldApps[currentAppIndex];
+    const appCompleted = transferCompleted.has(currentAppIndex);
+
     return renderWrapper(
       <>
         <div style={{ padding: '16px' }}>
-          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>Real-World Applications</h2>
-          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>Focus-dose control affects every modern electronic device</p>
-          <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>Complete all 4 applications to unlock the test</p>
-        </div>
-        {transferApplications.map((app, index) => (
-          <div key={index} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-              {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
-            </div>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-            <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-            </div>
-            {!transferCompleted.has(index) ? (
-              <button onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))} style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}>
-                Reveal Answer
-              </button>
-            ) : (
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-              </div>
-            )}
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: 700 }}>Real-World Applications</h2>
+          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px', fontWeight: 400 }}>Focus-dose control affects every modern electronic device</p>
+          <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
+            Progress: {transferCompleted.size} / {realWorldApps.length} applications
+          </p>
+          {/* App navigation dots */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
+            {realWorldApps.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentAppIndex(i)}
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  backgroundColor: transferCompleted.has(i) ? colors.success : i === currentAppIndex ? colors.accent : colors.border,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                aria-label={`Application ${i + 1}`}
+              />
+            ))}
           </div>
-        ))}
+        </div>
+        <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px', border: appCompleted ? `2px solid ${colors.success}` : `1px solid ${colors.border}`, transition: 'all 0.3s ease' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <span style={{ fontSize: '32px' }}>{currentApp.icon}</span>
+            <div>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', margin: 0, fontWeight: 700 }}>{currentApp.title}</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, fontWeight: 400 }}>{currentApp.tagline}</p>
+            </div>
+          </div>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '16px', fontWeight: 400 }}>{currentApp.description}</p>
+
+          <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>How Focus-Dose Control Applies:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 400 }}>{currentApp.connection}</p>
+          </div>
+
+          <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+            <h4 style={{ color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Technical Details:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 400 }}>{currentApp.howItWorks}</p>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+            {currentApp.stats.map((stat, i) => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', flex: '1 1 100px', textAlign: 'center' }}>
+                <div style={{ color: colors.accent, fontSize: '16px', fontWeight: 700 }}>{stat.value}</div>
+                <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 400 }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+            <h4 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>Industry Examples:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400 }}>
+              {currentApp.examples.join(', ')} - all manufactured using the same lithography principles you just learned.
+            </p>
+          </div>
+
+          {!appCompleted ? (
+            <button
+              onClick={() => setTransferCompleted(new Set([...transferCompleted, currentAppIndex]))}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.primary} 100%)`,
+                color: colors.textPrimary,
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 600,
+                minHeight: '44px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Got It
+            </button>
+          ) : (
+            <div style={{ background: 'rgba(16, 185, 129, 0.15)', padding: '16px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+              <p style={{ color: colors.success, fontWeight: 700, marginBottom: '8px', fontSize: '14px' }}>Understood!</p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, fontWeight: 400 }}>{currentApp.futureImpact}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation between apps */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 16px 16px 16px' }}>
+          <button
+            onClick={() => setCurrentAppIndex(Math.max(0, currentAppIndex - 1))}
+            disabled={currentAppIndex === 0}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: currentAppIndex === 0 ? colors.textMuted : colors.textSecondary,
+              cursor: currentAppIndex === 0 ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              minHeight: '44px',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Previous App
+          </button>
+          <button
+            onClick={() => setCurrentAppIndex(Math.min(realWorldApps.length - 1, currentAppIndex + 1))}
+            disabled={currentAppIndex === realWorldApps.length - 1}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: currentAppIndex === realWorldApps.length - 1 ? colors.textMuted : colors.textSecondary,
+              cursor: currentAppIndex === realWorldApps.length - 1 ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              minHeight: '44px',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Next App
+          </button>
+        </div>
       </>,
-      renderBottomBar(true, transferCompleted.size >= 4, 'Take the Test')
+      renderBottomBar(true, transferCompleted.size >= realWorldApps.length, 'Continue')
     );
   }
 
@@ -1373,35 +1609,41 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
       <>
         <div style={{ padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-            <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>
+            <span style={{ color: colors.textSecondary, fontWeight: 400, fontSize: '14px' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
+          </div>
+          <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400, lineHeight: 1.5 }}>
+              In a semiconductor fab, a process engineer is optimizing the lithography step for a new 5nm chip design. The scanner uses EUV light at 13.5nm wavelength with a numerical aperture of 0.33. The process window must accommodate wafer flatness variations of plus or minus 30nm across the 300mm wafer. Answer the following questions about focus-dose control in lithography manufacturing.
+            </p>
           </div>
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
             {testQuestions.map((_, i) => (
-              <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+              <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textSecondary : 'rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.2s ease' }} />
             ))}
           </div>
           <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', marginBottom: '8px', fontWeight: 400 }}>Question {currentTestQuestion + 1} of {testQuestions.length}</p>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, margin: 0, fontWeight: 700 }}>{currentQ.question}</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {currentQ.options.map((opt, oIndex) => (
-              <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
+              <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', fontWeight: 400, minHeight: '44px' }}>
                 {opt.text}
               </button>
             ))}
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-          <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>
+          <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', minHeight: '44px' }}>
             Previous
           </button>
           {currentTestQuestion < testQuestions.length - 1 ? (
-            <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>
-              Next
+            <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', minHeight: '44px' }}>
+              Continue
             </button>
           ) : (
-            <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>
+            <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', minHeight: '44px' }}>
               Submit Test
             </button>
           )}
@@ -1417,12 +1659,12 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
       <>
         <div style={{ padding: '24px', textAlign: 'center' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>Semiconductor Icon</div>
-          <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-          <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand lithography focus and dose control</p>
+          <h1 style={{ color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Mastery Achieved!</h1>
+          <p style={{ color: colors.textSecondary, marginBottom: '24px', fontWeight: 400 }}>You understand lithography focus and dose control</p>
         </div>
         <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>Key Concepts Mastered:</h3>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
             <li>Process window concept (focus-dose ellipse)</li>
             <li>Defocus causes image blur and feature variation</li>
             <li>Dose controls resist threshold and feature width</li>
@@ -1431,8 +1673,8 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
           </ul>
         </div>
         <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>Beyond the Basics:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, fontWeight: 400 }}>
             Modern EUV lithography at 13.5nm wavelength enables 3nm and smaller features, but requires even tighter process control. Machine learning is now used to predict and correct for focus-dose variations across the wafer in real-time!
           </p>
         </div>

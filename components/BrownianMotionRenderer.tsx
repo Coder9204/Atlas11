@@ -1,10 +1,26 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+// ============================================================================
+// BROWNIAN MOTION RENDERER - Complete 10-Phase Learning Game
+// Discover how random molecular collisions create observable motion
+// ============================================================================
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
 interface BrownianMotionRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
 }
 
 const colors = {
@@ -39,13 +55,49 @@ interface PathPoint {
   y: number;
 }
 
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
 const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  onGameEvent,
+  gamePhase,
 }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [isMobile, setIsMobile] = useState(false);
+  const isNavigating = useRef(false);
 
   // Responsive detection
   useEffect(() => {
@@ -54,20 +106,6 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
 
   // Simulation state
   const [temperature, setTemperature] = useState(50);
@@ -83,10 +121,57 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [selectedApp, setSelectedApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Twist Experiment',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'brownian-motion',
+        gameTitle: 'Brownian Motion',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
   // Initialize particles
   useEffect(() => {
@@ -213,6 +298,127 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
     frameCountRef.current = 0;
   }, []);
 
+  // Typography styles
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgCard,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.bgCard,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #7c3aed)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // Navigation bar component
+  const renderNavBar = (showBack: boolean = true) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: '16px 24px',
+      background: colors.bgDark,
+      borderTop: '1px solid rgba(255,255,255,0.1)',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      zIndex: 1000,
+    }}>
+      {showBack && phaseOrder.indexOf(phase) > 0 ? (
+        <button
+          onClick={prevPhase}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`,
+            background: 'transparent',
+            color: colors.textSecondary,
+            cursor: 'pointer',
+            fontSize: '14px',
+          }}
+        >
+          Back
+        </button>
+      ) : (
+        <div />
+      )}
+      <button
+        onClick={nextPhase}
+        style={{
+          padding: '12px 32px',
+          borderRadius: '8px',
+          border: 'none',
+          background: `linear-gradient(135deg, ${colors.accent}, #7c3aed)`,
+          color: 'white',
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          fontSize: '16px',
+        }}
+      >
+        Next
+      </button>
+    </div>
+  );
+
   const predictions = [
     { id: 'still', label: 'The particles stay still until something pushes them' },
     { id: 'drift', label: 'The particles drift slowly in one direction' },
@@ -256,7 +462,8 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'What causes Brownian motion?',
+      scenario: 'Robert Brown, a botanist studying pollen grains in water under a microscope in 1827, noticed the tiny particles were constantly jiggling in a seemingly random manner. Despite no visible cause pushing them, the particles never stopped moving.',
+      question: 'What causes this mysterious Brownian motion?',
       options: [
         { text: 'Gravity pulling particles downward', correct: false },
         { text: 'Random collisions with invisible fluid molecules', correct: true },
@@ -265,34 +472,38 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
       ],
     },
     {
-      question: 'If you observe a pollen grain in water, its path over time will:',
+      scenario: 'A biology student sets up a microscope to observe pollen grains suspended in a drop of water. She carefully eliminates all vibrations and ensures the water is at thermal equilibrium. She begins tracking the path of a single pollen grain over several minutes.',
+      question: 'What pattern will she observe in the pollen grain\'s path over time?',
       options: [
-        { text: 'Be a straight line', correct: false },
-        { text: 'Be a perfect circle', correct: false },
-        { text: 'Be a random, zigzag pattern', correct: true },
-        { text: 'Always move toward the light', correct: false },
+        { text: 'A straight line moving in one direction', correct: false },
+        { text: 'A perfect circular orbit', correct: false },
+        { text: 'A random, zigzag pattern (random walk)', correct: true },
+        { text: 'Movement only toward the light source', correct: false },
       ],
     },
     {
-      question: 'Increasing the temperature of the fluid will:',
+      scenario: 'A physicist is conducting an experiment on Brownian motion. She starts with a water sample at room temperature (20 degrees C) and carefully heats it to 60 degrees C while observing particles under the microscope. She notices a significant change in particle behavior.',
+      question: 'How does increasing the temperature affect the Brownian motion?',
       options: [
-        { text: 'Stop Brownian motion', correct: false },
-        { text: 'Make the jittering slower', correct: false },
-        { text: 'Make the jittering faster and more intense', correct: true },
-        { text: 'Make particles move in straight lines', correct: false },
+        { text: 'It stops Brownian motion completely', correct: false },
+        { text: 'The jittering becomes slower and less intense', correct: false },
+        { text: 'The jittering becomes faster and more intense', correct: true },
+        { text: 'Particles begin moving in straight lines', correct: false },
       ],
     },
     {
-      question: 'The mean square displacement of a Brownian particle grows:',
+      scenario: 'Einstein\'s 1905 paper on Brownian motion introduced the concept of mean square displacement (MSD), which measures the average squared distance a particle travels from its starting point. This statistical measure became crucial for understanding diffusion.',
+      question: 'How does the mean square displacement of a Brownian particle grow over time?',
       options: [
-        { text: 'Not at all - particles stay in place', correct: false },
-        { text: 'Linearly with time (proportional to t)', correct: true },
+        { text: 'Not at all - particles stay in the same place', correct: false },
+        { text: 'Linearly with time (MSD is proportional to t)', correct: true },
         { text: 'Exponentially with time', correct: false },
-        { text: 'With the square of time (proportional to t^2)', correct: false },
+        { text: 'With the square of time (proportional to t squared)', correct: false },
       ],
     },
     {
-      question: 'Smaller particles show stronger Brownian motion because:',
+      scenario: 'A researcher compares two samples: one with large 10-micrometer particles and another with tiny 100-nanometer nanoparticles. Both are suspended in water at the same temperature. She observes dramatically different behavior under the microscope.',
+      question: 'Why do smaller particles show stronger Brownian motion?',
       options: [
         { text: 'They have less inertia relative to collision forces', correct: true },
         { text: 'They are lighter and float better', correct: false },
@@ -301,34 +512,38 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
       ],
     },
     {
-      question: 'Brownian motion is an example of:',
+      scenario: 'A statistics student studying physics learns that while each individual step of a Brownian particle is completely unpredictable, the ensemble behavior of many particles follows precise mathematical laws. This seems paradoxical at first.',
+      question: 'Brownian motion is best described as what type of phenomenon?',
       options: [
         { text: 'Deterministic motion that can be predicted exactly', correct: false },
         { text: 'Random or stochastic motion with statistical patterns', correct: true },
         { text: 'Periodic motion like a pendulum', correct: false },
-        { text: 'Motion caused by external forces', correct: false },
+        { text: 'Motion caused only by external forces', correct: false },
       ],
     },
     {
-      question: 'Einstein\'s analysis of Brownian motion helped prove:',
+      scenario: 'In 1905, Einstein published a paper showing that Brownian motion could be explained by molecular theory. His mathematical predictions were later verified experimentally by Jean Perrin, who won the Nobel Prize for this work.',
+      question: 'What fundamental concept did Einstein\'s analysis of Brownian motion help prove?',
       options: [
         { text: 'The existence of atoms and molecules', correct: true },
-        { text: 'The theory of relativity', correct: false },
+        { text: 'The theory of special relativity', correct: false },
         { text: 'The photoelectric effect', correct: false },
         { text: 'The wave nature of light', correct: false },
       ],
     },
     {
-      question: 'In a fluid at thermal equilibrium, Brownian motion:',
+      scenario: 'A curious student asks: "If Brownian motion is caused by thermal energy, does it stop when everything reaches the same temperature?" The professor explains the subtle point about thermal equilibrium and perpetual motion.',
+      question: 'In a fluid at thermal equilibrium, what happens to Brownian motion?',
       options: [
-        { text: 'Stops completely', correct: false },
-        { text: 'Continues indefinitely', correct: true },
-        { text: 'Only occurs near the surface', correct: false },
-        { text: 'Requires external energy input', correct: false },
+        { text: 'It stops completely', correct: false },
+        { text: 'It continues indefinitely', correct: true },
+        { text: 'It only occurs near the surface', correct: false },
+        { text: 'It requires external energy input', correct: false },
       ],
     },
     {
-      question: 'The diffusion coefficient in Brownian motion depends on:',
+      scenario: 'The Stokes-Einstein equation (D = kT/6 pi eta r) relates the diffusion coefficient D to various physical parameters. A researcher wants to increase the diffusion rate of nanoparticles in her drug delivery system.',
+      question: 'According to this equation, the diffusion coefficient depends on:',
       options: [
         { text: 'Particle color', correct: false },
         { text: 'Room lighting', correct: false },
@@ -337,11 +552,12 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
       ],
     },
     {
-      question: 'Thermal noise in electronics is related to Brownian motion because:',
+      scenario: 'An electrical engineer designing a sensitive amplifier encounters unwanted voltage fluctuations called Johnson-Nyquist noise. This random signal limits how small a signal the amplifier can detect. The noise power is proportional to temperature.',
+      question: 'Why is thermal noise in electronics related to Brownian motion?',
       options: [
-        { text: 'Both involve random thermal fluctuations', correct: true },
-        { text: 'Both require a vacuum', correct: false },
-        { text: 'Both are caused by light', correct: false },
+        { text: 'Both involve random thermal fluctuations of particles', correct: true },
+        { text: 'Both require a vacuum to occur', correct: false },
+        { text: 'Both are caused by light absorption', correct: false },
         { text: 'Both only occur at high temperatures', correct: false },
       ],
     },
@@ -710,6 +926,17 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
             </g>
           )}
 
+          {/* Interactive temperature indicator - moves with slider */}
+          <circle
+            cx={15 + (temperature / 100) * (width - 30)}
+            cy={height - 12}
+            r={8}
+            fill={colors.accent}
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#brownParticleGlow)"
+          />
+
           {/* === 3D PARTICLES WITH REALISTIC SPHERICAL APPEARANCE === */}
           {particles.map((p, i) => (
             <g key={i}>
@@ -827,17 +1054,17 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
 
           {/* Legend items */}
           <circle cx={width - 170} cy="22" r="5" fill="url(#brownTrackedParticle3D)" />
-          <text x={width - 160} y="26" fill={colors.textSecondary} fontSize="10">
+          <text x={width - 160} y="26" fill={colors.textSecondary} fontSize="11">
             Tracked
           </text>
 
           <circle cx={width - 110} cy="22" r="5" fill="url(#brownParticle3D)" />
-          <text x={width - 100} y="26" fill={colors.textSecondary} fontSize="10">
+          <text x={width - 100} y="26" fill={colors.textSecondary} fontSize="11">
             Particles
           </text>
 
           <line x1={width - 55} y1="22" x2={width - 35} y2="22" stroke="#6ee7b7" strokeWidth="2" strokeLinecap="round" />
-          <text x={width - 30} y="26" fill={colors.textSecondary} fontSize="10">
+          <text x={width - 30} y="26" fill={colors.textSecondary} fontSize="11">
             Path
           </text>
 
@@ -846,12 +1073,23 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
             x={width / 2}
             y={height - 18}
             fill={colors.textMuted}
-            fontSize="10"
+            fontSize="11"
             textAnchor="middle"
             fontStyle="italic"
           >
             Fluid Medium (Water with Suspended Particles)
           </text>
+
+          {/* Grid lines for visual reference */}
+          <line x1={100} y1={55} x2={100} y2={height - 35} stroke={colors.textMuted} strokeWidth="0.5" opacity="0.3" strokeDasharray="4,4" />
+          <line x1={200} y1={55} x2={200} y2={height - 35} stroke={colors.textMuted} strokeWidth="0.5" opacity="0.3" strokeDasharray="4,4" />
+          <line x1={300} y1={55} x2={300} y2={height - 35} stroke={colors.textMuted} strokeWidth="0.5" opacity="0.3" strokeDasharray="4,4" />
+          <line x1={15} y1={130} x2={width - 15} y2={130} stroke={colors.textMuted} strokeWidth="0.5" opacity="0.3" strokeDasharray="4,4" />
+          <line x1={15} y1={210} x2={width - 15} y2={210} stroke={colors.textMuted} strokeWidth="0.5" opacity="0.3" strokeDasharray="4,4" />
+
+          {/* Reference and current labels */}
+          <text x={20} y={height - 5} fill={colors.textMuted} fontSize="11" opacity="0.7">reference</text>
+          <text x={width - 20} y={height - 5} fill={colors.accent} fontSize="11" textAnchor="end" opacity="0.7">current</text>
         </svg>
 
         {interactive && (
@@ -923,8 +1161,8 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
           <line x1={40} y1={10} x2={40} y2={100} stroke={colors.textMuted} strokeWidth={1} />
 
           {/* Labels */}
-          <text x={165} y={115} fill={colors.textMuted} fontSize={10} textAnchor="middle">Time</text>
-          <text x={15} y={55} fill={colors.textMuted} fontSize={10} textAnchor="middle" transform="rotate(-90, 15, 55)">MSD</text>
+          <text x={165} y={115} fill={colors.textMuted} fontSize={11} textAnchor="middle">Time</text>
+          <text x={15} y={55} fill={colors.textMuted} fontSize={11} textAnchor="middle" transform="rotate(-90, 15, 55)">MSD</text>
 
           {/* Data line */}
           {msdData.length > 1 && (
@@ -947,7 +1185,7 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
             strokeDasharray="4,4"
             opacity={0.5}
           />
-          <text x={250} y={30} fill={colors.warning} fontSize={9} opacity={0.7}>Linear (theory)</text>
+          <text x={250} y={30} fill={colors.warning} fontSize={11} opacity={0.7}>Linear (theory)</text>
         </svg>
       </div>
     );
@@ -966,14 +1204,22 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
           step="5"
           value={temperature}
           onChange={(e) => setTemperature(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ touchAction: 'pan-y',
+            width: '100%',
+            height: '20px',
+            borderRadius: '4px',
+            background: `linear-gradient(90deg, ${colors.accent} ${temperature}%, ${colors.bgCard} ${temperature}%)`,
+            cursor: 'pointer',
+            WebkitAppearance: 'none',
+            appearance: 'none',
+          }}
         />
       </div>
 
       {renderMSDGraph()}
 
       <div style={{
-        background: 'rgba(139, 92, 246, 0.2)',
+        background: `${colors.accent}22`,
         padding: '12px',
         borderRadius: '8px',
         borderLeft: `3px solid ${colors.accent}`,
@@ -988,84 +1234,62 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgDark} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div style={{ padding: '24px', textAlign: 'center', marginTop: '20px' }}>
+            <div style={{ fontSize: '72px', marginBottom: '24px' }}>🔬</div>
+            <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
               The Random Jiggle
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px' }}>
               Can "randomness" have a measurable pattern?
             </p>
           </div>
 
           {renderVisualization(true)}
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: colors.bgCard,
               padding: '20px',
               borderRadius: '12px',
               marginBottom: '16px',
+              border: `1px solid rgba(255,255,255,0.1)`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '12px' }}>
                 Look at tiny particles under a microscope - they never sit still!
                 They jitter and dance unpredictably, even when nothing seems to push them.
                 This is Brownian motion, discovered in 1827 by botanist Robert Brown.
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>
                 Try it yourself: Mix a drop of milk in water and observe under a phone microscope.
               </p>
             </div>
 
             <div style={{
-              background: 'rgba(139, 92, 246, 0.2)',
+              background: `${colors.accent}22`,
               padding: '16px',
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
                 Watch the red particle's path - completely random, yet strangely predictable in aggregate!
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderNavDots()}
+        {renderNavBar(false)}
       </div>
     );
   }
@@ -1073,8 +1297,26 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            margin: '24px 16px 16px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
+          </div>
+
           {renderVisualization(false)}
 
           <div style={{
@@ -1083,8 +1325,8 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
               Tiny particles (like pollen or fat droplets) suspended in water.
               The red particle is being tracked. The fluid appears still - no currents,
               no external forces. What should happen?
@@ -1092,32 +1334,42 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
           </div>
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
               How will the particles move over time?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {predictions.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setPrediction(p.id)}
+                  onClick={() => { playSound('click'); setPrediction(p.id); }}
                   style={{
                     padding: '16px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                    background: prediction === p.id ? `${colors.accent}22` : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    fontSize: '14px',
+                    ...typo.small,
                   }}
                 >
                   {p.label}
                 </button>
               ))}
             </div>
+
+            {prediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%', marginTop: '24px' }}
+              >
+                Test My Prediction
+              </button>
+            )}
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1125,12 +1377,20 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Brownian Motion</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Observe how particles jitter randomly but with consistent statistical properties
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div style={{ padding: '16px', textAlign: 'center', marginTop: '20px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>Explore Brownian Motion</h2>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Observe how particles jitter randomly but with consistent statistical properties.
+              This is important because understanding Brownian motion is essential for drug delivery,
+              nanomedicine, and financial modeling.
             </p>
           </div>
 
@@ -1143,16 +1403,32 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h4 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+            <ul style={{ ...typo.small, color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Watch the path - each step is random, but the overall spread is predictable</li>
               <li>Notice: particles don't travel far in any one direction</li>
               <li>The MSD graph shows displacement grows with time (not distance traveled!)</li>
               <li>Reset and watch different paths - all random, but statistically similar</li>
             </ul>
           </div>
+
+          <div style={{
+            background: `${colors.success}15`,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.success}`,
+          }}>
+            <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Why This Matters:</h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Brownian motion is fundamental to drug delivery (nanoparticles diffuse through tissue),
+              financial mathematics (stock price models), and even forensic science (pollen analysis).
+              Einstein used it to prove atoms exist!
+            </p>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1162,20 +1438,80 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
     const wasCorrect = prediction === 'jitter';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
+            background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
+            margin: '24px 16px 16px',
             padding: '20px',
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+            <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+              {wasCorrect ? 'Correct! You predicted the jittering behavior!' : 'Not Quite - But Now You Saw It!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Particles jitter randomly but stay in the same general area - classic Brownian motion!
+            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
+              As you observed, particles jitter randomly but stay in the same general area - classic Brownian motion!
+              {wasCorrect ? ' Your prediction matched what Einstein described mathematically.' : ' The jittering you saw is exactly what Einstein predicted.'}
+            </p>
+          </div>
+
+          {/* Review diagram SVG */}
+          <div style={{ textAlign: 'center', margin: '16px', background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
+            <svg width="360" height="180" viewBox="0 0 360 180" style={{ maxWidth: '100%' }}>
+              <defs>
+                <radialGradient id="reviewParticle" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </radialGradient>
+                <radialGradient id="reviewMolecule" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="100%" stopColor="#1d4ed8" />
+                </radialGradient>
+              </defs>
+              <rect width="360" height="180" fill="#0f172a" rx="8" />
+              <text x="180" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">Random Molecular Collisions</text>
+              {/* Surrounding molecules with arrows */}
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
+                const rad = (angle * Math.PI) / 180;
+                const cx = 180 + Math.cos(rad) * 55;
+                const cy = 100 + Math.sin(rad) * 55;
+                const ax = 180 + Math.cos(rad) * 35;
+                const ay = 100 + Math.sin(rad) * 35;
+                return (
+                  <g key={i}>
+                    <circle cx={cx} cy={cy} r="8" fill="url(#reviewMolecule)" opacity="0.7" />
+                    <line x1={cx} y1={cy} x2={ax} y2={ay} stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrowhead)" />
+                  </g>
+                );
+              })}
+              {/* Central particle */}
+              <circle cx="180" cy="100" r="18" fill="url(#reviewParticle)" />
+              <text x="180" y="155" textAnchor="middle" fill="#94a3b8" fontSize="11">Water molecules constantly collide from all directions</text>
+            </svg>
+          </div>
+
+          {/* Key formula */}
+          <div style={{
+            background: `${colors.warning}15`,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.warning}`,
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>Einstein's Key Equation:</p>
+            <p style={{ fontSize: '18px', color: colors.textPrimary, fontFamily: 'serif', margin: '8px 0' }}>
+              MSD = 2Dt (Mean Square Displacement is proportional to time)
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              D = kT / (6 pi eta r) relates diffusion to temperature
             </p>
           </div>
 
@@ -1185,8 +1521,8 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Brownian Motion</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>The Physics of Brownian Motion</h3>
+            <div style={{ ...typo.small, color: colors.textSecondary }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Invisible Collisions:</strong> Water molecules
                 are far too small to see, but they're constantly moving and colliding with the visible
@@ -1197,7 +1533,7 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
                 molecular collisions pushes the particle in a random direction. The net effect is a
                 "drunkard's walk" - random steps that don't add up to any particular direction.
               </p>
-              <p>
+              <p style={{ margin: 0 }}>
                 <strong style={{ color: colors.textPrimary }}>Statistical Pattern:</strong> While each
                 step is random, the mean square displacement grows linearly with time. This is a
                 fundamental result that Einstein used to prove atoms exist!
@@ -1205,7 +1541,8 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1213,11 +1550,29 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            margin: '24px 16px 16px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Temperature!
+            </p>
+          </div>
+
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
+            <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
               What if we warm up the sample slightly?
             </p>
           </div>
@@ -1230,40 +1585,50 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
               Imagine gently heating the water sample. The water molecules are now moving faster
               on average. How will this affect the visible particles' jittering?
             </p>
           </div>
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
               With higher temperature, what happens to the Brownian motion?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {twistPredictions.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
+                  onClick={() => { playSound('click'); setTwistPrediction(p.id); }}
                   style={{
                     padding: '16px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    background: twistPrediction === p.id ? `${colors.warning}22` : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    fontSize: '14px',
+                    ...typo.small,
                   }}
                 >
                   {p.label}
                 </button>
               ))}
             </div>
+
+            {twistPrediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%', marginTop: '24px' }}
+              >
+                Test My Prediction
+              </button>
+            )}
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1271,11 +1636,17 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Temperature Effects</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div style={{ padding: '16px', textAlign: 'center', marginTop: '20px' }}>
+            <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '8px' }}>Test Temperature Effects</h2>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
               Adjust the temperature and observe how jittering changes
             </p>
           </div>
@@ -1284,20 +1655,21 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
           {renderControls()}
 
           <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
+            background: `${colors.warning}22`,
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
             borderLeft: `3px solid ${colors.warning}`,
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <h4 style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
               Higher temperature means faster-moving water molecules, which deliver harder kicks
               to the visible particles. The jittering becomes more intense!
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1307,21 +1679,50 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
     const wasCorrect = twistPrediction === 'faster';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
+            background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
+            margin: '24px 16px 16px',
             padding: '20px',
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
               Higher temperature causes faster, more intense jittering!
             </p>
+          </div>
+
+          {/* Review diagram for temperature effect */}
+          <div style={{ textAlign: 'center', margin: '16px', background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
+            <svg width="360" height="160" viewBox="0 0 360 160" style={{ maxWidth: '100%' }}>
+              <rect width="360" height="160" fill="#0f172a" rx="8" />
+              <text x="180" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">Temperature vs. Motion Intensity</text>
+              {/* Cold side */}
+              <rect x="30" y="40" width="120" height="80" rx="6" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="1" />
+              <text x="90" y="60" textAnchor="middle" fill="#60a5fa" fontSize="11">Low Temperature</text>
+              <circle cx="90" cy="90" r="10" fill="#ef4444" />
+              <path d="M80 85 L85 80 M100 85 L95 80 M80 95 L85 100 M100 95 L95 100" stroke="#6ee7b7" strokeWidth="1.5" fill="none" />
+              <text x="90" y="130" textAnchor="middle" fill="#94a3b8" fontSize="11">Slow jitter</text>
+              {/* Hot side */}
+              <rect x="210" y="40" width="120" height="80" rx="6" fill="#3f1818" stroke="#f87171" strokeWidth="1" />
+              <text x="270" y="60" textAnchor="middle" fill="#fca5a5" fontSize="11">High Temperature</text>
+              <circle cx="270" cy="90" r="10" fill="#ef4444" />
+              <path d="M250 75 L260 70 M290 75 L280 70 M250 105 L260 110 M290 105 L280 110 M258 80 L265 75 M282 80 L275 75 M258 100 L265 105 M282 100 L275 105" stroke="#6ee7b7" strokeWidth="2" fill="none" />
+              <text x="270" y="130" textAnchor="middle" fill="#94a3b8" fontSize="11">Fast jitter</text>
+              {/* Arrow */}
+              <line x1="160" y1="90" x2="200" y2="90" stroke="#f59e0b" strokeWidth="2" />
+              <polygon points="200,90 194,85 194,95" fill="#f59e0b" />
+            </svg>
           </div>
 
           <div style={{
@@ -1330,8 +1731,8 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Temperature and Brownian Motion</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>Temperature and Brownian Motion</h3>
+            <div style={{ ...typo.small, color: colors.textSecondary }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Molecular Speed:</strong> Temperature is
                 directly related to the average kinetic energy of molecules. Higher temperature =
@@ -1342,7 +1743,7 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
                 coefficient D = kT / (6 pi eta r), where T is temperature. This predicts that
                 Brownian motion intensity is proportional to temperature!
               </p>
-              <p>
+              <p style={{ margin: 0 }}>
                 <strong style={{ color: colors.textPrimary }}>Practical Use:</strong> This relationship
                 allows scientists to measure temperature at microscopic scales by observing
                 particle motion - a form of "molecular thermometer."
@@ -1350,63 +1751,185 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = transferCompleted.size >= 4;
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div style={{ padding: '24px 16px 16px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Brownian motion appears everywhere from biology to electronics
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+              Explore all 4 applications to continue
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Done</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '8px',
+            margin: '0 16px 16px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  setTransferCompleted(new Set([...transferCompleted, i]));
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : transferCompleted.has(i) ? colors.success : 'rgba(255,255,255,0.1)'}`,
+                  borderRadius: '12px',
+                  padding: '12px 4px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {transferCompleted.has(i) && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '24px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ fontSize: '10px', color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.short}
                 </div>
-              )}
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '12px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
             </div>
-          ))}
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgDark,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How This Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '8px',
+              marginBottom: '16px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgDark,
+                  borderRadius: '8px',
+                  padding: '10px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '16px', marginBottom: '2px' }}>{stat.icon}</div>
+                  <div style={{ fontSize: '14px', color: app.color, fontWeight: 700 }}>{stat.value}</div>
+                  <div style={{ fontSize: '10px', color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{
+              background: colors.bgDark,
+              borderRadius: '8px',
+              padding: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '6px', fontWeight: 600 }}>Examples:</h4>
+              <ul style={{ margin: 0, paddingLeft: '16px' }}>
+                {app.examples.slice(0, 3).map((ex, i) => (
+                  <li key={i} style={{ fontSize: '11px', color: colors.textMuted, marginBottom: '2px' }}>{ex}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Continue button */}
+          <div style={{ padding: '0 16px 16px' }}>
+            {selectedApp < realWorldApps.length - 1 ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const nextIdx = selectedApp + 1;
+                  setSelectedApp(nextIdx);
+                  setTransferCompleted(new Set([...transferCompleted, nextIdx]));
+                }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Next Application
+              </button>
+            ) : (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Got It - Continue to Test
+              </button>
+            )}
+          </div>
+
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1414,78 +1937,300 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
+      const passed = testScore >= 7;
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+            <div style={{ maxWidth: '600px', margin: '24px auto 0', textAlign: 'center', padding: '0 16px' }}>
+              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+                {passed ? '🏆' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Test Complete!' : 'Keep Learning!'}
               </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You\'ve mastered Brownian motion!' : 'Review the material and try again.'}
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: '4px 0' }}>
+                You Scored
               </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
-                    </div>
-                  ))}
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '8px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed ? 'You understand Brownian motion!' : 'Review the concepts and try again.'}
+              </p>
+
+              {/* Answer Review */}
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ ...typo.small, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>
+                  Question-by-Question Review
+                </p>
+                <div style={{
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                  paddingBottom: '100px',
+                  flex: 1,
+                  paddingTop: '48px',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}>
+                  {testQuestions.map((q, i) => {
+                    const correctIdx = q.options.findIndex(o => o.correct);
+                    const isCorrect = testAnswers[i] === correctIdx;
+                    return (
+                      <div key={i} style={{
+                        background: colors.bgCard,
+                        borderRadius: '10px',
+                        border: `2px solid ${isCorrect ? colors.success : colors.error}30`,
+                        overflow: 'hidden',
+                      }}>
+                        <div style={{
+                          padding: '10px 14px',
+                          background: isCorrect ? `${colors.success}15` : `${colors.error}15`,
+                          display: 'flex', alignItems: 'center', gap: '10px',
+                        }}>
+                          <div style={{
+                            width: '26px', height: '26px', borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '14px', fontWeight: 700,
+                            background: isCorrect ? colors.success : colors.error,
+                            color: 'white',
+                          }}>
+                            {isCorrect ? '\u2713' : '\u2717'}
+                          </div>
+                          <div>
+                            <p style={{ ...typo.small, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+                              Question {i + 1}
+                            </p>
+                            <p style={{ fontSize: '11px', color: colors.textMuted, margin: 0 }}>
+                              {q.question.substring(0, 60)}...
+                            </p>
+                          </div>
+                        </div>
+                        {!isCorrect && (
+                          <div style={{ padding: '10px 14px' }}>
+                            <p style={{ fontSize: '11px', color: colors.error, margin: '0 0 4px', fontWeight: 600 }}>
+                              Your answer: {testAnswers[i] !== null ? q.options[testAnswers[i]!].text : 'Not answered'}
+                            </p>
+                            <p style={{ fontSize: '11px', color: colors.success, margin: 0, fontWeight: 600 }}>
+                              Correct: {q.options[correctIdx].text}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+
+              {/* Navigation buttons */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', padding: '24px 0' }}>
+                {passed ? (
+                  <button
+                    onClick={() => { playSound('complete'); nextPhase(); }}
+                    style={primaryButtonStyle}
+                  >
+                    Complete Lesson
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setTestSubmitted(false);
+                      setTestAnswers(new Array(10).fill(null));
+                      setCurrentTestQuestion(0);
+                      setTestScore(0);
+                      goToPhase('hook');
+                    }}
+                    style={primaryButtonStyle}
+                  >
+                    Review and Try Again
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderNavDots()}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px',
+            }}>
+              <h2 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Knowledge Test</h2>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentTestQuestion + 1} of 10
+              </span>
             </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+
+            {/* Progress dots */}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                <div
+                  key={i}
+                  onClick={() => setCurrentTestQuestion(i)}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentTestQuestion
+                      ? colors.accent
+                      : testAnswers[i] !== null
+                        ? colors.success
+                        : 'rgba(255,255,255,0.2)',
+                    cursor: 'pointer',
+                  }}
+                />
               ))}
             </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+
+            {/* Scenario */}
+            {'scenario' in currentQ && currentQ.scenario && (
+              <div style={{
+                background: colors.bgCard,
+                padding: '16px',
+                borderRadius: '12px',
+                marginBottom: '16px',
+                borderLeft: `3px solid ${colors.accent}`,
+              }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {currentQ.scenario}
+                </p>
+              </div>
+            )}
+
+            {/* Question */}
+            <div style={{
+              background: colors.bgDark,
+              padding: '20px',
+              borderRadius: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0, fontWeight: 600 }}>{currentQ.question}</p>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
-                  {opt.text}
+                <button
+                  key={oIndex}
+                  onClick={() => { playSound('click'); handleTestAnswer(currentTestQuestion, oIndex); }}
+                  style={{
+                    background: testAnswers[currentTestQuestion] === oIndex ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentTestQuestion] === oIndex ? colors.accent : 'rgba(255,255,255,0.1)'}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentTestQuestion] === oIndex ? colors.accent : colors.bgDark,
+                    color: testAnswers[currentTestQuestion] === oIndex ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {String.fromCharCode(65 + oIndex)}
+                  </span>
+                  <span style={{ ...typo.small, color: colors.textPrimary }}>
+                    {opt.text}
+                  </span>
                 </button>
               ))}
             </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
-            ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
-            )}
+
+            {/* Navigation */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+                disabled={currentTestQuestion === 0}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.textMuted}`,
+                  background: 'transparent',
+                  color: currentTestQuestion === 0 ? colors.textMuted : colors.textSecondary,
+                  cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Previous
+              </button>
+              {currentTestQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentTestQuestion] !== null && setCurrentTestQuestion(currentTestQuestion + 1)}
+                  disabled={testAnswers[currentTestQuestion] === null}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentTestQuestion] !== null ? colors.accent : 'rgba(255,255,255,0.1)',
+                    color: 'white',
+                    cursor: testAnswers[currentTestQuestion] !== null ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correctIdx = testQuestions[i].options.findIndex(o => o.correct);
+                      return acc + (ans === correctIdx ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : 'rgba(255,255,255,0.1)',
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
+            </div>
           </div>
         </div>
+        {renderNavDots()}
       </div>
     );
   }
@@ -1493,39 +2238,74 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered Brownian motion and random walks</p>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgDark} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div style={{ padding: '24px', textAlign: 'center', marginTop: '20px' }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>🏆</div>
+            <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>You've mastered Brownian motion and random walks</p>
           </div>
+
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+            <ul style={{ ...typo.small, color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Random molecular collisions cause visible particle jittering</li>
               <li>Mean square displacement grows linearly with time</li>
               <li>Temperature directly affects jitter intensity</li>
               <li>Brownian motion proved the existence of atoms</li>
             </ul>
           </div>
-          <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+
+          <div style={{ background: `${colors.accent}22`, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
               Brownian motion is fundamental to statistical mechanics, finance (stock prices),
               and biology (molecular motors). The Langevin equation and Fokker-Planck equation
               describe it mathematically. It's also key to understanding diffusion, osmosis,
               and many nanoscale phenomena!
             </p>
           </div>
+
           {renderVisualization(true)}
+
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <a
+              href="/"
+              style={{
+                ...primaryButtonStyle,
+                display: 'inline-block',
+                textDecoration: 'none',
+              }}
+            >
+              Back to Dashboard
+            </a>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderNavDots()}
       </div>
     );
   }
 
-  return null;
+  // Default fallback - should not reach here
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: colors.bgPrimary,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      {renderProgressBar()}
+      <p style={{ color: colors.textSecondary }}>Loading...</p>
+    </div>
+  );
 };
 
 export default BrownianMotionRenderer;

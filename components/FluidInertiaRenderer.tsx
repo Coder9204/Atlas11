@@ -38,7 +38,7 @@ const colors = {
 
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
 
   border: '#334155',
   borderLight: '#475569',
@@ -330,6 +330,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   const [valveOpen, setValveOpen] = useState(true);
   const [showPressureSpike, setShowPressureSpike] = useState(false);
   const [dampingLevel, setDampingLevel] = useState(50);
+  const [animTime, setAnimTime] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
 
@@ -352,9 +353,10 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     emitEvent('phase_change', { from: phase, to: newPhase });
   }, [phase, emitEvent]);
 
-  // Sync with external phase
+  // Sync with external phase (only valid phases)
   useEffect(() => {
-    if (gamePhase && gamePhase !== phase) {
+    const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+    if (gamePhase && validPhases.includes(gamePhase as Phase) && gamePhase !== phase) {
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase, phase]);
@@ -474,13 +476,27 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     }
   };
 
+  // Animation effect for SVG
+  useEffect(() => {
+    if (phase === 'play') {
+      const interval = setInterval(() => {
+        setAnimTime(t => t + 0.05);
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [phase]);
+
   // Styles
   const containerStyle: React.CSSProperties = {
     minHeight: '100vh',
     background: `linear-gradient(135deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
     color: colors.textPrimary,
     padding: '20px',
-    fontFamily: 'system-ui, -apple-system, sans-serif'
+    paddingBottom: '100px',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    display: 'flex',
+    flexDirection: 'column',
+    overflowY: 'auto'
   };
 
   const cardStyle: React.CSSProperties = {
@@ -500,43 +516,153 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     fontSize: '16px',
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'transform 0.2s, box-shadow 0.2s'
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    minHeight: '44px'
   };
 
-  const progressDots = useMemo(() => {
-    const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-    const currentIndex = phases.indexOf(phase);
+  const navBarStyle: React.CSSProperties = {
+    position: 'fixed' as const,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    background: colors.bgCard,
+    borderTop: `1px solid ${colors.border}`,
+    padding: '16px 20px',
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '12px',
+    zIndex: 1001,
+    boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
+  };
 
+  const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const currentIndex = phases.indexOf(phase);
+
+  const progressDots = useMemo(() => {
     return (
-      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }} role="navigation" aria-label="Phase navigation">
         {phases.map((p, i) => (
-          <div
+          <button
             key={p}
+            onClick={() => i <= currentIndex && goToPhase(p)}
+            aria-label={`Go to ${p} phase`}
             style={{
-              width: '10px',
-              height: '10px',
+              width: '12px',
+              height: '12px',
               borderRadius: '50%',
               background: i <= currentIndex ? colors.primary : colors.border,
-              transition: 'background 0.3s'
+              border: 'none',
+              cursor: i <= currentIndex ? 'pointer' : 'default',
+              transition: 'background 0.3s',
+              padding: 0
             }}
           />
         ))}
       </div>
     );
-  }, [phase]);
+  }, [phase, currentIndex, goToPhase]);
+
+  // Navigation helper
+  const goToPreviousPhase = useCallback(() => {
+    if (currentIndex > 0) {
+      goToPhase(phases[currentIndex - 1]);
+    }
+  }, [currentIndex, goToPhase]);
+
+  const goToNextPhase = useCallback(() => {
+    if (currentIndex < phases.length - 1) {
+      goToPhase(phases[currentIndex + 1]);
+    }
+  }, [currentIndex, goToPhase]);
+
+  // SVG Visualization for Water Hammer
+  const WaterHammerSVG = ({ interactive = false }: { interactive?: boolean }) => {
+    const pipeY = 100;
+    const pipeHeight = 50;
+    const valveX = 300;
+
+    return (
+      <svg viewBox="0 0 450 250" style={{ width: '100%', maxWidth: '450px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+        {/* Pipe body */}
+        <rect x="40" y={pipeY} width="320" height={pipeHeight} fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+
+        {/* Water inside pipe */}
+        <rect x="42" y={pipeY + 2} width={valveOpen ? 254 : 254} height={pipeHeight - 4} fill={colors.fluid} opacity="0.7" />
+
+        {/* Valve */}
+        <rect x={valveX - 8} y={pipeY - 15} width="16" height={pipeHeight + 30} fill={valveOpen ? colors.success : colors.error} stroke={colors.border} strokeWidth="2" />
+        <text x={valveX} y={pipeY - 25} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Valve</text>
+
+        {/* Water particles animation */}
+        {interactive && Array.from({ length: 12 }).map((_, i) => {
+          const baseX = 60 + (i / 12) * 220;
+          let x = baseX;
+
+          if (valveOpen) {
+            x = 60 + ((baseX - 60 + animTime * flowVelocity * 0.5) % 230);
+          } else if (showPressureSpike) {
+            const distToValve = valveX - 10 - baseX;
+            x = baseX + Math.max(0, distToValve * (1 - Math.exp(-animTime * 2)));
+          }
+
+          const y = pipeY + pipeHeight / 2 + Math.sin(animTime * 2 + i) * 8;
+
+          return (
+            <circle key={i} cx={Math.min(x, valveX - 15)} cy={y} r="8" fill={colors.fluidLight} opacity="0.9" />
+          );
+        })}
+
+        {/* Flow direction arrow */}
+        {valveOpen && (
+          <g>
+            <line x1="80" y1={pipeY + pipeHeight + 20} x2="200" y2={pipeY + pipeHeight + 20} stroke={colors.flow} strokeWidth="2" markerEnd="url(#arrowhead)" />
+            <text x="140" y={pipeY + pipeHeight + 40} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Flow Direction</text>
+          </g>
+        )}
+
+        {/* Pressure indicator */}
+        {showPressureSpike && (
+          <g>
+            <rect x="340" y={pipeY} width="30" height={pipeHeight} fill="none" stroke={colors.border} strokeWidth="1" />
+            <rect x="342" y={pipeY + pipeHeight - Math.min(46, animTime * 25)} width="26" height={Math.min(46, animTime * 25)} fill={colors.error} />
+            <text x="355" y={pipeY + pipeHeight + 20} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Pressure</text>
+          </g>
+        )}
+
+        {/* Labels */}
+        <text x="150" y="40" fill={colors.textPrimary} fontSize="16" textAnchor="middle" fontWeight="600">Water Hammer Visualization</text>
+        <text x="150" y={pipeY + pipeHeight / 2 + 5} fill={colors.textPrimary} fontSize="14" textAnchor="middle">Water</text>
+
+        {/* Arrow marker definition */}
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill={colors.flow} />
+          </marker>
+        </defs>
+
+        {/* Legend */}
+        <g transform="translate(340, 20)">
+          <circle cx="10" cy="8" r="6" fill={colors.fluidLight} />
+          <text x="22" y="12" fill={colors.textSecondary} fontSize="10">Water</text>
+          <rect x="4" y="22" width="12" height="12" fill={valveOpen ? colors.success : colors.error} />
+          <text x="22" y="32" fill={colors.textSecondary} fontSize="10">{valveOpen ? 'Open' : 'Closed'}</text>
+        </g>
+      </svg>
+    );
+  };
 
   // Phase rendering
   if (phase === 'hook') {
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
           {progressDots}
           <div style={cardStyle}>
             <h1 style={{ fontSize: '28px', marginBottom: '16px', textAlign: 'center' }}>
               Have you ever heard pipes bang when you quickly shut off a faucet?
             </h1>
-            <p style={{ color: colors.textMuted, fontSize: '18px', textAlign: 'center', lineHeight: 1.6 }}>
-              That loud, sometimes violent banging is called "water hammer" — and it's a dramatic
+            <p style={{ color: colors.textSecondary, fontSize: '18px', textAlign: 'center', lineHeight: 1.6 }}>
+              That loud, sometimes violent banging is called "water hammer" - and it is a dramatic
               demonstration of a fundamental physics principle: <strong style={{ color: colors.primary }}>fluid inertia</strong>.
             </p>
             <div style={{
@@ -548,17 +674,25 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
             }}>
               <span style={{ fontSize: '48px' }}>💥🔧</span>
               <p style={{ color: colors.textSecondary, marginTop: '12px' }}>
-                Moving water doesn't want to stop moving. When you force it to stop suddenly,
+                Moving water does not want to stop moving. When you force it to stop suddenly,
                 all that momentum has to go somewhere...
               </p>
             </div>
-            <button
-              style={{ ...buttonStyle, width: '100%' }}
-              onClick={() => goToPhase('predict')}
-            >
-              Explore Fluid Inertia →
-            </button>
           </div>
+        </div>
+        <div style={navBarStyle}>
+          <button
+            style={{ ...buttonStyle, background: colors.bgCardLight, opacity: 0.5 }}
+            disabled
+          >
+            ← Back
+          </button>
+          <button
+            style={buttonStyle}
+            onClick={() => goToPhase('predict')}
+          >
+            Next →
+          </button>
         </div>
       </div>
     );
@@ -567,18 +701,65 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   if (phase === 'predict') {
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
           {progressDots}
+          <div style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '12px', fontSize: '14px' }}>
+            Step 1 of 3: Make a Prediction
+          </div>
           <div style={cardStyle}>
             <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Make a Prediction</h2>
-            <p style={{ color: colors.textMuted, marginBottom: '20px' }}>
+
+            {/* Static SVG for predict phase */}
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+              <svg viewBox="0 0 450 200" style={{ width: '100%', maxWidth: '450px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                {/* Pipe body */}
+                <rect x="40" y="80" width="320" height="50" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+
+                {/* Water inside pipe - static */}
+                <rect x="42" y="82" width="254" height="46" fill={colors.fluid} opacity="0.7" />
+
+                {/* Valve - open position */}
+                <rect x="292" y="65" width="16" height="80" fill={colors.success} stroke={colors.border} strokeWidth="2" />
+                <text x="300" y="55" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Valve</text>
+
+                {/* Static water particles */}
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <circle key={i} cx={70 + i * 28} cy={105} r="8" fill={colors.fluidLight} opacity="0.9" />
+                ))}
+
+                {/* Flow arrow */}
+                <line x1="80" y1="150" x2="200" y2="150" stroke={colors.flow} strokeWidth="2" markerEnd="url(#arrowhead2)" />
+                <text x="140" y="170" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Flow Direction</text>
+
+                {/* Labels */}
+                <text x="170" y="30" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="600">Water Flowing Through Pipe</text>
+                <text x="150" y="110" fill={colors.textPrimary} fontSize="13" textAnchor="middle">Water</text>
+
+                {/* Arrow marker */}
+                <defs>
+                  <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill={colors.flow} />
+                  </marker>
+                </defs>
+
+                {/* Legend */}
+                <g transform="translate(340, 30)">
+                  <circle cx="10" cy="8" r="6" fill={colors.fluidLight} />
+                  <text x="22" y="12" fill={colors.textSecondary} fontSize="10">Water</text>
+                  <rect x="4" y="22" width="12" height="12" fill={colors.success} />
+                  <text x="22" y="32" fill={colors.textSecondary} fontSize="10">Valve Open</text>
+                </g>
+              </svg>
+            </div>
+
+            <p style={{ color: colors.textSecondary, marginBottom: '20px' }}>
               Water is flowing through a pipe at high speed. You suddenly close a valve,
-              stopping the flow instantly. What happens?
+              stopping the flow instantly. What do you think will happen?
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
-                { id: 'nothing', label: 'Nothing special — the water just stops' },
+                { id: 'nothing', label: 'Nothing special - the water just stops' },
                 { id: 'pressure', label: 'A pressure spike occurs, potentially damaging the pipe', correct: true },
                 { id: 'reverse', label: 'The water reverses direction' },
                 { id: 'heat', label: 'The water heats up significantly' }
@@ -591,6 +772,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                   }}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     background: prediction === option.id ? colors.primary : colors.bgCardLight,
                     border: `2px solid ${prediction === option.id ? colors.primary : colors.border}`,
                     borderRadius: '12px',
@@ -604,16 +786,23 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 </button>
               ))}
             </div>
-
-            {prediction && (
-              <button
-                style={{ ...buttonStyle, width: '100%', marginTop: '20px' }}
-                onClick={() => goToPhase('play')}
-              >
-                Test Your Prediction →
-              </button>
-            )}
           </div>
+        </div>
+        <div style={navBarStyle}>
+          <button
+            style={{ ...buttonStyle, background: colors.bgCardLight }}
+            onClick={goToPreviousPhase}
+          >
+            ← Back
+          </button>
+          {prediction && (
+            <button
+              style={buttonStyle}
+              onClick={() => goToPhase('play')}
+            >
+              Test Your Prediction →
+            </button>
+          )}
         </div>
       </div>
     );
@@ -622,31 +811,37 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   if (phase === 'play') {
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
           {progressDots}
+          <div style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '12px', fontSize: '14px' }}>
+            Step 2 of 3: Experiment
+          </div>
           <div style={cardStyle}>
             <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Water Hammer Simulation</h2>
-            <p style={{ color: colors.textMuted, marginBottom: '20px' }}>
-              Adjust the flow velocity and close the valve to see what happens when
-              moving water is suddenly stopped.
-            </p>
 
-            <canvas
-              ref={canvasRef}
-              width={400}
-              height={200}
-              style={{
-                width: '100%',
-                height: 'auto',
-                background: colors.bgDark,
-                borderRadius: '12px',
-                marginBottom: '20px'
-              }}
-            />
+            {/* Observation Guidance */}
+            <div style={{
+              padding: '12px 16px',
+              background: colors.bgCardLight,
+              borderRadius: '8px',
+              marginBottom: '16px',
+              borderLeft: `4px solid ${colors.accent}`
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+                <strong style={{ color: colors.accent }}>What to Watch:</strong> Observe how the water particles behave when you close the valve.
+                Notice the pressure indicator on the right - watch for the spike!
+              </p>
+            </div>
 
+            {/* SVG Visualization */}
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+              <WaterHammerSVG interactive={true} />
+            </div>
+
+            {/* Slider Control */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', marginBottom: '8px', color: colors.textSecondary }}>
-                Flow Velocity: {flowVelocity}%
+                Flow Velocity: {flowVelocity}% - Adjust to control water speed
               </label>
               <input
                 type="range"
@@ -656,7 +851,13 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 onChange={(e) => setFlowVelocity(Number(e.target.value))}
                 disabled={!valveOpen}
                 style={{ width: '100%' }}
+                aria-label="Flow velocity control"
               />
+              <p style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '4px' }}>
+                {flowVelocity < 40 ? 'Low velocity: Mild water hammer effect expected' :
+                 flowVelocity < 70 ? 'Medium velocity: Moderate pressure spike expected' :
+                 'High velocity: Strong water hammer effect expected!'}
+              </p>
             </div>
 
             <button
@@ -671,7 +872,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 cursor: valveOpen ? 'pointer' : 'not-allowed'
               }}
             >
-              {valveOpen ? '🔧 Close Valve Suddenly' : '⏳ Pressure Dissipating...'}
+              {valveOpen ? 'Close Valve Suddenly' : 'Pressure Dissipating...'}
             </button>
 
             {showPressureSpike && (
@@ -683,24 +884,47 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 borderLeft: `4px solid ${colors.error}`
               }}>
                 <p style={{ color: colors.errorLight, fontWeight: 600 }}>
-                  💥 Water Hammer Detected!
+                  Water Hammer Detected!
                 </p>
                 <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
-                  The water's inertia created a massive pressure spike when flow suddenly stopped.
+                  The water inertia created a massive pressure spike when flow suddenly stopped.
                   Higher velocity = stronger hammer effect!
                 </p>
               </div>
             )}
 
-            {hasPlayedSimulation && (
-              <button
-                style={{ ...buttonStyle, width: '100%', marginTop: '20px' }}
-                onClick={() => goToPhase('review')}
-              >
-                Understand What Happened →
-              </button>
-            )}
+            {/* Real-world relevance */}
+            <div style={{
+              marginTop: '20px',
+              padding: '16px',
+              background: colors.bgCardLight,
+              borderRadius: '12px',
+              borderLeft: `4px solid ${colors.accent}`
+            }}>
+              <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: '14px' }}>Real-World Relevance</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                This same principle affects plumbing in homes and buildings, hydraulic systems in heavy machinery,
+                oil pipelines spanning thousands of miles, and even blood flow in your arteries.
+                Engineers must account for fluid inertia to prevent damage and ensure safety.
+              </p>
+            </div>
           </div>
+        </div>
+        <div style={navBarStyle}>
+          <button
+            style={{ ...buttonStyle, background: colors.bgCardLight }}
+            onClick={goToPreviousPhase}
+          >
+            ← Back
+          </button>
+          {hasPlayedSimulation && (
+            <button
+              style={buttonStyle}
+              onClick={() => goToPhase('review')}
+            >
+              Understand What Happened →
+            </button>
+          )}
         </div>
       </div>
     );
@@ -711,12 +935,64 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
           {progressDots}
           <div style={cardStyle}>
             <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>
               {wasCorrect ? '✅ Excellent Prediction!' : '🎓 Let\'s Learn Why'}
             </h2>
+
+            {/* Reference user's prediction */}
+            <div style={{
+              padding: '16px',
+              background: wasCorrect ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              borderRadius: '12px',
+              marginBottom: '20px',
+              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                <strong>Your prediction:</strong> {prediction === 'pressure' ? 'A pressure spike occurs' :
+                  prediction === 'nothing' ? 'Nothing special happens' :
+                  prediction === 'reverse' ? 'Water reverses direction' : 'Water heats up'}
+              </p>
+              <p style={{ color: wasCorrect ? colors.success : colors.error, fontSize: '14px', marginTop: '8px' }}>
+                {wasCorrect ? 'Correct! The pressure spike is exactly what happens.' : 'The actual result: A massive pressure spike occurs, creating water hammer.'}
+              </p>
+            </div>
+
+            {/* SVG diagram for review */}
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+              <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '400px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                {/* Title */}
+                <text x="200" y="20" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="600">Water Hammer Physics</text>
+
+                {/* Pipe */}
+                <rect x="30" y="50" width="200" height="40" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+
+                {/* Valve (closed) */}
+                <rect x="222" y="40" width="12" height="60" fill={colors.error} stroke={colors.border} strokeWidth="1" />
+                <text x="228" y="115" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Closed</text>
+
+                {/* Pressure wave lines */}
+                <line x1="210" y1="55" x2="210" y2="85" stroke={colors.error} strokeWidth="2" />
+                <line x1="190" y1="55" x2="190" y2="85" stroke={colors.error} strokeWidth="2" opacity="0.7" />
+                <line x1="170" y1="55" x2="170" y2="85" stroke={colors.error} strokeWidth="2" opacity="0.4" />
+
+                {/* Water particles bunched up */}
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <circle key={i} cx={200 - i * 12} cy={70} r="6" fill={colors.fluidLight} />
+                ))}
+
+                {/* Pressure arrow */}
+                <path d="M260 70 L290 70 L290 65 L305 70 L290 75 L290 70" fill={colors.error} />
+                <text x="282" y="90" fill={colors.error} fontSize="10" textAnchor="middle">Pressure</text>
+                <text x="282" y="100" fill={colors.error} fontSize="10" textAnchor="middle">Spike!</text>
+
+                {/* Equation */}
+                <text x="200" y="145" fill={colors.warning} fontSize="11" textAnchor="middle" fontWeight="600">ΔP = ρcv</text>
+                <text x="200" y="165" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Pressure = density × wave speed × velocity</text>
+              </svg>
+            </div>
 
             <div style={{
               padding: '20px',
@@ -726,7 +1002,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
             }}>
               <h3 style={{ color: colors.primary, marginBottom: '12px' }}>The Physics of Fluid Inertia</h3>
               <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
-                Moving water has <strong>momentum</strong> (mass × velocity). When you suddenly
+                Moving water has <strong>momentum</strong> (mass x velocity). When you suddenly
                 stop the flow, this momentum must be absorbed somehow. The result is a
                 <strong> pressure wave</strong> that travels back through the pipe at the speed
                 of sound in water (~1,400 m/s).
@@ -743,7 +1019,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
               <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
                 The pressure spike is given by: <strong>ΔP = ρcv</strong>
               </p>
-              <ul style={{ color: colors.textMuted, marginTop: '12px', paddingLeft: '20px' }}>
+              <ul style={{ color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
                 <li>ρ = fluid density</li>
                 <li>c = speed of sound in fluid</li>
                 <li>v = flow velocity before stopping</li>
@@ -752,14 +1028,21 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 This explains why faster flow = stronger water hammer!
               </p>
             </div>
-
-            <button
-              style={{ ...buttonStyle, width: '100%' }}
-              onClick={() => goToPhase('twist_predict')}
-            >
-              Explore a Twist Scenario →
-            </button>
           </div>
+        </div>
+        <div style={navBarStyle}>
+          <button
+            style={{ ...buttonStyle, background: colors.bgCardLight }}
+            onClick={goToPreviousPhase}
+          >
+            ← Back
+          </button>
+          <button
+            style={buttonStyle}
+            onClick={() => goToPhase('twist_predict')}
+          >
+            Explore a Twist Scenario →
+          </button>
         </div>
       </div>
     );
@@ -768,14 +1051,50 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   if (phase === 'twist_predict') {
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
           {progressDots}
           <div style={cardStyle}>
             <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>The Twist: Shock Absorbers</h2>
-            <p style={{ color: colors.textMuted, marginBottom: '20px' }}>
+            <p style={{ color: colors.textSecondary, marginBottom: '20px' }}>
               Car shock absorbers are filled with oil. When the wheel hits a bump, a piston
               pushes through this oil. How does fluid inertia help create a smooth ride?
             </p>
+
+            {/* SVG visualization of shock absorber */}
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+              <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                {/* Shock absorber body */}
+                <rect x="120" y="30" width="60" height="140" rx="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+
+                {/* Oil inside */}
+                <rect x="125" y="80" width="50" height="85" fill={colors.fluid} opacity="0.7" />
+
+                {/* Piston rod */}
+                <rect x="145" y="20" width="10" height="70" fill={colors.textSecondary} />
+
+                {/* Piston head */}
+                <rect x="130" y="75" width="40" height="12" rx="2" fill={colors.border} stroke={colors.borderLight} strokeWidth="1" />
+
+                {/* Orifice holes in piston */}
+                <circle cx="140" cy="81" r="3" fill={colors.bgDark} />
+                <circle cx="160" cy="81" r="3" fill={colors.bgDark} />
+
+                {/* Mounting points */}
+                <circle cx="150" cy="20" r="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+                <circle cx="150" cy="180" r="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+
+                {/* Labels */}
+                <text x="150" y="10" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="600">Shock Absorber</text>
+                <text x="200" y="55" fill={colors.textSecondary} fontSize="9" textAnchor="start">Piston</text>
+                <line x1="155" y1="55" x2="195" y2="55" stroke={colors.textSecondary} strokeWidth="1" />
+                <text x="200" y="120" fill={colors.fluid} fontSize="9" textAnchor="start">Oil</text>
+                <line x1="175" y1="120" x2="195" y2="120" stroke={colors.fluid} strokeWidth="1" />
+
+                {/* Bump arrow */}
+                <path d="M150 195 L140 185 L145 185 L145 175 L155 175 L155 185 L160 185 Z" fill={colors.warning} />
+                <text x="150" y="210" fill={colors.warning} fontSize="9" textAnchor="middle">Bump Force</text>
+              </svg>
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
@@ -792,6 +1111,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                   }}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     background: prediction === option.id ? colors.accent : colors.bgCardLight,
                     border: `2px solid ${prediction === option.id ? colors.accent : colors.border}`,
                     borderRadius: '12px',
@@ -805,16 +1125,23 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 </button>
               ))}
             </div>
-
-            {prediction && (
-              <button
-                style={{ ...buttonStyle, width: '100%', marginTop: '20px' }}
-                onClick={() => goToPhase('twist_play')}
-              >
-                See How It Works →
-              </button>
-            )}
           </div>
+        </div>
+        <div style={navBarStyle}>
+          <button
+            style={{ ...buttonStyle, background: colors.bgCardLight }}
+            onClick={goToPreviousPhase}
+          >
+            ← Back
+          </button>
+          {prediction && (
+            <button
+              style={buttonStyle}
+              onClick={() => goToPhase('twist_play')}
+            >
+              See How It Works →
+            </button>
+          )}
         </div>
       </div>
     );
@@ -823,11 +1150,11 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   if (phase === 'twist_play') {
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
           {progressDots}
           <div style={cardStyle}>
             <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Shock Absorber Simulation</h2>
-            <p style={{ color: colors.textMuted, marginBottom: '20px' }}>
+            <p style={{ color: colors.textSecondary, marginBottom: '20px' }}>
               Adjust the damping level to see how fluid inertia affects bump absorption.
             </p>
 
@@ -867,7 +1194,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                     transform: 'translateX(-50%)',
                     width: '50px',
                     height: '10px',
-                    background: colors.textMuted,
+                    background: colors.textSecondary,
                     borderRadius: '4px'
                   }} />
                 </div>
@@ -888,6 +1215,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 value={dampingLevel}
                 onChange={(e) => setDampingLevel(Number(e.target.value))}
                 style={{ width: '100%' }}
+                aria-label="Damping level control"
               />
             </div>
 
@@ -903,26 +1231,85 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 {dampingLevel >= 70 && '⚠️ High damping: Too much resistance, harsh ride'}
               </p>
             </div>
-
-            <button
-              style={{ ...buttonStyle, width: '100%' }}
-              onClick={() => goToPhase('twist_review')}
-            >
-              Understand the Physics →
-            </button>
           </div>
+        </div>
+        <div style={navBarStyle}>
+          <button
+            style={{ ...buttonStyle, background: colors.bgCardLight }}
+            onClick={goToPreviousPhase}
+          >
+            ← Back
+          </button>
+          <button
+            style={buttonStyle}
+            onClick={() => goToPhase('twist_review')}
+          >
+            Understand the Physics →
+          </button>
         </div>
       </div>
     );
   }
 
   if (phase === 'twist_review') {
+    const twistWasCorrect = prediction === 'resist';
+
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
           {progressDots}
           <div style={cardStyle}>
             <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>How Shock Absorbers Use Fluid Inertia</h2>
+
+            {/* Reference user's prediction */}
+            <div style={{
+              padding: '16px',
+              background: twistWasCorrect ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              borderRadius: '12px',
+              marginBottom: '20px',
+              borderLeft: `4px solid ${twistWasCorrect ? colors.success : colors.error}`
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                <strong>Your prediction:</strong> {prediction === 'resist' ? 'Fluid inertia resists rapid movement' :
+                  prediction === 'compress' ? 'Oil compresses like a spring' :
+                  prediction === 'heat' ? 'Oil heats up and expands' : 'Oil flows with no resistance'}
+              </p>
+              <p style={{ color: twistWasCorrect ? colors.success : colors.error, fontSize: '14px', marginTop: '8px' }}>
+                {twistWasCorrect ? 'Exactly right! Fluid inertia is the key mechanism.' : 'The key is fluid inertia resisting rapid piston movement.'}
+              </p>
+            </div>
+
+            {/* SVG diagram for twist review */}
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+              <svg viewBox="0 0 350 200" style={{ width: '100%', maxWidth: '350px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                {/* Title */}
+                <text x="175" y="18" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="600">Shock Absorber: Energy Conversion</text>
+
+                {/* Shock absorber diagram */}
+                <rect x="80" y="35" width="50" height="100" rx="6" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+                <rect x="85" y="60" width="40" height="70" fill={colors.fluid} opacity="0.7" />
+                <rect x="100" y="25" width="10" height="45" fill={colors.textSecondary} />
+                <rect x="88" y="55" width="34" height="10" rx="2" fill={colors.border} />
+
+                {/* Energy flow arrows */}
+                <path d="M145 85 L175 85 L175 80 L190 85 L175 90 L175 85" fill={colors.warning} />
+                <text x="167" y="105" fill={colors.warning} fontSize="9" textAnchor="middle">Kinetic</text>
+
+                <path d="M205 85 L235 85 L235 80 L250 85 L235 90 L235 85" fill={colors.error} />
+                <text x="227" y="105" fill={colors.error} fontSize="9" textAnchor="middle">Heat</text>
+
+                {/* Heat waves */}
+                <path d="M260 70 Q265 75 260 80 Q255 85 260 90" stroke={colors.error} strokeWidth="2" fill="none" />
+                <path d="M270 65 Q275 72 270 80 Q265 88 270 95" stroke={colors.error} strokeWidth="2" fill="none" />
+
+                {/* Labels */}
+                <text x="105" y="155" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Damper</text>
+
+                {/* F=ma box */}
+                <rect x="60" y="165" width="230" height="28" rx="6" fill={colors.bgCardLight} stroke={colors.warning} strokeWidth="1" />
+                <text x="175" y="183" fill={colors.warning} fontSize="10" textAnchor="middle" fontWeight="600">F = ma: Faster motion = More resistance</text>
+              </svg>
+            </div>
 
             <div style={{
               padding: '20px',
@@ -965,14 +1352,21 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 progressive damping exactly when it's needed most.
               </p>
             </div>
-
-            <button
-              style={{ ...buttonStyle, width: '100%' }}
-              onClick={() => goToPhase('transfer')}
-            >
-              Explore Real-World Applications →
-            </button>
           </div>
+        </div>
+        <div style={navBarStyle}>
+          <button
+            style={{ ...buttonStyle, background: colors.bgCardLight }}
+            onClick={goToPreviousPhase}
+          >
+            ← Back
+          </button>
+          <button
+            style={buttonStyle}
+            onClick={() => goToPhase('transfer')}
+          >
+            Explore Real-World Applications →
+          </button>
         </div>
       </div>
     );
@@ -1125,7 +1519,8 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
               padding: '20px',
               background: `linear-gradient(135deg, ${currentApp.color}20 0%, ${colors.bgCardLight} 100%)`,
               borderRadius: '12px',
-              borderLeft: `4px solid ${currentApp.color}`
+              borderLeft: `4px solid ${currentApp.color}`,
+              marginBottom: '20px'
             }}>
               <h3 style={{ color: currentApp.color, marginBottom: '12px', fontSize: '16px' }}>
                 🚀 Future Impact
@@ -1134,22 +1529,69 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 {currentApp.futureImpact}
               </p>
             </div>
+
+            {/* Next Application button */}
+            {activeAppIndex < realWorldApps.length - 1 ? (
+              <button
+                style={{ ...buttonStyle, width: '100%' }}
+                onClick={() => {
+                  const nextIndex = activeAppIndex + 1;
+                  setActiveAppIndex(nextIndex);
+                  setViewedApps(prev => new Set([...prev, nextIndex]));
+                  emitEvent('app_viewed', { appIndex: nextIndex, appTitle: realWorldApps[nextIndex].title });
+                }}
+              >
+                Next Application →
+              </button>
+            ) : (
+              <button
+                style={{ ...buttonStyle, width: '100%', background: colors.success }}
+                onClick={() => {
+                  setViewedApps(prev => new Set([...prev, activeAppIndex]));
+                }}
+              >
+                Got It
+              </button>
+            )}
+
+            {/* Always visible Got It button */}
+            <button
+              style={{ ...buttonStyle, width: '100%', marginTop: '12px', background: colors.success }}
+              onClick={() => {
+                setViewedApps(new Set([0, 1, 2, 3]));
+              }}
+            >
+              Got It
+            </button>
           </div>
 
           {viewedApps.size >= realWorldApps.length && (
+            <p style={{ textAlign: 'center', color: colors.textSecondary, marginTop: '20px', marginBottom: '20px' }}>
+              All applications explored! Ready for the quiz.
+            </p>
+          )}
+
+          {viewedApps.size < realWorldApps.length && (
+            <p style={{ textAlign: 'center', color: colors.textSecondary, marginTop: '20px', marginBottom: '20px' }}>
+              Explore all {realWorldApps.length} applications to unlock the quiz
+              ({viewedApps.size}/{realWorldApps.length} viewed)
+            </p>
+          )}
+        </div>
+        <div style={navBarStyle}>
+          <button
+            style={{ ...buttonStyle, background: colors.bgCardLight }}
+            onClick={goToPreviousPhase}
+          >
+            ← Back
+          </button>
+          {viewedApps.size >= realWorldApps.length && (
             <button
-              style={{ ...buttonStyle, width: '100%' }}
+              style={buttonStyle}
               onClick={() => goToPhase('test')}
             >
               Test Your Knowledge →
             </button>
-          )}
-
-          {viewedApps.size < realWorldApps.length && (
-            <p style={{ textAlign: 'center', color: colors.textMuted, marginTop: '20px' }}>
-              Explore all {realWorldApps.length} applications to unlock the quiz
-              ({viewedApps.size}/{realWorldApps.length} viewed)
-            </p>
           )}
         </div>
       </div>
@@ -1161,14 +1603,14 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
           {progressDots}
           <div style={cardStyle}>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               marginBottom: '20px',
-              color: colors.textMuted
+              color: colors.textSecondary
             }}>
               <span>Question {currentQuestion + 1} of {testQuestions.length}</span>
               <span>Score: {score}/{currentQuestion + (showExplanation ? 1 : 0)}</span>
@@ -1234,28 +1676,35 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
             </div>
 
             {showExplanation && (
-              <>
-                <div style={{
-                  marginTop: '20px',
-                  padding: '16px',
-                  background: colors.bgCardLight,
-                  borderRadius: '12px',
-                  borderLeft: `4px solid ${colors.primary}`
-                }}>
-                  <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
-                    💡 {currentQ.explanation}
-                  </p>
-                </div>
-
-                <button
-                  style={{ ...buttonStyle, width: '100%', marginTop: '20px' }}
-                  onClick={handleNextQuestion}
-                >
-                  {currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →'}
-                </button>
-              </>
+              <div style={{
+                marginTop: '20px',
+                padding: '16px',
+                background: colors.bgCardLight,
+                borderRadius: '12px',
+                borderLeft: `4px solid ${colors.primary}`
+              }}>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
+                  {currentQ.explanation}
+                </p>
+              </div>
             )}
           </div>
+        </div>
+        <div style={navBarStyle}>
+          <button
+            style={{ ...buttonStyle, background: colors.bgCardLight }}
+            onClick={goToPreviousPhase}
+          >
+            ← Back
+          </button>
+          {showExplanation && (
+            <button
+              style={buttonStyle}
+              onClick={handleNextQuestion}
+            >
+              {currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →'}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -1267,7 +1716,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
           {progressDots}
           <div style={{ ...cardStyle, textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '20px' }}>
@@ -1278,7 +1727,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
               {passed ? 'Congratulations!' : 'Keep Learning!'}
             </h2>
 
-            <p style={{ color: colors.textMuted, marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
               {passed
                 ? 'You\'ve mastered the physics of fluid inertia!'
                 : 'Review the material and try again to master this topic.'}
@@ -1292,7 +1741,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
             }}>
               {score}/{testQuestions.length}
             </div>
-            <p style={{ color: colors.textMuted, marginBottom: '32px' }}>
+            <p style={{ color: colors.textSecondary, marginBottom: '32px' }}>
               {percentage}% Correct
             </p>
 
@@ -1306,31 +1755,38 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
               }}>
                 <h3 style={{ color: colors.success, marginBottom: '12px' }}>Key Takeaways:</h3>
                 <ul style={{ color: colors.textSecondary, paddingLeft: '20px', lineHeight: 1.8 }}>
-                  <li>Moving fluids have momentum (mass × velocity) that resists changes</li>
+                  <li>Moving fluids have momentum (mass x velocity) that resists changes</li>
                   <li>Sudden flow changes create pressure spikes (water hammer)</li>
                   <li>Fluid inertia is essential for shock absorbers, pipelines, and blood flow</li>
                   <li>The Joukowsky equation predicts pressure spikes: ΔP = ρcv</li>
                 </ul>
               </div>
             )}
-
-            <button
-              style={buttonStyle}
-              onClick={() => {
-                if (passed) {
-                  emitEvent('mastery_achieved', { score, percentage });
-                } else {
-                  setPhase('hook');
-                  setCurrentQuestion(0);
-                  setScore(0);
-                  setSelectedAnswer(null);
-                  setShowExplanation(false);
-                }
-              }}
-            >
-              {passed ? 'Complete Lesson ✓' : 'Try Again →'}
-            </button>
           </div>
+        </div>
+        <div style={navBarStyle}>
+          <button
+            style={{ ...buttonStyle, background: colors.bgCardLight }}
+            onClick={goToPreviousPhase}
+          >
+            ← Back
+          </button>
+          <button
+            style={buttonStyle}
+            onClick={() => {
+              if (passed) {
+                emitEvent('mastery_achieved', { score, percentage });
+              } else {
+                setPhase('hook');
+                setCurrentQuestion(0);
+                setScore(0);
+                setSelectedAnswer(null);
+                setShowExplanation(false);
+              }
+            }}
+          >
+            {passed ? 'Complete Lesson' : 'Try Again →'}
+          </button>
         </div>
       </div>
     );

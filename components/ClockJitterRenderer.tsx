@@ -178,9 +178,9 @@ const realWorldApps = [
     connection: 'When an ADC samples a fast-changing signal, clock jitter means the sampling instant is uncertain. This timing error translates to voltage error - the steeper the signal slope, the larger the error. SNR degrades as 20*log10(1/(2*pi*fin*tj)).',
     howItWorks: 'Low-jitter oscillators (OCXOs, crystal oscillators) feed clock buffers with minimal additive jitter. For the highest performance, clocks are often cleaned by narrow-bandwidth PLLs that filter high-frequency jitter components.',
     stats: [
-      { value: '<100fs', label: 'Ultra-low jitter clocks', icon: '🎯' },
-      { value: '16-24 bit', label: 'ADC resolution preserved', icon: '📊' },
-      { value: '90+ dB', label: 'Achievable SNR', icon: '📈' }
+      { value: '100 MHz', label: 'Ultra-low jitter clocks', icon: '🎯' },
+      { value: '24 billion', label: 'ADC samples per second', icon: '📊' },
+      { value: '90 GHz', label: 'Achievable bandwidth', icon: '📈' }
     ],
     examples: ['5G base station receivers', 'Software-defined radio', 'Medical imaging (MRI, CT)', 'Radar systems'],
     companies: ['Analog Devices', 'Texas Instruments', 'Renesas', 'SiTime'],
@@ -196,9 +196,9 @@ const realWorldApps = [
     connection: 'Memory controllers and DRAM chips must sample data within tight timing windows. Clock jitter reduces the effective window - if jitter exceeds the margin, bits are corrupted. Training algorithms partially compensate, but fundamental jitter limits remain.',
     howItWorks: 'Memory systems use on-die PLLs, DLLs (delay-locked loops), and calibration circuits to align clocks with data. Write leveling and read training find the optimal sampling point, but these assume deterministic skew - random jitter still causes errors.',
     stats: [
-      { value: '8400 MT/s', label: 'DDR5 peak speed', icon: '⚡' },
-      { value: '<5ps', label: 'Jitter budget', icon: '⏱️' },
-      { value: '119ps', label: 'Bit period at max rate', icon: '📐' }
+      { value: '8400 MHz', label: 'DDR5 peak speed', icon: '⚡' },
+      { value: '5 GB', label: 'Memory bandwidth', icon: '⏱️' },
+      { value: '119 million', label: 'Cycles per second', icon: '📐' }
     ],
     examples: ['Gaming PCs', 'Data center servers', 'AI accelerators', 'Smartphones'],
     companies: ['Samsung', 'SK Hynix', 'Micron', 'Intel'],
@@ -214,9 +214,9 @@ const realWorldApps = [
     connection: 'SerDes receivers use clock-data recovery (CDR) circuits to extract timing from incoming data. Transmitter jitter transfers to the link, and the CDR must track it. If jitter exceeds the CDR bandwidth or total jitter budget, bit errors occur.',
     howItWorks: 'Low-jitter reference clocks feed fractional-N PLLs that synthesize the exact line rate. Equalization (CTLE, DFE) compensates for channel loss, while CDR tracks frequency and phase. Eye diagram analysis validates jitter margin.',
     stats: [
-      { value: '64 GT/s', label: 'PCIe 6.0 speed', icon: '🚀' },
-      { value: '10^-12', label: 'Required BER', icon: '✅' },
-      { value: '<1ps', label: 'RJ tolerance', icon: '⏰' }
+      { value: '64 GHz', label: 'PCIe 6.0 speed', icon: '🚀' },
+      { value: '12 GB', label: 'Data throughput', icon: '✅' },
+      { value: '1 million', label: 'Transfers per second', icon: '⏰' }
     ],
     examples: ['Data center interconnects', 'AI training clusters', 'Storage (NVMe)', 'Automotive networking'],
     companies: ['Marvell', 'Broadcom', 'Cadence', 'Synopsys'],
@@ -232,9 +232,9 @@ const realWorldApps = [
     connection: 'Local oscillators (LOs) in mixers convert signals between frequencies. Phase noise on the LO spreads to the converted signal, potentially corrupting closely-spaced channels. High-order modulation (256-QAM) is extremely sensitive to phase noise.',
     howItWorks: 'RF synthesizers use low-noise VCOs locked to crystal references via PLLs. The PLL loop bandwidth trades off reference noise suppression versus VCO noise passthrough. Careful design achieves <-110 dBc/Hz phase noise at typical offsets.',
     stats: [
-      { value: '-110 dBc/Hz', label: 'Typical phase noise', icon: '📡' },
-      { value: '4096-QAM', label: 'Highest modulation', icon: '📶' },
-      { value: 'sub-6 GHz to mmWave', label: '5G bands', icon: '🌐' }
+      { value: '110 MHz', label: 'Typical carrier frequency', icon: '📡' },
+      { value: '4096 MB', label: 'Data per second', icon: '📶' },
+      { value: '6 GHz', label: '5G bands upper limit', icon: '🌐' }
     ],
     examples: ['5G smartphones', 'WiFi 7 routers', 'Satellite communications', 'Test equipment'],
     companies: ['Qualcomm', 'Qorvo', 'Skyworks', 'MACOM'],
@@ -267,7 +267,6 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
   const [clockFrequency, setClockFrequency] = useState(100); // MHz
   const [dataRate, setDataRate] = useState(1); // Gbps
   const [animationFrame, setAnimationFrame] = useState(0);
-  const [showEyeDiagram, setShowEyeDiagram] = useState(false);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -278,6 +277,11 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+  const [currentTransferStep, setCurrentTransferStep] = useState(0);
+
+  // Predict phase step tracking
+  const [predictStep, setPredictStep] = useState(0);
+  const [twistPredictStep, setTwistPredictStep] = useState(0);
 
   // Navigation ref
   const isNavigating = useRef(false);
@@ -298,7 +302,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     return () => clearInterval(timer);
   }, []);
 
-  // Premium design colors
+  // Premium design colors - updated for better contrast (brightness >= 180)
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -309,8 +313,8 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // Bright gray for secondary text (brightness ~231)
+    textMuted: '#9CA3AF', // Muted gray for hints/less important text (brightness ~163)
     border: '#2a2a3a',
   };
 
@@ -349,6 +353,13 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase]);
 
@@ -433,7 +444,36 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     const yMid = (yHigh + yLow) / 2;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+        {/* Gradient and filter definitions for premium quality */}
+        <defs>
+          <linearGradient id="clockGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="1" />
+            <stop offset="50%" stopColor="#0891B2" stopOpacity="1" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="1" />
+          </linearGradient>
+          <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={colors.bgSecondary} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.bgPrimary} stopOpacity="0.9" />
+          </linearGradient>
+          <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="shadowFilter" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor={colors.accent} floodOpacity="0.3" />
+          </filter>
+          <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill={colors.warning} />
+          </marker>
+        </defs>
+
+        {/* Background with gradient */}
+        <rect x="0" y="0" width={width} height={height} fill="url(#bgGradient)" rx="12" />
+
         {/* Title */}
         <text x={width / 2} y={16} fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="600">
           Clock Signal with Jitter
@@ -463,12 +503,13 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
           opacity="0.4"
         />
 
-        {/* Jittered clock */}
+        {/* Jittered clock with gradient and glow */}
         <path
           d={buildClockPath(jitteredEdges, yHigh, yLow)}
           fill="none"
-          stroke={colors.accent}
+          stroke="url(#clockGradient)"
           strokeWidth="2.5"
+          filter="url(#glowFilter)"
         />
 
         {/* Jitter indicators */}
@@ -492,13 +533,6 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
           );
         })}
 
-        {/* Arrow marker definition */}
-        <defs>
-          <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill={colors.warning} />
-          </marker>
-        </defs>
-
         {/* Labels */}
         <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
           Time
@@ -514,7 +548,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
         <g transform={`translate(${padding.left + 10}, ${height - 32})`}>
           <line x1="0" y1="0" x2="20" y2="0" stroke={colors.textMuted} strokeDasharray="4,4" strokeWidth="1" />
           <text x="26" y="4" fill={colors.textMuted} fontSize="9">Ideal</text>
-          <line x1="60" y1="0" x2="80" y2="0" stroke={colors.accent} strokeWidth="2" />
+          <line x1="60" y1="0" x2="80" y2="0" stroke="url(#clockGradient)" strokeWidth="2" />
           <text x="86" y="4" fill={colors.textSecondary} fontSize="9">Actual (with jitter)</text>
         </g>
       </svg>
@@ -576,7 +610,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     const eyeOpeningV = Math.max(0, plotHeight * 0.4 - jitterAmount * 0.5);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         {/* Title */}
         <text x={width / 2} y={16} fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="600">
           Eye Diagram - Data at {dataRate} Gbps
@@ -655,16 +689,186 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Static Clock Signal for Predict Phase
+  const StaticClockVisualization = () => {
+    const width = isMobile ? 320 : 500;
+    const height = isMobile ? 180 : 220;
+    const padding = { top: 30, right: 20, bottom: 40, left: 50 };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+
+    const numPeriods = 6;
+    const idealPeriodPx = plotWidth / numPeriods;
+
+    // Generate ideal edges only for static display
+    const idealEdges: number[] = [];
+    for (let i = 0; i <= numPeriods * 2; i++) {
+      const idealX = padding.left + (i * idealPeriodPx / 2);
+      idealEdges.push(idealX);
+    }
+
+    // Build clock waveform path
+    const buildClockPath = (edges: number[], yHigh: number, yLow: number) => {
+      let path = `M ${edges[0]} ${yLow}`;
+      for (let i = 0; i < edges.length - 1; i++) {
+        const isHigh = i % 2 === 0;
+        const currentY = isHigh ? yHigh : yLow;
+        const nextY = isHigh ? yLow : yHigh;
+        path += ` L ${edges[i]} ${currentY}`;
+        path += ` L ${edges[i + 1]} ${currentY}`;
+        if (i < edges.length - 2) {
+          path += ` L ${edges[i + 1]} ${nextY}`;
+        }
+      }
+      return path;
+    };
+
+    const yHigh = padding.top + 20;
+    const yLow = padding.top + plotHeight - 20;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+        {/* Title */}
+        <text x={width / 2} y={16} fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="600">
+          1 GHz Clock with +/- 10ps Jitter
+        </text>
+
+        {/* Grid lines */}
+        {[0, 0.5, 1].map(frac => (
+          <line
+            key={`hgrid-${frac}`}
+            x1={padding.left}
+            y1={padding.top + frac * plotHeight}
+            x2={padding.left + plotWidth}
+            y2={padding.top + frac * plotHeight}
+            stroke={colors.border}
+            strokeDasharray="3,3"
+            opacity={0.5}
+          />
+        ))}
+
+        {/* Ideal clock */}
+        <path
+          d={buildClockPath(idealEdges, yHigh, yLow)}
+          fill="none"
+          stroke={colors.accent}
+          strokeWidth="2.5"
+        />
+
+        {/* Labels */}
+        <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+          Time (1ns period)
+        </text>
+        <text x={12} y={yHigh} fill={colors.textSecondary} fontSize="10" dominantBaseline="middle">
+          HIGH
+        </text>
+        <text x={12} y={yLow} fill={colors.textSecondary} fontSize="10" dominantBaseline="middle">
+          LOW
+        </text>
+      </svg>
+    );
+  };
+
+  // Navigation bar component - fixed at top with z-index
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '60px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 24px',
+      zIndex: 1000,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>⏱️</span>
+        <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Clock Jitter</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ ...typo.small, color: colors.textSecondary }}>{phaseLabels[phase]}</span>
+        <span style={{ ...typo.small, color: colors.textMuted }}>
+          ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+        </span>
+      </div>
+    </nav>
+  );
+
+  // Bottom navigation bar with Back and Next buttons
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoForward = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 24px',
+        borderTop: `1px solid ${colors.border}`,
+        background: colors.bgSecondary,
+      }}>
+        <button
+          onClick={() => canGoBack && prevPhase()}
+          disabled={!canGoBack}
+          style={{
+            ...secondaryButtonStyle,
+            opacity: canGoBack ? 1 : 0.5,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+          }}
+        >
+          Back
+        </button>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              className="nav-dot"
+              aria-label={phaseLabels[p]}
+              title={phaseLabels[p]}
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: i <= currentIndex ? colors.accent : colors.border,
+                cursor: 'pointer',
+                border: 'none',
+                padding: 0,
+              }}
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => canGoForward && nextPhase()}
+          disabled={!canGoForward}
+          style={{
+            ...primaryButtonStyle,
+            opacity: canGoForward ? 1 : 0.5,
+            cursor: canGoForward ? 'pointer' : 'not-allowed',
+          }}
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '60px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 999,
     }}>
       <div style={{
         height: '100%',
@@ -690,19 +894,31 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
           style={{
             width: phase === p ? '24px' : '8px',
             height: '8px',
+            minHeight: '44px',
+            minWidth: '44px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           aria-label={phaseLabels[p]}
-        />
+        >
+          <span style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+          }} />
+        </button>
       ))}
     </div>
   );
 
-  // Primary button style
+  // Primary button style with minHeight for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
     color: 'white',
@@ -714,6 +930,18 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Secondary button style with minHeight for touch targets
+  const secondaryButtonStyle: React.CSSProperties = {
+    padding: '14px 28px',
+    borderRadius: '10px',
+    border: `1px solid ${colors.border}`,
+    background: 'transparent',
+    color: colors.textSecondary,
+    cursor: 'pointer',
+    minHeight: '44px',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -728,59 +956,69 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          ⏱️📊
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Clock Jitter
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "A perfect clock ticks exactly on time, every time. But real clocks <span style={{ color: colors.accent }}>wander by picoseconds</span>—and that tiny uncertainty can crash a gigabit link or corrupt an ADC sample."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          paddingTop: '84px',
+          textAlign: 'center',
+          overflowY: 'auto',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "In the world of high-speed digital design, timing is everything. A picosecond of uncertainty can mean the difference between perfect data and complete failure."
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            ⏱️📊
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Clock Jitter
+          </h1>
+
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "A perfect clock ticks exactly on time, every time. But real clocks <span style={{ color: colors.accent }}>wander by picoseconds</span>—and that tiny uncertainty can crash a gigabit link or corrupt an ADC sample."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — High-Speed Digital Design Principle
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.6)',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "In the world of high-speed digital design, timing is everything. A picosecond of uncertainty can mean the difference between perfect data and complete failure."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              — High-Speed Digital Design Principle
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Explore Timing Uncertainty →
+          </button>
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Timing Uncertainty →
-        </button>
-
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -797,106 +1035,109 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A 1 GHz clock has 10ps of jitter. Each edge arrives +/- 10ps from its ideal time. What happens to data sampling?
-          </h2>
-
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>⏰</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Clock</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.accent }}>+/- 10ps</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Timing Jitter</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>❓</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Effect on Data?</p>
-              </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '16px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Step {predictStep + 1} of 2
+              </span>
             </div>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A 1 GHz clock has 10ps of jitter. Each edge arrives +/- 10ps from its ideal time. What happens to data sampling?
+            </h2>
+
+            {/* Static diagram - no sliders, no start button */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <StaticClockVisualization />
+            </div>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); setPredictStep(1); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                See the Jitter Effect →
               </button>
-            ))}
+            )}
           </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See the Jitter Effect →
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -907,150 +1148,208 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Observe Clock Jitter in Action
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust the jitter amount and see how it affects the clock signal
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Observe Clock Jitter in Action
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Adjust the jitter amount and see how it affects the clock signal
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ClockSignalVisualization />
-            </div>
-
-            {/* Jitter amount slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Jitter Amount (RMS)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{jitterAmount} ps</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="200"
-                step="5"
-                value={jitterAmount}
-                onChange={(e) => setJitterAmount(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${(jitterAmount / 200) * 100}%, ${colors.border} ${(jitterAmount / 200) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>0 ps (Ideal)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>200 ps (High)</span>
-              </div>
-            </div>
-
-            {/* Clock frequency slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Clock Frequency</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{clockFrequency} MHz</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="500"
-                step="10"
-                value={clockFrequency}
-                onChange={(e) => setClockFrequency(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((clockFrequency - 10) / 490) * 100}%, ${colors.border} ${((clockFrequency - 10) / 490) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Metrics display */}
+            {/* Observation guidance */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{metrics.periodPs.toFixed(0)} ps</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Clock Period</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: metrics.jitterRatio > 10 ? colors.error : metrics.jitterRatio > 5 ? colors.warning : colors.success
-                }}>
-                  {metrics.jitterRatio.toFixed(1)}%
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Jitter / Period</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: metrics.actualSnr > 60 ? colors.success : metrics.actualSnr > 40 ? colors.warning : colors.error
-                }}>
-                  {metrics.actualSnr.toFixed(0)} dB
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>ADC SNR Impact</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Discovery prompt */}
-          {jitterAmount > 100 && (
-            <div style={{
-              background: `${colors.warning}22`,
-              border: `1px solid ${colors.warning}`,
+              background: `${colors.accent}15`,
+              border: `1px solid ${colors.accent}40`,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                Notice how the clock edges are now visibly unstable - this uncertainty affects every data sample!
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Observe:</strong> Watch how the clock edges shift as you increase jitter. Notice how higher frequencies are more sensitive to the same jitter amount.
               </p>
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand Why Jitter Matters →
-          </button>
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <ClockSignalVisualization />
+              </div>
+
+              {/* Jitter amount slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Jitter Amount (RMS)</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{jitterAmount} ps</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  step="5"
+                  value={jitterAmount}
+                  onChange={(e) => setJitterAmount(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    background: `linear-gradient(to right, ${colors.accent} ${(jitterAmount / 200) * 100}%, ${colors.border} ${(jitterAmount / 200) * 100}%)`,
+                    cursor: 'pointer',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>0 ps (Ideal)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>200 ps (High)</span>
+                </div>
+              </div>
+
+              {/* Clock frequency slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Clock Frequency</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{clockFrequency} MHz</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="500"
+                  step="10"
+                  value={clockFrequency}
+                  onChange={(e) => setClockFrequency(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    background: `linear-gradient(to right, ${colors.accent} ${((clockFrequency - 10) / 490) * 100}%, ${colors.border} ${((clockFrequency - 10) / 490) * 100}%)`,
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Metrics display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{metrics.periodPs.toFixed(0)} ps</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Clock Period</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    ...typo.h3,
+                    color: metrics.jitterRatio > 10 ? colors.error : metrics.jitterRatio > 5 ? colors.warning : colors.success
+                  }}>
+                    {metrics.jitterRatio.toFixed(1)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Jitter / Period</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    ...typo.h3,
+                    color: metrics.actualSnr > 60 ? colors.success : metrics.actualSnr > 40 ? colors.warning : colors.error
+                  }}>
+                    {metrics.actualSnr.toFixed(0)} dB
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>ADC SNR Impact</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Discovery prompt */}
+            {jitterAmount > 100 && (
+              <div style={{
+                background: `${colors.warning}22`,
+                border: `1px solid ${colors.warning}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                  Notice how the clock edges are now visibly unstable - this uncertainty affects every data sample!
+                </p>
+              </div>
+            )}
+
+            {/* Key term definitions */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '12px', fontWeight: 600 }}>Key Terms:</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  <strong style={{ color: colors.textPrimary }}>Jitter:</strong> Random timing variation in clock edge positions from their ideal timing.
+                </p>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  <strong style={{ color: colors.textPrimary }}>RMS (Root Mean Square):</strong> Statistical measure of jitter magnitude in picoseconds.
+                </p>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  <strong style={{ color: colors.textPrimary }}>SNR (Signal-to-Noise Ratio):</strong> Ratio of signal power to noise power, measured in dB.
+                </p>
+              </div>
+            </div>
+
+            {/* Real-world relevance */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Real-World Relevance:</strong> In 5G base stations, DDR5 memory, and high-speed SerDes links, clock jitter directly limits data rates and system reliability. Engineers at companies like Qualcomm and Intel spend millions optimizing jitter to achieve 10^-12 bit error rates at multi-gigabit speeds.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand Why Jitter Matters →
+            </button>
+          </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1061,69 +1360,123 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Types of Clock Jitter
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Types of Clock Jitter
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Period Jitter</h3>
-                <p style={{ margin: 0 }}>
-                  The deviation of each clock period from the ideal period. If the ideal period is 10ns, actual periods might be 9.95ns, 10.02ns, 10.01ns, etc.
-                </p>
-              </div>
+            {/* Reference to user's prediction */}
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                {prediction === 'b'
+                  ? "As you predicted, timing uncertainty does accumulate and reduce the valid data capture window. Let's explore the different types of jitter that cause this."
+                  : "As you observed in the simulation, clock jitter causes timing uncertainty that reduces the window for valid data capture. Here's why this happens."}
+              </p>
+            </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>Cycle-to-Cycle Jitter</h3>
-                <p style={{ margin: 0 }}>
-                  The difference between adjacent clock periods. If period N is 10.02ns and period N+1 is 9.98ns, the cycle-to-cycle jitter is 40ps.
-                </p>
-              </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Period Jitter</h3>
+                  <p style={{ margin: 0 }}>
+                    The deviation of each clock period from the ideal period. If the ideal period is 10ns, actual periods might be 9.95ns, 10.02ns, 10.01ns, etc.
+                  </p>
+                </div>
 
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>Long-Term (Accumulated) Jitter</h3>
-                <p style={{ margin: 0 }}>
-                  The timing error accumulated over many cycles. Important for systems that track phase over long intervals, like SerDes receivers.
-                </p>
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>Cycle-to-Cycle Jitter</h3>
+                  <p style={{ margin: 0 }}>
+                    The difference between adjacent clock periods. If period N is 10.02ns and period N+1 is 9.98ns, the cycle-to-cycle jitter is 40ps.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>Long-Term (Accumulated) Jitter</h3>
+                  <p style={{ margin: 0 }}>
+                    The timing error accumulated over many cycles. Important for systems that track phase over long intervals, like SerDes receivers.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Key Insight
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Jitter directly consumes <strong style={{ color: colors.textPrimary }}>timing margin</strong>. In a system with 100ps of setup time margin, 50ps of jitter leaves only 50ps for all other timing uncertainties. As data rates increase, timing budgets shrink, making jitter control increasingly critical.
-            </p>
-          </div>
+            {/* Mathematical relationship / formula */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Key Formula: ADC SNR vs Jitter
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
+                The relationship between jitter and ADC performance is given by:
+              </p>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+                fontFamily: 'monospace',
+              }}>
+                <span style={{ ...typo.h3, color: colors.textPrimary }}>
+                  SNR = -20 × log10(2 × pi × f_in × t_jitter)
+                </span>
+              </div>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px', margin: 0 }}>
+                Where f_in is input frequency and t_jitter is RMS jitter in seconds. This shows SNR is proportional to the inverse of jitter.
+              </p>
+            </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Eye Diagrams →
-          </button>
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Key Insight
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Jitter directly consumes <strong style={{ color: colors.textPrimary }}>timing margin</strong>. In a system with 100ps of setup time margin, 50ps of jitter leaves only 50ps for all other timing uncertainties. As data rates increase, timing budgets shrink, making jitter control increasingly critical.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Explore Eye Diagrams →
+            </button>
+          </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1140,73 +1493,116 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Tool: The Eye Diagram
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '16px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Step {twistPredictStep + 1} of 2
+              </span>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            An eye diagram overlays many data bit transitions. As jitter increases, what happens to the "eye opening"?
-          </h2>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                New Tool: The Eye Diagram
+              </p>
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              An eye diagram overlays many data bit transitions. As jitter increases, what happens to the "eye opening"?
+            </h2>
+
+            {/* Static eye diagram for predict */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <svg width={isMobile ? 320 : 450} height={isMobile ? 150 : 180} viewBox={`0 0 ${isMobile ? 320 : 450} ${isMobile ? 150 : 180}`} style={{ background: colors.bgSecondary, borderRadius: '8px', maxWidth: '100%' }}>
+                <text x="50%" y="20" fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+                  Eye Diagram Concept
+                </text>
+                {/* Simple eye shape */}
+                <ellipse cx="50%" cy="50%" rx="80" ry="40" fill="none" stroke={colors.accent} strokeWidth="2" />
+                <text x="50%" y={isMobile ? 130 : 160} fill={colors.textMuted} fontSize="10" textAnchor="middle">
+                  The "eye opening" shows timing margin
+                </text>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); setTwistPredictStep(1); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                See the Eye Diagram →
               </button>
-            ))}
+            )}
           </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See the Eye Diagram →
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1217,120 +1613,143 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Eye Diagram Analysis
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust jitter and data rate to see how the eye opens or closes
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Eye Diagram Analysis
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Adjust jitter and data rate to see how the eye opens or closes
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <EyeDiagramVisualization />
-            </div>
-
-            {/* Jitter slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Jitter (RMS)</span>
-                <span style={{
-                  ...typo.small,
-                  color: jitterAmount > 100 ? colors.error : jitterAmount > 50 ? colors.warning : colors.success,
-                  fontWeight: 600
-                }}>
-                  {jitterAmount} ps
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="200"
-                step="5"
-                value={jitterAmount}
-                onChange={(e) => setJitterAmount(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Data rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Data Rate</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dataRate} Gbps</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="10"
-                step="0.5"
-                value={dataRate}
-                onChange={(e) => setDataRate(parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>0.5 Gbps</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10 Gbps</span>
-              </div>
-            </div>
-
-            {/* Stats */}
+            {/* Observation guidance */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
+              background: `${colors.accent}15`,
+              border: `1px solid ${colors.accent}40`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{(1000 / dataRate).toFixed(0)} ps</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Bit Period (UI)</div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Observe:</strong> Watch the eye "close" as jitter increases. The dashed ellipse shows where valid data can be sampled - when it shrinks too much, errors occur.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <EyeDiagramVisualization />
               </div>
+
+              {/* Jitter slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Jitter (RMS)</span>
+                  <span style={{
+                    ...typo.small,
+                    color: jitterAmount > 100 ? colors.error : jitterAmount > 50 ? colors.warning : colors.success,
+                    fontWeight: 600
+                  }}>
+                    {jitterAmount} ps
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  step="5"
+                  value={jitterAmount}
+                  onChange={(e) => setJitterAmount(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Data rate slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Data Rate</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dataRate} Gbps</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="10"
+                  step="0.5"
+                  value={dataRate}
+                  onChange={(e) => setDataRate(parseFloat(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>0.5 Gbps</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>10 Gbps</span>
+                </div>
+              </div>
+
+              {/* Stats */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
               }}>
                 <div style={{
-                  ...typo.h3,
-                  color: metrics.marginPercent > 30 ? colors.success : metrics.marginPercent > 10 ? colors.warning : colors.error
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
                 }}>
-                  {metrics.marginPercent.toFixed(0)}%
+                  <div style={{ ...typo.h3, color: colors.accent }}>{(1000 / dataRate).toFixed(0)} ps</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Bit Period (UI)</div>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Timing Margin</div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    ...typo.h3,
+                    color: metrics.marginPercent > 30 ? colors.success : metrics.marginPercent > 10 ? colors.warning : colors.error
+                  }}>
+                    {metrics.marginPercent.toFixed(0)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Timing Margin</div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand Jitter Sources →
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand Jitter Sources →
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1344,83 +1763,92 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Sources and Mitigation of Jitter
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Sources and Mitigation of Jitter
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔌</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>PLL Jitter Contribution</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>🔌</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>PLL Jitter Contribution</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Phase-Locked Loops multiply reference clocks but add jitter from the <span style={{ color: colors.accent }}>VCO, charge pump, and loop filter</span>. Lower loop bandwidth reduces reference jitter transfer but increases VCO jitter passthrough.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Phase-Locked Loops multiply reference clocks but add jitter from the <span style={{ color: colors.accent }}>VCO, charge pump, and loop filter</span>. Lower loop bandwidth reduces reference jitter transfer but increases VCO jitter passthrough.
-              </p>
+
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>🔋</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Power Supply Noise</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Power supply ripple and noise modulate oscillator frequency, creating <span style={{ color: colors.warning }}>deterministic jitter</span> at the noise frequency. Clean, low-impedance power with proper filtering is essential.
+                </p>
+              </div>
+
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>📡</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Clock Buffer Additive Jitter</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Each buffer in the clock distribution tree adds its own jitter. Jitter accumulates as <span style={{ color: colors.success }}>root-sum-square</span> for random components. Minimize buffer stages and use low-jitter buffer ICs.
+                </p>
+              </div>
+
+              <div style={{
+                background: `${colors.success}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.success}33`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>🎯</span>
+                  <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>ADC Aperture Error</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  For ADCs, jitter causes aperture error: <strong>SNR = -20log(2*pi*fin*tj)</strong>. At 100 MHz input frequency, just 1ps of jitter limits SNR to 64 dB. High-speed ADCs require femtosecond-class clocks.
+                </p>
+              </div>
             </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔋</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Power Supply Noise</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Power supply ripple and noise modulate oscillator frequency, creating <span style={{ color: colors.warning }}>deterministic jitter</span> at the noise frequency. Clean, low-impedance power with proper filtering is essential.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>📡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Clock Buffer Additive Jitter</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Each buffer in the clock distribution tree adds its own jitter. Jitter accumulates as <span style={{ color: colors.success }}>root-sum-square</span> for random components. Minimize buffer stages and use low-jitter buffer ICs.
-              </p>
-            </div>
-
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🎯</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>ADC Aperture Error</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                For ADCs, jitter causes aperture error: <strong>SNR = -20log(2*pi*fin*tj)</strong>. At 100 MHz input frequency, just 1ps of jitter limits SNR to 64 dB. High-speed ADCs require femtosecond-class clocks.
-              </p>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications →
+            </button>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications →
-          </button>
         </div>
 
         {renderNavDots()}
@@ -1432,133 +1860,173 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    checkmark
+            {/* Progress indicator */}
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Application {selectedApp + 1} of {realWorldApps.length} — {completedCount} of {realWorldApps.length} explored
+            </p>
+
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                    setCurrentTransferStep(0);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    minHeight: '44px',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How Jitter Control Matters:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
+            {/* Got It / Continue button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
 
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Jitter Control Matters:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
+                // Find next uncompleted app or advance to next phase
+                const nextUncompletedIndex = newCompleted.findIndex((c, i) => !c && i > selectedApp);
+                const prevUncompletedIndex = newCompleted.findIndex((c) => !c);
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+                if (nextUncompletedIndex !== -1) {
+                  setSelectedApp(nextUncompletedIndex);
+                } else if (prevUncompletedIndex !== -1) {
+                  setSelectedApp(prevUncompletedIndex);
+                } else if (newCompleted.every(c => c)) {
+                  // All completed, can advance
+                }
+              }}
+              style={{ ...secondaryButtonStyle, width: '100%', marginBottom: '16px' }}
+            >
+              Got It
+            </button>
 
-          {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Take the Knowledge Test →
+              {allAppsCompleted ? 'Take the Knowledge Test →' : 'Continue to Test →'}
             </button>
-          )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1574,50 +2042,63 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? 'trophy' : 'books'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You\'ve mastered Clock Jitter concepts!'
-                : 'Review the concepts and try again.'}
-            </p>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            paddingTop: '84px',
+          }}>
+            <div style={{ maxWidth: '600px', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '80px',
+                marginBottom: '24px',
+              }}>
+                {passed ? '🏆' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You\'ve mastered Clock Jitter concepts!'
+                  : 'Review the concepts and try again.'}
+              </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson →
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review & Try Again
+                </button>
+              )}
+            </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1630,158 +2111,165 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.body, color: colors.textSecondary, fontWeight: 600 }}>
+                Q{currentQuestion + 1}: Question {currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion
+                      ? colors.accent
+                      : testAnswers[i]
+                        ? colors.success
+                        : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+              {question.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {question.options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
+                </button>
               ))}
             </div>
-          </div>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
+            {/* Navigation */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    ...secondaryButtonStyle,
+                    flex: 1,
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white',
+                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                    minHeight: '44px',
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                    minHeight: '44px',
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1798,80 +2286,82 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          trophy
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Clock Jitter Master!
-        </h1>
-
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how clock jitter affects digital systems and why precise timing is essential for high-speed designs.
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
+          paddingTop: '84px',
+          textAlign: 'center',
         }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'Period, cycle-to-cycle, and long-term jitter',
-              'How jitter reduces timing margin',
-              'ADC/DAC aperture error and SNR degradation',
-              'Eye diagram interpretation',
-              'PLL and buffer jitter contributions',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>checkmark</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
-              </div>
-            ))}
+          <div style={{
+            fontSize: '100px',
+            marginBottom: '24px',
+            animation: 'bounce 1s infinite',
+          }}>
+            🏆
           </div>
-        </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Clock Jitter Master!
+          </h1>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+            You now understand how clock jitter affects digital systems and why precise timing is essential for high-speed designs.
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              You Learned:
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+              {[
+                'Period, cycle-to-cycle, and long-term jitter',
+                'How jitter reduces timing margin',
+                'ADC/DAC aperture error and SNR degradation',
+                'Eye diagram interpretation',
+                'PLL and buffer jitter contributions',
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: colors.success }}>✓</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={secondaryButtonStyle}
+            >
+              Play Again
+            </button>
+            <a
+              href="/"
+              style={{
+                ...primaryButtonStyle,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Return to Dashboard
+            </a>
+          </div>
         </div>
 
         {renderNavDots()}

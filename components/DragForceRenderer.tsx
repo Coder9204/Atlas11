@@ -306,8 +306,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     bgCard: '#0f172a',
     bgCardLight: '#1e293b',
     textPrimary: '#f8fafc',
-    textSecondary: '#94a3b8',
-    textMuted: '#64748b',
+    textSecondary: '#e2e8f0', // High contrast text for accessibility
+    textMuted: '#cbd5e1',
     border: '#334155',
     borderLight: '#475569',
     dragForce: '#ef4444',
@@ -636,6 +636,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
             <button
               onClick={() => goToPhase('predict')}
+              style={{ minHeight: '44px' }}
               className="group px-8 py-4 bg-gradient-to-r from-sky-600 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-[0.98]"
             >
               <span className="flex items-center gap-2">
@@ -653,10 +654,53 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-sky-400 mb-2">Make Your Prediction</h2>
-            <p className="text-slate-400 mb-6 text-center">Test your intuition about air resistance</p>
+            <p style={{ color: '#e2e8f0' }} className="mb-2 text-center">Test your intuition about air resistance</p>
+
+            {/* Progress indicator */}
+            <div className="flex items-center gap-2 mb-6">
+              <span style={{ color: '#e2e8f0' }} className="text-sm">Step 1 of 2: Make prediction</span>
+              <div className="flex gap-1">
+                <div className={`w-2 h-2 rounded-full ${selectedPrediction ? 'bg-green-500' : 'bg-sky-500'}`} />
+                <div className={`w-2 h-2 rounded-full ${showPredictionFeedback ? 'bg-green-500' : 'bg-slate-600'}`} />
+              </div>
+            </div>
+
+            {/* Static SVG diagram */}
+            <div className="w-full max-w-md h-40 mb-6 rounded-xl overflow-hidden bg-gradient-to-b from-sky-900/30 to-slate-900/50 border border-slate-700/50">
+              <svg viewBox="0 0 400 160" className="w-full h-full" role="img" aria-label="Drag force diagram showing car and air resistance">
+                <defs>
+                  <linearGradient id="predictAirGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
+                    <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                {/* Road */}
+                <rect x="0" y="120" width="400" height="40" fill="#374151" />
+                <line x1="0" y1="140" x2="400" y2="140" stroke="#fbbf24" strokeWidth="2" strokeDasharray="20,10" />
+                {/* Car body */}
+                <rect x="100" y="85" width="80" height="30" rx="5" fill="#3b82f6" />
+                <rect x="115" y="70" width="50" height="20" rx="3" fill="#60a5fa" />
+                {/* Wheels */}
+                <circle cx="120" cy="115" r="10" fill="#1f2937" />
+                <circle cx="160" cy="115" r="10" fill="#1f2937" />
+                {/* Air flow lines */}
+                {[60, 80, 100].map((y, i) => (
+                  <line key={i} x1="200" y1={y} x2="350" y2={y} stroke="url(#predictAirGrad)" strokeWidth="2" strokeDasharray="8,4" />
+                ))}
+                {/* Drag arrow */}
+                <line x1="200" y1="95" x2="280" y2="95" stroke="#ef4444" strokeWidth="4" />
+                <polygon points="280,95 270,89 270,101" fill="#ef4444" />
+                <text x="240" y="85" fill="#ef4444" fontSize="12" fontWeight="bold" textAnchor="middle">Drag Force</text>
+                {/* Velocity arrow */}
+                <line x1="100" y1="95" x2="50" y2="95" stroke="#22c55e" strokeWidth="4" />
+                <polygon points="50,95 60,89 60,101" fill="#22c55e" />
+                <text x="75" y="85" fill="#22c55e" fontSize="12" fontWeight="bold" textAnchor="middle">v</text>
+              </svg>
+            </div>
 
             <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-6 rounded-xl mb-6 max-w-lg border border-slate-700/50">
-              <p className="text-lg text-slate-200 mb-4">
+              <p style={{ color: '#e2e8f0' }} className="text-lg mb-4">
                 A car is driving on the highway at <span className="text-cyan-400 font-bold">30 mph</span>.
                 The driver accelerates to <span className="text-yellow-400 font-bold">60 mph</span> (doubling their speed).
               </p>
@@ -676,11 +720,14 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                   key={option.id}
                   onClick={() => handlePrediction(option.id)}
                   disabled={showPredictionFeedback}
+                  style={{ minHeight: '44px' }}
                   className={`p-4 rounded-xl text-left transition-all ${
                     showPredictionFeedback && option.id === 'B'
                       ? 'bg-green-600 text-white border-2 border-green-400'
                       : showPredictionFeedback && selectedPrediction === option.id
                       ? 'bg-red-600 text-white'
+                      : selectedPrediction === option.id
+                      ? 'bg-sky-600 text-white border-2 border-sky-400 ring-2 ring-sky-400'
                       : 'bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 hover:border-slate-500'
                   }`}
                 >
@@ -694,19 +741,20 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                 <p className={`text-xl font-bold mb-3 ${selectedPrediction === 'B' ? 'text-green-400' : 'text-sky-400'}`}>
                   {selectedPrediction === 'B' ? 'Exactly Right!' : 'Surprising, isn\'t it?'}
                 </p>
-                <p className="text-slate-300 mb-3">
+                <p style={{ color: '#e2e8f0' }} className="mb-3">
                   Drag force depends on velocity <span className="text-yellow-400 font-bold">squared</span>!
                 </p>
                 <div className="bg-slate-900/50 p-3 rounded-lg mb-4">
                   <p className="font-mono text-sky-400 text-center text-lg">
                     F<sub>drag</sub> = ½ρ<span className="text-yellow-400">v²</span>C<sub>d</sub>A
                   </p>
-                  <p className="text-slate-400 text-sm text-center mt-2">
+                  <p style={{ color: '#e2e8f0' }} className="text-sm text-center mt-2">
                     Double velocity = 2² = <span className="text-green-400 font-bold">4x the drag!</span>
                   </p>
                 </div>
                 <button
                   onClick={() => goToPhase('play')}
+                  style={{ minHeight: '44px' }}
                   className="w-full px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-all"
                 >
                   Explore in the Simulator
@@ -724,7 +772,14 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-sky-400 mb-2">Drag Force Laboratory</h2>
-            <p className="text-slate-400 mb-4">Experiment with the variables that affect drag</p>
+            <p style={{ color: '#e2e8f0' }} className="mb-2">Experiment with the variables that affect drag</p>
+
+            {/* Observation guidance */}
+            <div className="bg-sky-900/30 border border-sky-500/30 rounded-lg px-4 py-2 mb-4 max-w-lg">
+              <p style={{ color: '#e2e8f0' }} className="text-sm text-center">
+                <span className="font-bold text-sky-400">Observe:</span> Watch how changing velocity, area, and drag coefficient affects the falling object. Notice how drag force grows with velocity squared.
+              </p>
+            </div>
 
             <div className="relative w-full max-w-lg h-80 bg-gradient-to-b from-sky-400/20 to-sky-900/40 rounded-xl mb-4 overflow-hidden border border-slate-700/50">
               <svg viewBox="0 0 400 400" className="w-full h-full">
@@ -827,19 +882,24 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
             <div className="flex gap-3 mb-4">
               <button onClick={startSimulation} disabled={isSimulating}
+                style={{ minHeight: '44px' }}
                 className="px-6 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 text-white font-bold rounded-xl">
                 {isSimulating ? 'Falling...' : 'Drop Object'}
               </button>
-              <button onClick={resetSimulation} className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white font-bold rounded-xl">
+              <button onClick={resetSimulation}
+                style={{ minHeight: '44px' }}
+                className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white font-bold rounded-xl">
                 Reset
               </button>
-              <label className="flex items-center gap-2 text-slate-300">
+              <label className="flex items-center gap-2" style={{ color: '#e2e8f0' }}>
                 <input type="checkbox" checked={showVectors} onChange={(e) => setShowVectors(e.target.checked)} />
                 Forces
               </label>
             </div>
 
-            <button onClick={() => goToPhase('review')} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl">
+            <button onClick={() => goToPhase('review')}
+              style={{ minHeight: '44px' }}
+              className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl">
               Review the Physics
             </button>
           </div>
@@ -903,6 +963,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
             </div>
 
             <button onClick={() => goToPhase('twist_predict')}
+              style={{ minHeight: '44px' }}
               className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl">
               Ready for the Twist?
             </button>
@@ -914,10 +975,19 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-2">The Twist: Terminal Velocity</h2>
-            <p className="text-slate-400 mb-6">Something strange happens when objects fall...</p>
+            <p style={{ color: '#e2e8f0' }} className="mb-2">Something strange happens when objects fall...</p>
+
+            {/* Progress indicator */}
+            <div className="flex items-center gap-2 mb-6">
+              <span style={{ color: '#e2e8f0' }} className="text-sm">Step 1 of 2: Make prediction</span>
+              <div className="flex gap-1">
+                <div className={`w-2 h-2 rounded-full ${twistPrediction ? 'bg-green-500' : 'bg-purple-500'}`} />
+                <div className={`w-2 h-2 rounded-full ${showTwistFeedback ? 'bg-green-500' : 'bg-slate-600'}`} />
+              </div>
+            </div>
 
             <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 p-6 rounded-xl mb-6 max-w-lg border border-purple-500/30">
-              <p className="text-slate-200 mb-4">
+              <p style={{ color: '#e2e8f0' }} className="mb-4">
                 A skydiver jumps from 15,000 feet. They accelerate faster and faster...
                 but after about 12 seconds, their speedometer stops increasing. They fall the rest of the way at a
                 <span className="text-purple-400 font-bold"> constant 120 mph</span>.
@@ -938,11 +1008,14 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                   key={option.id}
                   onClick={() => handleTwistPrediction(option.id)}
                   disabled={showTwistFeedback}
+                  style={{ minHeight: '44px' }}
                   className={`p-4 rounded-xl text-left transition-all ${
                     showTwistFeedback && option.id === 'C'
                       ? 'bg-green-600 text-white border-2 border-green-400'
                       : showTwistFeedback && twistPrediction === option.id
                       ? 'bg-red-600 text-white'
+                      : twistPrediction === option.id
+                      ? 'bg-purple-600 text-white border-2 border-purple-400 ring-2 ring-purple-400'
                       : 'bg-slate-700 hover:bg-slate-600 text-white border border-slate-600'
                   }`}
                 >
@@ -956,15 +1029,16 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                 <p className={`text-xl font-bold mb-3 ${twistPrediction === 'C' ? 'text-green-400' : 'text-purple-400'}`}>
                   {twistPrediction === 'C' ? 'Excellent reasoning!' : 'Great thinking!'}
                 </p>
-                <p className="text-slate-300 mb-3">
+                <p style={{ color: '#e2e8f0' }} className="mb-3">
                   As speed increases, drag force (proportional to v²) grows rapidly.
                   Eventually, drag equals the skydiver&apos;s weight.
                 </p>
-                <p className="text-slate-300 mb-4">
+                <p style={{ color: '#e2e8f0' }} className="mb-4">
                   When F<sub>drag</sub> = Weight, net force = 0, so acceleration = 0.
                   This is <span className="text-yellow-400 font-bold">terminal velocity</span>.
                 </p>
                 <button onClick={() => goToPhase('twist_play')}
+                  style={{ minHeight: '44px' }}
                   className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl">
                   See It In Action
                 </button>
@@ -978,7 +1052,14 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-2">Terminal Velocity Race</h2>
-            <p className="text-slate-400 mb-4">Watch how body position affects falling speed</p>
+            <p style={{ color: '#e2e8f0' }} className="mb-2">Watch how body position affects falling speed</p>
+
+            {/* Observation guidance */}
+            <div className="bg-purple-900/30 border border-purple-500/30 rounded-lg px-4 py-2 mb-4 max-w-lg">
+              <p style={{ color: '#e2e8f0' }} className="text-sm text-center">
+                <span className="font-bold text-purple-400">Observe:</span> Compare how the spread-eagle and tucked positions reach different terminal velocities. The larger cross-section creates more drag.
+              </p>
+            </div>
 
             <div className="relative w-full max-w-lg h-80 bg-gradient-to-b from-sky-400/20 to-sky-900/40 rounded-xl mb-4 overflow-hidden border border-slate-700/50">
               <svg viewBox="0 0 400 400" className="w-full h-full">
@@ -1048,26 +1129,29 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
             </div>
 
             <div className="bg-slate-800/80 p-4 rounded-xl max-w-lg mb-4 text-sm">
-              <p className="text-slate-300">
+              <p style={{ color: '#e2e8f0' }}>
                 <span className="text-green-400 font-bold">Spread eagle:</span> Large area, high drag, lower terminal velocity (~55 m/s)
               </p>
-              <p className="text-slate-300 mt-1">
+              <p style={{ color: '#e2e8f0' }} className="mt-1">
                 <span className="text-orange-400 font-bold">Tucked:</span> Small area, low drag, higher terminal velocity (~70 m/s)
               </p>
             </div>
 
             <div className="flex gap-3 mb-4">
               <button onClick={startTerminalSim} disabled={showTerminalSim}
+                style={{ minHeight: '44px' }}
                 className="px-6 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 text-white font-bold rounded-xl">
                 {showTerminalSim ? 'Falling...' : 'Jump!'}
               </button>
               <button onClick={resetTerminalSim}
+                style={{ minHeight: '44px' }}
                 className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white font-bold rounded-xl">
                 Reset
               </button>
             </div>
 
             <button onClick={() => goToPhase('twist_review')}
+              style={{ minHeight: '44px' }}
               className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl">
               Deep Dive: Terminal Velocity
             </button>
@@ -1132,7 +1216,17 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
         return (
           <div className="flex flex-col items-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-green-400 mb-2">Real-World Applications</h2>
-            <p className="text-slate-400 mb-6">Drag force shapes technology across every industry</p>
+            <p style={{ color: '#e2e8f0' }} className="mb-2">Drag force shapes technology across every industry</p>
+
+            {/* Progress indicator */}
+            <div className="flex items-center gap-2 mb-6">
+              <span style={{ color: '#e2e8f0' }} className="text-sm">Progress: {completedApps.size} of {realWorldApps.length} applications explored</span>
+              <div className="flex gap-1">
+                {realWorldApps.map((_, i) => (
+                  <div key={i} className={`w-2 h-2 rounded-full ${completedApps.has(i) ? 'bg-green-500' : 'bg-slate-600'}`} />
+                ))}
+              </div>
+            </div>
 
             {/* App tabs */}
             <div className="flex gap-2 mb-6 flex-wrap justify-center">
@@ -1140,12 +1234,12 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                 <button
                   key={index}
                   onClick={() => { setActiveAppTab(index); setExpandedApp(null); }}
+                  style={{ minHeight: '44px', backgroundColor: activeAppTab === index ? app.color : undefined }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all text-sm ${
                     activeAppTab === index
                       ? 'text-white shadow-lg'
                       : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                   }`}
-                  style={activeAppTab === index ? { backgroundColor: app.color } : {}}
                 >
                   <span className="mr-1">{app.icon}</span>
                   {completedApps.has(index) && <span className="mr-1">&#10003;</span>}
@@ -1167,7 +1261,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                   </div>
                 </div>
 
-                <p className="text-slate-300 mb-4">{currentApp.description}</p>
+                <p style={{ color: '#e2e8f0' }} className="mb-4">{currentApp.description}</p>
 
                 {/* Stats row */}
                 <div className="grid grid-cols-3 gap-3 mb-4">
@@ -1233,6 +1327,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                 {/* Mark complete button */}
                 {!completedApps.has(activeAppTab) && (
                   <button onClick={() => handleAppComplete(activeAppTab)}
+                    style={{ minHeight: '44px' }}
                     className="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all">
                     Mark as Understood
                   </button>
@@ -1240,10 +1335,11 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               </div>
             </div>
 
-            <p className="text-slate-400 mt-4">Explored: {completedApps.size} / {realWorldApps.length}</p>
+            <p style={{ color: '#e2e8f0' }} className="mt-4">Explored: {completedApps.size} / {realWorldApps.length}</p>
 
             {completedApps.size >= 2 && (
               <button onClick={() => goToPhase('test')}
+                style={{ minHeight: '44px' }}
                 className="mt-4 px-8 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 text-white font-bold rounded-xl">
                 Take the Quiz
               </button>
@@ -1253,17 +1349,28 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
       // ========== TEST PHASE ==========
       case 'test':
+        const answeredCount = testAnswers.filter(a => a !== -1).length;
         return (
           <div className="flex flex-col items-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-sky-400 mb-2">Knowledge Check</h2>
-            <p className="text-slate-400 mb-6">10 scenario-based questions to test your understanding</p>
+            <p style={{ color: '#e2e8f0' }} className="mb-2">10 scenario-based questions to test your understanding</p>
+
+            {/* Progress indicator */}
+            <div className="flex items-center gap-2 mb-4">
+              <span style={{ color: '#e2e8f0' }} className="text-sm">Question {Math.min(answeredCount + 1, 10)} of 10</span>
+              <div className="flex gap-1">
+                {testQuestions.map((_, i) => (
+                  <div key={i} className={`w-2 h-2 rounded-full ${testAnswers[i] !== -1 ? 'bg-green-500' : i === answeredCount ? 'bg-sky-500' : 'bg-slate-600'}`} />
+                ))}
+              </div>
+            </div>
 
             <div className="w-full max-w-2xl space-y-4 max-h-[60vh] overflow-y-auto pr-2">
               {testQuestions.map((q, qIndex) => (
                 <div key={qIndex} className="bg-slate-800/80 p-4 rounded-xl border border-slate-700/50">
                   <div className="bg-slate-900/50 p-3 rounded-lg mb-3">
-                    <p className="text-slate-400 text-sm italic mb-2">{q.scenario}</p>
-                    <p className="text-slate-200 font-medium">{qIndex + 1}. {q.question}</p>
+                    <p style={{ color: '#e2e8f0' }} className="text-sm italic mb-2">{q.scenario}</p>
+                    <p style={{ color: '#e2e8f0' }} className="font-medium">Q{qIndex + 1}. {q.question}</p>
                   </div>
 
                   <div className="grid grid-cols-1 gap-2">
@@ -1272,14 +1379,15 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                         key={oIndex}
                         onClick={() => handleTestAnswer(qIndex, oIndex)}
                         disabled={showTestResults}
+                        style={{ minHeight: '44px' }}
                         className={`p-3 rounded-lg text-sm text-left transition-all ${
                           showTestResults && option.correct
-                            ? 'bg-green-600 text-white'
+                            ? 'bg-green-600 text-white border-2 border-green-400'
                             : showTestResults && testAnswers[qIndex] === oIndex && !option.correct
-                            ? 'bg-red-600 text-white'
+                            ? 'bg-red-600 text-white border-2 border-red-400'
                             : testAnswers[qIndex] === oIndex
-                            ? 'bg-sky-600 text-white'
-                            : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                            ? 'bg-sky-600 text-white border-2 border-sky-400 ring-2 ring-sky-400'
+                            : 'bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600'
                         }`}
                       >
                         <span className="font-bold mr-2">{option.id.toUpperCase()}.</span>
@@ -1290,7 +1398,14 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
                   {showTestResults && (
                     <div className="mt-3 p-3 bg-slate-900/50 rounded-lg border-l-4 border-cyan-500">
-                      <p className="text-slate-300 text-sm">{q.explanation}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        {testQuestions[qIndex]?.options[testAnswers[qIndex]]?.correct ? (
+                          <span className="text-green-400 font-bold">&#10003; Correct</span>
+                        ) : (
+                          <span className="text-red-400 font-bold">&#10007; Incorrect</span>
+                        )}
+                      </div>
+                      <p style={{ color: '#e2e8f0' }} className="text-sm">{q.explanation}</p>
                     </div>
                   )}
                 </div>
@@ -1299,6 +1414,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
             {!showTestResults && testAnswers.every(a => a !== -1) && (
               <button onClick={handleSubmitTest}
+                style={{ minHeight: '44px' }}
                 className="mt-6 px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl">
                 Submit Answers
               </button>
@@ -1310,8 +1426,22 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                 <p className={`text-lg mt-2 ${testScore >= 7 ? 'text-green-400' : 'text-orange-400'}`}>
                   {testScore >= 7 ? 'Excellent! You\'ve mastered drag force!' : 'Good effort! Review and try again.'}
                 </p>
+
+                {/* Answer review summary */}
+                <div className="mt-4 flex justify-center gap-1 flex-wrap max-w-md mx-auto">
+                  {testQuestions.map((_, i) => {
+                    const isCorrect = testQuestions[i]?.options[testAnswers[i]]?.correct;
+                    return (
+                      <div key={i} className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold ${isCorrect ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                        {isCorrect ? '✓' : '✗'}
+                      </div>
+                    );
+                  })}
+                </div>
+
                 {testScore >= 7 && (
                   <button onClick={() => goToPhase('mastery')}
+                    style={{ minHeight: '44px' }}
                     className="mt-4 px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl">
                     Claim Your Badge
                   </button>
@@ -1382,8 +1512,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
 
-      {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50">
+      {/* Progress bar - Fixed navigation with proper z-index */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }} className="bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50">
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-medium text-sky-400">Drag Force</span>
           <div className="flex gap-1.5">
@@ -1391,7 +1521,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
+                style={{ minHeight: '44px', minWidth: '44px' }}
+                className={`h-2 rounded-full transition-all duration-300 flex items-center justify-center ${
                   phase === p
                     ? 'bg-gradient-to-r from-sky-400 to-cyan-400 w-6 shadow-lg shadow-sky-500/50'
                     : phaseOrder.indexOf(phase) > i
@@ -1399,10 +1530,11 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                     : 'bg-slate-600 w-2 hover:bg-slate-500'
                 }`}
                 title={phaseLabels[p]}
+                aria-label={`Go to ${phaseLabels[p]} phase`}
               />
             ))}
           </div>
-          <span className="text-sm text-slate-400 font-medium">{phaseLabels[phase]}</span>
+          <span style={{ color: '#e2e8f0' }} className="text-sm font-medium">{phaseLabels[phase]}</span>
         </div>
       </div>
 

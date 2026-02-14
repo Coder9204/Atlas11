@@ -1,4 +1,36 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// --- GAME EVENT INTERFACE ---
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+             'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+             'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+             'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
+             'coach_prompt' | 'guide_paused' | 'guide_resumed';
+  gameType: string;
+  gameTitle: string;
+  details: {
+    currentScreen?: number;
+    totalScreens?: number;
+    phase?: string;
+    phaseLabel?: string;
+    prediction?: string;
+    answer?: string;
+    isCorrect?: boolean;
+    score?: number;
+    maxScore?: number;
+    message?: string;
+    coachMessage?: string;
+    needsHelp?: boolean;
+    [key: string]: unknown;
+  };
+  timestamp: number;
+}
+
+interface SolarCellRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
 
 const realWorldApps = [
   {
@@ -75,19 +107,13 @@ const realWorldApps = [
   }
 ];
 
-interface SolarCellRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
-}
-
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
   textMuted: '#94a3b8',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
+  bgCardLight: '#1e293b',
   bgDark: 'rgba(15, 23, 42, 0.95)',
   accent: '#f59e0b',
   accentGlow: 'rgba(245, 158, 11, 0.4)',
@@ -97,14 +123,34 @@ const colors = {
   solar: '#3b82f6',
   light: '#fcd34d',
   panel: '#1e3a5f',
+  border: '#334155',
+  primary: '#f59e0b',
 };
 
 const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  onGameEvent,
+  gamePhase,
 }) => {
+  type SCPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: SCPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  // Use gamePhase from props if valid, otherwise default to 'hook'
+  const getInitialPhase = (): SCPhase => {
+    if (gamePhase && validPhases.includes(gamePhase as SCPhase)) {
+      return gamePhase as SCPhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<SCPhase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as SCPhase) && gamePhase !== phase) {
+      setPhase(gamePhase as SCPhase);
+    }
+  }, [gamePhase]);
+
   // Simulation state
   const [lightDistance, setLightDistance] = useState(50);
   const [panelAngle, setPanelAngle] = useState(0);
@@ -115,12 +161,17 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
   // Phase-specific state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [transferApp, setTransferApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Responsive detection
   useEffect(() => {
@@ -130,46 +181,103 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Phase order for navigation
+  const phaseOrder: SCPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<SCPhase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore Twist',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const emitGameEvent = useCallback((
+    eventType: GameEvent['eventType'],
+    details: GameEvent['details']
+  ) => {
+    if (onGameEvent) {
+      onGameEvent({
+        eventType,
+        gameType: 'solar_cell',
+        gameTitle: 'Solar Cell Physics',
+        details,
+        timestamp: Date.now()
+      });
+    }
+  }, [onGameEvent]);
+
+  const goToPhase = useCallback((p: SCPhase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    if (p === 'play' || p === 'twist_play') {
+      setIsAnimating(false);
+    }
+    if (p === 'twist_play') setUseMagnifier(true);
+    if (p === 'play') setUseMagnifier(false);
+
+    const idx = phaseOrder.indexOf(p);
+    emitGameEvent('phase_changed', {
+      phase: p,
+      phaseLabel: phaseLabels[p],
+      currentScreen: idx + 1,
+      totalScreens: phaseOrder.length,
+      message: `Navigated to ${phaseLabels[p]}`
+    });
+
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent, phaseLabels, phaseOrder]);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
   // Responsive typography
   const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
+    title: isMobile ? '24px' : '32px',
+    heading: isMobile ? '18px' : '22px',
+    bodyLarge: isMobile ? '14px' : '16px',
+    body: isMobile ? '13px' : '14px',
+    small: isMobile ? '11px' : '12px',
+    label: isMobile ? '10px' : '11px',
+    pagePadding: isMobile ? '12px' : '16px',
     cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
+    sectionGap: isMobile ? '12px' : '16px',
     elementGap: isMobile ? '8px' : '12px',
   };
 
   // Physics calculations
   const calculateOutput = useCallback(() => {
-    // Base intensity from source
     const baseIntensity = lightIntensity / 100;
-
-    // Inverse square law: I proportional to 1/r^2
-    // Normalize distance (50 is reference distance)
     const distanceFactor = Math.pow(50 / lightDistance, 2);
-
-    // Angle dependence: I proportional to cos(theta)
     const angleRad = (panelAngle * Math.PI) / 180;
     const angleFactor = Math.max(0, Math.cos(angleRad));
-
-    // Magnifier effect (2.5x intensity boost when used)
     const magnifierFactor = useMagnifier ? 2.5 : 1;
-
-    // Combined intensity on panel
     const effectiveIntensity = baseIntensity * distanceFactor * angleFactor * magnifierFactor;
-
-    // Solar cell output (current proportional to intensity, voltage relatively stable)
     const voltage = Math.min(0.6, 0.45 + 0.15 * Math.sqrt(effectiveIntensity));
-    const current = effectiveIntensity * 100; // mA
-    const power = voltage * current; // mW
-
-    // Efficiency (typical silicon cell ~15-20%)
-    const inputPower = effectiveIntensity * 1000; // Arbitrary scaling for display
+    const current = effectiveIntensity * 100;
+    const power = voltage * current;
+    const inputPower = effectiveIntensity * 1000;
     const efficiency = inputPower > 0 ? (power / inputPower) * 100 : 0;
 
     return {
@@ -205,33 +313,6 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
     { id: 'boost', label: 'Output increases significantly due to concentrated light' },
     { id: 'same', label: 'Output stays the same - the cell can only absorb so much' },
     { id: 'decrease', label: 'Output decreases because the magnifier blocks some light' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'Solar Farms',
-      description: 'Large-scale solar installations use tracking systems to follow the sun, maximizing the cosine factor throughout the day.',
-      question: 'Why do solar farms use sun-tracking mounts instead of fixed panels?',
-      answer: 'Fixed panels only achieve optimal angle (cos(0) = 1) briefly each day. Tracking systems keep panels perpendicular to sunlight, maximizing energy capture by 25-40% compared to fixed installations.',
-    },
-    {
-      title: 'Satellite Power Systems',
-      description: 'Satellites in orbit must carefully manage their solar panel orientation relative to the Sun while also managing thermal loads.',
-      question: 'How does the inverse-square law affect satellite solar panel design?',
-      answer: 'Satellites closer to the Sun (like Mercury missions) receive more intense light but also more heat. They may angle panels away from perpendicular to reduce thermal stress, trading efficiency for survivability.',
-    },
-    {
-      title: 'Light Meters in Photography',
-      description: 'Photographers use light meters with photodiodes (similar to solar cells) to measure scene brightness for proper exposure.',
-      question: 'Why do light meters need to account for angle of incidence?',
-      answer: 'A light meter pointed at an angle to the light source underestimates the true illumination. Professional meters use cosine-corrected diffusers to accurately measure light from any direction.',
-    },
-    {
-      title: 'Solar-Powered Calculators',
-      description: 'Simple calculators use small photovoltaic cells that work even in indoor lighting conditions.',
-      question: 'How do calculator solar cells work in dim indoor light?',
-      answer: 'Amorphous silicon cells in calculators are optimized for low-light conditions. They sacrifice peak efficiency for better performance across a wide intensity range, following a more logarithmic response.',
-    },
   ];
 
   const testQuestions = [
@@ -342,25 +423,26 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 8) {
+      emitGameEvent('correct_answer', { score, maxScore: 10 });
+    }
   };
 
+  const currentIdx = phaseOrder.indexOf(phase);
+
+  // Render visualization
   const renderVisualization = (interactive: boolean, showMagnifier: boolean = false) => {
     const width = 700;
     const height = 400;
     const output = calculateOutput();
 
-    // Light source position based on distance
     const lightX = 60 + (100 - lightDistance) * 1.5;
     const lightY = 60;
-
-    // Solar cell cross-section position
     const cellX = 320;
     const cellY = 180;
     const cellWidth = 280;
     const cellHeight = 160;
 
-    // Calculate photon rays
     const numRays = 6;
     const rays = [];
     const photonPositions: { x: number; y: number; progress: number }[] = [];
@@ -369,8 +451,6 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
       const targetY = cellY - 20 + (i * 50);
       const opacity = Math.max(0.2, output.effectiveIntensity * 0.5);
       const rayEndX = cellX - 10;
-
-      // Calculate animated photon position along ray
       const animPhase = ((Date.now() / 800) + i * 0.15) % 1;
       const photonX = lightX + (rayEndX - lightX) * animPhase;
       const photonY = lightY + (targetY - lightY) * animPhase;
@@ -394,7 +474,6 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
       );
     }
 
-    // Electron-hole pair generation positions (where photons hit the cell)
     const ehPairs = [
       { x: cellX + 30, y: cellY + 25, delay: 0 },
       { x: cellX + 80, y: cellY + 35, delay: 0.3 },
@@ -412,9 +491,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '700px' }}
         >
-          {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
-            {/* Premium lab background gradient */}
             <linearGradient id="solcLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />
               <stop offset="30%" stopColor="#0a1628" />
@@ -422,40 +499,35 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               <stop offset="100%" stopColor="#020617" />
             </linearGradient>
 
-            {/* Sun/Light source radial gradient with depth */}
             <radialGradient id="solcSunCore" cx="40%" cy="40%" r="60%">
-              <stop offset="0%" stopColor="#fffbeb" stopOpacity="1" />
-              <stop offset="25%" stopColor="#fef3c7" stopOpacity="0.95" />
-              <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.85" />
-              <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#d97706" stopOpacity="0.3" />
+              <stop offset="0%" stopColor="#fffbeb" stopOpacity={1} />
+              <stop offset="25%" stopColor="#fef3c7" stopOpacity={0.95} />
+              <stop offset="50%" stopColor="#fcd34d" stopOpacity={0.85} />
+              <stop offset="75%" stopColor="#f59e0b" stopOpacity={0.6} />
+              <stop offset="100%" stopColor="#d97706" stopOpacity={0.3} />
             </radialGradient>
 
-            {/* Sun outer glow */}
             <radialGradient id="solcSunGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#fbbf24" stopOpacity={0.4 * (lightIntensity / 100)} />
               <stop offset="40%" stopColor="#f59e0b" stopOpacity={0.25 * (lightIntensity / 100)} />
               <stop offset="70%" stopColor="#d97706" stopOpacity={0.1 * (lightIntensity / 100)} />
-              <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity={0} />
             </radialGradient>
 
-            {/* Photon beam gradient */}
             <linearGradient id="solcPhotonBeam" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.9" />
-              <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#d97706" stopOpacity="0.3" />
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity={0.9} />
+              <stop offset="30%" stopColor="#fcd34d" stopOpacity={0.8} />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity={0.6} />
+              <stop offset="100%" stopColor="#d97706" stopOpacity={0.3} />
             </linearGradient>
 
-            {/* Photon particle glow */}
             <radialGradient id="solcPhotonGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fef9c3" stopOpacity="1" />
-              <stop offset="30%" stopColor="#fde047" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#facc15" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+              <stop offset="0%" stopColor="#fef9c3" stopOpacity={1} />
+              <stop offset="30%" stopColor="#fde047" stopOpacity={0.8} />
+              <stop offset="60%" stopColor="#facc15" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#eab308" stopOpacity={0} />
             </radialGradient>
 
-            {/* N-type silicon gradient (phosphorus doped - electron rich) */}
             <linearGradient id="solcNType" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1e3a8a" />
               <stop offset="20%" stopColor="#1e40af" />
@@ -464,7 +536,6 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               <stop offset="100%" stopColor="#60a5fa" />
             </linearGradient>
 
-            {/* P-type silicon gradient (boron doped - hole rich) */}
             <linearGradient id="solcPType" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#7c2d12" />
               <stop offset="20%" stopColor="#9a3412" />
@@ -473,25 +544,22 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               <stop offset="100%" stopColor="#f97316" />
             </linearGradient>
 
-            {/* Depletion region gradient */}
             <linearGradient id="solcDepletion" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
-              <stop offset="30%" stopColor="#a78bfa" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#c084fc" stopOpacity="0.9" />
-              <stop offset="70%" stopColor="#e879f9" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#f97316" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.6} />
+              <stop offset="30%" stopColor="#a78bfa" stopOpacity={0.8} />
+              <stop offset="50%" stopColor="#c084fc" stopOpacity={0.9} />
+              <stop offset="70%" stopColor="#e879f9" stopOpacity={0.8} />
+              <stop offset="100%" stopColor="#f97316" stopOpacity={0.6} />
             </linearGradient>
 
-            {/* Anti-reflective coating gradient */}
             <linearGradient id="solcARCoating" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.4" />
-              <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.5" />
-              <stop offset="50%" stopColor="#14b8a6" stopOpacity="0.6" />
-              <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.4" />
+              <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.4} />
+              <stop offset="25%" stopColor="#06b6d4" stopOpacity={0.5} />
+              <stop offset="50%" stopColor="#14b8a6" stopOpacity={0.6} />
+              <stop offset="75%" stopColor="#06b6d4" stopOpacity={0.5} />
+              <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.4} />
             </linearGradient>
 
-            {/* Metal contact gradient */}
             <linearGradient id="solcMetalContact" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#e5e7eb" />
               <stop offset="20%" stopColor="#d1d5db" />
@@ -500,45 +568,38 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               <stop offset="100%" stopColor="#4b5563" />
             </linearGradient>
 
-            {/* Electron glow (blue - negative) */}
             <radialGradient id="solcElectronGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
-              <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#1d4ed8" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity={1} />
+              <stop offset="40%" stopColor="#3b82f6" stopOpacity={0.8} />
+              <stop offset="70%" stopColor="#1d4ed8" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity={0} />
             </radialGradient>
 
-            {/* Hole glow (orange/red - positive) */}
             <radialGradient id="solcHoleGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fed7aa" stopOpacity="1" />
-              <stop offset="40%" stopColor="#fb923c" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#ea580c" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#c2410c" stopOpacity="0" />
+              <stop offset="0%" stopColor="#fed7aa" stopOpacity={1} />
+              <stop offset="40%" stopColor="#fb923c" stopOpacity={0.8} />
+              <stop offset="70%" stopColor="#ea580c" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#c2410c" stopOpacity={0} />
             </radialGradient>
 
-            {/* Magnifier lens gradient */}
             <radialGradient id="solcLensGradient" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.4" />
-              <stop offset="50%" stopColor="#bae6fd" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.15" />
+              <stop offset="0%" stopColor="#e0f2fe" stopOpacity={0.4} />
+              <stop offset="50%" stopColor="#bae6fd" stopOpacity={0.25} />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity={0.15} />
             </radialGradient>
 
-            {/* Electric field arrows gradient */}
             <linearGradient id="solcEField" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#a855f7" />
               <stop offset="50%" stopColor="#7c3aed" />
               <stop offset="100%" stopColor="#6366f1" />
             </linearGradient>
 
-            {/* Output panel gradient */}
             <linearGradient id="solcOutputPanel" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" />
               <stop offset="50%" stopColor="#0f172a" />
               <stop offset="100%" stopColor="#020617" />
             </linearGradient>
 
-            {/* === GLOW FILTERS === */}
-            {/* Sun glow filter */}
             <filter id="solcSunBlur" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="8" result="blur" />
               <feMerge>
@@ -547,7 +608,6 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Photon glow filter */}
             <filter id="solcPhotonBlur" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
@@ -556,7 +616,6 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Electron/hole glow filter */}
             <filter id="solcParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
@@ -565,7 +624,6 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Depletion region glow */}
             <filter id="solcDepletionGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
@@ -574,36 +632,29 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Subtle inner shadow for depth */}
             <filter id="solcInnerShadow">
               <feOffset dx="0" dy="2" />
               <feGaussianBlur stdDeviation="2" result="shadow" />
               <feComposite in="SourceGraphic" in2="shadow" operator="over" />
             </filter>
 
-            {/* Grid pattern for lab background */}
             <pattern id="solcLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-              <rect width="30" height="30" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.3" />
+              <rect width="30" height="30" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity={0.3} />
             </pattern>
           </defs>
 
-          {/* === BACKGROUND === */}
           <rect width={width} height={height} fill="url(#solcLabBg)" />
           <rect width={width} height={height} fill="url(#solcLabGrid)" />
 
-          {/* === LIGHT SOURCE (SUN/LAMP) === */}
+          {/* Light Source */}
           <g transform={`translate(${lightX}, ${lightY})`}>
-            {/* Outer glow */}
             <circle r={50 * (lightIntensity / 100)} fill="url(#solcSunGlow)" filter="url(#solcSunBlur)" />
-            {/* Main sun body */}
             <circle r={25} fill="url(#solcSunCore)" filter="url(#solcSunBlur)">
               <animate attributeName="r" values="24;26;24" dur="2s" repeatCount="indefinite" />
             </circle>
-            {/* Hot core */}
-            <circle r={12} fill="#fffbeb" opacity="0.9">
+            <circle r={12} fill="#fffbeb" opacity={0.9}>
               <animate attributeName="opacity" values="0.85;1;0.85" dur="1.5s" repeatCount="indefinite" />
             </circle>
-            {/* Label */}
             <text y={-40} textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="bold">
               LIGHT SOURCE
             </text>
@@ -612,52 +663,40 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
             </text>
           </g>
 
-          {/* === PHOTON RAYS === */}
           {rays}
 
-          {/* === ANIMATED PHOTONS === */}
           {photonPositions.map((photon, i) => (
             <g key={`solcPhoton${i}`} filter="url(#solcPhotonBlur)">
               <circle cx={photon.x} cy={photon.y} r={8} fill="url(#solcPhotonGlow)" opacity={0.8} />
               <circle cx={photon.x} cy={photon.y} r={4} fill="#fef9c3" />
-              {/* Photon wave visualization */}
               <path
                 d={`M ${photon.x - 12} ${photon.y} Q ${photon.x - 6} ${photon.y - 4}, ${photon.x} ${photon.y} Q ${photon.x + 6} ${photon.y + 4}, ${photon.x + 12} ${photon.y}`}
                 stroke="#fde047"
                 strokeWidth="1.5"
                 fill="none"
-                opacity="0.6"
+                opacity={0.6}
               />
             </g>
           ))}
 
-          {/* === MAGNIFIER LENS (if enabled) === */}
           {showMagnifier && useMagnifier && (
             <g transform={`translate(${(lightX + cellX) / 2}, ${(lightY + cellY) / 2})`}>
-              {/* Lens body */}
               <ellipse rx={30} ry={50} fill="url(#solcLensGradient)" stroke="#0ea5e9" strokeWidth={3} />
-              {/* Lens highlight */}
-              <ellipse rx={20} ry={35} fill="none" stroke="#bae6fd" strokeWidth={1} opacity="0.5" />
-              {/* Focus lines */}
-              <line x1={-25} y1={-40} x2={0} y2={0} stroke="#fcd34d" strokeWidth="1" strokeDasharray="4,2" opacity="0.4" />
-              <line x1={25} y1={-40} x2={0} y2={0} stroke="#fcd34d" strokeWidth="1" strokeDasharray="4,2" opacity="0.4" />
-              {/* Label */}
+              <ellipse rx={20} ry={35} fill="none" stroke="#bae6fd" strokeWidth={1} opacity={0.5} />
+              <line x1={-25} y1={-40} x2={0} y2={0} stroke="#fcd34d" strokeWidth="1" strokeDasharray="4,2" opacity={0.4} />
+              <line x1={25} y1={-40} x2={0} y2={0} stroke="#fcd34d" strokeWidth="1" strokeDasharray="4,2" opacity={0.4} />
               <text y={70} textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">
                 2.5x CONCENTRATOR
               </text>
             </g>
           )}
 
-          {/* === SOLAR CELL CROSS-SECTION === */}
+          {/* Solar Cell Cross-Section */}
           <g transform={`translate(${cellX}, ${cellY})`}>
-            {/* Cell frame/housing */}
             <rect x={-10} y={-30} width={cellWidth + 20} height={cellHeight + 50} rx={6} fill="#111827" stroke="#1f2937" strokeWidth={1.5} />
-
-            {/* Anti-reflective coating (top layer) */}
             <rect x={0} y={0} width={cellWidth} height={8} rx={2} fill="url(#solcARCoating)" filter="url(#solcInnerShadow)" />
             <text x={cellWidth + 15} y={6} fill="#06b6d4" fontSize="8" fontWeight="bold">AR Coating</text>
 
-            {/* Top metal contacts (finger electrodes) */}
             {[0, 1, 2, 3, 4, 5, 6].map(i => (
               <rect
                 key={`solcTopContact${i}`}
@@ -670,77 +709,62 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               />
             ))}
 
-            {/* N-Type Silicon Layer (top - electron rich) */}
             <rect x={0} y={8} width={cellWidth} height={45} fill="url(#solcNType)" />
-            <text x={-8} y={32} fill="#60a5fa" fontSize="9" fontWeight="bold" textAnchor="end">N-type</text>
-            <text x={-8} y={42} fill="#94a3b8" fontSize="7" textAnchor="end">(e- rich)</text>
+            <text x={-8} y={28} fill="#60a5fa" fontSize="9" fontWeight="bold" textAnchor="end">N-type</text>
+            <text x={-8} y={46} fill="#94a3b8" fontSize="8" textAnchor="end">(e- rich)</text>
 
-            {/* P-N Junction / Depletion Region */}
-            <rect x={0} y={53} width={cellWidth} height={20} fill="url(#solcDepletion)" filter="url(#solcDepletionGlow)" opacity="0.9" />
-            {/* Electric field arrows in depletion region */}
+            <rect x={0} y={53} width={cellWidth} height={20} fill="url(#solcDepletion)" filter="url(#solcDepletionGlow)" opacity={0.9} />
             {[40, 100, 160, 220].map((xPos, i) => (
               <g key={`solcEFieldArrow${i}`} transform={`translate(${xPos}, 63)`}>
                 <line x1={0} y1={-6} x2={0} y2={6} stroke="url(#solcEField)" strokeWidth={2} />
                 <polygon points="0,8 -4,2 4,2" fill="#a855f7" />
-                <text y={-10} textAnchor="middle" fill="#c4b5fd" fontSize="6">E</text>
               </g>
             ))}
-            <text x={cellWidth + 15} y={65} fill="#c084fc" fontSize="8" fontWeight="bold">Depletion</text>
-            <text x={cellWidth + 15} y={75} fill="#94a3b8" fontSize="7">Region</text>
+            <text x={cellWidth + 15} y={58} fill="#c084fc" fontSize="8" fontWeight="bold">Depletion</text>
+            <text x={cellWidth + 15} y={78} fill="#94a3b8" fontSize="8">Region (E Field)</text>
 
-            {/* P-Type Silicon Layer (bottom - hole rich) */}
             <rect x={0} y={73} width={cellWidth} height={60} fill="url(#solcPType)" />
-            <text x={-8} y={100} fill="#fb923c" fontSize="9" fontWeight="bold" textAnchor="end">P-type</text>
-            <text x={-8} y={110} fill="#94a3b8" fontSize="7" textAnchor="end">(h+ rich)</text>
+            <text x={-8} y={95} fill="#fb923c" fontSize="9" fontWeight="bold" textAnchor="end">P-type</text>
+            <text x={-8} y={115} fill="#94a3b8" fontSize="8" textAnchor="end">(h+ rich)</text>
 
-            {/* Bottom metal contact (back electrode) */}
             <rect x={0} y={133} width={cellWidth} height={10} rx={2} fill="url(#solcMetalContact)" />
             <text x={cellWidth + 15} y={140} fill="#9ca3af" fontSize="8">Back Contact</text>
 
-            {/* === ELECTRON-HOLE PAIR GENERATION ANIMATION === */}
             {ehPairs.map((pair, i) => {
               const animTime = ((Date.now() / 1000) + pair.delay) % 2;
               const showPair = animTime < 1.5 && output.effectiveIntensity > 0.2;
-              const electronY = pair.y - Math.min(animTime * 30, 35);
-              const holeY = pair.y + Math.min(animTime * 25, 30);
+              // Ensure minimum 25px separation between particles at all times
+              const electronY = pair.y - 15 - Math.min(animTime * 30, 35);
+              const holeY = pair.y + 15 + Math.min(animTime * 25, 30);
 
               if (!showPair) return null;
 
               return (
                 <g key={`solcEHPair${i}`} opacity={Math.max(0, 1 - animTime / 1.5)}>
-                  {/* Photon absorption flash */}
                   {animTime < 0.3 && (
                     <circle cx={pair.x - cellX} cy={pair.y - cellY} r={10 * (1 - animTime / 0.3)} fill="#fef9c3" opacity={0.8} filter="url(#solcPhotonBlur)" />
                   )}
-
-                  {/* Electron (moves up toward N-type) */}
                   <g filter="url(#solcParticleGlow)">
                     <circle cx={pair.x - cellX} cy={electronY - cellY} r={6} fill="url(#solcElectronGlow)" />
                     <circle cx={pair.x - cellX} cy={electronY - cellY} r={3} fill="#93c5fd" />
-                    <text x={pair.x - cellX} y={electronY - cellY + 2} textAnchor="middle" fill="#1e3a8a" fontSize="6" fontWeight="bold">e-</text>
                   </g>
-
-                  {/* Hole (moves down toward P-type) */}
                   <g filter="url(#solcParticleGlow)">
                     <circle cx={pair.x - cellX} cy={holeY - cellY} r={6} fill="url(#solcHoleGlow)" />
-                    <circle cx={pair.x - cellX} cy={holeY - cellY} r={3} fill="#fed7aa" stroke="#ea580c" strokeWidth={1} fill-opacity="0.3" />
-                    <text x={pair.x - cellX} y={holeY - cellY + 2} textAnchor="middle" fill="#7c2d12" fontSize="6" fontWeight="bold">h+</text>
+                    <circle cx={pair.x - cellX} cy={holeY - cellY} r={3} fill="#fed7aa" stroke="#ea580c" strokeWidth={1} fillOpacity={0.3} />
                   </g>
                 </g>
               );
             })}
 
-            {/* Current flow indicators */}
             <g transform={`translate(${cellWidth + 5}, 0)`}>
               <line x1={5} y1={10} x2={5} y2={130} stroke="#22c55e" strokeWidth={2} strokeDasharray="6,3">
                 <animate attributeName="stroke-dashoffset" values="0;-18" dur="0.8s" repeatCount="indefinite" />
               </line>
               <polygon points="5,-5 0,5 10,5" fill="#22c55e" />
-              <text x={15} y={70} fill="#22c55e" fontSize="8" fontWeight="bold">I</text>
+              <text x={15} y={110} fill="#22c55e" fontSize="8" fontWeight="bold">I</text>
             </g>
           </g>
 
-          {/* === DISTANCE INDICATOR === */}
           <g transform={`translate(${(lightX + cellX) / 2}, ${height - 50})`}>
             <line x1={-80} y1={0} x2={80} y2={0} stroke="#475569" strokeWidth={1} />
             <line x1={-80} y1={-5} x2={-80} y2={5} stroke="#475569" strokeWidth={2} />
@@ -750,47 +774,35 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
             </text>
           </g>
 
-          {/* === OUTPUT DISPLAY PANEL === */}
           <g transform="translate(10, 260)">
             <rect width={145} height={130} rx={8} fill="url(#solcOutputPanel)" stroke="#f59e0b" strokeWidth={1.5} />
             <text x={72} y={20} textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">OUTPUT READINGS</text>
-
             <line x1={10} y1={28} x2={135} y2={28} stroke="#334155" strokeWidth={1} />
-
             <text x={15} y={48} fill="#94a3b8" fontSize="9">Voltage:</text>
             <text x={130} y={48} textAnchor="end" fill="#f8fafc" fontSize="11" fontWeight="bold">{output.voltage.toFixed(2)} V</text>
-
             <text x={15} y={68} fill="#94a3b8" fontSize="9">Current:</text>
             <text x={130} y={68} textAnchor="end" fill="#f8fafc" fontSize="11" fontWeight="bold">{output.current.toFixed(1)} mA</text>
-
             <text x={15} y={88} fill="#94a3b8" fontSize="9">Power:</text>
             <text x={130} y={88} textAnchor="end" fill="#10b981" fontSize="12" fontWeight="bold">{output.power.toFixed(1)} mW</text>
-
             <line x1={10} y1={96} x2={135} y2={96} stroke="#334155" strokeWidth={1} />
-
             <text x={15} y={114} fill="#94a3b8" fontSize="8">Efficiency:</text>
             <text x={130} y={114} textAnchor="end" fill="#06b6d4" fontSize="10" fontWeight="bold">{output.efficiency.toFixed(1)}%</text>
           </g>
 
-          {/* === LEGEND === */}
           <g transform={`translate(${width - 120}, 15)`}>
             <rect x={-10} y={-10} width={125} height={85} rx={6} fill="rgba(15,23,42,0.9)" stroke="#334155" />
             <text x={52} y={8} textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">LEGEND</text>
-
             <circle cx={10} cy={28} r={5} fill="url(#solcElectronGlow)" />
             <text x={22} y={31} fill="#60a5fa" fontSize="8">Electron (e-)</text>
-
             <circle cx={10} cy={48} r={5} fill="url(#solcHoleGlow)" />
             <text x={22} y={51} fill="#fb923c" fontSize="8">Hole (h+)</text>
-
             <circle cx={10} cy={68} r={5} fill="url(#solcPhotonGlow)" />
             <text x={22} y={71} fill="#fcd34d" fontSize="8">Photon</text>
           </g>
 
-          {/* === PANEL ANGLE INDICATOR === */}
           <g transform={`translate(${cellX + 140}, ${cellY + cellHeight + 35})`}>
             <text textAnchor="middle" fill="#94a3b8" fontSize="9">
-              Panel Angle: {panelAngle}deg from perpendicular
+              Panel Angle: {panelAngle} deg from perpendicular
             </text>
           </g>
         </svg>
@@ -847,7 +859,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
           step="5"
           value={lightDistance}
           onChange={(e) => setLightDistance(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -862,7 +874,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
           step="5"
           value={panelAngle}
           onChange={(e) => setPanelAngle(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -877,7 +889,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
           step="5"
           value={lightIntensity}
           onChange={(e) => setLightIntensity(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -917,172 +929,336 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  // Bottom navigation bar
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
+    const handleBack = () => {
+      if (currentIdx > 0) {
+        goToPhase(phaseOrder[currentIdx - 1]);
+      }
+    };
+
+    const handleNext = () => {
+      if (!canGoNext) return;
+      if (onNext) {
+        onNext();
+      } else if (currentIdx < phaseOrder.length - 1) {
+        goToPhase(phaseOrder[currentIdx + 1]);
+      }
+    };
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px',
+        flexShrink: 0
+      }}>
+        <button
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
+            opacity: currentIdx > 0 ? 1 : 0.3,
+            minHeight: '44px'
+          }}
+          onClick={handleBack}
+        >
+          ← Back
+        </button>
+
+        <span style={{
+          fontSize: '12px',
+          color: colors.textMuted,
+          fontWeight: 600
+        }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          style={{
+            padding: isMobile ? '10px 20px' : '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: isMobile ? '13px' : '14px',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)` : colors.bgCardLight,
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
+            minHeight: '44px'
+          }}
+          onClick={handleNext}
+        >
+          {nextLabel} →
+        </button>
+      </div>
+    );
+  };
+
+  // Progress bar header
+  const renderProgressBar = () => (
     <div style={{
+      flexShrink: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: isMobile ? '8px 12px' : '10px 16px',
+      backgroundColor: colors.bgCard,
+      borderBottom: `1px solid ${colors.border}`,
+      position: 'relative',
+      zIndex: 10,
+      gap: '8px'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+        <button
+          onClick={goBack}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '44px',
+            height: '44px',
+            borderRadius: '8px',
+            backgroundColor: currentIdx > 0 ? colors.bgCardLight : 'transparent',
+            border: currentIdx > 0 ? `1px solid ${colors.border}` : '1px solid transparent',
+            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+            cursor: currentIdx > 0 ? 'pointer' : 'default',
+            opacity: currentIdx > 0 ? 1 : 0.4,
+            flexShrink: 0,
+            transition: 'all 0.2s ease'
+          }}
+          title={currentIdx > 0 ? `Back to ${phaseLabels[phaseOrder[currentIdx - 1]]}` : 'No previous step'}
+        >
+          <span style={{ fontSize: '14px' }}>←</span>
+        </button>
+      </div>
+
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        flex: 1,
+        justifyContent: 'center'
+      }}>
+        {phaseOrder.map((p, i) => (
+          <div
+            key={p}
+            onClick={() => { if (i <= currentIdx) goToPhase(p); }}
+            role="button"
+            tabIndex={0}
+            style={{
+              width: i === currentIdx ? '20px' : '10px',
+              height: '10px',
+              borderRadius: '5px',
+              border: 'none',
+              backgroundColor: i < currentIdx
+                ? colors.success
+                : i === currentIdx
+                  ? colors.accent
+                  : colors.border,
+              cursor: i <= currentIdx ? 'pointer' : 'default',
+              transition: 'all 0.2s ease',
+              opacity: i > currentIdx ? 0.5 : 1,
+              minWidth: '10px',
+              minHeight: '10px'
+            }}
+            title={phaseLabels[p]}
+            aria-label={phaseLabels[p]}
+          />
+        ))}
+      </div>
+
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        flexShrink: 0
+      }}>
+        <span style={{
+          fontSize: '11px',
+          fontWeight: 700,
+          color: colors.accent,
+          padding: '4px 8px',
+          borderRadius: '6px',
+          backgroundColor: `${colors.accent}15`
+        }}>
+          {currentIdx + 1}/{phaseOrder.length}
+        </span>
+      </div>
+    </div>
+  );
+
+  // Premium wrapper with proper scroll structure
+  const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => (
+    <div style={{
+      height: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      backgroundColor: colors.bgPrimary,
+      color: colors.textPrimary,
       position: 'fixed',
-      bottom: 0,
+      top: 0,
       left: 0,
       right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
+      bottom: 0,
+      zIndex: 100
     }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
+      {renderProgressBar()}
+
+      <div style={{
+        flex: '1 1 0%',
+        minHeight: 0,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        position: 'relative',
+        WebkitOverflowScrolling: 'touch',
+        paddingBottom: '80px'
+      }}>
+        {children}
+      </div>
+
+      {footer}
     </div>
   );
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Solar Cell as a Physics Detector
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Does brightness scale linearly with output?
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                A solar cell converts light into electricity. But how does the power output
-                change when you move the light closer? When you tilt the panel? The answers
-                reveal fundamental physics!
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                Solar cells act as precise physics detectors for light intensity.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Try adjusting the distance and angle to see how power output changes!
-              </p>
-            </div>
-          </div>
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        <div style={{ textAlign: 'center', marginBottom: typo.sectionGap }}>
+          <h1 style={{ color: colors.accent, fontSize: typo.title, marginBottom: '8px' }}>
+            Solar Cell as a Physics Detector
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: typo.bodyLarge }}>
+            Discover how light intensity affects electrical output
+          </p>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
+
+        {renderVisualization(true)}
+
+        <div style={{
+          background: colors.bgCard,
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          marginTop: typo.sectionGap,
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: typo.body, lineHeight: 1.6, fontWeight: 400 }}>
+            A solar cell converts light into electricity. But how does the power output
+            change when you move the light closer? When you tilt the panel? The answers
+            reveal fundamental physics principles that engineers use every day!
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: typo.small, marginTop: '12px' }}>
+            Solar cells act as precise physics detectors for light intensity, following the inverse-square law and cosine dependence.
+          </p>
+        </div>
+
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          padding: '16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.accent}`,
+          marginTop: typo.sectionGap,
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: typo.body }}>
+            Try adjusting the distance and angle to see how power output changes!
+          </p>
+        </div>
+      </div>,
+      renderBottomBar(true, 'Start Discovery')
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        {renderVisualization(false)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A light source illuminating a solar panel. The panel converts light energy into
-              electrical current and voltage. The display shows real-time voltage (V), current (mA),
-              and power output (mW = V x I).
-            </p>
-          </div>
+        <div style={{
+          background: colors.bgCard,
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          marginTop: typo.sectionGap,
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: typo.heading }}>What to Watch:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.5 }}>
+            A light source illuminating a solar panel. The panel converts light energy into
+            electrical current and voltage. The display shows real-time voltage (V), current (mA),
+            and power output (mW = V x I).
+          </p>
+        </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              If you double the light brightness, what happens to the power output?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{ marginTop: typo.sectionGap }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: typo.heading }}>
+            If you double the light brightness, what happens to the power output?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {predictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: typo.body,
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
+      </div>,
+      renderBottomBar(!!prediction, 'Test My Prediction')
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Solar Cell Response</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust distance, angle, and intensity to discover the physics
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Move light from 20cm to 100cm - how does power change?</li>
-              <li>Keep distance fixed, tilt panel from 0 to 80 degrees</li>
-              <li>Find the combination for maximum power output</li>
-              <li>Note: current changes more than voltage!</li>
-            </ul>
-          </div>
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        <div style={{ textAlign: 'center', marginBottom: typo.sectionGap }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: typo.heading }}>Explore Solar Cell Response</h2>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
+            Adjust distance, angle, and intensity to discover the physics. Higher values result in more power output.
+          </p>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
+
+        {renderVisualization(true)}
+        {renderControls()}
+
+        <div style={{
+          background: colors.bgCard,
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          marginTop: typo.sectionGap,
+        }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.bodyLarge }}>Try These Experiments:</h4>
+          <ul style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Move light from 20cm to 100cm - how does power change? This demonstrates the inverse-square law.</li>
+            <li>Keep distance fixed, tilt panel from 0 to 80 degrees - this shows the cosine dependence.</li>
+            <li>Find the combination for maximum power output - that's what engineers optimize!</li>
+            <li>Note: current changes more than voltage because photocurrent is proportional to intensity.</li>
+          </ul>
+        </div>
+      </div>,
+      renderBottomBar(true, 'Continue to Review')
     );
   }
 
@@ -1090,151 +1266,147 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'nonlinear';
 
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Power output depends on intensity, but through multiple factors: current is linear with intensity,
-              while voltage increases only logarithmically. The result is approximately linear for current, but the
-              overall system shows nonlinear behavior at extremes.
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+          marginBottom: typo.sectionGap,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontSize: typo.heading }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary, fontSize: typo.body }}>
+            Power output depends on intensity, but through multiple factors: current is linear with intensity,
+            while voltage increases only logarithmically. The result is approximately linear for current, but the
+            overall system shows nonlinear behavior at extremes.
+          </p>
+        </div>
+
+        {renderVisualization(false)}
+
+        <div style={{
+          background: colors.bgCard,
+          padding: '20px',
+          borderRadius: '12px',
+          marginTop: typo.sectionGap,
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.heading }}>The Physics of Solar Cells</h3>
+          <div style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Inverse Square Law:</strong> Light intensity
+              decreases as 1/r^2 from a point source. Moving twice as far means only 1/4 the intensity!
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Cosine Law:</strong> Effective intensity
+              depends on cos(theta) where theta is the angle from perpendicular. At 60 degrees, only 50%
+              of the light is captured.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Current vs Voltage:</strong> Photocurrent
+              is proportional to intensity (more photons = more electrons). Voltage increases only
+              logarithmically with intensity.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Power:</strong> P = V x I. Since V is nearly
+              constant and I is proportional to intensity, power is approximately proportional to intensity.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Solar Cells</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Inverse Square Law:</strong> Light intensity
-                decreases as 1/r^2 from a point source. Moving twice as far means only 1/4 the intensity!
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Cosine Law:</strong> Effective intensity
-                depends on cos(theta) where theta is the angle from perpendicular. At 60 degrees, only 50%
-                of the light is captured.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Current vs Voltage:</strong> Photocurrent
-                is proportional to intensity (more photons = more electrons). Voltage increases only
-                logarithmically with intensity.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Power:</strong> P = V x I. Since V is nearly
-                constant and I is proportional to intensity, power is approximately proportional to intensity.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
+      </div>,
+      renderBottomBar(true, 'Next: A Twist!')
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What if we add a magnifying lens to concentrate the light?
-            </p>
-          </div>
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        <div style={{ textAlign: 'center', marginBottom: typo.sectionGap }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.heading }}>The Twist</h2>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
+            What if we add a magnifying lens to concentrate the light?
+          </p>
+        </div>
 
-          {renderVisualization(false, true)}
+        {renderVisualization(false, true)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A magnifying lens is placed between the light source and the solar panel.
-              The lens concentrates the light, increasing the intensity hitting the panel
-              by about 2.5x. This is similar to concentrated solar power (CSP) systems.
-            </p>
-          </div>
+        <div style={{
+          background: colors.bgCard,
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          marginTop: typo.sectionGap,
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: typo.heading }}>What to Watch:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.5 }}>
+            A magnifying lens is placed between the light source and the solar panel.
+            The lens concentrates the light, increasing the intensity hitting the panel
+            by about 2.5x. This is similar to concentrated solar power (CSP) systems.
+          </p>
+        </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What will happen when we use the magnifier with indoor light?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{ marginTop: typo.sectionGap }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: typo.heading }}>
+            What will happen when we use the magnifier with indoor light?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {twistPredictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setTwistPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                  background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: typo.body,
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
+      </div>,
+      renderBottomBar(!!twistPrediction, 'Test My Prediction')
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test the Magnifier</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Toggle the magnifier and observe the output changes
-            </p>
-          </div>
-
-          {renderVisualization(true, true)}
-          {renderControls(true)}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              The magnifier increases effective intensity by concentrating light onto a smaller area.
-              With careful indoor use, this boosts power output significantly. In bright sunlight,
-              thermal management becomes critical!
-            </p>
-          </div>
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        <div style={{ textAlign: 'center', marginBottom: typo.sectionGap }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.heading }}>Test the Magnifier</h2>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
+            Toggle the magnifier and observe the output changes. When enabled, intensity increases by 2.5x.
+          </p>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
+
+        {renderVisualization(true, true)}
+        {renderControls(true)}
+
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.warning}`,
+          marginTop: typo.sectionGap,
+        }}>
+          <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.bodyLarge }}>Key Observation:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
+            The magnifier increases effective intensity by concentrating light onto a smaller area.
+            With careful indoor use, this boosts power output significantly. In bright sunlight,
+            thermal management becomes critical!
+          </p>
+        </div>
+      </div>,
+      renderBottomBar(true, 'See the Explanation')
     );
   }
 
@@ -1242,227 +1414,312 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'boost';
 
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              With indoor light, the magnifier safely boosts output! The concentrated light increases
-              current significantly, producing more power.
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+          marginBottom: typo.sectionGap,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontSize: typo.heading }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary, fontSize: typo.body }}>
+            With indoor light, the magnifier safely boosts output! The concentrated light increases
+            current significantly, producing more power.
+          </p>
+        </div>
+
+        {renderVisualization(false, true)}
+
+        <div style={{
+          background: colors.bgCard,
+          padding: '20px',
+          borderRadius: '12px',
+          marginTop: typo.sectionGap,
+        }}>
+          <h3 style={{ color: colors.warning, marginBottom: '12px', fontSize: typo.heading }}>Concentrated Solar Power</h3>
+          <div style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Concentration Factor:</strong> A simple
+              magnifier provides 2-3x concentration. Industrial concentrators can achieve 500-1000x!
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Thermal Challenge:</strong> In sunlight,
+              concentrated solar creates intense heat. Special multi-junction cells with cooling
+              systems are required for high concentration ratios.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Indoor Safety:</strong> With typical
+              indoor lighting (~500 lux vs 100,000 lux sunlight), magnification is safe and
+              demonstrates the principle without thermal risks.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Concentrated Solar Power</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Concentration Factor:</strong> A simple
-                magnifier provides 2-3x concentration. Industrial concentrators can achieve 500-1000x!
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Thermal Challenge:</strong> In sunlight,
-                concentrated solar creates intense heat. Special multi-junction cells with cooling
-                systems are required for high concentration ratios.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Indoor Safety:</strong> With typical
-                indoor lighting (~500 lux vs 100,000 lux sunlight), magnification is safe and
-                demonstrates the principle without thermal risks.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
+      </div>,
+      renderBottomBar(true, 'Apply This Knowledge')
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Solar cell physics applies across many technologies
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
-          </div>
+    const allComplete = completedApps.every(c => c);
+    const currentApp = realWorldApps[transferApp];
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        <div style={{ textAlign: 'center', marginBottom: typo.sectionGap }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: typo.heading }}>
+            Real-World Applications
+          </h2>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
+            Solar cell physics applies across many technologies
+          </p>
+          <p style={{ color: colors.textMuted, fontSize: typo.small, marginTop: '8px' }}>
+            Complete all 4 applications to unlock the test ({completedApps.filter(c => c).length}/4)
+          </p>
+        </div>
+
+        {/* App tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: typo.sectionGap, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {realWorldApps.map((app, idx) => (
+            <button
+              key={idx}
+              onClick={() => setTransferApp(idx)}
               style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: transferApp === idx ? `2px solid ${app.color}` : `1px solid ${colors.border}`,
+                background: transferApp === idx ? `${app.color}20` : 'transparent',
+                color: completedApps[idx] ? colors.success : colors.textSecondary,
+                cursor: 'pointer',
+                fontSize: typo.small,
+                fontWeight: transferApp === idx ? 700 : 400,
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
+              {app.icon} {completedApps[idx] && '✓'}
+            </button>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
+
+        {/* Current app content */}
+        <div style={{
+          background: colors.bgCard,
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          border: `1px solid ${currentApp.color}40`,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <span style={{ fontSize: '32px' }}>{currentApp.icon}</span>
+            <div>
+              <h3 style={{ color: colors.textPrimary, fontSize: typo.heading }}>{currentApp.title}</h3>
+              <p style={{ color: currentApp.color, fontSize: typo.small }}>{currentApp.tagline}</p>
+            </div>
+          </div>
+
+          <p style={{ color: colors.textSecondary, fontSize: typo.body, marginBottom: '12px' }}>{currentApp.description}</p>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body, marginBottom: '12px' }}>{currentApp.howItWorks}</p>
+          <p style={{ color: colors.textMuted, fontSize: typo.small, marginBottom: '12px' }}>Future Impact: {currentApp.futureImpact}</p>
+
+          <div style={{ background: `${currentApp.color}15`, padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: typo.body, fontWeight: 600 }}>Physics Connection:</p>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small }}>{currentApp.connection}</p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+            {currentApp.stats.map((stat, i) => (
+              <div key={i} style={{ background: colors.bgCardLight, padding: '8px 12px', borderRadius: '8px', textAlign: 'center', flex: '1 1 80px' }}>
+                <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: currentApp.color }}>{stat.value}</div>
+                <div style={{ fontSize: typo.label, color: colors.textMuted }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginBottom: '12px' }}>
+            <p style={{ color: colors.textMuted, fontSize: typo.small, marginBottom: '4px' }}>Companies:</p>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small }}>{currentApp.companies.join(' • ')}</p>
+          </div>
+
+          {!completedApps[transferApp] ? (
+            <button
+              onClick={() => {
+                const newCompleted = [...completedApps];
+                newCompleted[transferApp] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${currentApp.color} 0%, ${currentApp.color}dd 100%)`,
+                color: 'white',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontSize: typo.body,
+              }}
+            >
+              Got It!
+            </button>
+          ) : (
+            <div style={{ background: 'rgba(16, 185, 129, 0.2)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+              <span style={{ color: colors.success, fontWeight: 600 }}>✓ Application Complete</span>
+            </div>
+          )}
+        </div>
+
+        {/* Next app button */}
+        {transferApp < realWorldApps.length - 1 && (
+          <button
+            onClick={() => setTransferApp(transferApp + 1)}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              fontSize: typo.body,
+              marginTop: typo.elementGap,
+            }}
+          >
+            Next App →
+          </button>
+        )}
+      </div>,
+      renderBottomBar(allComplete, 'Take the Test')
     );
   }
 
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You\'ve mastered solar cell physics!' : 'Review the material and try again.'}
-              </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+      return renderPremiumWrapper(
+        <div style={{ padding: typo.pagePadding }}>
+          <div style={{
+            background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            padding: '24px',
+            borderRadius: '12px',
+            textAlign: 'center',
+            marginBottom: typo.sectionGap,
+          }}>
+            <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px', fontSize: typo.heading }}>
+              {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ color: colors.textSecondary, marginTop: '8px', fontSize: typo.body }}>
+              {testScore >= 8 ? 'You\'ve mastered solar cell physics!' : 'Review the material and try again.'}
+            </p>
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
+          {testQuestions.map((q, qIndex) => {
+            const userAnswer = testAnswers[qIndex];
+            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            return (
+              <div key={qIndex} style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`, marginBottom: '12px' }}>
+                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold', fontSize: typo.body }}>Question {qIndex + 1} of 10: {q.question}</p>
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontSize: typo.small }}>
+                    {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>,
+        renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
-            </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
-                  {opt.text}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
-            ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
-            )}
-          </div>
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ color: colors.textPrimary, fontSize: typo.heading }}>Knowledge Test</h2>
+          <span style={{ color: colors.textSecondary, fontSize: typo.body }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
         </div>
-      </div>
+        <p style={{ color: colors.textMuted, fontSize: typo.small, marginBottom: '12px' }}>
+          Test your understanding of solar cell physics. Apply the concepts of the inverse-square law, cosine dependence, and the relationship between voltage, current, and power that you explored in the simulation.
+        </p>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+          {testQuestions.map((_, i) => (
+            <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+          ))}
+        </div>
+        <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+          <p style={{ color: colors.textPrimary, fontSize: typo.bodyLarge, lineHeight: 1.5 }}>{currentQ.question}</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {currentQ.options.map((opt, oIndex) => (
+            <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: typo.body }}>
+              {opt.text}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0' }}>
+          <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+          {currentTestQuestion < testQuestions.length - 1 ? (
+            <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+          ) : (
+            <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+          )}
+        </div>
+      </div>,
+      null
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered solar cell physics and light detection</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Inverse-square law for light intensity (I proportional to 1/r^2)</li>
-              <li>Cosine dependence on angle of incidence</li>
-              <li>Current proportional to intensity, voltage nearly constant</li>
-              <li>Power = Voltage x Current</li>
-              <li>Concentrated solar power principles</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Modern solar cells achieve up to 47% efficiency using multi-junction designs and
-              concentration. Space missions use solar panels with tracking systems to maximize power.
-              The same physics applies to photodiodes used in optical communication, camera sensors,
-              and medical imaging devices!
-            </p>
-          </div>
-          {renderVisualization(true, true)}
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        <div style={{ textAlign: 'center', marginBottom: typo.sectionGap }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
+          <h1 style={{ color: colors.success, marginBottom: '8px', fontSize: typo.title }}>Mastery Achieved!</h1>
+          <p style={{ color: colors.textSecondary, marginBottom: '24px', fontSize: typo.bodyLarge }}>You've mastered solar cell physics and light detection</p>
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
+        <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: typo.sectionGap }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.heading }}>Key Concepts Mastered:</h3>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontSize: typo.body }}>
+            <li>Inverse-square law for light intensity (I proportional to 1/r^2)</li>
+            <li>Cosine dependence on angle of incidence</li>
+            <li>Current proportional to intensity, voltage nearly constant</li>
+            <li>Power = Voltage x Current</li>
+            <li>Concentrated solar power principles</li>
+          </ul>
+        </div>
+        <div style={{ background: 'rgba(245, 158, 11, 0.2)', padding: '20px', borderRadius: '12px', marginBottom: typo.sectionGap }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.heading }}>Beyond the Basics:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.6 }}>
+            Modern solar cells achieve up to 47% efficiency using multi-junction designs and
+            concentration. Space missions use solar panels with tracking systems to maximize power.
+            The same physics applies to photodiodes used in optical communication, camera sensors,
+            and medical imaging devices!
+          </p>
+        </div>
+        {renderVisualization(true, true)}
+      </div>,
+      renderBottomBar(true, 'Complete Game')
     );
   }
 
-  return null;
+  // Default fallback - return hook phase
+  return renderPremiumWrapper(
+    <div style={{ padding: typo.pagePadding }}>
+      <div style={{ textAlign: 'center', marginBottom: typo.sectionGap }}>
+        <h1 style={{ color: colors.accent, fontSize: typo.title, marginBottom: '8px' }}>
+          Solar Cell as a Physics Detector
+        </h1>
+        <p style={{ color: colors.textSecondary, fontSize: typo.bodyLarge }}>
+          Discover how light intensity affects electrical output
+        </p>
+      </div>
+      {renderVisualization(true)}
+    </div>,
+    renderBottomBar(true, 'Start Discovery')
+  );
 };
 
 export default SolarCellRenderer;

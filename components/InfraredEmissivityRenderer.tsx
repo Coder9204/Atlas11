@@ -339,7 +339,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
+    textSecondary: '#e2e8f0',
     textMuted: '#6B7280',
     border: '#2a2a3a',
     hot: '#EF4444',
@@ -403,7 +403,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     const infrared = viewMode === 'infrared';
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="irTempScale" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#1e3a8a" />
@@ -471,7 +471,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         {infrared && (
           <g transform={`translate(${width - 50}, 50)`}>
             <rect x="0" y="0" width="35" height="140" rx="4" fill="#111827" stroke="#334155" strokeWidth="1" />
-            <text x="17" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="600">TEMP</text>
+            <text x="17" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="8" fontWeight="600">TEMP</text>
             <rect x="5" y="20" width="12" height="100" rx="2" fill="url(#irTempScale)" />
             <text x="22" y="30" fill="#ef4444" fontSize="8">60C</text>
             <text x="22" y="70" fill="#fbbf24" fontSize="8">30C</text>
@@ -543,7 +543,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
                   key={i}
                   d={`M ${50 + i * 20} 22 Q ${54 + i * 20} ${8 - Math.sin(animPhase + i) * 5} ${50 + i * 20} ${-5 - Math.sin(animPhase + i) * 5}`}
                   fill="none"
-                  stroke="#94a3b8"
+                  stroke="#e2e8f0"
                   strokeWidth="2"
                   strokeLinecap="round"
                   opacity="0.5"
@@ -613,7 +613,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           <rect x="0" y="0" width={width - 30} height="50" rx="6" fill="#111827" stroke="#334155" strokeWidth="1" />
 
           <g transform="translate(15, 12)">
-            <text fill="#94a3b8" fontSize="9" fontWeight="600">
+            <text fill="#e2e8f0" fontSize="9" fontWeight="600">
               {infrared ? 'APPARENT TEMP' : 'ACTUAL TEMP'}
             </text>
             <text y="18" fill={infrared ? '#f97316' : '#22d3ee'} fontSize="14" fontWeight="700">
@@ -622,14 +622,14 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           </g>
 
           <g transform="translate(120, 12)">
-            <text fill="#94a3b8" fontSize="9" fontWeight="600">EMISSIVITY</text>
+            <text fill="#e2e8f0" fontSize="9" fontWeight="600">EMISSIVITY</text>
             <text y="18" fill="#a855f7" fontSize="14" fontWeight="700">
               e = {props.emissivity.toFixed(2)}
             </text>
           </g>
 
           <g transform="translate(220, 12)">
-            <text fill="#94a3b8" fontSize="9" fontWeight="600">STATUS</text>
+            <text fill="#e2e8f0" fontSize="9" fontWeight="600">STATUS</text>
             <text y="18" fill={props.emissivity > 0.5 ? '#10b981' : '#eab308'} fontSize="11" fontWeight="600">
               {props.emissivity > 0.5 ? 'High IR Emission' : 'Low Emission / Reflective'}
             </text>
@@ -649,7 +649,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     const shinyApparent = 0.1 * 60 + 0.9 * ambientTemp;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="twistTempScale" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#1e3a8a" />
@@ -680,7 +680,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
         {/* Header */}
         <rect x="0" y="0" width={width} height="35" fill={infrared ? '#0f172a' : '#111827'} rx="12" />
-        <text x={width/2} y="14" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600">
+        <text x={width/2} y="14" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="600">
           EMISSIVITY COMPARISON
         </text>
         <text x={width/2} y="28" textAnchor="middle" fill={infrared ? '#f97316' : '#22d3ee'} fontSize="12" fontWeight="600">
@@ -719,7 +719,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
               key={i}
               d={`M ${40 + i * 15} 18 Q ${43 + i * 15} ${6 - Math.sin(animPhase + i) * 4} ${40 + i * 15} ${-4 - Math.sin(animPhase + i) * 4}`}
               fill="none"
-              stroke="#94a3b8"
+              stroke="#e2e8f0"
               strokeWidth="2"
               strokeLinecap="round"
               opacity="0.5"
@@ -787,7 +787,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
               key={i}
               d={`M ${40 + i * 15} 18 Q ${43 + i * 15} ${6 - Math.sin(animPhase + i) * 4} ${40 + i * 15} ${-4 - Math.sin(animPhase + i) * 4}`}
               fill="none"
-              stroke="#94a3b8"
+              stroke="#e2e8f0"
               strokeWidth="2"
               strokeLinecap="round"
               opacity="0.5"
@@ -810,7 +810,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
               <text x={(width-30)/2} y="14" textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="600">
                 SAME ACTUAL TEMPERATURE - DIFFERENT IR READINGS!
               </text>
-              <text x={(width-30)/2} y="27" textAnchor="middle" fill="#94a3b8" fontSize="9">
+              <text x={(width-30)/2} y="27" textAnchor="middle" fill="#e2e8f0" fontSize="9">
                 Shiny surface reflects the cold room (~{ambientTemp}C) instead of emitting its true 60C
               </text>
             </>
@@ -819,7 +819,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
               <text x={(width-30)/2} y="14" textAnchor="middle" fill="#22d3ee" fontSize="10" fontWeight="600">
                 Both cups at 60C - Steam rising from both
               </text>
-              <text x={(width-30)/2} y="27" textAnchor="middle" fill="#94a3b8" fontSize="9">
+              <text x={(width-30)/2} y="27" textAnchor="middle" fill="#e2e8f0" fontSize="9">
                 Switch to IR view to see how emissivity affects thermal camera readings
               </text>
             </>
@@ -829,16 +829,43 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1001,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>🌡️</span>
+        <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '16px' }}>Infrared Emissivity</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ color: '#e2e8f0', fontSize: '14px' }}>{phaseLabels[phase]}</span>
+        <span style={{ color: '#e2e8f0', fontSize: '14px' }}>({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})</span>
+      </div>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '56px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -888,6 +915,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -905,8 +933,11 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -972,10 +1003,13 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -1082,10 +1116,13 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Thermal Camera Simulator
           </h2>
@@ -1173,6 +1210,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
                   color: 'white',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Normal View
@@ -1187,6 +1225,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
                   color: 'white',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 IR Camera
@@ -1210,6 +1249,19 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             </div>
           )}
 
+          {/* Real-world relevance */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Real-World Application:</strong> Thermal cameras are used in building inspections, firefighting, and medical diagnostics. Understanding emissivity is essential for accurate temperature readings in the field.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
@@ -1230,10 +1282,13 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             How Thermal Imaging Works
           </h2>
@@ -1271,7 +1326,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
               Key Insight: Your Prediction
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              {prediction === 'b' ? 'You were correct!' : 'The correct answer was B.'} Your body temperature creates infrared radiation that the camera detects. The warmer you are, the more IR you emit.
+              You predicted: "{prediction === 'a' ? 'The color of your skin determines brightness' : prediction === 'b' ? 'Body temperature creates IR radiation' : 'Heat conduction speed'}".
+              {prediction === 'b' ? ' You were correct!' : ' The correct answer was B.'} Your body temperature creates infrared radiation that the camera detects. The warmer you are, the more IR you emit.
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
               But wait... if temperature determines IR emission, why would two objects at the <em>same</em> temperature look different on a thermal camera?
@@ -1304,10 +1360,13 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.hot}22`,
             borderRadius: '12px',
@@ -1403,10 +1462,13 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             The Emissivity Effect
           </h2>
@@ -1436,6 +1498,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
                   color: 'white',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Normal View
@@ -1450,6 +1513,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
                   color: 'white',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 IR Camera
@@ -1492,10 +1556,13 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Understanding Emissivity
           </h2>
@@ -1588,19 +1655,26 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} - Explore all applications to continue
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1705,6 +1779,34 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
                 </div>
               ))}
             </div>
+
+            {/* Got It button for current app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Auto-advance to next uncompleted app
+                const nextUncompleted = completedApps.findIndex((c, i) => !c && i > selectedApp);
+                if (nextUncompleted !== -1) {
+                  setSelectedApp(nextUncompleted);
+                } else {
+                  const firstUncompleted = completedApps.findIndex((c, i) => !c && i !== selectedApp);
+                  if (firstUncompleted !== -1) {
+                    setSelectedApp(firstUncompleted);
+                  }
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginTop: '16px',
+                background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, ${colors.hot})`,
+              }}
+            >
+              {completedApps[selectedApp] ? 'Got It!' : 'Got It - Mark Complete'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1734,7 +1836,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1790,7 +1892,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',

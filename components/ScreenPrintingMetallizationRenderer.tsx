@@ -642,7 +642,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
           <g transform={`translate(${cellX - 20 + squeegeePos}, ${cellY - 50})`} filter="url(#scrpmSqueegeeGlow)">
             <rect x="0" y="0" width="8" height="40" rx="2" fill="url(#scrpmSqueegeeHandle)" />
             <rect x="-2" y="35" width="12" height="20" rx="1" fill="url(#scrpmSqueegee)" />
-            <text x="4" y="-5" fill={colors.success} fontSize="7" textAnchor="middle">SQUEEGEE</text>
+            <text x="4" y="-5" fill={colors.success} fontSize="8" textAnchor="middle">SQUEEGEE</text>
           </g>
 
           {/* Silver paste reservoir */}
@@ -984,6 +984,11 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   // Progress bar component
   const renderProgressBar = () => (
     <div style={{
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1001,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -1054,13 +1059,14 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      zIndex: 1000,
+      zIndex: 1001,
     }}>
       <button
         onClick={goBack}
         disabled={currentIdx === 0}
         style={{
           padding: '12px 24px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: `1px solid ${colors.textMuted}`,
           background: 'transparent',
@@ -1074,7 +1080,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
       >
         Back
       </button>
-      <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+      <span style={{ color: colors.textSecondary, fontSize: '12px' }}>
         {phaseLabels[phase]}
       </span>
       <button
@@ -1082,6 +1088,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
         disabled={!canProceed}
         style={{
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
@@ -1100,9 +1107,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Screen Printing Metallization
@@ -1151,9 +1158,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1205,9 +1212,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Metallization Optimizer</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1243,9 +1250,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     const wasCorrect = prediction === 'tradeoff';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1302,9 +1309,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1363,9 +1370,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Compare Designs</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1401,9 +1408,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     const wasCorrect = twistPrediction === 'depends';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1454,9 +1461,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1521,9 +1528,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1561,13 +1568,13 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1656,9 +1663,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

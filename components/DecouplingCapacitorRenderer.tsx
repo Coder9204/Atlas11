@@ -292,13 +292,14 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Animation loop
+  // Animation loop - only run during phases that need it
   useEffect(() => {
+    if (phase !== 'play' && phase !== 'twist_play') return;
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
     }, 50);
     return () => clearInterval(timer);
-  }, []);
+  }, [phase]);
 
   // Trigger transient periodically in play phase
   useEffect(() => {
@@ -311,7 +312,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
     }
   }, [phase]);
 
-  // Premium design colors
+  // Premium design colors (high contrast for accessibility)
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -322,8 +323,8 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast for accessibility (brightness >= 180)
+    textMuted: '#cbd5e1', // Muted text with high contrast
     border: '#2a2a3a',
   };
 
@@ -343,7 +344,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Frequency Lab',
+    twist_play: 'Explore Frequency',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -410,183 +411,229 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   const icStatus = getICStatus();
 
   // IC and Decoupling Visualization SVG Component
-  const ICVisualization = ({ showDecoupling = true, interactive = false }) => {
+  const ICVisualization = ({ showDecoupling = true, interactive = false }: { showDecoupling?: boolean; interactive?: boolean }) => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 280 : 340;
+    const viewBox = `0 0 ${width} ${height}`;
 
     // Calculate positions
     const icCenterX = width / 2;
-    const icCenterY = height / 2 - 20;
+    const icCenterY = height * 0.3;
     const icSize = isMobile ? 80 : 100;
 
     // Capacitor position based on distance slider
     const capDistance = 30 + (distanceFromIC / 25) * (isMobile ? 60 : 80);
 
-    // Voltage ripple visualization
-    const rippleAmplitude = Math.min(voltageRipple * 30, 30);
-    const time = animationFrame * 0.1;
-
-    // Generate voltage waveform
-    const waveformPoints: string[] = [];
+    // Voltage waveform area - uses significant portion of SVG
+    const waveformTop = height * 0.45;
+    const waveformBottom = height - 25;
+    const waveformHeight = waveformBottom - waveformTop;
     const waveformWidth = isMobile ? 280 : 400;
-    const waveformY = height - 50;
+    const waveformLeft = 50;
+
+    // Zoomed Y-axis: map voltage range for visible droop
+    // Use a range that always shows significant vertical spread
+    // Zoomed Y-axis: tight range to show ripple clearly (>= 25% vertical utilization)
+    const rippleDisplay = Math.max(voltageRipple, 0.1);
+    const vMax = supplyVoltage + rippleDisplay * 0.3;
+    const vMin = supplyVoltage - rippleDisplay * 1.3;
+    const voltToY = (v: number) => {
+      const frac = (v - vMin) / (vMax - vMin);
+      return waveformBottom - frac * waveformHeight;
+    };
+
+    // Generate voltage waveform with visible droop
+    const waveformPoints: string[] = [];
     for (let i = 0; i < 50; i++) {
-      const x = 40 + (i / 50) * waveformWidth;
-      const noise = transientActive && i > 20 && i < 35
-        ? -rippleAmplitude * Math.exp(-Math.abs(i - 25) * 0.3)
-        : Math.sin(time + i * 0.3) * (rippleAmplitude * 0.1);
-      const y = waveformY - 20 - (supplyVoltage - voltageRipple * 0.5) * 8 + noise;
-      waveformPoints.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+      const x = waveformLeft + (i / 50) * waveformWidth;
+      const t = i / 50;
+      // Create a visible voltage droop in the middle region
+      const droopCenter = 0.55;
+      const droopWidth = 0.15;
+      const droopFactor = Math.exp(-Math.pow((t - droopCenter) / droopWidth, 2));
+      const droop = voltageRipple * droopFactor;
+      const voltage = supplyVoltage - droop;
+      const y = voltToY(voltage);
+      waveformPoints.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
     }
 
+    // Interactive marker: shows current operating point at droop
+    const markerX = waveformLeft + 0.55 * waveformWidth;
+    const markerVoltage = supplyVoltage - voltageRipple;
+    const markerY = voltToY(markerVoltage);
+
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width="100%" height={height} viewBox={viewBox} preserveAspectRatio="xMidYMid meet" style={{ maxWidth: `${width}px`, background: colors.bgCard, borderRadius: '12px' }}>
+        <title>Decoupling Capacitor Circuit Visualization</title>
+        <defs>
+          <linearGradient id="powerTraceGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={colors.accent} />
+            <stop offset="100%" stopColor="#10B981" />
+          </linearGradient>
+          <linearGradient id="waveformGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="100%" stopColor="#EF4444" />
+          </linearGradient>
+          <radialGradient id="markerGlow">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="0" />
+          </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="chipShadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.5)" />
+          </filter>
+        </defs>
+
         {/* Power Supply */}
-        <g>
-          <rect x="20" y={icCenterY - 25} width="40" height="50" rx="4" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <text x="40" y={icCenterY - 5} fill={colors.textPrimary} fontSize="10" textAnchor="middle">VCC</text>
-          <text x="40" y={icCenterY + 10} fill={colors.accent} fontSize="12" textAnchor="middle">3.3V</text>
-        </g>
+        <rect x="20" y={icCenterY - 25} width="40" height="50" rx="4" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+        <text x="40" y={icCenterY - 5} fill={colors.textPrimary} fontSize="11" textAnchor="middle">VCC</text>
+        <text x="40" y={icCenterY + 10} fill={colors.accent} fontSize="12" textAnchor="middle">3.3V</text>
 
         {/* Power trace to capacitor/IC */}
-        <line x1="60" y1={icCenterY} x2={icCenterX - icSize/2 - capDistance} y2={icCenterY} stroke={colors.accent} strokeWidth="3" />
+        <line x1="60" y1={icCenterY} x2={icCenterX - icSize/2 - capDistance} y2={icCenterY} stroke="url(#powerTraceGrad)" strokeWidth="3" />
 
         {/* Ground trace */}
         <line x1="60" y1={icCenterY + 40} x2={width - 40} y2={icCenterY + 40} stroke={colors.textMuted} strokeWidth="2" />
-        <text x={width - 30} y={icCenterY + 44} fill={colors.textMuted} fontSize="10">GND</text>
+        <text x={width - 30} y={icCenterY + 44} fill={colors.textMuted} fontSize="11">GND</text>
 
         {/* Decoupling Capacitor */}
         {showDecoupling && decouplingEnabled && (
-          <g transform={`translate(${icCenterX - icSize/2 - capDistance}, ${icCenterY - 15})`}>
-            <rect x="-8" y="0" width="16" height="30" rx="2" fill={colors.warning} stroke={colors.textPrimary} strokeWidth="1" />
-            <line x1="0" y1="0" x2="0" y2="-10" stroke={colors.accent} strokeWidth="2" />
-            <line x1="0" y1="30" x2="0" y2="55" stroke={colors.textMuted} strokeWidth="2" />
-            <text x="0" y="50" fill={colors.textSecondary} fontSize="9" textAnchor="middle">{capacitorValue}nF</text>
+          <>
+            <rect x={icCenterX - icSize/2 - capDistance - 8} y={icCenterY - 15} width="16" height="30" rx="2" fill={colors.warning} stroke={colors.textPrimary} strokeWidth="1" />
+            <line x1={icCenterX - icSize/2 - capDistance} y1={icCenterY - 15} x2={icCenterX - icSize/2 - capDistance} y2={icCenterY - 25} stroke={colors.accent} strokeWidth="2" />
+            <line x1={icCenterX - icSize/2 - capDistance} y1={icCenterY + 15} x2={icCenterX - icSize/2 - capDistance} y2={icCenterY + 40} stroke={colors.textMuted} strokeWidth="2" />
+            <text x={icCenterX - icSize/2 - capDistance} y={icCenterY + 28} fill={colors.textSecondary} fontSize="11" textAnchor="middle">{capacitorValue}nF</text>
 
             {/* Capacitor charge indicator */}
             <rect
-              x="-6"
-              y={2 + (transientActive ? 8 : 0)}
+              x={icCenterX - icSize/2 - capDistance - 6}
+              y={icCenterY - 13 + (transientActive ? 8 : 0)}
               width="12"
               height={26 - (transientActive ? 8 : 0)}
               fill={colors.accent}
               opacity="0.6"
               style={{ transition: 'all 0.1s' }}
             />
-          </g>
+          </>
         )}
 
         {/* Power trace from cap to IC */}
         {showDecoupling && decouplingEnabled && (
           <line
             x1={icCenterX - icSize/2 - capDistance + 8}
-            y1={icCenterY - 25}
+            y1={icCenterY}
             x2={icCenterX - icSize/2 - 5}
-            y2={icCenterY - 25}
+            y2={icCenterY}
             stroke={colors.accent}
             strokeWidth="2"
-            strokeDasharray={distanceFromIC > 15 ? "4,2" : "none"}
+            strokeDasharray={distanceFromIC > 15 ? "4 2" : "none"}
           />
         )}
 
         {/* Trace inductance indicator */}
         {distanceFromIC > 10 && (
-          <g transform={`translate(${icCenterX - icSize/2 - capDistance/2}, ${icCenterY - 35})`}>
+          <>
             <path
-              d="M-10,0 Q-5,-8 0,0 Q5,8 10,0"
+              d={`M ${icCenterX - icSize/2 - capDistance/2 - 10} ${icCenterY - 35} Q ${icCenterX - icSize/2 - capDistance/2 - 5} ${icCenterY - 43} ${icCenterX - icSize/2 - capDistance/2} ${icCenterY - 35} Q ${icCenterX - icSize/2 - capDistance/2 + 5} ${icCenterY - 27} ${icCenterX - icSize/2 - capDistance/2 + 10} ${icCenterY - 35}`}
               fill="none"
               stroke={colors.warning}
               strokeWidth="1.5"
             />
-            <text x="0" y="-10" fill={colors.warning} fontSize="8" textAnchor="middle">L={distanceFromIC}nH</text>
-          </g>
+            <text x={icCenterX - icSize/2 - capDistance/2} y={icCenterY - 48} fill={colors.warning} fontSize="11" textAnchor="middle">L={distanceFromIC}nH</text>
+          </>
         )}
 
         {/* IC Chip */}
-        <g transform={`translate(${icCenterX}, ${icCenterY})`}>
-          {/* IC body */}
-          <rect
-            x={-icSize/2}
-            y={-icSize/2}
-            width={icSize}
-            height={icSize}
-            rx="8"
-            fill={colors.bgSecondary}
-            stroke={transientActive ? icStatus.color : colors.textSecondary}
-            strokeWidth="3"
-            style={{
-              filter: transientActive && ripplePercent > 10 ? `drop-shadow(0 0 ${ripplePercent}px ${colors.error})` : 'none',
-              transition: 'all 0.1s'
-            }}
-          />
+        <rect
+          x={icCenterX - icSize/2}
+          y={icCenterY - icSize/2}
+          width={icSize}
+          height={icSize}
+          rx="8"
+          fill={colors.bgSecondary}
+          stroke={ripplePercent > 10 ? '#EF4444' : ripplePercent > 5 ? '#F59E0B' : '#10B981'}
+          strokeWidth="3"
+          filter="url(#chipShadow)"
+          style={{ transition: 'all 0.1s' }}
+        />
 
-          {/* IC pins */}
-          {[-1, 0, 1].map(i => (
-            <g key={`pin-${i}`}>
-              <rect x={-icSize/2 - 8} y={i * 15 - 4} width="8" height="8" fill={colors.textMuted} />
-              <rect x={icSize/2} y={i * 15 - 4} width="8" height="8" fill={colors.textMuted} />
-            </g>
-          ))}
-
-          {/* VCC/GND pins highlighted */}
-          <rect x={-icSize/2 - 8} y={-icSize/2 + 5} width="8" height="8" fill={colors.accent} />
-          <rect x={-icSize/2 - 8} y={icSize/2 - 13} width="8" height="8" fill={colors.textMuted} />
-
-          {/* IC label */}
-          <text x="0" y="-5" fill={colors.textPrimary} fontSize="12" fontWeight="600" textAnchor="middle">IC</text>
-          <text x="0" y="10" fill={colors.textSecondary} fontSize="10" textAnchor="middle">MCU</text>
-
-          {/* Status indicator */}
-          <circle cx={icSize/2 - 12} cy={-icSize/2 + 12} r="6" fill={icStatus.color}>
-            {transientActive && ripplePercent > 10 && (
-              <animate attributeName="opacity" values="1;0.3;1" dur="0.2s" repeatCount="indefinite" />
-            )}
-          </circle>
-        </g>
-
-        {/* Current transient arrow */}
-        {transientActive && (
-          <g>
-            <defs>
-              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill={colors.warning} />
-              </marker>
-            </defs>
-            <line
-              x1={icCenterX - icSize/2 - 20}
-              y1={icCenterY - 50}
-              x2={icCenterX - icSize/2 - 5}
-              y2={icCenterY - 35}
-              stroke={colors.warning}
-              strokeWidth="2"
-              markerEnd="url(#arrowhead)"
-            />
-            <text x={icCenterX - icSize/2 - 25} y={icCenterY - 55} fill={colors.warning} fontSize="10">
-              {loadTransient}mA
-            </text>
+        {/* IC pins */}
+        {[-1, 0, 1].map(i => (
+          <g key={`pin-${i}`}>
+            <rect x={icCenterX - icSize/2 - 8} y={icCenterY + i * 15 - 4} width="8" height="8" fill={colors.textMuted} />
+            <rect x={icCenterX + icSize/2} y={icCenterY + i * 15 - 4} width="8" height="8" fill={colors.textMuted} />
           </g>
-        )}
+        ))}
 
-        {/* Voltage waveform */}
-        <g>
-          {/* Reference lines */}
-          <line x1="40" y1={waveformY - 45} x2={40 + waveformWidth} y2={waveformY - 45} stroke={colors.border} strokeDasharray="3,3" />
-          <text x="35" y={waveformY - 42} fill={colors.textMuted} fontSize="9" textAnchor="end">3.3V</text>
+        {/* VCC/GND pins highlighted */}
+        <rect x={icCenterX - icSize/2 - 8} y={icCenterY - icSize/2 + 5} width="8" height="8" fill={colors.accent} />
+        <rect x={icCenterX - icSize/2 - 8} y={icCenterY + icSize/2 - 13} width="8" height="8" fill={colors.textMuted} />
 
-          <line x1="40" y1={waveformY - 20} x2={40 + waveformWidth} y2={waveformY - 20} stroke={colors.border} strokeDasharray="3,3" />
-          <text x="35" y={waveformY - 17} fill={colors.textMuted} fontSize="9" textAnchor="end">3.0V</text>
+        {/* IC label */}
+        <text x={icCenterX} y={icCenterY - 5} fill={colors.textPrimary} fontSize="14" fontWeight="700" textAnchor="middle">IC Chip</text>
+        <text x={icCenterX} y={icCenterY + 12} fill={colors.textSecondary} fontSize="11" textAnchor="middle">MCU</text>
 
-          {/* Voltage threshold warning line */}
-          <line x1="40" y1={waveformY - 30} x2={40 + waveformWidth} y2={waveformY - 30} stroke={colors.error} strokeDasharray="2,4" opacity="0.5" />
+        {/* Status indicator */}
+        <circle cx={icCenterX + icSize/2 - 12} cy={icCenterY - icSize/2 + 12} r="8" fill={icStatus.color} stroke="white">
+          {transientActive && ripplePercent > 10 && (
+            <animate attributeName="opacity" values="1;0.3;1" dur="0.2s" repeatCount="indefinite" />
+          )}
+        </circle>
 
-          {/* Waveform */}
-          <path d={waveformPoints.join(' ')} fill="none" stroke={transientActive ? icStatus.color : colors.accent} strokeWidth="2" />
+        {/* Formula display */}
+        <text x={width - 15} y={icCenterY - icSize/2 - 5} fill={colors.accent} fontSize="13" fontWeight="700" textAnchor="end">
+          V = L × di/dt
+        </text>
 
-          {/* Label */}
-          <text x={width/2} y={waveformY + 5} fill={colors.textSecondary} fontSize="10" textAnchor="middle">
-            VCC at IC pins (voltage ripple: {(voltageRipple * 1000).toFixed(0)}mV)
-          </text>
-        </g>
+        {/* Voltage waveform section */}
+        {/* Waveform Y-axis */}
+        <line x1={waveformLeft} y1={waveformTop} x2={waveformLeft} y2={waveformBottom} stroke={colors.textSecondary} strokeWidth="2" />
+        {/* Waveform X-axis */}
+        <line x1={waveformLeft} y1={waveformBottom} x2={waveformLeft + waveformWidth} y2={waveformBottom} stroke={colors.textSecondary} strokeWidth="2" />
+
+        {/* Grid lines */}
+        {[0, 0.25, 0.5, 0.75, 1].map(frac => (
+          <line
+            key={`wgrid-${frac}`}
+            x1={waveformLeft}
+            y1={waveformTop + frac * waveformHeight}
+            x2={waveformLeft + waveformWidth}
+            y2={waveformTop + frac * waveformHeight}
+            stroke={colors.border}
+            strokeDasharray="3 3"
+            opacity="0.5"
+          />
+        ))}
+
+        {/* Y-axis label */}
+        <text x={waveformLeft - 30} y={(waveformTop + waveformBottom) / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90, ${waveformLeft - 30}, ${(waveformTop + waveformBottom) / 2})`}>Voltage (V)</text>
+
+        {/* Y-axis value labels */}
+        <text x={waveformLeft - 5} y={voltToY(vMax) + 4} fill="#10B981" fontSize="11" textAnchor="end">{vMax.toFixed(1)}V</text>
+        <text x={waveformLeft - 5} y={voltToY((vMax + vMin) / 2) + 4} fill={colors.textSecondary} fontSize="11" textAnchor="end">{((vMax + vMin) / 2).toFixed(1)}V</text>
+        <text x={waveformLeft - 5} y={voltToY(vMin) + 4} fill="#EF4444" fontSize="11" textAnchor="end">{vMin.toFixed(1)}V</text>
+
+        {/* Safe threshold line */}
+        <line x1={waveformLeft} y1={voltToY(2.7)} x2={waveformLeft + waveformWidth} y2={voltToY(2.7)} stroke="#EF4444" strokeDasharray="4 2" opacity="0.7" />
+        <text x={waveformLeft + waveformWidth + 5} y={voltToY(2.7) + 4} fill="#EF4444" fontSize="11">Min safe</text>
+
+        {/* Waveform path */}
+        <path d={waveformPoints.join(' ')} fill="none" stroke="url(#waveformGrad)" strokeWidth="2.5" />
+
+        {/* Interactive marker circle with glow */}
+        <circle cx={markerX} cy={markerY} r="12" fill="url(#markerGlow)" />
+        <circle cx={markerX} cy={markerY} r="8" fill={colors.accent} stroke="white" strokeWidth="2" filter="url(#glow)" />
+
+        {/* X-axis / waveform title */}
+        <text x={waveformLeft + waveformWidth / 2} y={waveformBottom + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+          Time — voltage ripple: {(voltageRipple * 1000).toFixed(0)}mV ({ripplePercent.toFixed(1)}%)
+        </text>
       </svg>
     );
   };
@@ -595,6 +642,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   const FrequencyResponseVisualization = () => {
     const width = isMobile ? 320 : 450;
     const height = isMobile ? 200 : 240;
+    const viewBox = `0 0 ${width} ${height}`;
     const padding = { top: 30, right: 30, bottom: 40, left: 50 };
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
@@ -619,7 +667,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
     const capLabels = ['1nF', '10nF', '100nF'];
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width="100%" height={height} viewBox={viewBox} preserveAspectRatio="xMidYMid meet" style={{ maxWidth: `${width}px`, background: colors.bgCard, borderRadius: '12px' }}>
         {/* Grid */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <g key={`grid-${frac}`}>
@@ -644,7 +692,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
 
         {/* Frequency labels */}
         {['1k', '1M', '1G'].map((label, i) => (
-          <text key={label} x={padding.left + (i * plotWidth / 2)} y={padding.top + plotHeight + 15} fill={colors.textMuted} fontSize="9" textAnchor="middle">{label}</text>
+          <text key={label} x={padding.left + (i * plotWidth / 2)} y={padding.top + plotHeight + 15} fill={colors.textMuted} fontSize="11" textAnchor="middle">{label}</text>
         ))}
 
         {/* Draw curves for each capacitor value */}
@@ -669,29 +717,29 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
           {capLabels.map((label, i) => (
             <g key={label} transform={`translate(${i * 60}, 0)`}>
               <rect x="0" y="0" width="20" height="3" fill={capColors[i]} />
-              <text x="25" y="4" fill={colors.textSecondary} fontSize="9">{label}</text>
+              <text x="25" y="4" fill={colors.textSecondary} fontSize="11">{label}</text>
             </g>
           ))}
         </g>
 
         {/* Self-resonant frequency indicators */}
-        <text x={padding.left + plotWidth - 10} y={padding.top + 20} fill={colors.accent} fontSize="9" textAnchor="end">
+        <text x={padding.left + plotWidth - 10} y={padding.top + 20} fill={colors.accent} fontSize="11" textAnchor="end">
           Smaller caps: better at high freq
         </text>
       </svg>
     );
   };
 
-  // Progress bar component
+  // Progress bar component (fixed at top)
   const renderProgressBar = () => (
-    <div style={{
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -699,34 +747,107 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
         background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
         transition: 'width 0.3s ease',
       }} />
-    </div>
+    </nav>
   );
 
-  // Navigation dots
+  // Fixed bottom navigation bar
   const renderNavDots = () => (
-    <div style={{
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: colors.bgSecondary,
+      borderTop: `1px solid ${colors.border}`,
+      boxShadow: '0 -4px 12px rgba(0,0,0,0.3)',
+      padding: '12px 16px',
+      zIndex: 1000,
       display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '12px',
     }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
+      {/* Back button */}
+      <button
+        onClick={() => {
+          const currentIndex = phaseOrder.indexOf(phase);
+          if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
+        }}
+        disabled={phaseOrder.indexOf(phase) === 0}
+        style={{
+          background: 'transparent',
+          border: `1px solid ${colors.border}`,
+          borderRadius: '8px',
+          padding: '10px 16px',
+          minHeight: '44px',
+          color: phaseOrder.indexOf(phase) === 0 ? colors.border : colors.textSecondary,
+          cursor: phaseOrder.indexOf(phase) === 0 ? 'not-allowed' : 'pointer',
+          fontWeight: 600,
+          fontSize: '14px',
+        }}
+      >
+        ← Back
+      </button>
+
+      {/* Phase dots - wrapped for tap target */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '4px',
+        flex: 1,
+      }}>
+        {phaseOrder.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(p)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '18px 4px',
+              minHeight: '44px',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+            }}
+            aria-label={phaseLabels[p]}
+          >
+            <div style={{
+              width: phase === p ? '20px' : '8px',
+              height: '8px',
+              borderRadius: '4px',
+              background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+              transition: 'all 0.3s ease',
+            }} />
+          </button>
+        ))}
+      </div>
+
+      {/* Next button */}
+      <button
+        onClick={() => {
+          const currentIndex = phaseOrder.indexOf(phase);
+          if (currentIndex < phaseOrder.length - 1) {
+            playSound('transition');
+            goToPhase(phaseOrder[currentIndex + 1]);
+          }
+        }}
+        disabled={phaseOrder.indexOf(phase) === phaseOrder.length - 1 || phase === 'test'}
+        style={{
+          background: (phaseOrder.indexOf(phase) === phaseOrder.length - 1 || phase === 'test') ? colors.border : `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+          border: 'none',
+          borderRadius: '8px',
+          padding: '10px 16px',
+          minHeight: '44px',
+          color: 'white',
+          cursor: (phaseOrder.indexOf(phase) === phaseOrder.length - 1 || phase === 'test') ? 'not-allowed' : 'pointer',
+          fontWeight: 600,
+          fontSize: '14px',
+        }}
+      >
+        Next →
+      </button>
+    </nav>
   );
 
   // Primary button style
@@ -735,6 +856,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
     color: 'white',
     border: 'none',
     padding: isMobile ? '14px 28px' : '16px 32px',
+    minHeight: '44px',
     borderRadius: '12px',
     fontSize: isMobile ? '16px' : '18px',
     fontWeight: 700,
@@ -758,7 +880,11 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingBottom: '100px',
         textAlign: 'center',
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
 
@@ -800,6 +926,8 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
           </p>
         </div>
 
+        <div style={{ width: '80px', height: '2px', background: `rgba(6, 182, 212, 0.6)`, margin: '0 auto 24px' }} />
+
         <button
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
@@ -825,6 +953,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
 
@@ -845,7 +977,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
             An engineer adds a small ceramic capacitor between VCC and GND pins of a microcontroller. Random resets stop occurring. Why?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Simple diagram with SVG */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -853,32 +985,35 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🔋</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Supply</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.warning + '33',
-                padding: '15px 20px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.warning}`,
-              }}>
-                <div style={{ fontSize: '24px' }}>| |</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Capacitor</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>⬛</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Microcontroller</p>
-              </div>
-            </div>
+            <svg width="100%" height="120" viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '400px' }}>
+              {/* Power Supply */}
+              <rect x="20" y="30" width="60" height="60" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+              <text x="50" y="55" fill={colors.textPrimary} fontSize="12" textAnchor="middle">VCC</text>
+              <text x="50" y="75" fill={colors.accent} fontSize="14" textAnchor="middle">3.3V</text>
+
+              {/* Arrow 1 */}
+              <line x1="85" y1="60" x2="120" y2="60" stroke={colors.textMuted} strokeWidth="2" />
+              <polygon points="120,55 130,60 120,65" fill={colors.textMuted} />
+
+              {/* Capacitor */}
+              <rect x="140" y="35" width="50" height="50" rx="6" fill={colors.warning + '33'} stroke={colors.warning} strokeWidth="2" />
+              <text x="165" y="55" fill={colors.textPrimary} fontSize="16" textAnchor="middle">| |</text>
+              <text x="165" y="72" fill={colors.textPrimary} fontSize="11" textAnchor="middle">Cap</text>
+
+              {/* Arrow 2 */}
+              <line x1="195" y1="60" x2="230" y2="60" stroke={colors.textMuted} strokeWidth="2" />
+              <polygon points="230,55 240,60 230,65" fill={colors.textMuted} />
+
+              {/* Microcontroller */}
+              <rect x="250" y="25" width="80" height="70" rx="8" fill={colors.accent + '33'} stroke={colors.accent} strokeWidth="2" />
+              <rect x="265" y="40" width="50" height="40" rx="4" fill={colors.bgSecondary} />
+              <text x="290" y="65" fill={colors.textPrimary} fontSize="11" textAnchor="middle">MCU</text>
+
+              {/* Labels */}
+              <text x="50" y="110" fill={colors.textMuted} fontSize="11" textAnchor="middle">Power Supply</text>
+              <text x="165" y="110" fill={colors.textMuted} fontSize="11" textAnchor="middle">Capacitor</text>
+              <text x="290" y="110" fill={colors.textMuted} fontSize="11" textAnchor="middle">Microcontroller</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -940,6 +1075,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
 
@@ -947,8 +1086,13 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Stabilize the Power Supply
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust the decoupling capacitor parameters to minimize voltage ripple
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
+            This visualization displays how the decoupling capacitor affects voltage stability at the IC pins.
+            Try adjusting the sliders and observe how each parameter impacts the waveform.
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+            Voltage ripple is calculated as V = L × di/dt. When you increase distance, trace inductance causes larger voltage drops.
+            When you decrease capacitance, the local energy reservoir is the measure of how quickly power can be delivered.
           </p>
 
           {/* Main visualization */}
@@ -1004,7 +1148,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Capacitor Value</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{capacitorValue}nF</span>
+                <span style={{ height: '20px', ...typo.small, color: colors.accent, fontWeight: 600 }}>{capacitorValue}nF</span>
               </div>
               <input
                 type="range"
@@ -1014,10 +1158,12 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
                 value={capacitorValue}
                 onChange={(e) => setCapacitorValue(parseInt(e.target.value))}
                 disabled={!decouplingEnabled}
-                style={{
+                style={{ touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.accent,
                   background: `linear-gradient(to right, ${colors.accent} ${(capacitorValue / 1000) * 100}%, ${colors.border} ${(capacitorValue / 1000) * 100}%)`,
                   cursor: decouplingEnabled ? 'pointer' : 'not-allowed',
                   opacity: decouplingEnabled ? 1 : 0.5,
@@ -1040,10 +1186,12 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
                 value={distanceFromIC}
                 onChange={(e) => setDistanceFromIC(parseInt(e.target.value))}
                 disabled={!decouplingEnabled}
-                style={{
+                style={{ touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.accent,
                   cursor: decouplingEnabled ? 'pointer' : 'not-allowed',
                   opacity: decouplingEnabled ? 1 : 0.5,
                 }}
@@ -1069,10 +1217,12 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
                 step="50"
                 value={loadTransient}
                 onChange={(e) => setLoadTransient(parseInt(e.target.value))}
-                style={{
+                style={{ touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.accent,
                 }}
               />
             </div>
@@ -1117,6 +1267,19 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
             </div>
           </div>
 
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Real-world relevance:</strong> Every smartphone, computer, and electronic device uses decoupling capacitors to ensure stable power delivery. Without proper decoupling, processors would crash, sensors would give false readings, and wireless chips would fail to connect.
+            </p>
+          </div>
+
           {/* Discovery prompt */}
           {ripplePercent < 5 && decouplingEnabled && (
             <div style={{
@@ -1148,11 +1311,16 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionCorrect = prediction === 'b';
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
 
@@ -1160,6 +1328,23 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Local Energy Storage Matters
           </h2>
+
+          {/* Reference user's prediction */}
+          <div style={{
+            background: predictionCorrect ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${predictionCorrect ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: predictionCorrect ? colors.success : colors.warning, margin: 0 }}>
+              {prediction
+                ? (predictionCorrect
+                  ? "Your prediction was correct! The capacitor does store energy locally to supply instant current."
+                  : "Your prediction highlighted a common misconception. Let's see why the correct answer is about local energy storage.")
+                : "As you observed in the experiment, the result shows that your prediction about decoupling is key to understanding power integrity."}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1173,7 +1358,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
               </p>
               <p style={{ marginBottom: '16px' }}>
                 When a digital IC switches states, it demands current <span style={{ color: colors.accent }}>instantly</span>—within nanoseconds.
-                But the power supply might be centimeters away. At high frequencies, even short traces act as inductors.
+                But the power supply might be centimeters away. This causes voltage drops because at high frequencies, even short traces act as inductors.
               </p>
               <p style={{ marginBottom: '16px' }}>
                 <strong style={{ color: colors.textPrimary }}>V = L × di/dt</strong>
@@ -1260,6 +1445,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
 
@@ -1279,6 +1468,25 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             A 100MHz digital system shows power noise even with 100uF bulk capacitors. Adding small 0.1uF ceramics helps. Why?
           </h2>
+
+          {/* Static frequency diagram */}
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
+            <svg width="100%" height="120" viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '400px' }}>
+              <title>Capacitor Frequency Response</title>
+              <text x="200" y="15" fill={colors.textPrimary} fontSize="13" fontWeight="700" textAnchor="middle">Impedance vs Frequency</text>
+              {/* Axes */}
+              <line x1="50" y1="100" x2="370" y2="100" stroke={colors.textSecondary} strokeWidth="2" />
+              <line x1="50" y1="25" x2="50" y2="100" stroke={colors.textSecondary} strokeWidth="2" />
+              <text x="210" y="115" fill={colors.textMuted} fontSize="11" textAnchor="middle">Frequency (Hz)</text>
+              <text x="15" y="65" fill={colors.textMuted} fontSize="11" textAnchor="middle" transform="rotate(-90, 15, 65)">Z (Ohms)</text>
+              {/* Bulk cap curve - high impedance at high freq */}
+              <path d="M 60 90 L 100 80 L 140 55 L 180 40 L 220 50 L 260 65 L 300 80 L 340 90" fill="none" stroke="#EF4444" strokeWidth="2" />
+              <text x="350" y="93" fill="#EF4444" fontSize="11">100uF</text>
+              {/* Small cap curve - high impedance at low freq */}
+              <path d="M 60 35 L 100 50 L 140 65 L 180 78 L 220 65 L 260 50 L 300 35 L 340 28" fill="none" stroke="#10B981" strokeWidth="2" />
+              <text x="350" y="30" fill="#10B981" fontSize="11">0.1uF</text>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1337,6 +1545,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
 
@@ -1372,10 +1584,12 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
                 max="100"
                 value={esr}
                 onChange={(e) => setEsr(parseInt(e.target.value))}
-                style={{
+                style={{ touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.accent,
                   cursor: 'pointer',
                 }}
               />
@@ -1444,6 +1658,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
 
@@ -1535,19 +1753,29 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} explored)
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1654,6 +1882,34 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
             </div>
           </div>
 
+          {/* Got It button for current app */}
+          {!completedApps[selectedApp] ? (
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '16px' }}
+            >
+              Got It! Mark as Explored
+            </button>
+          ) : (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+                Application explored. {allAppsCompleted ? 'All applications completed!' : `${realWorldApps.length - completedCount} more to explore.`}
+              </p>
+            </div>
+          )}
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
@@ -1678,6 +1934,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingBottom: '100px',
+          overflowY: 'auto',
+          flex: 1,
+          paddingTop: '48px',
         }}>
           {renderProgressBar()}
 
@@ -1694,33 +1954,78 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
               {passed
                 ? 'You\'ve mastered Decoupling Capacitors!'
                 : 'Review the concepts and try again.'}
             </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
+            {/* Answer review indicators */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              {testQuestions.map((q, i) => {
+                const correctId = q.options.find(o => o.correct)?.id;
+                const isCorrect = testAnswers[i] === correctId;
+                return (
+                  <div key={i} style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: isCorrect ? colors.success : colors.error,
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                  }}>
+                    {isCorrect ? '✓' : '✗'}
+                  </div>
+                );
+              })}
+            </div>
+            <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '32px' }}>
+              Your answer review: {testScore} correct answers out of 10
+            </p>
+
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson →
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review & Try Again
+                </button>
+              )}
+              <a
+                href="/"
+                style={{
+                  padding: '14px 28px',
+                  minHeight: '44px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
                 }}
-                style={primaryButtonStyle}
               >
-                Review & Try Again
-              </button>
-            )}
+                Return to Dashboard
+              </a>
+            </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1734,6 +2039,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
 
@@ -1832,6 +2141,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
                 style={{
                   flex: 1,
                   padding: '14px',
+                  minHeight: '44px',
                   borderRadius: '10px',
                   border: `1px solid ${colors.border}`,
                   background: 'transparent',
@@ -1849,6 +2159,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
                 style={{
                   flex: 1,
                   padding: '14px',
+                  minHeight: '44px',
                   borderRadius: '10px',
                   border: 'none',
                   background: testAnswers[currentQuestion] ? colors.accent : colors.border,
@@ -1857,7 +2168,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
                   fontWeight: 600,
                 }}
               >
-                Next →
+                Next Question
               </button>
             ) : (
               <button
@@ -1874,6 +2185,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
                 style={{
                   flex: 1,
                   padding: '14px',
+                  minHeight: '44px',
                   borderRadius: '10px',
                   border: 'none',
                   background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
@@ -1904,7 +2216,11 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingBottom: '100px',
         textAlign: 'center',
+        overflowY: 'auto',
+        flex: 1,
+        paddingTop: '48px',
       }}>
         {renderProgressBar()}
 
@@ -1956,6 +2272,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
             onClick={() => goToPhase('hook')}
             style={{
               padding: '14px 28px',
+              minHeight: '44px',
               borderRadius: '10px',
               border: `1px solid ${colors.border}`,
               background: 'transparent',

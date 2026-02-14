@@ -3,6 +3,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // Phase type for internal state management
 type DTPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
+// Valid phases set for validation
+const validPhases = new Set<string>(['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery']);
+
 interface DepositionTypesRendererProps {
   gamePhase?: DTPhase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
@@ -12,7 +15,7 @@ interface DepositionTypesRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -38,7 +41,7 @@ const phaseLabels: Record<DTPhase, string> = {
   twist_predict: 'Twist',
   twist_play: 'Test Twist',
   twist_review: 'Twist Review',
-  transfer: 'Apply',
+  transfer: 'Transfer',
   test: 'Test',
   mastery: 'Mastery',
 };
@@ -71,14 +74,19 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
     elementGap: isMobile ? '8px' : '12px',
   };
 
-  // Internal phase state management
-  const [phase, setPhase] = useState<DTPhase>(() => gamePhase || 'hook');
+  // Internal phase state management - validate phase to default to hook for invalid values
+  const [phase, setPhase] = useState<DTPhase>(() => {
+    if (gamePhase && validPhases.has(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  });
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
-  // Sync phase with gamePhase prop when it changes (for resume)
+  // Sync phase with gamePhase prop when it changes (for resume) - validate phase
   useEffect(() => {
-    if (gamePhase && gamePhase !== phase) {
+    if (gamePhase && gamePhase !== phase && validPhases.has(gamePhase)) {
       setPhase(gamePhase);
     }
   }, [gamePhase]);
@@ -110,7 +118,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
   // Simulation state
   const [depositionType, setDepositionType] = useState<'pvd' | 'cvd' | 'ald'>('pvd');
   const [aspectRatio, setAspectRatio] = useState(2); // Width to Depth ratio
-  const [depositionTime, setDepositionTime] = useState(50); // 0-100%
+  const [depositionTime, setDepositionTime] = useState(30); // 0-100%
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Phase-specific state
@@ -121,6 +129,10 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingAnswer, setPendingAnswer] = useState<number | null>(null);
+  const [confirmedAnswers, setConfirmedAnswers] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
 
   // Animation effect
   useEffect(() => {
@@ -673,11 +685,22 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
               }
+              @keyframes depGrow {
+                0% { transform: scaleY(0); }
+                100% { transform: scaleY(1); }
+              }
               .dep-particle-anim {
                 animation: depPulse 1s ease-in-out infinite;
               }
               .dep-plasma-anim {
                 animation: depPlasmaSwirl 3s linear infinite;
+              }
+              .dep-film-grow {
+                animation: depGrow 0.5s ease-out forwards;
+                transform-origin: bottom;
+              }
+              .dep-svg-transition {
+                transition: all 0.3s ease;
               }
             `}</style>
           </defs>
@@ -891,21 +914,21 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             <rect x={-5} y={5} width={130} height={115} fill="url(#depPanelBg)" rx={10}
               stroke="#334155" strokeWidth={1} />
 
-            <text x={60} y={28} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="bold">
+            <text x={60} y={28} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="bold">
               STEP COVERAGE
             </text>
 
             {/* Top coverage bar */}
-            <text x={8} y={48} fill={colors.textSecondary} fontSize={9}>Top</text>
-            <text x={110} y={48} fill={colors.textPrimary} fontSize={9} textAnchor="end">
+            <text x={8} y={48} fill={colors.textSecondary} fontSize={11}>Top</text>
+            <text x={110} y={48} fill={colors.textPrimary} fontSize={11} textAnchor="end">
               {(result.topCoverage * 100).toFixed(0)}%
             </text>
             <rect x={8} y={52} width={104} height={6} fill="rgba(255,255,255,0.1)" rx={3} />
             <rect x={8} y={52} width={result.topCoverage * 104} height={6} fill="url(#depMeterSuccess)" rx={3} />
 
             {/* Side coverage bar */}
-            <text x={8} y={70} fill={colors.textSecondary} fontSize={9}>Side</text>
-            <text x={110} y={70} fill={colors.textPrimary} fontSize={9} textAnchor="end">
+            <text x={8} y={70} fill={colors.textSecondary} fontSize={11}>Side</text>
+            <text x={110} y={70} fill={colors.textPrimary} fontSize={11} textAnchor="end">
               {(result.sidewallCoverage * 100).toFixed(0)}%
             </text>
             <rect x={8} y={74} width={104} height={6} fill="rgba(255,255,255,0.1)" rx={3} />
@@ -913,8 +936,8 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
               fill={result.sidewallCoverage > 0.5 ? 'url(#depMeterSuccess)' : 'url(#depMeterWarning)'} rx={3} />
 
             {/* Bottom coverage bar */}
-            <text x={8} y={92} fill={colors.textSecondary} fontSize={9}>Bottom</text>
-            <text x={110} y={92} fill={colors.textPrimary} fontSize={9} textAnchor="end">
+            <text x={8} y={92} fill={colors.textSecondary} fontSize={11}>Bottom</text>
+            <text x={110} y={92} fill={colors.textPrimary} fontSize={11} textAnchor="end">
               {(result.bottomCoverage * 100).toFixed(0)}%
             </text>
             <rect x={8} y={96} width={104} height={6} fill="rgba(255,255,255,0.1)" rx={3} />
@@ -927,9 +950,9 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             <rect x={-5} y={0} width={130} height={78} fill="url(#depPanelBg)" rx={10}
               stroke="#334155" strokeWidth={1} />
 
-            <circle cx={15} cy={22} r={6} fill="url(#depPvdFilm)" filter="url(#depParticleGlow)" />
-            <circle cx={15} cy={44} r={6} fill="url(#depCvdFilm)" filter="url(#depParticleGlow)" />
-            <circle cx={15} cy={66} r={6} fill="url(#depAldFilm)" filter="url(#depParticleGlow)" />
+            <circle cx={15} cy={22} r={5} fill="url(#depPvdFilm)" />
+            <circle cx={15} cy={44} r={5} fill="url(#depCvdFilm)" />
+            <circle cx={15} cy={66} r={5} fill="url(#depAldFilm)" />
           </g>
 
           {/* Metrics panel - premium design */}
@@ -950,6 +973,35 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             filter="url(#depTextGlow)"
           >
             {result.stepCoverage > 90 ? 'Excellent' : result.stepCoverage > 60 ? 'Fair' : 'Poor'}
+          </text>
+
+          {/* Axis labels for educational clarity */}
+          <text x={250} y={16} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+            Deposition Rate vs Aspect Ratio
+          </text>
+          <text x={18} y={240} fill={colors.textSecondary} fontSize={11} textAnchor="middle" transform="rotate(-90, 18, 240)">
+            Coverage Rate
+          </text>
+
+          {/* Grid reference lines */}
+          <line x1={15} y1={100} x2={width - 15} y2={100} stroke="#334155" strokeWidth={0.5} strokeDasharray="4,4" opacity={0.5} />
+          <line x1={15} y1={200} x2={width - 15} y2={200} stroke="#334155" strokeWidth={0.5} strokeDasharray="4,4" opacity={0.5} />
+          <line x1={15} y1={300} x2={width - 15} y2={300} stroke="#334155" strokeWidth={0.5} strokeDasharray="4,4" opacity={0.5} />
+
+          {/* Interactive marker: moves with slider value (film thickness) */}
+          <circle
+            cx={trenchX + scaledWidth / 2}
+            cy={trenchTopY + 10 + (1 - depositionTime / 100) * 200}
+            r={8}
+            fill={depositionType === 'pvd' ? colors.pvd : depositionType === 'cvd' ? colors.cvd : colors.ald}
+            stroke="#ffffff"
+            strokeWidth={2}
+            filter="url(#depParticleGlow)"
+          />
+
+          {/* Formula annotation */}
+          <text x={250} y={height - 5} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+            Step Coverage = (t_bottom / t_top) × 100%
           </text>
         </svg>
 
@@ -1049,6 +1101,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
               disabled={isAnimating}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: isAnimating ? colors.textMuted : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
@@ -1058,6 +1111,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
                 fontSize: typo.body,
                 boxShadow: isAnimating ? 'none' : `0 4px 20px ${colors.accentGlow}`,
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
               {isAnimating ? 'Depositing...' : 'Start Deposition'}
@@ -1066,6 +1120,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
               onClick={() => { setDepositionTime(0); setIsAnimating(false); }}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
                 background: 'transparent',
@@ -1074,6 +1129,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
                 cursor: 'pointer',
                 fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset
@@ -1095,9 +1151,11 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             <button
               key={type}
               onClick={() => setDepositionType(type)}
+              data-testid={`method-${type}`}
               style={{
                 flex: 1,
                 padding: '12px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: depositionType === type ? `2px solid ${type === 'pvd' ? colors.pvd : type === 'cvd' ? colors.cvd : colors.ald}` : '1px solid rgba(255,255,255,0.2)',
                 background: depositionType === type ? `${type === 'pvd' ? colors.pvd : type === 'cvd' ? colors.cvd : colors.ald}20` : 'transparent',
@@ -1106,6 +1164,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
                 fontSize: '13px',
                 fontWeight: depositionType === type ? 'bold' : 'normal',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
               {type.toUpperCase()}
@@ -1115,34 +1174,54 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Deposition Progress: {depositionTime}%
+        <label htmlFor="thickness-slider" style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          <span style={{ fontWeight: 'bold', color: colors.textPrimary }}>Film Thickness:</span> {depositionTime}%
+          <span style={{ display: 'block', fontSize: '12px', marginTop: '4px' }}>
+            Controls deposition time and resulting film thickness (nm)
+          </span>
         </label>
         <input
+          id="thickness-slider"
           type="range"
           min="0"
           max="100"
           step="5"
           value={depositionTime}
           onChange={(e) => { setDepositionTime(parseInt(e.target.value)); setIsAnimating(false); }}
-          style={{ width: '100%' }}
+          aria-label="Film Thickness controls deposition time and resulting film thickness"
+          data-testid="thickness-slider"
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', minHeight: '44px', accentColor: '#22c55e', WebkitAppearance: 'none' as const }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginTop: '2px' }}>
+          <span>0% (Min)</span>
+          <span>100% (Max)</span>
+        </div>
       </div>
 
       {showAspectRatio && (
         <div>
-          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-            Aspect Ratio: {aspectRatio.toFixed(1)}:1
+          <label htmlFor="aspect-ratio-slider" style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+            <span style={{ fontWeight: 'bold', color: colors.textPrimary }}>Aspect Ratio:</span> {aspectRatio.toFixed(1)}:1
+            <span style={{ display: 'block', fontSize: '12px', marginTop: '4px' }}>
+              Controls trench depth-to-width ratio (higher = deeper, narrower trench)
+            </span>
           </label>
           <input
+            id="aspect-ratio-slider"
             type="range"
             min="0.5"
             max="10"
             step="0.5"
             value={aspectRatio}
             onChange={(e) => setAspectRatio(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
+            aria-label="Aspect Ratio controls trench depth-to-width ratio"
+            data-testid="aspect-ratio-slider"
+            style={{ height: '20px', touchAction: 'pan-y', width: '100%', minHeight: '44px', accentColor: '#22c55e', WebkitAppearance: 'none' as const }}
           />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginTop: '2px' }}>
+            <span>0.5 (Min)</span>
+            <span>10 (Max)</span>
+          </div>
         </div>
       )}
 
@@ -1165,50 +1244,70 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
     </div>
   );
 
-  // Progress bar showing all 10 phases
+  // Progress bar showing all 10 phases with fixed positioning
   const renderProgressBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        padding: '12px 16px',
-        background: 'rgba(0,0,0,0.3)',
-        overflowX: 'auto',
-      }}>
+      <nav
+        aria-label="Phase navigation"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '12px 16px',
+          background: colors.bgDark,
+          overflowX: 'auto',
+          zIndex: 1001,
+        }}
+      >
         {phaseOrder.map((p, index) => {
           const isCompleted = index < currentIndex;
           const isCurrent = index === currentIndex;
           return (
             <div
               key={p}
-              onClick={() => isCompleted && goToPhase(p)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                cursor: isCompleted ? 'pointer' : 'default',
               }}
             >
-              <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                background: isCompleted ? colors.success : isCurrent ? colors.accent : 'rgba(255,255,255,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '10px',
-                color: 'white',
-                fontWeight: 'bold',
-                flexShrink: 0,
-              }}>
+              <button
+                onClick={() => goToPhase(p)}
+                disabled={!isCompleted && !isCurrent}
+                aria-label={`${phaseLabels[p]} phase${isCompleted ? ' (completed)' : isCurrent ? ' (current)' : ''}`}
+                aria-current={isCurrent ? 'step' : undefined}
+                className="nav-dot"
+                data-phase={p}
+                data-testid={`nav-dot-${index + 1}`}
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  minHeight: '24px',
+                  borderRadius: '50%',
+                  background: isCompleted ? colors.success : isCurrent ? colors.accent : 'rgba(255,255,255,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '10px',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  flexShrink: 0,
+                  border: 'none',
+                  cursor: isCompleted ? 'pointer' : 'default',
+                  padding: 0,
+                  transition: 'all 0.2s ease',
+                }}
+              >
                 {isCompleted ? '✓' : index + 1}
-              </div>
+              </button>
               <span style={{
                 fontSize: '10px',
-                color: isCurrent ? colors.accent : colors.textMuted,
+                color: isCurrent ? colors.accent : colors.textSecondary,
                 whiteSpace: 'nowrap',
                 display: index < 4 || isCurrent ? 'block' : 'none',
               }}>
@@ -1225,7 +1324,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             </div>
           );
         })}
-      </div>
+      </nav>
     );
   };
 
@@ -1253,6 +1352,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           disabled={isFirst}
           style={{
             padding: '12px 24px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: `1px solid ${colors.textMuted}`,
             background: 'transparent',
@@ -1261,6 +1361,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             cursor: isFirst ? 'not-allowed' : 'pointer',
             fontSize: '14px',
             opacity: isFirst ? 0.5 : 1,
+            transition: 'all 0.2s ease',
           }}
         >
           Back
@@ -1270,6 +1371,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           disabled={!canProceed || isLast}
           style={{
             padding: '12px 32px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: 'none',
             background: canProceed && !isLast ? colors.accent : 'rgba(255,255,255,0.1)',
@@ -1277,6 +1379,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             fontWeight: 'bold',
             cursor: canProceed && !isLast ? 'pointer' : 'not-allowed',
             fontSize: '16px',
+            transition: 'all 0.2s ease',
           }}
         >
           {nextLabel}
@@ -1287,9 +1390,9 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
 
   // Wrapper for consistent layout
   const renderWrapper = (content: React.ReactNode, canProceed: boolean, nextLabel: string = 'Next') => (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '56px', paddingBottom: '100px' }}>
         {content}
       </div>
       {renderBottomBar(canProceed, nextLabel)}
@@ -1318,12 +1421,12 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             borderRadius: '12px',
             marginBottom: '16px',
           }}>
-            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 'normal' }}>
               Imagine trying to paint the inside of a deep, narrow hole. Spray paint from above
               would only coat the top and maybe some of the sides. A fog-like coating would do better.
               But what about going layer-by-layer, like carefully painting each surface?
             </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
               Chip manufacturing needs to coat trenches with aspect ratios over 50:1!
             </p>
           </div>
@@ -1366,9 +1469,14 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         </div>
 
         <div style={{ padding: '0 16px 16px 16px' }}>
-          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-            How do different deposition methods coat trench sidewalls?
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, margin: 0 }}>
+              How do different deposition methods coat trench sidewalls?
+            </h3>
+            <span style={{ color: colors.textSecondary, fontSize: '12px' }}>
+              Progress: {prediction ? '1' : '0'} / 1 selected
+            </span>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {predictions.map((p) => (
               <button
@@ -1376,6 +1484,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
                 onClick={() => setPrediction(p.id)}
                 style={{
                   padding: '16px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                   background: prediction === p.id ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
@@ -1408,6 +1517,18 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           </p>
         </div>
 
+        <div style={{
+          background: 'rgba(59, 130, 246, 0.2)',
+          margin: '16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.pvd}`,
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+            Observe how each deposition method coats the trench differently. Watch the step coverage meter!
+          </p>
+        </div>
+
         {renderVisualization(true)}
         {renderControls()}
 
@@ -1425,6 +1546,34 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             <li>Compare the "conformality" ratings</li>
           </ul>
         </div>
+
+        <div style={{
+          background: 'rgba(59, 130, 246, 0.15)',
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.pvd}`,
+        }}>
+          <h4 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Key Term: Step Coverage</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+            Step Coverage is defined as the ratio of film thickness on the bottom or sidewall of a trench to the thickness on the top surface. It is calculated as: Step Coverage = (Bottom Thickness / Top Thickness) × 100%. A step coverage of 100% means perfectly conformal coating.
+          </p>
+        </div>
+
+        <div style={{
+          background: 'rgba(34, 197, 94, 0.15)',
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.accent}`,
+        }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Real-World Relevance:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+            These deposition methods are essential in semiconductor manufacturing. Every transistor in your
+            phone uses ALD for gate dielectrics, PVD for metal contacts, and CVD for insulating layers.
+            Understanding step coverage helps engineers choose the right process for each structure.
+          </p>
+        </div>
       </>,
       true,
       'Continue to Review'
@@ -1434,6 +1583,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'directional';
+    const userPredictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return renderWrapper(
       <>
@@ -1447,11 +1597,61 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
             {wasCorrect ? 'Correct!' : 'Not Quite!'}
           </h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
+            You predicted: "{userPredictionLabel}"
+          </p>
           <p style={{ color: colors.textPrimary }}>
             PVD is highly directional, like spray paint. CVD is semi-conformal as gases can diffuse.
             ALD achieves near-perfect conformality by depositing one atomic layer at a time.
           </p>
         </div>
+
+        {/* Review diagram */}
+        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto', maxWidth: '400px' }}>
+          <defs>
+            <linearGradient id="reviewPvdGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+            <linearGradient id="reviewCvdGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#7e22ce" />
+            </linearGradient>
+            <linearGradient id="reviewAldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+          </defs>
+          {/* PVD illustration */}
+          <g transform="translate(30, 20)">
+            <rect x="0" y="40" width="80" height="60" fill="#1e293b" rx="4" />
+            <rect x="25" y="40" width="30" height="40" fill="#0f172a" />
+            <rect x="0" y="35" width="80" height="8" fill="url(#reviewPvdGrad)" />
+            <rect x="25" y="40" width="4" height="20" fill="url(#reviewPvdGrad)" opacity="0.4" />
+            <rect x="51" y="40" width="4" height="20" fill="url(#reviewPvdGrad)" opacity="0.4" />
+            <text x="40" y="115" fill="#e2e8f0" fontSize="11" textAnchor="middle">PVD</text>
+          </g>
+          {/* CVD illustration */}
+          <g transform="translate(160, 20)">
+            <rect x="0" y="40" width="80" height="60" fill="#1e293b" rx="4" />
+            <rect x="25" y="40" width="30" height="40" fill="#0f172a" />
+            <rect x="0" y="35" width="80" height="8" fill="url(#reviewCvdGrad)" />
+            <rect x="25" y="40" width="4" height="35" fill="url(#reviewCvdGrad)" opacity="0.7" />
+            <rect x="51" y="40" width="4" height="35" fill="url(#reviewCvdGrad)" opacity="0.7" />
+            <rect x="29" y="76" width="22" height="4" fill="url(#reviewCvdGrad)" opacity="0.6" />
+            <text x="40" y="115" fill="#e2e8f0" fontSize="11" textAnchor="middle">CVD</text>
+          </g>
+          {/* ALD illustration */}
+          <g transform="translate(290, 20)">
+            <rect x="0" y="40" width="80" height="60" fill="#1e293b" rx="4" />
+            <rect x="25" y="40" width="30" height="40" fill="#0f172a" />
+            <rect x="0" y="35" width="80" height="8" fill="url(#reviewAldGrad)" />
+            <rect x="25" y="40" width="4" height="40" fill="url(#reviewAldGrad)" />
+            <rect x="51" y="40" width="4" height="40" fill="url(#reviewAldGrad)" />
+            <rect x="29" y="76" width="22" height="4" fill="url(#reviewAldGrad)" />
+            <text x="40" y="115" fill="#e2e8f0" fontSize="11" textAnchor="middle">ALD</text>
+          </g>
+        </svg>
 
         <div style={{
           background: colors.bgCard,
@@ -1464,19 +1664,39 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             <p style={{ marginBottom: '12px' }}>
               <strong style={{ color: colors.pvd }}>PVD (Physical Vapor Deposition):</strong> Atoms
               are ejected from a target (sputtering) or evaporated. They travel in straight lines
-              and deposit where they land. Great for flat surfaces, poor for 3D structures.
+              and deposit where they land. This is because PVD is a line-of-sight process, therefore
+              shadowing prevents atoms from reaching sidewalls and bottoms of deep trenches.
             </p>
             <p style={{ marginBottom: '12px' }}>
               <strong style={{ color: colors.cvd }}>CVD (Chemical Vapor Deposition):</strong> Gas
               precursors flow over the surface and react to deposit a film. Gases can diffuse
-              into trenches, but reaction at the top can starve the bottom.
+              into trenches, but reaction at the top can starve the bottom. The key insight is
+              that CVD conformality depends on the balance between surface reaction rate and gas diffusion.
             </p>
             <p>
               <strong style={{ color: colors.ald }}>ALD (Atomic Layer Deposition):</strong> Precursor
               A saturates all surfaces (self-limiting). Precursor B reacts with A to form one
-              layer. Repeat. Every surface gets exactly the same thickness!
+              layer. This demonstrates perfect conformality because each precursor pulse coats
+              every surface equally before the next layer begins.
             </p>
           </div>
+        </div>
+
+        <div style={{
+          background: 'rgba(59, 130, 246, 0.15)',
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.pvd}`,
+        }}>
+          <h4 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Step Coverage Formula:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontFamily: 'monospace', marginBottom: '8px' }}>
+            Step Coverage = (Bottom Thickness / Top Thickness) × 100%
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+            For PVD: Step Coverage is proportional to 1/AR (inversely proportional to aspect ratio).
+            For ALD: Step Coverage is approximately 100% regardless of aspect ratio.
+          </p>
         </div>
       </>,
       true,
@@ -1512,9 +1732,14 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         </div>
 
         <div style={{ padding: '0 16px 16px 16px' }}>
-          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-            What happens to PVD at very high aspect ratios?
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, margin: 0 }}>
+              What happens to PVD at very high aspect ratios?
+            </h3>
+            <span style={{ color: colors.textSecondary, fontSize: '12px' }}>
+              Progress: {twistPrediction ? '1' : '0'} / 1 selected
+            </span>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {twistPredictions.map((p) => (
               <button
@@ -1522,6 +1747,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
                 onClick={() => setTwistPrediction(p.id)}
                 style={{
                   padding: '16px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                   background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1554,6 +1780,18 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           </p>
         </div>
 
+        <div style={{
+          background: 'rgba(59, 130, 246, 0.2)',
+          margin: '16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.pvd}`,
+        }}>
+          <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+            Observe how increasing aspect ratio affects step coverage. Watch for void formation with PVD!
+          </p>
+        </div>
+
         {renderVisualization(true, true)}
         {renderControls(true)}
 
@@ -1580,6 +1818,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'voids';
+    const userTwistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return renderWrapper(
       <>
@@ -1593,11 +1832,46 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
             {wasCorrect ? 'Correct!' : 'Not Quite!'}
           </h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
+            You predicted: "{userTwistPredictionLabel}"
+          </p>
           <p style={{ color: colors.textPrimary }}>
             PVD at high aspect ratios causes the top of the trench to close before the bottom
             fills, creating trapped voids. These voids cause reliability failures in chips.
           </p>
         </div>
+
+        {/* Twist review diagram showing void formation */}
+        <svg width="100%" height="140" viewBox="0 0 400 140" style={{ display: 'block', margin: '0 auto 16px', maxWidth: '400px' }}>
+          <defs>
+            <linearGradient id="twistReviewGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+          </defs>
+          {/* Low AR - good fill */}
+          <g transform="translate(50, 20)">
+            <rect x="0" y="20" width="80" height="80" fill="#1e293b" rx="4" />
+            <rect x="25" y="20" width="30" height="50" fill="#0f172a" />
+            <rect x="0" y="15" width="80" height="8" fill="url(#twistReviewGrad)" />
+            <rect x="25" y="20" width="4" height="50" fill="url(#twistReviewGrad)" opacity="0.8" />
+            <rect x="51" y="20" width="4" height="50" fill="url(#twistReviewGrad)" opacity="0.8" />
+            <rect x="29" y="66" width="22" height="4" fill="url(#twistReviewGrad)" opacity="0.7" />
+            <text x="40" y="115" fill="#22c55e" fontSize="11" textAnchor="middle">Low AR: OK</text>
+          </g>
+          {/* High AR - void formation */}
+          <g transform="translate(270, 20)">
+            <rect x="0" y="20" width="80" height="80" fill="#1e293b" rx="4" />
+            <rect x="30" y="20" width="20" height="70" fill="#0f172a" />
+            <rect x="0" y="15" width="80" height="10" fill="url(#twistReviewGrad)" />
+            <polygon points="30,15 25,25 35,25" fill="url(#twistReviewGrad)" />
+            <polygon points="50,15 45,25 55,25" fill="url(#twistReviewGrad)" />
+            <rect x="30" y="20" width="3" height="25" fill="url(#twistReviewGrad)" opacity="0.5" />
+            <rect x="47" y="20" width="3" height="25" fill="url(#twistReviewGrad)" opacity="0.5" />
+            <ellipse cx="40" cy="60" rx="8" ry="12" fill="#ef4444" opacity="0.4" stroke="#ef4444" strokeWidth="2" strokeDasharray="3,2" />
+            <text x="40" y="115" fill="#ef4444" fontSize="11" textAnchor="middle">High AR: VOID</text>
+          </g>
+        </svg>
 
         <div style={{
           background: colors.bgCard,
@@ -1632,6 +1906,10 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const currentApp = transferApplications[currentTransferApp];
+    const currentRealWorld = realWorldApps[currentTransferApp];
+    const isCurrentCompleted = transferCompleted.has(currentTransferApp);
+
     return renderWrapper(
       <>
         <div style={{ padding: '16px' }}>
@@ -1639,57 +1917,189 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             Real-World Applications
           </h2>
           <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            Deposition methods determine what structures are possible
+            Deposition methods determine what structures are possible in industries from TSMC and Intel to First Solar and Applied Materials.
           </p>
-          <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-            Complete all 4 applications to unlock the test
+          <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+            Application {currentTransferApp + 1} of {transferApplications.length}
           </p>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', padding: '0 16px' }}>
+            {transferApplications.map((_, i) => (
+              <div
+                key={i}
+                onClick={() => setCurrentTransferApp(i)}
+                style={{
+                  flex: 1,
+                  height: '4px',
+                  borderRadius: '2px',
+                  background: transferCompleted.has(i) ? colors.success : i === currentTransferApp ? colors.accent : 'rgba(255,255,255,0.1)',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s ease',
+                }}
+              />
+            ))}
+          </div>
         </div>
 
-        {transferApplications.map((app, index) => (
-          <div
-            key={index}
-            style={{
-              background: colors.bgCard,
-              margin: '16px',
-              padding: '16px',
-              borderRadius: '12px',
-              border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-              {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+        <div
+          style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: isCurrentCompleted ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+            transition: 'border 0.2s ease',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{currentApp.title}</h3>
+            {isCurrentCompleted && <span style={{ color: colors.success }}>Complete</span>}
+          </div>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{currentApp.description}</p>
+
+          {/* Rich content: industry statistics */}
+          {currentRealWorld && (
+            <div style={{ marginBottom: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '8px' }}>
+                {currentRealWorld.description}
+              </p>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                {currentRealWorld.stats.map((stat, si) => (
+                  <div key={si} style={{ background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '6px', textAlign: 'center', flex: 1, minWidth: '80px' }}>
+                    <div style={{ color: colors.textPrimary, fontWeight: 'bold', fontSize: '14px' }}>{stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+              <p style={{ color: colors.textMuted, fontSize: '12px' }}>
+                Companies: {currentRealWorld.companies.join(', ')}
+              </p>
             </div>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-            <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-            </div>
-            {!transferCompleted.has(index) ? (
+          )}
+
+          <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+            <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{currentApp.question}</p>
+          </div>
+          {!isCurrentCompleted ? (
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <button
-                onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                onClick={() => setTransferCompleted(new Set([...transferCompleted, currentTransferApp]))}
                 style={{
-                  padding: '8px 16px',
+                  padding: '12px 20px',
+                  minHeight: '44px',
                   borderRadius: '6px',
                   border: `1px solid ${colors.accent}`,
                   background: 'transparent',
                   color: colors.accent,
                   cursor: 'pointer',
-                  fontSize: '13px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
                   WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 Reveal Answer
               </button>
-            ) : (
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+              <button
+                onClick={() => {
+                  setTransferCompleted(new Set([...transferCompleted, currentTransferApp]));
+                  if (currentTransferApp < transferApplications.length - 1) {
+                    setCurrentTransferApp(currentTransferApp + 1);
+                  }
+                }}
+                style={{
+                  padding: '12px 20px',
+                  minHeight: '44px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: colors.success,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Got It
+              </button>
+            </div>
+          ) : (
+            <>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{currentApp.answer}</p>
               </div>
-            )}
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => {
+                    if (currentTransferApp < transferApplications.length - 1) {
+                      setCurrentTransferApp(currentTransferApp + 1);
+                    }
+                  }}
+                  style={{
+                    padding: '12px 20px',
+                    minHeight: '44px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: colors.success,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  Got It
+                </button>
+                {currentTransferApp < transferApplications.length - 1 && (
+                  <button
+                    onClick={() => setCurrentTransferApp(currentTransferApp + 1)}
+                    style={{
+                      padding: '12px 20px',
+                      minHeight: '44px',
+                      borderRadius: '6px',
+                      border: `1px solid ${colors.accent}`,
+                      background: 'transparent',
+                      color: colors.accent,
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Next Application
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {transferCompleted.size >= transferApplications.length && (
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <button
+              onClick={goNext}
+              style={{
+                padding: '16px 32px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Take the Test
+            </button>
           </div>
-        ))}
+        )}
       </>,
-      transferCompleted.size >= 4,
+      transferCompleted.size >= transferApplications.length,
       'Take the Test'
     );
   }
@@ -1709,7 +2119,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
             <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
               {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
             </h2>
-            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore}/10 Correct</p>
             <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
               {testScore >= 8 ? 'You understand deposition methods!' : 'Review the material and try again.'}
             </p>
@@ -1735,86 +2145,170 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
     }
 
     const currentQ = testQuestions[currentTestQuestion];
+    const isCurrentConfirmed = confirmedAnswers.has(currentTestQuestion);
+    const currentAnswer = testAnswers[currentTestQuestion];
+    const isCorrect = currentAnswer !== null && currentQ.options[currentAnswer].correct;
+
     return renderWrapper(
       <>
         <div style={{ padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-            <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            <span style={{ color: colors.textSecondary, fontSize: '16px', fontWeight: 'bold' }}>
+              Question {currentTestQuestion + 1} of {testQuestions.length}
+            </span>
           </div>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, marginBottom: '16px' }}>
+            In semiconductor manufacturing, thin film deposition is the process of coating wafer surfaces with layers of metals, insulators, and semiconductors at the nanometer scale. The three primary methods are Physical Vapor Deposition (PVD) which uses line-of-sight sputtering, Chemical Vapor Deposition (CVD) which uses gas-phase precursors that diffuse into structures, and Atomic Layer Deposition (ALD) which builds films one atomic layer at a time for perfect conformality.
+          </p>
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
             {testQuestions.map((_, i) => (
-              <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+              <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: confirmedAnswers.has(i) ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'background 0.2s ease' }} />
             ))}
           </div>
           <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
             <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {currentQ.options.map((opt, oIndex) => (
-              <button
-                key={oIndex}
-                onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '8px',
-                  border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                  background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
-                  color: colors.textPrimary,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '14px',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {opt.text}
-              </button>
-            ))}
+            {currentQ.options.map((opt, oIndex) => {
+              const isSelected = currentAnswer === oIndex;
+              const showResult = isCurrentConfirmed;
+              let btnBg = 'transparent';
+              let btnBorder = '1px solid rgba(255,255,255,0.2)';
+              if (showResult) {
+                if (opt.correct) {
+                  btnBg = 'rgba(16, 185, 129, 0.2)';
+                  btnBorder = `2px solid ${colors.success}`;
+                } else if (isSelected && !opt.correct) {
+                  btnBg = 'rgba(239, 68, 68, 0.2)';
+                  btnBorder = `2px solid ${colors.error}`;
+                }
+              } else if (isSelected) {
+                btnBg = 'rgba(34, 197, 94, 0.2)';
+                btnBorder = `2px solid ${colors.accent}`;
+              }
+              return (
+                <button
+                  key={oIndex}
+                  onClick={() => {
+                    if (!isCurrentConfirmed) {
+                      handleTestAnswer(currentTestQuestion, oIndex);
+                    }
+                  }}
+                  disabled={isCurrentConfirmed}
+                  style={{
+                    padding: '16px',
+                    minHeight: '44px',
+                    borderRadius: '8px',
+                    border: btnBorder,
+                    background: btnBg,
+                    color: colors.textPrimary,
+                    cursor: isCurrentConfirmed ? 'default' : 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {opt.text}
+                </button>
+              );
+            })}
           </div>
+
+          {/* Confirm button - single step */}
+
+          {/* Feedback after confirmation */}
+          {isCurrentConfirmed && (
+            <div style={{
+              background: isCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              border: `1px solid ${isCorrect ? colors.success : colors.error}`,
+              borderRadius: '8px',
+              padding: '16px',
+              marginTop: '16px',
+            }}>
+              <p style={{ color: isCorrect ? colors.success : colors.error, fontWeight: 'bold', marginBottom: '8px' }}>
+                {isCorrect ? 'Correct!' : 'Incorrect'}
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                {isCorrect
+                  ? 'Great job! You got this one right.'
+                  : `The correct answer is: ${currentQ.options.find(o => o.correct)?.text}`
+                }
+              </p>
+            </div>
+          )}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
           <button
-            onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+            onClick={() => { setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1)); setShowConfirmDialog(false); }}
             disabled={currentTestQuestion === 0}
             style={{
               padding: '12px 24px',
+              minHeight: '44px',
               borderRadius: '8px',
               border: `1px solid ${colors.textMuted}`,
               background: 'transparent',
               color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
               cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
               WebkitTapHighlightColor: 'transparent',
+              transition: 'all 0.2s ease',
             }}
           >
             Previous
           </button>
-          {currentTestQuestion < testQuestions.length - 1 ? (
+          {!isCurrentConfirmed && currentAnswer !== null ? (
             <button
-              onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+              onClick={() => {
+                setConfirmedAnswers(new Set([...confirmedAnswers, currentTestQuestion]));
+              }}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: colors.accent,
                 color: 'white',
                 cursor: 'pointer',
+                fontWeight: 'bold',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
-              Next
+              Confirm Answer
+            </button>
+          ) : currentTestQuestion < testQuestions.length - 1 ? (
+            <button
+              onClick={() => { setCurrentTestQuestion(currentTestQuestion + 1); setShowConfirmDialog(false); }}
+              style={{
+                padding: '12px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: isCurrentConfirmed ? colors.accent : 'rgba(255,255,255,0.1)',
+                color: isCurrentConfirmed ? 'white' : colors.textMuted,
+                cursor: isCurrentConfirmed ? 'pointer' : 'not-allowed',
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
+              }}
+              disabled={!isCurrentConfirmed}
+            >
+              Next Question
             </button>
           ) : (
             <button
               onClick={submitTest}
-              disabled={testAnswers.includes(null)}
+              disabled={confirmedAnswers.size < testQuestions.length}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
-                background: testAnswers.includes(null) ? colors.textMuted : colors.success,
-                color: 'white',
-                cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                background: confirmedAnswers.size >= testQuestions.length ? colors.success : 'rgba(255,255,255,0.1)',
+                color: confirmedAnswers.size >= testQuestions.length ? 'white' : colors.textMuted,
+                cursor: confirmedAnswers.size >= testQuestions.length ? 'pointer' : 'not-allowed',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
               Submit Test
@@ -1822,7 +2316,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           )}
         </div>
       </>,
-      !testAnswers.includes(null),
+      confirmedAnswers.size >= testQuestions.length,
       'Submit Test'
     );
   }

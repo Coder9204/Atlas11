@@ -410,16 +410,19 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     const stringLength = 400;
     const stringY = 120;
     const n = harmonic;
-    const amp = 50 * (1 - n * 0.05);
+    const amp = 75 * (1 - n * 0.05);
     const omega = baseFrequency * n * 0.015;
 
     const generateWavePath = () => {
       const points: string[] = [];
+      // Use max(abs(sin), 0.7) so the envelope is always visually prominent even at time=0
+      const timeFactor = Math.sin(omega * time);
+      const visibleFactor = Math.abs(timeFactor) < 0.75 ? (timeFactor >= 0 ? 0.75 : -0.75) : timeFactor;
       for (let x = 0; x <= stringLength; x += 2) {
         const relX = x / stringLength;
         const envelope = Math.sin(Math.PI * n * relX);
-        const y = stringY + amp * envelope * Math.sin(omega * time);
-        points.push(`${50 + x},${y}`);
+        const y = stringY + amp * envelope * visibleFactor;
+        points.push(`${50 + x} ${y}`);
       }
       return `M ${points.join(' L ')}`;
     };
@@ -532,6 +535,20 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
           {/* Vibrating string with premium glow */}
           <path d={generateWavePath()} fill="none" stroke="url(#standWaveGrad)" strokeWidth="5" strokeLinecap="round" filter="url(#standWaveGlow)" />
 
+          {/* Interactive marker at first antinode - moves with harmonic/tension */}
+          {antinodes.length > 0 && (
+            <circle
+              cx={antinodes[0]}
+              cy={stringY - amp * 0.7}
+              r="8"
+              fill="#fbbf24"
+              stroke="#ffffff"
+              strokeWidth="2"
+              filter="url(#standAntinodeGlow)"
+              opacity="0.95"
+            />
+          )}
+
           {/* Nodes with labels */}
           {nodes.map((x, i) => (
             <g key={`standNode-${i}`}>
@@ -541,7 +558,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               <circle cx={x} cy={stringY} r="4" fill="#fef2f2" />
               {/* Node label marker */}
               <circle cx={x} cy={stringY + 28} r="8" fill="#1f2937" stroke="#ef4444" strokeWidth="1" opacity="0.9" />
-              <text x={x} y={stringY + 32} textAnchor="middle" fill="#fca5a5" fontSize="8" fontWeight="700">N</text>
+              <text x={x} y={stringY + 32} textAnchor="middle" fill="#fca5a5" fontSize="11" fontWeight="700">N</text>
             </g>
           ))}
 
@@ -552,27 +569,23 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               <circle cx={x} cy={stringY} r="3" fill="#d1fae5" />
               {/* Antinode label marker */}
               <circle cx={x} cy={stringY - 28} r="8" fill="#1f2937" stroke="#10b981" strokeWidth="1" opacity="0.9" />
-              <text x={x} y={stringY - 24} textAnchor="middle" fill="#6ee7b7" fontSize="8" fontWeight="700">A</text>
+              <text x={x} y={stringY - 24} textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="700">A</text>
             </g>
           ))}
 
           {/* Harmonic indicator badge */}
-          <g transform="translate(10, 10)">
-            <rect x="0" y="0" width="60" height="32" rx="6" fill="#1f2937" stroke="#f59e0b" strokeWidth="1" />
-            <text x="30" y="13" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="600">Harmonic</text>
-            <text x="30" y="26" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="800">
-              n = {n}
-            </text>
-          </g>
+          <rect x="10" y="30" width="60" height="36" rx="6" fill="#1f2937" stroke="#f59e0b" strokeWidth="1" />
+          <text x="40" y="43" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="600">Harmonic</text>
+          <text x="40" y="59" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="800">
+            n = {n}
+          </text>
 
           {/* Tension indicator badge - updates SVG when tension changes */}
-          <g transform="translate(430, 10)">
-            <rect x="0" y="0" width="60" height="32" rx="6" fill="#1f2937" stroke="#8b5cf6" strokeWidth="1" />
-            <text x="30" y="13" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">Tension</text>
-            <text x="30" y="26" textAnchor="middle" fill="#8b5cf6" fontSize="12" fontWeight="800">
-              {tension}%
-            </text>
-          </g>
+          <rect x="430" y="30" width="60" height="36" rx="6" fill="#1f2937" stroke="#8b5cf6" strokeWidth="1" />
+          <text x="460" y="43" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">Tension</text>
+          <text x="460" y="59" textAnchor="middle" fill="#8b5cf6" fontSize="12" fontWeight="800">
+            {tension}%
+          </text>
 
           {/* Educational labels */}
           <text x="250" y="18" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="600">Standing Wave Pattern</text>
@@ -706,7 +719,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
             {/* Harmonic indicator */}
             <g transform="translate(10, 10)">
               <rect x="0" y="0" width="40" height="22" rx="4" fill="#1f2937" stroke="#f59e0b" strokeWidth="1" opacity="0.9" />
-              <text x="20" y="15" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="700">L/2</text>
+              <text x="20" y="15" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="700">L/2</text>
             </g>
           </svg>
           <p style={{ fontSize: typo.label }} className="text-slate-400 text-center px-4">
@@ -796,13 +809,13 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               {/* Left mirror - fully reflective */}
               <rect x="28" y="52" width="18" height="56" rx="4" fill="url(#standMirrorGrad)" />
               <rect x="30" y="54" width="3" height="52" rx="1" fill="#ddd6fe" opacity="0.4" />
-              <text x="37" y="125" textAnchor="middle" fill="#a78bfa" fontSize="8" fontWeight="600">100%</text>
+              <text x="37" y="125" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">100%</text>
             </g>
             <g>
               {/* Right mirror - partially transmissive */}
               <rect x="254" y="52" width="18" height="56" rx="4" fill="url(#standMirrorGrad)" opacity="0.7" />
               <rect x="256" y="54" width="3" height="52" rx="1" fill="#ddd6fe" opacity="0.3" />
-              <text x="263" y="125" textAnchor="middle" fill="#a78bfa" fontSize="8" fontWeight="600">~99%</text>
+              <text x="263" y="125" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">~99%</text>
             </g>
 
             {/* Output beam with animation */}
@@ -822,7 +835,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
             {/* Wavelength indicator */}
             <g transform="translate(10, 10)">
               <rect x="0" y="0" width="55" height="22" rx="4" fill="#1f2937" stroke="#8b5cf6" strokeWidth="1" opacity="0.9" />
-              <text x="28" y="15" textAnchor="middle" fill="#a78bfa" fontSize="9" fontWeight="700">L = n(lambda)/2</text>
+              <text x="28" y="15" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="700">L = n(lambda)/2</text>
             </g>
           </svg>
           <p style={{ fontSize: typo.label }} className="text-slate-400 text-center px-4">
@@ -938,25 +951,25 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
             {/* Energy level labels with premium styling */}
             <g transform="translate(240, 25)">
               <rect x="0" y="0" width="50" height="70" rx="6" fill="#1f2937" stroke="#10b981" strokeWidth="1" opacity="0.8" />
-              <text x="25" y="15" textAnchor="middle" fill="#6ee7b7" fontSize="8" fontWeight="600">SHELLS</text>
+              <text x="25" y="15" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="600">SHELLS</text>
               <g transform="translate(10, 25)">
                 <circle cx="8" cy="0" r="4" fill="#047857" />
-                <text x="18" y="4" fill="#6b7488" fontSize="9" fontWeight="500">n=1</text>
+                <text x="18" y="4" fill="#6b7488" fontSize="11" fontWeight="500">n=1</text>
               </g>
               <g transform="translate(10, 40)">
                 <circle cx="8" cy="0" r="4" fill="#059669" />
-                <text x="18" y="4" fill="#6b7488" fontSize="9" fontWeight="500">n=2</text>
+                <text x="18" y="4" fill="#6b7488" fontSize="11" fontWeight="500">n=2</text>
               </g>
               <g transform="translate(10, 55)">
                 <circle cx="8" cy="0" r="4" fill="#10b981" />
-                <text x="18" y="4" fill="#6b7488" fontSize="9" fontWeight="500">n=3</text>
+                <text x="18" y="4" fill="#6b7488" fontSize="11" fontWeight="500">n=3</text>
               </g>
             </g>
 
             {/* Quantum number indicator */}
             <g transform="translate(10, 10)">
               <rect x="0" y="0" width="65" height="22" rx="4" fill="#1f2937" stroke="#10b981" strokeWidth="1" opacity="0.9" />
-              <text x="33" y="15" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontWeight="700">n*lambda = 2*pi*r</text>
+              <text x="33" y="15" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="700">n*lambda = 2*pi*r</text>
             </g>
           </svg>
           <p style={{ fontSize: typo.label }} className="text-slate-400 text-center px-4">
@@ -1086,7 +1099,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
             {/* Room mode indicator */}
             <g transform="translate(10, 10)">
               <rect x="0" y="0" width="50" height="22" rx="4" fill="#1f2937" stroke="#ec4899" strokeWidth="1" opacity="0.9" />
-              <text x="25" y="15" textAnchor="middle" fill="#f472b6" fontSize="9" fontWeight="700">f = c/(2L)</text>
+              <text x="25" y="15" textAnchor="middle" fill="#f472b6" fontSize="11" fontWeight="700">f = c/(2L)</text>
             </g>
 
             {/* Wavelength label */}
@@ -1094,7 +1107,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               <line x1="99" y1="138" x2="201" y2="138" stroke="#ec4899" strokeWidth="1" />
               <polygon points="99,135 99,141 104,138" fill="#ec4899" />
               <polygon points="201,135 201,141 196,138" fill="#ec4899" />
-              <text x="150" y="148" textAnchor="middle" fill="#f472b6" fontSize="8">lambda/2</text>
+              <text x="150" y="148" textAnchor="middle" fill="#f472b6" fontSize="11">lambda/2</text>
             </g>
           </svg>
           <p style={{ fontSize: typo.label }} className="text-slate-400 text-center px-4">
@@ -1403,11 +1416,67 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 border: '1px solid rgba(245, 158, 11, 0.3)',
                 borderRadius: '12px',
                 padding: '16px',
-                marginBottom: '20px'
+                marginBottom: '16px'
               }}>
                 <p style={{ color: '#fbbf24', fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
-                  Adjust the wave frequency slider below to explore different harmonic modes. Each mode creates a unique standing wave pattern with distinct nodes and antinodes.
+                  Observe how this visualization shows standing wave patterns forming on a string fixed at both ends.
+                  When you increase the harmonic number, more loops appear because higher harmonics create more nodes.
+                  This is important in real-world applications - musical instruments, lasers, and antennas all use these principles.
                 </p>
+              </div>
+              {/* Key equation: f = (n/2L) × √(T/μ) */}
+              <div style={{
+                background: 'rgba(30, 41, 59, 0.5)',
+                border: '1px solid rgba(51, 65, 85, 0.5)',
+                borderRadius: '12px',
+                padding: '12px 16px',
+                marginBottom: '16px',
+                textAlign: 'center'
+              }}>
+                <span style={{ color: '#f8fafc', fontSize: '16px', fontFamily: 'serif' }}>
+                  f = (n/2L) × √(T/μ) &nbsp;→&nbsp; f<sub>n</sub> = n × {Math.round(baseFrequency)} = {frequency} Hz
+                </span>
+              </div>
+              {/* Current vs reference comparison */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'row',
+                gap: '12px',
+                marginBottom: '16px'
+              }}>
+                <div style={{
+                  flex: 1,
+                  background: 'rgba(245, 158, 11, 0.1)',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ color: '#e2e8f0', fontSize: '11px', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Reference</p>
+                  <p style={{ color: '#fbbf24', fontSize: '18px', fontWeight: 700, margin: 0 }}>{Math.round(baseFrequency)} Hz</p>
+                </div>
+                <div style={{
+                  flex: 1,
+                  background: 'rgba(245, 158, 11, 0.15)',
+                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ color: '#e2e8f0', fontSize: '11px', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current</p>
+                  <p style={{ color: '#f59e0b', fontSize: '18px', fontWeight: 700, margin: 0 }}>{frequency} Hz</p>
+                </div>
+                <div style={{
+                  flex: 1,
+                  background: 'rgba(139, 92, 246, 0.1)',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ color: '#e2e8f0', fontSize: '11px', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Factor</p>
+                  <p style={{ color: '#a78bfa', fontSize: '18px', fontWeight: 700, margin: 0 }}>{harmonic}x</p>
+                </div>
               </div>
               {/* Harmonic slider */}
               <div style={{ marginBottom: '24px' }}>
@@ -1430,7 +1499,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 <input
                   type="range" min="1" max="6" value={harmonic}
                   onChange={(e) => setHarmonic(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: '#f59e0b' }}
+                  style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#f59e0b' }}
                 />
               </div>
 
@@ -1508,11 +1577,19 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               fontSize: isMobile ? '24px' : '30px',
               fontWeight: 900,
               color: '#f8fafc',
-              marginBottom: '24px',
+              marginBottom: '16px',
               lineHeight: 1.2
             }}>
               The Physics of Standing Waves
             </h2>
+            <p style={{
+              fontSize: '16px',
+              color: '#94a3b8',
+              marginBottom: '24px',
+              lineHeight: 1.6
+            }}>
+              As you observed in the experiment, standing waves only form at specific frequencies. Your prediction was tested through observation!
+            </p>
 
             <div style={{
               display: 'grid',
@@ -1672,13 +1749,13 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 {/* Low tension string (top, loose) */}
                 <rect x="20" y="25" width="12" height="35" rx="4" fill="#374151" />
                 <rect x="368" y="25" width="12" height="35" rx="4" fill="#374151" />
-                <path d="M 32 42 Q 120 60 200 42 Q 280 24 368 42" fill="none" stroke="#64748b" strokeWidth="2" strokeDasharray="4,4" />
+                <path d="M 32 42 Q 120 75 200 42 Q 280 9 368 42" fill="none" stroke="#64748b" strokeWidth="2" strokeDasharray="4,4" />
                 <text x="200" y="20" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="600">Low Tension</text>
 
                 {/* High tension string (bottom, taut) */}
                 <rect x="20" y="80" width="12" height="35" rx="4" fill="#374151" />
                 <rect x="368" y="80" width="12" height="35" rx="4" fill="#374151" />
-                <path d="M 32 97 Q 120 91 200 97 Q 280 103 368 97" fill="none" stroke="url(#twistStringGrad)" strokeWidth="3" />
+                <path d="M 32 97 Q 120 78 200 97 Q 280 116 368 97" fill="none" stroke="url(#twistStringGrad)" strokeWidth="3" />
                 <text x="200" y="130" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">High Tension</text>
 
                 {/* Tension arrows */}
@@ -1795,7 +1872,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 <input
                   type="range" min="10" max="100" value={tension}
                   onChange={(e) => setTension(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: '#8b5cf6' }}
+                  style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#8b5cf6' }}
                 />
               </div>
 
@@ -1820,7 +1897,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 <input
                   type="range" min="1" max="6" value={harmonic}
                   onChange={(e) => setHarmonic(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: '#f59e0b' }}
+                  style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#f59e0b' }}
                 />
               </div>
 
@@ -2038,6 +2115,9 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
           {/* Content */}
           <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          paddingBottom: '100px',
+          paddingTop: '48px',
+          paddingTop: '48px',
             <div style={{ maxWidth: '720px', margin: '0 auto' }}>
               {/* Graphic */}
               <div style={{
@@ -2258,6 +2338,16 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
             <div style={{ fontSize: '72px', marginBottom: '24px' }}>
               {score >= 8 ? '🏆' : score >= 6 ? '⭐' : '📚'}
             </div>
+            <p style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#10b981',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em'
+            }}>
+              Test Complete! You scored
+            </p>
             <h2 style={{
               fontSize: '36px',
               fontWeight: 900,
@@ -2277,23 +2367,50 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                score >= 6 ? "Good job! Review the concepts you missed." :
                "Keep practicing! Review the material and try again."}
             </p>
-            <button
-              onClick={() => goToPhase('mastery')}
-              style={{
-                padding: '16px 40px',
-                borderRadius: '12px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: '#ffffff',
-                fontWeight: 700,
-                fontSize: '18px',
-                cursor: 'pointer',
-                boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Complete Lesson
-            </button>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  setPhase('hook');
+                  setTestIndex(0);
+                  setAnswers(Array(10).fill(null));
+                  setConfirmed(Array(10).fill(false));
+                  setShowResult(false);
+                  setDiscoveredHarmonics([1]);
+                  setActiveApp(0);
+                  setCompletedApps(new Set());
+                }}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: '#334155',
+                  color: '#e2e8f0',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Replay Lesson
+              </button>
+              <button
+                onClick={() => goToPhase('mastery')}
+                style={{
+                  padding: '16px 40px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Complete Lesson
+              </button>
+            </div>
           </div>
         );
       }
@@ -2465,7 +2582,12 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                   }}>
                     {q.options[answers[testIndex] as number]?.correct ? '✓ Correct!' : '✗ Not quite.'}
                   </strong>{' '}
-                  {q.explanation}
+                  <span>Explanation: {q.explanation}</span>
+                  {!q.options[answers[testIndex] as number]?.correct && (
+                    <span style={{ display: 'block', marginTop: '8px', color: '#94a3b8' }}>
+                      The correct answer is {q.options.find(o => o.correct)?.id.toUpperCase()}) {q.options.find(o => o.correct)?.label}
+                    </span>
+                  )}
                 </p>
               </div>
             )}

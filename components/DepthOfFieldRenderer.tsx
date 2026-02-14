@@ -564,7 +564,7 @@ export default function DepthOfFieldRenderer({
           <span style={{ color: defined.colors.text.muted, fontSize: typo.label }}>Sensor</span>
         </div>
 
-        <svg width={width} height={height - 30} style={{ overflow: 'visible' }}>
+        <svg width={width} height={height - 30} viewBox={`0 0 ${width} ${height - 30}`} role="img" aria-label="Depth of field ray diagram simulation" style={{ overflow: 'visible' }}>
           <defs>
             {/* Premium lab background gradient */}
             <linearGradient id="dofLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1070,13 +1070,13 @@ export default function DepthOfFieldRenderer({
       </h1>
 
       <p style={{
-        color: defined.colors.text.secondary,
+        color: '#e2e8f0',
         fontSize: defined.typography.sizes.lg,
         maxWidth: '500px',
         marginBottom: defined.spacing.xl,
         lineHeight: 1.6,
       }}>
-        You've seen it a thousand times: a portrait where the person is razor-sharp but the background melts into smooth, creamy blur. Your phone's "Portrait Mode" tries to fake it. But what's actually happening with light to create this effect?
+        You have seen it a thousand times: a portrait where the person is razor-sharp but the background melts into smooth, creamy blur. Your phone Portrait Mode tries to fake it. But what is actually happening with light to create this effect?
       </p>
 
       <div style={{
@@ -1087,18 +1087,18 @@ export default function DepthOfFieldRenderer({
         marginBottom: defined.spacing.xl,
         border: '1px solid rgba(99, 102, 241, 0.2)',
       }}>
-        <div style={{ fontSize: '4rem', marginBottom: defined.spacing.md }}>
-          <svg width="80" height="80" viewBox="0 0 80 80" style={{ margin: '0 auto', display: 'block' }}>
-            <circle cx="40" cy="40" r="35" fill="none" stroke="#6366F1" strokeWidth="3"/>
-            <circle cx="40" cy="40" r="20" fill="none" stroke="#6366F1" strokeWidth="2"/>
-            <circle cx="40" cy="40" r="8" fill="#6366F1"/>
-            <circle cx="25" cy="25" r="3" fill="#F472B6" opacity="0.7"/>
-            <circle cx="55" cy="55" r="5" fill="#F472B6" opacity="0.5"/>
-            <circle cx="60" cy="25" r="4" fill="#F472B6" opacity="0.6"/>
+        <div style={{ marginBottom: defined.spacing.md }}>
+          <svg width="200" height="120" viewBox="0 0 200 120" role="img" aria-label="Depth of field camera lens illustration" style={{ margin: '0 auto', display: 'block' }}>
+            <circle cx="100" cy="60" r="45" fill="none" stroke="#6366F1" strokeWidth="3"/>
+            <circle cx="100" cy="60" r="28" fill="none" stroke="#6366F1" strokeWidth="2"/>
+            <circle cx="100" cy="60" r="12" fill="#6366F1"/>
+            <circle cx="70" cy="35" r="5" fill="#F472B6" opacity="0.7"/>
+            <circle cx="140" cy="85" r="7" fill="#F472B6" opacity="0.5"/>
+            <circle cx="150" cy="35" r="6" fill="#F472B6" opacity="0.6"/>
           </svg>
         </div>
-        <p style={{ color: defined.colors.text.primary, fontSize: defined.typography.sizes.base, lineHeight: 1.6 }}>
-          The answer lies in something photographers call the <span style={{ color: defined.colors.lens.blur, fontWeight: defined.typography.weights.semibold }}>"circle of confusion"</span> - how light rays spread when they don't converge perfectly on the camera's sensor.
+        <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.base, lineHeight: 1.6 }}>
+          The answer lies in something photographers call the <span style={{ color: defined.colors.lens.blur, fontWeight: defined.typography.weights.semibold }}>circle of confusion</span> - how light rays spread when they do not converge perfectly on the camera sensor.
         </p>
         <p style={{ color: defined.colors.accent, marginTop: defined.spacing.md, fontWeight: defined.typography.weights.semibold }}>
           Master this, and you'll understand every camera ever made!
@@ -1117,6 +1117,7 @@ export default function DepthOfFieldRenderer({
           fontWeight: defined.typography.weights.semibold,
           cursor: 'pointer',
           boxShadow: defined.shadows.glow,
+          minHeight: '44px',
         }}
       >
         Discover Depth of Field
@@ -1126,6 +1127,13 @@ export default function DepthOfFieldRenderer({
 
   const renderPredict = () => (
     <div style={{ padding: defined.spacing.lg, maxWidth: '600px', margin: '0 auto' }}>
+      {/* Progress indicator */}
+      <div style={{ textAlign: 'center', marginBottom: defined.spacing.md }}>
+        <span style={{ color: '#e2e8f0', fontSize: typo.small }}>
+          Step 1 of 1 - Make your prediction
+        </span>
+      </div>
+
       <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg, fontSize: typo.heading }}>
         Make Your Prediction
       </h2>
@@ -1137,7 +1145,7 @@ export default function DepthOfFieldRenderer({
         marginBottom: defined.spacing.lg,
         border: '1px solid rgba(99, 102, 241, 0.2)',
       }}>
-        <p style={{ color: defined.colors.text.secondary, marginBottom: defined.spacing.md, lineHeight: 1.6 }}>
+        <p style={{ color: '#e2e8f0', marginBottom: defined.spacing.md, lineHeight: 1.6 }}>
           You want to photograph a flower with a beautifully blurred background. You have three options: open your aperture wider (lower f-number), move closer to the flower, or use a longer focal length lens.
         </p>
         <p style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.semibold }}>
@@ -1154,6 +1162,7 @@ export default function DepthOfFieldRenderer({
         <button
           key={option.id}
           onClick={() => setPrediction(option.id)}
+          aria-pressed={prediction === option.id}
           style={{
             width: '100%',
             padding: defined.spacing.md,
@@ -1168,6 +1177,7 @@ export default function DepthOfFieldRenderer({
             textAlign: 'left',
             fontSize: typo.body,
             transition: 'all 0.2s ease',
+            minHeight: '44px',
           }}
         >
           {option.id}. {option.text}
@@ -1185,7 +1195,7 @@ export default function DepthOfFieldRenderer({
           <p style={{ color: prediction === 'A' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold, marginBottom: defined.spacing.sm }}>
             {prediction === 'A' ? 'Correct!' : 'Good thinking, but not quite!'}
           </p>
-          <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6 }}>
+          <p style={{ color: '#e2e8f0', lineHeight: 1.6 }}>
             Aperture has the most direct effect on depth of field. A wider aperture (like f/1.8) creates a larger cone of rays passing through the lens, which forms a larger blur disk (circle of confusion) for out-of-focus objects. All factors matter, but aperture is the most powerful tool photographers have!
           </p>
           <button
@@ -1199,6 +1209,7 @@ export default function DepthOfFieldRenderer({
               padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
               cursor: 'pointer',
               fontWeight: defined.typography.weights.semibold,
+              minHeight: '44px',
             }}
           >
             See the Ray Diagram
@@ -1213,9 +1224,25 @@ export default function DepthOfFieldRenderer({
       <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.md, fontSize: typo.heading }}>
         Depth of Field Lab
       </h2>
-      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg, maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
+      <p style={{ color: '#e2e8f0', textAlign: 'center', marginBottom: defined.spacing.md, maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
         Adjust aperture, subject distance, and focus to see how blur circles form on the sensor.
       </p>
+
+      {/* Observation guidance */}
+      <div style={{
+        background: 'rgba(99, 102, 241, 0.15)',
+        border: '1px solid rgba(99, 102, 241, 0.3)',
+        borderRadius: defined.radius.md,
+        padding: defined.spacing.md,
+        marginBottom: defined.spacing.lg,
+        maxWidth: '550px',
+        margin: '0 auto',
+        marginTop: defined.spacing.md,
+      }}>
+        <p style={{ color: '#e2e8f0', fontSize: typo.body, textAlign: 'center' }}>
+          <strong>Observe:</strong> Use the sliders below to adjust aperture, subject distance, and focus. Watch how the blur circles change size on the sensor.
+        </p>
+      </div>
 
       <div style={{ marginTop: defined.spacing.lg }}>
         {renderRayConeVisualization()}
@@ -1231,7 +1258,7 @@ export default function DepthOfFieldRenderer({
         border: '1px solid rgba(99, 102, 241, 0.2)',
       }}>
         <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm }}>Try These Experiments:</h3>
-        <ul style={{ color: defined.colors.text.secondary, paddingLeft: defined.spacing.lg, lineHeight: '2' }}>
+        <ul style={{ color: '#e2e8f0', paddingLeft: defined.spacing.lg, lineHeight: '2' }}>
           <li>Open the aperture wide - watch the blur circles grow</li>
           <li>Move the subject away from the focus distance</li>
           <li>Match subject distance to focus distance - see sharp focus</li>
@@ -1251,6 +1278,7 @@ export default function DepthOfFieldRenderer({
             cursor: 'pointer',
             fontSize: typo.body,
             fontWeight: defined.typography.weights.semibold,
+            minHeight: '44px',
           }}
         >
           Understand the Physics
@@ -1273,13 +1301,13 @@ export default function DepthOfFieldRenderer({
       }}>
         <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, border: '1px solid rgba(244, 114, 182, 0.3)' }}>
           <h3 style={{ color: defined.colors.lens.blur, marginBottom: defined.spacing.sm }}>Circle of Confusion</h3>
-          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, lineHeight: 1.6 }}>
-            When a point is out of focus, light from it doesn't converge to a point on the sensor. Instead, it forms a disk. If this disk is small enough (below the eye's resolving ability), we perceive it as sharp. Larger disks appear blurred.
+          <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, lineHeight: 1.6 }}>
+            When a point is out of focus, light from it does not converge to a point on the sensor. Instead, it forms a disk. If this disk is small enough (below the eye resolving ability), we perceive it as sharp. Larger disks appear blurred.
           </p>
         </div>
         <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, border: '1px solid rgba(245, 158, 11, 0.3)' }}>
           <h3 style={{ color: defined.colors.accent, marginBottom: defined.spacing.sm }}>F-Number Explained</h3>
-          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, lineHeight: 1.6 }}>
+          <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, lineHeight: 1.6 }}>
             f-number = focal length / aperture diameter. A lower f-number means a wider physical aperture opening, which creates a larger cone of light and bigger blur circles for out-of-focus areas.
           </p>
         </div>
@@ -1294,22 +1322,22 @@ export default function DepthOfFieldRenderer({
         }}>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs, color: defined.colors.success }}>f/1.4</div>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Wide aperture<br/>Very shallow DOF<br/>Maximum blur</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm }}>Wide aperture<br/>Very shallow DOF<br/>Maximum blur</p>
           </div>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs, color: defined.colors.accent }}>f/8</div>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Medium aperture<br/>Moderate DOF<br/>Balanced</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm }}>Medium aperture<br/>Moderate DOF<br/>Balanced</p>
           </div>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs, color: defined.colors.primary }}>f/22</div>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Narrow aperture<br/>Very deep DOF<br/>Everything sharp</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm }}>Narrow aperture<br/>Very deep DOF<br/>Everything sharp</p>
           </div>
         </div>
       </div>
 
       <div style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: defined.radius.lg, padding: defined.spacing.lg, marginBottom: defined.spacing.lg }}>
         <h4 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm }}>The Key Insight</h4>
-        <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6 }}>
+        <p style={{ color: '#e2e8f0', lineHeight: 1.6 }}>
           A point of light becomes a blur disk when out of focus. The size of this disk depends on the aperture opening size. Larger aperture = larger blur disk = shallower depth of field. This is pure geometry!
         </p>
       </div>
@@ -1325,6 +1353,7 @@ export default function DepthOfFieldRenderer({
             padding: `${defined.spacing.md} ${defined.spacing.xl}`,
             cursor: 'pointer',
             fontWeight: defined.typography.weights.semibold,
+            minHeight: '44px',
           }}
         >
           See the Twist
@@ -1335,6 +1364,13 @@ export default function DepthOfFieldRenderer({
 
   const renderTwistPredict = () => (
     <div style={{ padding: defined.spacing.lg, maxWidth: '600px', margin: '0 auto' }}>
+      {/* Progress indicator */}
+      <div style={{ textAlign: 'center', marginBottom: defined.spacing.md }}>
+        <span style={{ color: '#e2e8f0', fontSize: typo.small }}>
+          Step 1 of 1 - Make your prediction
+        </span>
+      </div>
+
       <div style={{
         background: 'rgba(139, 92, 246, 0.1)',
         border: '1px solid rgba(139, 92, 246, 0.3)',
@@ -1359,11 +1395,11 @@ export default function DepthOfFieldRenderer({
         marginBottom: defined.spacing.lg,
         border: '1px solid rgba(139, 92, 246, 0.2)',
       }}>
-        <p style={{ color: defined.colors.text.secondary, marginBottom: defined.spacing.md, lineHeight: 1.6 }}>
-          You're photographing a person with a tree 10 meters behind them. Without changing your aperture setting at all, you walk closer to the person (from 3m to 1.5m away) and refocus on their face.
+        <p style={{ color: '#e2e8f0', marginBottom: defined.spacing.md, lineHeight: 1.6 }}>
+          You are photographing a person with a tree 10 meters behind them. Without changing your aperture setting at all, you walk closer to the person (from 3m to 1.5m away) and refocus on their face.
         </p>
         <p style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.semibold }}>
-          What happens to the background tree's blur?
+          What happens to the background tree blur?
         </p>
       </div>
 
@@ -1376,6 +1412,7 @@ export default function DepthOfFieldRenderer({
         <button
           key={option.id}
           onClick={() => setTwistPrediction(option.id)}
+          aria-pressed={twistPrediction === option.id}
           style={{
             width: '100%',
             padding: defined.spacing.md,
@@ -1389,6 +1426,7 @@ export default function DepthOfFieldRenderer({
             cursor: 'pointer',
             textAlign: 'left',
             fontSize: typo.body,
+            minHeight: '44px',
           }}
         >
           {option.id}. {option.text}
@@ -1404,10 +1442,10 @@ export default function DepthOfFieldRenderer({
           marginTop: defined.spacing.lg,
         }}>
           <p style={{ color: twistPrediction === 'B' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold, marginBottom: defined.spacing.sm }}>
-            {twistPrediction === 'B' ? 'Exactly right!' : "Surprising, isn't it?"}
+            {twistPrediction === 'B' ? 'Exactly right!' : 'Surprising, is it not?'}
           </p>
-          <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6 }}>
-            Moving closer to the subject while maintaining focus on them dramatically increases background blur! This is because the angular difference between the subject and background increases. The closer your subject, the relatively "farther" the background appears optically, creating larger circles of confusion.
+          <p style={{ color: '#e2e8f0', lineHeight: 1.6 }}>
+            Moving closer to the subject while maintaining focus on them dramatically increases background blur! This is because the angular difference between the subject and background increases. The closer your subject, the relatively farther the background appears optically, creating larger circles of confusion.
           </p>
           <button
             onClick={handlePhaseComplete}
@@ -1420,6 +1458,7 @@ export default function DepthOfFieldRenderer({
               padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
               cursor: 'pointer',
               fontWeight: defined.typography.weights.semibold,
+              minHeight: '44px',
             }}
           >
             Experiment With This
@@ -1434,9 +1473,25 @@ export default function DepthOfFieldRenderer({
       <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.md, fontSize: typo.heading }}>
         Distance and Background Blur
       </h2>
-      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg, maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
+      <p style={{ color: '#e2e8f0', textAlign: 'center', marginBottom: defined.spacing.md, maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
         Keep aperture constant. Move the subject closer while keeping it in focus. Watch the background blur intensify!
       </p>
+
+      {/* Observation guidance */}
+      <div style={{
+        background: 'rgba(139, 92, 246, 0.15)',
+        border: '1px solid rgba(139, 92, 246, 0.3)',
+        borderRadius: defined.radius.md,
+        padding: defined.spacing.md,
+        marginBottom: defined.spacing.lg,
+        maxWidth: '550px',
+        margin: '0 auto',
+        marginTop: defined.spacing.md,
+      }}>
+        <p style={{ color: '#e2e8f0', fontSize: typo.body, textAlign: 'center' }}>
+          <strong>Observe:</strong> Use the sliders to move the subject closer or farther. Notice how the background blur changes even without adjusting aperture.
+        </p>
+      </div>
 
       <div style={{ marginTop: defined.spacing.lg }}>
         {renderRayConeVisualization()}
@@ -1457,11 +1512,11 @@ export default function DepthOfFieldRenderer({
           padding: defined.spacing.md,
         }}>
           <h4 style={{ color: defined.colors.success, marginBottom: defined.spacing.sm }}>Subject Closer (50-80)</h4>
-          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md, lineHeight: 1.8 }}>
+          <ul style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md, lineHeight: 1.8 }}>
             <li>Subject fills more of the frame</li>
             <li>Background blur increases dramatically</li>
             <li>Shallower effective depth of field</li>
-            <li>More "professional" portrait look</li>
+            <li>More professional portrait look</li>
           </ul>
         </div>
         <div style={{
@@ -1471,7 +1526,7 @@ export default function DepthOfFieldRenderer({
           padding: defined.spacing.md,
         }}>
           <h4 style={{ color: defined.colors.lens.ray, marginBottom: defined.spacing.sm }}>Subject Farther (150-180)</h4>
-          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md, lineHeight: 1.8 }}>
+          <ul style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md, lineHeight: 1.8 }}>
             <li>Subject smaller in frame</li>
             <li>Background blur decreases</li>
             <li>Deeper effective depth of field</li>
@@ -1491,6 +1546,7 @@ export default function DepthOfFieldRenderer({
             padding: `${defined.spacing.md} ${defined.spacing.xl}`,
             cursor: 'pointer',
             fontWeight: defined.typography.weights.semibold,
+            minHeight: '44px',
           }}
         >
           Review the Discovery
@@ -1509,29 +1565,29 @@ export default function DepthOfFieldRenderer({
         <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md, textAlign: 'center' }}>Three Ways to Increase Background Blur</h3>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: defined.spacing.md }}>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: defined.spacing.xs }}>1</div>
+            <div style={{ fontSize: '2.5rem', marginBottom: defined.spacing.xs, color: '#e2e8f0' }}>1</div>
             <h4 style={{ color: defined.colors.accent, marginBottom: defined.spacing.xs }}>Open Aperture</h4>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>f/2.8 to f/1.4</p>
-            <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.xs, marginTop: defined.spacing.xs }}>Larger cone of light = bigger blur circles</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm }}>f/2.8 to f/1.4</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.xs, marginTop: defined.spacing.xs }}>Larger cone of light = bigger blur circles</p>
           </div>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: defined.spacing.xs }}>2</div>
+            <div style={{ fontSize: '2.5rem', marginBottom: defined.spacing.xs, color: '#e2e8f0' }}>2</div>
             <h4 style={{ color: defined.colors.success, marginBottom: defined.spacing.xs }}>Move Closer</h4>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>3m to 1m</p>
-            <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.xs, marginTop: defined.spacing.xs }}>Increases angular difference to background</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm }}>3m to 1m</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.xs, marginTop: defined.spacing.xs }}>Increases angular difference to background</p>
           </div>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: defined.spacing.xs }}>3</div>
+            <div style={{ fontSize: '2.5rem', marginBottom: defined.spacing.xs, color: '#e2e8f0' }}>3</div>
             <h4 style={{ color: defined.colors.lens.ray, marginBottom: defined.spacing.xs }}>Longer Lens</h4>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>50mm to 200mm</p>
-            <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.xs, marginTop: defined.spacing.xs }}>Larger physical aperture at same f-number</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm }}>50mm to 200mm</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.xs, marginTop: defined.spacing.xs }}>Larger physical aperture at same f-number</p>
           </div>
         </div>
       </div>
 
       <div style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: defined.radius.lg, padding: defined.spacing.lg, marginBottom: defined.spacing.lg }}>
         <h4 style={{ color: defined.colors.secondary, marginBottom: defined.spacing.sm }}>Pro Tip: Combine All Three!</h4>
-        <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6 }}>
+        <p style={{ color: '#e2e8f0', lineHeight: 1.6 }}>
           Professional portrait photographers use all three factors together: an 85mm lens (longer focal length) at f/1.4 (wide aperture) shot from about 2 meters (close distance). This combination creates the maximum possible subject isolation with beautifully smooth background blur.
         </p>
       </div>
@@ -1547,6 +1603,7 @@ export default function DepthOfFieldRenderer({
             padding: `${defined.spacing.md} ${defined.spacing.xl}`,
             cursor: 'pointer',
             fontWeight: defined.typography.weights.semibold,
+            minHeight: '44px',
           }}
         >
           Real-World Applications
@@ -1560,10 +1617,17 @@ export default function DepthOfFieldRenderer({
 
     return (
       <div style={{ padding: defined.spacing.lg, maxWidth: '900px', margin: '0 auto' }}>
+        {/* Progress indicator */}
+        <div style={{ textAlign: 'center', marginBottom: defined.spacing.md }}>
+          <span style={{ color: '#e2e8f0', fontSize: typo.small }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </span>
+        </div>
+
         <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.md, fontSize: typo.heading }}>
           Real-World Applications
         </h2>
-        <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
+        <p style={{ color: '#e2e8f0', textAlign: 'center', marginBottom: defined.spacing.lg }}>
           Depth of field principles power industries worth billions of dollars
         </p>
 
@@ -1706,6 +1770,7 @@ export default function DepthOfFieldRenderer({
                 borderRadius: defined.radius.md,
                 cursor: 'pointer',
                 fontWeight: defined.typography.weights.semibold,
+                minHeight: '44px',
               }}
             >
               Mark as Understood
@@ -1713,29 +1778,78 @@ export default function DepthOfFieldRenderer({
           )}
         </div>
 
-        {/* Progress indicator */}
-        <div style={{ textAlign: 'center', marginTop: defined.spacing.lg }}>
-          <p style={{ color: defined.colors.text.muted, marginBottom: defined.spacing.md }}>
-            {completedApps.filter(Boolean).length} of {realWorldApps.length} applications explored
-          </p>
-          {allAppsCompleted && (
+        {/* Navigation between applications */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: defined.spacing.lg,
+          gap: defined.spacing.md,
+        }}>
+          {selectedApp > 0 ? (
             <button
-              onClick={handlePhaseComplete}
+              onClick={() => setSelectedApp(selectedApp - 1)}
               style={{
+                padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
+                background: defined.colors.background.tertiary,
+                color: '#e2e8f0',
+                border: 'none',
+                borderRadius: defined.radius.md,
+                cursor: 'pointer',
+                fontWeight: defined.typography.weights.medium,
+                minHeight: '44px',
+              }}
+            >
+              Previous
+            </button>
+          ) : <div />}
+
+          {selectedApp < realWorldApps.length - 1 ? (
+            <button
+              onClick={() => {
+                if (!completedApps[selectedApp]) {
+                  handleCompleteApp();
+                }
+                setSelectedApp(selectedApp + 1);
+              }}
+              style={{
+                padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
                 background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
                 color: defined.colors.text.primary,
                 border: 'none',
-                borderRadius: defined.radius.lg,
-                padding: `${defined.spacing.md} ${defined.spacing.xl}`,
+                borderRadius: defined.radius.md,
                 cursor: 'pointer',
-                fontSize: typo.body,
                 fontWeight: defined.typography.weights.semibold,
+                minHeight: '44px',
+              }}
+            >
+              Next Application
+            </button>
+          ) : (
+            <button
+              onClick={handlePhaseComplete}
+              style={{
+                padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
+                background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
+                color: defined.colors.text.primary,
+                border: 'none',
+                borderRadius: defined.radius.md,
+                cursor: 'pointer',
+                fontWeight: defined.typography.weights.semibold,
+                minHeight: '44px',
                 boxShadow: defined.shadows.glow,
               }}
             >
               Take the Knowledge Test
             </button>
           )}
+        </div>
+
+        {/* Progress status */}
+        <div style={{ textAlign: 'center', marginTop: defined.spacing.lg }}>
+          <p style={{ color: '#e2e8f0', marginBottom: defined.spacing.md }}>
+            {completedApps.filter(Boolean).length} of {realWorldApps.length} applications explored
+          </p>
         </div>
       </div>
     );
@@ -1805,8 +1919,8 @@ export default function DepthOfFieldRenderer({
           alignItems: 'center',
           marginBottom: defined.spacing.lg,
         }}>
-          <span style={{ color: defined.colors.text.secondary }}>
-            Question {currentQuestion + 1} of {testQuestions.length}
+          <span style={{ color: '#e2e8f0' }}>
+            Q{currentQuestion + 1} of {testQuestions.length}
           </span>
           <span style={{ color: defined.colors.success, fontWeight: defined.typography.weights.semibold }}>
             Score: {score}/{currentQuestion + (showResult ? 1 : 0)}
@@ -2056,13 +2170,13 @@ export default function DepthOfFieldRenderer({
       color: defined.colors.text.primary,
       position: 'relative',
     }}>
-      {/* Fixed Header */}
-      <div style={{
+      {/* Fixed Header Navigation Bar */}
+      <nav style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 50,
+        zIndex: 9999,
         background: 'rgba(15, 23, 42, 0.95)',
         backdropFilter: 'blur(10px)',
         borderBottom: `1px solid ${defined.colors.background.tertiary}`,
@@ -2074,8 +2188,9 @@ export default function DepthOfFieldRenderer({
           padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
           maxWidth: '1200px',
           margin: '0 auto',
+          minHeight: '44px',
         }}>
-          <span style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+          <span style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm }}>
             Depth of Field
           </span>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -2101,7 +2216,7 @@ export default function DepthOfFieldRenderer({
             {phaseLabels[phase]}
           </span>
         </div>
-      </div>
+      </nav>
 
       {/* Main Content */}
       <div style={{ paddingTop: '60px', paddingBottom: '100px' }}>
@@ -2124,7 +2239,7 @@ export default function DepthOfFieldRenderer({
         justifyContent: 'space-between',
         alignItems: 'center',
       }}>
-        <span style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>
+        <span style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm }}>
           {currentPhaseIndex + 1} / {phaseOrder.length}
         </span>
         <button
@@ -2137,6 +2252,7 @@ export default function DepthOfFieldRenderer({
             borderRadius: defined.radius.md,
             cursor: 'pointer',
             fontWeight: defined.typography.weights.semibold,
+            minHeight: '44px',
           }}
         >
           Continue

@@ -108,13 +108,13 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   hook: 'Hook',
   predict: 'Predict',
-  play: 'Lab',
+  play: 'Experiment',
   review: 'Review',
   twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
+  twist_play: 'Twist Experiment',
   twist_review: 'Twist Review',
-  transfer: 'Transfer',
-  test: 'Test',
+  transfer: 'Real-World Transfer',
+  test: 'Knowledge Test',
   mastery: 'Mastery'
 };
 
@@ -141,8 +141,8 @@ const colors = {
   bgHover: '#27272A',
   border: '#2E2E33',
   textPrimary: '#FAFAFA',
-  textSecondary: '#A1A1AA',
-  textTertiary: '#71717A',
+  textSecondary: '#D0D0D8',
+  textTertiary: '#BEC0CC',
   work: '#3B82F6',
   power: '#F59E0B',
   energy: '#10B981',
@@ -247,100 +247,100 @@ const testQuestions = [
   {
     question: 'A 60kg person climbs 5 meters of stairs in 10 seconds. What is their power output? (g = 10 m/s²)',
     options: [
-      { text: '30 W', correct: false },
-      { text: '300 W', correct: true },
-      { text: '3000 W', correct: false },
-      { text: '60 W', correct: false },
+      { text: '30 Watts - low estimate', correct: false },
+      { text: '300 Watts - correct calculation', correct: true },
+      { text: '3000 Watts - too high', correct: false },
+      { text: '60 Watts - mass only', correct: false },
     ],
-    explanation: 'P = W/t = mgh/t = 60 × 10 × 5 / 10 = 300 W',
+    explanation: 'P = W/t = mgh/t = 60 × 10 × 5 / 10 = 300 W. The correct answer uses the full power formula.',
   },
   {
     question: 'Two people do the same amount of work. Person A takes 5 seconds, Person B takes 10 seconds. Which is true?',
     options: [
-      { text: 'A has twice the power', correct: true },
-      { text: 'B has twice the power', correct: false },
-      { text: 'Both have equal power', correct: false },
-      { text: 'Cannot determine', correct: false },
+      { text: 'Person A has twice the power output', correct: true },
+      { text: 'Person B has twice the power output', correct: false },
+      { text: 'Both have exactly equal power', correct: false },
+      { text: 'Cannot determine from given info', correct: false },
     ],
-    explanation: 'Power = Work/Time. Same work in half the time = twice the power.',
+    explanation: 'Power = Work/Time. Same work in half the time = twice the power. This is the key relationship.',
   },
   {
     question: 'A crane lifts a 500kg load 20m in 10 seconds. What power does the motor provide? (g = 10 m/s²)',
     options: [
-      { text: '1000 W', correct: false },
-      { text: '10,000 W', correct: true },
-      { text: '100,000 W', correct: false },
-      { text: '250 W', correct: false },
+      { text: '1000 Watts - underestimate', correct: false },
+      { text: '10,000 Watts (10 kilowatts)', correct: true },
+      { text: '100,000 Watts - overestimate', correct: false },
+      { text: '250 Watts - far too low', correct: false },
     ],
-    explanation: 'P = mgh/t = 500 × 10 × 20 / 10 = 10,000 W = 10 kW',
+    explanation: 'P = mgh/t = 500 × 10 × 20 / 10 = 10,000 W = 10 kW. This is a substantial motor.',
   },
   {
     question: 'If you push a box with 100N force at 2 m/s constant speed, what is your power output?',
     options: [
-      { text: '50 W', correct: false },
-      { text: '200 W', correct: true },
-      { text: '400 W', correct: false },
-      { text: '100 W', correct: false },
+      { text: '50 Watts - half the force', correct: false },
+      { text: '200 Watts - force times velocity', correct: true },
+      { text: '400 Watts - double counted', correct: false },
+      { text: '100 Watts - force only value', correct: false },
     ],
-    explanation: 'P = Fv = 100 × 2 = 200 W',
+    explanation: 'P = Fv = 100 × 2 = 200 W. Power equals force multiplied by velocity.',
   },
   {
     question: 'A 1000W motor runs for 1 hour. How much work does it do?',
     options: [
-      { text: '1000 J', correct: false },
-      { text: '60,000 J', correct: false },
-      { text: '3,600,000 J', correct: true },
-      { text: '1 J', correct: false },
+      { text: '1000 Joules - forgot time conversion', correct: false },
+      { text: '60,000 Joules - only one minute', correct: false },
+      { text: '3,600,000 Joules (3.6 megajoules)', correct: true },
+      { text: '1 Joule - completely wrong', correct: false },
     ],
-    explanation: 'W = Pt = 1000 × 3600 = 3,600,000 J = 3.6 MJ',
+    explanation: 'W = Pt = 1000 × 3600 = 3,600,000 J = 3.6 MJ. Remember: 1 hour = 3600 seconds.',
   },
   {
     question: 'Why do electric cars have faster acceleration than similarly powered gas cars?',
     options: [
-      { text: 'They weigh less', correct: false },
-      { text: 'Instant max torque from 0 RPM', correct: true },
-      { text: 'They use better tires', correct: false },
-      { text: 'Electric motors are more efficient', correct: false },
+      { text: 'Electric cars always weigh less than gas cars', correct: false },
+      { text: 'Instant maximum torque from zero RPM', correct: true },
+      { text: 'Electric cars use specially designed tires', correct: false },
+      { text: 'Electric motors are more thermally efficient', correct: false },
     ],
-    explanation: 'Electric motors deliver maximum torque instantly at 0 RPM, while gas engines need to rev up.',
+    explanation: 'Electric motors deliver maximum torque instantly at 0 RPM, while gas engines need to rev up to their power band.',
   },
   {
     question: 'A cyclist produces 400W and weighs 80kg with bike. Climbing a 10% grade at constant speed, what is their velocity?',
     options: [
-      { text: '0.5 m/s', correct: false },
-      { text: '5 m/s', correct: true },
-      { text: '50 m/s', correct: false },
-      { text: '1 m/s', correct: false },
+      { text: '0.5 meters per second - too slow', correct: false },
+      { text: '5 meters per second - correct answer', correct: true },
+      { text: '50 meters per second - impossibly fast', correct: false },
+      { text: '1 meter per second - underestimate', correct: false },
     ],
     explanation: 'P = mgv sin(θ) ≈ 80 × 10 × v × 0.1 = 80v. So v = 400/80 = 5 m/s',
   },
   {
     question: 'Which requires more power: lifting 100kg by 1m in 1 second, or lifting 10kg by 10m in 10 seconds?',
     options: [
-      { text: 'The 100kg lift', correct: true },
-      { text: 'The 10kg lift', correct: false },
-      { text: 'They require equal power', correct: false },
-      { text: 'Cannot compare', correct: false },
+      { text: 'The 100kg lift requires more power', correct: true },
+      { text: 'The 10kg lift requires more power', correct: false },
+      { text: 'Both require exactly equal power', correct: false },
+      { text: 'Cannot compare these two scenarios', correct: false },
     ],
-    explanation: '100kg: P = 100×10×1/1 = 1000W. 10kg: P = 10×10×10/10 = 100W. 100kg needs 10× more power.',
+    explanation: '100kg: P = 100×10×1/1 = 1000W. 10kg: P = 10×10×10/10 = 100W. The heavier lift needs 10× more power.',
   },
   {
     question: 'If the human body is 25% efficient, how much food energy (calories) powers a 400W workout for 1 hour?',
     options: [
-      { text: '400 kcal', correct: false },
-      { text: '1600 kcal', correct: false },
-      { text: '100 kcal', correct: false },
-      { text: '344 kcal', correct: true },
+      { text: '400 kcal - mechanical work only', correct: false },
+      { text: '1600 kcal - four times work value', correct: false },
+      { text: '100 kcal - significant underestimate', correct: false },
+      { text: '344 kcal - accounting for efficiency', correct: true },
     ],
     explanation: 'Mechanical work = 400 × 3600 = 1.44 MJ. At 25% efficiency, need 5.76 MJ = ~1370 kcal ≈ 344 kcal (accounting for 4.18 kJ/kcal).',
   },
   {
     question: 'A 100W light bulb and a 100W electric motor both run for an hour. Which does more work?',
     options: [
-      { text: 'The light bulb', correct: false },
-      { text: 'The motor', correct: false },
-      { text: 'Equal work - same power rating', correct: true },
-      { text: 'Depends on efficiency', correct: false },
+      { text: 'The light bulb does more total work', correct: false },
+      { text: 'The electric motor does more total work', correct: false },
+      { text: 'Equal work output - same power rating means same energy', correct: true },
+      { text: 'Depends entirely on their operating efficiency', correct: false },
     ],
     explanation: 'Both consume 100W × 3600s = 360,000 J of electrical energy. The motor converts more to mechanical work; the bulb to light and heat.',
   },
@@ -364,6 +364,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
   const [isClimbing, setIsClimbing] = useState(false);
   const [climbProgress, setClimbProgress] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [backpackWeight, setBackpackWeight] = useState(0); // twist_play state
 
   // Animation
   const animationRef = useRef<number | null>(null);
@@ -399,30 +400,33 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
     }
   }, [gamePhase]);
 
-  // Web Audio API sound
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
+  // Web Audio API sound - non-blocking
+  const playSound = useCallback((_type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined' || typeof window.AudioContext === 'undefined') return;
+    // Fire-and-forget to avoid blocking button response
+    requestAnimationFrame(() => {
+      try {
+        const audioContext = new AudioContext();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        const sounds = {
+          click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+          success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+          failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+          transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+          complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+        };
+        const sound = sounds[_type];
+        oscillator.frequency.value = sound.freq;
+        oscillator.type = sound.type;
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + sound.duration);
+      } catch { /* Audio not available */ }
+    });
   }, []);
 
   // Emit events
@@ -548,7 +552,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
           borderRadius: radius.md,
           border: 'none',
           cursor: disabled ? 'not-allowed' : 'pointer',
-          transition: 'all 0.2s',
+          transition: 'all 0.2s ease',
           opacity: disabled ? 0.5 : 1,
           zIndex: 10,
           ...variants[variant],
@@ -760,6 +764,21 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
           {/* Ground line */}
           <rect x="0" y="280" width="500" height="40" fill="url(#wkpwGround)" />
 
+          {/* Grid lines for reference */}
+          <line x1="0" y1="80" x2="500" y2="80" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="6 4" opacity="0.4" />
+          <line x1="0" y1="140" x2="500" y2="140" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="6 4" opacity="0.4" />
+          <line x1="0" y1="200" x2="500" y2="200" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="6 4" opacity="0.4" />
+
+          {/* Energy transfer path - shows work being done against gravity */}
+          <path
+            d={`M80 280 L92 267 L104 253 L116 240 L128 227 L140 213 L152 200 L164 187 L176 173 L188 160 L200 147 L212 133 L224 120 L236 107 L248 93 L260 80`}
+            stroke="#f59e0b"
+            strokeWidth="2"
+            fill="none"
+            opacity="0.4"
+            strokeDasharray="4 4"
+          />
+
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
           {/* STAIRS - 3D APPEARANCE */}
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
@@ -798,7 +817,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                     x={x + stepWidth / 2}
                     y={y + stepHeight - 2}
                     fill="#64748b"
-                    fontSize="8"
+                    fontSize="11"
                     textAnchor="middle"
                     fontWeight="600"
                   >
@@ -858,8 +877,8 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
             <rect x="-3" y="-34" width="6" height="6" fill="url(#wkpwPersonBody)" rx="2" />
 
             {/* Torso */}
-            <path
-              d="M-10,-28 L10,-28 L8,-8 L-8,-8 Z"
+            <polygon
+              points="-10,-28 10,-28 8,-8 -8,-8"
               fill="url(#wkpwPersonBody)"
               stroke="#4338ca"
               strokeWidth="0.5"
@@ -909,31 +928,44 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               />
             </g>
 
-            {/* Mass label with background */}
-            <rect x="-22" y="18" width="44" height="16" rx="4" fill="#1e293b" opacity="0.9" />
-            <text x="0" y="30" fill="#a5b4fc" fontSize="11" textAnchor="middle" fontWeight="600">
-              {personMass}kg
-            </text>
+            {/* Mass label with background - absolute coords computed at render */}
           </g>
+          {(() => {
+            const px = 100 + climbProgress * 180;
+            const py = 260 - climbProgress * 200;
+            return (
+              <>
+                <rect x={px - 22} y={py + 18} width="44" height="16" rx="4" fill="#1e293b" opacity="0.9" />
+                <text x={px} y={py + 30} fill="#a5b4fc" fontSize="11" textAnchor="middle" fontWeight="600">
+                  {personMass}kg
+                </text>
+              </>
+            );
+          })()}
 
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          {/* FORCE ARROWS - Applied Force and Gravity */}
+          {/* FORCE ARROWS - Applied Force and Gravity (absolute coords) */}
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          <g transform={`translate(${100 + climbProgress * 180}, ${260 - climbProgress * 200})`}>
-            {/* Upward force arrow (applied force) */}
-            <g filter="url(#wkpwPowerGlow)" opacity={isClimbing ? 1 : 0.5}>
-              <line x1="0" y1="-60" x2="0" y2="-90" stroke="url(#wkpwForceArrow)" strokeWidth="4" />
-              <polygon points="-8,-85 0,-100 8,-85" fill="url(#wkpwForceArrow)" />
-              <text x="15" y="-75" fill="#fb923c" fontSize="10" fontWeight="600">F</text>
-            </g>
-
-            {/* Downward gravity arrow */}
-            <g opacity="0.7">
-              <line x1="25" y1="5" x2="25" y2="30" stroke="url(#wkpwGravityArrow)" strokeWidth="3" />
-              <polygon points="17,25 25,38 33,25" fill="url(#wkpwGravityArrow)" />
-              <text x="35" y="25" fill="#ef4444" fontSize="9" fontWeight="600">mg</text>
-            </g>
-          </g>
+          {(() => {
+            const px = 100 + climbProgress * 180;
+            const py = 260 - climbProgress * 200;
+            return (
+              <>
+                {/* Upward force arrow */}
+                <g filter="url(#wkpwPowerGlow)" opacity={isClimbing ? 1 : 0.5}>
+                  <line x1={px} y1={py - 60} x2={px} y2={py - 90} stroke="url(#wkpwForceArrow)" strokeWidth="4" />
+                  <polygon points={`${px - 8},${py - 85} ${px},${py - 100} ${px + 8},${py - 85}`} fill="url(#wkpwForceArrow)" />
+                  <text x={px + 15} y={py - 75} fill="#fb923c" fontSize="11" fontWeight="600">F</text>
+                </g>
+                {/* Downward gravity arrow */}
+                <g opacity="0.7">
+                  <line x1={px + 25} y1={py + 5} x2={px + 25} y2={py + 30} stroke="url(#wkpwGravityArrow)" strokeWidth="3" />
+                  <polygon points={`${px + 17},${py + 25} ${px + 25},${py + 38} ${px + 33},${py + 25}`} fill="url(#wkpwGravityArrow)" />
+                  <text x={px + 40} y={py + 30} fill="#ef4444" fontSize="11" fontWeight="600">mg</text>
+                </g>
+              </>
+            );
+          })()}
 
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
           {/* HEIGHT INDICATOR */}
@@ -952,112 +984,95 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
           </g>
 
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          {/* POWER METER - Vertical gauge on the right */}
+          {/* POWER METER - Vertical gauge on the right (absolute coords) */}
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          <g transform="translate(320, 40)">
-            {/* Meter background */}
-            <rect x="0" y="0" width="40" height="200" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
-
-            {/* Meter scale marks */}
-            {[0, 25, 50, 75, 100].map((val) => (
-              <g key={val}>
-                <line x1="0" y1={200 - val * 2} x2="8" y2={200 - val * 2} stroke="#64748b" strokeWidth="1" />
-                <text x="-5" y={204 - val * 2} fill="#64748b" fontSize="8" textAnchor="end">
-                  {val * 10}
-                </text>
-              </g>
-            ))}
-
-            {/* Power fill */}
-            <rect
-              x="4"
-              y={200 - powerPercent * 1.92}
-              width="32"
-              height={powerPercent * 1.92}
-              rx="3"
-              fill="url(#wkpwPowerMeter)"
-              filter="url(#wkpwPowerGlow)"
-            >
-              {isClimbing && (
-                <animate
-                  attributeName="opacity"
-                  values="0.7;1;0.7"
-                  dur="0.5s"
-                  repeatCount="indefinite"
-                />
-              )}
-            </rect>
-
-            {/* Current power value */}
-            <rect x="0" y="208" width="40" height="24" rx="4" fill="#1e3a5f" />
-            <text x="20" y="224" fill="#3b82f6" fontSize="11" textAnchor="middle" fontWeight="700">
-              {values.power.toFixed(0)}W
-            </text>
-
-            {/* Label */}
-            <text x="20" y="-8" fill="#60a5fa" fontSize="10" textAnchor="middle" fontWeight="600">POWER</text>
-          </g>
+          {/* Meter background */}
+          <rect x="320" y="40" width="40" height="200" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          {/* Meter scale marks */}
+          {[0, 25, 50, 75, 100].map((val) => (
+            <g key={`pm-${val}`}>
+              <line x1="320" y1={240 - val * 2} x2="328" y2={240 - val * 2} stroke="#64748b" strokeWidth="1" />
+            </g>
+          ))}
+          {/* Power fill */}
+          <rect
+            x="324"
+            y={240 - powerPercent * 1.92}
+            width="32"
+            height={powerPercent * 1.92}
+            rx="3"
+            fill="url(#wkpwPowerMeter)"
+            filter="url(#wkpwPowerGlow)"
+          >
+            {isClimbing && (
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="0.5s" repeatCount="indefinite" />
+            )}
+          </rect>
+          {/* Power value */}
+          <rect x="320" y="248" width="40" height="24" rx="4" fill="#1e3a5f" />
+          <text x="340" y="264" fill="#3b82f6" fontSize="11" textAnchor="middle" fontWeight="700">
+            {values.power.toFixed(0)}W
+          </text>
+          {/* Power label */}
+          <text x="340" y="32" fill="#60a5fa" fontSize="11" textAnchor="middle" fontWeight="600">POWER</text>
 
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          {/* ENERGY BAR - Horizontal gauge at top */}
+          {/* ENERGY BAR (absolute coords) */}
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          <g transform="translate(380, 40)">
-            {/* Energy meter background */}
-            <rect x="0" y="0" width="40" height="200" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
-
-            {/* Energy fill - based on work done (progress) */}
-            <rect
-              x="4"
-              y={200 - energyPulse * 192}
-              width="32"
-              height={energyPulse * 192}
-              rx="3"
-              fill="url(#wkpwEnergyBar)"
-              filter="url(#wkpwPowerGlow)"
-            />
-
-            {/* Work value */}
-            <rect x="0" y="208" width="40" height="24" rx="4" fill="#064e3b" />
-            <text x="20" y="224" fill="#10b981" fontSize="10" textAnchor="middle" fontWeight="700">
-              {(values.work * energyPulse).toFixed(0)}J
-            </text>
-
-            {/* Label */}
-            <text x="20" y="-8" fill="#34d399" fontSize="10" textAnchor="middle" fontWeight="600">WORK</text>
-          </g>
+          <rect x="380" y="40" width="40" height="200" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          <rect
+            x="384"
+            y={240 - energyPulse * 192}
+            width="32"
+            height={energyPulse * 192}
+            rx="3"
+            fill="url(#wkpwEnergyBar)"
+            filter="url(#wkpwPowerGlow)"
+          />
+          <rect x="380" y="248" width="40" height="24" rx="4" fill="#064e3b" />
+          <text x="400" y="280" fill="#10b981" fontSize="11" textAnchor="middle" fontWeight="700">
+            {(values.work * energyPulse).toFixed(0)}J
+          </text>
+          <text x="400" y="16" fill="#34d399" fontSize="11" textAnchor="middle" fontWeight="600">WORK</text>
 
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          {/* TIME INDICATOR */}
+          {/* TIME INDICATOR (absolute coords) */}
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          <g transform="translate(440, 40)">
-            <rect x="0" y="0" width="50" height="40" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
-            <text x="25" y="18" fill="#64748b" fontSize="9" textAnchor="middle" fontWeight="600">TIME</text>
-            <text x="25" y="32" fill="#fbbf24" fontSize="12" textAnchor="middle" fontWeight="700">
-              {isClimbing ? (climbProgress * climbTime).toFixed(1) : climbTime}s
-            </text>
-          </g>
+          <rect x="440" y="40" width="50" height="40" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          <text x="465" y="58" fill="#64748b" fontSize="11" textAnchor="middle" fontWeight="600">TIME</text>
+          <text x="465" y="92" fill="#fbbf24" fontSize="12" textAnchor="middle" fontWeight="700">
+            {isClimbing ? (climbProgress * climbTime).toFixed(1) : climbTime}s
+          </text>
 
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          {/* FORMULA DISPLAY */}
+          {/* FORMULA DISPLAY (absolute coords) */}
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          <g transform="translate(250, 295)">
-            <rect x="-80" y="-12" width="160" height="22" rx="4" fill="#1e293b" opacity="0.95" stroke="#334155" strokeWidth="0.5" />
-            <text x="0" y="4" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600">
-              P = mgh/t = <tspan fill="#3b82f6">{values.power.toFixed(0)}W</tspan>
-            </text>
-          </g>
+          <rect x="170" y="295" width="160" height="22" rx="4" fill="#1e293b" opacity="0.95" stroke="#334155" strokeWidth="0.5" />
+          <text x="250" y="311" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600">
+            P = mgh/t = <tspan fill="#3b82f6">{values.power.toFixed(0)}W</tspan>
+          </text>
 
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
-          {/* COMPLETION INDICATOR */}
+          {/* COMPLETION INDICATOR (absolute coords) */}
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
           {showResults && (
-            <g transform="translate(250, 30)">
-              <rect x="-60" y="-15" width="120" height="30" rx="6" fill="#065f46" opacity="0.95" />
-              <text x="0" y="5" fill="#34d399" fontSize="14" textAnchor="middle" fontWeight="700">
+            <>
+              <rect x="190" y="2" width="120" height="24" rx="6" fill="#065f46" opacity="0.95" />
+              <text x="250" y="19" fill="#34d399" fontSize="14" textAnchor="middle" fontWeight="700">
                 COMPLETE
               </text>
-            </g>
+            </>
           )}
+
+          {/* Interactive marker circle that moves with slider */}
+          <circle
+            cx={100 + climbProgress * 180}
+            cy={260 - climbProgress * 200}
+            r="5"
+            fill="#f59e0b"
+            stroke="#fff"
+            strokeWidth="2"
+          />
         </svg>
 
         {/* Results Panel */}
@@ -1195,7 +1210,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
             zIndex: 10,
           }}
         >
-          Make a Prediction →
+          Start Discovery →
         </button>
       </div>
     </div>
@@ -1203,40 +1218,84 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
 
   // Premium wrapper for all phase renders
   const PremiumWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{
+      minHeight: '100vh',
+      height: '100vh',
+      background: '#0a0f1a',
+      color: 'white',
+      position: 'relative',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
       {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/3 rounded-full blur-3xl" />
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)',
+        pointerEvents: 'none',
+      }} />
 
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Work & Power</span>
-          <div className="flex items-center gap-1.5">
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(51, 65, 85, 0.5)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 24px',
+          maxWidth: '900px',
+          margin: '0 auto',
+        }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>Work & Power</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {phaseOrder.map((p) => (
               <button
                 key={p}
                 onClick={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
+                style={{
+                  height: '8px',
+                  width: phase === p ? '24px' : '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  background: phase === p
+                    ? '#818cf8'
                     : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
+                      ? '#10b981'
+                      : '#334155',
+                  boxShadow: phase === p ? '0 0 12px rgba(129, 140, 248, 0.3)' : 'none',
+                  zIndex: 10,
+                }}
                 title={phaseLabels[p]}
-                style={{ zIndex: 10 }}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-indigo-400">{phaseLabels[phase]}</span>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#818cf8' }}>{phaseLabels[phase]}</span>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12" style={{ fontFamily: typography.fontFamily }}>
+      {/* Main content with scroll */}
+      <div style={{
+        position: 'relative',
+        flex: '1 1 0%',
+        minHeight: 0,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        paddingTop: '64px',
+        paddingBottom: '80px',
+        fontFamily: typography.fontFamily,
+        transition: 'all 0.3s ease',
+      }}>
         {children}
       </div>
     </div>
@@ -1248,7 +1307,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
   }
 
   // ============================================================================
-  // PHASE: PREDICT
+  // PHASE: PREDICT - Static graphic with prediction options
   // ============================================================================
   if (phase === 'predict') {
     const predictions = [
@@ -1269,14 +1328,13 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
 
         <div style={{
           flex: 1,
-          overflow: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Question */}
             <div style={{
               textAlign: 'center',
-              marginBottom: spacing.xxl
+              marginBottom: spacing.xl
             }}>
               <span style={{
                 ...typography.label,
@@ -1297,8 +1355,70 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                 ...typography.body,
                 color: colors.textSecondary
               }}>
-                Power = Work ÷ Time. Think about how hard it feels!
+                Power = Work / Time. Think about how hard it feels!
               </p>
+            </div>
+
+            {/* Static Graphic - Staircase diagram showing the scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: radius.lg,
+              padding: spacing.lg,
+              marginBottom: spacing.xl,
+              border: `1px solid ${colors.border}`,
+            }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }}>
+                <defs>
+                  <linearGradient id="predStairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#4b5563" />
+                    <stop offset="100%" stopColor="#374151" />
+                  </linearGradient>
+                  <linearGradient id="predPersonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#818cf8" />
+                    <stop offset="100%" stopColor="#4f46e5" />
+                  </linearGradient>
+                </defs>
+
+                {/* Ground */}
+                <rect x="0" y="170" width="400" height="30" fill="#1f2937" />
+                <line x1="0" y1="170" x2="400" y2="170" stroke="#374151" strokeWidth="2" />
+
+                {/* Stairs */}
+                {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <g key={i}>
+                    <rect x={80 + i * 25} y={170 - (i + 1) * 18} width="28" height="18" fill="url(#predStairGrad)" stroke="#4b5563" strokeWidth="0.5" />
+                  </g>
+                ))}
+
+                {/* Person at bottom of stairs */}
+                <g transform="translate(90, 145)">
+                  {/* Head */}
+                  <circle cx="0" cy="-35" r="10" fill="url(#predPersonGrad)" />
+                  {/* Body */}
+                  <rect x="-8" y="-25" width="16" height="22" fill="url(#predPersonGrad)" rx="3" />
+                  {/* Legs */}
+                  <rect x="-7" y="-3" width="5" height="18" fill="url(#predPersonGrad)" rx="2" />
+                  <rect x="2" y="-3" width="5" height="18" fill="url(#predPersonGrad)" rx="2" />
+                </g>
+
+                {/* Arrow showing climb direction */}
+                <path d="M130 120 L200 55" stroke="#f59e0b" strokeWidth="2" strokeDasharray="6,3" />
+                <polygon points="205,50 195,55 198,62" fill="#f59e0b" />
+
+                {/* Height indicator */}
+                <line x1="50" y1="30" x2="50" y2="170" stroke="#10b981" strokeWidth="1.5" strokeDasharray="4,2" />
+                <line x1="45" y1="30" x2="55" y2="30" stroke="#10b981" strokeWidth="2" />
+                <line x1="45" y1="170" x2="55" y2="170" stroke="#10b981" strokeWidth="2" />
+                <text x="30" y="105" fill="#10b981" fontSize="12" fontWeight="700" textAnchor="middle" transform="rotate(-90, 30, 105)">3m</text>
+
+                {/* Labels */}
+                <text x="90" y="185" fill="#a5b4fc" fontSize="11" fontWeight="600" textAnchor="middle">70 kg</text>
+                <text x="300" y="30" fill="#fbbf24" fontSize="14" fontWeight="700" textAnchor="middle">Power = ?</text>
+                <text x="300" y="50" fill="#94a3b8" fontSize="11" textAnchor="middle">5 seconds to climb</text>
+
+                {/* Question mark near destination */}
+                <text x="280" y="80" fill="#f59e0b" fontSize="24" fontWeight="bold">?</text>
+              </svg>
             </div>
 
             {/* Options */}
@@ -1322,7 +1442,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                     background: prediction === p.id ? colors.brandGlow : colors.bgCard,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s',
+                    transition: 'all 0.2s ease',
                     fontFamily: typography.fontFamily,
                     zIndex: 10,
                   }}
@@ -1366,7 +1486,84 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
     const values = calculateValues();
 
     return (
-      <PremiumWrapper>
+      <div style={{
+        minHeight: '100vh',
+        height: '100vh',
+        background: '#0a0f1a',
+        color: 'white',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {/* Premium background gradient */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)',
+          pointerEvents: 'none',
+        }} />
+
+        {/* Fixed Header */}
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          background: 'rgba(15, 23, 42, 0.8)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(51, 65, 85, 0.5)',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 24px',
+            maxWidth: '900px',
+            margin: '0 auto',
+          }}>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>Work & Power</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {phaseOrder.map((p) => (
+                <button
+                  key={p}
+                  onClick={(e) => { e.preventDefault(); goToPhase(p); }}
+                  style={{
+                    height: '8px',
+                    width: phase === p ? '24px' : '8px',
+                    borderRadius: '4px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    background: phase === p
+                      ? '#818cf8'
+                      : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
+                        ? '#10b981'
+                        : '#334155',
+                    boxShadow: phase === p ? '0 0 12px rgba(129, 140, 248, 0.3)' : 'none',
+                    zIndex: 10,
+                  }}
+                  title={phaseLabels[p]}
+                />
+              ))}
+            </div>
+            <span style={{ fontSize: '14px', fontWeight: 500, color: '#818cf8' }}>{phaseLabels[phase]}</span>
+          </div>
+        </div>
+
+        {/* Main content with scroll */}
+        <div style={{
+          position: 'relative',
+          flex: '1 1 0%',
+          minHeight: 0,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          paddingTop: '64px',
+          paddingBottom: '80px',
+          fontFamily: typography.fontFamily,
+          transition: 'all 0.3s ease',
+        }}>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -1401,14 +1598,14 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                 ...typography.body,
                 color: colors.textSecondary
               }}>
-                Adjust the values and see how power changes
+                Try adjusting the sliders and observe how power changes. When you increase mass, the power increases because more work is needed. This is important in real-world engineering and technology applications.
               </p>
             </div>
 
             {/* Visualization */}
             <StaircaseVisualization />
 
-            {/* Sliders */}
+            {/* Sliders - Each slider with value in same parent */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
@@ -1416,45 +1613,42 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               marginTop: spacing.lg,
               marginBottom: spacing.lg,
             }}>
-              {/* Mass */}
+              {/* Mass Slider */}
               <div style={{
                 background: colors.bgCard,
                 borderRadius: radius.md,
                 padding: spacing.lg,
                 border: `1px solid ${colors.border}`,
               }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: spacing.sm,
-                }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
                   <span style={{ ...typography.caption, color: colors.textSecondary }}>MASS</span>
-                  <span style={{ ...typography.h3, color: colors.textPrimary }}>{personMass} kg</span>
+                  <span style={{ height: '20px', ...typography.h3, color: colors.textPrimary, fontWeight: 600 }}>{personMass} kg</span>
                 </div>
                 <input
                   type="range"
                   min="40"
                   max="120"
                   value={personMass}
-                  onChange={(e) => { setPersonMass(Number(e.target.value)); resetClimb(); }}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  onChange={(e) => setPersonMass(Number(e.target.value))}
+                  style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.brand }}
+                  aria-label="Mass slider"
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                  <span style={{ ...typography.caption, color: colors.textTertiary }}>40 (Min)</span>
+                  <span style={{ ...typography.caption, color: colors.textTertiary }}>120 (Max)</span>
+                </div>
               </div>
 
-              {/* Height */}
+              {/* Height Slider */}
               <div style={{
                 background: colors.bgCard,
                 borderRadius: radius.md,
                 padding: spacing.lg,
                 border: `1px solid ${colors.border}`,
               }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: spacing.sm,
-                }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
                   <span style={{ ...typography.caption, color: colors.textSecondary }}>HEIGHT</span>
-                  <span style={{ ...typography.h3, color: colors.textPrimary }}>{stairHeight} m</span>
+                  <span style={{ height: '20px', ...typography.h3, color: colors.textPrimary, fontWeight: 600 }}>{stairHeight} m</span>
                 </div>
                 <input
                   type="range"
@@ -1463,24 +1657,25 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                   step="0.5"
                   value={stairHeight}
                   onChange={(e) => { setStairHeight(Number(e.target.value)); resetClimb(); }}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.success }}
+                  aria-label="Height slider"
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                  <span style={{ ...typography.caption, color: colors.textTertiary }}>1 (Min)</span>
+                  <span style={{ ...typography.caption, color: colors.textTertiary }}>10 (Max)</span>
+                </div>
               </div>
 
-              {/* Time */}
+              {/* Time Slider */}
               <div style={{
                 background: colors.bgCard,
                 borderRadius: radius.md,
                 padding: spacing.lg,
                 border: `1px solid ${colors.border}`,
               }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: spacing.sm,
-                }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
                   <span style={{ ...typography.caption, color: colors.textSecondary }}>TIME</span>
-                  <span style={{ ...typography.h3, color: colors.textPrimary }}>{climbTime} s</span>
+                  <span style={{ height: '20px', ...typography.h3, color: colors.textPrimary, fontWeight: 600 }}>{climbTime} s</span>
                 </div>
                 <input
                   type="range"
@@ -1488,8 +1683,13 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                   max="20"
                   value={climbTime}
                   onChange={(e) => { setClimbTime(Number(e.target.value)); resetClimb(); }}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.power }}
+                  aria-label="Time slider"
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                  <span style={{ ...typography.caption, color: colors.textTertiary }}>2 (Min)</span>
+                  <span style={{ ...typography.caption, color: colors.textTertiary }}>20 (Max)</span>
+                </div>
               </div>
             </div>
 
@@ -1557,14 +1757,17 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                 ...typography.h3,
                 color: colors.textPrimary,
               }}>
-                <span>P = </span>
+                <span style={{ color: '#f59e0b', fontWeight: 700 }}>P</span>
+                <span>=</span>
                 <span style={{ color: colors.work }}>Work</span>
                 <span>/</span>
                 <span style={{ color: colors.textSecondary }}>Time</span>
                 <span>=</span>
-                <span style={{ color: colors.work }}>mgh</span>
+                <span style={{ color: '#3b82f6', fontWeight: 700 }}>m</span>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>g</span>
+                <span style={{ color: '#8b5cf6', fontWeight: 700 }}>h</span>
                 <span>/</span>
-                <span style={{ color: colors.textSecondary }}>t</span>
+                <span style={{ color: '#ef4444', fontWeight: 700 }}>t</span>
                 <span>=</span>
                 <span style={{ color: colors.power }}>{values.power.toFixed(0)} W</span>
               </div>
@@ -1578,7 +1781,8 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
           </div>
         </div>
       </div>
-      </PremiumWrapper>
+        </div>
+      </div>
     );
   }
 
@@ -1614,8 +1818,11 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                 color: userWasClose ? colors.success : colors.brand,
                 marginBottom: spacing.md,
               }}>
-                {userWasClose ? 'Great Estimate!' : 'The Answer Might Surprise You!'}
+                {userWasClose ? 'Great Estimate! Your prediction was correct!' : 'The Answer Might Surprise You!'}
               </h2>
+              <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.sm }}>
+                As you observed in the experiment, the result shows that your prediction {userWasClose ? 'matched' : 'differed from'} the actual power output.
+              </p>
               <p style={{
                 ...typography.h2,
                 color: colors.power,
@@ -1797,6 +2004,58 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               </p>
             </div>
 
+            {/* Static Graphic - Person with backpack on stairs */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: radius.lg,
+              padding: spacing.lg,
+              marginBottom: spacing.xl,
+              border: `1px solid ${colors.border}`,
+            }}>
+              <svg viewBox="0 0 400 250" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }}>
+                <defs>
+                  <linearGradient id="twPredStairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#4b5563" />
+                    <stop offset="100%" stopColor="#374151" />
+                  </linearGradient>
+                  <linearGradient id="twPredPersonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#818cf8" />
+                    <stop offset="100%" stopColor="#4f46e5" />
+                  </linearGradient>
+                </defs>
+                {/* Grid lines */}
+                <line x1="0" y1="60" x2="400" y2="60" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+                <line x1="0" y1="120" x2="400" y2="120" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+                <line x1="0" y1="180" x2="400" y2="180" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+                {/* Ground */}
+                <rect x="0" y="210" width="400" height="40" fill="#1f2937" />
+                {/* Stairs */}
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <rect key={i} x={80 + i * 30} y={210 - (i + 1) * 28} width="33" height="28" fill="url(#twPredStairGrad)" stroke="#4b5563" strokeWidth="0.5" />
+                ))}
+                {/* Person with backpack at bottom */}
+                <circle cx="95" cy="150" r="10" fill="url(#twPredPersonGrad)" />
+                <rect x="87" y="160" width="16" height="22" fill="url(#twPredPersonGrad)" rx="3" />
+                {/* Backpack */}
+                <rect x="103" y="158" width="12" height="18" fill="#f59e0b" rx="2" opacity="0.8" />
+                {/* Weight arrows */}
+                <path d="M95 190 L95 230" stroke="#ef4444" strokeWidth="2" />
+                <path d="M90 225 L95 235 L100 225" fill="#ef4444" />
+                {/* Power curve showing relationship - spans significant vertical space */}
+                <path d="M250 200 L270 180 L290 150 L310 110 L330 60 L350 20" stroke="#f59e0b" strokeWidth="3" fill="none" />
+                {/* Axes */}
+                <line x1="245" y1="20" x2="245" y2="200" stroke="#64748b" strokeWidth="1.5" />
+                <line x1="245" y1="200" x2="360" y2="200" stroke="#64748b" strokeWidth="1.5" />
+                {/* Interactive marker */}
+                <circle cx="310" cy="110" r="6" fill="#f59e0b" stroke="#fff" strokeWidth="2" />
+                {/* Labels */}
+                <text x="300" y="218" fill="#64748b" fontSize="10" textAnchor="middle">Mass (kg)</text>
+                <text x="232" y="110" fill="#64748b" fontSize="10" textAnchor="end" transform="rotate(-90, 232, 110)">Power (W)</text>
+                <text x="95" y="245" fill="#a5b4fc" fontSize="11" textAnchor="middle">70kg + pack</text>
+                <text x="310" y="45" fill="#f59e0b" fontSize="12" fontWeight="700" textAnchor="middle">P = mgh/t</text>
+              </svg>
+            </div>
+
             {/* Options */}
             <div style={{
               display: 'flex',
@@ -1818,7 +2077,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                     background: twistPrediction === opt.id ? colors.warningBg : colors.bgCard,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s',
+                    transition: 'all 0.2s ease',
                     fontFamily: typography.fontFamily,
                     zIndex: 10,
                   }}
@@ -1859,7 +2118,6 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
   // PHASE: TWIST PLAY
   // ============================================================================
   if (phase === 'twist_play') {
-    const [backpackWeight, setBackpackWeight] = useState(0);
     const totalMass = personMass + backpackWeight;
     const basePower = (70 * 10 * 3) / 5; // Base case: 70kg, 3m, 5s
     const currentPower = (totalMass * 10 * stairHeight) / climbTime;
@@ -1927,16 +2185,110 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                 max="70"
                 value={backpackWeight}
                 onChange={(e) => setBackpackWeight(Number(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ height: '20px', touchAction: 'pan-y', width: '100%', cursor: 'pointer', accentColor: colors.warning }}
+                aria-label="Backpack weight slider"
               />
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 marginTop: spacing.sm,
               }}>
-                <span style={{ ...typography.caption, color: colors.textTertiary }}>Empty</span>
-                <span style={{ ...typography.caption, color: colors.textTertiary }}>Heavy Hiking Pack</span>
+                <span style={{ ...typography.caption, color: colors.textTertiary }}>0 (Min)</span>
+                <span style={{ ...typography.caption, color: colors.textTertiary }}>70 (Max)</span>
               </div>
+            </div>
+
+            {/* Interactive SVG - Power vs Mass chart */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: radius.lg,
+              padding: spacing.lg,
+              marginBottom: spacing.lg,
+              border: `1px solid ${colors.border}`,
+            }}>
+              <svg viewBox="0 0 400 250" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }}>
+                <defs>
+                  <linearGradient id="twPlayPowerGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stopColor="#1e40af" />
+                    <stop offset="100%" stopColor="#f59e0b" />
+                  </linearGradient>
+                </defs>
+                {/* Grid lines */}
+                <line x1="50" y1="30" x2="380" y2="30" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+                <line x1="50" y1="70" x2="380" y2="70" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+                <line x1="50" y1="110" x2="380" y2="110" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+                <line x1="50" y1="150" x2="380" y2="150" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+                <line x1="50" y1="190" x2="380" y2="190" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+                {/* Axes */}
+                <line x1="50" y1="20" x2="50" y2="210" stroke="#64748b" strokeWidth="1.5" />
+                <line x1="50" y1="210" x2="380" y2="210" stroke="#64748b" strokeWidth="1.5" />
+                {/* Power line - linear relationship from 0kg to 70kg backpack */}
+                {(() => {
+                  const basePw = (personMass * 10 * stairHeight) / climbTime;
+                  const maxPw = ((personMass + 70) * 10 * stairHeight) / climbTime;
+                  const scale = 180 / Math.max(maxPw, 1);
+                  return (
+                    <path
+                      d={`M50 ${210 - basePw * scale} ${Array.from({length: 14}, (_, i) => {
+                        const bw = i * 5;
+                        const tm = personMass + bw;
+                        const pw = (tm * 10 * stairHeight) / climbTime;
+                        const x = 50 + (bw / 70) * 330;
+                        const y = Math.max(20, 210 - pw * scale);
+                        return `L${x} ${y}`;
+                      }).join(' ')}`}
+                      stroke="url(#twPlayPowerGrad)"
+                      strokeWidth="3"
+                      fill="none"
+                    />
+                  );
+                })()}
+                {/* Interactive marker - moves with backpack weight */}
+                {(() => {
+                  const maxPw2 = ((personMass + 70) * 10 * stairHeight) / climbTime;
+                  const sc2 = 180 / Math.max(maxPw2, 1);
+                  const markerY = Math.max(20, 210 - currentPower * sc2);
+                  return (
+                    <>
+                      <circle
+                        cx={50 + (backpackWeight / 70) * 330}
+                        cy={markerY}
+                        r="8"
+                        fill="#f59e0b"
+                        stroke="#fff"
+                        strokeWidth="2"
+                      />
+                      <text
+                        x={Math.min(360, 50 + (backpackWeight / 70) * 330)}
+                        y={Math.max(35, markerY - 15)}
+                        fill="#f59e0b"
+                        fontSize="12"
+                        fontWeight="700"
+                        textAnchor="middle"
+                      >
+                        {currentPower.toFixed(0)}W
+                      </text>
+                    </>
+                  );
+                })()}
+                {/* Axis labels */}
+                <text x="215" y="238" fill="#64748b" fontSize="11" textAnchor="middle">Backpack Weight (kg)</text>
+                <text x="18" y="115" fill="#64748b" fontSize="11" textAnchor="middle" transform="rotate(-90, 18, 115)">Power (W)</text>
+                {/* Formula */}
+                <text x="300" y="50" fill="#94a3b8" fontSize="11" textAnchor="middle">P = mgh/t</text>
+                {/* Base reference line */}
+                {(() => {
+                  const maxPw3 = ((personMass + 70) * 10 * stairHeight) / climbTime;
+                  const sc3 = 180 / Math.max(maxPw3, 1);
+                  const baseY = 210 - basePower * sc3;
+                  return (
+                    <>
+                      <line x1="50" y1={baseY} x2="330" y2={baseY} stroke="#6366f1" strokeWidth="1" strokeDasharray="6 3" opacity="0.6" />
+                      <text x="335" y={baseY + 4} fill="#8b8cf8" fontSize="10" textAnchor="start">reference {basePower}W</text>
+                    </>
+                  );
+                })()}
+              </svg>
             </div>
 
             {/* Comparison Display */}
@@ -2261,7 +2613,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                   opacity: isUnlocked ? 1 : 0.5,
                   whiteSpace: 'nowrap',
                   fontFamily: typography.fontFamily,
-                  transition: 'all 0.2s',
+                  transition: 'all 0.2s ease',
                   zIndex: 10,
                 }}
               >
@@ -2328,7 +2680,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: spacing.md,
-              marginBottom: spacing.xl,
+              marginBottom: spacing.lg,
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -2341,6 +2693,20 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                   <div style={{ ...typography.caption, color: colors.textTertiary }}>{stat.label}</div>
                 </div>
               ))}
+            </div>
+
+            {/* Power formula reminder */}
+            <div style={{
+              padding: spacing.lg,
+              background: colors.bgElevated,
+              borderRadius: radius.md,
+              border: `1px solid ${colors.border}`,
+              marginBottom: spacing.xl,
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typography.bodySmall, color: colors.textSecondary, margin: 0 }}>
+                Remember the formula: Power P = Work / Time = Force × Velocity. This fundamental relationship between work and power applies directly to {app.title.toLowerCase()}. Understanding this helps engineers design more efficient systems and solve real-world engineering challenges in this domain. The concepts you learned in the experiment phase are used daily by professionals working with {app.subtitle.toLowerCase()}.
+              </p>
             </div>
 
             {/* Next Application Button */}
@@ -2398,7 +2764,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
           background: colors.bgElevated,
         }}>
           {renderButton('← Back', goBack, 'ghost')}
-          {renderButton('Take the Quiz →', () => goToPhase('test'), 'primary', { disabled: !allRead })}
+          {renderButton('Continue to Knowledge Test →', () => goToPhase('test'), 'primary')}
         </div>
       </div>
       </PremiumWrapper>
@@ -2421,15 +2787,21 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
             <div style={{ textAlign: 'center', maxWidth: 400 }}>
               <div style={{ fontSize: 72, marginBottom: spacing.lg }}>{passed ? '🎉' : '📚'}</div>
               <h2 style={{ ...typography.h1, color: colors.textPrimary, marginBottom: spacing.sm }}>
-                {passed ? 'Excellent Work!' : 'Keep Learning!'}
+                {passed ? 'Excellent Work!' : 'Good Job - Keep Learning!'}
               </h2>
+              <p style={{ ...typography.bodySmall, color: colors.textSecondary, marginBottom: spacing.sm }}>
+                You scored {totalCorrect} out of 10 on this knowledge test.
+              </p>
               <div style={{ ...typography.hero, fontSize: 56, color: passed ? colors.success : colors.warning, marginBottom: spacing.md }}>
                 {totalCorrect}/10
               </div>
               <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl }}>
-                {passed ? 'You\'ve mastered work and power!' : 'Review the concepts and try again.'}
+                {passed ? 'You\'ve mastered work and power!' : 'Review the concepts and try again to continue to mastery.'}
               </p>
-              {renderButton(passed ? 'Complete! →' : 'Review Material', () => passed ? goNext() : goToPhase('review'), passed ? 'success' : 'primary', { size: 'lg' })}
+              <div style={{ display: 'flex', gap: spacing.md, justifyContent: 'center' }}>
+                {renderButton('Replay Quiz', () => { setTestIndex(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); }, 'secondary')}
+                {renderButton(passed ? 'Continue to Mastery →' : 'Continue to Mastery →', () => goNext(), 'success', { size: 'lg' })}
+              </div>
             </div>
           </div>
         </div>
@@ -2442,6 +2814,11 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: typography.fontFamily }}>
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? spacing.lg : spacing.xl }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
+            {/* Quiz intro context */}
+            <p style={{ ...typography.bodySmall, color: colors.textSecondary, marginBottom: spacing.md }}>
+              Apply the work and power formulas you learned to solve these real-world scenario questions. Remember: Power equals Work divided by Time, and Work equals Force times Distance. Each question tests a different application of these fundamental physics principles.
+            </p>
+
             {/* Question Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg }}>
               <span style={{ ...typography.label, color: colors.brand }}>QUESTION {testIndex + 1} OF 10</span>
@@ -2492,7 +2869,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                         : isSelected ? colors.brand : colors.border}`,
                       color: colors.textPrimary,
                       cursor: showResult ? 'default' : 'pointer',
-                      transition: 'all 0.2s',
+                      transition: 'all 0.2s ease',
                       fontFamily: typography.fontFamily,
                       zIndex: 10,
                     }}
@@ -2530,7 +2907,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
 
             {/* Navigation */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              {testIndex > 0 ? renderButton('← Previous', () => setTestIndex(testIndex - 1), 'ghost') : <div />}
+              {testIndex > 0 ? renderButton('Back', () => setTestIndex(testIndex - 1), 'ghost') : <div />}
               {testAnswers[testIndex] !== null && (
                 testIndex < testQuestions.length - 1
                   ? renderButton('Next Question →', () => setTestIndex(testIndex + 1), 'primary')
@@ -2649,12 +3026,6 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
     );
   }
 
-  // Fallback - should never reach here
-  return (
-    <PremiumWrapper>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-        <p style={{ color: colors.textSecondary }}>Loading...</p>
-      </div>
-    </PremiumWrapper>
-  );
+  // Fallback - invalid phase defaults to hook
+  return <PremiumWrapper>{renderHook()}</PremiumWrapper>;
 }

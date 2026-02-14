@@ -84,14 +84,16 @@ const realWorldApps = [
 
 interface MetronomeSyncRendererProps {
   phase: string;
+  gamePhase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
+  onBack?: () => void;
 }
 
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -108,9 +110,15 @@ const colors = {
   error: '#ef4444',
 };
 
+const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
-  phase, onPhaseComplete, onPredictionMade,
+  phase: phaseProp, gamePhase, onPhaseComplete, onPredictionMade, onBack,
 }) => {
+  // Use gamePhase if provided, otherwise phaseProp, defaulting to 'hook'
+  const rawPhase = gamePhase ?? phaseProp ?? 'hook';
+  const phase = PHASES.includes(rawPhase) ? rawPhase : 'hook';
+  const currentPhaseIndex = PHASES.indexOf(phase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [animationTime, setAnimationTime] = useState(0);
@@ -131,8 +139,10 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
   const [platformOffset, setPlatformOffset] = useState(0);
 
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [transferGotIt, setTransferGotIt] = useState(false);
   const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -237,9 +247,12 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
 
   const renderVisualization = () => {
     const syncLevel = calculateSyncLevel();
+    // Coupling indicator - platform thickness changes with coupling strength
+    const platformThickness = 16 + (couplingStrength / 100) * 8;
+    const couplingColor = couplingStrength > 70 ? '#10b981' : couplingStrength > 30 ? '#f59e0b' : '#ef4444';
 
     return (
-      <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }} data-coupling={couplingStrength} data-metronomes={numMetronomes}>
         <svg viewBox="0 0 500 400" style={{ width: '100%', height: 'auto', borderRadius: '12px' }}>
           <defs>
             {/* Premium wooden metronome housing gradient */}
@@ -393,19 +406,35 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
             Coupled Oscillators &amp; Self-Organization
           </text>
 
+          {/* Coupling strength indicator */}
+          <g transform="translate(15, 310)">
+            <text x="0" y="0" fill={colors.textMuted} fontSize="9" fontWeight="500">Coupling: {couplingStrength}%</text>
+            <rect x="0" y="5" width="60" height="6" rx="3" fill="rgba(71, 85, 105, 0.5)" />
+            <rect x="0" y="5" width={60 * couplingStrength / 100} height="6" rx="3" fill={couplingColor} />
+          </g>
+
           {/* Platform (movable) with premium wood */}
           <g transform={`translate(${platformOffset}, 0)`}>
             {/* Platform shadow */}
-            <rect x="35" y="262" width="330" height="18" rx="4" fill="#000" opacity="0.3" />
+            <rect x="35" y={262 + (20 - platformThickness) / 2} width="330" height={platformThickness} rx="4" fill="#000" opacity="0.3" />
 
-            {/* Main platform board */}
-            <rect x="30" y="255" width="340" height="20" rx="4" fill="url(#msyncPlatformWood)" stroke="#4A3728" strokeWidth="1.5" />
+            {/* Main platform board - thickness varies with coupling */}
+            <rect x="30" y={255 + (20 - platformThickness) / 2} width="340" height={platformThickness} rx="4" fill="url(#msyncPlatformWood)" stroke={couplingColor} strokeWidth="2" />
 
             {/* Platform highlight */}
-            <rect x="32" y="257" width="336" height="3" rx="1" fill="#A0522D" opacity="0.5" />
+            <rect x="32" y={257 + (20 - platformThickness) / 2} width="336" height="3" rx="1" fill="#A0522D" opacity="0.5" />
 
             {/* Platform edge detail */}
-            <rect x="30" y="272" width="340" height="3" rx="1" fill="#3D2510" />
+            <rect x="30" y={255 + (20 - platformThickness) / 2 + platformThickness - 3} width="340" height="3" rx="1" fill="#3D2510" />
+
+            {/* Coupling springs visualization - only shown when coupling > 0 */}
+            {couplingStrength > 0 && (
+              <g opacity={couplingStrength / 100}>
+                {[60, 180, 300].map((x, idx) => (
+                  <path key={idx} d={`M${x},${275 + (20 - platformThickness) / 2} Q${x + 5},280 ${x},285 Q${x - 5},290 ${x},295`} stroke={couplingColor} strokeWidth="2" fill="none" />
+                ))}
+              </g>
+            )}
 
             {/* Rollers under platform with chrome effect */}
             {[80, 200, 320].map((x, idx) => (
@@ -741,14 +770,30 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
     { id: 3, title: '🌐 Power Grid Synchronization', description: 'All generators in a power grid must be phase-locked at exactly 60 Hz (or 50 Hz). Loss of synchronization can cause cascading blackouts.', insight: 'The 2003 Northeast blackout affected 55 million people when generators fell out of sync.' },
   ];
 
-  const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
-      {showButton && (
-        <button onClick={() => onPhaseComplete?.()} disabled={!buttonEnabled}
-          style={{ width: '100%', padding: '14px 24px', background: buttonEnabled ? 'linear-gradient(135deg, #a855f7, #7c3aed)' : 'rgba(71, 85, 105, 0.5)', border: 'none', borderRadius: '12px', color: buttonEnabled ? colors.textPrimary : colors.textMuted, fontSize: '16px', fontWeight: 'bold', cursor: buttonEnabled ? 'pointer' : 'not-allowed' }}>
-          {buttonText}
+  const renderProgressBar = () => (
+    <div style={{ width: '100%', height: '4px', background: 'rgba(71, 85, 105, 0.5)', borderRadius: '2px' }}>
+      <div style={{ width: `${((currentPhaseIndex + 1) / PHASES.length) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #a855f7, #7c3aed)', borderRadius: '2px', transition: 'width 0.3s ease' }} />
+    </div>
+  );
+
+  const renderNavBar = (showNext: boolean, nextEnabled: boolean, nextText: string) => (
+    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+      {renderProgressBar()}
+      <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+        <button
+          onClick={() => onBack?.()}
+          aria-label="Back"
+          style={{ flex: '0 0 auto', padding: '14px 20px', minHeight: '44px', background: 'rgba(71, 85, 105, 0.5)', border: 'none', borderRadius: '12px', color: colors.textPrimary, fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+          Back
         </button>
-      )}
+        {showNext && (
+          <button onClick={() => onPhaseComplete?.()} disabled={!nextEnabled}
+            aria-label="Next"
+            style={{ flex: 1, padding: '14px 24px', minHeight: '44px', background: nextEnabled ? 'linear-gradient(135deg, #a855f7, #7c3aed)' : 'rgba(71, 85, 105, 0.5)', border: 'none', borderRadius: '12px', color: nextEnabled ? colors.textPrimary : colors.textMuted, fontSize: '16px', fontWeight: 'bold', cursor: nextEnabled ? 'pointer' : 'not-allowed' }}>
+            {nextText}
+          </button>
+        )}
+      </div>
     </div>
   );
 
@@ -772,7 +817,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, true, "Let's Explore! →")}
+        {renderNavBar(true, true, "Let's Explore!")}
       </div>
     );
   }
@@ -792,13 +837,13 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
           <div style={{ padding: '0 16px' }}>
             {predictions.map((p) => (
               <button key={p.id} onClick={() => { setPrediction(p.id); onPredictionMade?.(p.id); }}
-                style={{ display: 'block', width: '100%', padding: '16px', marginBottom: '12px', background: prediction === p.id ? 'linear-gradient(135deg, #a855f7, #7c3aed)' : 'rgba(51, 65, 85, 0.7)', border: prediction === p.id ? '2px solid #c4b5fd' : '2px solid transparent', borderRadius: '12px', color: colors.textPrimary, textAlign: 'left', cursor: 'pointer' }}>
+                style={{ display: 'block', width: '100%', padding: '16px', minHeight: '44px', marginBottom: '12px', background: prediction === p.id ? 'linear-gradient(135deg, #a855f7, #7c3aed)' : 'rgba(51, 65, 85, 0.7)', border: prediction === p.id ? '2px solid #c4b5fd' : '2px solid transparent', borderRadius: '12px', color: colors.textPrimary, textAlign: 'left', cursor: 'pointer' }}>
                 {p.text}
               </button>
             ))}
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+        {renderNavBar(true, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -812,14 +857,22 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
           </div>
           {renderVisualization()}
           {renderControls()}
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
+            <h3 style={{ color: colors.accent, fontSize: '16px', marginBottom: '8px' }}>🌍 Real-World Relevance</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
+              This coupled oscillator phenomenon appears everywhere: heart pacemaker cells synchronize to create your heartbeat,
+              fireflies flash in unison, power grid generators must stay phase-locked, and even neurons coordinate brain waves!
+            </p>
+          </div>
         </div>
-        {renderBottomBar(true, true, 'See What I Learned →')}
+        {renderNavBar(true, true, 'See What I Learned')}
       </div>
     );
   }
 
   if (phase === 'review') {
-    const isCorrect = predictions.find(p => p.id === prediction)?.correct;
+    const userPrediction = predictions.find(p => p.id === prediction);
+    const isCorrect = userPrediction?.correct;
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
@@ -827,7 +880,11 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
             <div style={{ fontSize: '48px' }}>{isCorrect ? '🎯' : '💡'}</div>
             <h2 style={{ color: isCorrect ? colors.success : colors.warning, fontSize: '24px' }}>{isCorrect ? 'Excellent!' : 'Amazing Phenomenon!'}</h2>
           </div>
+          {renderVisualization()}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '12px' }}>
+              <strong>Your prediction:</strong> "{userPrediction?.text || 'None'}"
+            </p>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
               The metronomes <strong style={{ color: colors.accent }}>synchronize through the platform</strong>!
               Each swing pushes the platform slightly, which in turn nudges all the other metronomes.
@@ -835,13 +892,13 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Ready for a Challenge →')}
+        {renderNavBar(true, true, 'Ready for a Challenge')}
       </div>
     );
   }
 
   // Twist phases
-  if (phase === 'twist_predict' || phase === 'twist_play' || phase === 'twist_review') {
+  if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
@@ -849,21 +906,58 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
             <h2 style={{ color: colors.warning, fontSize: '22px' }}>🌀 The Coupling Mechanism</h2>
           </div>
           {renderVisualization()}
-          {phase === 'twist_predict' && (
-            <div style={{ padding: '16px' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '16px' }}>What physically couples the metronomes?</h3>
-              {twistPredictions.map((p) => (
-                <button key={p.id} onClick={() => setTwistPrediction(p.id)}
-                  style={{ display: 'block', width: '100%', padding: '14px', marginBottom: '10px', background: twistPrediction === p.id ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(51, 65, 85, 0.7)', border: 'none', borderRadius: '10px', color: colors.textPrimary, cursor: 'pointer' }}>
-                  {p.text}
-                </button>
-              ))}
-            </div>
-          )}
-          {(phase === 'twist_play' || phase === 'twist_review') && renderControls()}
+          <div style={{ padding: '16px' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '16px' }}>What physically couples the metronomes?</h3>
+            {twistPredictions.map((p) => (
+              <button key={p.id} onClick={() => setTwistPrediction(p.id)}
+                style={{ display: 'block', width: '100%', padding: '14px', minHeight: '44px', marginBottom: '10px', background: twistPrediction === p.id ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(51, 65, 85, 0.7)', border: 'none', borderRadius: '10px', color: colors.textPrimary, cursor: 'pointer' }}>
+                {p.text}
+              </button>
+            ))}
+          </div>
         </div>
-        {renderBottomBar(true, phase === 'twist_predict' ? !!twistPrediction : true,
-          phase === 'twist_predict' ? 'See The Answer →' : phase === 'twist_play' ? 'Learn More →' : 'See Applications →')}
+        {renderNavBar(true, !!twistPrediction, 'See The Answer')}
+      </div>
+    );
+  }
+
+  if (phase === 'twist_play') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.warning, fontSize: '22px' }}>🌀 Explore the Coupling</h2>
+          </div>
+          {renderVisualization()}
+          {renderControls()}
+        </div>
+        {renderNavBar(true, true, 'Learn More')}
+      </div>
+    );
+  }
+
+  if (phase === 'twist_review') {
+    const userTwistPrediction = twistPredictions.find(p => p.id === twistPrediction);
+    const isCorrect = userTwistPrediction?.correct;
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '48px' }}>{isCorrect ? '🎯' : '💡'}</div>
+            <h2 style={{ color: isCorrect ? colors.success : colors.warning, fontSize: '24px' }}>{isCorrect ? 'Correct!' : 'Great Thinking!'}</h2>
+          </div>
+          {renderVisualization()}
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '12px' }}>
+              <strong>Your prediction:</strong> "{userTwistPrediction?.text || 'None'}"
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
+              The <strong style={{ color: colors.accent }}>movable platform transfers momentum</strong> between the metronomes.
+              When one swings, it nudges the platform, which nudges all others. This is the Kuramoto coupling mechanism!
+            </p>
+          </div>
+        </div>
+        {renderNavBar(true, true, 'See Applications')}
       </div>
     );
   }
@@ -875,6 +969,9 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px' }}>🌍 Real Applications</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
+              Coupled oscillator synchronization appears everywhere in nature and technology
+            </p>
           </div>
           {transferApplications.map((app) => (
             <div key={app.id} onClick={() => setTransferCompleted(prev => new Set([...prev, app.id]))}
@@ -883,13 +980,23 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
               <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px' }}>{app.description}</p>
             </div>
           ))}
+          {allCompleted && !transferGotIt && (
+            <div style={{ padding: '16px' }}>
+              <button
+                onClick={() => setTransferGotIt(true)}
+                style={{ width: '100%', padding: '14px', minHeight: '44px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: colors.textPrimary, fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+                Got It!
+              </button>
+            </div>
+          )}
         </div>
-        {renderBottomBar(true, allCompleted, allCompleted ? 'Take the Test →' : `Explore ${4 - transferCompleted.size} More`)}
+        {renderNavBar(true, transferGotIt, transferGotIt ? 'Take the Test' : `Explore ${Math.max(0, 4 - transferCompleted.size)} More`)}
       </div>
     );
   }
 
   if (phase === 'test') {
+    const currentQuestion = testQuestions[currentQuestionIndex];
     const answeredCount = Object.keys(testAnswers).length;
     const allAnswered = answeredCount === testQuestions.length;
 
@@ -901,9 +1008,12 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px' }}>{correctCount >= 8 ? '🏆' : '📚'}</div>
               <h2 style={{ color: colors.textPrimary, fontSize: '28px' }}>{Math.round(correctCount / 10 * 100)}%</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '16px', marginTop: '12px' }}>
+                You got {correctCount} out of {testQuestions.length} correct!
+              </p>
             </div>
           </div>
-          {renderBottomBar(true, true, 'Complete! 🎉')}
+          {renderNavBar(true, true, 'Complete!')}
         </div>
       );
     }
@@ -913,24 +1023,77 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px' }}>📝 Test</h2>
-          </div>
-          {testQuestions.map((q, idx) => (
-            <div key={q.id} style={{ background: colors.bgCard, margin: '12px 16px', padding: '16px', borderRadius: '12px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>{idx + 1}. {q.question}</p>
-              {q.options.map(opt => (
-                <button key={opt.id} onClick={() => setTestAnswers(prev => ({ ...prev, [q.id]: opt.id }))}
-                  style={{ display: 'block', width: '100%', padding: '10px', marginBottom: '8px', background: testAnswers[q.id] === opt.id ? 'rgba(168, 85, 247, 0.3)' : 'rgba(51, 65, 85, 0.5)', border: 'none', borderRadius: '8px', color: colors.textSecondary, textAlign: 'left', cursor: 'pointer' }}>
-                  {opt.text}
-                </button>
+            <p style={{ color: colors.accent, fontSize: '16px', marginTop: '8px' }}>
+              Question {currentQuestionIndex + 1} of {testQuestions.length}
+            </p>
+            {/* Question progress dots */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px' }}>
+              {testQuestions.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentQuestionIndex(idx)}
+                  aria-label={`Question ${idx + 1}`}
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    background: idx === currentQuestionIndex
+                      ? colors.accent
+                      : testAnswers[testQuestions[idx].id]
+                        ? colors.success
+                        : 'rgba(71, 85, 105, 0.5)',
+                    cursor: 'pointer'
+                  }}
+                />
               ))}
             </div>
-          ))}
-        </div>
-        {allAnswered && (
-          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px', background: colors.bgDark }}>
-            <button onClick={() => setTestSubmitted(true)} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #a855f7, #7c3aed)', border: 'none', borderRadius: '12px', color: colors.textPrimary, fontWeight: 'bold', cursor: 'pointer' }}>Submit</button>
           </div>
-        )}
+          <div style={{ background: colors.bgCard, margin: '12px 16px', padding: '16px', borderRadius: '12px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
+              {currentQuestionIndex + 1}. {currentQuestion.question}
+            </p>
+            {currentQuestion.options.map(opt => (
+              <button key={opt.id} onClick={() => setTestAnswers(prev => ({ ...prev, [currentQuestion.id]: opt.id }))}
+                style={{ display: 'block', width: '100%', padding: '14px', minHeight: '44px', marginBottom: '10px', background: testAnswers[currentQuestion.id] === opt.id ? 'rgba(168, 85, 247, 0.3)' : 'rgba(51, 65, 85, 0.5)', border: testAnswers[currentQuestion.id] === opt.id ? '2px solid #a855f7' : '2px solid transparent', borderRadius: '10px', color: colors.textSecondary, textAlign: 'left', cursor: 'pointer' }}>
+                {opt.text}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '12px', padding: '0 16px' }}>
+            {currentQuestionIndex > 0 && (
+              <button
+                onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+                style={{ flex: 1, padding: '12px', minHeight: '44px', background: 'rgba(71, 85, 105, 0.5)', border: 'none', borderRadius: '10px', color: colors.textPrimary, fontWeight: 'bold', cursor: 'pointer' }}>
+                Previous
+              </button>
+            )}
+            {currentQuestionIndex < testQuestions.length - 1 && (
+              <button
+                onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                disabled={!testAnswers[currentQuestion.id]}
+                style={{ flex: 1, padding: '12px', minHeight: '44px', background: testAnswers[currentQuestion.id] ? 'linear-gradient(135deg, #a855f7, #7c3aed)' : 'rgba(71, 85, 105, 0.5)', border: 'none', borderRadius: '10px', color: colors.textPrimary, fontWeight: 'bold', cursor: testAnswers[currentQuestion.id] ? 'pointer' : 'not-allowed' }}>
+                Next Question
+              </button>
+            )}
+          </div>
+        </div>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px', background: colors.bgDark, zIndex: 1000 }}>
+          {renderProgressBar()}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+            <button
+              onClick={() => onBack?.()}
+              aria-label="Back"
+              style={{ flex: '0 0 auto', padding: '14px 20px', minHeight: '44px', background: 'rgba(71, 85, 105, 0.5)', border: 'none', borderRadius: '12px', color: colors.textPrimary, fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+              Back
+            </button>
+            {allAnswered && (
+              <button onClick={() => setTestSubmitted(true)} style={{ flex: 1, padding: '14px', minHeight: '44px', background: 'linear-gradient(135deg, #a855f7, #7c3aed)', border: 'none', borderRadius: '12px', color: colors.textPrimary, fontWeight: 'bold', cursor: 'pointer' }}>
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
@@ -943,6 +1106,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
             <div style={{ fontSize: '72px' }}>🏆</div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px' }}>Synchronization Master!</h1>
           </div>
+          {renderVisualization()}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.textPrimary }}>🎓 Key Learnings:</h3>
             <ul style={{ color: colors.textSecondary, lineHeight: '2' }}>
@@ -952,12 +1116,33 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Complete Game →')}
+        {renderNavBar(true, true, 'Complete Game')}
       </div>
     );
   }
 
-  return <div style={{ padding: '20px' }}><p style={{ color: colors.textSecondary }}>Loading: {phase}</p></div>;
+  // Default to hook phase for any invalid phase
+  return (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.textPrimary, fontSize: '28px' }}>🎵 The Dancing Metronomes</h1>
+          <p style={{ color: colors.accent, fontSize: '18px' }}>Game 116: Metronome Synchronization</p>
+        </div>
+        {renderVisualization()}
+        <div style={{ padding: '20px' }}>
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px' }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px' }}>🤯 Spontaneous Order!</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6' }}>
+              Place several metronomes on a movable board, start them at random times,
+              and watch them <strong style={{ color: colors.accent }}>spontaneously synchronize</strong> within minutes!
+            </p>
+          </div>
+        </div>
+      </div>
+      {renderNavBar(true, true, "Let's Explore!")}
+    </div>
+  );
 };
 
 export default MetronomeSyncRenderer;

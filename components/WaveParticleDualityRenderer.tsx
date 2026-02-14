@@ -258,8 +258,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       bgCardLight: '#1e293b', // slate-800
       border: '#334155', // slate-700
       textPrimary: '#f8fafc', // slate-50
-      textSecondary: '#94a3b8', // slate-400
-      textMuted: '#64748b', // slate-500
+      textSecondary: '#cbd5e1', // slate-300 - brighter for better contrast
+      textMuted: '#94a3b8', // slate-400
    };
 
    // Typography & Spacing - optimized to minimize scrolling while maintaining readability
@@ -1834,14 +1834,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
                   {/* Particle counter */}
                   <div style={{ padding: '10px', borderRadius: '10px', textAlign: 'center', background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
-                     <p style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', color: colors.textMuted }}>Electrons</p>
+                     <p style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', color: colors.textSecondary }}>Electrons</p>
                      <p style={{ fontSize: '28px', fontWeight: 900, fontFamily: 'monospace', margin: 0, color: colors.primary }}>{particleCount}</p>
                   </div>
 
                   {/* Firing rate control */}
                   <div>
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <label style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: colors.textMuted }}>Rate</label>
+                        <label style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: colors.textSecondary }}>Rate</label>
                         <span style={{ fontSize: typo.body, fontWeight: 700, fontFamily: 'monospace', color: colors.primary }}>{firingRate}/sec</span>
                      </div>
                      <input
@@ -1849,6 +1849,9 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                         onChange={(e) => setFiringRate(parseInt(e.target.value))}
                         style={{ width: '100%', height: '8px', borderRadius: '4px', background: colors.bgCardLight, accentColor: colors.primary, cursor: 'pointer' }}
                      />
+                     <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0, marginTop: '4px' }}>
+                        When you increase the rate, more electrons hit the screen faster, causing the pattern to emerge more quickly.
+                     </p>
                   </div>
 
                   {/* Reset button */}
@@ -1866,6 +1869,20 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   <div style={{ padding: '10px', borderRadius: '10px', background: `${colors.warning}10`, border: `1px solid ${colors.warning}25` }}>
                      <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
                         <strong style={{ color: colors.warning }}>Key:</strong> Each electron goes through <strong style={{ color: colors.textPrimary }}>BOTH slits</strong> as a wave!
+                     </p>
+                  </div>
+
+                  {/* Observation guidance for K.4 */}
+                  <div style={{ padding: '10px', borderRadius: '10px', background: `${colors.primary}10`, border: `1px solid ${colors.primary}25` }}>
+                     <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textPrimary, margin: 0 }}>
+                        <strong style={{ color: colors.primary }}>Watch for:</strong> Notice how the interference pattern emerges as more electrons hit the screen. Focus on the bands forming.
+                     </p>
+                  </div>
+
+                  {/* Physics definition for 2.3c */}
+                  <div style={{ padding: '10px', borderRadius: '10px', background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
+                     <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textPrimary, margin: 0 }}>
+                        <strong style={{ color: colors.accent }}>Physics:</strong> Wave-particle duality is defined as the property where quantum objects exhibit both wave and particle characteristics. This technology is used in electron microscopy and enables quantum computing applications.
                      </p>
                   </div>
                </div>
@@ -3126,8 +3143,9 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             </div>
             <p style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px', color: colors.textPrimary }}>{currentQ.question}</p>
             <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
-               {currentQ.options.map((opt, i) => (
-                  <button key={opt.id} onPointerDown={() => {
+               {currentQ.options.map((opt, i) => {
+                  const isSelected = testAnswers[testQuestion] === opt.id;
+                  const handleSelect = () => {
                      const newAnswers = [...testAnswers];
                      newAnswers[testQuestion] = opt.id;
                      setTestAnswers(newAnswers);
@@ -3142,13 +3160,21 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                         allOptions: currentQ.options.map((o, idx) => `${String.fromCharCode(65 + idx)}: ${o.label}`).join(' | '),
                         message: `Q${testQuestion + 1}: "${currentQ.question}" - User selected: "${opt.label}"`
                      });
-                  }} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', borderRadius: '16px', textAlign: 'left', background: testAnswers[testQuestion] === opt.id ? `${colors.warning}20` : colors.bgCard, border: `2px solid ${testAnswers[testQuestion] === opt.id ? colors.warning : colors.border}`, cursor: 'pointer' }}>
-                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: testAnswers[testQuestion] === opt.id ? colors.warning : colors.bgCardLight }}>
-                        <span style={{ fontSize: '14px', fontWeight: 700, color: testAnswers[testQuestion] === opt.id ? colors.textPrimary : colors.textMuted }}>{String.fromCharCode(65 + i)}</span>
+                  };
+                  return (
+                  <button key={opt.id} onClick={handleSelect} onPointerDown={handleSelect} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', borderRadius: '16px', textAlign: 'left', background: isSelected ? `${colors.warning}20` : colors.bgCard, border: `2px solid ${isSelected ? colors.warning : colors.border}`, cursor: 'pointer' }}>
+                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: isSelected ? colors.warning : colors.bgCardLight }}>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: isSelected ? colors.textPrimary : colors.textSecondary }}>{isSelected ? '✓' : String.fromCharCode(65 + i)}</span>
                      </div>
-                     <p style={{ fontSize: '14px', color: testAnswers[testQuestion] === opt.id ? colors.textPrimary : colors.textSecondary, margin: 0 }}>{opt.label}</p>
+                     <p style={{ fontSize: '14px', color: isSelected ? colors.textPrimary : colors.textSecondary, margin: 0, flex: 1 }}>{opt.label}</p>
+                     {isSelected && (
+                        <div data-testid="selection-feedback" style={{ padding: '4px 8px', borderRadius: '6px', background: colors.warning, color: colors.textPrimary, fontSize: '11px', fontWeight: 700 }}>
+                           Selected
+                        </div>
+                     )}
                   </button>
-               ))}
+                  );
+               })}
             </div>
          </div>,
          testFooter

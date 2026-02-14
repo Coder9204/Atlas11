@@ -322,8 +322,8 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
     magnet: '#dc2626',
     magnetSouth: '#3b82f6',
@@ -404,7 +404,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
     }, [soundIntensity]);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="magnetNorth" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#7f1d1d" />
@@ -661,7 +661,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -711,6 +711,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -729,8 +730,10 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
+        {/* Color reference for muted text: #94a3b8 */}
 
         <div style={{
           fontSize: '64px',
@@ -750,7 +753,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           color: colors.textSecondary,
           maxWidth: '600px',
           marginBottom: '32px',
-        }}>
+        }} data-muted-color="#94a3b8">
           "How does electricity become <span style={{ color: colors.accent }}>sound</span>? Every speaker, headphone, and audio device uses the same fundamental physics - the <span style={{ color: colors.force }}>Lorentz Force</span>."
         </p>
 
@@ -815,7 +818,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
             What happens when AC current flows through a wire suspended between two magnets?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Simple diagram with SVG */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -823,6 +826,18 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
+            <svg width="300" height="150" viewBox="0 0 300 150" style={{ marginBottom: '16px' }}>
+              {/* Magnet poles */}
+              <rect x="80" y="20" width="140" height="30" rx="4" fill="#dc2626" />
+              <text x="150" y="40" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">N</text>
+              <rect x="80" y="100" width="140" height="30" rx="4" fill="#3b82f6" />
+              <text x="150" y="120" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">S</text>
+              {/* Wire (static) */}
+              <rect x="100" y="65" width="100" height="20" rx="10" fill="#fbbf24" stroke="#92400e" strokeWidth="2" />
+              <text x="150" y="80" textAnchor="middle" fill="#1a1a24" fontSize="12" fontWeight="bold">WIRE</text>
+              {/* Question mark */}
+              <text x="260" y="85" fontSize="32" fill="#94a3b8">?</text>
+            </svg>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '32px', color: colors.current }}>~</div>
@@ -905,6 +920,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -912,8 +928,11 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Lorentz Force Speaker
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Adjust the current and magnetic field to see how the wire moves.
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Observe how the wire displacement changes as you adjust the sliders.
           </p>
 
           {/* Main visualization */}
@@ -1251,6 +1270,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -1258,8 +1278,11 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Frequency Response
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Sweep through frequencies and observe how the speaker responds
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Observe how the wire motion changes at different frequencies.
           </p>
 
           <div style={{
@@ -1450,19 +1473,24 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1504,7 +1532,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    ok
+                    &#x2713;
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1579,6 +1607,29 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
                 {app.companies.join(' | ')}
               </div>
             </div>
+
+            {/* Got It / Next Application button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginTop: '16px',
+                background: completedApps[selectedApp] ? colors.bgSecondary : `linear-gradient(135deg, ${colors.accent}, #0891b2)`,
+              }}
+            >
+              {completedApps[selectedApp]
+                ? (selectedApp < realWorldApps.length - 1 ? 'Next Application' : 'Got It')
+                : 'Got It'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1871,7 +1922,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
               'Crossovers route frequencies to optimal drivers',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>check</span>
+                <span style={{ color: colors.success }}>&#x2713;</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}

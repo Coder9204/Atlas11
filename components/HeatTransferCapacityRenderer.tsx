@@ -178,9 +178,9 @@ const realWorldApps = [
     connection: 'The thermal conductivity (k) you explored explains heatsink design: copper (k=401) bases spread heat quickly, aluminum (k=237) fins dissipate it to air, and thermal paste (k=5-15) bridges the microscopic gaps.',
     howItWorks: 'Heat flows from the die through thermal interface material to a copper base (spreading), up heat pipes (phase-change transport), through aluminum fins, and finally convects to air. Each stage is optimized for its thermal role.',
     stats: [
-      { value: '300W', label: 'High-end GPU thermal load', icon: '🔥' },
-      { value: '100C', label: 'Typical throttle temperature', icon: '🌡️' },
-      { value: '400+ W/mK', label: 'Copper thermal conductivity', icon: '⚡' }
+      { value: '300 W', label: 'High-end GPU thermal load', icon: '🔥' },
+      { value: '50%', label: 'Heat via conduction path', icon: '🌡️' },
+      { value: '401 W', label: 'Copper conductivity (per mK)', icon: '⚡' }
     ],
     examples: ['Noctua air coolers', 'Corsair AIO liquid coolers', 'NVIDIA Founders Edition', 'Data center cold plates'],
     companies: ['Noctua', 'Corsair', 'NZXT', 'Thermal Grizzly'],
@@ -312,19 +312,19 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Premium design colors
+  // Premium design colors - using high contrast colors (brightness >= 180)
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
     accent: '#F97316', // Orange for heat theme
-    accentGlow: 'rgba(249, 115, 22, 0.3)',
+    accentGlow: 'rgba(249, 115, 22, 0.5)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast - brightness >= 180
+    textMuted: '#94a3b8', // Muted secondary text
     border: '#2a2a3a',
   };
 
@@ -344,7 +344,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Heat Capacity',
+    twist_play: 'Twist Experiment',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -427,16 +427,62 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
     }
   }, [phase, heatingStarted]);
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component - fixed position top with z-index
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1001,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {phase !== 'hook' && (
+          <button
+            onClick={() => {
+              const idx = phaseOrder.indexOf(phase);
+              if (idx > 0) goToPhase(phaseOrder[idx - 1]);
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              fontSize: '18px',
+              padding: '4px 8px',
+              minHeight: '44px',
+            }}
+            aria-label="Back"
+          >
+            ←
+          </button>
+        )}
+        <span style={{ fontSize: '24px' }}>🔥</span>
+        <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Heat Transfer</span>
+      </div>
+      <div style={{ color: colors.textSecondary, fontSize: '14px' }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '56px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 999,
     }}>
       <div style={{
         height: '100%',
@@ -474,7 +520,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
     </div>
   );
 
-  // Primary button style
+  // Primary button style - minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, ${colors.error})`,
     color: 'white',
@@ -486,24 +532,81 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
-  // Heat Conduction Visualization
+  // Secondary button style - minHeight 44px for touch targets
+  const secondaryButtonStyle: React.CSSProperties = {
+    padding: '14px 28px',
+    borderRadius: '12px',
+    border: `1px solid ${colors.border}`,
+    background: 'transparent',
+    color: colors.textSecondary,
+    cursor: 'pointer',
+    fontWeight: 600,
+    minHeight: '44px',
+  };
+
+  // Heat Conduction Visualization - with viewBox for proportional scaling
   const HeatConductionViz = () => {
     const width = isMobile ? 340 : 500;
-    const height = isMobile ? 220 : 280;
-    const barWidth = width - 120;
+    const height = isMobile ? 280 : 340;
+
+    // Chart area
+    const chartLeft = 70;
+    const chartRight = width - 30;
+    const chartTop = 35;
+    const chartBottom = height - 60;
+    const chartW = chartRight - chartLeft;
+    const chartH = chartBottom - chartTop;
+
+    // Fixed Y-axis scale: always 25°C to 200°C
+    const yMin = 25;
+    const yMax = 200;
+
+    // Build temperature profile path with 20 L-command points
+    // When not heating (or just started), show theoretical steady-state profile
+    // based on material conductivity and heat source temperature
+    const k = materials[selectedMaterial].k;
+    const kNorm = Math.min(1, k / 401); // Normalized 0-1 based on copper
+    const displayTemps = barTemperatures.map((temp, i) => {
+      if (isHeating && temp > 26) {
+        return temp; // Use simulation values during active heating
+      }
+      // Show theoretical steady-state: linear gradient from source to ambient
+      // High-k materials show steeper initial curve
+      const frac = i / (barTemperatures.length - 1);
+      const steadyState = heatSourceTemp - (heatSourceTemp - 25) * Math.pow(frac, 0.3 + kNorm * 0.7);
+      return steadyState;
+    });
+
+    const tempPoints = displayTemps.map((temp, i) => {
+      const x = chartLeft + (i / (displayTemps.length - 1)) * chartW;
+      const tNorm = Math.min(1, Math.max(0, (temp - yMin) / (yMax - yMin)));
+      const y = chartBottom - tNorm * chartH;
+      return { x, y };
+    });
+    const pathD = tempPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+    // Interactive marker at the selected position (midpoint of bar)
+    const markerIdx = Math.floor(displayTemps.length / 2);
+    const markerTemp = displayTemps[markerIdx];
+    const markerX = chartLeft + (markerIdx / (displayTemps.length - 1)) * chartW;
+    const markerTNorm = Math.min(1, Math.max(0, (markerTemp - yMin) / (yMax - yMin)));
+    const markerY = chartBottom - markerTNorm * chartH;
+
+    // Temperature grid lines (fixed scale 25-200°C)
+    const gridTemps = [25, 50, 75, 100, 150, 200];
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
-          <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#dc2626" />
-            <stop offset="50%" stopColor="#f97316" />
-            <stop offset="100%" stopColor="#fde047" />
+          <linearGradient id="curveGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#ef4444" />
           </linearGradient>
-          <filter id="flameGlow">
-            <feGaussianBlur stdDeviation="4" result="blur" />
+          <filter id="markerGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -511,80 +614,72 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
           </filter>
         </defs>
 
-        {/* Heat source */}
-        <g transform={`translate(30, ${height / 2 - 40})`}>
-          {/* Burner base */}
-          <rect x={0} y={60} width={40} height={12} rx={3} fill="#475569" />
-          {/* Flame */}
-          {isHeating && (
-            <g filter="url(#flameGlow)">
-              <ellipse cx={20} cy={40} rx={14} ry={25} fill="url(#flameGrad)" opacity={0.95}>
-                <animate attributeName="ry" values="22;28;22" dur="0.3s" repeatCount="indefinite" />
-              </ellipse>
-              <ellipse cx={20} cy={45} rx={7} ry={15} fill="#fef9c3" opacity={0.9}>
-                <animate attributeName="ry" values="12;18;12" dur="0.2s" repeatCount="indefinite" />
-              </ellipse>
+        {/* Axis labels */}
+        <text x={15} y={height / 2} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600" transform={`rotate(-90, 15, ${height / 2})`}>
+          Temperature (°C)
+        </text>
+        <text x={(chartLeft + chartRight) / 2} y={height - 8} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
+          Distance along bar
+        </text>
+
+        {/* Horizontal grid lines */}
+        {gridTemps.map(t => {
+          const yPos = chartBottom - ((t - yMin) / (yMax - yMin)) * chartH;
+          if (yPos < chartTop || yPos > chartBottom) return null;
+          return (
+            <g key={t}>
+              <line x1={chartLeft} y1={yPos} x2={chartRight} y2={yPos} stroke={colors.border} strokeDasharray="4 4" opacity={0.5} />
+              <text x={chartLeft - 6} y={yPos + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">{t}°C</text>
             </g>
-          )}
-        </g>
+          );
+        })}
 
-        {/* Metal bar with temperature segments */}
-        <g transform={`translate(70, ${height / 2 - 20})`}>
-          {barTemperatures.map((temp, i) => {
-            const segWidth = barWidth / barTemperatures.length;
-            const t = Math.min(1, Math.max(0, (temp - 25) / 75));
-            const r = Math.round(59 + t * 196);
-            const g = Math.round(130 - t * 50);
-            const b = Math.round(246 - t * 200);
-            return (
-              <rect
-                key={i}
-                x={i * segWidth}
-                y={0}
-                width={segWidth + 1}
-                height={40}
-                rx={i === 0 ? 6 : i === barTemperatures.length - 1 ? 6 : 0}
-                fill={`rgb(${r},${g},${b})`}
-              />
-            );
-          })}
-          <rect x={0} y={0} width={barWidth} height={40} rx={6} fill="none" stroke="#475569" strokeWidth={2} />
-        </g>
+        {/* Vertical grid lines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((frac, i) => {
+          const xPos = chartLeft + frac * chartW;
+          return (
+            <line key={i} x1={xPos} y1={chartTop} x2={xPos} y2={chartBottom} stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
+          );
+        })}
 
-        {/* Heat flow arrows */}
-        {isHeating && (
-          <g opacity={0.7}>
-            {[0, 1, 2].map((i) => (
-              <g key={i} transform={`translate(${100 + i * 100}, ${height / 2})`}>
-                <path d="M0,0 L15,0 L12,-4 M15,0 L12,4" stroke={colors.accent} strokeWidth={2} fill="none">
-                  <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1s" begin={`${i * 0.3}s`} repeatCount="indefinite" />
-                </path>
-              </g>
-            ))}
-          </g>
-        )}
+        {/* Chart border */}
+        <rect x={chartLeft} y={chartTop} width={chartW} height={chartH} fill="none" stroke={colors.border} strokeWidth={1} />
 
-        {/* Labels */}
-        <text x={50} y={height - 30} textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="600">
-          {heatSourceTemp}C
+        {/* Room temperature baseline path */}
+        <path d={`M ${chartLeft} ${chartBottom} L ${chartRight} ${chartBottom}`} fill="none" stroke="#3b82f6" strokeWidth={1} strokeDasharray="6 3" opacity={0.6} />
+
+        {/* Temperature profile curve */}
+        <path d={pathD} fill="none" stroke="url(#curveGrad)" strokeWidth={3} strokeLinecap="round" />
+
+        {/* Glow circle behind interactive marker */}
+        <circle cx={markerX} cy={markerY} r={14} fill={colors.accent} opacity={0.2}>
+          <animate attributeName="r" values="12;16;12" dur="1.5s" repeatCount="indefinite" />
+        </circle>
+
+        {/* Interactive marker circle */}
+        <circle cx={markerX} cy={markerY} r={8} fill={colors.accent} stroke="#ffffff" strokeWidth={2} filter="url(#markerGlow)" />
+        <text x={markerX} y={markerY - 14} textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="700">
+          {Math.round(markerTemp)}°C
         </text>
-        <text x={width / 2} y={height - 10} textAnchor="middle" fill={materials[selectedMaterial].color} fontSize="14" fontWeight="700">
+
+        {/* Reference baseline label */}
+        <text x={chartRight + 4} y={chartBottom + 4} textAnchor="start" fill="#3b82f6" fontSize="11">25°C baseline</text>
+
+        {/* Material & equation label */}
+        <text x={chartLeft + 8} y={chartTop + 16} textAnchor="start" fill={materials[selectedMaterial].color} fontSize="12" fontWeight="700">
           {materials[selectedMaterial].name} (k={materials[selectedMaterial].k})
-        </text>
-        <text x={width - 50} y={height - 30} textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="600">
-          {Math.round(barTemperatures[barTemperatures.length - 1])}C
         </text>
 
         {/* Equation */}
-        <rect x={width / 2 - 80} y={height - 55} width={160} height={30} rx={8} fill={colors.bgSecondary} stroke={colors.border} />
-        <text x={width / 2} y={height - 35} textAnchor="middle" fill={colors.accent} fontSize="13" fontWeight="600">
+        <rect x={chartRight - 148} y={chartTop + 2} width={145} height={22} rx={6} fill={colors.bgSecondary} stroke={colors.border} />
+        <text x={chartRight - 76} y={chartTop + 17} textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
           Q/t = -kA(dT/dx)
         </text>
       </svg>
     );
   };
 
-  // Heat Capacity Race Visualization
+  // Heat Capacity Race Visualization - with viewBox for proportional scaling
   const HeatCapacityViz = () => {
     const width = isMobile ? 340 : 500;
     const height = isMobile ? 260 : 320;
@@ -592,7 +687,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
     const spacing = (width - 4 * beakerWidth) / 5;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="beakerFlame" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#dc2626" />
@@ -662,7 +757,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
               <text x={35} y={175} textAnchor="middle" fill={data.color} fontSize="11" fontWeight="600">
                 {data.name}
               </text>
-              <text x={35} y={190} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+              <text x={35} y={190} textAnchor="middle" fill={colors.textMuted} fontSize="11">
                 c={data.c}
               </text>
               {isWinner && (
@@ -695,62 +790,107 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          🔥🌡️
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🔥🌡️
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Heat Transfer & Capacity
-        </h1>
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Heat Transfer & Capacity
+          </h1>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Why does a <span style={{ color: colors.accent }}>metal spoon</span> feel cold and a <span style={{ color: colors.success }}>wooden spoon</span> feel warm at the same temperature? The answer reveals how heat really works."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Your nerves don't sense temperature - they sense heat FLOW. Understanding this distinction unlocks the physics of thermal engineering."
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "Why does a <span style={{ color: colors.accent }}>metal spoon</span> feel cold and a <span style={{ color: colors.success }}>wooden spoon</span> feel warm at the same temperature? The answer reveals how heat really works."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Thermal Physics
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "Your nerves don't sense temperature - they sense heat FLOW. Understanding this distinction unlocks the physics of thermal engineering."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              - Thermal Physics
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Next
+          </button>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Start Exploring Heat →
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
+
+  // Static visualization for predict phase - SVG with viewBox
+  const PredictViz = () => {
+    const width = isMobile ? 340 : 500;
+    const height = 200;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Metal spoon */}
+        <g transform={`translate(${width * 0.25}, 60)`}>
+          <ellipse cx={0} cy={30} rx={35} ry={50} fill="#94a3b8" opacity={0.3} />
+          <ellipse cx={0} cy={30} rx={25} ry={40} fill="#64748b" />
+          <rect x={-5} y={60} width={10} height={60} rx={3} fill="#475569" />
+          <text x={0} y={140} textAnchor="middle" fill={colors.textSecondary} fontSize="14" fontWeight="600">Metal</text>
+          <text x={0} y={158} textAnchor="middle" fill={colors.accent} fontSize="12">20C</text>
+        </g>
+
+        {/* VS */}
+        <text x={width * 0.5} y={100} textAnchor="middle" fill={colors.textMuted} fontSize="20" fontWeight="700">vs</text>
+
+        {/* Wooden spoon */}
+        <g transform={`translate(${width * 0.75}, 60)`}>
+          <ellipse cx={0} cy={30} rx={35} ry={50} fill="#a3e635" opacity={0.2} />
+          <ellipse cx={0} cy={30} rx={25} ry={40} fill="#92400e" />
+          <rect x={-5} y={60} width={10} height={60} rx={3} fill="#78350f" />
+          <text x={0} y={140} textAnchor="middle" fill={colors.textSecondary} fontSize="14" fontWeight="600">Wood</text>
+          <text x={0} y={158} textAnchor="middle" fill={colors.accent} fontSize="12">20C</text>
+        </g>
+
+        {/* Question mark */}
+        <text x={width * 0.5} y={30} textAnchor="middle" fill={colors.accent} fontSize="24">Which feels colder?</text>
+      </svg>
+    );
+  };
 
   // PREDICT PHASE
   if (phase === 'predict') {
@@ -764,98 +904,111 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A metal spoon and a wooden spoon have been sitting at room temperature (20C) all day. When you touch them, which will feel colder?
-          </h2>
-
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🥄</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Metal Spoon</p>
-                <p style={{ ...typo.small, color: colors.accent }}>20C</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🪵</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Wooden Spoon</p>
-                <p style={{ ...typo.small, color: colors.accent }}>20C</p>
-              </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Step 1 of 3: Make your prediction
+              </span>
+              <span style={{ ...typo.small, color: colors.accent }}>
+                {prediction ? '1/1 selected' : '0/1 selected'}
+              </span>
             </div>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                🤔 Make Your Prediction
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A metal spoon and a wooden spoon have been sitting at room temperature (20C) all day. When you touch them, which will feel colder?
+            </h2>
+
+            {/* Static SVG diagram */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '24px',
+            }}>
+              <PredictViz />
+            </div>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Next
               </button>
-            ))}
+            )}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction →
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -866,164 +1019,196 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Heat Conduction Lab
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Watch how different materials conduct heat at different rates.
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Heat Conduction Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Watch how different materials conduct heat at different rates.
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <HeatConductionViz />
-            </div>
-
-            {/* Material selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Select Material:</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
-                {Object.entries(materials).map(([key, mat]) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      playSound('click');
-                      setSelectedMaterial(key as keyof typeof materials);
-                      setBarTemperatures(Array(20).fill(25));
-                      setIsHeating(false);
-                      setElapsedTime(0);
-                    }}
-                    style={{
-                      padding: '10px 6px',
-                      borderRadius: '8px',
-                      border: `2px solid ${selectedMaterial === key ? mat.color : colors.border}`,
-                      background: selectedMaterial === key ? `${mat.color}22` : colors.bgSecondary,
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <div style={{ ...typo.small, color: mat.color, fontWeight: 600 }}>{mat.name}</div>
-                    <div style={{ fontSize: '10px', color: colors.textMuted }}>k={mat.k}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Heat source slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🔥 Heat Source Temperature</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{heatSourceTemp}C</span>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="200"
-                value={heatSourceTemp}
-                onChange={(e) => setHeatSourceTemp(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Time display */}
+            {/* Observation guidance */}
             <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '24px',
-              marginBottom: '20px',
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.textPrimary }}>{elapsedTime.toFixed(1)}s</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Time Elapsed</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{Math.round(barTemperatures[barTemperatures.length - 1])}C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Cold End Temp</div>
-              </div>
-            </div>
-
-            {/* Control buttons */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setIsHeating(!isHeating);
-                }}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: isHeating ? colors.error : colors.accent,
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '16px',
-                }}
-              >
-                {isHeating ? '⏸ Pause' : '🔥 Start Heating'}
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setBarTemperatures(Array(20).fill(25));
-                  setIsHeating(false);
-                  setElapsedTime(0);
-                }}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '12px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                🔄 Reset
-              </button>
-            </div>
-          </div>
-
-          {/* Discovery prompt */}
-          {barTemperatures[barTemperatures.length - 1] > 40 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
-              textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Heat is spreading! Notice how {materials[selectedMaterial].name} (k={materials[selectedMaterial].k}) conducts heat at its rate.
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Observe:</strong> Try different materials and watch how quickly the heat bar changes color. When you increase the temperature, higher conductivity causes heat to spread faster. This is why engineers design heat sinks from copper — its high k-value enables rapid heat transfer in practical applications.
               </p>
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics →
-          </button>
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <HeatConductionViz />
+              </div>
+
+              {/* Material selector */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Select Material:</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                  {Object.entries(materials).map(([key, mat]) => (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        playSound('click');
+                        setSelectedMaterial(key as keyof typeof materials);
+                        setBarTemperatures(Array(20).fill(25));
+                        setIsHeating(false);
+                        setElapsedTime(0);
+                      }}
+                      style={{
+                        padding: '10px 6px',
+                        borderRadius: '8px',
+                        border: `2px solid ${selectedMaterial === key ? mat.color : colors.border}`,
+                        background: selectedMaterial === key ? `${mat.color}22` : colors.bgSecondary,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        minHeight: '44px',
+                      }}
+                    >
+                      <div style={{ ...typo.small, color: mat.color, fontWeight: 600 }}>{mat.name}</div>
+                      <div style={{ fontSize: '10px', color: colors.textMuted }}>k={mat.k}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Heat source slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>🔥 Heat Source Temperature</span>
+                  <span style={{
+                    height: '20px',
+                    ...typo.small,
+                    color: heatSourceTemp >= 150 ? colors.error : heatSourceTemp >= 100 ? colors.warning : colors.success,
+                    fontWeight: 600,
+                  }}>{heatSourceTemp}°C</span>
+                </div>
+                <input
+                  type="range"
+                  min="50"
+                  max="200"
+                  value={heatSourceTemp}
+                  onChange={(e) => setHeatSourceTemp(parseInt(e.target.value))}
+                  style={{
+                    touchAction: 'pan-y',
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    WebkitAppearance: 'none' as const,
+                    accentColor: colors.accent,
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>50°C</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>200°C</span>
+                </div>
+              </div>
+
+              {/* Time display */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '24px',
+                marginBottom: '20px',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{elapsedTime.toFixed(1)}s</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Time Elapsed</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{Math.round(barTemperatures[barTemperatures.length - 1])}C</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Cold End Temp</div>
+                </div>
+              </div>
+
+              {/* Control buttons */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setIsHeating(!isHeating);
+                  }}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: isHeating ? colors.error : colors.accent,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '16px',
+                    minHeight: '44px',
+                  }}
+                >
+                  {isHeating ? '⏸ Pause' : '🔥 Start Heating'}
+                </button>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setBarTemperatures(Array(20).fill(25));
+                    setIsHeating(false);
+                    setElapsedTime(0);
+                  }}
+                  style={{
+                    ...secondaryButtonStyle,
+                  }}
+                >
+                  🔄 Reset
+                </button>
+              </div>
+            </div>
+
+            {/* Discovery prompt */}
+            {barTemperatures[barTemperatures.length - 1] > 40 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  🎯 Heat is spreading! Notice how {materials[selectedMaterial].name} (k={materials[selectedMaterial].k}) conducts heat at its rate.
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Next
+            </button>
+          </div>
+
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1034,91 +1219,114 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Thermal Conductivity Explained
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Thermal Conductivity Explained
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.accent }}>Fourier's Law: Q/t = -kA(dT/dx)</strong>
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <span style={{ color: colors.textPrimary }}>k (thermal conductivity)</span> measures how fast heat flows through a material. Higher k = faster heat transfer.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                When you touch <span style={{ color: colors.accent }}>metal (k=401)</span>, heat rapidly flows from your warm 37C hand into the cooler metal. Your nerves sense this rapid heat LOSS and interpret it as "cold."
-              </p>
-              <p>
-                When you touch <span style={{ color: colors.success }}>wood (k=0.12)</span>, heat flows slowly. Your hand stays warm, so wood feels "warmer" - even at the same temperature!
-              </p>
-            </div>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: '16px',
-            marginBottom: '24px',
-          }}>
             <div style={{
               background: `${colors.accent}11`,
-              border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
-              padding: '20px',
+              padding: '16px',
+              marginBottom: '16px',
+              border: `1px solid ${colors.accent}33`,
             }}>
-              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-                High k Materials
-              </h3>
-              <ul style={{ ...typo.small, color: colors.textSecondary, paddingLeft: '20px', margin: 0 }}>
-                <li>Copper (k=401)</li>
-                <li>Aluminum (k=237)</li>
-                <li>Steel (k=50)</li>
-              </ul>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                Used for heat sinks, cookware
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                As you observed in the experiment, high-conductivity materials transfer heat much faster. Your prediction about which spoon feels colder relates directly to this observation.
               </p>
             </div>
 
             <div style={{
-              background: `${colors.success}11`,
-              border: `1px solid ${colors.success}33`,
-              borderRadius: '12px',
-              padding: '20px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
             }}>
-              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
-                Low k Materials
-              </h3>
-              <ul style={{ ...typo.small, color: colors.textSecondary, paddingLeft: '20px', margin: 0 }}>
-                <li>Wood (k=0.12)</li>
-                <li>Fiberglass (k=0.04)</li>
-                <li>Air (k=0.025)</li>
-              </ul>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                Used for insulation
-              </p>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.accent }}>Fourier's Law: Q/t = -kA(dT/dx)</strong>
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <span style={{ color: colors.textPrimary }}>k (thermal conductivity)</span> measures how fast heat flows through a material. Higher k = faster heat transfer.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  When you touch <span style={{ color: colors.accent }}>metal (k=401)</span>, heat rapidly flows from your warm 37C hand into the cooler metal. Your nerves sense this rapid heat LOSS and interpret it as "cold."
+                </p>
+                <p>
+                  When you touch <span style={{ color: colors.success }}>wood (k=0.12)</span>, heat flows slowly. Your hand stays warm, so wood feels "warmer" - even at the same temperature!
+                </p>
+              </div>
             </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gap: '16px',
+              marginBottom: '24px',
+            }}>
+              <div style={{
+                background: `${colors.accent}11`,
+                border: `1px solid ${colors.accent}33`,
+                borderRadius: '12px',
+                padding: '20px',
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                  High k Materials
+                </h3>
+                <ul style={{ ...typo.small, color: colors.textSecondary, paddingLeft: '20px', margin: 0 }}>
+                  <li>Copper (k=401)</li>
+                  <li>Aluminum (k=237)</li>
+                  <li>Steel (k=50)</li>
+                </ul>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                  Used for heat sinks, cookware
+                </p>
+              </div>
+
+              <div style={{
+                background: `${colors.success}11`,
+                border: `1px solid ${colors.success}33`,
+                borderRadius: '12px',
+                padding: '20px',
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+                  Low k Materials
+                </h3>
+                <ul style={{ ...typo.small, color: colors.textSecondary, paddingLeft: '20px', margin: 0 }}>
+                  <li>Wood (k=0.12)</li>
+                  <li>Fiberglass (k=0.04)</li>
+                  <li>Air (k=0.025)</li>
+                </ul>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                  Used for insulation
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Next
+            </button>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Heat Capacity →
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1135,73 +1343,120 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🧪 New Variable: Specific Heat Capacity
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Step 1 of 3: Make your prediction
+              </span>
+              <span style={{ ...typo.small, color: colors.warning }}>
+                {twistPrediction ? '1/1 selected' : '0/1 selected'}
+              </span>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            You put equal masses of water, oil, aluminum, and iron on identical burners providing equal heat. Which reaches 100C first?
-          </h2>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                🧪 New Variable: Specific Heat Capacity
+              </p>
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              You put equal masses of water, oil, aluminum, and iron on identical burners providing equal heat. Which reaches 100C first?
+            </h2>
+
+            {/* Twist predict diagram */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <svg width={isMobile ? 340 : 500} height={140} viewBox={`0 0 ${isMobile ? 340 : 500} 140`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+                {Object.entries(specificHeats).map(([key, data], idx) => {
+                  const bw = 60;
+                  const spacing = ((isMobile ? 340 : 500) - 4 * bw) / 5;
+                  const bx = spacing + idx * (bw + spacing);
+                  return (
+                    <g key={key}>
+                      <rect x={bx} y={20} width={bw} height={70} rx={6} fill="#0f172a" stroke={data.color} strokeWidth={2} />
+                      <rect x={bx + 5} y={50} width={bw - 10} height={35} fill={data.color} opacity={0.6} rx={3} />
+                      <text x={bx + bw / 2} y={108} textAnchor="middle" fill={data.color} fontSize="12" fontWeight="600">{data.name}</text>
+                      <text x={bx + bw / 2} y={125} textAnchor="middle" fill={colors.textMuted} fontSize="11">c={data.c}</text>
+                    </g>
+                  );
+                })}
+                <text x={(isMobile ? 170 : 250)} y={15} textAnchor="middle" fill={colors.warning} fontSize="13" fontWeight="600">Equal heat applied to each →</text>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Next
               </button>
-            ))}
+            )}
           </div>
 
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See the Race →
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1214,122 +1469,141 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Heat Capacity Race
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Same heat input, same mass - which heats up fastest?
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Heat Capacity Race
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Same heat input, same mass - which heats up fastest?
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <HeatCapacityViz />
-            </div>
-
-            {/* Temperature readouts */}
+            {/* Observation guidance */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              {Object.entries(specificHeats).map(([key, data]) => {
-                const temp = substanceTemps[key];
-                const isWinner = temp >= 100;
-                return (
-                  <div key={key} style={{
-                    background: colors.bgSecondary,
-                    borderRadius: '8px',
-                    padding: '12px',
-                    textAlign: 'center',
-                    border: `2px solid ${isWinner ? colors.success : colors.border}`,
-                  }}>
-                    <div style={{ ...typo.h3, color: isWinner ? colors.success : colors.textPrimary }}>
-                      {Math.round(temp)}C
-                    </div>
-                    <div style={{ ...typo.small, color: data.color, fontWeight: 600 }}>{data.name}</div>
-                    <div style={{ fontSize: '10px', color: colors.textMuted }}>c={data.c}</div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Control buttons */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setHeatingStarted(!heatingStarted);
-                }}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: heatingStarted ? colors.error : colors.accent,
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '16px',
-                }}
-              >
-                {heatingStarted ? '⏸ Pause' : '🔥 Start All Burners'}
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setSubstanceTemps({ water: 25, oil: 25, aluminum: 25, iron: 25 });
-                  setHeatingStarted(false);
-                }}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '12px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                🔄 Reset
-              </button>
-            </div>
-          </div>
-
-          {/* Winner announcement */}
-          {winner && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
+              background: `${colors.warning}11`,
+              border: `1px solid ${colors.warning}33`,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
-              textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🏆 {specificHeats[winner[0]].name} wins! Low specific heat (c={specificHeats[winner[0]].c}) means less energy needed per degree.
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.warning }}>Observe:</strong> Watch how substances with lower specific heat capacity (c) heat up faster. Water (c=4.18) heats slowest because it takes more energy to raise its temperature.
               </p>
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand Heat Capacity →
-          </button>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <HeatCapacityViz />
+              </div>
+
+              {/* Temperature readouts */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '12px',
+                marginBottom: '24px',
+              }}>
+                {Object.entries(specificHeats).map(([key, data]) => {
+                  const temp = substanceTemps[key];
+                  const isWinner = temp >= 100;
+                  return (
+                    <div key={key} style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                      border: `2px solid ${isWinner ? colors.success : colors.border}`,
+                    }}>
+                      <div style={{ ...typo.h3, color: isWinner ? colors.success : colors.textPrimary }}>
+                        {Math.round(temp)}C
+                      </div>
+                      <div style={{ ...typo.small, color: data.color, fontWeight: 600 }}>{data.name}</div>
+                      <div style={{ fontSize: '10px', color: colors.textMuted }}>c={data.c}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Control buttons */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setHeatingStarted(!heatingStarted);
+                  }}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: heatingStarted ? colors.error : colors.accent,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '16px',
+                    minHeight: '44px',
+                  }}
+                >
+                  {heatingStarted ? '⏸ Pause' : '🔥 Start All Burners'}
+                </button>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setSubstanceTemps({ water: 25, oil: 25, aluminum: 25, iron: 25 });
+                    setHeatingStarted(false);
+                  }}
+                  style={{
+                    ...secondaryButtonStyle,
+                  }}
+                >
+                  🔄 Reset
+                </button>
+              </div>
+            </div>
+
+            {/* Winner announcement */}
+            {winner && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  🏆 {specificHeats[winner[0]].name} wins! Low specific heat (c={specificHeats[winner[0]].c}) means less energy needed per degree.
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Next
+            </button>
+          </div>
+
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1340,78 +1614,89 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Two Properties, Two Roles
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Two Properties, Two Roles
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.accent}`,
-              borderLeft: `4px solid ${colors.accent}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>Thermal Conductivity (k)</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.accent}`,
+                borderLeft: `4px solid ${colors.accent}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>⚡</span>
+                  <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>Thermal Conductivity (k)</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  <strong>How fast</strong> heat spreads through a material. High k = rapid heat flow. Metal feels cold because heat leaves your hand quickly.
+                </p>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                  Formula: Q/t = -kA(dT/dx)
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                <strong>How fast</strong> heat spreads through a material. High k = rapid heat flow. Metal feels cold because heat leaves your hand quickly.
-              </p>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                Formula: Q/t = -kA(dT/dx)
-              </p>
-            </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid #3b82f6`,
-              borderLeft: `4px solid #3b82f6`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>💧</span>
-                <h3 style={{ ...typo.h3, color: '#3b82f6', margin: 0 }}>Specific Heat Capacity (c)</h3>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid #3b82f6`,
+                borderLeft: `4px solid #3b82f6`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>💧</span>
+                  <h3 style={{ ...typo.h3, color: '#3b82f6', margin: 0 }}>Specific Heat Capacity (c)</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  <strong>How much energy</strong> needed to raise temperature. High c = temperature-resistant. Water (c=4.18) buffers climate, heats slowly.
+                </p>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                  Formula: Q = mcDeltaT
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                <strong>How much energy</strong> needed to raise temperature. High c = temperature-resistant. Water (c=4.18) buffers climate, heats slowly.
-              </p>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                Formula: Q = mcDeltaT
-              </p>
+
+              <div style={{
+                background: `${colors.success}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.success}33`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+                  💡 Key Insight
+                </h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  These are <strong>independent properties</strong>. Metals have high k (good conductors) AND low c (heat up fast). Water has low k (poor conductor) AND high c (resists temperature change). Engineers choose materials by considering both!
+                </p>
+              </div>
             </div>
 
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
-                💡 Key Insight
-              </h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                These are <strong>independent properties</strong>. Metals have high k (good conductors) AND low c (heat up fast). Water has low k (poor conductor) AND high c (resists temperature change). Engineers choose materials by considering both!
-              </p>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Next
+            </button>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications →
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1425,14 +1710,35 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '16px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              App {selectedApp + 1} of {realWorldApps.length}
+            </span>
+          </div>
 
           {/* App selector */}
           <div style={{
@@ -1523,6 +1829,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1537,6 +1844,65 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
                 </div>
               ))}
             </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                Real Examples:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.examples.join(' • ')}
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                Companies: {app.companies.join(', ')}
+              </p>
+            </div>
+
+            <p style={{ ...typo.small, color: colors.textMuted, fontStyle: 'italic', marginBottom: '16px' }}>
+              Future: {app.futureImpact}
+            </p>
+
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                  newCompleted[selectedApp + 1] = true;
+                  setCompletedApps(newCompleted);
+                }
+              }}
+              style={{
+                ...secondaryButtonStyle,
+                width: '100%',
+                background: `${app.color}22`,
+                border: `1px solid ${app.color}`,
+                color: app.color,
+                marginBottom: '16px',
+              }}
+            >
+              Got It — Next App
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1547,6 +1913,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
               Take the Knowledge Test →
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1562,52 +1929,63 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🎉' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand heat transfer and thermal capacity!'
-                : 'Review the concepts and try again.'}
-            </p>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '80px',
+            paddingRight: '24px',
+            paddingBottom: '100px',
+            paddingLeft: '24px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '80px',
+                marginBottom: '24px',
+              }}>
+                {passed ? '🎉' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You understand heat transfer and thermal capacity!'
+                  : 'Review the concepts and try again.'}
+              </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson →
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review & Try Again
+                </button>
+              )}
+            </div>
+            {renderNavDots()}
           </div>
-          {renderNavDots()}
         </div>
       );
     }
@@ -1618,162 +1996,173 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion
+                      ? colors.accent
+                      : testAnswers[i]
+                        ? colors.success
+                        : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+              {question.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {question.options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
+                </button>
               ))}
+            </div>
+
+            {/* Navigation */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ← Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white',
+                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Next →
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                ← Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }

@@ -468,12 +468,17 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
 
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '16px',
-        marginTop: '24px',
-        borderTop: '1px solid #334155'
+        background: '#0f172a',
+        borderTop: '1px solid #334155',
+        zIndex: 1000,
       }}>
         <button
           onClick={goBack}
@@ -486,11 +491,12 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             color: isFirst ? '#475569' : '#f8fafc',
             cursor: isFirst ? 'not-allowed' : 'pointer',
             fontWeight: 'bold',
+            minHeight: '44px',
           }}
         >
           Back
         </button>
-        <span style={{ color: '#94a3b8', fontSize: '14px' }}>
+        <span style={{ color: '#e2e8f0', fontSize: '14px' }}>
           {phaseLabels[phase]} ({currentIndex + 1}/{phaseOrder.length})
         </span>
         <button
@@ -504,6 +510,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             color: 'white',
             cursor: isLast ? 'not-allowed' : 'pointer',
             fontWeight: 'bold',
+            minHeight: '44px',
           }}
         >
           Next
@@ -516,7 +523,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
   const renderPhaseContent = (content: React.ReactNode) => (
     <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc' }}>
       {renderProgressBar()}
-      <div style={{ padding: '0 24px 24px 24px' }}>
+      <div style={{ padding: '0 24px 100px 24px', overflowY: 'auto' }}>
         {content}
       </div>
       {renderBottomBar()}
@@ -1259,7 +1266,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
 
         {useChiplets && (
           <div style={{ flex: 1 }}>
-            <label style={{ color: '#94a3b8', fontSize: '12px' }}>Chiplet Count: {chipletCount}</label>
+            <label style={{ color: '#e2e8f0', fontSize: '12px' }}>Chiplet Count: {chipletCount}</label>
             <input
               type="range"
               min="2"
@@ -1284,7 +1291,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
           <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #8b5cf6, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Manufacturing Drives Architecture
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
+          <p style={{ color: '#e2e8f0', fontSize: '18px', marginTop: '8px' }}>
             Why not just make one giant perfect compute array?
           </p>
         </div>
@@ -1309,6 +1316,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             borderRadius: '12px',
             color: 'white',
             cursor: 'pointer',
+            minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
@@ -1323,6 +1331,23 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
+
+        {/* Static visualization for prediction */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+          <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }}>
+            <rect width="400" height="200" fill="#0f172a" rx="8" />
+            <text x="200" y="30" fill="#e2e8f0" fontSize="14" textAnchor="middle" fontWeight="bold">Die Size Comparison</text>
+            {/* 400mm2 die */}
+            <rect x="50" y="50" width="80" height="80" fill="#3b82f6" stroke="#60a5fa" strokeWidth="2" rx="4" />
+            <text x="90" y="150" fill="#e2e8f0" fontSize="12" textAnchor="middle">400mm2</text>
+            {/* Arrow */}
+            <path d="M160 90 L200 90 L190 80 M200 90 L190 100" stroke="#8b5cf6" strokeWidth="2" fill="none" />
+            {/* 800mm2 die */}
+            <rect x="230" y="30" width="120" height="120" fill="#3b82f6" stroke="#60a5fa" strokeWidth="2" rx="4" />
+            <text x="290" y="170" fill="#e2e8f0" fontSize="12" textAnchor="middle">800mm2</text>
+            <text x="290" y="185" fill="#f59e0b" fontSize="10" textAnchor="middle">(2x area)</text>
+          </svg>
+        </div>
 
         <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
           <p style={{ fontSize: '16px' }}>
@@ -1344,6 +1369,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
                 cursor: 'pointer',
                 textAlign: 'left',
                 fontSize: '15px',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -1366,6 +1392,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
               borderRadius: '12px',
               color: 'white',
               cursor: 'pointer',
+              minHeight: '44px',
               WebkitTapHighlightColor: 'transparent',
             }}
           >
@@ -1381,7 +1408,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
     return renderPhaseContent(
       <div style={{ maxWidth: '700px', margin: '0 auto' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Manufacturing Limits</h2>
-        <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+        <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
           Adjust die size, defect density, and power to see practical ceilings
         </p>
 
@@ -1398,6 +1425,12 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
           </ul>
         </div>
 
+        <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '16px', borderLeft: '4px solid #8b5cf6' }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+            <strong>Real-world relevance:</strong> These exact trade-offs determine why NVIDIA H100 GPUs cost over $30,000 and why AMD chose chiplets for EPYC processors. Manufacturing physics shapes every modern processor design.
+          </p>
+        </div>
+
         <button
           onClick={goNext}
           style={{
@@ -1411,6 +1444,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             borderRadius: '12px',
             color: 'white',
             cursor: 'pointer',
+            minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
@@ -1423,6 +1457,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'practical_limits';
+    const userPredictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -1436,6 +1471,9 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
           <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
             {wasCorrect ? 'Correct!' : 'Not Quite!'}
           </h3>
+          <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px' }}>
+            <strong>Your prediction:</strong> {userPredictionLabel}
+          </p>
           <p>
             Practical ceilings appear quickly. Doubling die area can halve yield (due to exponential defect probability), making cost per good die explode. Plus, twice the transistors at the same power density means twice the heat to remove.
           </p>
@@ -1446,21 +1484,21 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
 
           <div style={{ marginBottom: '16px' }}>
             <h4 style={{ color: '#ef4444', marginBottom: '8px' }}>1. Yield (Defect Probability)</h4>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
               Yield = e^(-D*A). This exponential decay means a 2x larger die does not cost 2x more - it can cost 3-4x more because so many dies fail. At 800mm2 with typical defect densities, yield can drop below 30%.
             </p>
           </div>
 
           <div style={{ marginBottom: '16px' }}>
             <h4 style={{ color: '#f59e0b', marginBottom: '8px' }}>2. Thermal Dissipation</h4>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
               More transistors = more power. A 800mm2 die at 1 W/mm2 needs to dissipate 800W. Even liquid cooling struggles above 500-700W. Either throttle performance or accept impossibly expensive cooling.
             </p>
           </div>
 
           <div>
             <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>3. Reticle Limit</h4>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
               EUV lithography exposes ~26mm x 33mm = 858mm2 maximum. Dies larger than this require stitching multiple exposures, which adds cost and complexity. This is a hard limit of physics.
             </p>
           </div>
@@ -1479,6 +1517,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             borderRadius: '12px',
             color: 'white',
             cursor: 'pointer',
+            minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
@@ -1517,6 +1556,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
                 cursor: 'pointer',
                 textAlign: 'left',
                 fontSize: '15px',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -1539,6 +1579,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
               borderRadius: '12px',
               color: 'white',
               cursor: 'pointer',
+              minHeight: '44px',
               WebkitTapHighlightColor: 'transparent',
             }}
           >
@@ -1554,7 +1595,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
     return renderPhaseContent(
       <div style={{ maxWidth: '700px', margin: '0 auto' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Chiplet Comparison</h2>
-        <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+        <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
           Toggle chiplets ON and adjust count to see the yield and cost impact
         </p>
 
@@ -1584,6 +1625,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             borderRadius: '12px',
             color: 'white',
             cursor: 'pointer',
+            minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
@@ -1616,7 +1658,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
 
         <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px' }}>
           <h3 style={{ color: '#22c55e', marginBottom: '16px' }}>The Chiplet Revolution</h3>
-          <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
             Manufacturing constraints drove the shift to chiplets. AMD EPYC, Apple M1 Ultra, and Intel Ponte Vecchio all use chiplets because the economics are superior. You get more working silicon per dollar, better thermals, and can mix process nodes. The trade-off is packaging complexity and some latency penalty, but advanced 2.5D/3D packaging minimizes this.
           </p>
         </div>
@@ -1634,6 +1676,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             borderRadius: '12px',
             color: 'white',
             cursor: 'pointer',
+            minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
@@ -1648,7 +1691,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-        <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+        <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
           Manufacturing limits shape the chips that power AI
         </p>
 
@@ -1667,7 +1710,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
               <h3 style={{ color: '#f8fafc' }}>{app.title}</h3>
               {transferCompleted.has(index) && <span style={{ color: '#22c55e' }}>Complete</span>}
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
             <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
               <p style={{ color: '#8b5cf6', fontSize: '14px' }}>{app.question}</p>
             </div>
@@ -1681,6 +1724,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
                   background: 'transparent',
                   color: '#8b5cf6',
                   cursor: 'pointer',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1696,22 +1740,22 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
 
         <button
           onClick={goNext}
-          disabled={transferCompleted.size < 4}
           style={{
             marginTop: '24px',
             width: '100%',
             padding: '16px',
             fontSize: '16px',
             fontWeight: 'bold',
-            background: transferCompleted.size >= 4 ? '#8b5cf6' : '#475569',
+            background: '#22c55e',
             border: 'none',
             borderRadius: '12px',
             color: 'white',
-            cursor: transferCompleted.size >= 4 ? 'pointer' : 'not-allowed',
+            cursor: 'pointer',
+            minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          {transferCompleted.size >= 4 ? 'Take the Test' : `Complete ${4 - transferCompleted.size} more applications`}
+          Got It
         </button>
       </div>
     );
@@ -1753,7 +1797,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
                     borderRadius: '6px',
                     marginBottom: '4px',
                     background: opt.correct ? 'rgba(34, 197, 94, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                    color: opt.correct ? '#22c55e' : userAnswer === oIndex ? '#ef4444' : '#94a3b8',
+                    color: opt.correct ? '#22c55e' : userAnswer === oIndex ? '#ef4444' : '#e2e8f0',
                   }}>
                     {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
                   </div>
@@ -1762,10 +1806,53 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             );
           })}
 
+          <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
+            <button
+              onClick={() => window.location.href = '/dashboard'}
+              style={{
+                flex: 1,
+                padding: '16px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                background: 'transparent',
+                border: '1px solid #475569',
+                borderRadius: '12px',
+                color: '#f8fafc',
+                cursor: 'pointer',
+                minHeight: '44px',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => {
+                setTestSubmitted(false);
+                setTestAnswers(new Array(10).fill(null));
+                setCurrentTestQuestion(0);
+                goToPhase('hook');
+              }}
+              style={{
+                flex: 1,
+                padding: '16px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                background: '#8b5cf6',
+                border: 'none',
+                borderRadius: '12px',
+                color: 'white',
+                cursor: 'pointer',
+                minHeight: '44px',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Play Again
+            </button>
+          </div>
           <button
             onClick={goNext}
             style={{
-              marginTop: '24px',
+              marginTop: '16px',
               width: '100%',
               padding: '16px',
               fontSize: '16px',
@@ -1775,6 +1862,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
               borderRadius: '12px',
               color: 'white',
               cursor: 'pointer',
+              minHeight: '44px',
               WebkitTapHighlightColor: 'transparent',
             }}
           >
@@ -1790,7 +1878,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2>Knowledge Test</h2>
-          <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+          <span style={{ color: '#e2e8f0' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
         </div>
 
         <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
@@ -1826,6 +1914,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
                 color: '#f8fafc',
                 cursor: 'pointer',
                 textAlign: 'left',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -1845,6 +1934,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
               background: 'transparent',
               color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
               cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+              minHeight: '44px',
               WebkitTapHighlightColor: 'transparent',
             }}
           >
@@ -1861,6 +1951,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
                 background: '#8b5cf6',
                 color: 'white',
                 cursor: 'pointer',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -1877,6 +1968,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
                 background: testAnswers.includes(null) ? '#475569' : '#22c55e',
                 color: 'white',
                 cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -1894,7 +1986,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
       <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
         <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
         <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Mastery Achieved!</h1>
-        <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
+        <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>
           You understand how manufacturing shapes chip architecture
         </p>
 
@@ -1911,7 +2003,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
 
         <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '20px', borderRadius: '12px', textAlign: 'left' }}>
           <h3 style={{ color: '#8b5cf6', marginBottom: '12px' }}>The Physics Connection:</h3>
-          <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
             Solar panels, AI chips, and power converters all face the same truth: physics constrains design. Just as solar yield is dominated by a few factors, chip cost is dominated by defect density and die area. Understanding these physical limits helps you predict what is possible and why architectures evolve the way they do.
           </p>
         </div>
@@ -1928,6 +2020,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             borderRadius: '12px',
             color: 'white',
             cursor: 'pointer',
+            minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
           }}
         >

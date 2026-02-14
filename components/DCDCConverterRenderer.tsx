@@ -384,8 +384,8 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: 'rgba(226, 232, 240, 0.7)',
     border: '#2a2a3a',
     input: '#3B82F6',
     output: '#22C55E',
@@ -497,7 +497,12 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-        <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '16px' }}>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ width: '100%', maxWidth: width, background: colors.bgCard, borderRadius: '16px' }}
+          role="img"
+          aria-label={`${converterType === 'buck' ? 'Buck' : 'Boost'} converter circuit diagram showing input ${inputVoltage}V, duty cycle ${dutyCycle}%, output ${output.outputVoltage.toFixed(1)}V`}
+        >
           <defs>
             <linearGradient id="dcInputGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1E40AF" />
@@ -732,7 +737,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Duty Cycle</span>
-                <span style={{ color: colors.accent, fontSize: '14px', fontWeight: 600 }}>{dutyCycle}%</span>
+                <span data-testid="duty-cycle-value" style={{ color: colors.accent, fontSize: '14px', fontWeight: 600 }}>{dutyCycle}%</span>
               </div>
               <input
                 type="range"
@@ -740,6 +745,8 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 max="95"
                 value={dutyCycle}
                 onChange={(e) => setDutyCycle(parseInt(e.target.value))}
+                aria-label={`Duty Cycle: ${dutyCycle}%`}
+                aria-valuetext={`${dutyCycle}%`}
                 style={{ width: '100%', height: '8px', cursor: 'pointer' }}
               />
             </div>
@@ -748,7 +755,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Input Voltage</span>
-                <span style={{ color: colors.input, fontSize: '14px', fontWeight: 600 }}>{inputVoltage}V</span>
+                <span data-testid="input-voltage-value" style={{ color: colors.input, fontSize: '14px', fontWeight: 600 }}>{inputVoltage}V</span>
               </div>
               <input
                 type="range"
@@ -756,6 +763,8 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 max="48"
                 value={inputVoltage}
                 onChange={(e) => setInputVoltage(parseInt(e.target.value))}
+                aria-label={`Input Voltage: ${inputVoltage}V`}
+                aria-valuetext={`${inputVoltage}V`}
                 style={{ width: '100%', height: '8px', cursor: 'pointer' }}
               />
             </div>
@@ -764,7 +773,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Load Current</span>
-                <span style={{ color: colors.output, fontSize: '14px', fontWeight: 600 }}>{loadCurrent.toFixed(1)}A</span>
+                <span data-testid="load-current-value" style={{ color: colors.output, fontSize: '14px', fontWeight: 600 }}>{loadCurrent.toFixed(1)}A</span>
               </div>
               <input
                 type="range"
@@ -773,6 +782,8 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 step="0.1"
                 value={loadCurrent}
                 onChange={(e) => setLoadCurrent(parseFloat(e.target.value))}
+                aria-label={`Load Current: ${loadCurrent.toFixed(1)}A`}
+                aria-valuetext={`${loadCurrent.toFixed(1)}A`}
                 style={{ width: '100%', height: '8px', cursor: 'pointer' }}
               />
             </div>
@@ -783,6 +794,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 onClick={() => setIsAnimating(!isAnimating)}
                 style={{
                   padding: '10px 20px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: isAnimating ? colors.error : colors.success,
@@ -790,6 +802,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                   fontWeight: 600,
                   cursor: 'pointer',
                   fontSize: '14px',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {isAnimating ? 'Stop' : 'Start'} Animation
@@ -798,6 +811,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 onClick={() => setConverterType(converterType === 'buck' ? 'boost' : 'buck')}
                 style={{
                   padding: '10px 20px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: colors.inductor,
@@ -805,6 +819,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                   fontWeight: 600,
                   cursor: 'pointer',
                   fontSize: '14px',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 Switch to {converterType === 'buck' ? 'Boost' : 'Buck'}
@@ -813,6 +828,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 onClick={() => { setDutyCycle(50); setInputVoltage(24); setLoadCurrent(2); }}
                 style={{
                   padding: '10px 20px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: `2px solid ${colors.accent}`,
                   background: 'transparent',
@@ -820,6 +836,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                   fontWeight: 600,
                   cursor: 'pointer',
                   fontSize: '14px',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 Reset
@@ -837,24 +854,36 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
   const renderProgressBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '4px',
-        padding: '16px',
-        background: colors.bgSecondary,
-        borderBottom: `1px solid ${colors.border}`,
-        overflowX: 'auto',
-      }}>
+      <nav
+        aria-label="Phase navigation"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '4px',
+          padding: '16px',
+          background: colors.bgSecondary,
+          borderBottom: `1px solid ${colors.border}`,
+          overflowX: 'auto',
+        }}
+      >
         {phaseOrder.map((p, index) => (
           <React.Fragment key={p}>
             <button
               onClick={() => index <= currentIndex && goToPhase(p)}
               disabled={index > currentIndex}
+              aria-label={`Go to ${phaseLabels[p]} phase`}
+              aria-current={index === currentIndex ? 'step' : undefined}
               style={{
                 width: isMobile ? '28px' : '32px',
                 height: isMobile ? '28px' : '32px',
+                minHeight: '44px',
+                minWidth: '44px',
                 borderRadius: '50%',
                 border: 'none',
                 background: index === currentIndex
@@ -870,6 +899,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
+                transition: 'all 0.2s ease',
               }}
               title={phaseLabels[p]}
             >
@@ -885,7 +915,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             )}
           </React.Fragment>
         ))}
-      </div>
+      </nav>
     );
   };
 
@@ -902,7 +932,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
 
     switch (phase) {
       case 'hook':
-        nextLabel = 'Make a Prediction';
+        nextLabel = 'Start Learning';
         break;
       case 'predict':
         canProceed = !!prediction;
@@ -967,13 +997,15 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
         display: 'flex',
         justifyContent: 'space-between',
         gap: '12px',
-        zIndex: 100,
+        zIndex: 1000,
       }}>
         <button
           onClick={prevPhase}
           disabled={isFirst}
+          aria-label="Go to previous phase"
           style={{
             padding: '12px 24px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: `1px solid ${isFirst ? colors.border : colors.textMuted}`,
             background: 'transparent',
@@ -981,6 +1013,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             fontWeight: 600,
             cursor: isFirst ? 'not-allowed' : 'pointer',
             opacity: isFirst ? 0.5 : 1,
+            transition: 'all 0.2s ease',
           }}
         >
           Back
@@ -988,16 +1021,19 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
         <button
           onClick={handleNext}
           disabled={!canProceed || isLast}
+          aria-label={nextLabel}
           style={{
             padding: '12px 32px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: 'none',
-            background: canProceed && !isLast ? colors.accent : colors.bgCard,
+            background: canProceed && !isLast ? `linear-gradient(135deg, ${colors.accent}, #D97706)` : colors.bgCard,
             color: canProceed && !isLast ? 'white' : colors.textMuted,
             fontWeight: 600,
             cursor: canProceed && !isLast ? 'pointer' : 'not-allowed',
             flex: 1,
             maxWidth: '280px',
+            transition: 'all 0.2s ease',
           }}
         >
           {nextLabel}
@@ -1018,10 +1054,10 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
         return (
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ ...typo.h1, color: colors.accent, marginBottom: '8px' }}>
-              DC-DC Converters
+              Welcome to DC-DC Converters
             </h1>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
-              How do electronics transform voltage efficiently?
+              Discover how electronics transform voltage efficiently - begin your journey into power electronics!
             </p>
 
             <ConverterVisualization interactive={true} />
@@ -1064,8 +1100,11 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             <h2 style={{ ...typo.h2, color: colors.textPrimary, textAlign: 'center', marginBottom: '8px' }}>
               Make Your Prediction
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               What determines the output voltage of a DC-DC converter?
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+              Step 1 of 1: Select your prediction below
             </p>
 
             <ConverterVisualization interactive={false} />
@@ -1086,8 +1125,10 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                   <button
                     key={p.id}
                     onClick={() => { setPrediction(p.id); playSound('click'); }}
+                    aria-pressed={prediction === p.id}
                     style={{
                       padding: '16px',
+                      minHeight: '44px',
                       borderRadius: '8px',
                       border: prediction === p.id
                         ? `2px solid ${colors.accent}`
@@ -1103,6 +1144,12 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                   </button>
                 ))}
               </div>
+
+              {prediction && (
+                <p style={{ ...typo.small, color: colors.success, textAlign: 'center', marginTop: '16px' }}>
+                  Prediction selected - click Continue to test it
+                </p>
+              )}
             </div>
           </div>
         );
@@ -1116,8 +1163,11 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             <h2 style={{ ...typo.h2, color: colors.textPrimary, textAlign: 'center', marginBottom: '8px' }}>
               Experiment with the Converter
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Adjust the duty cycle and watch how output voltage changes
+            </p>
+            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px' }}>
+              This is important because DC-DC converters are used in every electronic device from phones to electric vehicles
             </p>
 
             <ConverterVisualization interactive={true} />
@@ -1156,10 +1206,10 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               marginBottom: '24px',
             }}>
               <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-                {wasCorrect ? 'Correct!' : 'Not Quite!'}
+                {wasCorrect ? 'Your prediction was correct!' : 'Not Quite - Let\'s See What Happened!'}
               </h3>
               <p style={{ ...typo.body, color: colors.textPrimary }}>
-                The <strong style={{ color: colors.accent }}>duty cycle</strong> (the ratio of switch ON time
+                As you observed in the experiment, the <strong style={{ color: colors.accent }}>duty cycle</strong> (the ratio of switch ON time
                 to total cycle time) directly controls the output voltage. This principle is called
                 <strong> Pulse Width Modulation (PWM)</strong>.
               </p>
@@ -1212,8 +1262,11 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             <h2 style={{ ...typo.h2, color: colors.warning, textAlign: 'center', marginBottom: '8px' }}>
               The Twist: Boost Converter Limits
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               The formula says Vout approaches infinity as D approaches 100%. But does it really?
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+              Step 1 of 1: Select your prediction below
             </p>
 
             <ConverterVisualization interactive={false} />
@@ -1234,8 +1287,10 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                   <button
                     key={p.id}
                     onClick={() => { setTwistPrediction(p.id); playSound('click'); }}
+                    aria-pressed={twistPrediction === p.id}
                     style={{
                       padding: '16px',
+                      minHeight: '44px',
                       borderRadius: '8px',
                       border: twistPrediction === p.id
                         ? `2px solid ${colors.warning}`
@@ -1251,6 +1306,12 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                   </button>
                 ))}
               </div>
+
+              {twistPrediction && (
+                <p style={{ ...typo.small, color: colors.success, textAlign: 'center', marginTop: '16px' }}>
+                  Prediction selected - click Continue to test it
+                </p>
+              )}
             </div>
           </div>
         );
@@ -1264,8 +1325,11 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             <h2 style={{ ...typo.h2, color: colors.warning, textAlign: 'center', marginBottom: '8px' }}>
               Explore Boost Converter Limits
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Push the duty cycle high and observe what happens to efficiency
+            </p>
+            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px' }}>
+              Observe how the converter behaves differently at extreme duty cycles
             </p>
 
             <ConverterVisualization interactive={true} />
@@ -1518,7 +1582,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 </div>
 
                 {/* Mark Complete Button */}
-                {!completedApps[selectedApp] && (
+                {!completedApps[selectedApp] ? (
                   <button
                     onClick={() => {
                       const newCompleted = [...completedApps];
@@ -1529,6 +1593,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                     style={{
                       width: '100%',
                       padding: '16px',
+                      minHeight: '44px',
                       marginTop: '20px',
                       borderRadius: '8px',
                       border: 'none',
@@ -1539,7 +1604,31 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                       ...typo.body,
                     }}
                   >
-                    Mark as Read
+                    Got It
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      const nextIncomplete = completedApps.findIndex((c, i) => !c && i !== selectedApp);
+                      if (nextIncomplete !== -1) {
+                        setSelectedApp(nextIncomplete);
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '16px',
+                      minHeight: '44px',
+                      marginTop: '20px',
+                      borderRadius: '8px',
+                      border: `2px solid ${colors.success}`,
+                      background: 'transparent',
+                      color: colors.success,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      ...typo.body,
+                    }}
+                  >
+                    Completed - Continue to Next
                   </button>
                 )}
               </div>
@@ -1552,7 +1641,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               ...typo.small,
               color: completedApps.every(c => c) ? colors.success : colors.textMuted,
             }}>
-              {completedApps.filter(c => c).length} of 4 applications completed
+              Application {selectedApp + 1} of 4 - {completedApps.filter(c => c).length} of 4 completed
               {completedApps.every(c => c) && ' - Ready for the test!'}
             </div>
           </div>
@@ -1682,7 +1771,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 Knowledge Test
               </h2>
               <span style={{ ...typo.body, color: colors.textSecondary }}>
-                {currentQuestion + 1} / {testQuestions.length}
+                Question {currentQuestion + 1} of {testQuestions.length}
               </span>
             </div>
 
@@ -1738,8 +1827,10 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 <button
                   key={opt.id}
                   onClick={() => handleTestAnswer(opt.id)}
+                  aria-pressed={testAnswers[currentQuestion] === opt.id}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: testAnswers[currentQuestion] === opt.id
                       ? `2px solid ${colors.accent}`
@@ -1768,8 +1859,10 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               <button
                 onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
                 disabled={currentQuestion === 0}
+                aria-label="Go to previous question"
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: `1px solid ${currentQuestion === 0 ? colors.border : colors.textMuted}`,
                   background: 'transparent',
@@ -1783,8 +1876,10 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               {currentQuestion < testQuestions.length - 1 ? (
                 <button
                   onClick={() => setCurrentQuestion(currentQuestion + 1)}
+                  aria-label="Go to next question"
                   style={{
                     padding: '12px 24px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: 'none',
                     background: colors.accent,
@@ -1800,8 +1895,10 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 <button
                   onClick={submitTest}
                   disabled={testAnswers.includes(null)}
+                  aria-label="Submit test"
                   style={{
                     padding: '12px 24px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: 'none',
                     background: testAnswers.includes(null) ? colors.bgCard : colors.success,

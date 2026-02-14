@@ -346,7 +346,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Friction Lab',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -431,7 +431,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
   }, []);
 
   // Cart Visualization Component
-  const CartVisualization = () => {
+  const CartVisualization = ({ showStatic = false }: { showStatic?: boolean }) => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 220 : 260;
     const trackY = height - 80;
@@ -439,15 +439,15 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
     const cartWidth = isMobile ? 50 : 60;
     const cartHeight = isMobile ? 32 : 40;
 
-    const leftCartX = centerX - 70 + leftPos * 3;
-    const rightCartX = centerX + 10 + rightPos * 3;
+    const leftCartX = showStatic ? centerX - 70 : centerX - 70 + leftPos * 3;
+    const rightCartX = showStatic ? centerX + 10 : centerX + 10 + rightPos * 3;
 
     const momentumLeft = massLeft * leftVel;
     const momentumRight = massRight * rightVel;
     const totalMomentum = momentumLeft + momentumRight;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         <defs>
           <linearGradient id="cartBlueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#60A5FA" />
@@ -599,32 +599,104 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
+  // Back navigation function
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Navigation bar with Back, dots, and Next
+  const renderNavDots = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirstPhase = currentIndex === 0;
+    const isLastPhase = currentIndex === phaseOrder.length - 1;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '12px 16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1000,
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.3)',
+      }}>
+        {/* Back button */}
         <button
-          key={p}
-          onClick={() => goToPhase(p)}
+          onClick={prevPhase}
+          disabled={isFirstPhase}
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
+            padding: '10px 16px',
+            borderRadius: '8px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            background: isFirstPhase ? 'transparent' : colors.bgCard,
+            color: isFirstPhase ? colors.textMuted : colors.textSecondary,
+            fontWeight: 600,
+            cursor: isFirstPhase ? 'default' : 'pointer',
+            opacity: isFirstPhase ? 0.5 : 1,
+            minHeight: '44px',
           }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+        >
+          Back
+        </button>
+
+        {/* Navigation dots */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '6px',
+          minHeight: '44px',
+        }}>
+          {phaseOrder.map((p, i) => (
+            <div
+              key={p}
+              role="button"
+              tabIndex={0}
+              onClick={() => goToPhase(p)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') goToPhase(p); }}
+              style={{
+                width: phase === p ? '20px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: currentIndex >= i ? colors.accent : colors.border,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+              aria-label={phaseLabels[p]}
+              title={phaseLabels[p]}
+            />
+          ))}
+        </div>
+
+        {/* Next button */}
+        <button
+          onClick={nextPhase}
+          disabled={isLastPhase}
+          style={{
+            padding: '10px 16px',
+            borderRadius: '8px',
+            border: 'none',
+            background: isLastPhase ? 'transparent' : colors.accent,
+            color: isLastPhase ? colors.textMuted : 'white',
+            fontWeight: 600,
+            cursor: isLastPhase ? 'default' : 'pointer',
+            opacity: isLastPhase ? 0.5 : 1,
+            minHeight: '44px',
+          }}
+        >
+          Next
+        </button>
+      </nav>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -647,17 +719,27 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div
+        data-color-scheme="textSecondary:#9CA3AF textMuted:#6B7280"
+        style={{
+          minHeight: '100vh',
+          background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          paddingBottom: '80px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '64px',
@@ -703,6 +785,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
         >
           Explore Momentum
         </button>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -742,7 +825,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
             A 1 kg cart and a 2 kg cart are connected by a compressed spring. When released, which cart moves faster?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static visualization for predict phase */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -750,31 +833,27 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <div style={{
-                background: colors.accent,
-                padding: '15px 25px',
-                borderRadius: '8px',
-                color: 'white',
-                fontWeight: 700,
-              }}>
-                1 kg
-              </div>
-              <div style={{ fontSize: '24px', color: colors.success }}>
-                Spring
-              </div>
-              <div style={{
-                background: colors.accentSecondary,
-                padding: '15px 35px',
-                borderRadius: '8px',
-                color: 'white',
-                fontWeight: 700,
-              }}>
-                2 kg
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <CartVisualization showStatic={true} />
             </div>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
+            <p style={{ ...typo.small, color: colors.textMuted }}>
               The spring pushes both carts apart with equal force
+            </p>
+          </div>
+
+          {/* What to Watch guidance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <h4 style={{ ...typo.small, color: colors.accent, fontWeight: 600, marginBottom: '8px' }}>
+              What to Watch For:
+            </h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Pay attention to how the spring force affects each cart. When the spring releases, observe how each cart's mass determines its resulting velocity.
             </p>
           </div>
 
@@ -836,16 +915,22 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Momentum Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust the masses and release the spring to see momentum conservation in action
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            Adjust the masses and release the spring to see momentum conservation in action. This principle is important in engineering and design - from car crash safety to spacecraft propulsion systems.
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+            Watch how changing the mass affects each cart's velocity. Notice that the total momentum (shown in the display) remains constant - this is why momentum conservation matters in the real world.
           </p>
 
           {/* Main visualization */}
@@ -873,7 +958,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
                   value={massLeft}
                   onChange={(e) => { setMassLeft(parseInt(e.target.value)); resetExperiment(); }}
                   disabled={isAnimating}
-                  style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer' }}
+                  style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer', accentColor: colors.accent, background: colors.bgSecondary }}
                 />
               </div>
               <div>
@@ -888,7 +973,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
                   value={massRight}
                   onChange={(e) => { setMassRight(parseInt(e.target.value)); resetExperiment(); }}
                   disabled={isAnimating}
-                  style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer' }}
+                  style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer', accentColor: colors.accentSecondary, background: colors.bgSecondary }}
                 />
               </div>
             </div>
@@ -956,6 +1041,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
               Understand the Physics
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1073,17 +1159,37 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
             What happens to momentum conservation when we add friction to the track?
           </h2>
 
+          {/* Static visualization for twist_predict */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <CartVisualization showStatic={true} />
+            </div>
             <p style={{ ...typo.body, color: colors.textSecondary }}>
               On a frictionless track, the carts keep moving forever with constant total momentum = 0. But on a rough surface, they slow down and stop...
             </p>
             <p style={{ ...typo.body, color: colors.warning, marginTop: '16px', fontWeight: 600 }}>
               Does this mean momentum is NOT conserved with friction?
+            </p>
+          </div>
+
+          {/* What to Watch guidance */}
+          <div style={{
+            background: `${colors.warning}11`,
+            border: `1px solid ${colors.warning}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <h4 style={{ ...typo.small, color: colors.warning, fontWeight: 600, marginBottom: '8px' }}>
+              What to Observe:
+            </h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Watch how friction affects the cart velocities and total momentum. Pay attention to whether momentum truly "disappears" or transfers elsewhere.
             </p>
           </div>
 
@@ -1346,31 +1452,54 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
+            {/* Progress indicator */}
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+              Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} of {realWorldApps.length} completed)
+            </p>
+
+            {/* Key statistics banner */}
+            <div style={{
+              background: `${colors.accent}11`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '24px',
+              textAlign: 'center',
+              border: `1px solid ${colors.accent}33`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                Momentum conservation is used in applications ranging from 1000 kg spacecraft to particles traveling at 300000 km per second - the fundamental physics remains the same across scales from 0.001 m to billions of kilometers.
+              </p>
+            </div>
+
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
                   playSound('click');
                   setSelectedApp(i);
                   const newCompleted = [...completedApps];
@@ -1449,6 +1578,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1463,6 +1593,55 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
                 </div>
               ))}
             </div>
+
+            {/* Got It button for current app */}
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: `linear-gradient(135deg, ${app.color}, ${app.color}dd)`,
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  width: '100%',
+                }}
+              >
+                Got It!
+              </button>
+            )}
+            {completedApps[selectedApp] && selectedApp < realWorldApps.length - 1 && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(selectedApp + 1);
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp + 1] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  width: '100%',
+                }}
+              >
+                Continue to Next App
+              </button>
+            )}
           </div>
 
           {allAppsCompleted && (
@@ -1473,6 +1652,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
               Take the Knowledge Test
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1553,6 +1733,13 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Knowledge Test
+          </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Apply your understanding of momentum conservation to solve these physics problems. Each scenario tests a different aspect of what you've learned.
+          </p>
+
           {/* Progress */}
           <div style={{
             display: 'flex',

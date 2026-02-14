@@ -389,7 +389,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-        <svg width={svgW} height={svgH} style={{ borderRadius: '16px', border: `1px solid ${colors.border}` }}>
+        <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: `${svgW}px`, height: 'auto', borderRadius: '16px', border: `1px solid ${colors.border}` }}>
           <defs>
             <linearGradient id="pendBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1a1a24" />
@@ -567,6 +567,9 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
         <span style={{ fontSize: '28px' }}>🔬</span>
         <div><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Experiment</h2><p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0 }}>Change the mass and length, then observe the period</p></div>
       </div>
+      <div style={{ padding: '12px', background: colors.bgCardLight, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>When you increase the length, the period increases because the pendulum has farther to travel. This is why clocks use precise pendulum lengths. When you change the mass, observe what happens to the period - this practical experiment helps engineers design timekeeping devices.</p>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>{renderPendulum(true)}</div>
     </div>
   );
@@ -577,7 +580,8 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
       <div style={{ padding: '24px' }}>
         <div style={{ padding: '32px', background: wasCorrect ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)` : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`, borderRadius: '16px', border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`, marginBottom: '24px', textAlign: 'center' }}>
           <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎉' : '💡'}</span>
-          <h3 style={{ fontSize: '22px', color: wasCorrect ? colors.success : colors.accent, marginTop: '12px', fontWeight: 700 }}>{wasCorrect ? 'Correct! Mass does not affect the period!' : 'Mass does not affect the period!'}</h3>
+          <h3 style={{ fontSize: '22px', color: wasCorrect ? colors.success : colors.accent, marginTop: '12px', fontWeight: 700 }}>{wasCorrect ? 'Correct! Your prediction was right!' : 'Surprising result!'}</h3>
+          <p style={{ fontSize: '14px', color: colors.textSecondary, marginTop: '8px' }}>As you observed in the experiment, mass does not affect the period!</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><span style={{ fontSize: '28px' }}>📚</span><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>The Physics of Pendulum Period</h2></div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
@@ -689,7 +693,8 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
     return (
       <div style={{ padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><span style={{ fontSize: '28px' }}>🌍</span><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Real-World Applications</h2></div>
-        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: '0 0 16px', lineHeight: 1.6 }}>Pendulum period in engineering and science</p>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: '0 0 8px', lineHeight: 1.6 }}>Pendulum period in engineering and science</p>
+        <p style={{ fontSize: '13px', color: colors.textMuted, margin: '0 0 16px' }}>Application {activeApp + 1} of {realWorldApps.length}</p>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
           {realWorldApps.map((a, idx) => { const isCompleted = completedApps.has(idx); const isCurrent = idx === activeApp; return (
             <button key={idx} onClick={() => setActiveApp(idx)} style={{ padding: '12px 16px', fontSize: '14px', fontWeight: isCurrent ? 700 : 500, color: isCurrent ? '#0a0a0f' : isCompleted ? colors.success : colors.textSecondary, background: isCurrent ? `linear-gradient(135deg, ${a.color}, ${a.color}dd)` : isCompleted ? `${colors.success}15` : colors.bgCard, border: `1px solid ${isCurrent ? a.color : isCompleted ? colors.success : colors.border}`, borderRadius: '8px', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s ease', zIndex: 10, position: 'relative' as const }}>{isCompleted ? '✓ ' : ''}{a.icon} {a.title}</button>
@@ -709,7 +714,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           <div style={{ padding: '12px 24px', background: colors.bgCardLight, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}><span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 500 }}>Key players:</span>{app.companies.map((company, idx) => (<span key={idx} style={{ padding: '4px 12px', fontSize: '12px', color: colors.textSecondary, background: colors.bgCard, borderRadius: '8px', border: `1px solid ${colors.border}` }}>{company}</span>))}</div>
           <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}` }}>
             {!completedApps.has(activeApp) ? (
-              <button onClick={() => { const n = new Set(completedApps); n.add(activeApp); setCompletedApps(n); if (activeApp < realWorldApps.length - 1) setTimeout(() => setActiveApp(activeApp + 1), 300); }} style={{ width: '100%', padding: '16px', fontSize: '15px', fontWeight: 600, color: '#0a0a0f', background: colors.success, border: 'none', borderRadius: '12px', cursor: 'pointer', zIndex: 10, position: 'relative' as const }}>Mark as Read</button>
+              <button onClick={() => { const n = new Set(completedApps); n.add(activeApp); setCompletedApps(n); if (activeApp < realWorldApps.length - 1) setTimeout(() => setActiveApp(activeApp + 1), 300); }} style={{ width: '100%', padding: '16px', fontSize: '15px', fontWeight: 600, color: '#0a0a0f', background: colors.success, border: 'none', borderRadius: '12px', cursor: 'pointer', zIndex: 10, position: 'relative' as const }}>Got It</button>
             ) : (<div style={{ padding: '16px', background: `${colors.success}15`, borderRadius: '12px', border: `1px solid ${colors.success}40`, textAlign: 'center' }}><span style={{ fontSize: '15px', color: colors.success, fontWeight: 600 }}>Completed</span></div>)}
           </div>
         </div>
@@ -811,7 +816,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
         <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>Pendulum Period</span>
         <span style={{ fontSize: '14px', fontWeight: 500, color: colors.primary }}>{phaseLabels[phase]}</span>
       </div>
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%' }}>{renderPhase()}</div>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto' }}>{renderPhase()}</div>
       {renderBottomBar()}
     </div>
   );

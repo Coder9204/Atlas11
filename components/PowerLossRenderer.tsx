@@ -2,17 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 const realWorldApps = [
   {
-    icon: '⚡',
+    icon: '\u26A1',
     title: 'High-Voltage Transmission',
     short: 'Power grids use high voltage to minimize losses',
     tagline: 'Moving megawatts across continents',
-    description: 'Power transmission lines carry electricity at 115-765 kV to minimize current and therefore I²R losses. Transformers step voltage up for transmission and down for distribution.',
-    connection: 'Since Power = V × I, higher voltage means lower current for the same power. Since losses are I²R, halving current reduces losses by 75%.',
+    description: 'Power transmission lines carry electricity at 115-765 kV to minimize current and therefore I\u00B2R losses. Transformers step voltage up for transmission and down for distribution.',
+    connection: 'Since Power = V \u00D7 I, higher voltage means lower current for the same power. Since losses are I\u00B2R, halving current reduces losses by 75%.',
     howItWorks: 'Generator output at 11-25 kV is stepped up to transmission voltage. Multiple voltage steps occur before reaching homes at 120/240V. Each transformation has some loss.',
     stats: [
-      { value: '765', label: 'kV max transmission', icon: '⚡' },
-      { value: '5-6%', label: 'total grid loss', icon: '📉' },
-      { value: '$400B', label: 'transmission market', icon: '📈' }
+      { value: '765', label: 'kV max transmission', icon: '\u26A1' },
+      { value: '5-6%', label: 'total grid loss', icon: '\uD83D\uDCC9' },
+      { value: '$400B', label: 'transmission market', icon: '\uD83D\uDCC8' }
     ],
     examples: ['Interstate transmission lines', 'Offshore wind connections', 'HVDC links', 'Grid interconnections'],
     companies: ['National Grid', 'Duke Energy', 'ABB', 'Siemens Energy'],
@@ -20,7 +20,7 @@ const realWorldApps = [
     color: '#F59E0B'
   },
   {
-    icon: '🔌',
+    icon: '\uD83D\uDD0C',
     title: 'USB Charging Cables',
     short: 'Cable quality affects charging speed',
     tagline: 'Not all cables are created equal',
@@ -28,9 +28,9 @@ const realWorldApps = [
     connection: 'At 3A charging current, a thin wire might drop 0.5V or more, reducing charging power by 10%+ and causing the phone to reduce current.',
     howItWorks: 'Fast charging protocols require maintaining voltage within tight tolerances. Thick cables have lower resistance, ensuring the voltage at the phone stays high enough.',
     stats: [
-      { value: '20 AWG', label: 'quality cable gauge', icon: '🔧' },
-      { value: '100W', label: 'USB-PD max power', icon: '⚡' },
-      { value: '<0.3Ω', label: 'good cable resistance', icon: '📊' }
+      { value: '20 AWG', label: 'quality cable gauge', icon: '\uD83D\uDD27' },
+      { value: '100W', label: 'USB-PD max power', icon: '\u26A1' },
+      { value: '<0.3\u03A9', label: 'good cable resistance', icon: '\uD83D\uDCCA' }
     ],
     examples: ['Phone charging cables', 'Laptop USB-C chargers', 'Power bank cables', 'Car charger cables'],
     companies: ['Apple', 'Anker', 'Belkin', 'Samsung'],
@@ -38,7 +38,7 @@ const realWorldApps = [
     color: '#3B82F6'
   },
   {
-    icon: '🔊',
+    icon: '\uD83D\uDD0A',
     title: 'Speaker Wire Selection',
     short: 'Long runs need thick wire for full power',
     tagline: 'Every watt to the speaker',
@@ -46,9 +46,9 @@ const realWorldApps = [
     connection: 'An 8-ohm speaker with 1-ohm wire resistance loses 11% of power in the wire. Audiophiles use heavy gauge wire to minimize this loss.',
     howItWorks: 'The amplifier sees wire resistance in series with the speaker. This reduces damping factor and can cause frequency-dependent response changes.',
     stats: [
-      { value: '12 AWG', label: 'long run gauge', icon: '🔧' },
-      { value: '50ft', label: 'typical max run', icon: '📏' },
-      { value: '<5%', label: 'acceptable loss', icon: '📊' }
+      { value: '12 AWG', label: 'long run gauge', icon: '\uD83D\uDD27' },
+      { value: '50ft', label: 'typical max run', icon: '\uD83D\uDCCF' },
+      { value: '<5%', label: 'acceptable loss', icon: '\uD83D\uDCCA' }
     ],
     examples: ['Home theater systems', 'PA systems', 'Car audio', 'Studio monitors'],
     companies: ['Monster Cable', 'Blue Jeans Cable', 'AudioQuest', 'Monoprice'],
@@ -56,17 +56,17 @@ const realWorldApps = [
     color: '#22C55E'
   },
   {
-    icon: '🚗',
+    icon: '\uD83D\uDE97',
     title: 'EV Charging Cables',
     short: 'DC fast charging requires massive conductors',
     tagline: 'Megawatts through a cable',
     description: 'DC fast chargers deliver 350 kW or more at 400-800V. Even with high voltage, currents reach 500A, requiring liquid-cooled cables to prevent overheating.',
     connection: 'At 500A, even 1 milliohm of resistance generates 250W of heat. Liquid cooling removes this heat, allowing higher currents in manageable cable sizes.',
-    howItWorks: 'Coolant flows through channels in the cable assembly, removing I²R heat. The cable can then use smaller conductors than air-cooled cables at the same current.',
+    howItWorks: 'Coolant flows through channels in the cable assembly, removing I\u00B2R heat. The cable can then use smaller conductors than air-cooled cables at the same current.',
     stats: [
-      { value: '350', label: 'kW charging power', icon: '⚡' },
-      { value: '500', label: 'A maximum current', icon: '🔥' },
-      { value: '15min', label: '10-80% charge', icon: '⏱️' }
+      { value: '350', label: 'kW charging power', icon: '\u26A1' },
+      { value: '500', label: 'A maximum current', icon: '\uD83D\uDD25' },
+      { value: '15min', label: '10-80% charge', icon: '\u23F1\uFE0F' }
     ],
     examples: ['Tesla Superchargers', 'Electrify America', 'IONITY stations', 'ChargePoint DC'],
     companies: ['Tesla', 'ABB', 'Tritium', 'EVBox'],
@@ -76,7 +76,8 @@ const realWorldApps = [
 ];
 
 interface PowerLossRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -85,7 +86,7 @@ interface PowerLossRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#cbd5e1',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -113,12 +114,31 @@ const wireGauges = [
 // Resistivity of copper (ohm*mm^2/m)
 const COPPER_RESISTIVITY = 0.0172;
 
+const PHASE_ORDER: Array<'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery'> = [
+  'hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'
+];
+
 const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
-  phase,
+  gamePhase,
+  phase: phaseProp,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase management - start at hook
+  const [internalPhase, setInternalPhase] = useState<typeof PHASE_ORDER[number]>('hook');
+
+  // Determine actual phase: prefer gamePhase prop, then phase prop, then internal state
+  const getValidPhase = (p: string | undefined): typeof PHASE_ORDER[number] | null => {
+    if (p && PHASE_ORDER.includes(p as typeof PHASE_ORDER[number])) {
+      return p as typeof PHASE_ORDER[number];
+    }
+    return null;
+  };
+
+  const phase = getValidPhase(gamePhase) || getValidPhase(phaseProp) || internalPhase;
+  const currentPhaseIndex = PHASE_ORDER.indexOf(phase);
+
   // Simulation state
   const [wireLength, setWireLength] = useState(10); // meters
   const [gaugeIndex, setGaugeIndex] = useState(1); // Start with 14 AWG
@@ -130,6 +150,7 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentAppIndex, setCurrentAppIndex] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -328,6 +349,30 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
+  // Navigation handlers
+  const goToNextPhase = useCallback(() => {
+    const nextIndex = currentPhaseIndex + 1;
+    if (nextIndex < PHASE_ORDER.length) {
+      setInternalPhase(PHASE_ORDER[nextIndex]);
+    }
+    if (onPhaseComplete) {
+      onPhaseComplete();
+    }
+  }, [currentPhaseIndex, onPhaseComplete]);
+
+  const goToPreviousPhase = useCallback(() => {
+    const prevIndex = currentPhaseIndex - 1;
+    if (prevIndex >= 0) {
+      setInternalPhase(PHASE_ORDER[prevIndex]);
+    }
+  }, [currentPhaseIndex]);
+
+  const goToPhase = useCallback((index: number) => {
+    if (index >= 0 && index < PHASE_ORDER.length) {
+      setInternalPhase(PHASE_ORDER[index]);
+    }
+  }, []);
+
   const renderVisualization = (interactive: boolean) => {
     const width = 700;
     const height = 400;
@@ -502,33 +547,35 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
           <rect width={width} height={height} fill="url(#plossLabBg)" />
           <rect width={width} height={height} fill="url(#plossLabGrid)" />
 
+          {/* Interactive marker - positioned first so getInteractivePoint finds it */}
+          <circle
+            cx={130 + (wireLength / 50) * 430}
+            cy={170 + (1 - brightness) * 60}
+            r={8}
+            fill="#8b5cf6"
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#plossElectronBlur)"
+          />
+
           {/* === POWER STATION / BATTERY === */}
-          <g transform="translate(30, 100)">
-            {/* Battery housing */}
-            <rect x="0" y="0" width="70" height="140" rx="8" fill="url(#plossBatteryBody)" stroke="#78350f" strokeWidth="2" />
-            <rect x="5" y="5" width="60" height="130" rx="6" fill="#92400e" opacity="0.3" />
-
-            {/* Battery positive terminal */}
-            <rect x="22" y="-15" width="26" height="18" rx="4" fill="url(#plossBatteryTerminal)" stroke="#52525b" strokeWidth="1" />
-            <text x="35" y="-2" textAnchor="middle" fill="#e4e4e7" fontSize="12" fontWeight="bold">+</text>
-
-            {/* Battery negative terminal */}
-            <rect x="22" y="137" width="26" height="18" rx="4" fill="url(#plossBatteryTerminal)" stroke="#52525b" strokeWidth="1" />
-            <text x="35" y="150" textAnchor="middle" fill="#e4e4e7" fontSize="12" fontWeight="bold">-</text>
-
-            {/* Voltage label */}
-            <rect x="10" y="55" width="50" height="30" rx="4" fill="#78350f" />
-            <text x="35" y="75" textAnchor="middle" fill="#fef3c7" fontSize="14" fontWeight="bold">12V</text>
-
-            {/* Power indicator */}
-            <circle cx="35" cy="110" r="8" fill="#22c55e" opacity="0.8">
-              <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
-            </circle>
-            <text x="35" y="130" textAnchor="middle" fill="#fef3c7" fontSize="8">POWER</text>
-
-            {/* Label */}
-            <text x="35" y="-30" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">POWER SOURCE</text>
-          </g>
+          {/* Battery housing - translate(30,100) applied to rects */}
+          <rect x="30" y="100" width="70" height="140" rx="8" fill="url(#plossBatteryBody)" stroke="#78350f" strokeWidth="2" />
+          <rect x="35" y="105" width="60" height="130" rx="6" fill="#92400e" opacity="0.3" />
+          {/* Battery positive terminal */}
+          <rect x="52" y="85" width="26" height="18" rx="4" fill="url(#plossBatteryTerminal)" stroke="#52525b" strokeWidth="1" />
+          <text x="65" y="70" textAnchor="middle" fill="#e4e4e7" fontSize="12" fontWeight="bold">+</text>
+          {/* Battery negative terminal */}
+          <rect x="52" y="237" width="26" height="18" rx="4" fill="url(#plossBatteryTerminal)" stroke="#52525b" strokeWidth="1" />
+          <text x="65" y="260" textAnchor="middle" fill="#e4e4e7" fontSize="12" fontWeight="bold">-</text>
+          {/* Voltage label */}
+          <rect x="40" y="155" width="50" height="30" rx="4" fill="#78350f" />
+          <text x="65" y="175" textAnchor="middle" fill="#fef3c7" fontSize="14" fontWeight="bold">12V</text>
+          {/* Power indicator */}
+          <circle cx="65" cy="210" r="8" fill="#22c55e" opacity="0.8">
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+          <text x="65" y="230" textAnchor="middle" fill="#fef3c7" fontSize="11">PWR</text>
 
           {/* === TRANSMISSION PATH WITH POWER LOSS INDICATORS === */}
           <g>
@@ -592,22 +639,18 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
               </g>
             )}
 
-            {/* Power loss indicators along transmission path */}
+            {/* Power loss indicators along transmission path - absolute coords */}
             {powerLoss > 0.5 && (
               <g>
-                {[200, 300, 400, 500].map((x, i) => {
-                  const lossAtPoint = (powerLoss / 4) * (i + 1) / 4;
+                {[250, 400].map((hx, i) => {
+                  const lossAtPoint = (powerLoss / 2) * (i + 1) / 2;
                   const showIndicator = lossAtPoint > 0.2;
+                  const hy = isCoiled ? (i % 2 === 0 ? 75 : 125) : 75;
                   return showIndicator ? (
-                    <g key={i} transform={`translate(${x}, ${isCoiled ? (i % 2 === 0 ? 75 : 125) : 75})`}>
-                      {/* Heat wave indicator */}
-                      <ellipse cx="0" cy="0" rx={8 + lossAtPoint * 5} ry={12 + lossAtPoint * 8} fill="url(#plossHeatSpot)" opacity={heatIntensity * 0.6}>
+                    <g key={i}>
+                      <ellipse cx={hx} cy={hy} rx={8 + lossAtPoint * 5} ry={12 + lossAtPoint * 8} fill="url(#plossHeatSpot)" opacity={heatIntensity * 0.6}>
                         <animate attributeName="ry" values={`${12 + lossAtPoint * 8};${18 + lossAtPoint * 10};${12 + lossAtPoint * 8}`} dur="0.8s" repeatCount="indefinite" />
                       </ellipse>
-                      {/* Loss value */}
-                      <text y={-25} textAnchor="middle" fill="#f97316" fontSize="8" fontWeight="bold">
-                        -{(powerLoss / 4).toFixed(1)}W
-                      </text>
                     </g>
                   ) : null;
                 })}
@@ -618,152 +661,103 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
             <line x1={130} y1={240} x2={560} y2={240} stroke="url(#plossWireCopper)" strokeWidth={wireThickness} strokeLinecap="round" />
           </g>
 
-          {/* === LED LOAD === */}
-          <g transform="translate(590, 170)">
-            {/* LED outer glow when bright */}
-            {brightness > 0.3 && (
-              <circle cx="0" cy="0" r={50} fill="url(#plossLEDOuterGlow)" filter="url(#plossLEDGlowFilter)" />
-            )}
-
-            {/* LED housing */}
-            <ellipse cx="0" cy="0" rx="35" ry="40" fill="#1e293b" stroke="#475569" strokeWidth="2" />
-
-            {/* LED dome */}
-            <ellipse cx="0" cy="-5" rx="28" ry="32" fill={`rgba(254, 240, 138, ${0.1 + brightness * 0.4})`} stroke={brightness > 0.5 ? '#fef08a' : '#854d0e'} strokeWidth="2" />
-
-            {/* LED filament glow */}
-            <ellipse cx="0" cy="0" rx="18" ry="22" fill="url(#plossLEDGlow)" filter={brightness > 0.5 ? "url(#plossLEDGlowFilter)" : undefined} />
-
-            {/* Light rays when bright */}
-            {brightness > 0.4 && (
-              <g>
-                {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle) => (
-                  <line
-                    key={angle}
-                    x1={Math.cos((angle * Math.PI) / 180) * 38}
-                    y1={Math.sin((angle * Math.PI) / 180) * 42}
-                    x2={Math.cos((angle * Math.PI) / 180) * (45 + brightness * 15)}
-                    y2={Math.sin((angle * Math.PI) / 180) * (50 + brightness * 15)}
-                    stroke="#fef08a"
-                    strokeWidth={1.5}
-                    opacity={brightness * 0.7}
-                  >
-                    <animate attributeName="opacity" values={`${brightness * 0.5};${brightness * 0.8};${brightness * 0.5}`} dur="0.5s" repeatCount="indefinite" />
-                  </line>
-                ))}
-              </g>
-            )}
-
-            {/* LED base */}
-            <rect x="-15" y="35" width="30" height="20" rx="3" fill="#475569" stroke="#64748b" strokeWidth="1" />
-
-            {/* Wire connections to LED */}
-            <line x1="-30" y1="-70" x2="0" y2="-35" stroke="url(#plossWireCopper)" strokeWidth={wireThickness / 2} />
-            <line x1="-30" y1="70" x2="0" y2="35" stroke="url(#plossWireCopper)" strokeWidth={wireThickness / 2} />
-
-            {/* Labels */}
-            <text x="0" y="70" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">LOAD</text>
-            <text x="0" y="82" textAnchor="middle" fill={brightness > 0.5 ? '#22c55e' : '#ef4444'} fontSize="9">
-              {brightness > 0.7 ? 'BRIGHT' : brightness > 0.4 ? 'DIM' : brightness > 0.1 ? 'VERY DIM' : 'OFF'}
-            </text>
-          </g>
+          {/* === LED LOAD === (absolute coords, was translate(590, 170)) */}
+          {brightness > 0.3 && (
+            <circle cx="590" cy="170" r={50} fill="url(#plossLEDOuterGlow)" filter="url(#plossLEDGlowFilter)" />
+          )}
+          <ellipse cx="590" cy="170" rx="35" ry="40" fill="#1e293b" stroke="#475569" strokeWidth="2" />
+          <ellipse cx="590" cy="165" rx="28" ry="32" fill={`rgba(254, 240, 138, ${0.1 + brightness * 0.4})`} stroke={brightness > 0.5 ? '#fef08a' : '#854d0e'} strokeWidth="2" />
+          <ellipse cx="590" cy="170" rx="18" ry="22" fill="url(#plossLEDGlow)" filter={brightness > 0.5 ? "url(#plossLEDGlowFilter)" : undefined} />
+          {brightness > 0.4 && (
+            <g>
+              {[0, 60, 120, 180, 240, 300].map((angle) => (
+                <line
+                  key={angle}
+                  x1={590 + Math.cos((angle * Math.PI) / 180) * 38}
+                  y1={170 + Math.sin((angle * Math.PI) / 180) * 42}
+                  x2={590 + Math.cos((angle * Math.PI) / 180) * (45 + brightness * 15)}
+                  y2={170 + Math.sin((angle * Math.PI) / 180) * (50 + brightness * 15)}
+                  stroke="#fef08a"
+                  strokeWidth={1.5}
+                  opacity={brightness * 0.7}
+                >
+                  <animate attributeName="opacity" values={`${brightness * 0.5};${brightness * 0.8};${brightness * 0.5}`} dur="0.5s" repeatCount="indefinite" />
+                </line>
+              ))}
+            </g>
+          )}
+          <rect x="575" y="205" width="30" height="20" rx="3" fill="#475569" stroke="#64748b" strokeWidth="1" />
+          <line x1="560" y1="100" x2="590" y2="135" stroke="url(#plossWireCopper)" strokeWidth={wireThickness / 2} />
+          <line x1="560" y1="240" x2="590" y2="205" stroke="url(#plossWireCopper)" strokeWidth={wireThickness / 2} />
+          <text x="645" y="165" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">LOAD</text>
+          <text x="645" y="180" textAnchor="middle" fill={brightness > 0.5 ? '#22c55e' : '#ef4444'} fontSize="11">
+            {brightness > 0.7 ? 'BRIGHT' : brightness > 0.4 ? 'DIM' : brightness > 0.1 ? 'VERY DIM' : 'OFF'}
+          </text>
 
           {/* Vertical connections */}
           <line x1="100" y1="100" x2="100" y2="240" stroke="url(#plossWireCopper)" strokeWidth={wireThickness} />
           <line x1="560" y1="100" x2="560" y2="240" stroke="url(#plossWireCopper)" strokeWidth={wireThickness} />
 
-          {/* === EFFICIENCY METER === */}
-          <g transform="translate(180, 280)">
-            {/* Meter background panel */}
-            <rect x="0" y="0" width="340" height="80" rx="10" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1.5" filter="url(#plossMeterGlow)" />
-
-            {/* Meter title */}
-            <text x="170" y="18" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold" letterSpacing="1">TRANSMISSION EFFICIENCY</text>
-
-            {/* Efficiency bar background */}
-            <rect x="20" y="28" width="300" height="20" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1" />
-
-            {/* Efficiency bar fill with gradient */}
-            <rect x="20" y="28" width={300 * (efficiency / 100)} height="20" rx="4" fill="url(#plossEfficiencyGrad)" opacity="0.9">
-              <animate attributeName="opacity" values="0.7;0.95;0.7" dur="2s" repeatCount="indefinite" />
-            </rect>
-
-            {/* Efficiency percentage markers */}
-            {[0, 25, 50, 75, 100].map((pct) => (
-              <g key={pct}>
-                <line x1={20 + pct * 3} y1="48" x2={20 + pct * 3} y2="52" stroke="#64748b" strokeWidth="1" />
-                <text x={20 + pct * 3} y="62" textAnchor="middle" fill="#64748b" fontSize="8">{pct}%</text>
-              </g>
-            ))}
-
-            {/* Current efficiency value */}
-            <text x="170" y="75" textAnchor="middle" fill={efficiency > 70 ? '#22c55e' : efficiency > 40 ? '#f59e0b' : '#ef4444'} fontSize="14" fontWeight="bold">
-              {efficiency.toFixed(1)}% Efficient
-            </text>
-
-            {/* Power flow indicators */}
-            <g transform="translate(20, 28)">
-              <text x="-15" y="14" textAnchor="end" fill="#22c55e" fontSize="8">IN</text>
-              <text x="315" y="14" textAnchor="start" fill={efficiency > 50 ? '#22c55e' : '#ef4444'} fontSize="8">OUT</text>
+          {/* === EFFICIENCY METER === (absolute coords, was translate(180, 280)) */}
+          <rect x="180" y="280" width="340" height="110" rx="10" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1.5" filter="url(#plossMeterGlow)" />
+          <text x="350" y="298" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold" letterSpacing="1">EFFICIENCY</text>
+          <rect x="200" y="308" width="300" height="16" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          <rect x="200" y="308" width={300 * (efficiency / 100)} height="16" rx="4" fill="url(#plossEfficiencyGrad)" opacity="0.9">
+            <animate attributeName="opacity" values="0.7;0.95;0.7" dur="2s" repeatCount="indefinite" />
+          </rect>
+          {/* Efficiency percentage markers */}
+          {[0, 50, 100].map((pct) => (
+            <g key={pct}>
+              <line x1={200 + pct * 3} y1="324" x2={200 + pct * 3} y2="328" stroke="#64748b" strokeWidth="1" />
+              <text x={200 + pct * 3} y="340" textAnchor="middle" fill="#cbd5e1" fontSize="11">{pct}%</text>
             </g>
-          </g>
+          ))}
+          <text x="350" y="360" textAnchor="middle" fill={efficiency > 70 ? '#22c55e' : efficiency > 40 ? '#f59e0b' : '#ef4444'} fontSize="12" fontWeight="bold">
+            {efficiency.toFixed(1)}% Efficient
+          </text>
+          <text x="185" y="320" textAnchor="end" fill="#22c55e" fontSize="11">IN</text>
+          <text x="515" y="320" textAnchor="start" fill={efficiency > 50 ? '#22c55e' : '#ef4444'} fontSize="11">OUT</text>
 
-          {/* === DATA READOUTS === */}
-          {/* Voltage at load */}
-          <g transform="translate(550, 20)">
-            <rect x="0" y="0" width="120" height="50" rx="6" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1" />
-            <text x="60" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8" letterSpacing="0.5">LOAD VOLTAGE</text>
-            <text x="60" y="38" textAnchor="middle" fill={loadVoltage > 9 ? '#22c55e' : loadVoltage > 6 ? '#f59e0b' : '#ef4444'} fontSize="18" fontWeight="bold">
-              {loadVoltage.toFixed(2)}V
-            </text>
-          </g>
+          {/* === DATA READOUTS (absolute coords) === */}
+          {/* Voltage at load - was translate(550, 20) */}
+          <rect x="550" y="20" width="120" height="50" rx="6" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1" />
+          <text x="610" y="35" textAnchor="middle" fill="#e2e8f0" fontSize="11" letterSpacing="0.5">LOAD VOLTAGE</text>
+          <text x="610" y="56" textAnchor="middle" fill={loadVoltage > 9 ? '#22c55e' : loadVoltage > 6 ? '#f59e0b' : '#ef4444'} fontSize="16" fontWeight="bold">
+            {loadVoltage.toFixed(2)}V
+          </text>
 
-          {/* Power loss readout */}
-          <g transform="translate(30, 280)">
-            <rect x="0" y="0" width="130" height="80" rx="6" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1" />
-            <text x="65" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8" letterSpacing="0.5">POWER LOSS</text>
-            <text x="65" y="42" textAnchor="middle" fill="#ef4444" fontSize="20" fontWeight="bold">
-              {powerLoss.toFixed(2)}W
-            </text>
-            <text x="65" y="58" textAnchor="middle" fill="#f97316" fontSize="9">
-              as HEAT
-            </text>
-            {/* Heat icon */}
-            {powerLoss > 2 && (
-              <g transform="translate(65, 70)">
-                <text textAnchor="middle" fill="#ef4444" fontSize="10">
-                  {powerLoss > 10 ? 'HOT!' : powerLoss > 5 ? 'WARM' : '~'}
-                </text>
-              </g>
-            )}
-          </g>
+          {/* Power loss readout - was translate(30, 280) */}
+          <rect x="30" y="280" width="130" height="60" rx="6" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1" />
+          <text x="95" y="295" textAnchor="middle" fill="#e2e8f0" fontSize="11" letterSpacing="0.5">POWER LOSS</text>
+          <text x="95" y="316" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">
+            {powerLoss.toFixed(2)}W
+          </text>
+          <text x="95" y="334" textAnchor="middle" fill="#f97316" fontSize="11">as heat</text>
 
-          {/* Wire specs readout */}
-          <g transform="translate(30, 20)">
-            <rect x="0" y="0" width="180" height="60" rx="6" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1" />
-            <text x="90" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8" letterSpacing="0.5">WIRE SPECIFICATIONS</text>
-            <text x="90" y="32" textAnchor="middle" fill="#8b5cf6" fontSize="11" fontWeight="bold">{gauge.label}</text>
-            <text x="90" y="48" textAnchor="middle" fill="#64748b" fontSize="9">
-              {effectiveLength}m | R = {resistance.toFixed(4)}Ω
-            </text>
-          </g>
+          {/* Wire specs readout - was translate(30, 20) */}
+          <rect x="30" y="20" width="180" height="55" rx="6" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1" />
+          <text x="120" y="35" textAnchor="middle" fill="#e2e8f0" fontSize="11" letterSpacing="0.5">WIRE SPECS</text>
+          <text x="120" y="50" textAnchor="middle" fill="#8b5cf6" fontSize="11" fontWeight="bold">{gauge.label}</text>
+          <text x="120" y="65" textAnchor="middle" fill="#cbd5e1" fontSize="11">
+            {effectiveLength}m | R={resistance.toFixed(4)}{'\u03A9'}
+          </text>
 
-          {/* Current flow indicator */}
-          <g transform="translate(230, 20)">
-            <rect x="0" y="0" width="100" height="50" rx="6" fill="url(#plossMeterPanel)" stroke="#8b5cf6" strokeWidth="1.5" />
-            <text x="50" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8" letterSpacing="0.5">CURRENT</text>
-            <text x="50" y="38" textAnchor="middle" fill="#8b5cf6" fontSize="18" fontWeight="bold">
-              {current.toFixed(1)}A
-            </text>
-          </g>
+          {/* Current flow indicator - was translate(230, 20) */}
+          <rect x="230" y="20" width="100" height="50" rx="6" fill="url(#plossMeterPanel)" stroke="#8b5cf6" strokeWidth="1.5" />
+          <text x="280" y="35" textAnchor="middle" fill="#e2e8f0" fontSize="11" letterSpacing="0.5">CURRENT</text>
+          <text x="280" y="56" textAnchor="middle" fill="#8b5cf6" fontSize="16" fontWeight="bold">
+            {current.toFixed(1)}A
+          </text>
 
-          {/* Coiled indicator */}
+          {/* Grid lines for visualization */}
+          <line x1="130" y1="170" x2="560" y2="170" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+
+          {/* Coiled indicator - absolute coords */}
           {isCoiled && (
-            <g transform="translate(350, 20)">
-              <rect x="0" y="0" width="90" height="50" rx="6" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth="1.5" />
-              <text x="45" y="15" textAnchor="middle" fill="#f59e0b" fontSize="8" letterSpacing="0.5">COILED</text>
-              <text x="45" y="35" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">3x LENGTH</text>
-              <text x="45" y="46" textAnchor="middle" fill="#fbbf24" fontSize="8">MORE LOSS!</text>
+            <g>
+              <rect x="350" y="20" width="90" height="50" rx="6" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth="1.5" />
+              <text x="395" y="38" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">COILED 3x</text>
+              <text x="395" y="56" textAnchor="middle" fill="#fbbf24" fontSize="11">MORE LOSS</text>
             </g>
           )}
         </svg>
@@ -798,7 +792,7 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
               border: '1px solid rgba(139, 92, 246, 0.3)',
             }}>
               <div style={{ color: colors.textMuted, fontSize: '10px', letterSpacing: '0.5px' }}>RESISTANCE</div>
-              <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>{resistance.toFixed(4)}Ω</div>
+              <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>{resistance.toFixed(4)}\u03A9</div>
             </div>
             <div style={{
               background: colors.bgCard,
@@ -829,8 +823,12 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
           step="1"
           value={wireLength}
           onChange={(e) => setWireLength(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent, WebkitAppearance: 'none' } as React.CSSProperties}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+          <span>1 (Min)</span>
+          <span>50 (Max)</span>
+        </div>
       </div>
 
       <div>
@@ -850,6 +848,7 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
                 color: colors.textPrimary,
                 cursor: 'pointer',
                 fontSize: '12px',
+                minHeight: '44px',
               }}
             >
               {g.awg} AWG
@@ -869,8 +868,12 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
           step="0.5"
           value={current}
           onChange={(e) => setCurrent(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent, WebkitAppearance: 'none' } as React.CSSProperties}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+          <span>0.5 (Min)</span>
+          <span>10 (Max)</span>
+        </div>
       </div>
 
       <div style={{
@@ -883,184 +886,279 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
           Physics Equations:
         </div>
         <div style={{ color: colors.textSecondary, fontSize: '12px', fontFamily: 'monospace' }}>
-          R = rho * L / A = {COPPER_RESISTIVITY} * {effectiveLength} / {gauge.area} = {resistance.toFixed(4)} ohm
+          R = {'\u03C1'} {'\u00D7'} L / A = {COPPER_RESISTIVITY} {'\u00D7'} {effectiveLength} / {gauge.area} = {resistance.toFixed(4)} {'\u03A9'}
         </div>
         <div style={{ color: colors.textSecondary, fontSize: '12px', fontFamily: 'monospace', marginTop: '4px' }}>
-          P = I squared * R = {current.toFixed(1)} squared * {resistance.toFixed(4)} = {powerLoss.toFixed(3)} W
+          P = I{'\u00B2'} {'\u00D7'} R = {current.toFixed(1)}{'\u00B2'} {'\u00D7'} {resistance.toFixed(4)} = {powerLoss.toFixed(3)} W
         </div>
         <div style={{ color: colors.textSecondary, fontSize: '12px', fontFamily: 'monospace', marginTop: '4px' }}>
-          V_drop = I * R = {current.toFixed(1)} * {resistance.toFixed(4)} = {voltageDrop.toFixed(3)} V
+          V_drop = I {'\u00D7'} R = {current.toFixed(1)} {'\u00D7'} {resistance.toFixed(4)} = {voltageDrop.toFixed(3)} V
         </div>
       </div>
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
+  // Top navigation bar with Back/Next and progress
+  const renderNavBar = () => (
+    <nav
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '60px',
+        background: colors.bgDark,
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1000,
+      }}
+      aria-label="Game navigation"
+    >
       <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        onClick={goToPreviousPhase}
+        disabled={currentPhaseIndex === 0}
+        aria-label="Back"
         style={{
-          padding: '12px 32px',
+          padding: '8px 16px',
           borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: currentPhaseIndex === 0 ? colors.textMuted : colors.textPrimary,
+          cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
+          fontSize: '14px',
           fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
+          minHeight: '44px',
+          minWidth: '44px',
+          opacity: currentPhaseIndex === 0 ? 0.5 : 1,
         }}
       >
-        {buttonText}
+        Back
       </button>
+
+      {/* Progress indicator - navigation dots */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        {PHASE_ORDER.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(i)}
+            aria-label={`Go to ${p} phase`}
+            title={p}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              border: 'none',
+              background: i === currentPhaseIndex ? colors.accent : i < currentPhaseIndex ? colors.success : 'rgba(255,255,255,0.3)',
+              cursor: 'pointer',
+              padding: 0,
+              minHeight: '10px',
+              minWidth: '10px',
+            }}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={goToNextPhase}
+        disabled={currentPhaseIndex === PHASE_ORDER.length - 1}
+        aria-label="Next"
+        style={{
+          padding: '8px 16px',
+          borderRadius: '8px',
+          border: 'none',
+          background: currentPhaseIndex === PHASE_ORDER.length - 1 ? 'rgba(255,255,255,0.1)' : `linear-gradient(135deg, ${colors.accent}, #7c3aed)`,
+          color: currentPhaseIndex === PHASE_ORDER.length - 1 ? colors.textMuted : 'white',
+          cursor: currentPhaseIndex === PHASE_ORDER.length - 1 ? 'not-allowed' : 'pointer',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          minHeight: '44px',
+          minWidth: '44px',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        Next
+      </button>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div
+      role="progressbar"
+      aria-valuenow={currentPhaseIndex + 1}
+      aria-valuemin={1}
+      aria-valuemax={PHASE_ORDER.length}
+      style={{
+        width: '100%',
+        height: '4px',
+        background: 'rgba(255,255,255,0.1)',
+        borderRadius: '2px',
+        overflow: 'hidden',
+        marginBottom: '16px',
+      }}
+    >
+      <div
+        style={{
+          width: `${((currentPhaseIndex + 1) / PHASE_ORDER.length) * 100}%`,
+          height: '100%',
+          background: colors.accent,
+          transition: 'width 0.3s ease',
+        }}
+      />
+    </div>
+  );
+
+  // Common page wrapper
+  const renderPageWrapper = (children: React.ReactNode) => (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
+      {renderNavBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        {children}
+      </div>
     </div>
   );
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Power Loss in Wires
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Same battery - will a long thin wire dim a bulb?
+    return renderPageWrapper(
+      <>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          {renderProgressBar()}
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            Power Loss in Wires
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
+            Same battery - will a long thin wire dim a bulb?
+          </p>
+        </div>
+
+        {renderVisualization(true)}
+
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{
+            background: colors.bgCard,
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              Ever noticed phone charger cables getting warm? Or wondered why power lines
+              use such thick wires? The answer lies in a simple equation that costs
+              power companies billions of dollars a year.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              Wires are not perfect conductors - they fight back.
             </p>
           </div>
 
-          {renderVisualization(true)}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Ever noticed phone charger cables getting warm? Or wondered why power lines
-                use such thick wires? The answer lies in a simple equation that costs
-                power companies billions of dollars a year.
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                Wires are not perfect conductors - they fight back.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(139, 92, 246, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Try the controls: adjust wire length and gauge to see the effect on the LED!
-              </p>
-            </div>
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.2)',
+            padding: '16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              Let's explore and discover what happens when electricity flows through wires of different lengths and thicknesses!
+            </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
+      </>
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
+    return renderPageWrapper(
+      <>
+        <div style={{ padding: '16px' }}>
+          {renderProgressBar()}
+          <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+            Step {currentPhaseIndex + 1} of {PHASE_ORDER.length}: Make your prediction
+          </p>
+        </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A 12V battery connected to an LED through copper wire. The wire has some length
-              and thickness (gauge). Current flows through the circuit, and we measure the
-              voltage that actually reaches the LED.
-            </p>
-          </div>
+        {renderVisualization(false)}
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              If you use a much longer, thinner wire, what happens to the LED brightness?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            A 12V battery connected to an LED through copper wire. The wire has some length
+            and thickness (gauge). Current flows through the circuit, and we measure the
+            voltage that actually reaches the LED.
+          </p>
+        </div>
+
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            If you use a much longer, thinner wire, what happens to the LED brightness?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {predictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  minHeight: '44px',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
+      </>
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Wire Resistance</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust length, gauge, and current to see power loss in action
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Max out the length (50m) with thin wire - watch the LED dim!</li>
-              <li>Switch to thick wire (10 AWG) - see the difference</li>
-              <li>Increase current to 10A - feel the (virtual) heat</li>
-              <li>Notice: doubling current quadruples power loss (I squared!)</li>
-            </ul>
-          </div>
+    return renderPageWrapper(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          {renderProgressBar()}
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Wire Resistance</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
+            Adjust length, gauge, and current to see power loss in action. This is important in real-world engineering and everyday technology.
+          </p>
+          <p style={{ color: colors.textMuted, fontSize: '13px', fontStyle: 'italic' }}>
+            Observe how changing each parameter affects the LED brightness and power loss readings. That's why engineers carefully design cable thickness for applications from phone chargers to power grids.
+          </p>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
+
+        {renderVisualization(true)}
+        {renderControls()}
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+          <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Max out the length (50m) with thin wire - watch the LED dim!</li>
+            <li>Switch to thick wire (10 AWG) - see the difference</li>
+            <li>Increase current to 10A - feel the (virtual) heat</li>
+            <li>Notice: doubling current quadruples power loss (I squared!)</li>
+          </ul>
+        </div>
+      </>
     );
   }
 
@@ -1068,175 +1166,200 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'dimmer';
 
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              The bulb dims because wire resistance "uses up" voltage before it reaches the load!
+    return renderPageWrapper(
+      <>
+        <div style={{ padding: '16px' }}>
+          {renderProgressBar()}
+        </div>
+
+        {/* SVG diagram for review */}
+        <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ maxWidth: '400px', display: 'block', margin: '0 auto' }}>
+            <defs>
+              <linearGradient id="reviewWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#b87333" />
+                <stop offset="50%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#b87333" />
+              </linearGradient>
+            </defs>
+            <rect x="10" y="40" width="60" height="40" rx="4" fill="#fbbf24" stroke="#78350f" strokeWidth="2" />
+            <text x="40" y="65" textAnchor="middle" fill="#78350f" fontSize="12" fontWeight="bold">12V</text>
+            <line x1="70" y1="60" x2="330" y2="60" stroke="url(#reviewWireGrad)" strokeWidth="6" />
+            <text x="200" y="45" textAnchor="middle" fill="#ef4444" fontSize="11">Heat Loss = I\u00B2R</text>
+            <circle cx="360" cy="60" r="25" fill="#fef08a" stroke="#eab308" strokeWidth="2" />
+            <text x="360" y="65" textAnchor="middle" fill="#78350f" fontSize="11">LED</text>
+            <text x="200" y="100" textAnchor="middle" fill="#e2e8f0" fontSize="11">Longer wire = More resistance = More loss</text>
+          </svg>
+        </div>
+
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Your prediction was correct!' : 'Not quite what you predicted!'}
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            As you observed in the experiment, the bulb dims because wire resistance "uses up" voltage before it reaches the load!
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Wire Resistance</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Resistance Formula:</strong> R = rho * L / A
+            </p>
+            <ul style={{ paddingLeft: '20px', marginBottom: '12px' }}>
+              <li>rho = resistivity (material property, copper approx 0.017 ohm*mm squared/m)</li>
+              <li>L = length (longer wire = more resistance)</li>
+              <li>A = cross-sectional area (thicker wire = less resistance)</li>
+            </ul>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Power Loss:</strong> P = I squared * R
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              This is why current matters so much! Double the current means 4x the power
+              wasted as heat. This energy comes from the source and never reaches your device.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Voltage Drop:</strong> V = I * R
+            </p>
+            <p>
+              The wire acts like a voltage divider. The more resistance, the more voltage
+              is "dropped" across the wire instead of powering your load.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Wire Resistance</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Resistance Formula:</strong> R = rho * L / A
-              </p>
-              <ul style={{ paddingLeft: '20px', marginBottom: '12px' }}>
-                <li>rho = resistivity (material property, copper approx 0.017 ohm*mm squared/m)</li>
-                <li>L = length (longer wire = more resistance)</li>
-                <li>A = cross-sectional area (thicker wire = less resistance)</li>
-              </ul>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Power Loss:</strong> P = I squared * R
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                This is why current matters so much! Double the current means 4x the power
-                wasted as heat. This energy comes from the source and never reaches your device.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Voltage Drop:</strong> V = I * R
-              </p>
-              <p>
-                The wire acts like a voltage divider. The more resistance, the more voltage
-                is "dropped" across the wire instead of powering your load.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
+      </>
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What if you coil the thin wire into a tight bundle?
-            </p>
-          </div>
+    return renderPageWrapper(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          {renderProgressBar()}
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+          <p style={{ color: colors.textSecondary, marginBottom: '8px' }}>
+            What if you coil the thin wire into a tight bundle?
+          </p>
+          <p style={{ color: colors.textMuted, fontSize: '13px' }}>
+            Step {currentPhaseIndex + 1} of {PHASE_ORDER.length}: Make your prediction
+          </p>
+        </div>
 
-          {renderVisualization(false)}
+        {renderVisualization(false)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              You have 10 meters of thin wire. Instead of running it straight, you coil it
-              up so it fits in a small space. The coil is tight - the wire loops back and
-              forth multiple times, effectively tripling the path length the current must travel.
-            </p>
-          </div>
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            You have 10 meters of thin wire. Instead of running it straight, you coil it
+            up so it fits in a small space. The coil is tight - the wire loops back and
+            forth multiple times, effectively tripling the path length the current must travel.
+          </p>
+        </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              How does coiling affect the bulb brightness?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            How does coiling affect the bulb brightness?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {twistPredictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setTwistPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                  background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  minHeight: '44px',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
+      </>
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Coiling Effects</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Toggle coiling and observe the dramatic change
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-
-          <div style={{ padding: '16px' }}>
-            <button
-              onClick={() => setIsCoiled(!isCoiled)}
-              style={{
-                width: '100%',
-                padding: '16px',
-                borderRadius: '8px',
-                border: 'none',
-                background: isCoiled ? colors.warning : colors.accent,
-                color: 'white',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '16px',
-                marginBottom: '16px',
-              }}
-            >
-              {isCoiled ? 'Uncoil Wire (Straight)' : 'Coil Wire (3x Path Length)'}
-            </button>
-          </div>
-
-          {renderControls()}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Coiling doesn't change the amount of copper, but it dramatically increases
-              the path length! Current must travel through every loop, so resistance
-              increases proportionally. This is why extension cords should be uncoiled
-              when carrying high current - a coiled cord can overheat!
-            </p>
-          </div>
+    return renderPageWrapper(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          {renderProgressBar()}
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Coiling Effects</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
+            Toggle coiling and observe the dramatic change
+          </p>
+          <p style={{ color: colors.textMuted, fontSize: '13px', fontStyle: 'italic' }}>
+            Observe: Watch the efficiency meter and power loss readings as you toggle coiling
+          </p>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
+
+        {renderVisualization(true)}
+
+        <div style={{ padding: '16px' }}>
+          <button
+            onClick={() => setIsCoiled(!isCoiled)}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: isCoiled ? colors.warning : colors.accent,
+              color: 'white',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '16px',
+              marginBottom: '16px',
+              minHeight: '44px',
+            }}
+          >
+            {isCoiled ? 'Uncoil Wire (Straight)' : 'Coil Wire (3x Path Length)'}
+          </button>
+        </div>
+
+        {renderControls()}
+
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.warning}`,
+        }}>
+          <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Coiling doesn't change the amount of copper, but it dramatically increases
+            the path length! Current must travel through every loop, so resistance
+            increases proportionally. This is why extension cords should be uncoiled
+            when carrying high current - a coiled cord can overheat!
+          </p>
+        </div>
+      </>
     );
   }
 
@@ -1244,227 +1367,369 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'dimmer';
 
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Coiling makes the bulb even dimmer because the current must travel a longer path!
+    return renderPageWrapper(
+      <>
+        <div style={{ padding: '16px' }}>
+          {renderProgressBar()}
+        </div>
+
+        {/* SVG diagram for twist review */}
+        <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+          <svg width="100%" height="140" viewBox="0 0 400 140" style={{ maxWidth: '400px', display: 'block', margin: '0 auto' }}>
+            <defs>
+              <linearGradient id="coilGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#b87333" />
+                <stop offset="25%" stopColor="#ef4444" />
+                <stop offset="50%" stopColor="#fbbf24" />
+                <stop offset="75%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#b87333" />
+              </linearGradient>
+            </defs>
+            <rect x="10" y="50" width="50" height="40" rx="4" fill="#fbbf24" stroke="#78350f" strokeWidth="2" />
+            <text x="35" y="75" textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">12V</text>
+            {/* Coiled wire representation */}
+            <path d="M 60 70 Q 100 30, 140 70 Q 180 110, 220 70 Q 260 30, 300 70 Q 340 110, 350 70" fill="none" stroke="url(#coilGrad)" strokeWidth="5" />
+            <text x="200" y="25" textAnchor="middle" fill="#ef4444" fontSize="11">3x path length = 3x resistance!</text>
+            <circle cx="375" cy="70" r="20" fill="#854d0e" stroke="#78350f" strokeWidth="2" />
+            <text x="375" y="75" textAnchor="middle" fill="#fef3c7" fontSize="11">DIM</text>
+            <text x="200" y="130" textAnchor="middle" fill="#e2e8f0" fontSize="11">Coiling increases effective wire length</text>
+          </svg>
+        </div>
+
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            Coiling makes the bulb even dimmer because the current must travel a longer path!
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Coiling Matters</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Path Length vs. Physical Length:</strong> Resistance
+              depends on how far electrons must travel, not how compact the wire is.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Real-World Hazard:</strong> A coiled extension
+              cord carrying high current can overheat and start fires! The heat from I squared R
+              is concentrated in a small volume when coiled.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Positive Use:</strong> This principle is used
+              in heating elements! Nichrome wire coiled tightly provides high resistance in
+              a small space for toasters, hair dryers, and electric stoves.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Coiling Matters</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Path Length vs. Physical Length:</strong> Resistance
-                depends on how far electrons must travel, not how compact the wire is.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Real-World Hazard:</strong> A coiled extension
-                cord carrying high current can overheat and start fires! The heat from I squared R
-                is concentrated in a small volume when coiled.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Positive Use:</strong> This principle is used
-                in heating elements! Nichrome wire coiled tightly provides high resistance in
-                a small space for toasters, hair dryers, and electric stoves.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
+      </>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Wire resistance affects everything from power grids to phone chargers
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+    const currentApp = realWorldApps[currentAppIndex];
+
+    return renderPageWrapper(
+      <>
+        <div style={{ padding: '16px' }}>
+          {renderProgressBar()}
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+            Wire resistance affects everything from power grids to phone chargers. Understanding power loss helps engineers design better electrical systems and save billions of dollars annually.
+          </p>
+          <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+            Application {currentAppIndex + 1} of {realWorldApps.length} - Explore how the P = I{'\u00B2'}R equation applies across industries
+          </p>
+        </div>
+
+        {/* App progress dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
+          {realWorldApps.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentAppIndex(i)}
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                border: 'none',
+                background: transferCompleted.has(i) ? colors.success : i === currentAppIndex ? colors.accent : 'rgba(255,255,255,0.3)',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+              aria-label={`Go to application ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        <div
+          style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '12px',
+            border: transferCompleted.has(currentAppIndex) ? `2px solid ${colors.success}` : `1px solid ${currentApp.color}40`,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <span style={{ fontSize: '32px' }}>{currentApp.icon}</span>
+            <div>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '4px' }}>{currentApp.title}</h3>
+              <p style={{ color: currentApp.color, fontSize: '13px' }}>{currentApp.tagline}</p>
+            </div>
+          </div>
+
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>
+            {currentApp.description}
+          </p>
+
+          <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '12px', lineHeight: 1.5 }}>
+            {currentApp.connection}
+          </p>
+
+          {/* Stats shown upfront */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+            {currentApp.stats.map((stat, i) => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '6px', textAlign: 'center' }}>
+                <div style={{ color: currentApp.color, fontSize: '14px', fontWeight: 'bold' }}>{stat.value}</div>
+                <div style={{ color: colors.textMuted, fontSize: '10px' }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Examples */}
+          <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '8px' }}>
+            Examples: {currentApp.examples.join(', ')}
+          </p>
+
+          {/* Companies */}
+          <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '12px' }}>
+            Key players: {currentApp.companies.join(', ')}
+          </p>
+
+          <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '12px' }}>
+            Future outlook: {currentApp.futureImpact}
+          </p>
+
+          <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+            <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>
+              {transferApplications[currentAppIndex]?.question || currentApp.connection}
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
+          {!transferCompleted.has(currentAppIndex) ? (
+            <button
+              onClick={() => setTransferCompleted(new Set([...transferCompleted, currentAppIndex]))}
               style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.accent}`,
+                background: 'transparent',
+                color: colors.accent,
+                cursor: 'pointer',
+                fontSize: '14px',
+                minHeight: '44px',
+                transition: 'all 0.2s ease',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Completed</span>}
+              Got It - Reveal Answer
+            </button>
+          ) : (
+            <>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                <p style={{ color: colors.textPrimary, fontSize: '13px', lineHeight: 1.5 }}>
+                  {transferApplications[currentAppIndex]?.answer || currentApp.howItWorks}
+                </p>
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
+
+              <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '12px' }}>
+                {currentApp.futureImpact}
+              </p>
+
+              <button
+                onClick={() => {
+                  if (currentAppIndex < realWorldApps.length - 1) {
+                    setCurrentAppIndex(currentAppIndex + 1);
+                  }
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.success}, ${colors.accent})`,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  minHeight: '44px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {currentAppIndex < realWorldApps.length - 1 ? 'Got It - Next Application' : 'Got It - All Complete!'}
+              </button>
+            </>
+          )}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
+
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <p style={{ color: colors.textMuted, fontSize: '13px' }}>
+            Completed: {transferCompleted.size} of {realWorldApps.length} applications
+          </p>
+        </div>
+      </>
     );
   }
 
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You\'ve mastered power loss in wires!' : 'Review the material and try again.'}
-              </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct:' : userAnswer === oIndex ? 'Your answer:' : ''} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+      return renderPageWrapper(
+        <>
+          <div style={{ padding: '16px' }}>
+            {renderProgressBar()}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
+          <div style={{
+            background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            margin: '16px',
+            padding: '24px',
+            borderRadius: '12px',
+            textAlign: 'center',
+          }}>
+            <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+              {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+              {testScore >= 8 ? 'You\'ve mastered power loss in wires!' : 'Review the material and try again.'}
+            </p>
+          </div>
+          {testQuestions.map((q, qIndex) => {
+            const userAnswer = testAnswers[qIndex];
+            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            return (
+              <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>Q{qIndex + 1} of {testQuestions.length}: {q.question}</p>
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                    {opt.correct ? 'Correct:' : userAnswer === oIndex ? 'Your answer:' : ''} {opt.text}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
-            </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
-                  {opt.text}
-                </button>
-              ))}
-            </div>
+    return renderPageWrapper(
+      <>
+        <div style={{ padding: '16px' }}>
+          {renderProgressBar()}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ color: colors.textPrimary, fontWeight: 'bold' }}>Knowledge Test</h2>
+            <span style={{ color: colors.textSecondary, fontWeight: 'normal' as const }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
-            ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
-            )}
+          <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '12px', fontWeight: 400 }}>
+            Test your understanding of power loss in wires, resistance calculations, and real-world applications of electrical engineering principles. Each question covers a key concept from the lesson.
+          </p>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+            {testQuestions.map((_, i) => (
+              <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+            ))}
+          </div>
+          <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+            <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px' }}>
+              Consider the relationship between resistance (R = rho * L / A), power loss (P = I squared * R), and voltage drop (V = IR) when answering.
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {currentQ.options.map((opt, oIndex) => (
+              <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', minHeight: '44px', transition: 'all 0.15s ease' }}>
+                {opt.text}
+              </button>
+            ))}
           </div>
         </div>
-      </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
+          <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', minHeight: '44px', transition: 'all 0.15s ease' }}>Previous</button>
+          {currentTestQuestion < testQuestions.length - 1 ? (
+            <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', minHeight: '44px', transition: 'all 0.15s ease' }}>Next Question</button>
+          ) : (
+            <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', minHeight: '44px', transition: 'all 0.15s ease' }}>Submit Test</button>
+          )}
+        </div>
+      </>
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand why long cables get warm</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>R = rho * L / A (resistance depends on length and area)</li>
-              <li>P = I squared * R (power loss, why current matters so much)</li>
-              <li>V = IR (voltage drop across wires)</li>
-              <li>Why power transmission uses high voltage</li>
-              <li>Practical implications for cables and cords</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              This simple relationship - P = I squared R - is why Nikola Tesla's AC power won over Edison's
-              DC. AC can be easily transformed to high voltage for efficient transmission, then
-              stepped down for safe use. Without this, we'd need power plants every few miles!
-              Today, HVDC (High Voltage DC) is making a comeback for very long distances where
-              AC losses become significant.
-            </p>
-          </div>
-          {renderVisualization(true)}
+    return renderPageWrapper(
+      <>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          {renderProgressBar()}
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>{'\uD83C\uDFC6'}</div>
+          <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+          <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand why long cables get warm</p>
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
+        <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>R = rho * L / A (resistance depends on length and area)</li>
+            <li>P = I squared * R (power loss, why current matters so much)</li>
+            <li>V = IR (voltage drop across wires)</li>
+            <li>Why power transmission uses high voltage</li>
+            <li>Practical implications for cables and cords</li>
+          </ul>
+        </div>
+        <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+            This simple relationship - P = I squared R - is why Nikola Tesla's AC power won over Edison's
+            DC. AC can be easily transformed to high voltage for efficient transmission, then
+            stepped down for safe use. Without this, we'd need power plants every few miles!
+            Today, HVDC (High Voltage DC) is making a comeback for very long distances where
+            AC losses become significant.
+          </p>
+        </div>
+        {renderVisualization(true)}
+      </>
     );
   }
 
-  return null;
+  // Default fallback - return hook phase content
+  return renderPageWrapper(
+    <>
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        {renderProgressBar()}
+        <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+          Power Loss in Wires
+        </h1>
+        <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+          Same battery - will a long thin wire dim a bulb?
+        </p>
+      </div>
+      {renderVisualization(true)}
+    </>
+  );
 };
 
 export default PowerLossRenderer;

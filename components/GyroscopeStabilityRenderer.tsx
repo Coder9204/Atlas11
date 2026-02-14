@@ -902,6 +902,21 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
           </p>
         </div>
 
+        {/* Educational content - cause-effect, physics terms and real-world relevance */}
+        <div style={{
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          width: '100%',
+          maxWidth: '576px',
+          backgroundColor: colors.cardBg,
+          border: `1px solid ${colors.border}`
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.textMuted, textAlign: 'center', lineHeight: '1.6' }}>
+            When you increase the spin rate, higher angular momentum causes more stability because resistance to tilting grows proportionally. <strong style={{ color: colors.primaryLight }}>Angular momentum</strong> is a measure of rotational motion, calculated as L = I x omega where I is the moment of inertia and omega is the angular velocity. This principle is important in real-world applications like spacecraft attitude control and bicycle stability. Engineers design systems that rely on this relationship between spin and stability.
+          </p>
+        </div>
+
         <button
           onClick={nextPhase}
           style={{
@@ -936,7 +951,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
           style={{ backgroundColor: `${colors.primary}20`, borderColor: colors.primary }}
         >
           <p style={{ color: colors.primaryLight }} className="font-semibold text-center">
-            Excellent prediction! You correctly identified the gyroscopic effect.
+            Excellent! Your prediction was correct - you observed that the spinning wheel resists tilting due to angular momentum conservation.
           </p>
         </div>
       ) : (
@@ -945,7 +960,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
           style={{ backgroundColor: `${colors.accent}20`, borderColor: colors.accent }}
         >
           <p style={{ color: colors.accentLight }} className="text-center">
-            The answer: It resists tilting and pushes back unexpectedly!
+            As you saw in the experiment, the wheel resists tilting and pushes back unexpectedly! Your observation shows the power of angular momentum.
           </p>
         </div>
       )}
@@ -1684,8 +1699,8 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
         <div
           style={{
             position: 'absolute',
-            top: '-160px',
-            right: '-160px',
+            top: '0px',
+            right: '0px',
             width: '384px',
             height: '384px',
             borderRadius: '9999px',
@@ -1697,7 +1712,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
           style={{
             position: 'absolute',
             top: '50%',
-            left: '-160px',
+            left: '0px',
             width: '384px',
             height: '384px',
             borderRadius: '9999px',
@@ -1708,7 +1723,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
         <div
           style={{
             position: 'absolute',
-            bottom: '-160px',
+            bottom: '0px',
             right: '33%',
             width: '384px',
             height: '384px',

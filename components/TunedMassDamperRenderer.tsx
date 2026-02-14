@@ -10,7 +10,7 @@ interface TunedMassDamperRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast (brightness >= 180)
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -1218,6 +1218,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               onClick={() => setIsPlaying(!isPlaying)}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: isPlaying
@@ -1239,6 +1240,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               onClick={resetSimulation}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
                 background: 'transparent',
@@ -1328,8 +1330,8 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = true) => (
+    <nav style={{
       position: 'fixed',
       bottom: 0,
       left: 0,
@@ -1338,18 +1340,47 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      zIndex: 1001,
+    }} aria-label="Game navigation">
+      {showBack ? (
+        <button
+          onClick={() => {
+            // Back button behavior - could be handled by parent
+            if (onPhaseComplete) {
+              // Signal to go back (parent handles this)
+            }
+          }}
+          aria-label="Go back"
+          style={{
+            padding: '12px 24px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textSecondary}`,
+            background: 'transparent',
+            color: colors.textSecondary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            fontSize: '16px',
+          }}
+        >
+          Back
+        </button>
+      ) : (
+        <div />
+      )}
       <button
         onClick={onPhaseComplete}
         disabled={disabled && !canProceed}
+        aria-label={buttonText}
         style={{
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
+          color: canProceed ? 'white' : colors.textSecondary,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
@@ -1357,7 +1388,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
       >
         {buttonText}
       </button>
-    </div>
+    </nav>
   );
 
   // HOOK PHASE
@@ -1404,7 +1435,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction →')}
+        {renderBottomBar(false, true, 'Make a Prediction →', false)}
       </div>
     );
   }
@@ -1472,6 +1503,19 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             </p>
           </div>
 
+          {/* Observation Guidance */}
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.building}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Watch how the TMD (red mass) moves in the opposite direction to the building. This counter-motion absorbs vibration energy.
+            </p>
+          </div>
+
           {renderVisualization(true)}
           {renderControls()}
 
@@ -1481,7 +1525,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>🔬 Try These Experiments:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Toggle damper on/off - compare max amplitude</li>
               <li>Set frequency to 1.0 Hz (resonance) for dramatic effect</li>
@@ -1618,6 +1662,19 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             </p>
           </div>
 
+          {/* Observation Guidance */}
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.15)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.warning}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Move the tuning slider away from 100% and watch how the building amplitude changes. The damper becomes less effective when mis-tuned.
+            </p>
+          </div>
+
           {renderVisualization(true)}
           {renderControls()}
 
@@ -1628,7 +1685,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `3px solid ${colors.warning}`,
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>💡 Key Observation:</h4>
+            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Mis-tuning reduces effectiveness dramatically! In extreme cases, a poorly
               tuned damper can even make motion worse by adding energy at the wrong phase.
@@ -1694,18 +1751,20 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const [currentTransferApp, setCurrentTransferApp] = useState(0);
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              🌍 Real-World Applications
+              Real-World Applications
             </h2>
             <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               Tuned mass dampers protect structures around the world
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+              Complete all 4 applications to unlock the test ({transferCompleted.size}/4 completed)
             </p>
           </div>
 
@@ -1736,7 +1795,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
                 marginBottom: '8px',
               }}>
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
-                  💭 {app.question}
+                  {app.question}
                 </p>
               </div>
               {!transferCompleted.has(index) ? (
@@ -1744,6 +1803,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
                   style={{
                     padding: '8px 16px',
+                    minHeight: '44px',
                     borderRadius: '6px',
                     border: `1px solid ${colors.accent}`,
                     background: 'transparent',
@@ -1755,13 +1815,38 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  borderLeft: `3px solid ${colors.success}`,
-                }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    borderLeft: `3px solid ${colors.success}`,
+                    marginBottom: '12px',
+                  }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  {index < transferApplications.length - 1 && !transferCompleted.has(index + 1) && (
+                    <button
+                      onClick={() => {
+                        // Scroll to next application
+                        const nextElement = document.getElementById(`transfer-app-${index + 1}`);
+                        if (nextElement) nextElement.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      style={{
+                        padding: '8px 16px',
+                        minHeight: '44px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: colors.accent,
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Got It - Next Application
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -1849,8 +1934,8 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>
-                {currentTestQuestion + 1} / {testQuestions.length}
+              <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>
+                Question {currentTestQuestion + 1} of {testQuestions.length}
               </span>
             </div>
 

@@ -2,94 +2,334 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================================
+// GAS LAWS RENDERER - Complete 10-Phase Learning Game
+// Discover how pressure, volume, and temperature are interconnected
+// ============================================================================
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
+interface GasLawsRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// ============================================================================
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ============================================================================
+const testQuestions = [
+  {
+    scenario: "A scuba diver descends to 30 meters depth where the pressure is 4 atmospheres. She takes a deep breath from her tank, filling her lungs with 6 liters of air at that depth.",
+    question: "If she ascends to the surface without exhaling, what would the volume of air in her lungs try to become (according to Boyle's Law)?",
+    options: [
+      { id: 'a', label: "1.5 liters - the air compresses at lower pressure" },
+      { id: 'b', label: "6 liters - volume stays the same" },
+      { id: 'c', label: "24 liters - volume increases 4x as pressure drops to 1 atm", correct: true },
+      { id: 'd', label: "12 liters - volume doubles" }
+    ],
+    explanation: "According to Boyle's Law (P1V1 = P2V2), when pressure decreases from 4 atm to 1 atm, volume increases proportionally. 4 atm x 6L = 1 atm x V2, so V2 = 24 liters. This is why divers must exhale while ascending - lungs could rupture from expansion!"
+  },
+  {
+    scenario: "A weather balloon is released at sea level where the atmospheric pressure is 1 atm. The balloon contains 100 cubic meters of helium. It rises to an altitude where the pressure is only 0.25 atm.",
+    question: "What will be the approximate volume of the balloon at this altitude (assuming constant temperature)?",
+    options: [
+      { id: 'a', label: "25 cubic meters" },
+      { id: 'b', label: "100 cubic meters" },
+      { id: 'c', label: "400 cubic meters", correct: true },
+      { id: 'd', label: "200 cubic meters" }
+    ],
+    explanation: "Using Boyle's Law: P1V1 = P2V2. At lower pressure (1/4 of original), the volume becomes 4 times larger. 1 atm x 100 m3 = 0.25 atm x V2, so V2 = 400 m3. This is why weather balloons must start small and eventually burst at high altitudes."
+  },
+  {
+    scenario: "A sealed container holds gas at 300 K (27C). The container is placed in an oven and heated to 600 K (327C) while the pressure is kept constant by allowing the container to expand.",
+    question: "According to Charles's Law, how does the volume change?",
+    options: [
+      { id: 'a', label: "Volume stays the same - only pressure changes" },
+      { id: 'b', label: "Volume doubles from original", correct: true },
+      { id: 'c', label: "Volume triples from original" },
+      { id: 'd', label: "Volume decreases by half" }
+    ],
+    explanation: "Charles's Law states V1/T1 = V2/T2 at constant pressure. When temperature doubles from 300K to 600K, volume also doubles. The key is using absolute temperature (Kelvin) - at constant pressure, volume is directly proportional to absolute temperature."
+  },
+  {
+    scenario: "A hot air balloon works by heating the air inside the envelope. The balloon contains 2800 cubic meters of air at 20C (293K). The burner heats this air to 100C (373K).",
+    question: "What is the new volume of the heated air inside the balloon?",
+    options: [
+      { id: 'a', label: "About 2200 cubic meters" },
+      { id: 'b', label: "About 2800 cubic meters - no change" },
+      { id: 'c', label: "About 3565 cubic meters", correct: true },
+      { id: 'd', label: "About 4200 cubic meters" }
+    ],
+    explanation: "Using Charles's Law: V2 = V1 x (T2/T1) = 2800 x (373/293) = 3565 m3. The heated air expands and spills out of the open bottom, reducing the mass of air inside while maintaining pressure equilibrium with outside air. This makes the balloon buoyant!"
+  },
+  {
+    scenario: "A car tire is inflated to 35 psi (gauge pressure) on a cool morning when the temperature is 10C (283K). After driving on the highway, the tire temperature rises to 50C (323K).",
+    question: "If the tire volume is essentially constant, what is the approximate new pressure (using Gay-Lussac's Law)?",
+    options: [
+      { id: 'a', label: "About 30 psi - pressure decreases" },
+      { id: 'b', label: "About 35 psi - no significant change" },
+      { id: 'c', label: "About 40 psi - pressure increases proportionally", correct: true },
+      { id: 'd', label: "About 50 psi - pressure increases dramatically" }
+    ],
+    explanation: "Gay-Lussac's Law: P1/T1 = P2/T2 at constant volume. P2 = 35 x (323/283) = 40 psi. This is why tire pressure should be checked when tires are cold - hot tires give artificially high readings. The ~14% pressure increase matches the ~14% temperature increase in Kelvin."
+  },
+  {
+    scenario: "The Ideal Gas Law is PV = nRT. A cylinder contains 2 moles of oxygen gas at 300K and 1 atm pressure, occupying about 49 liters. The gas is compressed to 10 liters while maintaining the same temperature.",
+    question: "What is the new pressure of the gas?",
+    options: [
+      { id: 'a', label: "0.2 atm - proportional decrease" },
+      { id: 'b', label: "2 atm - inverse relationship" },
+      { id: 'c', label: "4.9 atm - inversely proportional to volume ratio", correct: true },
+      { id: 'd', label: "10 atm - equals the volume in liters" }
+    ],
+    explanation: "At constant temperature and amount of gas, PV = constant (Boyle's Law from Ideal Gas Law). P2 = P1 x (V1/V2) = 1 atm x (49/10) = 4.9 atm. Compressing the gas to about 1/5 its original volume increases pressure about 5 times."
+  },
+  {
+    scenario: "An aerosol can contains gas at 2.5 atm pressure at room temperature (20C or 293K). A warning label says not to expose the can to temperatures above 50C (323K).",
+    question: "What would the pressure reach if the can were heated to 50C?",
+    options: [
+      { id: 'a', label: "About 2.0 atm" },
+      { id: 'b', label: "About 2.5 atm - no change" },
+      { id: 'c', label: "About 2.76 atm", correct: true },
+      { id: 'd', label: "About 4.0 atm" }
+    ],
+    explanation: "Using Gay-Lussac's Law: P2 = P1 x (T2/T1) = 2.5 x (323/293) = 2.76 atm. This 10% pressure increase might seem small, but at high pressures, even small increases can exceed the can's structural limits. That's why aerosol cans must never be heated!"
+  },
+  {
+    scenario: "At standard temperature and pressure (STP: 273K and 1 atm), one mole of any ideal gas occupies 22.4 liters. A chemist needs to store 5 moles of nitrogen gas at 2 atm and 300K.",
+    question: "Using the Ideal Gas Law (PV = nRT with R = 0.0821 L-atm/mol-K), what volume container is needed?",
+    options: [
+      { id: 'a', label: "About 30 liters" },
+      { id: 'b', label: "About 61.6 liters", correct: true },
+      { id: 'c', label: "About 112 liters" },
+      { id: 'd', label: "About 22.4 liters" }
+    ],
+    explanation: "Using PV = nRT: V = nRT/P = (5 mol x 0.0821 L-atm/mol-K x 300K) / 2 atm = 61.6 liters. Note that doubling the pressure halves the volume compared to STP conditions, while the higher temperature (300K vs 273K) slightly increases the volume."
+  },
+  {
+    scenario: "A sealed rigid container holds air at 1 atm and 25C. The container is cooled to -50C (223K from 298K). The container cannot expand or contract.",
+    question: "What happens to the pressure and the molecules inside?",
+    options: [
+      { id: 'a', label: "Pressure stays at 1 atm; molecules move faster" },
+      { id: 'b', label: "Pressure drops to about 0.75 atm; molecules move slower", correct: true },
+      { id: 'c', label: "Pressure increases; molecules collide more often" },
+      { id: 'd', label: "Pressure drops to zero; molecules stop moving" }
+    ],
+    explanation: "At lower temperature, gas molecules have less kinetic energy and move slower, colliding with container walls less frequently and with less force. P2 = P1 x (T2/T1) = 1 x (223/298) = 0.75 atm. Molecules never completely stop until absolute zero (0K)."
+  },
+  {
+    scenario: "Submarines must manage air pressure carefully. A sub at 100m depth (11 atm total pressure) has a compartment with 50 m3 of air at that pressure. During emergency surfacing, this compartment must vent to prevent over-pressurization.",
+    question: "How much air (by volume at surface pressure) must be vented to equalize to 1 atm?",
+    options: [
+      { id: 'a', label: "50 m3 - equal to compartment volume" },
+      { id: 'b', label: "450 m3 - most of the expanded air must escape" },
+      { id: 'c', label: "500 m3 - the total expanded volume", correct: true },
+      { id: 'd', label: "550 m3 - more than the expanded volume" }
+    ],
+    explanation: "At 11 atm, the 50 m3 of air would expand to 550 m3 at surface pressure (Boyle's Law). To keep only 50 m3 in the compartment at 1 atm, 500 m3 (at surface pressure) must be vented. Submarine engineers must account for these massive volume changes during depth changes."
+  }
+];
+
+// ============================================================================
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// ============================================================================
+const realWorldApps = [
+  {
+    icon: '🤿',
+    title: 'Scuba Diving & Decompression',
+    short: 'Life-saving gas law applications underwater',
+    tagline: 'Understanding pressure keeps divers alive',
+    description: "Scuba diving is perhaps the most critical real-world application of gas laws. As divers descend, water pressure increases by 1 atmosphere for every 10 meters of depth. This pressure change dramatically affects the air in a diver's lungs, sinuses, and equipment.",
+    connection: "Boyle's Law (PV = constant) explains why divers must never hold their breath while ascending. Air in the lungs at 30m depth (4 atm) would expand to 4 times its volume at the surface, potentially causing fatal lung overexpansion. Henry's Law governs nitrogen absorption into tissues, requiring decompression stops.",
+    howItWorks: "Dive computers continuously calculate tissue nitrogen saturation using algorithms based on gas laws. Regulators automatically adjust breathing gas pressure to match ambient water pressure. Emergency ascent procedures balance the risk of decompression sickness against lung barotrauma - both governed by gas laws.",
+    stats: [
+      { value: '4 atm', label: 'Pressure at 30m depth', icon: '📊' },
+      { value: '18 m/min', label: 'Max safe ascent rate', icon: '⬆️' },
+      { value: '5 min', label: 'Safety stop at 5m', icon: '⏱️' }
+    ],
+    examples: ['Recreational dive planning', 'Technical deep diving', 'Hyperbaric chamber treatment', 'Submarine rescue operations'],
+    companies: ['PADI', 'Suunto', 'Shearwater Research', 'Aqua Lung', 'Mares'],
+    futureImpact: 'Advanced dive computers with real-time tissue modeling, rebreather technology for extended bottom time, and AI-assisted dive planning are making underwater exploration safer. Gas law principles remain fundamental to all these innovations.',
+    color: '#06B6D4'
+  },
+  {
+    icon: '🎈',
+    title: 'Weather Balloons & Meteorology',
+    short: 'Probing the atmosphere with gas physics',
+    tagline: 'Predicting weather through gas law principles',
+    description: "Weather balloons carry instrument packages (radiosondes) to altitudes exceeding 30km, sampling temperature, humidity, pressure, and wind. As they rise through decreasing atmospheric pressure, the balloons expand according to Boyle's Law until they burst.",
+    connection: "Charles's Law and the Ideal Gas Law together explain how air masses behave in the atmosphere. Rising air expands and cools adiabatically (without heat exchange), causing water vapor to condense into clouds. This process drives weather patterns from gentle showers to hurricanes.",
+    howItWorks: "Twice daily, over 800 weather stations worldwide release balloons simultaneously. Each balloon starts about 1 meter in diameter and expands to 6-8 meters before bursting. The radiosonde transmits data every second during its 2-hour ascent, creating a vertical profile of atmospheric conditions.",
+    stats: [
+      { value: '35 km', label: 'Maximum altitude', icon: '🎈' },
+      { value: '800+', label: 'Daily launches globally', icon: '🌍' },
+      { value: '6-8 m', label: 'Diameter at burst', icon: '💥' }
+    ],
+    examples: ['Weather forecasting models', 'Climate research', 'Ozone layer monitoring', 'Hurricane tracking'],
+    companies: ['NOAA', 'Vaisala', 'National Weather Service', 'ECMWF', 'Met Office'],
+    futureImpact: 'Smaller, cheaper radiosondes and drone-based atmospheric sampling are increasing data density. Machine learning models trained on decades of radiosonde data are improving forecast accuracy, all built on fundamental gas law understanding.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🚗',
+    title: 'Internal Combustion Engines',
+    short: 'Converting fuel to motion through gas expansion',
+    tagline: 'Millions of controlled explosions per minute',
+    description: "Every internal combustion engine is a practical application of gas laws. The four-stroke cycle (intake, compression, combustion, exhaust) manipulates gas pressure, volume, and temperature to convert chemical energy into mechanical work.",
+    connection: "The compression stroke demonstrates Boyle's Law - reducing volume increases pressure and temperature. Combustion rapidly increases temperature (and pressure) according to Gay-Lussac's Law. The power stroke harvests this pressure as the expanding gases push the piston down, following the Ideal Gas Law.",
+    howItWorks: "A typical car engine compresses the air-fuel mixture to 1/10th its original volume (compression ratio of 10:1). Combustion raises temperature to ~2500C, dramatically increasing pressure. This high-pressure gas expands, pushing the piston and rotating the crankshaft. Engine efficiency is limited by the Carnot cycle, also derived from gas laws.",
+    stats: [
+      { value: '10:1', label: 'Typical compression ratio', icon: '🔧' },
+      { value: '2500°C', label: 'Combustion temperature', icon: '🔥' },
+      { value: '35-40%', label: 'Peak thermal efficiency', icon: '⚡' }
+    ],
+    examples: ['Gasoline car engines', 'Diesel truck engines', 'Jet aircraft turbines', 'Natural gas power plants'],
+    companies: ['Toyota', 'Volkswagen', 'Cummins', 'General Electric', 'Rolls-Royce'],
+    futureImpact: 'Variable compression ratio engines optimize efficiency across operating conditions. HCCI (Homogeneous Charge Compression Ignition) promises diesel-like efficiency with gasoline-like emissions. Even electric vehicles use gas law principles in their thermal management systems.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '✈️',
+    title: 'Aircraft Pressurization',
+    short: 'Maintaining breathable air at 40,000 feet',
+    tagline: 'Engineering comfort at extreme altitudes',
+    description: "Commercial aircraft cruise at 35,000-40,000 feet where atmospheric pressure is only about 20% of sea level. Without pressurization, passengers would lose consciousness in seconds. Aircraft must maintain a safe, comfortable pressure while managing the enormous structural stresses this creates.",
+    connection: "The Ideal Gas Law governs cabin pressurization. Outflow valves precisely regulate cabin pressure by controlling how fast air escapes. The pressure differential between cabin and outside air (up to 8.9 psi) creates enormous forces - a typical cabin door has over 10 tons of outward force pressing on it.",
+    howItWorks: "Bleed air from the jet engines is cooled and fed into the cabin at a controlled rate. Outflow valves, typically in the rear fuselage, modulate cabin pressure to maintain 'cabin altitude' of 6,000-8,000 feet equivalent. The system automatically adjusts during climb and descent to prevent ear discomfort.",
+    stats: [
+      { value: '8.9 psi', label: 'Max pressure differential', icon: '📏' },
+      { value: '6000 ft', label: 'Cabin altitude (787)', icon: '⛰️' },
+      { value: '10+ tons', label: 'Force on cabin door', icon: '🚪' }
+    ],
+    examples: ['Commercial airliners', 'Private jets', 'Military transports', 'Space station modules'],
+    companies: ['Boeing', 'Airbus', 'Honeywell', 'Collins Aerospace', 'Liebherr'],
+    futureImpact: 'The Boeing 787 uses composite materials to safely maintain higher cabin pressure (lower cabin altitude), reducing passenger fatigue. Future aircraft may use electric compressors instead of engine bleed air, improving efficiency while maintaining gas law-governed pressurization.',
+    color: '#3B82F6'
+  }
+];
+
+// ============================================================================
+// PHASE DEFINITIONS
+// ============================================================================
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 const phaseLabels: Record<Phase, string> = {
-  'hook': 'Hook', 'predict': 'Predict', 'play': 'Lab', 'review': 'Review', 'twist_predict': 'Twist Predict',
-  'twist_play': 'Twist Lab', 'twist_review': 'Twist Review', 'transfer': 'Transfer', 'test': 'Test', 'mastery': 'Mastery'
+  hook: 'Introduction',
+  predict: 'Prediction',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Explore',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Completion'
 };
 
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+// ============================================================================
+// DESIGN TOKENS
+// ============================================================================
+const colors = {
+  bgPrimary: '#0a0f1a',
+  bgSecondary: '#0f172a',
+  bgCard: 'rgba(30, 41, 59, 0.7)',
+  bgInput: 'rgba(51, 65, 85, 0.5)',
+  accent: '#8B5CF6',
+  accentAlt: '#06B6D4',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  textPrimary: '#F8FAFC',
+  textSecondary: '#CBD5E1',
+  textMuted: '#64748B',
+  border: '#334155',
+  borderLight: '#475569',
+};
 
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
+const typo = {
+  h1: { fontSize: '32px', fontWeight: 700, lineHeight: 1.2, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+  h2: { fontSize: '24px', fontWeight: 600, lineHeight: 1.3, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+  h3: { fontSize: '18px', fontWeight: 600, lineHeight: 1.4, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+  body: { fontSize: '16px', fontWeight: 400, lineHeight: 1.6, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+  small: { fontSize: '14px', fontWeight: 400, lineHeight: 1.5, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+  label: { fontSize: '12px', fontWeight: 500, lineHeight: 1.4, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+};
 
-interface Props {
-  onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
-  onPhaseComplete?: (phase: string) => void;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================================
 // MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
-const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
+// ============================================================================
+const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhase }) => {
   const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
 
   // Boyle's Law simulation
   const [volume, setVolume] = useState(100);
   const [pressure, setPressure] = useState(1);
 
-  // Twist: Charles's Law
+  // Charles's Law simulation
   const [twistTemp, setTwistTemp] = useState(300);
   const [twistVolume, setTwistVolume] = useState(100);
 
-  // Molecule positions
+  // Molecule animation
   const [molecules, setMolecules] = useState<Array<{x: number, y: number, vx: number, vy: number}>>([]);
 
-  // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  // Quiz state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [score, setScore] = useState(0);
+  const [quizComplete, setQuizComplete] = useState(false);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [appsVisited, setAppsVisited] = useState<Set<number>>(new Set([0]));
 
-  // Phase sync
+  // Phase sync from external prop
   useEffect(() => {
-    if (gamePhase !== undefined && gamePhase !== phase && phaseOrder.includes(gamePhase as Phase)) {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
       setPhase(gamePhase as Phase);
     }
-  }, [gamePhase, phase]);
+  }, [gamePhase]);
 
   // Initialize molecules
   useEffect(() => {
@@ -148,31 +388,7 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCompl
     return () => clearInterval(interval);
   }, [phase, volume, twistVolume, twistTemp]);
 
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
-
+  // Navigation functions
   const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
@@ -184,1494 +400,1381 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCompl
       setTwistTemp(300);
       setTwistVolume(100);
     }
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-  }, [playSound, onPhaseComplete, onGameEvent]);
+    onGameEvent?.({
+      eventType: 'phase_changed',
+      gameType: 'gas-laws',
+      gameTitle: 'Gas Laws',
+      details: { phase: newPhase },
+      timestamp: Date.now()
+    });
+  }, [onGameEvent]);
 
   const handlePrediction = useCallback((prediction: string) => {
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'C' ? 'success' : 'failure');
-    onGameEvent?.({ type: 'prediction_made', data: { prediction, correct: prediction === 'C' } });
-  }, [playSound, onGameEvent]);
+    onGameEvent?.({
+      eventType: 'prediction_made',
+      gameType: 'gas-laws',
+      gameTitle: 'Gas Laws',
+      details: { prediction, correct: prediction === 'C' },
+      timestamp: Date.now()
+    });
+  }, [onGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'B' ? 'success' : 'failure');
-    onGameEvent?.({ type: 'twist_prediction_made', data: { prediction, correct: prediction === 'B' } });
-  }, [playSound, onGameEvent]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
+    onGameEvent?.({
+      eventType: 'prediction_made',
+      gameType: 'gas-laws',
+      gameTitle: 'Gas Laws',
+      details: { prediction, correct: prediction === 'B', phase: 'twist_predict' },
+      timestamp: Date.now()
     });
+  }, [onGameEvent]);
+
+  const handleAnswerSelect = (answerId: string) => {
+    setSelectedAnswer(answerId);
     playSound('click');
-  }, [playSound]);
+  };
 
-  const handleAppComplete = useCallback((appIndex: number) => {
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-    onGameEvent?.({ type: 'app_explored', data: { appIndex } });
-  }, [playSound, onGameEvent]);
+  const handleConfirmAnswer = () => {
+    const question = testQuestions[currentQuestion];
+    const correct = question.options.find(o => o.id === selectedAnswer)?.correct || false;
+    if (correct) {
+      setScore(s => s + 1);
+      playSound('success');
+    } else {
+      playSound('failure');
+    }
+    setShowExplanation(true);
+    onGameEvent?.({
+      eventType: correct ? 'correct_answer' : 'incorrect_answer',
+      gameType: 'gas-laws',
+      gameTitle: 'Gas Laws',
+      details: { questionIndex: currentQuestion, answer: selectedAnswer, correct },
+      timestamp: Date.now()
+    });
+  };
 
-  // Test questions
-  const testQuestions = [
-    { question: "If you halve the volume of a gas at constant temperature, the pressure:", options: [{ text: "Halves", correct: false }, { text: "Doubles", correct: true }, { text: "Stays the same", correct: false }, { text: "Quadruples", correct: false }] },
-    { question: "Boyle's Law states that at constant temperature:", options: [{ text: "P and V are directly proportional", correct: false }, { text: "P and V are inversely proportional", correct: true }, { text: "P and T are directly proportional", correct: false }, { text: "V and T are inversely proportional", correct: false }] },
-    { question: "If a gas is heated at constant pressure, its volume will:", options: [{ text: "Decrease", correct: false }, { text: "Increase", correct: true }, { text: "Stay the same", correct: false }, { text: "Become zero", correct: false }] },
-    { question: "Charles's Law relates:", options: [{ text: "Pressure and volume", correct: false }, { text: "Volume and temperature", correct: true }, { text: "Pressure and temperature", correct: false }, { text: "All three variables", correct: false }] },
-    { question: "The Ideal Gas Law is expressed as:", options: [{ text: "PV = nRT", correct: true }, { text: "P/V = nRT", correct: false }, { text: "P + V = nRT", correct: false }, { text: "PV = n/RT", correct: false }] },
-    { question: "At absolute zero (0 K), an ideal gas would have:", options: [{ text: "Maximum pressure", correct: false }, { text: "Zero volume", correct: true }, { text: "Maximum volume", correct: false }, { text: "Infinite pressure", correct: false }] },
-    { question: "If you double both pressure and temperature of a gas, the volume:", options: [{ text: "Doubles", correct: false }, { text: "Halves", correct: false }, { text: "Stays the same", correct: true }, { text: "Quadruples", correct: false }] },
-    { question: "A weather balloon expands as it rises because:", options: [{ text: "Temperature increases", correct: false }, { text: "Atmospheric pressure decreases", correct: true }, { text: "More gas enters", correct: false }, { text: "Gravity weakens", correct: false }] },
-    { question: "The gas constant R has units of:", options: [{ text: "J/(mol*K)", correct: false }, { text: "Pa*m^3", correct: false }, { text: "atm*L", correct: false }, { text: "All of these (equivalent)", correct: true }] },
-    { question: "Real gases deviate from ideal behavior at:", options: [{ text: "Low pressure and high temperature", correct: false }, { text: "High pressure and low temperature", correct: true }, { text: "All conditions equally", correct: false }, { text: "Only at room temperature", correct: false }] }
-  ];
+  const handleNextQuestion = () => {
+    if (currentQuestion < testQuestions.length - 1) {
+      setCurrentQuestion(q => q + 1);
+      setSelectedAnswer(null);
+      setShowExplanation(false);
+    } else {
+      setQuizComplete(true);
+      onGameEvent?.({
+        eventType: 'game_completed',
+        gameType: 'gas-laws',
+        gameTitle: 'Gas Laws',
+        details: { score, total: testQuestions.length },
+        timestamp: Date.now()
+      });
+    }
+  };
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (testQuestions[index].options[answer]?.correct ? 1 : 0), 0);
+  // Common styles
+  const primaryButtonStyle: React.CSSProperties = {
+    padding: '14px 28px',
+    borderRadius: '12px',
+    border: 'none',
+    background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentAlt})`,
+    color: colors.textPrimary,
+    fontSize: '16px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    boxShadow: `0 4px 20px ${colors.accent}40`,
+  };
 
-  // Piston visualization for Boyle's Law - Premium SVG Graphics
-  const renderPistonViz = () => {
+  const secondaryButtonStyle: React.CSSProperties = {
+    padding: '12px 24px',
+    borderRadius: '10px',
+    border: `1px solid ${colors.border}`,
+    background: 'transparent',
+    color: colors.textSecondary,
+    fontSize: '14px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+  };
+
+  const cardStyle: React.CSSProperties = {
+    background: colors.bgCard,
+    borderRadius: '16px',
+    padding: '24px',
+    border: `1px solid ${colors.border}`,
+  };
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '8px 0',
+    }} aria-label="Progress indicator">
+      {phaseOrder.map((p, i) => (
+        <div
+          key={p}
+          onClick={() => { if (phaseOrder.indexOf(phase) > i) goToPhase(p); }}
+          role="progressbar"
+          aria-valuenow={phaseOrder.indexOf(phase)}
+          aria-valuemin={0}
+          aria-valuemax={phaseOrder.length - 1}
+          aria-label={phaseLabels[p]}
+          style={{
+            width: phase === p ? '24px' : '12px',
+            height: '12px',
+            borderRadius: '6px',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: phaseOrder.indexOf(phase) > i ? 'pointer' : 'default',
+            transition: 'all 0.3s ease',
+          }}
+        />
+      ))}
+    </div>
+  );
+
+  // Bottom Navigation Bar component
+  const renderBottomNav = (backPhase: Phase | null, nextPhase: Phase | null, nextLabel?: string) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: '12px 24px',
+      background: colors.bgSecondary,
+      borderTop: `1px solid ${colors.border}`,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      zIndex: 100,
+    }}>
+      {backPhase ? (
+        <button onClick={() => goToPhase(backPhase)} style={{ ...secondaryButtonStyle, minHeight: '44px' }}>
+          ← Back
+        </button>
+      ) : (
+        <div style={{ width: '80px' }} />
+      )}
+      {renderNavDots()}
+      {nextPhase ? (
+        <button onClick={() => goToPhase(nextPhase)} style={{ ...primaryButtonStyle, minHeight: '44px' }}>
+          {nextLabel || 'Next →'}
+        </button>
+      ) : (
+        <div style={{ width: '80px' }} />
+      )}
+    </div>
+  );
+
+  // Back button
+  const renderBackButton = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex === 0) return null;
+    return (
+      <button
+        onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+        style={secondaryButtonStyle}
+      >
+        ← Back
+      </button>
+    );
+  };
+
+  // Piston SVG for Boyle's Law
+  const renderPistonSVG = () => {
     const containerHeight = (volume / 100) * 150;
-    // Calculate pressure color - higher pressure = more red/orange
     const pressureIntensity = Math.min(1, (pressure - 0.5) / 3.5);
-    const pressureHue = 270 - pressureIntensity * 30; // violet to purple-red
 
     return (
-      <>
-        <svg viewBox="0 0 250 200" className="w-full h-full">
-          <defs>
-            {/* Premium cylinder container gradient - metallic appearance */}
-            <linearGradient id="gasContainerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="15%" stopColor="#1e293b" />
-              <stop offset="40%" stopColor="#334155" />
-              <stop offset="60%" stopColor="#334155" />
-              <stop offset="85%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
+      <svg viewBox="0 0 250 220" style={{ width: '100%', height: '100%' }}>
+        <defs>
+          <linearGradient id="gasContainerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="15%" stopColor="#1e293b" />
+            <stop offset="85%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+          <linearGradient id="gasPistonGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="50%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#334155" />
+          </linearGradient>
+          <radialGradient id="gasParticleGrad" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#c4b5fd" />
+            <stop offset="100%" stopColor="#7c3aed" />
+          </radialGradient>
+          <radialGradient id="gasParticleHot" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#fcd34d" />
+            <stop offset="100%" stopColor="#d97706" />
+          </radialGradient>
+          <filter id="particleGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="containerShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" floodOpacity="0.3" />
+          </filter>
+        </defs>
 
-            {/* Piston 3D metallic gradient */}
-            <linearGradient id="gasPistonGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="15%" stopColor="#cbd5e1" />
-              <stop offset="50%" stopColor="#64748b" />
-              <stop offset="85%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#334155" />
-            </linearGradient>
-
-            {/* Piston handle metallic gradient */}
-            <linearGradient id="gasPistonHandleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#475569" />
-              <stop offset="30%" stopColor="#64748b" />
-              <stop offset="50%" stopColor="#94a3b8" />
-              <stop offset="70%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#475569" />
-            </linearGradient>
-
-            {/* Gas particle gradient with glow */}
-            <radialGradient id="gasParticleGrad" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#c4b5fd" />
-              <stop offset="40%" stopColor="#a78bfa" />
-              <stop offset="70%" stopColor="#8b5cf6" />
-              <stop offset="100%" stopColor="#7c3aed" />
-            </radialGradient>
-
-            {/* High pressure particle gradient (warmer) */}
-            <radialGradient id="gasParticleHighPressure" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#fcd34d" />
-              <stop offset="40%" stopColor="#f59e0b" />
-              <stop offset="70%" stopColor="#d97706" />
-              <stop offset="100%" stopColor="#b45309" />
-            </radialGradient>
-
-            {/* Cylinder inner wall reflection */}
-            <linearGradient id="gasCylinderInner" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.8" />
-            </linearGradient>
-
-            {/* Pressure zone gradient - dynamic based on pressure */}
-            <linearGradient id="gasPressureZone" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.1 + pressureIntensity * 0.2} />
-              <stop offset="50%" stopColor="#7c3aed" stopOpacity={0.05 + pressureIntensity * 0.15} />
-              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
-            </linearGradient>
-
-            {/* Particle glow filter */}
-            <filter id="gasParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Piston shadow filter */}
-            <filter id="gasPistonShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="shadow" />
-              <feOffset dx="0" dy="4" in="shadow" result="offsetShadow" />
-              <feMerge>
-                <feMergeNode in="offsetShadow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Ambient pressure glow */}
-            <filter id="gasPressureGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="8" result="glow" />
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Metallic highlight filter */}
-            <filter id="gasMetallicSheen">
-              <feGaussianBlur stdDeviation="0.5" />
-            </filter>
-          </defs>
-
-          {/* Background */}
-          <rect width="250" height="200" fill="#020617" rx="8" />
-
-          {/* Subtle grid pattern */}
-          <pattern id="gasLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+        {/* Background group */}
+        <g id="background-layer">
+          <rect width="250" height="220" fill={colors.bgPrimary} rx="8" />
+          <pattern id="gridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
           </pattern>
-          <rect width="250" height="200" fill="url(#gasLabGrid)" rx="8" />
+          <rect width="250" height="220" fill="url(#gridPattern)" rx="8" />
+        </g>
 
-          {/* Cylinder outer shell */}
-          <rect x="25" y="10" width="200" height="180" rx="6" fill="url(#gasContainerGrad)" stroke="#475569" strokeWidth="2" />
+        {/* Cylinder group */}
+        <g id="cylinder-layer" filter="url(#containerShadow)">
+          <rect x="25" y="10" width="200" height="180" rx="6" fill="url(#gasContainerGrad)" stroke={colors.borderLight} strokeWidth="2" />
+        </g>
 
-          {/* Cylinder inner wall */}
-          <rect x="30" y="15" width="190" height="170" rx="4" fill="url(#gasCylinderInner)" />
-
-          {/* Pressure zone visualization */}
-          <rect
-            x="30"
-            y={20 + (150 - containerHeight)}
-            width="190"
-            height={containerHeight + 10}
-            fill="url(#gasPressureZone)"
-            rx="3"
-          />
-
-          {/* Gas molecules with glow */}
+        {/* Molecules group */}
+        <g id="molecules-layer">
           {molecules.map((mol, i) => {
             const adjustedY = mol.y - (150 - containerHeight) + 25;
             if (adjustedY > 35 + (150 - containerHeight) && adjustedY < 180) {
               return (
-                <g key={i} filter="url(#gasParticleGlow)">
-                  <circle
-                    cx={mol.x + 25}
-                    cy={adjustedY}
-                    r="6"
-                    fill={pressure > 2 ? "url(#gasParticleHighPressure)" : "url(#gasParticleGrad)"}
-                    opacity={0.9}
-                  />
-                  {/* Specular highlight */}
-                  <circle
-                    cx={mol.x + 23}
-                    cy={adjustedY - 2}
-                    r="2"
-                    fill="white"
-                    opacity="0.4"
-                  />
-                </g>
+                <circle
+                  key={i}
+                  cx={mol.x + 25}
+                  cy={adjustedY}
+                  r="6"
+                  fill={pressure > 2 ? "url(#gasParticleHot)" : "url(#gasParticleGrad)"}
+                  filter="url(#particleGlow)"
+                  opacity={0.9}
+                />
               );
             }
             return null;
           })}
+        </g>
 
-          {/* Piston with 3D effect */}
-          <g filter="url(#gasPistonShadow)">
-            {/* Piston handle */}
-            <rect
-              x="110"
-              y={0}
-              width="30"
-              height={20 + (150 - containerHeight)}
-              fill="url(#gasPistonHandleGrad)"
-              rx="2"
-            />
-            {/* Handle grip lines */}
-            {[0, 8, 16].map((offset, i) => (
-              <rect
-                key={i}
-                x="112"
-                y={4 + offset}
-                width="26"
-                height="2"
-                fill="#334155"
-                opacity="0.5"
-                rx="1"
-              />
-            ))}
+        {/* Piston group */}
+        <g id="piston-layer">
+          <rect
+            x="30"
+            y={15 + (150 - containerHeight)}
+            width="190"
+            height="20"
+            rx="3"
+            fill="url(#gasPistonGrad)"
+            stroke={colors.borderLight}
+            strokeWidth="1"
+          />
+          <rect x="110" y="0" width="30" height={20 + (150 - containerHeight)} fill={colors.borderLight} rx="2" />
+        </g>
 
-            {/* Piston head */}
-            <rect
-              x="30"
-              y={15 + (150 - containerHeight)}
-              width="190"
-              height="20"
-              rx="3"
-              fill="url(#gasPistonGrad)"
-              stroke="#64748b"
-              strokeWidth="1"
-            />
-            {/* Piston bevel highlight */}
-            <rect
-              x="32"
-              y={16 + (150 - containerHeight)}
-              width="186"
-              height="3"
-              fill="white"
-              opacity="0.2"
-              rx="1"
-            />
-          </g>
-
-          {/* Cylinder rim highlights */}
-          <rect x="25" y="10" width="200" height="3" fill="white" opacity="0.1" rx="6" />
-          <rect x="25" y="187" width="200" height="3" fill="black" opacity="0.3" rx="6" />
-        </svg>
-
-        {/* Labels outside SVG using typo system */}
-        <div className="flex justify-center gap-6 mt-3">
-          <div className="text-center">
-            <div
-              className="font-bold"
-              style={{
-                fontSize: typo.bodyLarge,
-                color: pressure > 2 ? '#f59e0b' : '#8b5cf6'
-              }}
-            >
-              P = {pressure.toFixed(2)} atm
-            </div>
-          </div>
-          <div className="text-center">
-            <div
-              className="font-medium"
-              style={{ fontSize: typo.body, color: '#64748b' }}
-            >
-              V = {volume}%
-            </div>
-          </div>
-        </div>
-      </>
+        {/* Labels group */}
+        <g id="labels-layer">
+          <text x="15" y="100" fill="#ffffff" fontSize="10" fontWeight="bold">Cylinder</text>
+          <text x="15" y="112" fill={colors.textMuted} fontSize="8">Container</text>
+          <text x="185" y="30" fill="#ffffff" fontSize="10" fontWeight="bold">Piston</text>
+          <text x="185" y="42" fill={colors.textMuted} fontSize="8">Movable</text>
+          <text x="125" y="205" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="bold">
+            P = {pressure.toFixed(2)} atm
+          </text>
+          <text x="125" y="218" textAnchor="middle" fill={colors.textSecondary} fontSize="12">
+            V = {volume}%
+          </text>
+        </g>
+      </svg>
     );
   };
 
-  // Temperature effect visualization for Charles's Law - Premium SVG Graphics
-  const renderTempViz = () => {
+  // Balloon SVG for Charles's Law
+  const renderBalloonSVG = () => {
     const containerHeight = (twistVolume / 100) * 150;
-    // Temperature color interpolation
-    const tempNormalized = (twistTemp - 200) / 300; // 0 at 200K, 1 at 500K
     const isHot = twistTemp > 350;
     const isCold = twistTemp < 250;
 
     return (
-      <>
-        <svg viewBox="0 0 250 200" className="w-full h-full">
-          <defs>
-            {/* Premium balloon gradient - changes with temperature */}
-            <radialGradient id="gasBalloonGrad" cx="40%" cy="35%" r="65%">
-              <stop offset="0%" stopColor={isHot ? '#fef3c7' : isCold ? '#cffafe' : '#ddd6fe'} stopOpacity="0.4" />
-              <stop offset="30%" stopColor={isHot ? '#fcd34d' : isCold ? '#67e8f9' : '#a78bfa'} stopOpacity="0.3" />
-              <stop offset="60%" stopColor={isHot ? '#f59e0b' : isCold ? '#22d3ee' : '#8b5cf6'} stopOpacity="0.2" />
-              <stop offset="100%" stopColor={isHot ? '#d97706' : isCold ? '#06b6d4' : '#7c3aed'} stopOpacity="0.15" />
-            </radialGradient>
+      <svg viewBox="0 0 250 220" style={{ width: '100%', height: '100%' }}>
+        <defs>
+          <radialGradient id="balloonGrad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stopColor={isHot ? '#fef3c7' : isCold ? '#cffafe' : '#ddd6fe'} stopOpacity="0.4" />
+            <stop offset="50%" stopColor={isHot ? '#f59e0b' : isCold ? '#06b6d4' : '#8b5cf6'} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={isHot ? '#d97706' : isCold ? '#0891b2' : '#7c3aed'} stopOpacity="0.15" />
+          </radialGradient>
+          <linearGradient id="balloonBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={isHot ? '#fbbf24' : isCold ? '#22d3ee' : '#a78bfa'} />
+            <stop offset="100%" stopColor={isHot ? '#d97706' : isCold ? '#0891b2' : '#7c3aed'} />
+          </linearGradient>
+          <linearGradient id="heatSource" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity={(twistTemp - 200) / 300 * 0.8} />
+            <stop offset="100%" stopColor="#fef3c7" stopOpacity={(twistTemp - 200) / 300 * 0.2} />
+          </linearGradient>
+          <radialGradient id="tempParticle" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor={isHot ? '#fef08a' : isCold ? '#a5f3fc' : '#ddd6fe'} />
+            <stop offset="100%" stopColor={isHot ? '#d97706' : isCold ? '#0891b2' : '#7c3aed'} />
+          </radialGradient>
+          <filter id="balloonGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="5" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Balloon surface gradient */}
-            <linearGradient id="gasBalloonSurface" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={isHot ? '#fbbf24' : isCold ? '#22d3ee' : '#a78bfa'} stopOpacity="0.6" />
-              <stop offset="50%" stopColor={isHot ? '#f59e0b' : isCold ? '#06b6d4' : '#8b5cf6'} stopOpacity="0.4" />
-              <stop offset="100%" stopColor={isHot ? '#d97706' : isCold ? '#0891b2' : '#7c3aed'} stopOpacity="0.6" />
-            </linearGradient>
+        {/* Background */}
+        <rect width="250" height="220" fill={colors.bgPrimary} rx="8" />
 
-            {/* Hot particle gradient */}
-            <radialGradient id="gasTempParticleHot" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#fef08a" />
-              <stop offset="40%" stopColor="#fcd34d" />
-              <stop offset="70%" stopColor="#f59e0b" />
-              <stop offset="100%" stopColor="#d97706" />
-            </radialGradient>
+        {/* Grid */}
+        <rect width="250" height="220" fill="url(#gridPattern)" rx="8" />
 
-            {/* Cold particle gradient */}
-            <radialGradient id="gasTempParticleCold" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#a5f3fc" />
-              <stop offset="40%" stopColor="#67e8f9" />
-              <stop offset="70%" stopColor="#22d3ee" />
-              <stop offset="100%" stopColor="#06b6d4" />
-            </radialGradient>
+        {/* Heat source */}
+        <rect x="50" y="185" width="150" height="15" rx="3" fill="url(#heatSource)" />
+        {[0, 1, 2, 3, 4].map(i => (
+          <rect key={i} x={60 + i * 30} y="188" width="20" height="8" rx="2"
+            fill={isHot ? '#dc2626' : '#374151'} opacity={isHot ? 0.8 : 0.3} />
+        ))}
 
-            {/* Neutral particle gradient */}
-            <radialGradient id="gasTempParticleNeutral" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#ddd6fe" />
-              <stop offset="40%" stopColor="#c4b5fd" />
-              <stop offset="70%" stopColor="#a78bfa" />
-              <stop offset="100%" stopColor="#8b5cf6" />
-            </radialGradient>
+        {/* Balloon */}
+        <ellipse
+          cx="125"
+          cy={95 - (containerHeight - 100) / 4}
+          rx={70 + (twistVolume - 100) * 0.35}
+          ry={containerHeight / 2 + 20}
+          fill="url(#balloonGrad)"
+          stroke="url(#balloonBorder)"
+          strokeWidth="3"
+          filter="url(#balloonGlow)"
+        />
 
-            {/* Heat source gradient */}
-            <linearGradient id="gasHeatSource" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity={tempNormalized * 0.8} />
-              <stop offset="30%" stopColor="#f97316" stopOpacity={tempNormalized * 0.6} />
-              <stop offset="70%" stopColor="#fbbf24" stopOpacity={tempNormalized * 0.4} />
-              <stop offset="100%" stopColor="#fef3c7" stopOpacity={tempNormalized * 0.2} />
-            </linearGradient>
+        {/* Balloon tie */}
+        <path
+          d={`M120,${95 - (containerHeight - 100) / 4 + containerHeight / 2 + 20} L125,${105 - (containerHeight - 100) / 4 + containerHeight / 2 + 20} L130,${95 - (containerHeight - 100) / 4 + containerHeight / 2 + 20}`}
+          fill="none"
+          stroke={isHot ? '#f59e0b' : isCold ? '#06b6d4' : '#8b5cf6'}
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <line x1="125" y1={105 - (containerHeight - 100) / 4 + containerHeight / 2 + 20} x2="125" y2="185"
+          stroke={colors.textMuted} strokeWidth="2" strokeDasharray="4 2" />
 
-            {/* Balloon reflection/shine */}
-            <linearGradient id="gasBalloonShine" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="white" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="white" stopOpacity="0" />
-              <stop offset="100%" stopColor="white" stopOpacity="0" />
-            </linearGradient>
+        {/* Molecules inside balloon */}
+        {molecules.slice(0, 20).map((mol, i) => {
+          const balloonRx = 70 + (twistVolume - 100) * 0.35;
+          const balloonRy = containerHeight / 2 + 20;
+          const balloonCy = 95 - (containerHeight - 100) / 4;
+          const normalizedX = (mol.x - 100) / 100;
+          const normalizedY = (mol.y - 80) / 80;
+          const cx = 125 + normalizedX * (balloonRx * 0.6);
+          const cy = balloonCy + normalizedY * (balloonRy * 0.6);
+          const dx = (cx - 125) / balloonRx;
+          const dy = (cy - balloonCy) / balloonRy;
+          if (dx * dx + dy * dy > 0.7) return null;
 
-            {/* Temperature particle glow */}
-            <filter id="gasTempParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation={isHot ? 3 : 2} result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+          return (
+            <circle key={i} cx={cx} cy={cy} r={4 + (twistTemp - 200) / 200}
+              fill="url(#tempParticle)" opacity={0.85} />
+          );
+        })}
 
-            {/* Balloon outer glow */}
-            <filter id="gasBalloonGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="6" result="glow" />
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+        {/* Pressure indicator */}
+        <rect x="10" y="10" width="50" height="24" rx="4" fill={colors.bgCard} stroke={colors.border} />
+        <text x="35" y="19" textAnchor="middle" fill={colors.textMuted} fontSize="8">PRESSURE</text>
+        <text x="35" y="29" textAnchor="middle" fill={colors.success} fontSize="10" fontWeight="bold">1 atm</text>
 
-            {/* Heat shimmer effect */}
-            <filter id="gasHeatShimmer">
-              <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="2" result="turbulence" />
-              <feDisplacementMap in2="turbulence" in="SourceGraphic" scale={isHot ? 2 : 0} xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-
-            {/* Ambient temperature glow */}
-            <filter id="gasAmbientTempGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="10" />
-            </filter>
-          </defs>
-
-          {/* Background */}
-          <rect width="250" height="200" fill="#020617" rx="8" />
-
-          {/* Subtle grid pattern */}
-          <pattern id="gasTempGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-          </pattern>
-          <rect width="250" height="200" fill="url(#gasTempGrid)" rx="8" />
-
-          {/* Heat source indicator at bottom */}
-          <rect
-            x="50"
-            y="175"
-            width="150"
-            height="15"
-            rx="3"
-            fill="url(#gasHeatSource)"
-          />
-          {/* Heat element coils */}
-          {[0, 1, 2, 3, 4].map((i) => (
-            <rect
-              key={i}
-              x={60 + i * 30}
-              y="178"
-              width="20"
-              height="8"
-              rx="2"
-              fill={isHot ? '#dc2626' : '#374151'}
-              opacity={isHot ? 0.8 : 0.3}
-            />
-          ))}
-
-          {/* Balloon with glow effect */}
-          <g filter="url(#gasBalloonGlow)">
-            {/* Balloon main body */}
-            <ellipse
-              cx="125"
-              cy={95 - (containerHeight - 100) / 4}
-              rx={70 + (twistVolume - 100) * 0.35}
-              ry={containerHeight / 2 + 20}
-              fill="url(#gasBalloonGrad)"
-              stroke="url(#gasBalloonSurface)"
-              strokeWidth="3"
-            />
-            {/* Balloon shine/reflection */}
-            <ellipse
-              cx={100 - (twistVolume - 100) * 0.1}
-              cy={70 - (containerHeight - 100) / 4}
-              rx={20 + (twistVolume - 100) * 0.1}
-              ry={30 + (twistVolume - 100) * 0.1}
-              fill="url(#gasBalloonShine)"
-            />
-          </g>
-
-          {/* Balloon tie/knot */}
-          <path
-            d={`M120,${95 - (containerHeight - 100) / 4 + containerHeight / 2 + 20} L125,${105 - (containerHeight - 100) / 4 + containerHeight / 2 + 20} L130,${95 - (containerHeight - 100) / 4 + containerHeight / 2 + 20}`}
-            fill="none"
-            stroke={isHot ? '#f59e0b' : isCold ? '#06b6d4' : '#8b5cf6'}
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Balloon string */}
-          <line
-            x1="125"
-            y1={105 - (containerHeight - 100) / 4 + containerHeight / 2 + 20}
-            x2="125"
-            y2="175"
-            stroke="#64748b"
-            strokeWidth="2"
-            strokeDasharray="4 2"
-          />
-
-          {/* Molecules inside balloon with glow */}
-          {molecules.map((mol, i) => {
-            const balloonRx = 70 + (twistVolume - 100) * 0.35;
-            const balloonRy = containerHeight / 2 + 20;
-            const balloonCy = 95 - (containerHeight - 100) / 4;
-
-            // Calculate position within balloon bounds
-            const normalizedX = (mol.x - 100) / 100;
-            const normalizedY = (mol.y - 80) / 80;
-
-            const cx = 125 + normalizedX * (balloonRx * 0.7);
-            const cy = balloonCy + normalizedY * (balloonRy * 0.7);
-
-            // Check if particle is within balloon ellipse
-            const dx = (cx - 125) / balloonRx;
-            const dy = (cy - balloonCy) / balloonRy;
-            if (dx * dx + dy * dy > 0.85) return null;
-
-            const particleGradient = isHot
-              ? "url(#gasTempParticleHot)"
-              : isCold
-              ? "url(#gasTempParticleCold)"
-              : "url(#gasTempParticleNeutral)";
-
-            return (
-              <g key={i} filter="url(#gasTempParticleGlow)">
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={4 + tempNormalized}
-                  fill={particleGradient}
-                  opacity={0.9}
-                />
-                {/* Specular highlight */}
-                <circle
-                  cx={cx - 1.5}
-                  cy={cy - 1.5}
-                  r={1.5}
-                  fill="white"
-                  opacity="0.4"
-                />
-              </g>
-            );
-          })}
-
-          {/* Pressure constant indicator - small gauge */}
-          <g transform="translate(20, 20)">
-            <rect x="0" y="0" width="50" height="24" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="1" />
-            <text x="25" y="10" textAnchor="middle" fontSize="8" fill="#64748b">PRESSURE</text>
-            <text x="25" y="20" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#10b981">1 atm</text>
-          </g>
-        </svg>
-
-        {/* Labels outside SVG using typo system */}
-        <div className="flex justify-center gap-6 mt-3">
-          <div className="text-center">
-            <div
-              className="font-bold"
-              style={{
-                fontSize: typo.bodyLarge,
-                color: isHot ? '#f59e0b' : isCold ? '#06b6d4' : '#f8fafc'
-              }}
-            >
-              T = {twistTemp} K ({Math.round(twistTemp - 273)}°C)
-            </div>
-          </div>
-          <div className="text-center">
-            <div
-              className="font-medium"
-              style={{ fontSize: typo.body, color: '#64748b' }}
-            >
-              V = {twistVolume.toFixed(0)}%
-            </div>
-          </div>
-        </div>
-      </>
+        {/* Labels */}
+        <text x="125" y="205" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
+          T = {twistTemp} K ({Math.round(twistTemp - 273)}°C)
+        </text>
+        <text x="125" y="218" textAnchor="middle" fill={colors.textSecondary} fontSize="12">
+          V = {twistVolume.toFixed(0)}%
+        </text>
+      </svg>
     );
   };
 
-  // Applications data
-  const applications = [
-    {
-      title: "Scuba Diving",
-      icon: "diving",
-      description: "At depth, divers breathe compressed air. As they ascend, air in lungs expands (Boyle's Law). Never hold breath while ascending!",
-      details: "P1V1 = P2V2. At 30m, pressure is 4 atm. A 1L breath at depth becomes 4L at surface. Safety stops allow gas equilibration.",
-      stats: [
-        { value: '4x', label: 'Volume change 30m to 0m' },
-        { value: '1 atm', label: 'Per 10m depth' },
-        { value: '18m/min', label: 'Safe ascent rate' }
-      ]
-    },
-    {
-      title: "Hot Air Balloons",
-      icon: "balloon",
-      description: "Heating air makes it expand and become less dense. The balloon traps lighter air, creating buoyancy (Charles's Law).",
-      details: "V1/T1 = V2/T2. Heating air from 300K to 400K increases volume by 33%. Same mass in larger volume = lower density = floats.",
-      stats: [
-        { value: '100C', label: 'Typical temperature difference' },
-        { value: '30%', label: 'Density reduction' },
-        { value: '300kg', label: 'Typical payload' }
-      ]
-    },
-    {
-      title: "Car Engines",
-      icon: "engine",
-      description: "Compress fuel-air mixture, ignite it, and rapid heating causes explosive expansion pushing pistons.",
-      details: "Compression ratio (typically 10:1) determines efficiency. Higher compression = higher peak pressure = more work extracted.",
-      stats: [
-        { value: '10:1', label: 'Compression ratio' },
-        { value: '2500C', label: 'Combustion temp' },
-        { value: '10%', label: 'Tire P increase when hot' }
-      ]
-    },
-    {
-      title: "Weather Systems",
-      icon: "weather",
-      description: "Rising air expands and cools (adiabatic cooling), causing cloud formation and driving weather patterns.",
-      details: "Lower pressure at altitude means rising air expands. Expansion cools the air. Cool air holds less water = clouds and rain.",
-      stats: [
-        { value: '10C/km', label: 'Dry adiabatic rate' },
-        { value: '50%', label: 'P at 5.5km altitude' },
-        { value: '1013', label: 'Sea level P (hPa)' }
-      ]
-    }
-  ];
-
-  // Real-world applications with comprehensive data
-  const realWorldApps = [
-    {
-      icon: 'diving',
-      title: 'Scuba Diving',
-      short: 'Decompression Science',
-      tagline: 'Understanding pressure changes underwater saves lives',
-      description: 'Scuba diving relies fundamentally on gas laws to keep divers safe. As divers descend, water pressure increases by 1 atmosphere for every 10 meters of depth. This increased pressure causes nitrogen from the breathing gas to dissolve into body tissues. When ascending, this dissolved gas must be released slowly to prevent decompression sickness (the bends), which occurs when nitrogen forms bubbles in the bloodstream and tissues.',
-      connection: 'Boyle\'s Law (PV = constant) explains why air in a diver\'s lungs expands during ascent. At 30 meters depth, pressure is 4 atmospheres, so a lungful of air would expand to 4 times its volume at the surface. This is why divers must never hold their breath while ascending - the expanding air could cause fatal lung overexpansion injuries.',
-      howItWorks: 'Dive computers use gas law calculations to track nitrogen absorption in different tissue compartments with varying half-times. They calculate no-decompression limits and required safety stops based on depth, time, and ascent rate. Henry\'s Law governs gas solubility, while Boyle\'s Law determines volume changes during ascent.',
-      stats: [
-        { value: '4 atm', label: 'Pressure at 30m depth' },
-        { value: '18 m/min', label: 'Maximum safe ascent rate' },
-        { value: '3-5 min', label: 'Safety stop at 5m depth' }
-      ],
-      examples: [
-        'Decompression stops during technical diving',
-        'Nitrox mixtures to extend bottom time',
-        'Dive computer algorithms for multi-level dives',
-        'Treatment of decompression sickness in hyperbaric chambers'
-      ],
-      companies: ['PADI', 'Suunto', 'Shearwater', 'Aqua Lung', 'Mares'],
-      futureImpact: 'Advanced dive computers with real-time tissue saturation monitoring, AI-powered dive planning algorithms, and rebreather technology for extended deep diving are making underwater exploration safer and more accessible.',
-      color: 'cyan'
-    },
-    {
-      icon: 'balloon',
-      title: 'Weather Balloons',
-      short: 'Atmospheric Meteorology',
-      tagline: 'Probing the atmosphere with gas law principles',
-      description: 'Weather balloons are essential tools for atmospheric research and weather forecasting. These helium or hydrogen-filled balloons carry instrument packages called radiosondes that measure temperature, humidity, pressure, and wind conditions as they ascend through the atmosphere. The data collected is critical for numerical weather prediction models and understanding atmospheric dynamics.',
-      connection: 'As a weather balloon rises, atmospheric pressure decreases exponentially. According to Boyle\'s Law, the balloon\'s volume increases as external pressure drops. Charles\'s Law also plays a role: as the balloon rises into colder air, the gas would contract, but the pressure decrease effect dominates. Eventually, the balloon expands until its latex envelope can no longer stretch, causing it to burst at altitudes of 25-35 km.',
-      howItWorks: 'The radiosonde transmits data via radio as it ascends at about 5 m/s. GPS tracking provides wind speed and direction data. The ideal gas law PV=nRT allows meteorologists to calculate air density at different altitudes. Twice daily, over 800 stations worldwide release weather balloons simultaneously for coordinated atmospheric sampling.',
-      stats: [
-        { value: '35 km', label: 'Maximum burst altitude' },
-        { value: '5 m/s', label: 'Typical ascent rate' },
-        { value: '800+', label: 'Daily global launches' }
-      ],
-      examples: [
-        'Twice-daily radiosonde launches worldwide',
-        'Ozone monitoring in the stratosphere',
-        'Hurricane reconnaissance flights',
-        'Climate research high-altitude sampling'
-      ],
-      companies: ['Vaisala', 'NOAA', 'Lockheed Martin', 'GRAW Radiosondes'],
-      futureImpact: 'Next-generation weather balloons with biodegradable materials, miniaturized sensors, and autonomous recovery systems will provide higher-resolution atmospheric data while reducing environmental impact.',
-      color: 'violet'
-    },
-    {
-      icon: 'engine',
-      title: 'Internal Combustion Engines',
-      short: 'Automotive Power',
-      tagline: 'Converting fuel to motion through controlled gas expansion',
-      description: 'Internal combustion engines power most vehicles worldwide by converting chemical energy in fuel into mechanical motion. The engine operates through a four-stroke cycle: intake, compression, combustion, and exhaust. Each stroke involves precise control of gas pressure, volume, and temperature to maximize power output and efficiency while minimizing emissions.',
-      connection: 'The compression stroke demonstrates Boyle\'s Law as the piston compresses the air-fuel mixture to 1/10th its original volume, increasing pressure dramatically. During combustion, the rapid temperature increase (to about 2500°C) causes explosive pressure rise following Gay-Lussac\'s Law. This high-pressure gas then expands (Boyle\'s Law again), pushing the piston down and producing useful work.',
-      howItWorks: 'The ideal gas law governs each phase of the Otto cycle. Higher compression ratios extract more work from the expanding gases but risk pre-ignition (knock). Modern engines use variable valve timing, direct injection, and turbocharging to optimize the pressure-volume-temperature relationship throughout the cycle. Engine management computers adjust parameters in real-time based on gas law principles.',
-      stats: [
-        { value: '10:1', label: 'Typical compression ratio' },
-        { value: '2500°C', label: 'Peak combustion temperature' },
-        { value: '35-40%', label: 'Thermal efficiency range' }
-      ],
-      examples: [
-        'Turbocharging for increased power density',
-        'Variable compression ratio engines',
-        'Homogeneous charge compression ignition (HCCI)',
-        'Atkinson cycle for hybrid vehicle efficiency'
-      ],
-      companies: ['Toyota', 'Volkswagen', 'BMW', 'Honda', 'Ford'],
-      futureImpact: 'Advanced combustion strategies, synthetic fuels, and hybrid integration are pushing internal combustion efficiency to new heights. Even as electrification grows, gas law principles remain crucial for range extenders and sustainable fuel applications.',
-      color: 'amber'
-    },
-    {
-      icon: 'airplane',
-      title: 'Pressurized Aircraft Cabins',
-      short: 'Aviation Safety',
-      tagline: 'Maintaining breathable air at 40,000 feet',
-      description: 'Commercial aircraft cruise at altitudes of 35,000-40,000 feet where atmospheric pressure is only about 20% of sea level pressure. At these altitudes, humans would lose consciousness within seconds without supplemental oxygen. Cabin pressurization systems maintain a safe, comfortable environment by compressing outside air and regulating cabin pressure to simulate lower altitude conditions.',
-      connection: 'The ideal gas law PV=nRT is fundamental to aircraft pressurization. As the aircraft climbs, cabin pressure is maintained by pumping compressed air from the engines (bleed air) into the cabin. The pressure differential between cabin and outside air can reach 8-9 psi at cruise altitude. This creates enormous structural loads on the fuselage - a typical cabin door experiences over 10 tons of outward force.',
-      howItWorks: 'Outflow valves precisely regulate cabin pressure by controlling air release rate. Cabin altitude is typically maintained at 6,000-8,000 feet equivalent pressure. The pressurization system must account for temperature changes, passenger count (oxygen consumption), and altitude changes. Emergency oxygen systems deploy automatically if cabin pressure drops, following Dalton\'s Law of partial pressures.',
-      stats: [
-        { value: '8.9 psi', label: 'Maximum pressure differential' },
-        { value: '8,000 ft', label: 'Typical cabin altitude' },
-        { value: '10+ tons', label: 'Force on cabin door' }
-      ],
-      examples: [
-        'Automatic cabin pressure scheduling during climb/descent',
-        'Emergency oxygen mask deployment systems',
-        'Pressure bulkhead design and testing',
-        'Hypoxia training for flight crews'
-      ],
-      companies: ['Boeing', 'Airbus', 'Honeywell', 'Collins Aerospace', 'Liebherr'],
-      futureImpact: 'New composite materials allow higher cabin pressures for improved passenger comfort. The Boeing 787 maintains cabin altitude at 6,000 feet versus 8,000 feet for older aircraft. Future designs may use electric compressors instead of engine bleed air for more efficient pressurization.',
-      color: 'sky'
-    }
-  ];
-
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ============================================================================
   // RENDER PHASES
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ============================================================================
 
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-violet-500/10 border border-violet-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-violet-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-violet-400 tracking-wide">CHEMISTRY EXPLORATION</span>
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        color: '#ffffff',
+        overflow: 'hidden',
+      }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '24px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '80px', textAlign: 'center', maxWidth: '600px', margin: '0 auto', overflowY: 'auto' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 16px',
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}30`,
+            borderRadius: '20px',
+            marginBottom: '24px',
+          }}>
+            <span style={{ width: '8px', height: '8px', background: colors.accent, borderRadius: '50%' }} />
+            <span style={{ ...typo.label, color: colors.accent }}>PHYSICS EXPLORATION</span>
+          </div>
+
+          <h1 style={{ ...typo.h1, color: '#ffffff', marginBottom: '16px' }}>
+            Gas Laws: PVT Relationships
+          </h1>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            Why do balloons <span style={{ color: '#ffffff', fontWeight: 600 }}>expand</span> when heated?
+            What makes sealed containers <span style={{ color: '#ffffff', fontWeight: 600 }}>dangerous</span> in fires?
+            Discover how pressure, volume, and temperature are interconnected.
+          </p>
+
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '32px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+              {[
+                { icon: '📊', text: 'Pressure' },
+                { icon: '📦', text: 'Volume' },
+                { icon: '🌡️', text: 'Temperature' }
+              ].map((item, i) => (
+                <div key={i} style={{
+                  padding: '16px',
+                  background: colors.bgInput,
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>{item.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>{item.text}</div>
+                </div>
+              ))}
+            </div>
+            <p style={{ ...typo.body, color: '#ffffff' }}>
+              These three variables are always connected. Change one, and the others must respond. This relationship governs everything from breathing to rocket engines.
+            </p>
+          </div>
+
+          <button onClick={() => goToPhase('predict')} style={primaryButtonStyle}>
+            Start Exploring →
+          </button>
+        </div>
+        {renderBottomNav(null, 'predict', 'Next →')}
       </div>
+    );
+  }
 
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-violet-100 to-cyan-200 bg-clip-text text-transparent">
-        Gas Laws: PVT Relationships
-      </h1>
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        color: colors.textPrimary,
+        overflow: 'hidden',
+      }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, marginBottom: '8px' }}>Make Your Prediction</h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px' }}>Think about what will happen before we test it</p>
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Why do balloons <span className="text-white font-semibold">expand</span> when heated and <span className="text-white font-semibold">pop</span> when squeezed?
-      </p>
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '16px' }}>
+              You seal a syringe containing <strong>20 mL of air</strong> at 1 atm pressure.
+              You push the plunger to compress the air to <strong>10 mL</strong> (half the volume).
+            </p>
+            <p style={{ ...typo.body, color: colors.accent, fontWeight: 600 }}>
+              What happens to the pressure inside?
+            </p>
 
-      {/* Premium card with graphic */}
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-cyan-500/5 rounded-3xl" />
+            {/* Simple syringe visualization */}
+            <svg viewBox="0 0 400 100" style={{ width: '100%', height: '100px', marginTop: '16px' }}>
+              <rect width="400" height="100" fill="transparent" />
+              {/* Before */}
+              <rect x="30" y="30" width="120" height="40" rx="6" fill={colors.bgInput} stroke={colors.border} strokeWidth="2" />
+              <text x="90" y="55" textAnchor="middle" fill={colors.textPrimary} fontSize="14">20 mL</text>
+              <text x="90" y="85" textAnchor="middle" fill={colors.textMuted} fontSize="12">Before</text>
+              {/* Arrow */}
+              <path d="M170 50 L210 50 M200 40 L210 50 L200 60" stroke={colors.accent} strokeWidth="3" fill="none" />
+              {/* After */}
+              <rect x="230" y="30" width="60" height="40" rx="6" fill={colors.bgInput} stroke={colors.accent} strokeWidth="2" />
+              <text x="260" y="55" textAnchor="middle" fill={colors.textPrimary} fontSize="14">10 mL</text>
+              <text x="260" y="85" textAnchor="middle" fill={colors.textMuted} fontSize="12">After</text>
+            </svg>
+          </div>
 
-        <div className="relative">
-          <div className="grid grid-cols-3 gap-4 mb-8">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginBottom: '24px' }}>
             {[
-              { icon: '📊', text: 'Pressure' },
-              { icon: '📦', text: 'Volume' },
-              { icon: '🌡️', text: 'Temperature' }
-            ].map((item, i) => (
-              <div key={i} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                <div className="text-3xl mb-2">{item.icon}</div>
-                <div className="text-sm font-semibold text-slate-300">{item.text}</div>
-              </div>
+              { id: 'A', text: 'Pressure decreases to 0.5 atm' },
+              { id: 'B', text: 'Pressure stays at 1 atm' },
+              { id: 'C', text: 'Pressure increases to 2 atm' },
+              { id: 'D', text: 'Pressure increases to 4 atm' }
+            ].map(option => (
+              <button
+                key={option.id}
+                onClick={() => handlePrediction(option.id)}
+                disabled={showPredictionFeedback}
+                style={{
+                  padding: '16px 20px',
+                  borderRadius: '12px',
+                  border: `2px solid ${
+                    showPredictionFeedback && selectedPrediction === option.id
+                      ? option.id === 'C' ? colors.success : colors.error
+                      : showPredictionFeedback && option.id === 'C' ? colors.success
+                      : colors.border
+                  }`,
+                  background: showPredictionFeedback && (selectedPrediction === option.id || option.id === 'C')
+                    ? option.id === 'C' ? `${colors.success}20` : `${colors.error}20`
+                    : colors.bgCard,
+                  color: colors.textPrimary,
+                  textAlign: 'left',
+                  cursor: showPredictionFeedback ? 'default' : 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <span style={{ fontWeight: 700 }}>{option.id}.</span>
+                <span style={{ marginLeft: '8px' }}>{option.text}</span>
+              </button>
             ))}
           </div>
 
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              How are pressure, volume, and temperature connected?
+          {showPredictionFeedback && (
+            <div style={{ ...cardStyle, width: '100%', background: `${colors.success}15`, borderColor: colors.success }}>
+              <p style={{ ...typo.body, color: colors.success, marginBottom: '12px', fontWeight: 600 }}>
+                {selectedPrediction === 'C' ? 'Correct!' : 'Not quite!'} This is Boyle's Law: P1V1 = P2V2
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>
+                When you halve the volume, the pressure doubles. The same number of molecules hitting half the surface area means twice as many collisions per unit area = double pressure.
+              </p>
+              <button
+                onClick={() => goToPhase('play')}
+                style={{ ...primaryButtonStyle, marginTop: '16px' }}
+              >
+                Explore the Physics →
+              </button>
+            </div>
+          )}
+
+          {!showPredictionFeedback && (
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {renderBackButton()}
+            </div>
+          )}
+        </div>
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        color: colors.textPrimary,
+        overflow: 'hidden',
+      }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '24px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px', maxWidth: '600px', margin: '0 auto', overflowY: 'auto' }}>
+          <h2 style={{ ...typo.h2, marginBottom: '8px' }}>Boyle's Law Lab</h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px' }}>
+            Adjust the volume and observe how pressure changes - this demonstrates why compressing gases takes work and releases heat.
+          </p>
+
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
+            <div style={{ height: '220px', marginBottom: '16px' }}>
+              {renderPistonSVG()}
+            </div>
+
+            {/* Legend Section */}
+            <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '12px', marginTop: '8px' }}>
+              <p style={{ ...typo.label, color: colors.textMuted, marginBottom: '8px' }}>LEGEND</p>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: colors.accent }} />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Gas Molecules</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '16px', height: '8px', background: colors.borderLight, borderRadius: '2px' }} />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Piston</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '16px', height: '12px', border: `2px solid ${colors.borderLight}`, borderRadius: '2px' }} />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Cylinder</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Slider control */}
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <label style={{ ...typo.body, color: colors.textPrimary }}>Volume</label>
+              <span style={{ ...typo.body, color: colors.accent, fontWeight: 700 }}>{volume}%</span>
+            </div>
+            <input
+              type="range"
+              min="25"
+              max="200"
+              value={volume}
+              onChange={(e) => setVolume(parseInt(e.target.value))}
+              style={{
+                width: '100%',
+                height: '8px',
+                borderRadius: '4px',
+                background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${(volume - 25) / 1.75}%, ${colors.border} ${(volume - 25) / 1.75}%, ${colors.border} 100%)`,
+                appearance: 'none',
+                cursor: 'pointer',
+                accentColor: colors.accent,
+                touchAction: 'none',
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+              <span style={{ ...typo.label, color: colors.textMuted }}>Compressed (25%)</span>
+              <span style={{ ...typo.label, color: colors.textMuted }}>Expanded (200%)</span>
+            </div>
+          </div>
+
+          {/* Cause-Effect Explanation */}
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '16px', background: `${colors.accent}10` }}>
+            <p style={{ ...typo.body, color: '#ffffff', fontWeight: 600, marginBottom: '8px' }}>
+              {volume < 100 ? 'When you decrease the volume...' : volume > 100 ? 'When you increase the volume...' : 'At the baseline...'}
             </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              Squeeze a sealed syringe and watch what happens to the pressure inside.
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
+              {volume < 100
+                ? `The pressure increases to ${pressure.toFixed(2)} atm because the same number of molecules now collide with a smaller surface area more frequently. This causes higher pressure.`
+                : volume > 100
+                ? `The pressure decreases to ${pressure.toFixed(2)} atm because molecules now have more space to move, resulting in fewer collisions per unit area. This leads to lower pressure.`
+                : `The gas is at equilibrium with P = 1 atm and V = 100%. As you adjust the volume, the pressure will change inversely to maintain PV = constant.`
+              }
             </p>
-            <div className="pt-2">
-              <p className="text-base text-violet-400 font-semibold">
-                Can you predict the relationship?
+          </div>
+
+          {/* PV display */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', marginBottom: '16px' }}>
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+              <div style={{ ...typo.h2, color: colors.accent }}>{pressure.toFixed(2)}</div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>Pressure (atm)</div>
+            </div>
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+              <div style={{ ...typo.h2, color: colors.accentAlt }}>{volume}</div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>Volume (%)</div>
+            </div>
+          </div>
+
+          {/* PV constant */}
+          <div style={{ ...cardStyle, width: '100%', background: `${colors.success}15`, borderColor: colors.success, textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ ...typo.h1, color: colors.success }}>{(pressure * volume).toFixed(0)}</div>
+            <div style={{ ...typo.small, color: colors.success }}>P x V = Constant! (Boyle's Law)</div>
+          </div>
+
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            This relationship is important in engineering - compressing the fuel-air mixture in engines increases the force of the explosion, making vehicles more powerful.
+          </p>
+        </div>
+
+        {renderBottomNav('predict', 'review', 'Next →')}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        color: colors.textPrimary,
+        overflow: 'hidden',
+      }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, marginBottom: '8px' }}>Boyle's Law Explained</h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px' }}>Same molecules, different space</p>
+
+          <div style={{ ...cardStyle, width: '100%', textAlign: 'center', marginBottom: '24px', background: `linear-gradient(135deg, ${colors.accent}15, ${colors.accentAlt}15)` }}>
+            <div style={{ ...typo.h1, color: colors.accent, marginBottom: '8px' }}>P₁V₁ = P₂V₂</div>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>At constant temperature, pressure and volume are inversely proportional</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', marginBottom: '24px' }}>
+            <div style={cardStyle}>
+              <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔬</div>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Molecular View</h3>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>
+                Gas pressure comes from molecules hitting container walls. Smaller volume = same molecules hit walls more often = higher pressure.
+              </p>
+            </div>
+            <div style={cardStyle}>
+              <div style={{ fontSize: '32px', marginBottom: '12px' }}>📊</div>
+              <h3 style={{ ...typo.h3, color: colors.accentAlt, marginBottom: '8px' }}>Inverse Relationship</h3>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>
+                P and V are inversely proportional. When one doubles, the other halves. Their product stays constant.
               </p>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Premium CTA button */}
-      <button
-        onClick={() => goToPhase('predict')}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-violet-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/25 hover:scale-[1.02] active:scale-[0.98]"
-        style={{ zIndex: 10 }}
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Explore Gas Behavior
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-
-      {/* Feature hints */}
-      <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-violet-400">✦</span>
-          Boyle's Law
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-violet-400">✦</span>
-          Charles's Law
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-violet-400">✦</span>
-          Ideal Gas Law
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6 border border-slate-700/50">
-        <p className="text-lg text-slate-300 mb-4">
-          You seal a syringe containing 20 mL of air at 1 atm pressure. You push the plunger to compress the air to 10 mL (half the volume).
-        </p>
-        <p className="text-violet-400 font-semibold">What happens to the pressure inside?</p>
-
-        {/* Simple syringe diagram */}
-        <div className="mt-6 flex justify-center items-center gap-8">
-          <div className="text-center">
-            <div className="w-32 h-16 bg-slate-700 rounded-lg flex items-center justify-center border-2 border-slate-600">
-              <span className="text-slate-300">20 mL</span>
-            </div>
-            <p className="text-sm text-slate-400 mt-2">Before</p>
-          </div>
-          <svg className="w-8 h-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-slate-700 rounded-lg flex items-center justify-center border-2 border-violet-500">
-              <span className="text-slate-300">10 mL</span>
-            </div>
-            <p className="text-sm text-slate-400 mt-2">After</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Pressure decreases to 0.5 atm' },
-          { id: 'B', text: 'Pressure stays at 1 atm' },
-          { id: 'C', text: 'Pressure increases to 2 atm' },
-          { id: 'D', text: 'Pressure increases to 4 atm' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-            style={{ zIndex: 10 }}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl border border-slate-700/50">
-          <p className="text-emerald-400 font-semibold">
-            Correct! This is <span className="text-violet-400">Boyle's Law</span>: P1V1 = P2V2. Half the volume means double the pressure!
-          </p>
-          <button
-            onClick={() => goToPhase('play')}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
-            style={{ zIndex: 10 }}
-          >
-            Explore the Physics
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Boyle's Law Lab</h2>
-      <p className="text-slate-400 mb-6">Adjust the volume and watch how pressure changes</p>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6 border border-slate-700/50 max-w-md w-full">
-        <div className="h-64">
-          {renderPistonViz()}
-        </div>
-      </div>
-
-      <div className="w-full max-w-md space-y-6">
-        {/* Volume slider */}
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <div className="flex justify-between items-center mb-2">
-            <label className="text-slate-300 text-sm font-medium">Volume</label>
-            <span className="text-violet-400 font-bold">{volume}%</span>
-          </div>
-          <input
-            type="range"
-            min="25"
-            max="200"
-            value={volume}
-            onChange={(e) => setVolume(parseInt(e.target.value))}
-            className="w-full accent-violet-500"
-          />
-          <div className="flex justify-between text-xs text-slate-500 mt-1">
-            <span>Compressed</span>
-            <span>Expanded</span>
-          </div>
-        </div>
-
-        {/* PV display */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-slate-700/50 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-violet-400">{pressure.toFixed(2)}</div>
-            <div className="text-sm text-slate-400">Pressure (atm)</div>
-          </div>
-          <div className="bg-slate-700/50 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-cyan-400">{volume}</div>
-            <div className="text-sm text-slate-400">Volume (%)</div>
-          </div>
-        </div>
-
-        {/* PV product (constant) */}
-        <div className="bg-emerald-900/30 rounded-xl p-4 text-center border border-emerald-500/30">
-          <div className="text-3xl font-bold text-emerald-400">{(pressure * volume).toFixed(0)}</div>
-          <div className="text-sm text-emerald-300">P x V = Constant!</div>
-        </div>
-
-        {/* Formula */}
-        <div className="bg-violet-900/30 rounded-xl p-4 text-center border border-violet-500/30">
-          <div className="text-xl font-bold text-violet-300 mb-2">P1V1 = P2V2</div>
-          <div className="text-sm text-slate-400">Boyle's Law (at constant T)</div>
-        </div>
-      </div>
-
-      <button
-        onClick={() => goToPhase('review')}
-        className="mt-8 px-8 py-4 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
-        style={{ zIndex: 10 }}
-      >
-        Understand the Physics
-      </button>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-white mb-2">Boyle's Law Explained</h2>
-      <p className="text-slate-400 mb-6">Same molecules, different space</p>
-
-      {/* Main formula card */}
-      <div className="bg-gradient-to-br from-violet-900/40 to-slate-800/40 rounded-2xl p-6 mb-6 w-full border border-violet-500/30 text-center">
-        <div className="text-4xl font-bold text-violet-300 mb-4">P1V1 = P2V2</div>
-        <p className="text-slate-300">At constant temperature, pressure and volume are inversely proportional</p>
-      </div>
-
-      {/* Explanation cards */}
-      <div className="grid md:grid-cols-2 gap-4 w-full mb-6">
-        <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700/50">
-          <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center mb-3">
-            <span className="text-2xl">🔬</span>
-          </div>
-          <h3 className="font-bold text-violet-400 mb-2">Molecular Explanation</h3>
-          <p className="text-sm text-slate-400">Gas pressure comes from molecules hitting container walls. Smaller volume = same molecules hit walls more often = higher pressure.</p>
-        </div>
-        <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700/50">
-          <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center mb-3">
-            <span className="text-2xl">📊</span>
-          </div>
-          <h3 className="font-bold text-cyan-400 mb-2">Inverse Relationship</h3>
-          <p className="text-sm text-slate-400">P and V are inversely proportional. When one doubles, the other halves. Their product stays constant.</p>
-        </div>
-      </div>
-
-      {/* Key takeaways */}
-      <div className="w-full space-y-3 mb-6">
-        <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wide">Key Takeaways</h3>
-        {[
-          { icon: '🏊', title: 'Scuba Diving', desc: 'Air in lungs expands as divers ascend. Never hold breath while ascending!' },
-          { icon: '🎈', title: 'Weather Balloons', desc: 'Balloons expand as they rise because atmospheric pressure decreases.' },
-          { icon: '💉', title: 'Syringes', desc: 'Pulling the plunger expands volume, lowering pressure and drawing liquid in.' }
-        ].map((item, i) => (
-          <div key={i} className="flex items-start gap-4 bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
-            <span className="text-2xl">{item.icon}</span>
-            <div>
-              <h4 className="font-semibold text-white">{item.title}</h4>
-              <p className="text-sm text-slate-400">{item.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <button
-        onClick={() => goToPhase('twist_predict')}
-        className="px-8 py-4 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
-        style={{ zIndex: 10 }}
-      >
-        Explore Temperature Effects
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Temperature Effects</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6 border border-slate-700/50">
-        <p className="text-lg text-slate-300 mb-4">
-          A balloon at room temperature (300 K) is heated to 450 K while the external pressure stays constant at 1 atm.
-        </p>
-        <p className="text-amber-400 font-semibold">What happens to the balloon's volume?</p>
-
-        {/* Balloon diagram */}
-        <div className="mt-6 flex justify-center items-center gap-8">
-          <div className="text-center">
-            <div className="w-20 h-20 rounded-full bg-cyan-500/20 border-2 border-cyan-500 flex items-center justify-center">
-              <span className="text-cyan-400 font-bold">300K</span>
-            </div>
-            <p className="text-sm text-slate-400 mt-2">Cool</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🔥</span>
-            <svg className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </div>
-          <div className="text-center">
-            <div className="w-28 h-28 rounded-full bg-amber-500/20 border-2 border-amber-500 border-dashed flex items-center justify-center">
-              <span className="text-amber-400 font-bold text-xl">?</span>
-            </div>
-            <p className="text-sm text-slate-400 mt-2">Hot (450K)</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Balloon shrinks' },
-          { id: 'B', text: 'Balloon expands (1.5x volume)' },
-          { id: 'C', text: 'Volume stays the same' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-            style={{ zIndex: 10 }}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl border border-slate-700/50">
-          <p className="text-emerald-400 font-semibold">
-            Correct! This is <span className="text-amber-400">Charles's Law</span>: V1/T1 = V2/T2. 450K/300K = 1.5, so volume increases by 50%!
-          </p>
-          <button
-            onClick={() => goToPhase('twist_play')}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
-            style={{ zIndex: 10 }}
-          >
-            Explore Temperature Effects
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Charles's Law Lab</h2>
-      <p className="text-slate-400 mb-6">Adjust the temperature and watch the balloon expand or contract</p>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6 border border-slate-700/50 max-w-md w-full">
-        <div className="h-64">
-          {renderTempViz()}
-        </div>
-      </div>
-
-      <div className="w-full max-w-md space-y-6">
-        {/* Temperature slider */}
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <div className="flex justify-between items-center mb-2">
-            <label className="text-slate-300 text-sm font-medium">Temperature</label>
-            <span className="text-amber-400 font-bold">{twistTemp} K</span>
-          </div>
-          <input
-            type="range"
-            min="200"
-            max="500"
-            value={twistTemp}
-            onChange={(e) => setTwistTemp(parseInt(e.target.value))}
-            className="w-full accent-amber-500"
-          />
-          <div className="flex justify-between text-xs text-slate-500 mt-1">
-            <span>Cold (200 K)</span>
-            <span>Hot (500 K)</span>
-          </div>
-        </div>
-
-        {/* T and V display */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-slate-700/50 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-amber-400">{twistTemp}</div>
-            <div className="text-sm text-slate-400">Temperature (K)</div>
-          </div>
-          <div className="bg-slate-700/50 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-cyan-400">{twistVolume.toFixed(0)}</div>
-            <div className="text-sm text-slate-400">Volume (%)</div>
-          </div>
-        </div>
-
-        {/* V/T ratio (constant) */}
-        <div className="bg-emerald-900/30 rounded-xl p-4 text-center border border-emerald-500/30">
-          <div className="text-3xl font-bold text-emerald-400">{(twistVolume / twistTemp).toFixed(3)}</div>
-          <div className="text-sm text-emerald-300">V / T = Constant!</div>
-        </div>
-
-        {/* Formula */}
-        <div className="bg-amber-900/30 rounded-xl p-4 text-center border border-amber-500/30">
-          <div className="text-xl font-bold text-amber-300 mb-2">V1/T1 = V2/T2</div>
-          <div className="text-sm text-slate-400">Charles's Law (at constant P)</div>
-        </div>
-      </div>
-
-      <button
-        onClick={() => goToPhase('twist_review')}
-        className="mt-8 px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
-        style={{ zIndex: 10 }}
-      >
-        Deep Understanding
-      </button>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-white mb-2">The Ideal Gas Law</h2>
-      <p className="text-slate-400 mb-6">Combining all three variables</p>
-
-      {/* Main formula card */}
-      <div className="bg-gradient-to-br from-violet-900/40 to-amber-900/40 rounded-2xl p-6 mb-6 w-full border border-violet-500/30 text-center">
-        <div className="text-5xl font-bold bg-gradient-to-r from-violet-300 to-amber-300 bg-clip-text text-transparent mb-4">PV = nRT</div>
-        <p className="text-slate-300">Pressure x Volume = moles x gas constant x Temperature</p>
-      </div>
-
-      {/* Three gas laws */}
-      <div className="w-full space-y-3 mb-6">
-        <div className="flex items-center gap-4 bg-violet-900/30 rounded-xl p-4 border border-violet-500/30">
-          <div className="w-12 h-12 rounded-xl bg-violet-500/30 flex items-center justify-center font-bold text-violet-300">PV</div>
-          <div>
-            <h4 className="font-semibold text-violet-300">Boyle's Law</h4>
-            <p className="text-sm text-slate-400">P1V1 = P2V2 (constant T)</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 bg-amber-900/30 rounded-xl p-4 border border-amber-500/30">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/30 flex items-center justify-center font-bold text-amber-300">V/T</div>
-          <div>
-            <h4 className="font-semibold text-amber-300">Charles's Law</h4>
-            <p className="text-sm text-slate-400">V1/T1 = V2/T2 (constant P)</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 bg-cyan-900/30 rounded-xl p-4 border border-cyan-500/30">
-          <div className="w-12 h-12 rounded-xl bg-cyan-500/30 flex items-center justify-center font-bold text-cyan-300">P/T</div>
-          <div>
-            <h4 className="font-semibold text-cyan-300">Gay-Lussac's Law</h4>
-            <p className="text-sm text-slate-400">P1/T1 = P2/T2 (constant V)</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Key insight */}
-      <div className="bg-emerald-900/30 rounded-xl p-5 border border-emerald-500/30 w-full mb-6">
-        <h3 className="font-bold text-emerald-400 mb-2">The Big Picture</h3>
-        <p className="text-sm text-slate-300">PV = nRT connects macroscopic measurements (P, V, T) to the microscopic world of molecules. This single equation explains balloons, scuba diving, engines, weather, and countless other phenomena!</p>
-      </div>
-
-      <button
-        onClick={() => goToPhase('transfer')}
-        className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 transition-all"
-        style={{ zIndex: 10 }}
-      >
-        Real World Applications
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => {
-    const handleNextApplication = () => {
-      if (activeAppTab < applications.length - 1) {
-        if (!completedApps.has(activeAppTab)) {
-          handleAppComplete(activeAppTab);
-        }
-        setActiveAppTab(activeAppTab + 1);
-      } else {
-        if (!completedApps.has(activeAppTab)) {
-          handleAppComplete(activeAppTab);
-        }
-      }
-    };
-
-    return (
-      <div className="flex flex-col p-6 max-w-3xl mx-auto">
-        <h2 className="text-2xl font-bold text-white mb-2">Real-World Applications</h2>
-        <p className="text-slate-400 mb-6">Gas laws in action everywhere</p>
-
-        {/* App tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {applications.map((app, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveAppTab(i)}
-              className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
-                activeAppTab === i
-                  ? 'bg-gradient-to-r from-violet-600 to-cyan-600 text-white'
-                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-              } ${completedApps.has(i) ? 'ring-2 ring-emerald-500' : ''}`}
-              style={{ zIndex: 10 }}
-            >
-              {completedApps.has(i) && <span className="mr-1">✓</span>}
-              {app.title}
-            </button>
-          ))}
-        </div>
-
-        {/* Current app content */}
-        <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50 mb-6">
-          <h3 className="text-xl font-bold text-white mb-3">{applications[activeAppTab].title}</h3>
-          <p className="text-slate-300 mb-4">{applications[activeAppTab].description}</p>
-          <p className="text-sm text-slate-400 mb-4">{applications[activeAppTab].details}</p>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            {applications[activeAppTab].stats.map((stat, i) => (
-              <div key={i} className="bg-slate-700/50 rounded-xl p-3 text-center">
-                <div className="text-lg font-bold text-violet-400">{stat.value}</div>
-                <div className="text-xs text-slate-400">{stat.label}</div>
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
+            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '16px' }}>Key Takeaways</h3>
+            {[
+              { icon: '🤿', title: 'Scuba Diving', desc: "Air in lungs expands as divers ascend - never hold your breath while ascending!" },
+              { icon: '🎈', title: 'Weather Balloons', desc: 'Balloons expand as they rise because atmospheric pressure decreases with altitude.' },
+              { icon: '💉', title: 'Syringes', desc: 'Pulling the plunger expands volume, lowering pressure and drawing liquid in.' }
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: i < 2 ? '16px' : 0 }}>
+                <span style={{ fontSize: '24px' }}>{item.icon}</span>
+                <div>
+                  <h4 style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>{item.title}</h4>
+                  <p style={{ ...typo.small, color: colors.textSecondary }}>{item.desc}</p>
+                </div>
               </div>
             ))}
           </div>
 
-          {/* Next Application button */}
-          <button
-            onClick={handleNextApplication}
-            className="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
-            style={{ zIndex: 10 }}
-          >
-            {activeAppTab < applications.length - 1 ? 'Next Application →' : 'Complete Applications'}
-          </button>
-        </div>
+          <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>
+            You correctly predicted that halving the volume doubles the pressure! Now let's explore what happens when temperature changes.
+          </p>
 
-        {/* Progress */}
-        <div className="text-center mb-6">
-          <p className="text-slate-400">{completedApps.size} of {applications.length} applications explored</p>
-          <div className="w-full bg-slate-700 rounded-full h-2 mt-2">
-            <div
-              className="bg-gradient-to-r from-violet-500 to-cyan-500 h-2 rounded-full transition-all"
-              style={{ width: `${(completedApps.size / applications.length) * 100}%` }}
-            />
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {renderBackButton()}
+            <button onClick={() => goToPhase('twist_predict')} style={primaryButtonStyle}>
+              Explore Temperature Effects →
+            </button>
           </div>
         </div>
-
-        {completedApps.size >= applications.length && (
-          <button
-            onClick={() => goToPhase('test')}
-            className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 transition-all mx-auto"
-            style={{ zIndex: 10 }}
-          >
-            Take the Test
-          </button>
-        )}
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderTest = () => {
-    if (showTestResults) {
-      const score = calculateScore();
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        color: colors.textPrimary,
+        overflow: 'hidden',
+      }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, marginBottom: '8px' }}>New Variable: Temperature</h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px' }}>How does heating a gas affect its volume?</p>
+
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '16px' }}>
+              A balloon at room temperature <strong>(300 K)</strong> is heated to <strong>450 K</strong> while the external pressure stays constant at 1 atm.
+            </p>
+            <p style={{ ...typo.body, color: colors.warning, fontWeight: 600 }}>
+              What happens to the balloon's volume?
+            </p>
+
+            {/* Balloon visualization */}
+            <svg viewBox="0 0 400 100" style={{ width: '100%', height: '100px', marginTop: '16px' }}>
+              <rect width="400" height="100" fill="transparent" />
+              {/* Before */}
+              <circle cx="80" cy="45" r="30" fill={`${colors.accentAlt}20`} stroke={colors.accentAlt} strokeWidth="2" />
+              <text x="80" y="50" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">300K</text>
+              <text x="80" y="88" textAnchor="middle" fill={colors.textMuted} fontSize="11">Cool</text>
+              {/* Arrow + fire */}
+              <text x="150" y="45" fontSize="20">🔥</text>
+              <path d="M175 45 L215 45 M205 35 L215 45 L205 55" stroke={colors.warning} strokeWidth="3" fill="none" />
+              {/* After */}
+              <ellipse cx="280" cy="45" rx="45" ry="35" fill={`${colors.warning}20`} stroke={colors.warning} strokeWidth="2" strokeDasharray="5 3" />
+              <text x="280" y="50" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="bold">?</text>
+              <text x="280" y="88" textAnchor="middle" fill={colors.textMuted} fontSize="11">Hot (450K)</text>
+            </svg>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginBottom: '24px' }}>
+            {[
+              { id: 'A', text: 'Balloon shrinks' },
+              { id: 'B', text: 'Balloon expands (1.5x volume)' },
+              { id: 'C', text: 'Volume stays the same' }
+            ].map(option => (
+              <button
+                key={option.id}
+                onClick={() => handleTwistPrediction(option.id)}
+                disabled={showTwistFeedback}
+                style={{
+                  padding: '16px 20px',
+                  borderRadius: '12px',
+                  border: `2px solid ${
+                    showTwistFeedback && twistPrediction === option.id
+                      ? option.id === 'B' ? colors.success : colors.error
+                      : showTwistFeedback && option.id === 'B' ? colors.success
+                      : colors.border
+                  }`,
+                  background: showTwistFeedback && (twistPrediction === option.id || option.id === 'B')
+                    ? option.id === 'B' ? `${colors.success}20` : `${colors.error}20`
+                    : colors.bgCard,
+                  color: colors.textPrimary,
+                  textAlign: 'left',
+                  cursor: showTwistFeedback ? 'default' : 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <span style={{ fontWeight: 700 }}>{option.id}.</span>
+                <span style={{ marginLeft: '8px' }}>{option.text}</span>
+              </button>
+            ))}
+          </div>
+
+          {showTwistFeedback && (
+            <div style={{ ...cardStyle, width: '100%', background: `${colors.success}15`, borderColor: colors.success }}>
+              <p style={{ ...typo.body, color: colors.success, marginBottom: '12px', fontWeight: 600 }}>
+                {twistPrediction === 'B' ? 'Correct!' : 'Not quite!'} This is Charles's Law: V₁/T₁ = V₂/T₂
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>
+                450K/300K = 1.5, so volume increases by 50%! At constant pressure, volume is directly proportional to absolute temperature (Kelvin).
+              </p>
+              <button
+                onClick={() => goToPhase('twist_play')}
+                style={{ ...primaryButtonStyle, marginTop: '16px', background: `linear-gradient(135deg, ${colors.warning}, #ea580c)` }}
+              >
+                Explore Temperature Effects →
+              </button>
+            </div>
+          )}
+
+          {!showTwistFeedback && (
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {renderBackButton()}
+            </div>
+          )}
+        </div>
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        color: colors.textPrimary,
+        overflow: 'hidden',
+      }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, marginBottom: '8px' }}>Charles's Law Lab</h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px' }}>
+            Adjust temperature and watch the balloon expand or contract - this explains how hot air balloons float!
+          </p>
+
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
+            <div style={{ height: '220px', marginBottom: '16px' }}>
+              {renderBalloonSVG()}
+            </div>
+          </div>
+
+          {/* Temperature slider */}
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <label style={{ ...typo.body, color: colors.textPrimary }}>Temperature</label>
+              <span style={{ ...typo.body, color: colors.warning, fontWeight: 700 }}>{twistTemp} K</span>
+            </div>
+            <input
+              type="range"
+              min="200"
+              max="500"
+              value={twistTemp}
+              onChange={(e) => setTwistTemp(parseInt(e.target.value))}
+              style={{
+                width: '100%',
+                height: '8px',
+                borderRadius: '4px',
+                background: `linear-gradient(to right, ${colors.accentAlt} 0%, ${colors.warning} 50%, ${colors.error} 100%)`,
+                appearance: 'none',
+                cursor: 'pointer',
+                accentColor: colors.warning,
+                touchAction: 'none',
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+              <span style={{ ...typo.label, color: colors.textMuted }}>Cold (200 K / -73°C)</span>
+              <span style={{ ...typo.label, color: colors.textMuted }}>Hot (500 K / 227°C)</span>
+            </div>
+          </div>
+
+          {/* T and V display */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', marginBottom: '16px' }}>
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+              <div style={{ ...typo.h2, color: colors.warning }}>{twistTemp}</div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>Temperature (K)</div>
+            </div>
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+              <div style={{ ...typo.h2, color: colors.accentAlt }}>{twistVolume.toFixed(0)}</div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>Volume (%)</div>
+            </div>
+          </div>
+
+          {/* V/T constant */}
+          <div style={{ ...cardStyle, width: '100%', background: `${colors.success}15`, borderColor: colors.success, textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ ...typo.h1, color: colors.success }}>{(twistVolume / twistTemp).toFixed(3)}</div>
+            <div style={{ ...typo.small, color: colors.success }}>V / T = Constant! (Charles's Law)</div>
+          </div>
+
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Notice how the molecules move faster when hot - they collide with walls more forcefully. At constant pressure, the balloon must expand to maintain equilibrium.
+          </p>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {renderBackButton()}
+            <button onClick={() => goToPhase('twist_review')} style={{ ...primaryButtonStyle, background: `linear-gradient(135deg, ${colors.warning}, #ea580c)` }}>
+              Deep Understanding →
+            </button>
+          </div>
+        </div>
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        color: colors.textPrimary,
+        overflow: 'hidden',
+      }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, marginBottom: '8px' }}>The Ideal Gas Law</h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px' }}>Combining all three variables into one powerful equation</p>
+
+          <div style={{ ...cardStyle, width: '100%', textAlign: 'center', marginBottom: '24px', background: `linear-gradient(135deg, ${colors.accent}15, ${colors.warning}15)` }}>
+            <div style={{ fontSize: '48px', fontWeight: 800, background: `linear-gradient(135deg, ${colors.accent}, ${colors.warning})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '8px' }}>
+              PV = nRT
+            </div>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Pressure × Volume = moles × gas constant × Temperature
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginBottom: '24px' }}>
+            <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '16px', background: `${colors.accent}15` }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${colors.accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: colors.accent }}>PV</div>
+              <div>
+                <h4 style={{ ...typo.body, color: colors.accent, fontWeight: 600 }}>Boyle's Law</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>P₁V₁ = P₂V₂ (constant T)</p>
+              </div>
+            </div>
+            <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '16px', background: `${colors.warning}15` }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${colors.warning}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: colors.warning }}>V/T</div>
+              <div>
+                <h4 style={{ ...typo.body, color: colors.warning, fontWeight: 600 }}>Charles's Law</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>V₁/T₁ = V₂/T₂ (constant P)</p>
+              </div>
+            </div>
+            <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '16px', background: `${colors.accentAlt}15` }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${colors.accentAlt}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: colors.accentAlt }}>P/T</div>
+              <div>
+                <h4 style={{ ...typo.body, color: colors.accentAlt, fontWeight: 600 }}>Gay-Lussac's Law</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>P₁/T₁ = P₂/T₂ (constant V)</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ ...cardStyle, width: '100%', background: `${colors.success}15`, borderColor: colors.success }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>The Big Picture</h3>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
+              PV = nRT connects macroscopic measurements (P, V, T) to the microscopic world of molecules. This single equation explains balloons, scuba diving, engines, weather, and countless other phenomena!
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+            {renderBackButton()}
+            <button onClick={() => goToPhase('transfer')} style={{ ...primaryButtonStyle, background: `linear-gradient(135deg, ${colors.success}, ${colors.accentAlt})` }}>
+              Real World Applications →
+            </button>
+          </div>
+        </div>
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const currentApp = realWorldApps[selectedApp];
+    const allAppsVisited = appsVisited.size >= realWorldApps.length;
+
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        color: colors.textPrimary,
+        overflow: 'hidden',
+      }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px', maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
+          <h2 style={{ ...typo.h2, marginBottom: '8px', textAlign: 'center' }}>Real-World Applications</h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>Gas laws in action everywhere</p>
+
+          {/* App tabs */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '8px' }}>
+            {realWorldApps.map((app, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setSelectedApp(i);
+                  setAppsVisited(prev => new Set([...prev, i]));
+                }}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  border: selectedApp === i ? 'none' : `1px solid ${colors.border}`,
+                  background: selectedApp === i ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentAlt})` : 'transparent',
+                  color: colors.textPrimary,
+                  fontSize: '14px',
+                  fontWeight: selectedApp === i ? 600 : 400,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.3s ease',
+                  boxShadow: selectedApp === i ? `0 4px 15px ${colors.accent}40` : 'none',
+                }}
+              >
+                {appsVisited.has(i) && <span style={{ marginRight: '6px' }}>✓</span>}
+                {app.icon} {app.title}
+              </button>
+            ))}
+          </div>
+
+          {/* Current app content */}
+          <div style={{ ...cardStyle, marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '36px' }}>{currentApp.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h2, color: colors.textPrimary }}>{currentApp.title}</h3>
+                <p style={{ ...typo.small, color: currentApp.color }}>{currentApp.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>{currentApp.description}</p>
+
+            <div style={{ padding: '16px', background: `${currentApp.color}15`, borderRadius: '12px', marginBottom: '16px' }}>
+              <h4 style={{ ...typo.body, color: currentApp.color, fontWeight: 600, marginBottom: '8px' }}>Gas Law Connection</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>{currentApp.connection}</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+              {currentApp.stats.map((stat, i) => (
+                <div key={i} style={{ padding: '12px', background: colors.bgInput, borderRadius: '10px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: currentApp.color }}>{stat.value}</div>
+                  <div style={{ ...typo.label, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>Industry Leaders</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {currentApp.companies.map((company, i) => (
+                  <span key={i} style={{ padding: '4px 10px', background: colors.bgInput, borderRadius: '6px', fontSize: '12px', color: colors.textSecondary }}>{company}</span>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setAppsVisited(prev => new Set([...prev, selectedApp]));
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                  setAppsVisited(prev => new Set([...prev, selectedApp + 1]));
+                }
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', background: `linear-gradient(135deg, ${currentApp.color}, ${colors.accent})` }}
+            >
+              {selectedApp < realWorldApps.length - 1 ? 'Next Application →' : 'Got It!'}
+            </button>
+          </div>
+
+          {/* Progress */}
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '8px' }}>
+            {appsVisited.size} of {realWorldApps.length} applications explored
+          </p>
+          <div style={{ width: '100%', height: '8px', background: colors.border, borderRadius: '4px', marginBottom: '24px' }}>
+            <div style={{
+              width: `${(appsVisited.size / realWorldApps.length) * 100}%`,
+              height: '100%',
+              background: `linear-gradient(90deg, ${colors.accent}, ${colors.accentAlt})`,
+              borderRadius: '4px',
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
+
+          {allAppsVisited && (
+            <button
+              onClick={() => goToPhase('test')}
+              style={{ ...primaryButtonStyle, background: `linear-gradient(135deg, ${colors.success}, ${colors.accentAlt})` }}
+            >
+              Take the Test →
+            </button>
+          )}
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
+            {renderBackButton()}
+          </div>
+        </div>
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    // Quiz complete view
+    if (quizComplete) {
       const percentage = (score / testQuestions.length) * 100;
+      const passed = percentage >= 70;
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-          <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${
-            percentage >= 70 ? 'bg-emerald-500/20' : 'bg-amber-500/20'
-          }`}>
-            <span className="text-5xl">{percentage >= 70 ? '🎉' : '📚'}</span>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+          color: colors.textPrimary,
+          overflow: 'hidden',
+        }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
+            <div style={{
+              width: '100px',
+              height: '100px',
+              borderRadius: '50%',
+              background: passed ? `${colors.success}20` : `${colors.warning}20`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ fontSize: '50px' }}>{passed ? '🎉' : '📚'}</span>
+            </div>
+
+            <h2 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '8px' }}>
+              {passed ? 'Excellent Work!' : 'Keep Learning!'}
+            </h2>
+
+            <div style={{ ...typo.h1, fontSize: '64px', color: passed ? colors.success : colors.warning, marginBottom: '8px' }}>
+              {score}/{testQuestions.length}
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              You scored {percentage.toFixed(0)}%
+            </p>
+
+            <button
+              onClick={() => {
+                if (passed) {
+                  goToPhase('mastery');
+                } else {
+                  setCurrentQuestion(0);
+                  setSelectedAnswer(null);
+                  setShowExplanation(false);
+                  setScore(0);
+                  setQuizComplete(false);
+                }
+              }}
+              style={primaryButtonStyle}
+            >
+              {passed ? 'Complete Lesson →' : 'Review & Try Again'}
+            </button>
           </div>
-
-          <h2 className="text-3xl font-bold text-white mb-2">
-            {percentage >= 90 ? 'Outstanding!' : percentage >= 70 ? 'Great Job!' : 'Keep Learning!'}
-          </h2>
-
-          <div className={`text-6xl font-bold mb-4 ${percentage >= 70 ? 'text-emerald-400' : 'text-amber-400'}`}>
-            {score}/{testQuestions.length}
-          </div>
-
-          <p className="text-slate-400 mb-8">You scored {percentage}%</p>
-
-          <button
-            onClick={() => {
-              if (percentage >= 70) {
-                goToPhase('mastery');
-              } else {
-                setShowTestResults(false);
-                setTestAnswers(Array(10).fill(-1));
-              }
-            }}
-            className="px-8 py-4 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
-            style={{ zIndex: 10 }}
-          >
-            {percentage >= 70 ? 'Complete Lesson' : 'Review & Retry'}
-          </button>
+          {renderNavDots()}
         </div>
       );
     }
 
-    const currentQuestion = testQuestions.findIndex((_, i) => testAnswers[i] === -1);
-    const questionIndex = currentQuestion === -1 ? testQuestions.length - 1 : currentQuestion;
-    const question = testQuestions[questionIndex];
+    // Quiz question view
+    const question = testQuestions[currentQuestion];
 
     return (
-      <div className="flex flex-col items-center p-6 max-w-2xl mx-auto">
-        <div className="flex items-center justify-between w-full mb-6">
-          <h2 className="text-xl font-bold text-white">Question {questionIndex + 1} of {testQuestions.length}</h2>
-          <div className="flex gap-1">
-            {testQuestions.map((_, i) => (
-              <div
-                key={i}
-                className={`w-3 h-3 rounded-full ${
-                  testAnswers[i] !== -1 ? 'bg-emerald-500' : i === questionIndex ? 'bg-violet-500' : 'bg-slate-600'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-slate-800/50 rounded-2xl p-6 mb-6 w-full border border-slate-700/50">
-          <p className="text-lg text-white font-medium">{question.question}</p>
-        </div>
-
-        <div className="grid gap-3 w-full mb-6">
-          {question.options.map((option, i) => (
-            <button
-              key={i}
-              onClick={() => handleTestAnswer(questionIndex, i)}
-              className={`p-4 rounded-xl text-left transition-all duration-300 ${
-                testAnswers[questionIndex] === i
-                  ? 'bg-violet-600/40 border-2 border-violet-400'
-                  : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-              }`}
-              style={{ zIndex: 10 }}
-            >
-              <span className="font-bold text-white mr-2">{String.fromCharCode(65 + i)}.</span>
-              <span className="text-slate-200">{option.text}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="flex gap-4">
-          {questionIndex > 0 && (
-            <button
-              onClick={() => {
-                setTestAnswers(prev => {
-                  const newAnswers = [...prev];
-                  newAnswers[questionIndex] = -1;
-                  return newAnswers;
-                });
-              }}
-              className="px-6 py-3 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600 transition-all"
-              style={{ zIndex: 10 }}
-            >
-              Previous
-            </button>
-          )}
-
-          {testAnswers[questionIndex] !== -1 && (
-            questionIndex < testQuestions.length - 1 ? (
-              <button
-                onClick={() => {}}
-                className="px-6 py-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
-                style={{ zIndex: 10 }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  if (testAnswers.every(a => a !== -1)) {
-                    setShowTestResults(true);
-                    onGameEvent?.({ type: 'test_completed', data: { score: calculateScore() } });
-                  }
-                }}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 transition-all"
-                style={{ zIndex: 10 }}
-              >
-                Submit Test
-              </button>
-            )
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] p-6 text-center relative overflow-hidden">
-      {/* Confetti effect */}
-      {Array.from({ length: 30 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-3 h-3 rounded-full animate-bounce"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            backgroundColor: ['#8b5cf6', '#06b6d4', '#f59e0b', '#10b981'][i % 4],
-            animationDelay: `${Math.random() * 2}s`,
-            animationDuration: `${2 + Math.random() * 2}s`
-          }}
-        />
-      ))}
-
-      <div className="relative z-10">
-        <div className="w-28 h-28 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center mb-8 mx-auto shadow-2xl shadow-violet-500/30">
-          <span className="text-6xl">🏆</span>
-        </div>
-
-        <h1 className="text-4xl font-bold text-white mb-4">Mastery Achieved!</h1>
-        <p className="text-xl text-slate-400 mb-8">You've mastered the Gas Laws!</p>
-
-        <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
-          {[
-            { icon: '📊', label: "Boyle's Law", value: 'Mastered' },
-            { icon: '🌡️', label: "Charles's Law", value: 'Mastered' },
-            { icon: '🎈', label: 'Ideal Gas', value: 'Mastered' }
-          ].map((item, i) => (
-            <div key={i} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-              <div className="text-3xl mb-2">{item.icon}</div>
-              <div className="text-xs text-slate-400">{item.label}</div>
-              <div className="text-sm font-bold text-violet-400">{item.value}</div>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        color: colors.textPrimary,
+        overflow: 'hidden',
+      }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px', maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
+          {/* Progress */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h2 style={{ ...typo.h3, color: colors.textPrimary }}>Question {currentQuestion + 1} of {testQuestions.length}</h2>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: i < currentQuestion ? colors.success : i === currentQuestion ? colors.accent : colors.border,
+                }} />
+              ))}
             </div>
-          ))}
-        </div>
-
-        <div className="bg-emerald-900/30 rounded-xl p-4 border border-emerald-500/30 mb-8 max-w-md mx-auto">
-          <div className="text-3xl font-bold text-emerald-400 mb-1">{calculateScore()}/10</div>
-          <div className="text-sm text-emerald-300">Test Score</div>
-        </div>
-
-        <button
-          onClick={() => {
-            playSound('complete');
-            onGameEvent?.({ type: 'mastery_achieved', data: { score: calculateScore() } });
-          }}
-          className="px-10 py-5 bg-gradient-to-r from-violet-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl hover:shadow-lg hover:shadow-violet-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
-          style={{ zIndex: 10 }}
-        >
-          Complete Lesson 🎓
-        </button>
-      </div>
-    </div>
-  );
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MAIN RENDER
-  // ═══════════════════════════════════════════════════════════════════════════
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-
-      {/* Ambient glow effects */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-
-      {/* Fixed header with phase dots */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-4 max-w-4xl mx-auto">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🎈</span>
-            <span className="font-semibold text-white">Gas Laws</span>
           </div>
 
-          {/* Phase dots */}
-          <div className="flex items-center gap-2">
-            {phaseOrder.map((p, index) => {
-              const currentIndex = phaseOrder.indexOf(phase);
+          {/* Scenario */}
+          <div style={{ ...cardStyle, marginBottom: '16px' }}>
+            <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>SCENARIO</p>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>{question.scenario}</p>
+          </div>
+
+          {/* Question */}
+          <div style={{ ...cardStyle, marginBottom: '24px', borderColor: colors.accent }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>{question.question}</p>
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+            {question.options.map((option) => {
+              const isSelected = selectedAnswer === option.id;
+              const showResult = showExplanation;
+              const isCorrect = option.correct;
+
               return (
                 <button
-                  key={p}
-                  onClick={() => { if (index < currentIndex) goToPhase(p); }}
-                  className={`transition-all duration-300 rounded-full ${
-                    p === phase
-                      ? 'h-2 w-6 bg-violet-500'
-                      : index < currentIndex
-                        ? 'h-2 w-2 bg-emerald-500 cursor-pointer hover:bg-emerald-400'
-                        : 'h-2 w-2 bg-slate-600'
-                  }`}
-                  style={{ zIndex: 10 }}
-                />
+                  key={option.id}
+                  onClick={() => !showExplanation && handleAnswerSelect(option.id)}
+                  disabled={showExplanation}
+                  style={{
+                    padding: '16px 20px',
+                    borderRadius: '12px',
+                    border: `2px solid ${
+                      showResult
+                        ? isCorrect ? colors.success : isSelected ? colors.error : colors.border
+                        : isSelected ? colors.accent : colors.border
+                    }`,
+                    background: showResult
+                      ? isCorrect ? `${colors.success}20` : isSelected ? `${colors.error}20` : colors.bgCard
+                      : isSelected ? `${colors.accent}20` : colors.bgCard,
+                    color: colors.textPrimary,
+                    textAlign: 'left',
+                    cursor: showExplanation ? 'default' : 'pointer',
+                    transition: 'all 0.3s ease',
+                    opacity: showResult && !isCorrect && !isSelected ? 0.5 : 1,
+                  }}
+                >
+                  <span style={{ fontWeight: 700 }}>{option.id.toUpperCase()})</span>
+                  <span style={{ marginLeft: '8px' }}>{option.label}</span>
+                </button>
               );
             })}
           </div>
 
-          <div className="text-sm text-slate-400">
-            {phaseOrder.indexOf(phase) + 1} / {phaseOrder.length}
+          {/* Explanation */}
+          {showExplanation && (
+            <div style={{ ...cardStyle, background: `${colors.success}15`, borderColor: colors.success, marginBottom: '24px' }}>
+              <h4 style={{ ...typo.body, color: colors.success, fontWeight: 600, marginBottom: '8px' }}>Explanation</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>{question.explanation}</p>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            {!showExplanation && selectedAnswer && (
+              <button onClick={handleConfirmAnswer} style={primaryButtonStyle}>
+                Check Answer
+              </button>
+            )}
+            {showExplanation && (
+              <button onClick={handleNextQuestion} style={primaryButtonStyle}>
+                {currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results'}
+              </button>
+            )}
           </div>
         </div>
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      {/* Content area with padding for fixed header */}
-      <div className="relative z-10 pt-20 pb-8">
-        {phase === 'hook' && renderHook()}
-        {phase === 'predict' && renderPredict()}
-        {phase === 'play' && renderPlay()}
-        {phase === 'review' && renderReview()}
-        {phase === 'twist_predict' && renderTwistPredict()}
-        {phase === 'twist_play' && renderTwistPlay()}
-        {phase === 'twist_review' && renderTwistReview()}
-        {phase === 'transfer' && renderTransfer()}
-        {phase === 'test' && renderTest()}
-        {phase === 'mastery' && renderMastery()}
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        color: colors.textPrimary,
+        overflow: 'hidden',
+      }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
+          <div style={{
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentAlt})`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '24px',
+            boxShadow: `0 8px 30px ${colors.accent}40`,
+          }}>
+            <span style={{ fontSize: '60px' }}>🏆</span>
+          </div>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '8px' }}>
+            Gas Laws Master!
+          </h1>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px', maxWidth: '400px' }}>
+            You've mastered the relationships between pressure, volume, and temperature!
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px', maxWidth: '400px' }}>
+            {[
+              { icon: '📊', label: "Boyle's Law", value: 'Mastered' },
+              { icon: '🌡️', label: "Charles's Law", value: 'Mastered' },
+              { icon: '🎈', label: 'Ideal Gas Law', value: 'Mastered' }
+            ].map((item, i) => (
+              <div key={i} style={{ ...cardStyle, textAlign: 'center' }}>
+                <div style={{ fontSize: '28px', marginBottom: '8px' }}>{item.icon}</div>
+                <div style={{ ...typo.label, color: colors.textMuted }}>{item.label}</div>
+                <div style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ ...cardStyle, background: `${colors.success}15`, borderColor: colors.success, marginBottom: '32px', maxWidth: '300px' }}>
+            <div style={{ ...typo.h1, color: colors.success }}>{score}/10</div>
+            <div style={{ ...typo.small, color: colors.success }}>Test Score</div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button onClick={() => goToPhase('hook')} style={secondaryButtonStyle}>
+              Play Again
+            </button>
+            <a href="/" style={{ ...primaryButtonStyle, textDecoration: 'none' }}>
+              Return to Dashboard
+            </a>
+          </div>
+        </div>
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 };
 
 export default GasLawsRenderer;

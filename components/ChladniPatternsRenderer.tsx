@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 interface ChladniPatternsRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -10,7 +11,7 @@ interface ChladniPatternsRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -24,12 +25,24 @@ const colors = {
   nodal: '#0ea5e9',
 };
 
+const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+
 const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
-  phase,
+  phase: phaseProp,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state for self-managing navigation
+  const [internalPhaseIndex, setInternalPhaseIndex] = useState(0);
+
+  // Use gamePhase prop if provided, otherwise fall back to phase prop, or use internal state
+  const externalPhase = gamePhase || phaseProp;
+  const currentPhase = externalPhase || PHASES[internalPhaseIndex];
+  // Validate phase - if invalid, default to 'hook'
+  const phase = PHASES.includes(currentPhase as typeof PHASES[number]) ? currentPhase : 'hook';
+
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -67,6 +80,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistResult, setShowTwistResult] = useState(false);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -127,25 +141,25 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
   const transferApplications = [
     {
       title: 'Musical Instrument Design',
-      description: 'Violin makers use Chladni patterns to see how the top plate vibrates. The patterns reveal if the wood is properly shaped for good sound.',
+      description: 'Violin makers use Chladni patterns to see how the top plate vibrates at frequencies from 200 Hz to 5000 Hz. A typical violin plate is tested at over 50 different frequencies, with patterns revealing if the 3 mm thick spruce wood is properly shaped for good sound.',
       question: 'Why do luthiers want to see specific Chladni patterns on violins?',
       answer: 'Certain patterns indicate the wood will vibrate efficiently at frequencies important for the violin\'s tone. Symmetrical patterns mean even vibration, which produces a balanced, resonant sound.',
     },
     {
       title: 'Speaker Cone Testing',
-      description: 'Audio engineers use laser vibrometry (modern Chladni patterns) to identify "breakup modes" where speaker cones stop moving as a piston.',
+      description: 'Audio engineers use laser vibrometry (modern Chladni patterns) to identify "breakup modes" where speaker cones stop moving as a piston. High-end speakers are tested from 20 Hz to 20000 Hz, with measurements accurate to 0.01 mm amplitude.',
       question: 'What do complex Chladni patterns on a speaker cone indicate?',
       answer: 'Complex patterns show the cone is breaking up into multiple vibrating zones at that frequency. This causes distortion. Good speakers are designed so breakup occurs above the audible range.',
     },
     {
       title: 'Earthquake Engineering',
-      description: 'Building vibration modes are like 3D Chladni patterns. Engineers identify nodal floors (floors that don\'t move much) during earthquakes.',
+      description: 'Building vibration modes are like 3D Chladni patterns. Engineers identify nodal floors during earthquakes. A 100 m tall building might have its first mode at 0.5 Hz, second mode at 1.5 Hz, creating distinct vibration patterns.',
       question: 'Where would you want critical equipment in a vibrating building?',
       answer: 'At nodal points (floors) where vibration amplitude is minimal, like sand collecting on nodal lines. Different earthquake frequencies excite different modes, so design must consider multiple scenarios.',
     },
     {
       title: 'Cymbal Manufacturing',
-      description: 'Cymbal makers hammer specific areas based on how they want the cymbal to vibrate. Different zones produce different overtones.',
+      description: 'Cymbal makers hammer specific areas based on how they want the cymbal to vibrate. A 20 inch ride cymbal vibrates from 300 Hz to 15000 Hz. Different zones produce different overtones, with hammering affecting vibration by up to 30%.',
       question: 'How do Chladni patterns help cymbal design?',
       answer: 'Patterns show which areas move most for each frequency. Hammering nodal lines changes the cymbal\'s overtone structure minimally, while hammering antinodal areas (where sand moves away) has maximum effect on that frequency.',
     },
@@ -301,6 +315,158 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
     return particles;
   }, [isVibrating, modeM, modeN]);
 
+  // Get current phase index for progress tracking
+  const currentPhaseIndex = PHASES.indexOf(phase as typeof PHASES[number]);
+  const progressPercent = ((currentPhaseIndex + 1) / PHASES.length) * 100;
+
+  // Navigation handlers
+  const handleNext = useCallback(() => {
+    if (externalPhase) {
+      // External control mode - call onPhaseComplete
+      onPhaseComplete?.();
+    } else {
+      // Self-managing mode - advance internal state
+      setInternalPhaseIndex(prev => Math.min(prev + 1, PHASES.length - 1));
+    }
+  }, [externalPhase, onPhaseComplete]);
+
+  const handleBack = useCallback(() => {
+    if (externalPhase) {
+      onPhaseComplete?.();
+    } else {
+      setInternalPhaseIndex(prev => Math.max(prev - 1, 0));
+    }
+  }, [externalPhase, onPhaseComplete]);
+
+  const handleDotClick = useCallback((index: number) => {
+    if (externalPhase) {
+      onPhaseComplete?.();
+    } else {
+      setInternalPhaseIndex(index);
+    }
+  }, [externalPhase, onPhaseComplete]);
+
+  // Common button styles with transitions
+  const buttonBaseStyle = {
+    transition: 'all 0.2s ease',
+  };
+
+  // Navigation bar component with fixed position at top
+  const renderNavBar = (showBack: boolean = true) => (
+    <nav
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 16px',
+        background: colors.bgDark,
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1000,
+      }}
+      aria-label="navigation"
+    >
+      {showBack && currentPhaseIndex > 0 ? (
+        <button
+          onClick={handleBack}
+          aria-label="Back"
+          style={{
+            ...buttonBaseStyle,
+            padding: '10px 20px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textSecondary}`,
+            background: 'transparent',
+            color: colors.textSecondary,
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: 700,
+          }}
+        >
+          Back
+        </button>
+      ) : (
+        <div style={{ width: '80px' }} />
+      )}
+
+      {/* Navigation dots */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        {PHASES.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => handleDotClick(i)}
+            aria-label={`Go to ${p} phase`}
+            title={p}
+            style={{
+              ...buttonBaseStyle,
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              border: 'none',
+              background: i === currentPhaseIndex
+                ? colors.accent
+                : i < currentPhaseIndex
+                ? colors.success
+                : 'rgba(255,255,255,0.3)',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={handleNext}
+        aria-label="Next"
+        style={{
+          ...buttonBaseStyle,
+          padding: '10px 20px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: 'none',
+          background: `linear-gradient(135deg, ${colors.accent} 0%, #0d9488 100%)`,
+          color: 'white',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: 700,
+        }}
+      >
+        Next
+      </button>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div
+      role="progressbar"
+      aria-valuenow={progressPercent}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      style={{
+        position: 'fixed',
+        top: '68px',
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: 'rgba(255,255,255,0.1)',
+        zIndex: 999,
+      }}
+    >
+      <div
+        style={{
+          width: `${progressPercent}%`,
+          height: '100%',
+          background: colors.accent,
+          transition: 'width 0.3s ease',
+        }}
+      />
+    </div>
+  );
+
   const renderVisualization = (interactive: boolean) => {
     const width = 400;
     const height = 380;
@@ -316,6 +482,8 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '500px' }}
+          role="img"
+          aria-label="Chladni pattern visualization showing vibrating plate with sand particles"
         >
           <defs>
             {/* Premium metal plate gradient - brushed steel effect */}
@@ -451,6 +619,18 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             filter="url(#chladPlateInnerShadow)"
           />
 
+          {/* Plate label */}
+          <text
+            x={plateX + plateSize / 2}
+            y={plateY - 10}
+            textAnchor="middle"
+            fill={colors.textSecondary}
+            fontSize="12"
+            fontWeight="bold"
+          >
+            Metal Plate
+          </text>
+
           {/* Plate surface highlight */}
           <rect
             x={plateX + 2}
@@ -487,17 +667,28 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             <g filter="url(#chladNodalGlowFilter)">
               {/* Draw approximate nodal lines for current mode */}
               {Array.from({ length: modeM }).map((_, i) => (
-                <line
-                  key={`v${i}`}
-                  x1={plateX + (plateSize * (i + 0.5)) / modeM}
-                  y1={plateY}
-                  x2={plateX + (plateSize * (i + 0.5)) / modeM}
-                  y2={plateY + plateSize}
-                  stroke="url(#chladNodalGlow)"
-                  strokeWidth={3}
-                  strokeDasharray="8,4"
-                  opacity={0.7 + Math.sin(time * 6) * 0.2}
-                />
+                <g key={`v${i}`}>
+                  <line
+                    x1={plateX + (plateSize * (i + 0.5)) / modeM}
+                    y1={plateY}
+                    x2={plateX + (plateSize * (i + 0.5)) / modeM}
+                    y2={plateY + plateSize}
+                    stroke="url(#chladNodalGlow)"
+                    strokeWidth={3}
+                    strokeDasharray="8,4"
+                    opacity={0.7 + Math.sin(time * 6) * 0.2}
+                  />
+                  {i === 0 && (
+                    <text
+                      x={plateX + (plateSize * (i + 0.5)) / modeM + 8}
+                      y={plateY + 20}
+                      fill={colors.nodal}
+                      fontSize="10"
+                    >
+                      Nodal Line
+                    </text>
+                  )}
+                </g>
               ))}
               {Array.from({ length: modeN }).map((_, i) => (
                 <line
@@ -517,7 +708,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
 
           {/* Sand particles with premium gradient and glow */}
           <g filter="url(#chladSandGlow)">
-            {generateSandParticles.map((p, i) => (
+            {generateSandParticles.slice(0, 100).map((p, i) => (
               <circle
                 key={i}
                 cx={plateX + (p.x * plateSize) / 300}
@@ -528,6 +719,17 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
               />
             ))}
           </g>
+
+          {/* Sand label */}
+          <text
+            x={plateX + 20}
+            y={plateY + plateSize - 15}
+            fill={colors.sand}
+            fontSize="11"
+            fontWeight="bold"
+          >
+            Sand Particles
+          </text>
 
           {/* Vibration indicator - speaker/driver visualization */}
           {isVibrating && (
@@ -548,8 +750,26 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                 fill="url(#chladSpeakerGlow)"
                 opacity={0.4}
               />
+              <text
+                x={width / 2}
+                y={plateY + plateSize + 55}
+                textAnchor="middle"
+                fill={colors.accent}
+                fontSize="10"
+              >
+                Speaker ({frequency} Hz)
+              </text>
             </g>
           )}
+
+          {/* Legend inside SVG */}
+          <g transform={`translate(${width - 110}, 15)`}>
+            <rect x="0" y="0" width="100" height="50" fill="rgba(0,0,0,0.5)" rx="4" />
+            <circle cx="12" cy="15" r="5" fill="url(#chladSandGrain)" />
+            <text x="22" y="18" fill={colors.textSecondary} fontSize="10">Sand</text>
+            <line x1="7" y1="35" x2="25" y2="35" stroke={colors.nodal} strokeWidth="2" strokeDasharray="4,2" />
+            <text x="30" y="38" fill={colors.textSecondary} fontSize="10">Node</text>
+          </g>
         </svg>
 
         {/* Labels moved outside SVG using typo system */}
@@ -561,14 +781,14 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
           padding: `0 ${typo.cardPadding}`,
         }}>
           {/* Legend */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: typo.elementGap }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: typo.elementGap }} role="legend">
             <div style={{
               width: '12px',
               height: '12px',
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #d97706 100%)',
             }} />
-            <span style={{ color: colors.textMuted, fontSize: typo.label }}>Sand</span>
+            <span style={{ color: colors.textSecondary, fontSize: typo.label }}>Sand</span>
             {showNodalLines && (
               <>
                 <div style={{
@@ -578,13 +798,13 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                   background: 'linear-gradient(90deg, transparent, #38bdf8, transparent)',
                   borderRadius: '2px',
                 }} />
-                <span style={{ color: colors.textMuted, fontSize: typo.label }}>Nodal lines</span>
+                <span style={{ color: colors.textSecondary, fontSize: typo.label }}>Nodal lines</span>
               </>
             )}
           </div>
 
           {/* Mode indicator */}
-          <div style={{ color: colors.textMuted, fontSize: typo.label }}>
+          <div style={{ color: colors.textSecondary, fontSize: typo.label }}>
             Mode ({modeM}, {modeN})
           </div>
         </div>
@@ -609,12 +829,16 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             <button
               onClick={() => setIsVibrating(!isVibrating)}
               style={{
+                ...buttonBaseStyle,
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isVibrating ? colors.error : colors.success,
+                background: isVibrating
+                  ? `linear-gradient(135deg, ${colors.error} 0%, #dc2626 100%)`
+                  : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
                 color: 'white',
-                fontWeight: 'bold',
+                fontWeight: 700,
                 cursor: 'pointer',
                 fontSize: '14px',
               }}
@@ -640,7 +864,8 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
           step="50"
           value={frequency}
           onChange={(e) => setFrequency(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent, background: 'rgba(20, 184, 166, 0.2)' }}
+          aria-label="Frequency slider"
         />
       </div>
 
@@ -666,170 +891,22 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
           Current Mode: ({modeM}, {modeN})
         </div>
         <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          Higher frequency → More complex pattern
+          Higher frequency = More complex pattern
         </div>
       </div>
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-
-  // Real-world applications data for expanded transfer phase
-  const realWorldApps = [
-    {
-      icon: '🎻',
-      title: 'Musical Instrument Design',
-      short: 'Instrument Acoustics',
-      tagline: 'Crafting perfect sound through vibration analysis',
-      description: 'Luthiers and instrument makers use Chladni patterns to analyze how the body of stringed instruments vibrates. By sprinkling fine particles on violin tops, guitar bodies, and piano soundboards, craftsmen can see the modal shapes that determine an instrument\'s tonal quality. Different wood thicknesses, bracing patterns, and arching profiles create distinct Chladni figures, allowing makers to tune instruments before they\'re completed.',
-      connection: 'Just like sand reveals nodal lines on our vibrating plate, fine powder shows luthiers exactly where a violin top moves and where it stays still. The symmetry and complexity of these patterns directly correlate to the richness and balance of the instrument\'s sound.',
-      howItWorks: 'When a violin plate is excited at specific frequencies, it vibrates in characteristic mode shapes. Areas of maximum displacement throw off particles, while nodal lines retain them. Master luthiers compare these patterns against reference instruments (like Stradivarius violins) to guide their carving and achieve optimal acoustic response.',
-      stats: [
-        { value: '70+', label: 'Distinct modes in a violin top below 5 kHz' },
-        { value: '2-3mm', label: 'Precision in thickness graduation' },
-        { value: '300+', label: 'Years of Chladni-guided lutherie' }
-      ],
-      examples: [
-        'Stradivarius violin analysis and replication studies',
-        'Classical guitar bracing pattern optimization',
-        'Piano soundboard resonance mapping',
-        'Drum head tuning and membrane selection'
-      ],
-      companies: [
-        'Yamaha Musical Instruments',
-        'C.F. Martin & Company',
-        'Steinway & Sons',
-        'Taylor Guitars'
-      ],
-      futureImpact: 'AI-assisted lutherie is emerging, where machine learning algorithms analyze Chladni patterns to predict acoustic quality before an instrument is assembled. 3D printing combined with modal analysis may enable custom-optimized instruments tailored to individual musicians.',
-      color: '#f59e0b'
-    },
-    {
-      icon: '✈️',
-      title: 'Structural Vibration Analysis',
-      short: 'Aerospace & Automotive',
-      tagline: 'Ensuring safety through resonance understanding',
-      description: 'Engineers in aerospace and automotive industries use modal analysis—a sophisticated extension of Chladni\'s principles—to identify dangerous resonant frequencies in aircraft wings, car body panels, and engine components. Understanding where structures vibrate helps prevent catastrophic failures and reduces noise, vibration, and harshness (NVH) in vehicles.',
-      connection: 'The nodal lines we observe on our simple plate scale up to complex 3D structures. Aircraft wings, car doors, and bridge decks all have natural modes where certain regions move dramatically while others remain relatively still—exactly like our Chladni patterns.',
-      howItWorks: 'Engineers use laser vibrometry and accelerometer arrays to measure vibration patterns across structures. Finite element analysis (FEA) software predicts modal shapes before physical testing. By comparing predicted and measured Chladni-like patterns, engineers validate designs and identify resonance risks that could cause fatigue failure or uncomfortable vibrations.',
-      stats: [
-        { value: '1000+', label: 'Modes analyzed in modern aircraft' },
-        { value: '99.9%', label: 'Correlation target for FEA validation' },
-        { value: '$2M+', label: 'Saved per avoided design iteration' }
-      ],
-      examples: [
-        'Boeing 787 composite wing flutter analysis',
-        'Formula 1 car chassis NVH optimization',
-        'Wind turbine blade resonance mapping',
-        'Suspension bridge deck vibration studies'
-      ],
-      companies: [
-        'Boeing',
-        'Airbus',
-        'Tesla',
-        'General Motors',
-        'Siemens'
-      ],
-      futureImpact: 'Real-time structural health monitoring using embedded sensors will continuously track modal patterns, detecting damage or fatigue before failure occurs. Digital twins will predict vibration behavior throughout a structure\'s entire service life.',
-      color: '#3b82f6'
-    },
-    {
-      icon: '🧹',
-      title: 'Ultrasonic Cleaning Optimization',
-      short: 'Industrial Cleaning',
-      tagline: 'Maximizing cleaning power through standing wave engineering',
-      description: 'Ultrasonic cleaning tanks rely on standing waves in liquid to create cavitation bubbles that scrub contaminants from surfaces. The placement of nodal and antinodal regions determines cleaning effectiveness. Engineers design tank geometries and transducer arrays to create optimal Chladni-like patterns in the cleaning fluid, ensuring uniform cavitation across the entire working volume.',
-      connection: 'Just as sand collects at nodal lines on our plate, cavitation intensity varies spatially in ultrasonic tanks. Parts placed at antinodal regions receive maximum cleaning, while those at nodes may be undertreated. Understanding these standing wave patterns is crucial for consistent results.',
-      howItWorks: 'Piezoelectric transducers excite the tank at ultrasonic frequencies (typically 20-80 kHz), creating standing pressure waves in the cleaning solution. Multiple transducers operating at slightly different frequencies or with sweep modulation help distribute cavitation more uniformly. Hydrophone mapping reveals the 3D "Chladni pattern" of cavitation intensity.',
-      stats: [
-        { value: '40 kHz', label: 'Common industrial cleaning frequency' },
-        { value: '50,000', label: 'Cavitation implosions per second per cm³' },
-        { value: '10x', label: 'Cleaning efficiency vs. manual methods' }
-      ],
-      examples: [
-        'Semiconductor wafer cleaning in chip fabrication',
-        'Surgical instrument sterilization',
-        'Jewelry and precision parts cleaning',
-        'Automotive fuel injector restoration'
-      ],
-      companies: [
-        'Branson Ultrasonics',
-        'Crest Ultrasonics',
-        'Blue Wave Ultrasonics',
-        'Elma Schmidbauer'
-      ],
-      futureImpact: 'Smart ultrasonic systems will use real-time acoustic monitoring to adapt frequency and power, automatically optimizing the standing wave pattern for different part geometries. AI-controlled multi-frequency arrays will eliminate dead zones entirely.',
-      color: '#14b8a6'
-    },
-    {
-      icon: '🔊',
-      title: 'Speaker Cone Design',
-      short: 'Audio Engineering',
-      tagline: 'Engineering perfect sound reproduction',
-      description: 'Speaker designers use laser vibrometry to visualize Chladni patterns on speaker cones, revealing "breakup modes" where the cone stops moving as a rigid piston and begins flexing. These breakup patterns cause distortion and coloration in audio. By optimizing cone materials, geometry, and suspension, engineers push breakup frequencies above the audible range.',
-      connection: 'A speaker cone is essentially a circular Chladni plate. At low frequencies, it moves uniformly (like our plate before patterns form). As frequency increases, standing wave patterns emerge—the cone\'s equivalent of our nodal lines—causing the sound to become distorted.',
-      howItWorks: 'Scanning laser vibrometers measure thousands of points across a cone\'s surface while it plays test tones. Software reconstructs the vibration pattern at each frequency, showing exactly how the cone deforms. Engineers use this data to choose materials (paper, polypropylene, Kevlar, beryllium) and shapes (straight, curved, ribbed) that delay breakup onset.',
-      stats: [
-        { value: '15 kHz+', label: 'Target breakup frequency for tweeters' },
-        { value: '0.01mm', label: 'Vibrometer measurement precision' },
-        { value: '120 dB', label: 'Dynamic range in premium speakers' }
-      ],
-      examples: [
-        'Beryllium tweeter dome development',
-        'Subwoofer cone material optimization',
-        'Studio monitor flat response design',
-        'Automotive speaker cabin integration'
-      ],
-      companies: [
-        'Bowers & Wilkins',
-        'JBL Professional',
-        'Focal',
-        'KEF',
-        'Harman International'
-      ],
-      futureImpact: 'Metamaterial speaker cones with engineered microstructures will control vibration patterns at the molecular level. Active cone materials with embedded sensors and actuators may dynamically suppress breakup modes in real-time.',
-      color: '#8b5cf6'
-    }
-  ];
-
   // HOOK PHASE
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar(false)}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              🎵 Seeing Sound
+              Seeing Sound
             </h1>
             <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
               What if you could see the patterns hidden in vibrations?
@@ -845,11 +922,11 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 In 1787, Ernst Chladni discovered that sprinkling sand on a vibrating metal
                 plate reveals beautiful geometric patterns - different for each musical note!
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                 These "Chladni figures" let us see the hidden structure of sound waves.
               </p>
             </div>
@@ -860,22 +937,38 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                💡 Press "Vibrate" to see where the sand collects!
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
+                Press "Vibrate" to see where the sand collects!
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction →')}
       </div>
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
+    const selectedCount = prediction ? 1 : 0;
+    const totalRequired = 1;
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+          {/* Progress indicator for predict phase */}
+          <div style={{
+            padding: '12px 16px',
+            background: 'rgba(20, 184, 166, 0.1)',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            textAlign: 'center',
+          }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Progress: {selectedCount} of {totalRequired} prediction made
+            </span>
+          </div>
+
           {renderVisualization(false)}
 
           <div style={{
@@ -884,7 +977,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 What You're Looking At:</h3>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
               A metal plate covered with sand particles (yellow dots). The plate can be
               vibrated at different frequencies by a speaker underneath.
@@ -893,7 +986,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
 
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              🤔 When the plate vibrates, where will the sand go?
+              When the plate vibrates, where will the sand go?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {predictions.map((p) => (
@@ -902,6 +995,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(20, 184, 166, 0.2)' : 'transparent',
@@ -917,7 +1011,6 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
       </div>
     );
   }
@@ -926,11 +1019,26 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Chladni Patterns</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Change the frequency to see different vibration modes
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            background: 'rgba(20, 184, 166, 0.15)',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Watch how sand particles move toward the nodal lines (areas of zero vibration) as you change the frequency.
             </p>
           </div>
 
@@ -943,7 +1051,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>🔬 Try These Experiments:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Start at low frequency (100 Hz) - simple pattern</li>
               <li>Increase to 300 Hz - more complex pattern</li>
@@ -951,8 +1059,23 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
               <li>Toggle nodal lines to understand the structure</li>
             </ul>
           </div>
+
+          <div style={{
+            background: 'rgba(20, 184, 166, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Real-World Applications:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+              This technology is important in engineering and design. Musical instrument makers use
+              Chladni patterns to design violins and guitars. Engineers apply this principle to
+              test car body panels and aircraft components. The real-world application of standing
+              wave analysis helps us build better speakers and audio equipment.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review →')}
       </div>
     );
   }
@@ -963,7 +1086,9 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -972,11 +1097,16 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
+              {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
               Sand collects along nodal lines - places where the plate doesn't move!
             </p>
+          </div>
+
+          {/* Visual diagram for review */}
+          <div style={{ margin: '16px' }}>
+            {renderVisualization(false)}
           </div>
 
           <div style={{
@@ -985,38 +1115,64 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 The Physics of Standing Waves</h3>
+            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Standing Waves</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>Why Your Observation Matters:</strong> As you observed during the experiment,
+                the sand collects in specific lines. This happens because these are the nodal lines - places where the plate
+                experiences zero vibration due to destructive interference.
+              </p>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Standing Waves:</strong> When a plate
                 vibrates at resonant frequencies, waves reflect from the edges and interfere, creating
-                standing waves with fixed nodal lines.
+                standing waves with fixed nodal lines. Therefore, the pattern you saw is the result of wave superposition.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Nodes vs Antinodes:</strong> Nodal lines
+                <strong style={{ color: colors.textPrimary }}>Nodes vs Antinodes:</strong> The key insight is that nodal lines
                 are where destructive interference creates zero motion. Antinodes have maximum vibration.
-                Sand is bounced away from antinodes and settles at nodes.
+                Because sand is bounced away from antinodes by the vibration, it settles at nodes where there's no motion.
+              </p>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>The Formula:</strong> For a square plate, the Chladni equation
+                shows that amplitude = cos(m*pi*x/L)*cos(n*pi*y/L) - cos(n*pi*x/L)*cos(m*pi*y/L), where m and n are mode numbers.
+                Sand collects where this equation equals zero.
               </p>
               <p>
                 <strong style={{ color: colors.textPrimary }}>Modes:</strong> Each resonant frequency
                 creates a unique "mode" with its own pattern. Higher frequencies = more complex patterns
-                with more nodal lines.
+                with more nodal lines. This demonstrates the principle of standing wave formation.
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist! →')}
       </div>
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
+    const selectedCount = twistPrediction ? 1 : 0;
+    const totalRequired = 1;
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+          {/* Progress indicator */}
+          <div style={{
+            padding: '12px 16px',
+            background: 'rgba(245, 158, 11, 0.1)',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            textAlign: 'center',
+          }}>
+            <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Progress: {selectedCount} of {totalRequired} prediction made
+            </span>
+          </div>
+
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>🔄 The Twist</h2>
+            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
               What happens if we double the frequency?
             </p>
@@ -1030,7 +1186,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 The Setup:</h3>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
               You've seen a pattern at 200 Hz. Now imagine we increase to 400 Hz -
               a higher-pitched sound with more energy vibrating the plate.
@@ -1039,7 +1195,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
 
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              🤔 When we double the frequency, what happens to the pattern?
+              When we double the frequency, what happens to the pattern?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {twistPredictions.map((p) => (
@@ -1048,6 +1204,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1063,7 +1220,6 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction →')}
       </div>
     );
   }
@@ -1072,11 +1228,26 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Frequency vs Pattern</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Sweep through frequencies and watch the pattern evolve
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            background: 'rgba(245, 158, 11, 0.15)',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.warning}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.warning }}>Observe:</strong> Notice how the number of nodal lines increases as you raise the frequency. Each mode has its unique signature pattern.
             </p>
           </div>
 
@@ -1090,14 +1261,13 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `3px solid ${colors.warning}`,
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>💡 Key Observation:</h4>
+            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Higher frequency = shorter wavelength = more nodes can fit on the plate = more
               complex pattern. Each "mode" has its own unique signature!
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation →')}
       </div>
     );
   }
@@ -1108,7 +1278,9 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1117,11 +1289,16 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
+              {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
               Higher frequency creates more complex patterns with more nodal lines!
             </p>
+          </div>
+
+          {/* Visual diagram for twist review */}
+          <div style={{ margin: '16px' }}>
+            {renderVisualization(false)}
           </div>
 
           <div style={{
@@ -1130,7 +1307,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>🔬 Mode Numbers Explained</h3>
+            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Mode Numbers Explained</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Mode (m, n):</strong> Each pattern is
@@ -1139,7 +1316,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
               </p>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Frequency Relationship:</strong> Higher
-                modes have higher resonant frequencies. The relationship follows f ∝ √(m² + n²),
+                modes have higher resonant frequencies. The relationship follows f is proportional to the square root of (m squared + n squared),
                 meaning complexity increases with frequency.
               </p>
               <p>
@@ -1149,25 +1326,30 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge →')}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const completedCount = transferCompleted.size;
+    const totalApps = transferApplications.length;
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              🌍 Real-World Applications
+              Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Chladni patterns have practical uses in acoustics and engineering
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            {/* Progress indicator for transfer phase */}
+            <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+              Progress: {completedCount} of {totalApps} applications completed
             </p>
           </div>
 
@@ -1185,7 +1367,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
                 {transferCompleted.has(index) && (
-                  <span style={{ color: colors.success }}>✓</span>
+                  <span style={{ color: colors.success }}>Completed</span>
                 )}
               </div>
               <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>
@@ -1198,38 +1380,70 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                 marginBottom: '8px',
               }}>
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
-                  💭 {app.question}
+                  {app.question}
                 </p>
               </div>
-              {!transferCompleted.has(index) ? (
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                {!transferCompleted.has(index) ? (
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      ...buttonBaseStyle,
+                      padding: '12px 20px',
+                      minHeight: '44px',
+                      borderRadius: '6px',
+                      border: `1px solid ${colors.accent}`,
+                      background: `linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(13, 148, 136, 0.1) 100%)`,
+                      color: colors.accent,
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                    }}
+                  >
+                    Reveal Answer
+                  </button>
+                ) : (
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    borderLeft: `3px solid ${colors.success}`,
+                    marginBottom: '12px',
+                    width: '100%',
+                  }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400 }}>{app.answer}</p>
+                  </div>
+                )}
                 <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                  onClick={() => {
+                    if (!transferCompleted.has(index)) {
+                      setTransferCompleted(new Set([...transferCompleted, index]));
+                    }
+                    if (index < transferApplications.length - 1) {
+                      setCurrentTransferApp(index + 1);
+                    }
+                  }}
+                  data-action="got-it"
+                  aria-label="Got it, continue to next application"
                   style={{
-                    padding: '8px 16px',
+                    ...buttonBaseStyle,
+                    padding: '10px 20px',
+                    minHeight: '44px',
                     borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
+                    border: 'none',
+                    background: `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
+                    color: 'white',
                     cursor: 'pointer',
-                    fontSize: '13px',
+                    fontSize: '14px',
+                    fontWeight: 700,
                   }}
                 >
-                  Reveal Answer
+                  Got it
                 </button>
-              ) : (
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  borderLeft: `3px solid ${colors.success}`,
-                }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
+              </div>
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test →')}
       </div>
     );
   }
@@ -1239,7 +1453,9 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderNavBar()}
+          {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1248,7 +1464,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
               textAlign: 'center',
             }}>
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}
+                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
               </h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>
                 {testScore} / 10
@@ -1258,61 +1474,108 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
               </p>
             </div>
 
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            {/* Answer review section with checkmark/X indicators */}
+            <div style={{ margin: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '16px', fontWeight: 700 }}>Answer Review</h3>
+              {testQuestions.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
 
-              return (
-                <div
-                  key={qIndex}
-                  style={{
-                    background: colors.bgCard,
-                    margin: '16px',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
-                  }}
-                >
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>
-                    {qIndex + 1}. {q.question}
-                  </p>
-                  {q.options.map((opt, oIndex) => (
-                    <div
-                      key={oIndex}
-                      style={{
-                        padding: '8px 12px',
-                        marginBottom: '4px',
-                        borderRadius: '6px',
-                        background: opt.correct
-                          ? 'rgba(16, 185, 129, 0.2)'
-                          : userAnswer === oIndex
-                          ? 'rgba(239, 68, 68, 0.2)'
-                          : 'transparent',
-                        color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary,
-                      }}
-                    >
-                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                return (
+                  <div
+                    key={qIndex}
+                    data-answer-review="true"
+                    data-correct={isCorrect}
+                    style={{
+                      padding: '12px',
+                      marginBottom: '8px',
+                      borderRadius: '8px',
+                      background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <span
+                        className={isCorrect ? 'correct-indicator' : 'incorrect-indicator'}
+                        style={{
+                          color: isCorrect ? colors.success : colors.error,
+                          fontWeight: 700,
+                          fontSize: '20px',
+                          lineHeight: 1,
+                        }}
+                        aria-label={isCorrect ? 'Correct answer' : 'Incorrect answer'}
+                      >
+                        {isCorrect ? '\u2713' : '\u2717'}
+                      </span>
+                      <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>
+                        Question {qIndex + 1}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                      {q.question}
+                    </p>
+                    {!isCorrect && userAnswer !== null && (
+                      <p style={{ color: colors.error, fontSize: '12px', marginTop: '4px', fontWeight: 400 }}>
+                        Your answer: {q.options[userAnswer].text}
+                      </p>
+                    )}
+                    <p style={{ color: colors.success, fontSize: '12px', marginTop: '4px', fontWeight: 400 }}>
+                      Correct answer: {q.options.find(o => o.correct)?.text}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
+    const answeredCount = testAnswers.filter(a => a !== null).length;
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
               <span style={{ color: colors.textSecondary }}>
                 {currentTestQuestion + 1} / {testQuestions.length}
+              </span>
+            </div>
+
+            {/* Test introduction and context */}
+            <div style={{
+              background: 'rgba(20, 184, 166, 0.1)',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.5 }}>
+                Test your understanding of Chladni patterns and standing waves. These questions cover
+                the physics of vibrating plates, nodal lines, resonant frequencies, and real-world
+                applications in acoustics and engineering. Each question builds on concepts from the
+                exploration phase. Take your time and think about what you observed during the experiment.
+              </p>
+            </div>
+
+            {/* Question number prominently shown */}
+            <div style={{
+              background: colors.bgCard,
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <span style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>
+                Q{currentTestQuestion + 1} of {testQuestions.length}
+              </span>
+              <span style={{ color: colors.textSecondary, fontSize: '14px', marginLeft: '12px' }}>
+                ({answeredCount} answered)
               </span>
             </div>
 
@@ -1332,7 +1595,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                     background: testAnswers[i] !== null
                       ? colors.accent
                       : i === currentTestQuestion
-                      ? colors.textMuted
+                      ? colors.textSecondary
                       : 'rgba(255,255,255,0.1)',
                     cursor: 'pointer',
                   }}
@@ -1358,6 +1621,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                   onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: testAnswers[currentTestQuestion] === oIndex
                       ? `2px solid ${colors.accent}`
@@ -1381,23 +1645,28 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             <button
               onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
               disabled={currentTestQuestion === 0}
+              aria-label="Previous question"
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
+                border: `1px solid ${colors.textSecondary}`,
                 background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+                color: currentTestQuestion === 0 ? colors.textSecondary : colors.textPrimary,
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                opacity: currentTestQuestion === 0 ? 0.5 : 1,
               }}
             >
-              ← Previous
+              Previous
             </button>
 
             {currentTestQuestion < testQuestions.length - 1 ? (
               <button
                 onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                aria-label="Next question"
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: colors.accent,
@@ -1405,7 +1674,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                   cursor: 'pointer',
                 }}
               >
-                Next →
+                Next
               </button>
             ) : (
               <button
@@ -1413,11 +1682,13 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                 disabled={testAnswers.includes(null)}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                  background: testAnswers.includes(null) ? colors.textSecondary : colors.success,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  opacity: testAnswers.includes(null) ? 0.5 : 1,
                 }}
               >
                 Submit Test
@@ -1433,9 +1704,11 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }} aria-label="trophy">&#127942;</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
               You've mastered Chladni patterns and standing waves
@@ -1448,7 +1721,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 Key Concepts Mastered:</h3>
+            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
             <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Standing waves and nodal/antinodal regions</li>
               <li>Resonant frequencies and vibration modes</li>
@@ -1464,7 +1737,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🚀 Beyond the Basics:</h3>
+            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
               Modern laser vibrometry creates 3D Chladni patterns, revealing vibrations in
               everything from car bodies to biological cells. The same mathematics describes
@@ -1474,12 +1747,21 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
 
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game →')}
       </div>
     );
   }
 
-  return null;
+  // Default fallback - should not reach here due to phase validation
+  return (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderNavBar(false)}
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px', textAlign: 'center', padding: '24px' }}>
+        <h1 style={{ color: colors.textPrimary }}>Chladni Patterns</h1>
+        <p style={{ color: colors.textSecondary }}>Loading...</p>
+      </div>
+    </div>
+  );
 };
 
 export default ChladniPatternsRenderer;

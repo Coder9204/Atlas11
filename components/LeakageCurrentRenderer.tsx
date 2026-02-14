@@ -21,7 +21,7 @@ interface LeakageCurrentRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgCardLight: '#1e293b',
@@ -209,6 +209,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [transferGotIt, setTransferGotIt] = useState<Set<number>>(new Set());
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -1062,20 +1063,32 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   const renderProgressBar = () => {
     const currentIdx = phaseOrder.indexOf(phase);
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: isMobile ? '10px 12px' : '12px 16px',
-        borderBottom: `1px solid ${colors.border}`,
-        backgroundColor: colors.bgCard,
-        gap: isMobile ? '12px' : '16px'
-      }}>
+      <div
+        role="navigation"
+        aria-label="Phase navigation"
+        data-testid="progress-bar"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: isMobile ? '10px 12px' : '12px 16px',
+          borderBottom: `1px solid ${colors.border}`,
+          backgroundColor: colors.bgCard,
+          gap: isMobile ? '12px' : '16px'
+        }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
-          <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
+          <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }} role="tablist" aria-label="Progress dots">
             {phaseOrder.map((p, i) => (
               <div
                 key={p}
+                role="tab"
+                aria-label={`Phase ${i + 1}: ${phaseLabels[p]}`}
+                aria-selected={i === currentIdx}
                 onClick={() => i < currentIdx && goToPhase(p)}
                 style={{
                   height: isMobile ? '10px' : '8px',
@@ -1083,7 +1096,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
                   borderRadius: '5px',
                   backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
                   cursor: i < currentIdx ? 'pointer' : 'default',
-                  transition: 'all 0.3s',
+                  transition: 'all 0.3s ease',
                   minWidth: isMobile ? '10px' : '8px',
                   minHeight: isMobile ? '10px' : '8px'
                 }}
@@ -1091,7 +1104,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -1132,6 +1145,11 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
 
     return (
       <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -1153,7 +1171,8 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             border: `1px solid ${colors.border}`,
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
           Back
@@ -1161,7 +1180,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
 
         <span style={{
           fontSize: '12px',
-          color: colors.textMuted,
+          color: colors.textSecondary,
           fontWeight: 600
         }}>
           {phaseLabels[phase]}
@@ -1175,12 +1194,13 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             fontWeight: 700,
             fontSize: isMobile ? '13px' : '14px',
             background: canGoNext ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.warning} 100%)` : colors.bgCardLight,
-            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            color: canGoNext ? colors.textPrimary : colors.textSecondary,
             border: 'none',
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.4,
             boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
           {nextLabel}
@@ -1193,7 +1213,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   const renderPhaseContent = (content: React.ReactNode, bottomBar: React.ReactNode) => (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
         {content}
       </div>
       {bottomBar}
@@ -1204,12 +1224,13 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>
               Leakage Current in Nanoscale
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', fontWeight: 400, marginBottom: '24px' }}>
               Why do chips use power even when doing nothing?
             </p>
           </div>
@@ -1223,7 +1244,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 400, lineHeight: 1.6 }}>
                 Your phone has billions of transistors, each supposed to be either fully ON or fully OFF.
                 But at nanometer scales, quantum effects mean transistors are never truly OFF - they
                 constantly leak current like a dripping faucet!
@@ -1236,13 +1257,13 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
                 Try changing the process node size and watch what happens to leakage power!
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Exploring')}
       </div>
     );
   }
@@ -1251,7 +1272,8 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
           <div style={{ padding: '16px' }}>
@@ -1303,10 +1325,11 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Leakage Power</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <h2 style={{ color: colors.textPrimary, fontWeight: 700, marginBottom: '8px' }}>Explore Leakage Power</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
               Adjust process node, temperature, and voltage
             </p>
           </div>
@@ -1320,13 +1343,28 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h4 style={{ color: colors.accent, fontWeight: 700, marginBottom: '8px' }}>Experiments to Try:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Go from 90nm to 7nm - watch leakage explode</li>
               <li>Increase temperature - see leakage double every 10C</li>
               <li>Lower voltage - see both powers decrease</li>
               <li>Find where leakage exceeds dynamic power</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.dynamic}`,
+          }}>
+            <h4 style={{ color: colors.dynamic, fontWeight: 700, marginBottom: '8px' }}>Real-World Relevance:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, lineHeight: 1.6 }}>
+              Understanding leakage current is critical for designing smartphones, laptops, and data centers.
+              Every modern device must balance performance against the invisible power drain that occurs even
+              when transistors are supposed to be off. This is why your phone battery drains overnight!
+            </p>
           </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review')}
@@ -1334,13 +1372,56 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
     );
   }
 
+  // Helper function to render review diagram
+  const renderReviewDiagram = () => {
+    const width = 400;
+    const height = 200;
+    return (
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ borderRadius: '12px', maxWidth: '450px' }}
+      >
+        <defs>
+          <linearGradient id="reviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+          <linearGradient id="gateBar" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#a855f7" />
+            <stop offset="100%" stopColor="#7c3aed" />
+          </linearGradient>
+          <linearGradient id="subBar" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fb923c" />
+            <stop offset="100%" stopColor="#ea580c" />
+          </linearGradient>
+        </defs>
+        <rect width={width} height={height} fill="url(#reviewBg)" rx={12} />
+        <text x={width/2} y={25} fill="#e2e8f0" fontSize={14} fontWeight="bold" textAnchor="middle">Leakage Types Comparison</text>
+        <rect x={80} y={50} width={60} height={100} fill="url(#gateBar)" rx={4} />
+        <text x={110} y={170} fill="#a855f7" fontSize={11} textAnchor="middle" fontWeight="bold">Gate</text>
+        <text x={110} y={185} fill="#e2e8f0" fontSize={9} textAnchor="middle">Tunneling</text>
+        <rect x={180} y={70} width={60} height={80} fill="url(#subBar)" rx={4} />
+        <text x={210} y={170} fill="#fb923c" fontSize={11} textAnchor="middle" fontWeight="bold">Subthreshold</text>
+        <text x={210} y={185} fill="#e2e8f0" fontSize={9} textAnchor="middle">Thermal</text>
+        <rect x={280} y={40} width={60} height={110} fill="#ef4444" rx={4} />
+        <text x={310} y={170} fill="#ef4444" fontSize={11} textAnchor="middle" fontWeight="bold">Total</text>
+        <text x={310} y={185} fill="#e2e8f0" fontSize={9} textAnchor="middle">Leakage</text>
+      </svg>
+    );
+  };
+
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'significant';
+    const predictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1348,13 +1429,20 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, fontWeight: 700, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Surprising Result!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400, marginBottom: '8px' }}>
+              You predicted: &quot;{predictionLabel}&quot;
+            </p>
+            <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
               Leakage power is a major concern in modern chips! At advanced nodes, it can
               consume 30-50% of total power even when the chip is nearly idle.
             </p>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px' }}>
+            {renderReviewDiagram()}
           </div>
 
           <div style={{
@@ -1363,24 +1451,24 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Two Types of Leakage</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.accent, fontWeight: 700, marginBottom: '12px' }}>Two Types of Leakage</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.gate }}>Gate Leakage:</strong> Electrons quantum tunnel
+                <strong style={{ color: colors.gate, fontWeight: 700 }}>Gate Leakage:</strong> Electrons quantum tunnel
                 through the ultra-thin gate oxide. At 5nm, the oxide is only ~1nm thick - a few atoms!
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.subthreshold }}>Subthreshold Leakage:</strong> Even when
+                <strong style={{ color: colors.subthreshold, fontWeight: 700 }}>Subthreshold Leakage:</strong> Even when
                 gate voltage is below threshold, some electrons have enough thermal energy to flow
                 from source to drain.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Temperature Effect:</strong> Subthreshold
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Temperature Effect:</strong> Subthreshold
                 leakage roughly doubles for every 10C increase because more electrons have enough
                 thermal energy to cross the barrier.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Scaling Challenge:</strong> As transistors
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Scaling Challenge:</strong> As transistors
                 shrink, oxide gets thinner (more tunneling) and threshold voltage must decrease
                 (more subthreshold leakage) - a double penalty!
               </p>
@@ -1396,7 +1484,8 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist: The Crossover Point</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1455,7 +1544,8 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Find the Crossover</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1487,13 +1577,53 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
     );
   }
 
+  // Helper function to render twist review diagram
+  const renderTwistReviewDiagram = () => {
+    const width = 400;
+    const height = 200;
+    return (
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ borderRadius: '12px', maxWidth: '450px' }}
+      >
+        <defs>
+          <linearGradient id="twistBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+        </defs>
+        <rect width={width} height={height} fill="url(#twistBg)" rx={12} />
+        <text x={width/2} y={25} fill="#e2e8f0" fontSize={14} fontWeight="bold" textAnchor="middle">Power Crossover Point</text>
+        <line x1={50} y1={40} x2={50} y2={160} stroke="#475569" strokeWidth={2} />
+        <line x1={50} y1={160} x2={370} y2={160} stroke="#475569" strokeWidth={2} />
+        <text x={210} y={185} fill="#e2e8f0" fontSize={10} textAnchor="middle">Process Node (nm)</text>
+        <text x={25} y={100} fill="#e2e8f0" fontSize={10} textAnchor="middle" transform="rotate(-90, 25, 100)">Power</text>
+        <path d="M 70 140 Q 150 130, 200 100 Q 250 70, 350 50" stroke="#3b82f6" strokeWidth={3} fill="none" />
+        <text x={360} y={55} fill="#3b82f6" fontSize={10}>Dynamic</text>
+        <path d="M 70 155 Q 150 150, 200 120 Q 250 80, 350 45" stroke="#ef4444" strokeWidth={3} fill="none" />
+        <text x={360} y={40} fill="#ef4444" fontSize={10}>Leakage</text>
+        <circle cx={230} cy={95} r={8} fill="#f59e0b" opacity={0.8} />
+        <text x={230} y={80} fill="#f59e0b" fontSize={10} textAnchor="middle" fontWeight="bold">Crossover</text>
+        <text x={90} y={175} fill="#e2e8f0" fontSize={9}>90nm</text>
+        <text x={160} y={175} fill="#e2e8f0" fontSize={9}>45nm</text>
+        <text x={230} y={175} fill="#f59e0b" fontSize={9}>14nm</text>
+        <text x={300} y={175} fill="#e2e8f0" fontSize={9}>5nm</text>
+      </svg>
+    );
+  };
+
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'leakage_dominates';
+    const twistPredLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
             margin: '16px',
@@ -1501,13 +1631,20 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.warning}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.warning, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.warning, fontWeight: 700, marginBottom: '8px' }}>
               {wasCorrect ? 'Exactly Right!' : 'The Surprising Truth!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400, marginBottom: '8px' }}>
+              You predicted: &quot;{twistPredLabel}&quot;
+            </p>
+            <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
               At advanced nodes, leakage can indeed exceed dynamic power, especially at low activity
               levels. This is why modern chips aggressively power-gate unused blocks.
             </p>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px' }}>
+            {renderTwistReviewDiagram()}
           </div>
 
           <div style={{
@@ -1516,20 +1653,20 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Industry Response</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.warning, fontWeight: 700, marginBottom: '12px' }}>Industry Response</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>High-K Metal Gates:</strong> Replace SiO2
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>High-K Metal Gates:</strong> Replace SiO2
                 with hafnium oxide (HfO2) which has higher dielectric constant, allowing thicker oxide
                 with same capacitance.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>FinFET (3D Transistors):</strong> Wrap the
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>FinFET (3D Transistors):</strong> Wrap the
                 gate around the channel on 3 sides for better electrostatic control, enabling higher
                 threshold voltage without performance penalty.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Power Gating:</strong> Completely shut off
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Power Gating:</strong> Completely shut off
                 power to unused chip blocks. The transistors do not leak if they have no supply voltage!
               </p>
             </div>
@@ -1542,14 +1679,17 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const allGotIt = transferGotIt.size >= transferApplications.length;
+
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, fontWeight: 700, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400, textAlign: 'center', marginBottom: '16px' }}>
               Complete all 4 applications to unlock the test
             </p>
           </div>
@@ -1562,33 +1702,54 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
                 margin: '16px',
                 padding: '16px',
                 borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                border: transferGotIt.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700 }}>{app.title}</h3>
+                {transferGotIt.has(index) && <span style={{ color: colors.success, fontWeight: 600 }}>Complete</span>}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, marginBottom: '12px' }}>{app.description}</p>
               <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
               </div>
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
+                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', minHeight: '44px', WebkitTapHighlightColor: 'transparent' }}
                 >
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400 }}>{app.answer}</p>
+                  </div>
+                  {!transferGotIt.has(index) && (
+                    <button
+                      onClick={() => setTransferGotIt(new Set([...transferGotIt, index]))}
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: colors.success,
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        minHeight: '44px',
+                        WebkitTapHighlightColor: 'transparent'
+                      }}
+                    >
+                      Got It
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(!allGotIt, allGotIt, 'Take the Test')}
       </div>
     );
   }
@@ -1598,7 +1759,8 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1606,23 +1768,31 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
               borderRadius: '12px',
               textAlign: 'center',
             }}>
-              <h2 style={{ color: testScore >= 7 ? colors.success : colors.error, marginBottom: '8px' }}>
+              <h2 style={{ color: testScore >= 7 ? colors.success : colors.error, fontWeight: 700, marginBottom: '8px' }}>
                 {testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}
               </h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+              <p style={{ color: colors.textSecondary, fontWeight: 400, marginTop: '8px' }}>
                 {testScore >= 7 ? 'You understand nanoscale leakage!' : 'Review the material and try again.'}
               </p>
+            </div>
+            <div style={{ margin: '16px' }}>
+              <h3 style={{ color: colors.textPrimary, fontWeight: 700, marginBottom: '12px' }}>Answer Review:</h3>
             </div>
             {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '18px' }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                    <p style={{ color: colors.textPrimary, fontWeight: 'bold', margin: 0 }}>Question {qIndex + 1}: {q.question}</p>
+                  </div>
                   {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontWeight: 400, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {opt.correct && <span style={{ fontWeight: 700 }}>\u2713</span>}
+                      {!opt.correct && userAnswer === oIndex && <span style={{ fontWeight: 700 }}>\u2717</span>}
+                      {opt.text}
                     </div>
                   ))}
                 </div>
@@ -1637,34 +1807,35 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary, fontWeight: 600 }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textSecondary : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 400, lineHeight: 1.5 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', WebkitTapHighlightColor: 'transparent' }}>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', fontWeight: 400, minHeight: '44px', WebkitTapHighlightColor: 'transparent' }}>
                   {opt.text}
                 </button>
               ))}
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textSecondary}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textSecondary : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', minHeight: '44px', fontWeight: 400, WebkitTapHighlightColor: 'transparent' }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', minHeight: '44px', fontWeight: 600, WebkitTapHighlightColor: 'transparent' }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textSecondary : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', minHeight: '44px', fontWeight: 600, WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
             )}
           </div>
         </div>
@@ -1676,15 +1847,16 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered nanoscale leakage current!</p>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
+            <h1 style={{ color: colors.success, fontWeight: 700, marginBottom: '8px' }}>Mastery Achieved!</h1>
+            <p style={{ color: colors.textSecondary, fontWeight: 400, marginBottom: '24px' }}>You have mastered nanoscale leakage current!</p>
           </div>
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h3 style={{ color: colors.accent, fontWeight: 700, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+            <ul style={{ color: colors.textSecondary, fontWeight: 400, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Gate leakage from quantum tunneling through thin oxide</li>
               <li>Subthreshold leakage from thermal carrier excitation</li>
               <li>Temperature dependence (doubling per 10C)</li>
@@ -1693,8 +1865,8 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             </ul>
           </div>
           <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Industry Frontier:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+            <h3 style={{ color: colors.accent, fontWeight: 700, marginBottom: '12px' }}>Industry Frontier:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, lineHeight: 1.6 }}>
               At 3nm and beyond, the industry is exploring GAA (Gate-All-Around) transistors and
               new channel materials like nanosheets. The battle against leakage continues to drive
               semiconductor innovation, with each generation requiring new physics solutions!

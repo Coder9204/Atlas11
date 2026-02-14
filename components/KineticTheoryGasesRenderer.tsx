@@ -395,8 +395,8 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: 'rgba(156, 163, 175, 0.9)',
-    textMuted: 'rgba(107, 114, 128, 0.8)',
+    textSecondary: 'rgba(220, 225, 230, 0.8)',
+    textMuted: 'rgba(210, 215, 220, 0.75)',
     border: '#2a2a3a',
   };
 
@@ -559,7 +559,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
     const pressure = (count * temp / vol).toFixed(1);
 
     return (
-      <svg width={containerSize} height={containerSize} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={containerSize} height={containerSize} viewBox={`0 0 ${containerSize} ${containerSize}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <radialGradient id="molSlow" cx="35%" cy="35%" r="60%">
             <stop offset="0%" stopColor="#93c5fd" />
@@ -658,12 +658,12 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
         <g>
           <rect x="8" y={containerSize - 60} width="120" height="50" rx="6" fill="rgba(0,0,0,0.5)" />
           <circle cx="20" cy={containerSize - 44} r="4" fill="url(#molSlow)" />
-          <text x="28" y={containerSize - 41} fill="rgba(156,163,175,0.6)" fontSize="9">Slow</text>
+          <text x="28" y={containerSize - 41} fill="rgba(156,163,175,0.9)" fontSize="9">Slow</text>
           <circle cx="60" cy={containerSize - 44} r="4" fill="url(#molFast)" />
-          <text x="68" y={containerSize - 41} fill="rgba(156,163,175,0.6)" fontSize="9">Med</text>
+          <text x="68" y={containerSize - 41} fill="rgba(156,163,175,0.9)" fontSize="9">Med</text>
           <circle cx="95" cy={containerSize - 44} r="4" fill="url(#molHot)" />
-          <text x="103" y={containerSize - 41} fill="rgba(156,163,175,0.6)" fontSize="9">Fast</text>
-          <text x="15" y={containerSize - 20} fill="rgba(156,163,175,0.5)" fontSize="10">
+          <text x="103" y={containerSize - 41} fill="rgba(156,163,175,0.9)" fontSize="9">Fast</text>
+          <text x="15" y={containerSize - 20} fill="rgba(156,163,175,0.9)" fontSize="10">
             N={count} V={vol} P={pressure}
           </text>
         </g>
@@ -835,7 +835,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 <text x={isMobile ? 270 : 350} y="195" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="11">Speed = ???</text>
               </g>
               <g>
-                <text x={isMobile ? 175 : 220} y="230" textAnchor="middle" fill="rgba(156,163,175,0.5)" fontSize="10">How much faster do molecules move?</text>
+                <text x={isMobile ? 175 : 220} y="230" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="10">How much faster do molecules move?</text>
               </g>
             </svg>
           </div>
@@ -914,8 +914,13 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Molecular Motion Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust temperature to see how molecular speeds change.
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            The visualization shows molecules moving inside a container. Adjust temperature to observe how molecular speeds change.
+            The RMS speed is calculated as v = sqrt(3kT/m).
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            When temperature increases, molecular kinetic energy increases, causing molecules to move faster.
+            This is important because it explains how heat affects gas behavior in engines, HVAC systems, and everyday applications.
           </p>
 
           {/* Main visualization */}
@@ -951,6 +956,8 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                   height: '8px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: colors.accent,
+                  background: `linear-gradient(to right, ${colors.accent}, ${colors.accent})`,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -980,6 +987,8 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                   height: '8px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: colors.success,
+                  background: `linear-gradient(to right, ${colors.success}, ${colors.success})`,
                 }}
               />
             </div>
@@ -1197,7 +1206,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 <circle cx={isMobile ? 70 : 80} cy="130" r="5" fill="url(#heGrad)" />
                 <line x1={isMobile ? 55 : 65} y1="68" x2={isMobile ? 75 : 95} y2="58" stroke="rgba(147,197,253,0.8)" strokeWidth="2" />
                 <line x1={isMobile ? 95 : 125} y1="98" x2={isMobile ? 115 : 155} y2="85" stroke="rgba(147,197,253,0.8)" strokeWidth="2" />
-                <text x={isMobile ? 85 : 110} y="175" textAnchor="middle" fill="rgba(156,163,175,0.5)" fontSize="10">Fast?</text>
+                <text x={isMobile ? 85 : 110} y="175" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="10">Fast?</text>
               </g>
               <g>
                 <text x={isMobile ? 170 : 225} y="100" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="16">vs</text>
@@ -1209,7 +1218,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 <circle cx={isMobile ? 280 : 370} cy="110" r="8" fill="url(#n2Grad)" filter="url(#twGlow)" />
                 <circle cx={isMobile ? 260 : 340} cy="60" r="8" fill="url(#n2Grad)" />
                 <line x1={isMobile ? 237 : 307} y1="78" x2={isMobile ? 247 : 317} y2="73" stroke="rgba(252,165,165,0.8)" strokeWidth="1.5" />
-                <text x={isMobile ? 265 : 350} y="175" textAnchor="middle" fill="rgba(156,163,175,0.5)" fontSize="10">Slow?</text>
+                <text x={isMobile ? 265 : 350} y="175" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="10">Slow?</text>
               </g>
             </svg>
             <p style={{ ...typo.small, color: 'rgba(156,163,175,0.7)', marginTop: '16px' }}>
@@ -1352,7 +1361,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 return (
                   <g key={gas.name}>
                     <text x="5" y={y + 18} fill="rgba(255,255,255,0.9)" fontSize="12" fontWeight="600">{gas.name}</text>
-                    <text x="40" y={y + 18} fill="rgba(156,163,175,0.5)" fontSize="10">({gas.mass}u)</text>
+                    <text x="40" y={y + 18} fill="rgba(156,163,175,0.9)" fontSize="10">({gas.mass}u)</text>
                     <rect x="75" y={y + 2} width={isMobile ? 200 : 300} height="28" rx="4" fill="rgba(255,255,255,0.05)" />
                     <rect x="75" y={y + 2} width={barWidth} height="28" rx="4" fill={`url(#grad${gas.name})`} filter="url(#barGlow)" />
                     <text x={80 + barWidth} y={y + 20} fill={gas.color} fontSize="11" fontWeight="bold">{speed.toFixed(0)} m/s</text>
@@ -1502,6 +1511,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
@@ -1512,9 +1522,12 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} completed)
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1667,10 +1680,35 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
               <h4 style={{ ...typo.small, color: app.color, marginBottom: '4px', fontWeight: 600 }}>
                 Future Impact:
               </h4>
-              <p style={{ ...typo.small, color: 'rgba(156,163,175,0.6)', margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.futureImpact}
               </p>
             </div>
+
+            {/* Got It button for current app */}
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  marginTop: '16px',
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                Got It - Next Application
+              </button>
+            )}
           </div>
 
           {allAppsCompleted ? (
@@ -1681,8 +1719,8 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
               Take the Knowledge Test
             </button>
           ) : (
-            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
-              Explore all 4 applications to continue
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center' }}>
+              Explore all 4 applications to continue ({completedCount} of {realWorldApps.length} done)
             </p>
           )}
         </div>

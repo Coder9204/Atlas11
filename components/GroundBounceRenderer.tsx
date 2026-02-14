@@ -178,9 +178,9 @@ const realWorldApps = [
     connection: 'When a CPU executes an instruction, thousands of transistors may switch simultaneously. The package and die must be designed with ground bounce in mind - using multiple power/ground planes, careful bump placement, and on-die decoupling capacitors.',
     howItWorks: 'CPUs use multi-layer packages with dedicated power/ground planes to minimize inductance. On-die capacitors (MIM capacitors) provide local charge storage. Critical paths are placed near power/ground bumps. Slew rate control limits di/dt.',
     stats: [
-      { value: '<50mV', label: 'Max ground bounce target', icon: '⚡' },
-      { value: '1000+', label: 'Power/ground bumps', icon: '🔌' },
-      { value: '10+ layers', label: 'Package substrate', icon: '📊' }
+      { value: '50mV', label: 'Max ground bounce target', icon: '⚡' },
+      { value: '5 GHz', label: 'Clock frequency', icon: '🔌' },
+      { value: '100W', label: 'Typical power budget', icon: '📊' }
     ],
     examples: ['Intel Core processors', 'AMD Ryzen CPUs', 'Apple M-series chips', 'ARM Cortex processors'],
     companies: ['Intel', 'AMD', 'Apple', 'Qualcomm'],
@@ -326,7 +326,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
+    textSecondary: '#e2e8f0',
     textMuted: '#6B7280',
     border: '#2a2a3a',
     signal: '#3B82F6', // Blue for digital signals
@@ -350,7 +350,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Package Lab',
+    twist_play: 'Explore Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -369,6 +369,13 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase]);
 
@@ -391,9 +398,9 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
 
   // Ground Bounce Visualization Component
   const GroundBounceVisualization = ({ showAnimation = true }: { showAnimation?: boolean }) => {
-    const width = isMobile ? 340 : 500;
-    const height = isMobile ? 280 : 350;
-    const padding = { top: 30, right: 20, bottom: 50, left: 60 };
+    const width = isMobile ? 360 : 520;
+    const height = isMobile ? 300 : 380;
+    const padding = { top: 40, right: 30, bottom: 55, left: 65 };
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
 
@@ -410,13 +417,14 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
       return 3.3 * Math.min(1, progress * 2);
     };
 
-    // Generate ground bounce waveform
+    // Generate ground bounce waveform - amplified for visual clarity
+    const displayScale = Math.max(1, 2.0 / Math.max(bounceData.bounceVoltage, 0.1));
     const getGroundBounce = (t: number) => {
       if (t < switchTime || t > settleTime + 10) return 0;
       const relativeT = t - switchTime;
       const peakTime = 5; // Peak bounce happens quickly
       const decay = Math.exp(-relativeT / 15);
-      const bounce = bounceData.bounceVoltage * Math.sin((relativeT / peakTime) * Math.PI) * decay;
+      const bounce = bounceData.bounceVoltage * displayScale * Math.sin((relativeT / peakTime) * Math.PI) * decay;
       return Math.max(0, bounce);
     };
 
@@ -429,23 +437,50 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
     const animProgress = showAnimation ? switchPhase : 100;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="bounceGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={colors.noise} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.noise} stopOpacity="0.1" />
+          </linearGradient>
+          <linearGradient id="signalGradient" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={colors.signal} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={colors.signal} stopOpacity="1" />
+          </linearGradient>
+          <filter id="glowFilter" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="markerGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
         {/* Grid lines */}
+        <g className="grid-lines">
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-          <g key={`grid-${frac}`}>
-            <line
-              x1={padding.left}
-              y1={padding.top + frac * plotHeight}
-              x2={padding.left + plotWidth}
-              y2={padding.top + frac * plotHeight}
-              stroke={colors.border}
-              strokeDasharray="3,3"
-              opacity={0.5}
-            />
-          </g>
+          <line
+            key={`grid-${frac}`}
+            x1={padding.left}
+            y1={padding.top + frac * plotHeight}
+            x2={padding.left + plotWidth}
+            y2={padding.top + frac * plotHeight}
+            stroke={colors.border}
+            strokeDasharray="3,3"
+            opacity={0.5}
+          />
         ))}
+        </g>
 
         {/* Axes */}
+        <g className="axes">
         <line
           x1={padding.left}
           y1={padding.top + plotHeight}
@@ -462,6 +497,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
           stroke={colors.textSecondary}
           strokeWidth="2"
         />
+        </g>
 
         {/* Axis labels */}
         <text
@@ -474,20 +510,20 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
           Time (ns)
         </text>
         <text
-          x={15}
-          y={padding.top + plotHeight / 2}
+          x={12}
+          y={padding.top + plotHeight / 2 + 60}
           fill={colors.textSecondary}
           fontSize="12"
           textAnchor="middle"
-          transform={`rotate(-90, 15, ${padding.top + plotHeight / 2})`}
+          transform={`rotate(-90, 12, ${padding.top + plotHeight / 2 + 60})`}
         >
           Voltage (V)
         </text>
 
         {/* Y-axis scale */}
-        <text x={padding.left - 8} y={padding.top + 4} fill={colors.textMuted} fontSize="10" textAnchor="end">4V</text>
-        <text x={padding.left - 8} y={padding.top + plotHeight / 2} fill={colors.textMuted} fontSize="10" textAnchor="end">2V</text>
-        <text x={padding.left - 8} y={padding.top + plotHeight} fill={colors.textMuted} fontSize="10" textAnchor="end">0V</text>
+        <text x={padding.left - 8} y={padding.top + 4} fill={colors.textMuted} fontSize="11" textAnchor="end">4V</text>
+        <text x={padding.left - 8} y={padding.top + plotHeight / 2} fill={colors.textMuted} fontSize="11" textAnchor="end">2V</text>
+        <text x={padding.left - 8} y={padding.top + plotHeight} fill={colors.textMuted} fontSize="11" textAnchor="end">0V</text>
 
         {/* Logic threshold line */}
         <line
@@ -503,7 +539,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
           x={padding.left + plotWidth - 5}
           y={padding.top + plotHeight - (1.65 / 4) * plotHeight - 5}
           fill={colors.warning}
-          fontSize="10"
+          fontSize="11"
           textAnchor="end"
         >
           Threshold (1.65V)
@@ -520,6 +556,8 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
           opacity={0.3}
         />
 
+        {/* Waveforms group */}
+        <g className="waveforms">
         {/* Ground bounce waveform */}
         <path
           d={Array.from({ length: Math.min(timePoints, animProgress) }, (_, i) => {
@@ -533,6 +571,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
           stroke={colors.noise}
           strokeWidth="3"
           opacity={0.8}
+          filter="url(#glowFilter)"
         />
 
         {/* Output signal waveform */}
@@ -567,42 +606,69 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
           />
         )}
 
-        {/* Legend */}
-        <g transform={`translate(${padding.left + 10}, ${padding.top + 10})`}>
-          <rect x="0" y="0" width="12" height="3" fill={colors.signal} />
-          <text x="18" y="4" fill={colors.textSecondary} fontSize="10">Output Signal</text>
-          <rect x="0" y="14" width="12" height="3" fill={colors.noise} />
-          <text x="18" y="18" fill={colors.textSecondary} fontSize="10">Ground Bounce</text>
-          {bounceData.bounceVoltage > 0.1 && (
-            <>
-              <rect x="0" y="28" width="12" height="3" fill={colors.error} opacity={0.8} />
-              <text x="18" y="32" fill={colors.textSecondary} fontSize="10">Effective Output</text>
-            </>
-          )}
         </g>
+
+        {/* Legend - absolute positioning to avoid text overlap */}
+        <rect x={padding.left + 10} y={padding.top + 10} width="12" height="3" fill={colors.signal} />
+        <text x={padding.left + 28} y={padding.top + 14} fill={colors.textSecondary} fontSize="11">Output Signal</text>
+        <rect x={padding.left + 10} y={padding.top + 24} width="12" height="3" fill={colors.noise} />
+        <text x={padding.left + 28} y={padding.top + 28} fill={colors.textSecondary} fontSize="11">Ground Bounce</text>
+        {bounceData.bounceVoltage > 0.1 && (
+          <>
+            <rect x={padding.left + 10} y={padding.top + 38} width="12" height="3" fill={colors.error} opacity={0.8} />
+            <text x={padding.left + 28} y={padding.top + 42} fill={colors.textSecondary} fontSize="11">Effective Output</text>
+          </>
+        )}
+
+        {/* Threshold reference marker on right side */}
+        <circle
+          cx={padding.left + plotWidth - 10}
+          cy={padding.top + plotHeight - (1.65 / 4) * plotHeight}
+          r="4"
+          fill={colors.warning}
+          opacity={0.5}
+        />
+
+        {/* Interactive marker at current bounce peak */}
+        <circle
+          cx={padding.left + (numOutputs / 32) * plotWidth * 0.7 + plotWidth * 0.15}
+          cy={padding.top + plotHeight - (bounceData.bounceVoltage * displayScale / 4) * plotHeight}
+          r="8"
+          fill={colors.noise}
+          stroke="white"
+          strokeWidth="2"
+          filter="url(#markerGlow)"
+        >
+          <animate attributeName="r" values="7;9;7" dur="2s" repeatCount="indefinite" />
+        </circle>
 
         {/* Bounce peak annotation */}
         {animProgress > 40 && bounceData.bounceVoltage > 0.1 && (
-          <g>
-            <circle
-              cx={padding.left + (35 / 100) * plotWidth}
-              cy={padding.top + plotHeight - (bounceData.bounceVoltage / 4) * plotHeight}
-              r="6"
-              fill={colors.noise}
-              stroke="white"
-              strokeWidth="2"
-            />
-            <text
-              x={padding.left + (35 / 100) * plotWidth + 10}
-              y={padding.top + plotHeight - (bounceData.bounceVoltage / 4) * plotHeight}
-              fill={colors.noise}
-              fontSize="11"
-              fontWeight="600"
-            >
-              {(bounceData.bounceVoltage * 1000).toFixed(0)}mV
-            </text>
-          </g>
+          <text
+            x={padding.left + (35 / 100) * plotWidth + 15}
+            y={padding.top + plotHeight - (bounceData.bounceVoltage * displayScale / 4) * plotHeight - 10}
+            fill={colors.noise}
+            fontSize="11"
+            fontWeight="600"
+          >
+            {(bounceData.bounceVoltage * 1000).toFixed(0)}mV
+          </text>
         )}
+
+        {/* Formula annotation */}
+        <text
+          x={padding.left + plotWidth - 5}
+          y={padding.top + plotHeight + 40}
+          fill={colors.accent}
+          fontSize="12"
+          fontWeight="700"
+          textAnchor="end"
+        >
+          V = L × di/dt
+        </text>
+
+        {/* Title */}
+        <title>Ground Bounce Voltage Waveform</title>
       </svg>
     );
   };
@@ -615,7 +681,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
     const startX = (width - (numOutputs * (outputWidth + 4) - 4)) / 2;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* Chip outline */}
         <rect
           x={20}
@@ -671,12 +737,47 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
 
         {/* Ground rail */}
         <rect x={20} y={130} width={width - 40} height={20} fill={colors.ground} opacity={0.3} rx="2" />
-        <text x={width / 2} y={145} fill={colors.textSecondary} fontSize="10" textAnchor="middle">
+        <text x={width / 2} y={145} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
           Ground Rail ({bounceData.bounceVoltage > 0.1 ? `bouncing ${(bounceData.bounceVoltage * 1000).toFixed(0)}mV` : 'stable'})
         </text>
       </svg>
     );
   };
+
+  // Navigation bar component (fixed position with zIndex >= 1000)
+  const renderNavigationBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      borderBottom: `1px solid ${colors.border}`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '20px' }}>⚡</span>
+        <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>Ground Bounce</span>
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]}
+      </div>
+      <div style={{
+        height: '4px',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </nav>
+  );
 
   // Progress bar component
   const renderProgressBar = () => (
@@ -687,7 +788,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -701,18 +802,24 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
   // Navigation dots
   const renderNavDots = () => (
     <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
       justifyContent: 'center',
       gap: '8px',
       padding: '16px 0',
+      background: colors.bgPrimary,
+      zIndex: 1000,
     }}>
       {phaseOrder.map((p, i) => (
         <button
           key={p}
           onClick={() => goToPhase(p)}
           style={{
+            minHeight: '44px',
             width: phase === p ? '24px' : '8px',
-            height: '8px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
@@ -737,6 +844,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -754,8 +862,12 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
+        paddingBottom: '100px',
         textAlign: 'center',
+        overflowY: 'auto' as const,
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -777,7 +889,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "When 32 outputs switch at once, why does the chip sometimes lie about its own signals? The answer involves <span style={{ color: colors.accent }}>invisible inductance</span> and the speed of electrons."
+          &quot;When 32 outputs switch at once, why does the chip sometimes lie about its own signals? The answer involves <span style={{ color: colors.accent }}>invisible inductance</span> and the speed of electrons.&quot;
         </p>
 
         <div style={{
@@ -797,19 +909,36 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             V = L × di/dt
           </div>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Every wire has inductance. When current changes fast, voltage appears. When millions of transistors switch together... chaos."
+            &quot;Every wire has inductance. When current changes fast, voltage appears. When millions of transistors switch together... chaos.&quot;
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: 'rgba(107, 114, 128, 0.8)', marginTop: '8px' }}>
             — Digital Design Principle
           </p>
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Discover the Problem →
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={() => { playSound('click'); prevPhase(); }}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '12px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              fontSize: '16px',
+              cursor: 'pointer',
+              minHeight: '44px',
+            }}
+          >
+            Back
+          </button>
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Start Exploring →
+          </button>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -829,7 +958,11 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        paddingBottom: '100px',
+        overflowY: 'auto' as const,
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -849,7 +982,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             A microcontroller switches all 32 data outputs from LOW to HIGH simultaneously. What happens to the ground reference inside the chip?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram showing the scenario */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -857,31 +990,52 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{
-                background: colors.bgSecondary,
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.signal}`,
-              }}>
-                <div style={{ fontSize: '24px', marginBottom: '8px' }}>IC</div>
-                <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                  {[1,2,3,4,5,6,7,8].map(i => (
-                    <div key={i} style={{
-                      width: '16px',
-                      height: '20px',
-                      background: colors.signal,
-                      borderRadius: '2px',
-                    }} />
-                  ))}
-                </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>32 outputs switching</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px' }}>❓</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>What happens<br/>to ground?</p>
-              </div>
-            </div>
+            <svg width={isMobile ? 300 : 400} height={200} viewBox={`0 0 ${isMobile ? 300 : 400} 200`} style={{ background: colors.bgCard }}>
+              {/* IC Package */}
+              <rect x={50} y={40} width={isMobile ? 200 : 300} height={60} fill={colors.bgSecondary} stroke={colors.signal} strokeWidth="2" rx="4" />
+              <text x={isMobile ? 150 : 200} y={70} fill={colors.textPrimary} fontSize="14" textAnchor="middle">IC Package</text>
+
+              {/* Output pins */}
+              {Array.from({ length: 8 }, (_, i) => (
+                <g key={i}>
+                  <rect
+                    x={70 + i * (isMobile ? 22 : 32)}
+                    y={100}
+                    width={isMobile ? 16 : 24}
+                    height={30}
+                    fill={colors.signal}
+                    stroke={colors.border}
+                    rx="2"
+                  />
+                </g>
+              ))}
+
+              {/* Ground rail with question mark */}
+              <rect x={50} y={150} width={isMobile ? 200 : 300} height={20} fill={colors.ground} opacity={0.3} rx="2" />
+              <text x={isMobile ? 150 : 200} y={165} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Ground Rail - What happens here?</text>
+
+              {/* Arrows showing current flow */}
+              <path d={`M ${isMobile ? 100 : 120} 100 L ${isMobile ? 100 : 120} 145`} stroke={colors.warning} strokeWidth="2" strokeDasharray="4,4" markerEnd="url(#predictArrow)" />
+              <path d={`M ${isMobile ? 180 : 250} 100 L ${isMobile ? 180 : 250} 145`} stroke={colors.warning} strokeWidth="2" strokeDasharray="4,4" markerEnd="url(#predictArrow)" />
+
+              {/* Arrow marker */}
+              <defs>
+                <marker id="predictArrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                  <polygon points="0 0, 6 3, 0 6" fill={colors.warning} />
+                </marker>
+              </defs>
+
+              {/* Label */}
+              <text x={isMobile ? 150 : 200} y={25} fill={colors.textSecondary} fontSize="11" textAnchor="middle">32 outputs switching LOW to HIGH</text>
+
+              {/* Legend */}
+              <g transform="translate(10, 180)">
+                <rect x="0" y="0" width="10" height="10" fill={colors.signal} />
+                <text x="15" y="9" fill={colors.textSecondary} fontSize="11">Output pins</text>
+                <rect x={isMobile ? 80 : 100} y="0" width="10" height="10" fill={colors.ground} opacity={0.5} />
+                <text x={isMobile ? 95 : 115} y="9" fill={colors.textSecondary} fontSize="11">Ground</text>
+              </g>
+            </svg>
           </div>
 
           {/* Options */}
@@ -898,6 +1052,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -921,14 +1076,31 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             ))}
           </div>
 
-          {prediction && (
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
             <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
+              onClick={() => { playSound('click'); prevPhase(); }}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '12px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                fontSize: '16px',
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
             >
-              Test My Prediction →
+              Back
             </button>
-          )}
+            {prediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, flex: 1 }}
+              >
+                See the Result →
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -943,15 +1115,26 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
+        flex: 1,
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto', flex: 1, paddingTop: '48px', paddingBottom: '100px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Ground Bounce Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
             Adjust the number of switching outputs and watch ground bounce grow
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '12px', fontStyle: 'italic' }}>
+            Observe: Watch how the ground voltage (yellow) spikes when outputs switch. Try increasing outputs to see the effect.
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px', background: colors.bgCard, padding: '12px', borderRadius: '8px' }}>
+            Real-World Relevance: This exact phenomenon affects every modern processor, memory interface, and high-speed digital system. Engineers at Intel, AMD, and NVIDIA battle ground bounce daily to achieve multi-GHz clock speeds.
           </p>
 
           {/* Main visualization */}
@@ -961,18 +1144,46 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <GroundBounceVisualization />
+            </div>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
               <OutputsVisualization />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GroundBounceVisualization />
+
+            {/* Legend Panel */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '20px',
+            }}>
+              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px', fontWeight: 600 }}>Legend:</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '20px', height: '4px', background: colors.signal, borderRadius: '2px' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Output Signal</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '20px', height: '4px', background: colors.noise, borderRadius: '2px' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Bounce</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '20px', height: '4px', background: colors.error, borderRadius: '2px', opacity: 0.8 }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Effective Output</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '20px', height: '2px', background: colors.warning, borderRadius: '2px' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Logic Threshold (1.65V)</span>
+              </div>
+              </div>
             </div>
 
             {/* Number of outputs slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Switching Outputs</span>
-                <span style={{ ...typo.small, color: colors.signal, fontWeight: 600 }}>{numOutputs}</span>
+                <span style={{ height: '20px', ...typo.small, color: colors.signal, fontWeight: 600 }}>{numOutputs}</span>
               </div>
               <input
                 type="range"
@@ -981,11 +1192,14 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                 value={numOutputs}
                 onChange={(e) => setNumOutputs(parseInt(e.target.value))}
                 style={{
+                  touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.signal} ${(numOutputs / 32) * 100}%, ${colors.border} ${(numOutputs / 32) * 100}%)`,
                   cursor: 'pointer',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.signal,
                 }}
               />
             </div>
@@ -994,7 +1208,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Slew Rate (Speed)</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{slewRate} V/ns</span>
+                <span style={{ height: '20px', ...typo.small, color: colors.warning, fontWeight: 600 }}>{slewRate} V/ns</span>
               </div>
               <input
                 type="range"
@@ -1004,10 +1218,13 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                 value={slewRate}
                 onChange={(e) => setSlewRate(parseFloat(e.target.value))}
                 style={{
+                  touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.warning,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1031,6 +1248,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                 fontWeight: 600,
                 cursor: isSimulating ? 'not-allowed' : 'pointer',
                 marginBottom: '20px',
+                minHeight: '44px',
               }}
             >
               {isSimulating ? 'Simulating...' : 'Trigger Switching Event'}
@@ -1108,15 +1326,37 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionWasCorrect = prediction === 'b';
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
+        flex: 1,
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto', flex: 1, paddingTop: '48px', paddingBottom: '100px' }}>
+          {/* Reference user's prediction */}
+          <div style={{
+            background: predictionWasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${predictionWasCorrect ? colors.success : colors.warning}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: predictionWasCorrect ? colors.success : colors.warning, margin: 0 }}>
+              {predictionWasCorrect
+                ? 'Your prediction was correct! You predicted that the chip\'s internal ground voltage spikes, causing output level errors.'
+                : 'Your prediction helped frame the experiment. As you observed, the ground voltage actually spikes when outputs switch simultaneously.'}
+            </p>
+          </div>
+
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Ground Bounce
           </h2>
@@ -1219,7 +1459,12 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
+        flex: 1,
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1269,6 +1514,45 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             </div>
           </div>
 
+          {/* Package comparison SVG */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width={isMobile ? 340 : 420} height={220} viewBox={`0 0 ${isMobile ? 340 : 420} 220`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="dipGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={colors.error} stopOpacity="0.6" />
+                  <stop offset="100%" stopColor={colors.error} stopOpacity="0.1" />
+                </linearGradient>
+                <linearGradient id="bgaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#10B981" stopOpacity="0.1" />
+                </linearGradient>
+              </defs>
+              {/* DIP side */}
+              <rect x={20} y={40} width={isMobile ? 130 : 170} height={50} fill={colors.bgSecondary} stroke={colors.error} strokeWidth="2" rx="4" />
+              <text x={isMobile ? 85 : 105} y={70} fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="600">DIP Package</text>
+              {/* DIP long leads */}
+              {Array.from({ length: 6 }, (_, i) => (
+                <rect key={`dip-${i}`} x={35 + i * (isMobile ? 18 : 24)} y={90} width={8} height={50} fill={colors.error} opacity={0.6} rx="1" />
+              ))}
+              <text x={isMobile ? 85 : 105} y={160} fill={colors.error} fontSize="12" textAnchor="middle">L = 10nH (high)</text>
+              <text x={isMobile ? 85 : 105} y={180} fill={colors.textMuted} fontSize="11" textAnchor="middle">Long leads</text>
+
+              {/* BGA side */}
+              <rect x={isMobile ? 180 : 230} y={40} width={isMobile ? 130 : 170} height={50} fill={colors.bgSecondary} stroke="#10B981" strokeWidth="2" rx="4" />
+              <text x={isMobile ? 245 : 315} y={70} fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="600">BGA Package</text>
+              {/* BGA short balls */}
+              {Array.from({ length: 6 }, (_, i) => (
+                <circle key={`bga-${i}`} cx={(isMobile ? 195 : 245) + i * (isMobile ? 18 : 24)} cy={100} r="5" fill="#10B981" opacity={0.6} />
+              ))}
+              <text x={isMobile ? 245 : 315} y={130} fill="#10B981" fontSize="12" textAnchor="middle">L = 0.5nH (low)</text>
+              <text x={isMobile ? 245 : 315} y={150} fill={colors.textMuted} fontSize="11" textAnchor="middle">Short solder balls</text>
+
+              {/* Comparison arrow */}
+              <text x={isMobile ? 170 : 210} y={75} fill={colors.warning} fontSize="16" textAnchor="middle">vs</text>
+              <text x={isMobile ? 170 : 210} y={210} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Which package has less ground bounce?</text>
+            </svg>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
               <button
@@ -1281,6 +1565,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1326,15 +1611,23 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
+        flex: 1,
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Package Inductance Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
             Adjust package inductance and see the dramatic effect on ground bounce
+          </p>
+          <p style={{ ...typo.small, color: colors.warning, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Observe: Compare BGA vs DIP packages. Notice how lower inductance dramatically reduces ground bounce voltage.
           </p>
 
           <div style={{
@@ -1342,6 +1635,11 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
+            overflowY: 'auto',
+            paddingBottom: '100px',
+            flex: 1,
+            paddingTop: '48px',
+            maxHeight: '70vh',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <GroundBounceVisualization showAnimation={false} />
@@ -1367,10 +1665,13 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                 value={packageInductance}
                 onChange={(e) => setPackageInductance(parseFloat(e.target.value))}
                 style={{
+                  touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.warning,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1384,7 +1685,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Simultaneous Switching Outputs</span>
-                <span style={{ ...typo.small, color: colors.signal, fontWeight: 600 }}>{numOutputs}</span>
+                <span style={{ height: '20px', ...typo.small, color: colors.signal, fontWeight: 600 }}>{numOutputs}</span>
               </div>
               <input
                 type="range"
@@ -1393,10 +1694,13 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                 value={numOutputs}
                 onChange={(e) => setNumOutputs(parseInt(e.target.value))}
                 style={{
+                  touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.signal,
                 }}
               />
             </div>
@@ -1405,7 +1709,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Edge Slew Rate</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{slewRate} V/ns</span>
+                <span style={{ height: '20px', ...typo.small, color: colors.warning, fontWeight: 600 }}>{slewRate} V/ns</span>
               </div>
               <input
                 type="range"
@@ -1415,10 +1719,13 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                 value={slewRate}
                 onChange={(e) => setSlewRate(parseFloat(e.target.value))}
                 style={{
+                  touchAction: 'pan-y',
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: colors.warning,
                 }}
               />
             </div>
@@ -1475,7 +1782,12 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
+        flex: 1,
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1568,7 +1880,12 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
+        flex: 1,
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
@@ -1601,6 +1918,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1681,12 +1999,65 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             </div>
           </div>
 
+          {/* Progress indicator */}
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
+
+          {/* Got It button - always visible */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+            }}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              marginBottom: '12px',
+              background: completedApps[selectedApp] ? colors.bgCard : `linear-gradient(135deg, ${colors.accent}, #DC2626)`,
+              border: completedApps[selectedApp] ? `1px solid ${colors.success}` : 'none',
+            }}
+          >
+            {completedApps[selectedApp] ? 'Reviewed' : 'Got It'}
+          </button>
+
+          {/* Next Application button */}
+          {selectedApp < realWorldApps.length - 1 && (
+            <button
+              onClick={() => {
+                playSound('click');
+                const nextAppIndex = selectedApp + 1;
+                setSelectedApp(nextAppIndex);
+                const newCompleted = [...completedApps];
+                newCompleted[nextAppIndex] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '12px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                marginBottom: '12px',
+                minHeight: '44px',
+              }}
+            >
+              Next Application
+            </button>
+          )}
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Take the Knowledge Test →
+              Take the Knowledge Test
             </button>
           )}
         </div>
@@ -1705,7 +2076,12 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
+          paddingBottom: '80px',
+          overflowY: 'auto',
+          flex: 1,
         }}>
+          {renderNavigationBar()}
           {renderProgressBar()}
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
@@ -1761,7 +2137,12 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
+        flex: 1,
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1827,6 +2208,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1884,7 +2266,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
                   fontWeight: 600,
                 }}
               >
-                Next →
+                Next
               </button>
             ) : (
               <button

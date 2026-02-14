@@ -85,7 +85,7 @@ const realWorldApps = [
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast (brightness >= 180)
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -99,6 +99,8 @@ const colors = {
   surface: '#64748b',
   air: '#e0f2fe',
 };
+
+const PHASE_ORDER = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
 
 const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   phase,
@@ -118,11 +120,13 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [internalPhase, setInternalPhase] = useState(phase);
 
   // Responsive detection
   useEffect(() => {
@@ -131,6 +135,38 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Sync internal phase with prop
+  useEffect(() => {
+    setInternalPhase(phase);
+  }, [phase]);
+
+  // Get current phase index
+  const currentPhaseIndex = PHASE_ORDER.indexOf(internalPhase as typeof PHASE_ORDER[number]);
+
+  // Navigate to next phase
+  const goToNextPhase = () => {
+    if (currentPhaseIndex < PHASE_ORDER.length - 1) {
+      setInternalPhase(PHASE_ORDER[currentPhaseIndex + 1]);
+    }
+    if (onPhaseComplete) {
+      onPhaseComplete();
+    }
+  };
+
+  // Navigate to previous phase
+  const goToPrevPhase = () => {
+    if (currentPhaseIndex > 0) {
+      setInternalPhase(PHASE_ORDER[currentPhaseIndex - 1]);
+    }
+  };
+
+  // Navigate to specific phase
+  const goToPhase = (index: number) => {
+    if (index >= 0 && index < PHASE_ORDER.length) {
+      setInternalPhase(PHASE_ORDER[index]);
+    }
+  };
 
   // Responsive typography
   const typo = {
@@ -1087,6 +1123,77 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
     </div>
   );
 
+  // Render progress bar
+  const renderProgressBar = () => (
+    <div
+      role="progressbar"
+      aria-valuenow={currentPhaseIndex + 1}
+      aria-valuemin={1}
+      aria-valuemax={PHASE_ORDER.length}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: 'rgba(255,255,255,0.1)',
+        zIndex: 1001,
+      }}
+    >
+      <div style={{
+        height: '100%',
+        width: `${((currentPhaseIndex + 1) / PHASE_ORDER.length) * 100}%`,
+        background: colors.accent,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Render navigation bar with dots
+  const renderNavBar = () => (
+    <nav
+      aria-label="Game navigation"
+      style={{
+        position: 'fixed',
+        top: '4px',
+        left: 0,
+        right: 0,
+        padding: '12px 24px',
+        background: colors.bgDark,
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '8px',
+        zIndex: 1000,
+      }}
+    >
+      {PHASE_ORDER.map((p, index) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(index)}
+          aria-label={`${p} phase`}
+          aria-current={index === currentPhaseIndex ? 'step' : undefined}
+          style={{
+            width: '12px',
+            height: '12px',
+            minHeight: '12px',
+            borderRadius: '50%',
+            border: 'none',
+            background: index === currentPhaseIndex
+              ? colors.accent
+              : index < currentPhaseIndex
+                ? colors.success
+                : 'rgba(255,255,255,0.2)',
+            cursor: 'pointer',
+            padding: 0,
+            transition: 'all 0.2s ease',
+          }}
+        />
+      ))}
+    </nav>
+  );
+
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed',
@@ -1097,14 +1204,35 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
       background: colors.bgDark,
       borderTop: '1px solid rgba(255,255,255,0.1)',
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       zIndex: 1000,
     }}>
       <button
-        onClick={onPhaseComplete}
+        onClick={goToPrevPhase}
+        disabled={currentPhaseIndex === 0}
+        aria-label="Back"
+        style={{
+          padding: '12px 24px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: currentPhaseIndex === 0 ? 'rgba(255,255,255,0.3)' : colors.textPrimary,
+          fontWeight: 'bold',
+          cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
+          fontSize: '16px',
+        }}
+      >
+        Back
+      </button>
+      <button
+        onClick={goToNextPhase}
         disabled={disabled && !canProceed}
+        aria-label="Next"
         style={{
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
@@ -1120,10 +1248,12 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   );
 
   // HOOK PHASE
-  if (phase === 'hook') {
+  if (internalPhase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               The Lotus Secret
@@ -1170,10 +1300,12 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   }
 
   // PREDICT PHASE
-  if (phase === 'predict') {
+  if (internalPhase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           {renderVisualization(false, true)}
 
           <div style={{
@@ -1201,6 +1333,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
@@ -1222,10 +1355,12 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   }
 
   // PLAY PHASE
-  if (phase === 'play') {
+  if (internalPhase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Surface Wettability</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1235,6 +1370,18 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
 
           {renderVisualization(true, true)}
           {renderControls()}
+
+          <div style={{
+            background: 'rgba(6, 182, 212, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              Observe how the contact angle and droplet shape change as you adjust the surface properties.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1257,12 +1404,14 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   }
 
   // REVIEW PHASE
-  if (phase === 'review') {
+  if (internalPhase === 'review') {
     const wasCorrect = prediction === 'ball';
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1277,6 +1426,8 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
               Water forms near-perfect spheres that roll easily - the superhydrophobic effect!
             </p>
           </div>
+
+          {renderVisualization(false, true)}
 
           <div style={{
             background: colors.bgCard,
@@ -1310,10 +1461,12 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   }
 
   // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
+  if (internalPhase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1348,6 +1501,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',

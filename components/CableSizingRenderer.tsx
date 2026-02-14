@@ -232,22 +232,22 @@ const TRANSFER_APPS = [
   {
     title: 'Data Center PDUs',
     icon: '🏢',
-    description: 'Power Distribution Units in data centers use thick copper bus bars and operate at 480V/415V to minimize losses. A 1MW facility could waste $50,000/year at poor efficiency.',
+    description: 'Power Distribution Units in data centers use thick copper bus bars and operate at 480V/415V to minimize losses. Companies like Google, Microsoft, Amazon AWS, and Meta operate massive data centers where power efficiency is critical. A 1MW facility could waste $50,000/year at poor efficiency. Schneider Electric and Eaton are leading PDU manufacturers that design systems specifically to minimize I squared R losses in high-density computing environments.',
   },
   {
     title: 'Electric Vehicle Charging',
     icon: '🚗',
-    description: 'Level 3 DC fast chargers use high voltage (400-800V) to reduce cable sizes while delivering 350kW. Otherwise cables would need to be impossibly thick and heavy.',
+    description: 'Level 3 DC fast chargers from companies like Tesla (Supercharger network), Electrify America, ChargePoint, and EVgo use high voltage (400-800V) to reduce cable sizes while delivering 350kW. ABB and Tritium manufacture the charging equipment. Porsche and Audi vehicles use 800V architecture specifically to enable faster charging with thinner cables. Otherwise cables would need to be impossibly thick and heavy for practical vehicle charging.',
   },
   {
     title: 'Power Grid Transmission',
     icon: '⚡',
-    description: 'Power lines operate at 230-765kV because at 120V, transmitting 1GW would require cables 10+ feet diameter! High voltage makes long-distance transmission practical.',
+    description: 'Power lines operated by utilities like Pacific Gas and Electric (PG&E), Duke Energy, and American Electric Power run at 230-765kV because at 120V, transmitting 1GW would require cables over 10 feet in diameter! Siemens Energy, GE Vernova, and Hitachi build the transformers and switching equipment. High voltage transmission lines from companies like NextEra Energy connect renewable power across entire regions efficiently.',
   },
   {
     title: 'Solar Farm Interconnection',
     icon: '☀️',
-    description: 'Large solar farms use central inverters to boost voltage before transmission. A 100MW farm might lose 5-10% in cables alone at low voltage.',
+    description: 'Large solar farms operated by First Solar, SunPower, and NextEra Energy use central inverters from SMA Solar Technology, SolarEdge, and Enphase to boost voltage before transmission. Tesla Megapack battery installations also use high voltage DC to minimize losses. A 100MW farm might lose 5-10% of generated power in cables alone if operating at low voltage, which is why utility-scale solar always uses medium voltage collection systems.',
   },
 ];
 
@@ -352,7 +352,7 @@ export default function CableSizingRenderer({
     bgCard: '#0f172a',        // slate-900
     bgCardLight: '#1e293b',   // slate-800
     textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
+    textSecondary: '#e2e8f0', // slate-200 - improved contrast
     textMuted: '#64748b',     // slate-500
     border: '#334155',        // slate-700
     borderLight: '#475569',   // slate-600
@@ -473,48 +473,78 @@ export default function CableSizingRenderer({
   // Progress bar renderer
   const renderProgressBar = () => {
     const currentIdx = PHASES.indexOf(phase);
+    const progressPercent = ((currentIdx + 1) / PHASES.length) * 100;
     return (
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-900/80 border-b border-slate-700">
-        <button
-          onClick={goBack}
-          disabled={currentIdx === 0}
-          className={`p-2 rounded-lg transition-all ${
-            currentIdx === 0
-              ? 'opacity-30 cursor-not-allowed'
-              : 'hover:bg-slate-700 text-slate-300'
-          }`}
+      <nav
+        className="flex flex-col bg-slate-900/80 border-b border-slate-700"
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}
+        role="navigation"
+        aria-label="Phase navigation"
+      >
+        {/* Progress bar */}
+        <div
+          className="h-1 bg-slate-700 w-full"
+          role="progressbar"
+          aria-valuenow={progressPercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Progress: ${currentIdx + 1} of ${PHASES.length} phases`}
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+          <div
+            className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-300"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1">
-            {PHASES.map((p, i) => (
-              <button
-                key={p}
-                onClick={() => i <= currentIdx && goToPhase(p)}
-                className={`h-2 rounded-full transition-all ${
-                  i === currentIdx
-                    ? 'w-6 bg-amber-500'
-                    : i < currentIdx
-                    ? 'w-2 bg-emerald-500 cursor-pointer hover:bg-emerald-400'
-                    : 'w-2 bg-slate-600'
-                }`}
-                title={PHASE_LABELS[p]}
-              />
-            ))}
+        <div className="flex items-center justify-between px-4 py-3">
+          <button
+            onClick={goBack}
+            disabled={currentIdx === 0}
+            aria-label="Go to previous phase"
+            style={{ minHeight: '44px', minWidth: '44px' }}
+            className={`p-2 rounded-lg transition-all ${
+              currentIdx === 0
+                ? 'opacity-30 cursor-not-allowed'
+                : 'hover:bg-slate-700 text-slate-300'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 200 200" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={16} d="M125 158l-58-58 58-58" />
+            </svg>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1" role="tablist" aria-label="Phase dots">
+              {PHASES.map((p, i) => (
+                <button
+                  key={p}
+                  onClick={() => goToPhase(p)}
+                  role="tab"
+                  aria-selected={i === currentIdx}
+                  aria-label={`${PHASE_LABELS[p]}${i < currentIdx ? ' (completed)' : i === currentIdx ? ' (current)' : ''}`}
+                  style={{ minHeight: '44px', minWidth: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                  className="transition-all cursor-pointer"
+                >
+                  <span className={`block h-2 rounded-full transition-all ${
+                    i === currentIdx
+                      ? 'w-6 bg-amber-500'
+                      : i < currentIdx
+                      ? 'w-2 bg-emerald-500 hover:bg-emerald-400'
+                      : 'w-2 bg-slate-600 hover:bg-slate-500'
+                  }`} />
+                </button>
+              ))}
+            </div>
+            <span className="text-xs font-medium ml-2" style={{ color: '#e2e8f0' }}>
+              {currentIdx + 1}/{PHASES.length}
+            </span>
           </div>
-          <span className="text-xs font-medium text-slate-400 ml-2">
-            {currentIdx + 1}/{PHASES.length}
-          </span>
-        </div>
 
-        <div className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-semibold">
-          {PHASE_LABELS[phase]}
+          <div className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-semibold">
+            {PHASE_LABELS[phase]}
+          </div>
         </div>
-      </div>
+      </nav>
     );
   };
 
@@ -522,10 +552,11 @@ export default function CableSizingRenderer({
   const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Continue') => {
     const currentIdx = PHASES.indexOf(phase);
     return (
-      <div className="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-t border-slate-700">
+      <div className="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-t border-slate-700" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1)', borderTop: '1px solid #334155' }}>
         <button
           onClick={goBack}
           disabled={currentIdx === 0}
+          style={{ minHeight: '44px', borderRadius: '12px', cursor: currentIdx === 0 ? 'not-allowed' : 'pointer', transition: 'all 0.3s ease', background: '#334155' }}
           className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
             currentIdx === 0
               ? 'opacity-30 cursor-not-allowed bg-slate-700 text-slate-500'
@@ -535,13 +566,14 @@ export default function CableSizingRenderer({
           Back
         </button>
 
-        <span className="text-sm text-slate-500 font-medium">
+        <span className="text-sm font-medium" style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '14px' }}>
           {PHASE_LABELS[phase]}
         </span>
 
         <button
           onClick={goNext}
           disabled={!canGoNext}
+          style={{ minHeight: '44px', borderRadius: '12px', cursor: canGoNext ? 'pointer' : 'not-allowed', transition: 'all 0.3s ease', background: canGoNext ? 'linear-gradient(to right, #f59e0b, #f97316)' : '#334155', boxShadow: canGoNext ? '0 4px 14px 0 rgba(245, 158, 11, 0.39)' : 'none' }}
           className={`px-6 py-2.5 rounded-xl font-semibold transition-all ${
             canGoNext
               ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40'
@@ -898,6 +930,25 @@ export default function CableSizingRenderer({
               stroke={heatIntensity > 0.6 ? '#ef4444' : heatIntensity > 0.3 ? '#fbbf24' : '#22c55e'}
               strokeWidth="2"
             />
+          </g>
+
+          {/* SVG Labels for educational clarity */}
+          <text x="50" y="55" fill="#e2e8f0" fontSize="11" fontWeight="bold">Power Source</text>
+          <text x="50" y="68" fill="#e2e8f0" fontSize="9">240V Supply</text>
+          <text x="265" y="55" fill="#e2e8f0" fontSize="11" fontWeight="bold">Load</text>
+          <text x="265" y="68" fill="#e2e8f0" fontSize="9">{loadCurrent}A Draw</text>
+          <text x="150" y="145" fill="#b87333" fontSize="10" fontWeight="bold">AWG {wireGauge} Cable</text>
+          <text x="150" y="158" fill="#e2e8f0" fontSize="9">{cableLength}m length</text>
+          <text x="180" y="175" fill="#e2e8f0" fontSize="9">R={resistance.toFixed(3)}Ω</text>
+          <text x="180" y="188" fill={powerLoss > 200 ? '#ef4444' : '#fbbf24'} fontSize="10" fontWeight="bold">Loss: {powerLoss.toFixed(0)}W</text>
+
+          {/* Legend */}
+          <g transform="translate(280, 150)">
+            <text x="0" y="0" fill="#e2e8f0" fontSize="10" fontWeight="bold">Legend:</text>
+            <circle cx="8" cy="12" r="4" fill="#fbbf24" />
+            <text x="16" y="16" fill="#e2e8f0" fontSize="9">Current Flow</text>
+            <circle cx="8" cy="28" r="4" fill="#ef4444" />
+            <text x="16" y="32" fill="#e2e8f0" fontSize="9">Heat Loss</text>
           </g>
         </svg>
 
@@ -1337,7 +1388,7 @@ export default function CableSizingRenderer({
   // ──────────────────────────────────────────────────────────────────────────
 
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center" style={{ paddingTop: '80px' }}>
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full mb-8">
         <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
         <span className="text-sm font-medium text-amber-400 tracking-wide">DATA CENTER PHYSICS</span>
@@ -1375,67 +1426,133 @@ export default function CableSizingRenderer({
     </div>
   );
 
-  const renderPredict = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-          <span className="text-xl">🤔</span>
+  const renderPredict = () => {
+    const predictOptions = [
+      { id: 'double', label: 'Doubles (2x) - twice the current, twice the loss', icon: '2️⃣' },
+      { id: 'quadruple', label: 'Quadruples (4x) - loss goes with current squared', icon: '4️⃣' },
+      { id: 'same', label: 'Stays the same - cable resistance is fixed', icon: '➡️' },
+    ];
+    const answeredCount = prediction ? 1 : 0;
+
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-8" style={{ paddingTop: '80px' }}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+            <span className="text-xl">🤔</span>
+          </div>
+          <h2 className="text-xl font-bold text-slate-800">Make Your Prediction</h2>
         </div>
-        <h2 className="text-xl font-bold text-slate-800">Make Your Prediction</h2>
-      </div>
 
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 mb-6">
-        <p className="text-blue-800 leading-relaxed">
-          A cable carries <strong>100 Amps</strong>. If you double the current to <strong>200 Amps</strong>,
-          how does the power loss (heat) in the cable change?
-        </p>
-      </div>
+        {/* Progress indicator */}
+        <div className="bg-slate-50 rounded-2xl p-4 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-slate-700">Progress</span>
+            <span className="text-sm font-bold text-blue-600">{answeredCount}/1</span>
+          </div>
+          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-300"
+              style={{ width: `${answeredCount * 100}%` }}
+            />
+          </div>
+        </div>
 
-      <div className="space-y-3 mb-6">
-        {[
-          { id: 'double', label: 'Doubles (2x) - twice the current, twice the loss', icon: '2️⃣' },
-          { id: 'quadruple', label: 'Quadruples (4x) - loss goes with current squared', icon: '4️⃣' },
-          { id: 'same', label: 'Stays the same - cable resistance is fixed', icon: '➡️' },
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            disabled={showPredictionFeedback}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
-              prediction === option.id
-                ? option.id === 'quadruple'
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-red-300 bg-red-50'
-                : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50'
-            } ${showPredictionFeedback ? 'cursor-default' : 'cursor-pointer'}`}
-          >
-            <span className="text-2xl">{option.icon}</span>
-            <span className="font-medium text-slate-700">{option.label}</span>
-          </button>
-        ))}
-      </div>
+        {/* SVG Visualization for predict phase */}
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
+          <svg viewBox="0 0 400 200" className="w-full h-48">
+            <defs>
+              <linearGradient id="predictCableGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#f5a54a" />
+                <stop offset="50%" stopColor="#b87333" />
+                <stop offset="100%" stopColor="#8b4513" />
+              </linearGradient>
+              <linearGradient id="predictGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
+                <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+              </linearGradient>
+            </defs>
 
-      {showPredictionFeedback && (
-        <div className={`p-5 rounded-2xl mb-6 ${
-          prediction === 'quadruple' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
-        }`}>
-          <p className={`leading-relaxed ${prediction === 'quadruple' ? 'text-emerald-800' : 'text-amber-800'}`}>
-            {prediction === 'quadruple' ? (
-              <><strong>Exactly right!</strong> P = I²R means power loss scales with the <em>square</em> of current. Double the current = 4x the loss. Triple current = 9x loss! This is why cable sizing matters so much.</>
-            ) : (
-              <><strong>The math is surprising:</strong> P = I²R! Power loss scales with current <em>squared</em>. Doubling current causes 4x the loss, not 2x. This quadratic relationship is why proper cable sizing is critical.</>
-            )}
+            {/* Background */}
+            <rect width="400" height="200" fill="#0f172a" rx="8" />
+
+            {/* Cable representation */}
+            <rect x="50" y="80" width="300" height="40" rx="8" fill="url(#predictCableGrad)" />
+
+            {/* Current flow animation */}
+            <rect x="50" y="95" width="300" height="10" fill="url(#predictGlow)" opacity="0.6">
+              <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.5s" repeatCount="indefinite" />
+            </rect>
+
+            {/* Labels */}
+            <text x="200" y="40" fill="#e2e8f0" fontSize="16" textAnchor="middle" fontWeight="bold">Current Flow Through Cable</text>
+            <text x="200" y="60" fill="#e2e8f0" fontSize="12" textAnchor="middle">100A → 200A</text>
+
+            {/* Question mark */}
+            <text x="200" y="160" fill="#fbbf24" fontSize="24" textAnchor="middle">What happens to power loss?</text>
+
+            {/* Heat indicators */}
+            <circle cx="120" cy="100" r="4" fill="#ef4444" opacity="0.6">
+              <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="200" cy="100" r="4" fill="#ef4444" opacity="0.6">
+              <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" begin="0.3s" />
+            </circle>
+            <circle cx="280" cy="100" r="4" fill="#ef4444" opacity="0.6">
+              <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" begin="0.6s" />
+            </circle>
+          </svg>
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 mb-6">
+          <p className="text-blue-800 leading-relaxed">
+            A cable carries <strong>100 Amps</strong>. If you double the current to <strong>200 Amps</strong>,
+            how does the power loss (heat) in the cable change?
           </p>
         </div>
-      )}
-      {renderBottomBar(showPredictionFeedback, 'Explore I²R Losses')}
-    </div>
-  );
+
+        <div className="space-y-3 mb-6">
+          {predictOptions.map(option => (
+            <button
+              key={option.id}
+              onClick={() => handlePrediction(option.id)}
+              disabled={showPredictionFeedback}
+              style={{ WebkitTapHighlightColor: 'transparent', minHeight: '44px' }}
+              className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
+                prediction === option.id
+                  ? option.id === 'quadruple'
+                    ? 'border-emerald-500 bg-emerald-50'
+                    : 'border-red-300 bg-red-50'
+                  : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50'
+              } ${showPredictionFeedback ? 'cursor-default' : 'cursor-pointer'}`}
+            >
+              <span className="text-2xl">{option.icon}</span>
+              <span className="font-medium text-slate-700">{option.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {showPredictionFeedback && (
+          <div className={`p-5 rounded-2xl mb-6 ${
+            prediction === 'quadruple' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
+          }`}>
+            <p className={`leading-relaxed ${prediction === 'quadruple' ? 'text-emerald-800' : 'text-amber-800'}`}>
+              {prediction === 'quadruple' ? (
+                <><strong>Exactly right!</strong> P = I²R means power loss scales with the <em>square</em> of current. Double the current = 4x the loss. Triple current = 9x loss! This is why cable sizing matters so much.</>
+              ) : (
+                <><strong>The math is surprising:</strong> P = I²R! Power loss scales with current <em>squared</em>. Doubling current causes 4x the loss, not 2x. This quadratic relationship is why proper cable sizing is critical.</>
+              )}
+            </p>
+          </div>
+        )}
+        {renderBottomBar(showPredictionFeedback, 'Explore I²R Losses')}
+      </div>
+    );
+  };
 
   const renderPlay = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-3 mb-4">
+    <div className="max-w-2xl mx-auto px-6 py-8" style={{ paddingTop: '80px', gap: '16px' }}>
+      <div className="flex items-center gap-3 mb-4" style={{ marginBottom: '16px', gap: '12px' }}>
         <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
           <span className="text-xl">🔬</span>
         </div>
@@ -1445,12 +1562,30 @@ export default function CableSizingRenderer({
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
+      {/* Observation guidance */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4" style={{ padding: '16px', marginBottom: '16px', backgroundColor: 'rgba(239, 246, 255, 0.9)', borderRadius: '16px' }}>
+        <p className="text-blue-800 text-sm leading-relaxed">
+          <strong>Observe:</strong> Watch how the visualization changes as you adjust the controls. Pay attention to heat buildup and power loss values.
+        </p>
+      </div>
+
+      {/* Key physics terms definition */}
+      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-4 mb-4" style={{ padding: '16px', marginBottom: '16px', borderRadius: '16px' }}>
+        <h4 className="font-bold text-purple-800 mb-2" style={{ fontWeight: 700, fontSize: '14px' }}>Key Terms</h4>
+        <ul className="text-purple-700 text-sm space-y-1" style={{ lineHeight: 1.5 }}>
+          <li><strong>AWG (American Wire Gauge):</strong> Wire thickness standard - lower number means thicker wire with lower resistance</li>
+          <li><strong>I squared R Loss:</strong> Power dissipated as heat in a conductor, where P equals I squared times R</li>
+          <li><strong>Voltage Drop:</strong> Voltage lost along wire length due to resistance, calculated as V equals I times R</li>
+          <li><strong>Resistance:</strong> Opposition to current flow, measured in Ohms, increases with wire length</li>
+        </ul>
+      </div>
+
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6" style={{ padding: '16px', marginBottom: '24px', borderRadius: '16px', backgroundColor: 'rgba(15, 23, 42, 0.95)' }}>
         {renderCableVisualization()}
       </div>
 
-      <div className="space-y-4 mb-6">
-        <div className="bg-slate-100 rounded-xl p-4">
+      <div className="space-y-4 mb-6" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+        <div className="bg-slate-100 rounded-xl p-4" style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(241, 245, 249, 0.95)' }}>
           <label className="text-slate-700 text-sm font-medium block mb-2">
             Load Current: {loadCurrent} Amps
           </label>
@@ -1461,6 +1596,7 @@ export default function CableSizingRenderer({
             value={loadCurrent}
             onChange={(e) => handleSliderChange(setLoadCurrent, parseInt(e.target.value))}
             className="w-full accent-amber-500"
+            style={{ touchAction: 'pan-y', height: '8px', borderRadius: '4px', background: 'linear-gradient(to right, #f59e0b, #f97316)', cursor: 'pointer' }}
           />
           <div className="flex justify-between text-xs text-slate-500 mt-1">
             <span>10A</span>
@@ -1468,7 +1604,7 @@ export default function CableSizingRenderer({
           </div>
         </div>
 
-        <div className="bg-slate-100 rounded-xl p-4">
+        <div className="bg-slate-100 rounded-xl p-4" style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(241, 245, 249, 0.95)' }}>
           <label className="text-slate-700 text-sm font-medium block mb-2">
             Wire Gauge: AWG {wireGauge} ({wireGauge <= 2 ? 'thick' : wireGauge <= 6 ? 'medium' : 'thin'})
           </label>
@@ -1480,6 +1616,7 @@ export default function CableSizingRenderer({
             value={wireGauge}
             onChange={(e) => handleSliderChange(setWireGauge, parseInt(e.target.value))}
             className="w-full accent-orange-500"
+            style={{ touchAction: 'pan-y', height: '8px', borderRadius: '4px', background: 'linear-gradient(to right, #f97316, #ea580c)', cursor: 'pointer' }}
           />
           <div className="flex justify-between text-xs text-slate-500 mt-1">
             <span>AWG 0 (Thick)</span>
@@ -1487,7 +1624,7 @@ export default function CableSizingRenderer({
           </div>
         </div>
 
-        <div className="bg-slate-100 rounded-xl p-4">
+        <div className="bg-slate-100 rounded-xl p-4" style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(241, 245, 249, 0.95)' }}>
           <label className="text-slate-700 text-sm font-medium block mb-2">
             Cable Length: {cableLength} meters
           </label>
@@ -1498,6 +1635,7 @@ export default function CableSizingRenderer({
             value={cableLength}
             onChange={(e) => handleSliderChange(setCableLength, parseInt(e.target.value))}
             className="w-full accent-blue-500"
+            style={{ touchAction: 'pan-y', height: '8px', borderRadius: '4px', background: 'linear-gradient(to right, #3b82f6, #2563eb)', cursor: 'pointer' }}
           />
           <div className="flex justify-between text-xs text-slate-500 mt-1">
             <span>10m</span>
@@ -1512,17 +1650,36 @@ export default function CableSizingRenderer({
         </p>
       </div>
 
+      {/* Real-world relevance */}
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 mb-6" style={{ padding: '16px', marginBottom: '24px', gap: '12px' }}>
+        <h4 className="font-bold text-blue-800 mb-2">Real-World Relevance</h4>
+        <p className="text-blue-700 text-sm leading-relaxed">
+          Data centers spend millions on properly sized cables. A 1MW facility with poor cable sizing could waste $50,000/year in I squared R losses alone.
+          Every amp of unnecessary current means exponentially more heat and wasted electricity.
+        </p>
+      </div>
+
       {renderBottomBar(hasExperimented, hasExperimented ? 'Continue to Review' : `Adjust sliders ${Math.max(0, 5 - experimentCount)} more times...`)}
     </div>
   );
 
   const renderReview = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
+    <div className="max-w-2xl mx-auto px-6 py-8" style={{ paddingTop: '80px' }}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
           <span className="text-xl">📖</span>
         </div>
         <h2 className="text-xl font-bold text-slate-800">Understanding I²R Losses</h2>
+      </div>
+
+      {/* Reference user's prediction */}
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 mb-6" style={{ padding: '16px', marginBottom: '24px' }}>
+        <p className="text-amber-800 text-sm leading-relaxed">
+          <strong>Your prediction:</strong> You predicted that doubling current would{' '}
+          {prediction === 'quadruple' ? 'quadruple the power loss - and you were right!' :
+           prediction === 'double' ? 'double the power loss. Actually, it quadruples because P = I squared R!' :
+           'keep losses the same. Surprisingly, losses quadruple because of the I squared relationship!'}
+        </p>
       </div>
 
       <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 mb-6 text-center text-white">
@@ -1567,69 +1724,128 @@ export default function CableSizingRenderer({
     </div>
   );
 
-  const renderTwistPredict = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-          <span className="text-xl">🔄</span>
+  const renderTwistPredict = () => {
+    const twistOptions = [
+      { id: 'same', label: 'Same losses - power delivered is the same', icon: '=' },
+      { id: '480better', label: '480V has MUCH lower losses (about 1/5th)', icon: '📉' },
+      { id: '208better', label: '208V has lower losses - less voltage stress', icon: '📈' },
+    ];
+    const answeredCount = twistPrediction ? 1 : 0;
+
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-8" style={{ paddingTop: '80px' }}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+            <span className="text-xl">🔄</span>
+          </div>
+          <h2 className="text-xl font-bold text-slate-800">The High Voltage Twist</h2>
         </div>
-        <h2 className="text-xl font-bold text-slate-800">The High Voltage Twist</h2>
-      </div>
 
-      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 mb-6">
-        <p className="text-amber-800 leading-relaxed">
-          A data center needs to deliver <strong>10kW</strong> to a server rack.
-          They can use either <strong>208V</strong> or <strong>480V</strong> distribution.
-        </p>
-        <p className="text-amber-700 mt-2 font-medium">
-          How do the cable losses compare?
-        </p>
-      </div>
+        {/* Progress indicator */}
+        <div className="bg-slate-50 rounded-2xl p-4 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-slate-700">Progress</span>
+            <span className="text-sm font-bold text-amber-600">{answeredCount}/1</span>
+          </div>
+          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-300"
+              style={{ width: `${answeredCount * 100}%` }}
+            />
+          </div>
+        </div>
 
-      <div className="space-y-3 mb-6">
-        {[
-          { id: 'same', label: 'Same losses - power delivered is the same', icon: '=' },
-          { id: '480better', label: '480V has MUCH lower losses (about 1/5th)', icon: '📉' },
-          { id: '208better', label: '208V has lower losses - less voltage stress', icon: '📈' },
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            disabled={showTwistFeedback}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
-              twistPrediction === option.id
-                ? option.id === '480better'
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-amber-300 bg-amber-50'
-                : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50'
-            } ${showTwistFeedback ? 'cursor-default' : 'cursor-pointer'}`}
-          >
-            <span className="text-2xl">{option.icon}</span>
-            <span className="font-medium text-slate-700">{option.label}</span>
-          </button>
-        ))}
-      </div>
+        {/* SVG Visualization for twist_predict phase */}
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
+          <svg viewBox="0 0 400 200" className="w-full h-48">
+            <defs>
+              <linearGradient id="twistVoltGrad208" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fbbf24" />
+                <stop offset="100%" stopColor="#d97706" />
+              </linearGradient>
+              <linearGradient id="twistVoltGrad480" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#34d399" />
+                <stop offset="100%" stopColor="#059669" />
+              </linearGradient>
+            </defs>
 
-      {showTwistFeedback && (
-        <div className={`p-5 rounded-2xl mb-6 ${
-          twistPrediction === '480better' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
-        }`}>
-          <p className={`leading-relaxed ${twistPrediction === '480better' ? 'text-emerald-800' : 'text-amber-800'}`}>
-            {twistPrediction === '480better' ? (
-              <><strong>Excellent!</strong> P=IV means higher V = lower I for same power. Since losses are I²R, halving current cuts losses to 1/4! 480V vs 208V: (208/480)² = 0.19 or about 1/5 the losses!</>
-            ) : (
-              <><strong>The math is powerful:</strong> Higher voltage means lower current for the same power (P=IV). Since losses are I²R, halving current reduces losses to 1/4. This is why data centers prefer higher distribution voltages!</>
-            )}
+            {/* Background */}
+            <rect width="400" height="200" fill="#0f172a" rx="8" />
+
+            {/* 208V side */}
+            <rect x="40" y="60" width="140" height="80" rx="8" fill="url(#twistVoltGrad208)" opacity="0.3" />
+            <text x="110" y="90" fill="#fbbf24" fontSize="20" textAnchor="middle" fontWeight="bold">208V</text>
+            <text x="110" y="115" fill="#e2e8f0" fontSize="12" textAnchor="middle">48A current</text>
+            <text x="110" y="130" fill="#e2e8f0" fontSize="10" textAnchor="middle">Higher I²R loss</text>
+
+            {/* VS */}
+            <text x="200" y="105" fill="#64748b" fontSize="14" textAnchor="middle">vs</text>
+
+            {/* 480V side */}
+            <rect x="220" y="60" width="140" height="80" rx="8" fill="url(#twistVoltGrad480)" opacity="0.3" />
+            <text x="290" y="90" fill="#34d399" fontSize="20" textAnchor="middle" fontWeight="bold">480V</text>
+            <text x="290" y="115" fill="#e2e8f0" fontSize="12" textAnchor="middle">21A current</text>
+            <text x="290" y="130" fill="#e2e8f0" fontSize="10" textAnchor="middle">Lower I²R loss</text>
+
+            {/* Title */}
+            <text x="200" y="35" fill="#e2e8f0" fontSize="14" textAnchor="middle" fontWeight="bold">Same 10kW Power - Different Voltages</text>
+
+            {/* Question */}
+            <text x="200" y="175" fill="#fbbf24" fontSize="14" textAnchor="middle">Which has lower cable losses?</text>
+          </svg>
+        </div>
+
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 mb-6">
+          <p className="text-amber-800 leading-relaxed">
+            A data center needs to deliver <strong>10kW</strong> to a server rack.
+            They can use either <strong>208V</strong> or <strong>480V</strong> distribution.
+          </p>
+          <p className="text-amber-700 mt-2 font-medium">
+            How do the cable losses compare?
           </p>
         </div>
-      )}
-      {renderBottomBar(showTwistFeedback, 'Compare Voltages')}
-    </div>
-  );
+
+        <div className="space-y-3 mb-6">
+          {twistOptions.map(option => (
+            <button
+              key={option.id}
+              onClick={() => handleTwistPrediction(option.id)}
+              disabled={showTwistFeedback}
+              style={{ WebkitTapHighlightColor: 'transparent', minHeight: '44px' }}
+              className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
+                twistPrediction === option.id
+                  ? option.id === '480better'
+                    ? 'border-emerald-500 bg-emerald-50'
+                    : 'border-amber-300 bg-amber-50'
+                  : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50'
+              } ${showTwistFeedback ? 'cursor-default' : 'cursor-pointer'}`}
+            >
+              <span className="text-2xl">{option.icon}</span>
+              <span className="font-medium text-slate-700">{option.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {showTwistFeedback && (
+          <div className={`p-5 rounded-2xl mb-6 ${
+            twistPrediction === '480better' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
+          }`}>
+            <p className={`leading-relaxed ${twistPrediction === '480better' ? 'text-emerald-800' : 'text-amber-800'}`}>
+              {twistPrediction === '480better' ? (
+                <><strong>Excellent!</strong> P=IV means higher V = lower I for same power. Since losses are I²R, halving current cuts losses to 1/4! 480V vs 208V: (208/480)² = 0.19 or about 1/5 the losses!</>
+              ) : (
+                <><strong>The math is powerful:</strong> Higher voltage means lower current for the same power (P=IV). Since losses are I²R, halving current reduces losses to 1/4. This is why data centers prefer higher distribution voltages!</>
+              )}
+            </p>
+          </div>
+        )}
+        {renderBottomBar(showTwistFeedback, 'Compare Voltages')}
+      </div>
+    );
+  };
 
   const renderTwistPlay = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
+    <div className="max-w-2xl mx-auto px-6 py-8" style={{ paddingTop: '80px' }}>
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
           <span className="text-xl">📊</span>
@@ -1638,6 +1854,13 @@ export default function CableSizingRenderer({
           <h2 className="text-xl font-bold text-slate-800">Voltage Comparison</h2>
           <p className="text-sm text-slate-500">See how distribution voltage affects losses</p>
         </div>
+      </div>
+
+      {/* Observation guidance */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4">
+        <p className="text-blue-800 text-sm leading-relaxed">
+          <strong>Observe:</strong> Compare the bar heights showing power loss at 208V vs 480V. Notice how much lower the losses are at higher voltage.
+        </p>
       </div>
 
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
@@ -1656,6 +1879,7 @@ export default function CableSizingRenderer({
           value={loadPower}
           onChange={(e) => { setLoadPower(parseInt(e.target.value)); handleVoltageChange(distributionVoltage); }}
           className="w-full accent-amber-500"
+          style={{ touchAction: 'pan-y', height: '8px', borderRadius: '4px', background: 'linear-gradient(to right, #f59e0b, #f97316)', cursor: 'pointer' }}
         />
         <div className="flex justify-between text-xs text-slate-500 mt-1">
           <span>1 kW</span>
@@ -1688,7 +1912,7 @@ export default function CableSizingRenderer({
   );
 
   const renderTwistReview = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
+    <div className="max-w-2xl mx-auto px-6 py-8" style={{ paddingTop: '80px' }}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
           <span className="text-xl">💡</span>
@@ -1740,7 +1964,7 @@ export default function CableSizingRenderer({
     const allAppsCompleted = completedApps.size >= 4;
 
     return (
-      <div className="max-w-2xl mx-auto px-6 py-8">
+      <div className="max-w-2xl mx-auto px-6 py-8" style={{ paddingTop: '80px' }}>
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
             <span className="text-xl">🌍</span>
@@ -1748,6 +1972,20 @@ export default function CableSizingRenderer({
           <div>
             <h2 className="text-xl font-bold text-slate-800">Real-World Applications</h2>
             <p className="text-sm text-slate-500">Complete all 4 to unlock assessment</p>
+          </div>
+        </div>
+
+        {/* Progress indicator */}
+        <div className="bg-slate-50 rounded-2xl p-4 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-slate-700">Progress</span>
+            <span className="text-sm font-bold text-blue-600">{completedApps.size}/4</span>
+          </div>
+          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-300"
+              style={{ width: `${(completedApps.size / 4) * 100}%` }}
+            />
           </div>
         </div>
 
@@ -1783,13 +2021,13 @@ export default function CableSizingRenderer({
             {!completedApps.has(activeAppTab) ? (
               <button
                 onClick={() => handleCompleteApp(activeAppTab)}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
+                style={{ WebkitTapHighlightColor: 'transparent', minHeight: '44px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s ease', background: 'linear-gradient(to right, #f59e0b, #f97316)', boxShadow: '0 4px 14px 0 rgba(245, 158, 11, 0.39)' }}
                 className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold shadow-lg"
               >
-                Mark as Complete
+                Got It
               </button>
             ) : (
-              <div className="w-full py-3 bg-amber-100 text-amber-700 rounded-xl font-semibold text-center">
+              <div className="w-full py-3 bg-amber-100 text-amber-700 rounded-xl font-semibold text-center" style={{ minHeight: '44px', borderRadius: '12px', background: '#fef3c7' }}>
                 Completed
               </div>
             )}
@@ -1819,7 +2057,7 @@ export default function CableSizingRenderer({
     const allAnswered = answeredCount === TEST_QUESTIONS.length;
 
     return (
-      <div className="max-w-2xl mx-auto px-6 py-8">
+      <div className="max-w-2xl mx-auto px-6 py-8" style={{ paddingTop: '80px' }}>
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
             <span className="text-xl">📝</span>
@@ -1849,23 +2087,28 @@ export default function CableSizingRenderer({
               {TEST_QUESTIONS.map((q, qIndex) => (
                 <div key={qIndex} className="bg-white border border-slate-200 rounded-2xl p-5">
                   <div className="flex items-start gap-3 mb-4">
-                    <span className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold ${
+                    <span className={`flex-shrink-0 px-2 py-1 rounded-lg text-sm font-bold ${
                       testAnswers[qIndex] !== null ? 'bg-violet-500 text-white' : 'bg-slate-200 text-slate-600'
                     }`}>
-                      {qIndex + 1}
+                      Question {qIndex + 1} of 10
                     </span>
-                    <p className="font-medium text-slate-800 leading-relaxed">{q.question}</p>
                   </div>
-                  <div className="space-y-2 ml-10">
+                  <p className="font-medium text-slate-800 leading-relaxed mb-4">{q.question}</p>
+                  <div className="space-y-2">
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
                         onClick={() => handleTestAnswer(qIndex, oIndex)}
-                        style={{ WebkitTapHighlightColor: 'transparent' }}
+                        style={{
+                          WebkitTapHighlightColor: 'transparent',
+                          minHeight: '44px',
+                          transform: testAnswers[qIndex] === oIndex ? 'scale(1.02)' : 'scale(1)',
+                          borderWidth: testAnswers[qIndex] === oIndex ? '2px' : '1px',
+                        }}
                         className={`w-full p-3 rounded-xl text-left text-sm transition-all duration-200 ${
                           testAnswers[qIndex] === oIndex
-                            ? 'bg-violet-500 text-white shadow-lg'
-                            : 'bg-slate-50 text-slate-700 hover:bg-violet-50 border border-slate-200'
+                            ? 'bg-violet-500 text-white shadow-lg border-violet-600'
+                            : 'bg-slate-50 text-slate-700 hover:bg-violet-50 border-slate-200'
                         }`}
                       >
                         {option.text}
@@ -1879,7 +2122,7 @@ export default function CableSizingRenderer({
             <button
               onClick={handleSubmitTest}
               disabled={!allAnswered}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              style={{ WebkitTapHighlightColor: 'transparent', minHeight: '44px' }}
               className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
                 allAnswered
                   ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
@@ -1890,24 +2133,47 @@ export default function CableSizingRenderer({
             </button>
           </>
         ) : (
-          <div className="text-center py-8">
-            <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full mb-6 ${
-              testScore >= 7 ? 'bg-gradient-to-br from-amber-500 to-orange-500' : 'bg-gradient-to-br from-slate-400 to-slate-500'
-            }`}>
-              <span className="text-5xl">{testScore >= 7 ? '🔌' : '📚'}</span>
+          <div className="py-8">
+            <div className="text-center mb-8">
+              <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full mb-6 ${
+                testScore >= 7 ? 'bg-gradient-to-br from-amber-500 to-orange-500' : 'bg-gradient-to-br from-slate-400 to-slate-500'
+              }`}>
+                <span className="text-5xl">{testScore >= 7 ? '🔌' : '📚'}</span>
+              </div>
+
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">{testScore}/10 Correct</h3>
+              <p className="text-slate-600 mb-4">
+                {testScore >= 7 ? 'Excellent! You understand cable sizing and voltage drop!' : 'Review the concepts and try again.'}
+              </p>
             </div>
 
-            <h3 className="text-2xl font-bold text-slate-800 mb-2">{testScore}/10 Correct</h3>
-            <p className="text-slate-600 mb-8">
-              {testScore >= 7 ? 'Excellent! You understand cable sizing and voltage drop!' : 'Review the concepts and try again.'}
-            </p>
+            {/* Answer Review Section */}
+            <div className="bg-slate-50 rounded-2xl p-4 mb-6">
+              <h4 className="font-bold text-slate-800 mb-4">Answer Review</h4>
+              <div className="space-y-3">
+                {TEST_QUESTIONS.map((q, qIndex) => {
+                  const userAnswer = testAnswers[qIndex];
+                  const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                  return (
+                    <div key={qIndex} className="flex items-center gap-3 p-2 rounded-lg bg-white">
+                      <span className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                        isCorrect ? 'bg-emerald-500' : 'bg-red-500'
+                      }`}>
+                        {isCorrect ? '✓' : '✗'}
+                      </span>
+                      <span className="text-sm text-slate-700">Q{qIndex + 1}: {isCorrect ? 'Correct' : 'Incorrect'}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             {testScore >= 7 ? (
               renderBottomBar(true, 'Complete Lesson')
             ) : (
               <button
                 onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null)); }}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
+                style={{ WebkitTapHighlightColor: 'transparent', minHeight: '44px' }}
                 className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-slate-200 text-slate-700"
               >
                 Try Again
@@ -1920,7 +2186,7 @@ export default function CableSizingRenderer({
   };
 
   const renderMastery = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8 text-center">
+    <div className="max-w-2xl mx-auto px-6 py-8 text-center" style={{ paddingTop: '80px' }}>
       <div className="mb-8">
         <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 shadow-xl shadow-amber-500/30 mb-6">
           <span className="text-5xl">🏆</span>
@@ -1981,9 +2247,9 @@ export default function CableSizingRenderer({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col" style={{ fontWeight: 400, fontSize: '16px', lineHeight: 1.6, background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', maxWidth: '100vw' }}>
       {renderProgressBar()}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1" style={{ overflowY: 'auto', paddingBottom: '80px' }}>
         {renderPhase()}
       </div>
     </div>

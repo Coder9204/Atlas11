@@ -170,7 +170,7 @@ const testQuestions = [
 // -----------------------------------------------------------------------------
 const realWorldApps = [
   {
-    icon: '🎮',
+    icon: '\u{1F3AE}',
     title: 'Gaming GPU Boost',
     short: 'Why your GPU clock speeds dance around',
     tagline: 'Maximum performance within thermal limits',
@@ -178,9 +178,9 @@ const realWorldApps = [
     connection: 'The thermal RC model explains why boost clocks can be sustained initially (thermal capacitance absorbs heat) but must drop as equilibrium is reached. Better cooling directly translates to higher sustained clocks.',
     howItWorks: 'Hundreds of times per second, the GPU measures die temperature, power consumption, and current headroom. An algorithm determines the maximum safe frequency based on voltage-frequency curves and power budgets. Clocks adjust in small steps to maximize performance.',
     stats: [
-      { value: '100+ MHz', label: 'Clock variation', icon: '📊' },
-      { value: '<10ms', label: 'Adjustment time', icon: '⚡' },
-      { value: '15-25%', label: 'Boost vs base', icon: '🚀' }
+      { value: '200 MHz', label: 'Clock variation' },
+      { value: '10ms', label: 'Adjustment time' },
+      { value: '25%', label: 'Boost vs base' }
     ],
     examples: ['NVIDIA GPU Boost 4.0', 'AMD PowerTune', 'Intel Adaptive Boost', 'Apple ProMotion'],
     companies: ['NVIDIA', 'AMD', 'Intel', 'Qualcomm'],
@@ -188,7 +188,7 @@ const realWorldApps = [
     color: '#10B981'
   },
   {
-    icon: '📱',
+    icon: '\u{1F4F1}',
     title: 'Mobile SoC Throttling',
     short: 'Why phones get hot and slow down',
     tagline: 'Thermal limits in your pocket',
@@ -196,9 +196,9 @@ const realWorldApps = [
     connection: 'The thermal time constant of a phone (case + battery + PCB) is typically 30-60 seconds. This explains why burst performance can last for short periods before sustained thermal limits force throttling.',
     howItWorks: 'Mobile DVFS uses multiple sensors (die, skin, battery, ambient) to manage power. Big.LITTLE architectures allow shifting work to efficient cores. When skin temperature approaches 42C (discomfort threshold), aggressive throttling begins.',
     stats: [
-      { value: '50%', label: 'Burst vs sustained', icon: '📉' },
-      { value: '42C', label: 'Skin temp limit', icon: '🌡️' },
-      { value: '5-10W', label: 'Sustained power', icon: '🔋' }
+      { value: '50%', label: 'Burst vs sustained' },
+      { value: '42C', label: 'Skin temp limit' },
+      { value: '5-10W', label: 'Sustained power' }
     ],
     examples: ['Apple A-series chips', 'Snapdragon thermal management', 'Samsung Game Booster', 'MediaTek Dimensity'],
     companies: ['Apple', 'Qualcomm', 'Samsung', 'MediaTek'],
@@ -206,7 +206,7 @@ const realWorldApps = [
     color: '#3B82F6'
   },
   {
-    icon: '🏢',
+    icon: '\u{1F3E2}',
     title: 'Data Center Power Management',
     short: 'Optimizing perf-per-watt at scale',
     tagline: 'Every watt costs money',
@@ -214,9 +214,9 @@ const realWorldApps = [
     connection: 'The V^2 relationship in P = CV^2f means modest frequency reductions enable significant voltage drops. A 10% clock reduction might enable 15% voltage reduction, yielding 25%+ power savings.',
     howItWorks: 'Hyperscalers profile workloads and set power/frequency targets per job type. AI training often runs at reduced clocks for efficiency. Batch scheduling fills gaps to maintain high utilization at optimal efficiency points.',
     stats: [
-      { value: '30%', label: 'Power savings', icon: '💰' },
-      { value: '95%', label: 'Performance retained', icon: '🎯' },
-      { value: 'MWs', label: 'Saved per datacenter', icon: '⚡' }
+      { value: '30%', label: 'Power savings' },
+      { value: '95%', label: 'Performance retained' },
+      { value: 'MWs', label: 'Saved per datacenter' }
     ],
     examples: ['Google TPU power management', 'AWS Inferentia optimization', 'Microsoft Azure GPU pools', 'Meta AI clusters'],
     companies: ['Google', 'Microsoft', 'Meta', 'Amazon'],
@@ -224,7 +224,7 @@ const realWorldApps = [
     color: '#8B5CF6'
   },
   {
-    icon: '🏎️',
+    icon: '\u{1F3CE}',
     title: 'Automotive & Embedded Systems',
     short: 'Safety-critical thermal management',
     tagline: 'When throttling isnt an option',
@@ -232,9 +232,9 @@ const realWorldApps = [
     connection: 'The thermal RC model is used to design cooling systems that guarantee equilibrium temperatures under worst-case sustained loads. Safety margins ensure no throttling occurs during critical operations.',
     howItWorks: 'Automotive-grade processors specify sustainable power, not boost power. Cooling systems are designed for 100% duty cycle at maximum sustainable load. DVFS provides efficiency at light loads while guaranteeing full performance when needed.',
     stats: [
-      { value: '100%', label: 'Guaranteed perf', icon: '✓' },
-      { value: '105C', label: 'Junction limit', icon: '🌡️' },
-      { value: '15 years', label: 'Reliability target', icon: '📅' }
+      { value: '100%', label: 'Guaranteed perf' },
+      { value: '105C', label: 'Junction limit' },
+      { value: '15 years', label: 'Reliability target' }
     ],
     examples: ['NVIDIA DRIVE', 'Tesla FSD computer', 'Mobileye EyeQ', 'Qualcomm Snapdragon Ride'],
     companies: ['NVIDIA', 'Tesla', 'Intel/Mobileye', 'Qualcomm'],
@@ -267,8 +267,8 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
   const [simulationTime, setSimulationTime] = useState(0);
   const [powerLimit, setPowerLimit] = useState(250); // Watts
   const [thermalLimit, setThermalLimit] = useState(83); // Celsius
-  const [ambientTemp, setAmbientTemp] = useState(25); // Celsius
-  const [thermalResistance, setThermalResistance] = useState(0.25); // C/W
+  const [ambientTemp] = useState(25); // Celsius
+  const [thermalResistance] = useState(0.25); // C/W
 
   // Simulation data history
   const [clockHistory, setClockHistory] = useState<number[]>([]);
@@ -303,46 +303,27 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
 
   // Calculate GPU state based on thermal RC model
   const calculateGPUState = useCallback((time: number, thermalR: number) => {
-    // Base boost clock and power
-    const maxBoostClock = 2400; // MHz
-    const baseClock = 1800; // MHz
-    const maxPower = 300; // Watts (what the GPU would draw at max boost)
-
-    // Thermal RC model parameters
-    const thermalCapacitance = 150; // J/C (thermal mass of GPU die + heatsink)
-    const tau = thermalR * thermalCapacitance; // Time constant
-
-    // Calculate current temperature based on thermal RC model
-    // T(t) = T_ambient + P * R_th * (1 - e^(-t/tau))
+    const maxBoostClock = 2400;
+    const baseClock = 1800;
+    const maxPower = 300;
+    const thermalCapacitance = 150;
+    const tau = thermalR * thermalCapacitance;
     const steadyStateTemp = ambientTemp + maxPower * thermalR;
     const currentTemp = ambientTemp + (steadyStateTemp - ambientTemp) * (1 - Math.exp(-time / tau));
-
-    // Calculate clock speed based on thermal headroom and power limit
     let targetClock = maxBoostClock;
     let currentPower = maxPower;
-
-    // Power limit throttling
     if (currentPower > powerLimit) {
-      // Reduce clock to meet power limit (P ~ f^1.2 approximately due to V-f curve)
       targetClock = maxBoostClock * Math.pow(powerLimit / maxPower, 1 / 1.2);
       currentPower = powerLimit;
     }
-
-    // Thermal throttling
     if (currentTemp > thermalLimit - 5) {
       const thermalHeadroom = Math.max(0, thermalLimit - currentTemp) / 10;
       const thermalFactor = Math.min(1, thermalHeadroom + 0.7);
       targetClock = Math.min(targetClock, maxBoostClock * thermalFactor);
     }
-
-    // Ensure clock doesn't go below base
     targetClock = Math.max(baseClock, targetClock);
-
-    // Recalculate power based on actual clock
-    // P = C * V^2 * f, simplified approximation
     const clockRatio = targetClock / maxBoostClock;
     currentPower = maxPower * Math.pow(clockRatio, 1.2);
-
     return {
       clock: Math.round(targetClock),
       temperature: Math.min(thermalLimit + 2, Math.round(currentTemp * 10) / 10),
@@ -351,6 +332,39 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     };
   }, [ambientTemp, powerLimit, thermalLimit]);
 
+  // Compute a "static" GPU state from current parameters (no simulation needed)
+  // This maps power limit and thermal limit directly to visible clock/temp/power
+  const getStaticGPUState = useCallback((pl: number, tl: number, tr: number) => {
+    const maxBoostClock = 2400;
+    const baseClock = 1800;
+    const maxPower = 300;
+    // Power-limited clock: higher PL allows higher clock
+    let targetClock = maxBoostClock;
+    let effectivePower = maxPower;
+    if (effectivePower > pl) {
+      targetClock = maxBoostClock * Math.pow(pl / maxPower, 1 / 1.2);
+      effectivePower = pl;
+    }
+    // Steady-state temp uses actual power after PL constraint
+    const steadyStateTemp = ambientTemp + effectivePower * tr;
+    // Thermal throttle only if steady-state temp exceeds thermal limit
+    if (steadyStateTemp > tl - 5) {
+      const thermalHeadroom = Math.max(0, tl - steadyStateTemp) / 10;
+      const thermalFactor = Math.min(1, thermalHeadroom + 0.7);
+      const thermalClock = maxBoostClock * thermalFactor;
+      targetClock = Math.min(targetClock, thermalClock);
+    }
+    targetClock = Math.max(baseClock, Math.min(maxBoostClock, targetClock));
+    const clockRatio = targetClock / maxBoostClock;
+    effectivePower = Math.round(maxPower * Math.pow(clockRatio, 1.2));
+    const finalTemp = Math.round((ambientTemp + effectivePower * tr) * 10) / 10;
+    return {
+      clock: Math.round(targetClock),
+      temperature: Math.min(tl + 2, finalTemp),
+      power: effectivePower,
+    };
+  }, [ambientTemp]);
+
   // Run simulation
   useEffect(() => {
     if (isSimulating && simulationTime < 120) {
@@ -358,21 +372,18 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
         setSimulationTime(t => {
           const newTime = t + 0.5;
           const effectiveThermalR = coolingImproved
-            ? thermalResistance * (1 - fanSpeed / 200) // Fan speed reduces thermal resistance
+            ? thermalResistance * (1 - fanSpeed / 200)
             : thermalResistance;
           const state = calculateGPUState(newTime, effectiveThermalR);
-
           setClockHistory(h => [...h.slice(-59), state.clock]);
           setTempHistory(h => [...h.slice(-59), state.temperature]);
           setPowerHistory(h => [...h.slice(-59), state.power]);
-
           return newTime;
         });
       }, 100);
     } else if (simulationTime >= 120) {
       setIsSimulating(false);
     }
-
     return () => {
       if (simulationRef.current) clearInterval(simulationRef.current);
     };
@@ -383,29 +394,28 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#F97316', // Orange for heat/thermal theme
+    accent: '#F97316',
     accentGlow: 'rgba(249, 115, 22, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#9CA3AF',
     border: '#2a2a3a',
-    clock: '#22D3EE', // Cyan for clock speed
-    temp: '#EF4444', // Red for temperature
-    power: '#A855F7', // Purple for power
+    clock: '#22D3EE',
+    temp: '#EF4444',
+    power: '#A855F7',
   };
 
   const typo = {
-    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
-    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
-    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
-    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
-    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800 as const, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700 as const, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600 as const, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400 as const, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400 as const, lineHeight: 1.5 },
   };
 
-  // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
     hook: 'Introduction',
@@ -413,7 +423,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Cooling Lab',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -444,7 +454,13 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     }
   }, [phase, goToPhase, phaseOrder]);
 
-  // Reset simulation
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
   const resetSimulation = useCallback(() => {
     setIsSimulating(false);
     setSimulationTime(0);
@@ -453,7 +469,175 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     setPowerHistory([]);
   }, []);
 
-  // Chart component for simulation data
+  // Slider style shared across all sliders
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '20px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    touchAction: 'pan-y',
+    accentColor: colors.accent,
+    WebkitAppearance: 'none' as const,
+    appearance: 'none' as const,
+    background: `linear-gradient(90deg, ${colors.accent}44, ${colors.accent})`,
+  };
+
+  // Main interactive SVG for play phase - reacts to powerLimit & thermalLimit
+  const DVFSInteractiveSVG = ({ pl, tl, effectiveTR }: { pl: number; tl: number; effectiveTR: number }) => {
+    const width = isMobile ? 340 : 450;
+    const height = 260;
+    const state = getStaticGPUState(pl, tl, effectiveTR);
+    const clockPercent = Math.max(0, Math.min(1, (state.clock - 1800) / (2400 - 1800)));
+    const tempPercent = Math.max(0, Math.min(1, (state.temperature - ambientTemp) / (tl - ambientTemp + 1)));
+    const powerPercent = Math.max(0, Math.min(1, state.power / pl));
+
+    // Generate data points for the V-F curve
+    const vfPoints: { x: number; y: number }[] = [];
+    for (let i = 0; i <= 20; i++) {
+      const frac = i / 20;
+      const freq = 1800 + frac * 600;
+      const voltage = 0.8 + frac * 0.4 * Math.pow(frac, 0.3);
+      const x = 40 + frac * (width - 80);
+      const y = height - 50 - (voltage - 0.7) * (height - 100) / 0.6;
+      vfPoints.push({ x, y });
+    }
+
+    const markerIdx = Math.round(clockPercent * 20);
+    const markerX = vfPoints[Math.min(markerIdx, 20)]?.x || 40;
+    const markerY = vfPoints[Math.min(markerIdx, 20)]?.y || height / 2;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="dvfs-vf-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.success} stopOpacity="0.8" />
+            <stop offset="50%" stopColor={colors.clock} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.temp} stopOpacity="0.8" />
+          </linearGradient>
+          <linearGradient id="dvfs-bar-clock" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.clock} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={colors.clock} />
+          </linearGradient>
+          <linearGradient id="dvfs-bar-temp" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.warning} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={colors.temp} />
+          </linearGradient>
+          <linearGradient id="dvfs-bar-power" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.power} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={colors.power} />
+          </linearGradient>
+          <filter id="dvfs-glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="dvfs-shadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.3" />
+          </filter>
+        </defs>
+
+        {/* Title */}
+        <text x={width / 2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+          V-F Curve: P = C × V² × f
+        </text>
+
+        {/* Grid lines */}
+        {[0, 0.25, 0.5, 0.75, 1].map(frac => {
+          const gy = height - 50 - frac * (height - 100);
+          return (
+            <line key={`hg-${frac}`} x1="40" y1={gy} x2={width - 40} y2={gy}
+              stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
+          );
+        })}
+        {[0, 0.25, 0.5, 0.75, 1].map(frac => {
+          const gx = 40 + frac * (width - 80);
+          return (
+            <line key={`vg-${frac}`} x1={gx} y1="30" x2={gx} y2={height - 50}
+              stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
+          );
+        })}
+
+        {/* V-F curve path */}
+        <path
+          d={vfPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')}
+          fill="none"
+          stroke="url(#dvfs-vf-grad)"
+          strokeWidth="3"
+          filter="url(#dvfs-shadow)"
+        />
+
+        {/* Operating point marker */}
+        <circle cx={markerX} cy={markerY} r="8" fill={colors.accent} filter="url(#dvfs-glow)" opacity="0.9" />
+        <circle cx={markerX} cy={markerY} r="4" fill="white" />
+
+        {/* Power limit line */}
+        {(() => {
+          const plFrac = Math.min(1, (pl - 150) / 200);
+          const plX = 40 + plFrac * (width - 80);
+          return (
+            <g>
+              <line x1={plX} y1="30" x2={plX} y2={height - 50}
+                stroke={colors.power} strokeWidth="2" strokeDasharray="6,3" opacity="0.7" />
+              <text x={plX} y={height - 38} textAnchor="middle" fill={colors.power} fontSize="11">
+                PL: {pl}W
+              </text>
+            </g>
+          );
+        })()}
+
+        {/* Thermal limit line */}
+        {(() => {
+          const tlFrac = Math.min(1, (tl - 70) / 25);
+          const tlY = height - 50 - tlFrac * (height - 100);
+          return (
+            <g>
+              <line x1="40" y1={tlY} x2={width - 40} y2={tlY}
+                stroke={colors.temp} strokeWidth="2" strokeDasharray="6,3" opacity="0.7" />
+              <text x={width - 38} y={tlY - 4} textAnchor="start" fill={colors.temp} fontSize="11">
+                TL: {tl}C
+              </text>
+            </g>
+          );
+        })()}
+
+        {/* Axis labels */}
+        <text x={width / 2} y={height - 22} textAnchor="middle" fill={colors.textMuted} fontSize="12">
+          Frequency (MHz)
+        </text>
+        <text x="12" y={height / 2 - 20} textAnchor="middle" fill={colors.textMuted} fontSize="12"
+          transform={`rotate(-90, 12, ${height / 2 - 20})`}>
+          Voltage (V)
+        </text>
+
+        {/* Min/max boundary labels */}
+        <text x="40" y={height - 38} textAnchor="start" fill={colors.textMuted} fontSize="11">1800</text>
+        <text x={width - 40} y={height - 38} textAnchor="end" fill={colors.textMuted} fontSize="11">2400</text>
+        <text x="38" y="38" textAnchor="end" fill={colors.textMuted} fontSize="11">1.2V</text>
+        <text x="38" y={height - 52} textAnchor="end" fill={colors.textMuted} fontSize="11">0.8V</text>
+
+        {/* Status bars at bottom */}
+        <g>
+          <rect x="40" y={height - 14} width={100} height="8" rx="4" fill={colors.clock + '33'} />
+          <rect x="40" y={height - 14} width={100 * clockPercent} height="8" rx="4" fill="url(#dvfs-bar-clock)" />
+          <text x="40" y={height - 2} fill={colors.clock} fontSize="11">{state.clock} MHz</text>
+        </g>
+        <g>
+          <rect x={width / 2 - 50} y={height - 14} width={100} height="8" rx="4" fill={colors.temp + '33'} />
+          <rect x={width / 2 - 50} y={height - 14} width={100 * tempPercent} height="8" rx="4" fill="url(#dvfs-bar-temp)" />
+          <text x={width / 2 - 50} y={height - 2} fill={colors.temp} fontSize="11">{state.temperature}C</text>
+        </g>
+        <g>
+          <rect x={width - 140} y={height - 14} width={100} height="8" rx="4" fill={colors.power + '33'} />
+          <rect x={width - 140} y={height - 14} width={100 * powerPercent} height="8" rx="4" fill="url(#dvfs-bar-power)" />
+          <text x={width - 140} y={height - 2} fill={colors.power} fontSize="11">{state.power}W</text>
+        </g>
+      </svg>
+    );
+  };
+
+  // Simulation chart sub-component
   const SimulationChart = ({ data, color, label, unit, maxVal }: {
     data: number[];
     color: string;
@@ -464,7 +648,6 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     const width = isMobile ? 300 : 400;
     const height = 100;
     const padding = 30;
-
     return (
       <div style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -473,8 +656,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
             {data.length > 0 ? `${data[data.length - 1]}${unit}` : `--${unit}`}
           </span>
         </div>
-        <svg width={width} height={height} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
-          {/* Grid lines */}
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
           {[0, 0.25, 0.5, 0.75, 1].map(frac => (
             <line
               key={frac}
@@ -487,99 +669,22 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               strokeDasharray="2,2"
             />
           ))}
-
-          {/* Data line */}
           {data.length > 1 && (
             <path
               d={data.map((val, i) => {
                 const x = padding + (i / 59) * (width - padding - 10);
                 const y = height - padding - (val / maxVal) * (height - 2 * padding);
-                return `${i === 0 ? 'M' : 'L'} ${x} ${Math.max(padding, Math.min(height - padding, y))}`;
+                return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${Math.max(padding, Math.min(height - padding, y)).toFixed(1)}`;
               }).join(' ')}
               fill="none"
               stroke={color}
               strokeWidth="2"
             />
           )}
-
-          {/* Y-axis labels */}
-          <text x="5" y={padding} fill={colors.textMuted} fontSize="9">{maxVal}</text>
-          <text x="5" y={height - padding + 4} fill={colors.textMuted} fontSize="9">0</text>
+          <text x="5" y={padding} fill={colors.textMuted} fontSize="11">{maxVal}</text>
+          <text x="5" y={height - padding + 4} fill={colors.textMuted} fontSize="11">0</text>
         </svg>
       </div>
-    );
-  };
-
-  // GPU Visualization
-  const GPUVisualization = () => {
-    const width = isMobile ? 320 : 450;
-    const height = 200;
-
-    const currentState = clockHistory.length > 0
-      ? { clock: clockHistory[clockHistory.length - 1], temp: tempHistory[tempHistory.length - 1], power: powerHistory[powerHistory.length - 1] }
-      : { clock: 2400, temp: ambientTemp, power: 0 };
-
-    const clockPercent = (currentState.clock - 1800) / (2400 - 1800);
-    const tempPercent = (currentState.temp - ambientTemp) / (thermalLimit - ambientTemp);
-    const powerPercent = currentState.power / powerLimit;
-
-    return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        {/* GPU Die */}
-        <rect
-          x={width / 2 - 60}
-          y={30}
-          width={120}
-          height={80}
-          rx="8"
-          fill={`rgb(${Math.min(255, 100 + tempPercent * 155)}, ${Math.max(0, 100 - tempPercent * 100)}, ${Math.max(0, 50 - tempPercent * 50)})`}
-          stroke={colors.border}
-          strokeWidth="2"
-        />
-        <text x={width / 2} y={60} textAnchor="middle" fill="white" fontSize="12" fontWeight="600">GPU Die</text>
-        <text x={width / 2} y={80} textAnchor="middle" fill="white" fontSize="18" fontWeight="700">
-          {currentState.temp.toFixed(1)}C
-        </text>
-        <text x={width / 2} y={100} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="10">
-          {currentState.clock} MHz
-        </text>
-
-        {/* Heatsink fins */}
-        {[-3, -2, -1, 0, 1, 2, 3].map(i => (
-          <rect
-            key={i}
-            x={width / 2 - 80 + i * 25}
-            y={115}
-            width={18}
-            height={40}
-            rx="2"
-            fill={colors.border}
-          />
-        ))}
-
-        {/* Stats at bottom */}
-        <g transform={`translate(30, ${height - 30})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.clock + '33'} />
-          <rect x="0" y="0" width={80 * clockPercent} height="20" rx="4" fill={colors.clock} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">
-            Clock
-          </text>
-        </g>
-        <g transform={`translate(${width / 2 - 40}, ${height - 30})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.temp + '33'} />
-          <rect x="0" y="0" width={80 * tempPercent} height="20" rx="4" fill={colors.temp} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">
-            Temp
-          </text>
-        </g>
-        <g transform={`translate(${width - 110}, ${height - 30})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.power + '33'} />
-          <rect x="0" y="0" width={80 * powerPercent} height="20" rx="4" fill={colors.power} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">
-            Power
-          </text>
-        </g>
-      </svg>
     );
   };
 
@@ -642,7 +747,76 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Bottom navigation bar with Back / Next
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isTestActive = phase === 'test' && !testSubmitted;
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 24px',
+        borderTop: `1px solid ${colors.border}`,
+        background: colors.bgSecondary,
+      }}>
+        <button
+          onClick={prevPhase}
+          disabled={currentIndex === 0}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: currentIndex === 0 ? colors.border : colors.textSecondary,
+            cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+            opacity: currentIndex === 0 ? 0.4 : 1,
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          Back
+        </button>
+        <span style={{ ...typo.small, color: colors.textMuted }}>
+          {currentIndex + 1} / {phaseOrder.length}
+        </span>
+        <button
+          onClick={nextPhase}
+          disabled={isTestActive || currentIndex === phaseOrder.length - 1}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: 'none',
+            background: (isTestActive || currentIndex === phaseOrder.length - 1) ? colors.border : colors.accent,
+            color: 'white',
+            cursor: (isTestActive || currentIndex === phaseOrder.length - 1) ? 'not-allowed' : 'pointer',
+            opacity: isTestActive ? 0.4 : 1,
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
+  // Scroll container wrapper
+  const ScrollContainer = ({ children }: { children: React.ReactNode }) => (
+    <div style={{
+      flex: 1,
+      overflowY: 'auto',
+      paddingTop: '48px',
+      paddingBottom: '100px',
+      paddingLeft: '24px',
+      paddingRight: '24px',
+    }}>
+      {children}
+    </div>
+  );
 
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
@@ -656,58 +830,55 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
         {renderProgressBar()}
 
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          <span role="img" aria-label="GPU">🖥️</span><span role="img" aria-label="thermometer">🌡️</span>
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+        <ScrollContainer>
+          <div style={{ maxWidth: '700px', margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ fontSize: '64px', marginBottom: '24px' }}>
+              <span role="img" aria-label="GPU">{'\u{1F5A5}'}</span><span role="img" aria-label="thermometer">{'\u{1F321}'}</span>
+            </div>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Why Can't GPUs Run Max Clocks Forever?
-        </h1>
+            <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+              Why Can't GPUs Run Max Clocks Forever?
+            </h1>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          Your GPU advertises 2400 MHz boost clock, but in games it hovers around 2000 MHz. What's happening? The answer lies in <span style={{ color: colors.accent }}>thermal physics</span> and <span style={{ color: colors.power }}>power limits</span>.
-        </p>
+            <p style={{
+              ...typo.body,
+              color: colors.textSecondary,
+              maxWidth: '600px',
+              margin: '0 auto 32px',
+            }}>
+              Your GPU advertises 2400 MHz boost clock, but in games it hovers around 2000 MHz. What's happening? The answer lies in <span style={{ color: colors.accent }}>thermal physics</span> and <span style={{ color: colors.power }}>power limits</span>.
+            </p>
 
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Boost clocks are a promise of potential, not a guarantee. Physics determines what you actually get."
-          </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — DVFS Engineering Principle
-          </p>
-        </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '500px',
+              margin: '0 auto 32px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+                "Boost clocks are a promise of potential, not a guarantee. Physics determines what you actually get."
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                — DVFS Engineering Principle
+              </p>
+            </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore DVFS Physics
-        </button>
+            <button
+              onClick={() => { playSound('click'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Explore DVFS Physics
+            </button>
+          </div>
+        </ScrollContainer>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -725,107 +896,115 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A GPU starts a demanding game at 2400 MHz boost clock. After 5 minutes of sustained load, what happens to the clock speed?
-          </h2>
-
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🕐</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>t = 0s</p>
-                <p style={{ ...typo.body, color: colors.clock }}>2400 MHz</p>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>🔥</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>5 min load</p>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>❓</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>t = 5min</p>
-                <p style={{ ...typo.body, color: colors.textSecondary }}>??? MHz</p>
-              </div>
+        <ScrollContainer>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              ...typo.small,
+              color: colors.textSecondary,
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              Step 1 of 2: Make your prediction
             </div>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A GPU starts a demanding game at 2400 MHz boost clock. After 5 minutes of sustained load, what happens to the clock speed?
+            </h2>
+
+            {/* Static SVG diagram */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <svg width={isMobile ? 320 : 400} height="150" viewBox="0 0 400 150" style={{ maxWidth: '100%' }}>
+                <rect x="0" y="0" width="400" height="150" fill={colors.bgSecondary} rx="8" />
+                <rect x="30" y="40" width="80" height="60" fill={colors.bgCard} stroke={colors.clock} strokeWidth="2" rx="4" />
+                <text x="70" y="65" textAnchor="middle" fill={colors.clock} fontSize="12" fontWeight="600">GPU</text>
+                <text x="70" y="85" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="700">2400 MHz</text>
+                <text x="70" y="115" textAnchor="middle" fill={colors.textMuted} fontSize="11">t=0</text>
+                <line x1="120" y1="70" x2="170" y2="70" stroke={colors.textMuted} strokeWidth="2" />
+                <polygon points="170,65 180,70 170,75" fill={colors.textMuted} />
+                <rect x="180" y="40" width="80" height="60" fill={colors.accent + '33'} stroke={colors.accent} strokeWidth="2" rx="4" />
+                <text x="220" y="65" textAnchor="middle" fill={colors.accent} fontSize="14" fontWeight="600">LOAD</text>
+                <text x="220" y="85" textAnchor="middle" fill={colors.textPrimary} fontSize="11">5 min load</text>
+                <line x1="270" y1="70" x2="320" y2="70" stroke={colors.textMuted} strokeWidth="2" />
+                <polygon points="320,65 330,70 320,75" fill={colors.textMuted} />
+                <rect x="330" y="40" width="60" height="60" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" rx="4" />
+                <text x="360" y="70" textAnchor="middle" fill={colors.textSecondary} fontSize="24">?</text>
+                <text x="360" y="115" textAnchor="middle" fill={colors.textMuted} fontSize="11">t=5min</text>
+              </svg>
+            </div>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
+        </ScrollContainer>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
-        </div>
-
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -833,141 +1012,144 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
 
   // PLAY PHASE - Thermal RC Simulation
   if (phase === 'play') {
+    const handleSliderChange = (setter: (v: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setter(parseInt(e.target.value));
+      resetSimulation();
+    };
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            GPU Thermal Throttling Simulator
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Watch how clock speeds drop as temperature rises under sustained load
-          </p>
+        <ScrollContainer>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              GPU Thermal Throttling Simulator
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+              Watch how clock speeds drop as temperature rises under sustained load. When you increase the power limit, higher voltage causes more heat due to the equation P = C × V² × f.
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+              <strong>Real-world relevance:</strong> This same DVFS mechanism operates in gaming GPUs, smartphones, and data center hardware — balancing performance against thermal and power constraints. The thermal time constant is calculated as tau = R_th × C_th.
+            </p>
 
-          {/* GPU Visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <GPUVisualization />
-            </div>
-
-            {/* Control sliders */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Power Limit</span>
-                <span style={{ ...typo.small, color: colors.power, fontWeight: 600 }}>{powerLimit}W</span>
-              </div>
-              <input
-                type="range"
-                min="150"
-                max="350"
-                value={powerLimit}
-                onChange={(e) => { setPowerLimit(parseInt(e.target.value)); resetSimulation(); }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Thermal Limit</span>
-                <span style={{ ...typo.small, color: colors.temp, fontWeight: 600 }}>{thermalLimit}C</span>
-              </div>
-              <input
-                type="range"
-                min="70"
-                max="95"
-                value={thermalLimit}
-                onChange={(e) => { setThermalLimit(parseInt(e.target.value)); resetSimulation(); }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Simulation controls */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  if (isSimulating) {
-                    setIsSimulating(false);
-                  } else {
-                    setIsSimulating(true);
-                  }
-                }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isSimulating ? colors.error : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isSimulating ? 'Pause' : simulationTime > 0 ? 'Resume' : 'Start Load'}
-              </button>
-              <button
-                onClick={resetSimulation}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Charts */}
-            <SimulationChart data={clockHistory} color={colors.clock} label="Clock Speed" unit=" MHz" maxVal={2500} />
-            <SimulationChart data={tempHistory} color={colors.temp} label="Temperature" unit="C" maxVal={100} />
-            <SimulationChart data={powerHistory} color={colors.power} label="Power" unit="W" maxVal={350} />
-          </div>
-
-          {/* Discovery prompt */}
-          {clockHistory.length > 30 && clockHistory[clockHistory.length - 1] < 2200 && (
+            {/* Interactive SVG */}
             <div style={{
-              background: `${colors.warning}22`,
-              border: `1px solid ${colors.warning}`,
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <DVFSInteractiveSVG pl={powerLimit} tl={thermalLimit} effectiveTR={thermalResistance} />
+              </div>
+
+              {/* Control sliders */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Power Limit</span>
+                  <span style={{ ...typo.small, color: colors.power, fontWeight: 600 }}>{powerLimit}W</span>
+                </div>
+                <input
+                  type="range"
+                  min="150"
+                  max="350"
+                  value={powerLimit}
+                  onChange={handleSliderChange(setPowerLimit)}
+                  onInput={handleSliderChange(setPowerLimit)}
+                  style={sliderStyle}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>150W</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>350W</span>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Thermal Limit</span>
+                  <span style={{ ...typo.small, color: colors.temp, fontWeight: 600 }}>{thermalLimit}C</span>
+                </div>
+                <input
+                  type="range"
+                  min="70"
+                  max="95"
+                  value={thermalLimit}
+                  onChange={handleSliderChange(setThermalLimit)}
+                  onInput={handleSliderChange(setThermalLimit)}
+                  style={sliderStyle}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>70C</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>95C</span>
+                </div>
+              </div>
+
+              {/* Simulation controls */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
+                <button
+                  onClick={() => setIsSimulating(!isSimulating)}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isSimulating ? colors.error : colors.success,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isSimulating ? 'Pause' : simulationTime > 0 ? 'Resume' : 'Start Load'}
+                </button>
+                <button
+                  onClick={resetSimulation}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+
+              {/* Charts */}
+              <SimulationChart data={clockHistory} color={colors.clock} label="Clock Speed" unit=" MHz" maxVal={2500} />
+              <SimulationChart data={tempHistory} color={colors.temp} label="Temperature" unit="C" maxVal={100} />
+              <SimulationChart data={powerHistory} color={colors.power} label="Power" unit="W" maxVal={350} />
+            </div>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
-              textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                Notice how clocks dropped from 2400 MHz! The GPU hit its thermal/power limits and throttled.
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>What to observe:</strong> Start the simulation and watch how clock speed, temperature, and power interact over time. Try adjusting power and thermal limits to see their effects on GPU performance.
               </p>
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
-        </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics
+            </button>
+          </div>
+        </ScrollContainer>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -979,75 +1161,133 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Physics of GPU Throttling
-          </h2>
+        <ScrollContainer>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              The Physics of GPU Throttling
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
+            {/* Reference user's prediction */}
             <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
+              background: `${colors.success}11`,
+              border: `1px solid ${colors.success}33`,
+              borderRadius: '12px',
               padding: '16px',
-              marginBottom: '16px',
-              textAlign: 'center',
+              marginBottom: '24px',
             }}>
-              <p style={{ ...typo.h3, color: colors.power, margin: 0 }}>
-                P = C * V^2 * f
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.success }}>Your prediction:</strong> {
+                  prediction === 'b'
+                    ? 'You predicted that clocks would gradually decrease as temperature rises — and you were right! As you observed in the experiment, the GPU throttles as thermal limits approach.'
+                    : prediction === 'a'
+                    ? 'You predicted clocks would stay constant at 2400 MHz. As you observed, thermal physics causes throttling over time.'
+                    : prediction === 'c'
+                    ? 'You predicted clocks would oscillate randomly. The actual behavior is more predictable — driven by thermal and power limits as you saw in the experiment.'
+                    : 'As you saw in the experiment, GPU clocks decrease predictably as temperature rises toward thermal limits.'
+                }
               </p>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                Power = Capacitance * Voltage^2 * Frequency
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.h3, color: colors.power, margin: 0 }}>
+                  P = C × V² × f
+                </p>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                  Power = Capacitance × Voltage² × Frequency
+                </p>
+              </div>
+
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Dynamic Power</strong> scales with voltage squared. Higher clocks need higher voltage, causing power to increase faster than clock speed.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.temp }}>Thermal Equilibrium</strong>: T_die = T_ambient + Power × R_thermal. Heat flows from die to ambient based on thermal resistance.
+                </p>
+                <p>
+                  <strong style={{ color: colors.clock }}>Thermal RC Model</strong>: Temperature rises exponentially toward equilibrium with T(t) = T_amb + P × R × (1 - e^(-t/tau)). Time constant tau = R_th × C_th determines how quickly this happens.
+                </p>
+              </div>
+            </div>
+
+            {/* Review SVG diagram */}
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <svg width={isMobile ? 320 : 400} height="160" viewBox="0 0 400 160">
+                <defs>
+                  <linearGradient id="review-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={colors.success} />
+                    <stop offset="100%" stopColor={colors.temp} />
+                  </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="400" height="160" fill={colors.bgSecondary} rx="8" />
+                <text x="200" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Throttling Timeline</text>
+                {/* Boost phase */}
+                <rect x="30" y="40" width="120" height="30" rx="4" fill={colors.success + '33'} stroke={colors.success} strokeWidth="1" />
+                <text x="90" y="60" textAnchor="middle" fill={colors.success} fontSize="12" fontWeight="600">Boost Phase</text>
+                {/* Arrow */}
+                <line x1="155" y1="55" x2="185" y2="55" stroke={colors.textMuted} strokeWidth="2" />
+                <polygon points="185,50 195,55 185,60" fill={colors.textMuted} />
+                {/* Throttle phase */}
+                <rect x="200" y="40" width="170" height="30" rx="4" fill={colors.temp + '33'} stroke={colors.temp} strokeWidth="1" />
+                <text x="285" y="60" textAnchor="middle" fill={colors.temp} fontSize="12" fontWeight="600">Thermal Throttling</text>
+                {/* Bottom labels */}
+                <text x="90" y="90" textAnchor="middle" fill={colors.textMuted} fontSize="11">2400 MHz</text>
+                <text x="285" y="90" textAnchor="middle" fill={colors.textMuted} fontSize="11">1800-2100 MHz</text>
+                <text x="90" y="110" textAnchor="middle" fill={colors.success} fontSize="11">T &lt; T_limit</text>
+                <text x="285" y="110" textAnchor="middle" fill={colors.temp} fontSize="11">T approaches T_limit</text>
+                {/* Time axis */}
+                <line x1="30" y1="130" x2="370" y2="130" stroke={colors.textMuted} strokeWidth="1" />
+                <text x="30" y="148" fill={colors.textMuted} fontSize="11">0s</text>
+                <text x="200" y="148" textAnchor="middle" fill={colors.textMuted} fontSize="11">Time</text>
+                <text x="370" y="148" textAnchor="end" fill={colors.textMuted} fontSize="11">5min</text>
+              </svg>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Key Insight: Two Throttling Mechanisms
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+                <strong>Power Limit:</strong> GPU reduces clocks when power draw exceeds TDP. This happens instantly.
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong>Thermal Limit:</strong> GPU reduces clocks when temperature approaches max. This develops over time as heat accumulates.
               </p>
             </div>
 
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Dynamic Power</strong> scales with voltage squared. Higher clocks need higher voltage, causing power to increase faster than clock speed.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.temp }}>Thermal Equilibrium</strong>: T_die = T_ambient + Power * R_thermal. Heat flows from die to ambient based on thermal resistance.
-              </p>
-              <p>
-                <strong style={{ color: colors.clock }}>Thermal RC Model</strong>: Temperature rises exponentially toward equilibrium. Time constant tau = R_th * C_th determines how quickly this happens.
-              </p>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Can We Improve This?
+            </button>
           </div>
+        </ScrollContainer>
 
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Key Insight: Two Throttling Mechanisms
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Power Limit:</strong> GPU reduces clocks when power draw exceeds TDP. This happens instantly.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Thermal Limit:</strong> GPU reduces clocks when temperature approaches max. This develops over time as heat accumulates.
-            </p>
-          </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Can We Improve This?
-          </button>
-        </div>
-
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1065,77 +1305,117 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.success}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.success}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
-              New Variable: Cooling Performance
-            </p>
-          </div>
+        <ScrollContainer>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.success}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.success}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+                New Variable: Cooling Performance
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            What happens to sustained GPU clocks if we improve the cooling system (increase fan speed, better heatsink)?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              What happens to sustained GPU clocks if we improve the cooling system (increase fan speed, better heatsink)?
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            {/* Static comparison SVG for twist predict */}
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <svg width={isMobile ? 320 : 400} height="180" viewBox="0 0 400 180">
+                <defs>
+                  <linearGradient id="tp-cool-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={colors.clock} stopOpacity="0.3" />
+                    <stop offset="100%" stopColor={colors.clock} />
+                  </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="400" height="180" fill={colors.bgSecondary} rx="8" />
+                <text x="200" y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+                  Cooling Impact on Sustained Clocks
+                </text>
+                {/* Current baseline */}
+                <rect x="30" y="45" width="160" height="50" rx="6" fill={colors.bgCard} stroke={colors.border} strokeWidth="1" />
+                <text x="110" y="65" textAnchor="middle" fill={colors.textMuted} fontSize="12">Current cooling</text>
+                <text x="110" y="85" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="700">~2000 MHz</text>
+                {/* Arrow */}
+                <text x="210" y="75" textAnchor="middle" fill={colors.textMuted} fontSize="20">{'\u2192'}</text>
+                {/* Improved */}
+                <rect x="230" y="45" width="150" height="50" rx="6" fill={colors.success + '11'} stroke={colors.success} strokeWidth="1" strokeDasharray="4,2" />
+                <text x="305" y="65" textAnchor="middle" fill={colors.success} fontSize="12">Better cooling</text>
+                <text x="305" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="18" fontWeight="700">?</text>
+                {/* Labels */}
+                <text x="110" y="115" textAnchor="middle" fill={colors.textMuted} fontSize="11">R_th = 0.25 C/W</text>
+                <text x="305" y="115" textAnchor="middle" fill={colors.success} fontSize="11">R_th reduced</text>
+                <text x="200" y="145" textAnchor="middle" fill={colors.textMuted} fontSize="12">
+                  Lower thermal resistance = more headroom?
+                </text>
+                <text x="200" y="165" textAnchor="middle" fill={colors.accent} fontSize="11">
+                  T_eq = T_amb + P × R_th
+                </text>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.success}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.success : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.success}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
+                onClick={() => {
+                  playSound('success');
+                  resetSimulation();
+                  setCoolingImproved(true);
+                  nextPhase();
                 }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.success : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test Better Cooling
               </button>
-            ))}
+            )}
           </div>
+        </ScrollContainer>
 
-          {twistPrediction && (
-            <button
-              onClick={() => {
-                playSound('success');
-                resetSimulation();
-                setCoolingImproved(true);
-                nextPhase();
-              }}
-              style={primaryButtonStyle}
-            >
-              Test Better Cooling
-            </button>
-          )}
-        </div>
-
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1143,139 +1423,124 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
+    const effectiveTR = thermalResistance * (1 - fanSpeed / 200);
+
+    const handleFanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFanSpeed(parseInt(e.target.value));
+      resetSimulation();
+    };
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Cooling Impact on Performance
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust fan speed to reduce thermal resistance and sustain higher clocks
-          </p>
+        <ScrollContainer>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Cooling Impact on Performance
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust fan speed to reduce thermal resistance and sustain higher clocks
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <GPUVisualization />
-            </div>
-
-            {/* Fan speed slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Fan Speed</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{fanSpeed}%</span>
-              </div>
-              <input
-                type="range"
-                min="30"
-                max="100"
-                value={fanSpeed}
-                onChange={(e) => { setFanSpeed(parseInt(e.target.value)); resetSimulation(); }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Quiet</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Aggressive</span>
-              </div>
-            </div>
-
-            {/* Thermal resistance display */}
             <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '20px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Effective Thermal Resistance:</span>
-              <span style={{ ...typo.body, color: colors.success, fontWeight: 600 }}>
-                {(thermalResistance * (1 - fanSpeed / 200)).toFixed(3)} C/W
-              </span>
-            </div>
-
-            {/* Simulation controls */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  if (isSimulating) {
-                    setIsSimulating(false);
-                  } else {
-                    setIsSimulating(true);
-                  }
-                }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isSimulating ? colors.error : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isSimulating ? 'Pause' : simulationTime > 0 ? 'Resume' : 'Start Load'}
-              </button>
-              <button
-                onClick={resetSimulation}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Charts */}
-            <SimulationChart data={clockHistory} color={colors.clock} label="Clock Speed" unit=" MHz" maxVal={2500} />
-            <SimulationChart data={tempHistory} color={colors.temp} label="Temperature" unit="C" maxVal={100} />
-          </div>
-
-          {/* Discovery prompt */}
-          {fanSpeed >= 80 && clockHistory.length > 30 && clockHistory[clockHistory.length - 1] > 2100 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
               marginBottom: '24px',
-              textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                With aggressive cooling, the GPU sustains higher clocks! Lower thermal resistance = more thermal headroom.
-              </p>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <DVFSInteractiveSVG pl={powerLimit} tl={thermalLimit} effectiveTR={effectiveTR} />
+              </div>
+
+              {/* Fan speed slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Fan Speed</span>
+                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{fanSpeed}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="30"
+                  max="100"
+                  value={fanSpeed}
+                  onChange={handleFanChange}
+                  onInput={handleFanChange}
+                  style={sliderStyle}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>30% Quiet</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>100% Aggressive</span>
+                </div>
+              </div>
+
+              {/* Thermal resistance display */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Effective Thermal Resistance:</span>
+                <span style={{ ...typo.body, color: colors.success, fontWeight: 600 }}>
+                  {effectiveTR.toFixed(3)} C/W
+                </span>
+              </div>
+
+              {/* Simulation controls */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
+                <button
+                  onClick={() => setIsSimulating(!isSimulating)}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isSimulating ? colors.error : colors.success,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isSimulating ? 'Pause' : simulationTime > 0 ? 'Resume' : 'Start Load'}
+                </button>
+                <button
+                  onClick={resetSimulation}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+
+              {/* Charts */}
+              <SimulationChart data={clockHistory} color={colors.clock} label="Clock Speed" unit=" MHz" maxVal={2500} />
+              <SimulationChart data={tempHistory} color={colors.temp} label="Temperature" unit="C" maxVal={100} />
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Connection
-          </button>
-        </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Connection
+            </button>
+          </div>
+        </ScrollContainer>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1287,85 +1552,96 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Thermal-Performance Connection
-          </h2>
+        <ScrollContainer>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              The Thermal-Performance Connection
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🧊</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Lower R_thermal = Higher Sustained Clocks</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                T_equilibrium = T_ambient + P * R_thermal. Better cooling (lower R_th) means lower equilibrium temperature at the same power. This leaves <span style={{ color: colors.clock }}>thermal headroom for higher clocks</span>.
-              </p>
+            {/* Review SVG */}
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <svg width={isMobile ? 320 : 400} height="120" viewBox="0 0 400 120">
+                <defs>
+                  <linearGradient id="tr-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={colors.success} />
+                    <stop offset="100%" stopColor={colors.clock} />
+                  </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="400" height="120" fill={colors.bgSecondary} rx="8" />
+                <text x="200" y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Cooling vs Performance</text>
+                <rect x="30" y="40" width="160" height="35" rx="4" fill={colors.warning + '22'} stroke={colors.warning} strokeWidth="1" />
+                <text x="110" y="62" textAnchor="middle" fill={colors.warning} fontSize="12">Stock: ~2000 MHz</text>
+                <rect x="210" y="40" width="160" height="35" rx="4" fill={colors.success + '22'} stroke={colors.success} strokeWidth="1" />
+                <text x="290" y="62" textAnchor="middle" fill={colors.success} fontSize="12">Improved: ~2300 MHz</text>
+                <text x="200" y="100" textAnchor="middle" fill={colors.accent} fontSize="12">Lower R_th = Higher sustained clocks</text>
+              </svg>
             </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⏱️</span>
-                <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>Thermal Time Constant</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>Lower R_thermal = Higher Sustained Clocks</h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  T_equilibrium = T_ambient + P × R_thermal. Better cooling (lower R_th) means lower equilibrium temperature at the same power. This leaves <span style={{ color: colors.clock }}>thermal headroom for higher clocks</span>.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                tau = R_th * C_th. This determines how quickly temperature rises. A larger heatsink (more C_th) allows <span style={{ color: colors.power }}>longer boost periods</span> before throttling kicks in.
-              </p>
+
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>Thermal Time Constant</h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  tau = R_th × C_th. This determines how quickly temperature rises. A larger heatsink (more C_th) allows <span style={{ color: colors.power }}>longer boost periods</span> before throttling kicks in.
+                </p>
+              </div>
+
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.power, marginBottom: '12px' }}>Power Budget = Thermal Budget</h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  The maximum sustainable power is limited by: P_max = (T_limit - T_ambient) / R_thermal. Want more power? Either raise the thermal limit, lower ambient, or improve cooling.
+                </p>
+              </div>
+
+              <div style={{
+                background: `${colors.warning}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.warning}33`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>Real-World Prediction</h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  You can calculate the throttling point! If R_th = 0.25 C/W, T_limit = 83C, T_ambient = 25C, then P_max = (83-25)/0.25 = <strong>232W</strong>. Clocks will reduce to stay at this power level.
+                </p>
+              </div>
             </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.power, margin: 0 }}>Power Budget = Thermal Budget</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                The maximum sustainable power is limited by: P_max = (T_limit - T_ambient) / R_thermal. Want more power? Either raise the thermal limit, lower ambient, or improve cooling.
-              </p>
-            </div>
-
-            <div style={{
-              background: `${colors.warning}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.warning}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>💡</span>
-                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>Real-World Prediction</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                You can calculate the throttling point! If R_th = 0.25 C/W, T_limit = 83C, T_ambient = 25C, then P_max = (83-25)/0.25 = <strong>232W</strong>. Clocks will reduce to stay at this power level.
-              </p>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications
+            </button>
           </div>
+        </ScrollContainer>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
-        </div>
-
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1380,130 +1656,167 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
-
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
-                  </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
-              </div>
-            </div>
-
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
+        <ScrollContainer>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Application {selectedApp + 1} of {realWorldApps.length}
             </p>
 
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How DVFS Applies:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
+            {/* App selector */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '12px',
+              marginBottom: '24px',
             }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    minHeight: '44px',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      {'\u2713'}
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
+                  </div>
+                </button>
               ))}
             </div>
+
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How DVFS Applies:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
+                <strong>Companies:</strong> {app.companies.join(', ')}. <strong>Examples:</strong> {app.examples.join(', ')}.
+              </p>
+
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  if (selectedApp < realWorldApps.length - 1) {
+                    setSelectedApp(selectedApp + 1);
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${app.color}, ${app.color}CC)`,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  minHeight: '44px',
+                }}
+              >
+                Got It - Continue
+              </button>
+            </div>
+
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
           </div>
+        </ScrollContainer>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
-        </div>
-
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1517,51 +1830,113 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🎉' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand DVFS and thermal management!'
-                : 'Review the concepts and try again.'}
-            </p>
+          <ScrollContainer>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+                {passed ? '\u{1F389}' : '\u{1F4DA}'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
+                {passed
+                  ? 'You understand DVFS and thermal management!'
+                  : 'Review the concepts and try again.'}
+              </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
-          </div>
+              {/* Answer review */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'left',
+                maxHeight: '300px',
+                overflowY: 'auto',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '12px', fontWeight: 600 }}>
+                  Answer Review:
+                </h4>
+                {testQuestions.map((q, i) => {
+                  const correctId = q.options.find(o => o.correct)?.id;
+                  const userAnswer = testAnswers[i];
+                  const isCorrect = userAnswer === correctId;
+                  return (
+                    <div key={i} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '8px',
+                      padding: '6px 8px',
+                      borderRadius: '6px',
+                      background: isCorrect ? `${colors.success}11` : `${colors.error}11`,
+                    }}>
+                      <span style={{
+                        color: isCorrect ? colors.success : colors.error,
+                        fontSize: '16px',
+                        fontWeight: 700,
+                      }}>
+                        {isCorrect ? '\u2713' : '\u2717'}
+                      </span>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>
+                        Q{i + 1}: {isCorrect ? 'Correct' : `Incorrect (was ${userAnswer?.toUpperCase()}, correct: ${correctId?.toUpperCase()})`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                {passed ? (
+                  <button
+                    onClick={() => { playSound('complete'); nextPhase(); }}
+                    style={primaryButtonStyle}
+                  >
+                    Complete Lesson
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setTestSubmitted(false);
+                      setTestAnswers(Array(10).fill(null));
+                      setCurrentQuestion(0);
+                      setTestScore(0);
+                      goToPhase('hook');
+                    }}
+                    style={primaryButtonStyle}
+                  >
+                    Review & Try Again
+                  </button>
+                )}
+                <a
+                  href="/"
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    fontWeight: 600,
+                  }}
+                >
+                  Dashboard
+                </a>
+              </div>
+            </div>
+          </ScrollContainer>
+
+          {renderBottomNav()}
           {renderNavDots()}
         </div>
       );
@@ -1573,161 +1948,165 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
+        <ScrollContainer>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion
+                      ? colors.accent
+                      : testAnswers[i]
+                        ? colors.success
+                        : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+              {question.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {question.options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
+                </button>
               ))}
             </div>
+
+            {/* Navigation */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white',
+                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
+            </div>
           </div>
+        </ScrollContainer>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
-        </div>
-
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1741,87 +2120,84 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
         {renderProgressBar()}
 
-        <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+        <ScrollContainer>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ fontSize: '100px', marginBottom: '24px' }}>
+              {'\u{1F3C6}'}
+            </div>
 
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          DVFS Master!
-        </h1>
+            <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+              DVFS Master!
+            </h1>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand why GPUs can't sustain boost clocks forever and how thermal physics governs performance.
-        </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', margin: '0 auto 32px' }}>
+              You now understand why GPUs can't sustain boost clocks forever and how thermal physics governs performance.
+            </p>
 
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'P = C * V^2 * f - power scales with voltage squared',
-              'Thermal RC model predicts temperature rise',
-              'Thermal and power limits cause throttling',
-              'Better cooling enables higher sustained clocks',
-              'Time constant determines boost duration',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '400px',
+              margin: '0 auto 32px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+                You Learned:
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                {[
+                  'P = C × V² × f — power scales with voltage squared',
+                  'Thermal RC model predicts temperature rise',
+                  'Thermal and power limits cause throttling',
+                  'Better cooling enables higher sustained clocks',
+                  'Time constant determines boost duration',
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ color: colors.success }}>{'\u2713'}</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  resetSimulation();
+                  setCoolingImproved(false);
+                  setFanSpeed(50);
+                  goToPhase('hook');
+                }}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Play Again
+              </button>
+              <a
+                href="/"
+                style={{
+                  ...primaryButtonStyle,
+                  textDecoration: 'none',
+                  display: 'inline-block',
+                }}
+              >
+                Return to Dashboard
+              </a>
+            </div>
           </div>
-        </div>
+        </ScrollContainer>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => {
-              resetSimulation();
-              setCoolingImproved(false);
-              setFanSpeed(50);
-              goToPhase('hook');
-            }}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );

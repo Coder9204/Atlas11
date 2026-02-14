@@ -767,6 +767,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflow: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -833,10 +834,41 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        {/* Navigation bar with Back button */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          maxWidth: '700px',
+          margin: '60px auto 0',
+          width: '100%',
+        }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            ← Back
+          </button>
+          <span style={{ ...typo.small, color: colors.textMuted }}>Step 2 of 10</span>
+        </div>
+
+        <div style={{ maxWidth: '700px', margin: '24px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -950,15 +982,19 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Inclined Plane Simulator
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
             Adjust the angle and observe how forces change on the block. Watch how acceleration increases with steeper angles.
+            This is important because the formula F = mg sin(theta) shows how inclined planes provide practical mechanical advantage used in real-world engineering applications.
           </p>
 
           {/* Main visualization */}
@@ -982,8 +1018,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             {/* Angle slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Ramp Angle</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{angle}</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Ramp Angle - When you increase the angle, the acceleration increases because more of gravity acts along the ramp.</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{angle}°</span>
               </div>
               <input
                 type="range"
@@ -998,11 +1034,13 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                   height: '8px',
                   borderRadius: '4px',
                   cursor: isRolling ? 'not-allowed' : 'pointer',
+                  accentColor: colors.accent,
+                  background: `linear-gradient(to right, ${colors.accent}, ${colors.success})`,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10 (gentle)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>60 (steep)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>10° (gentle)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>60° (steep)</span>
               </div>
             </div>
 
@@ -1570,10 +1608,13 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>

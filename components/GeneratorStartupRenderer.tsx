@@ -368,8 +368,8 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast for accessibility
+    textMuted: '#cbd5e1', // High contrast for accessibility
     border: '#2a2a3a',
   };
 
@@ -421,14 +421,14 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
   }, [phase, goToPhase, phaseOrder]);
 
   // Generator Visualization SVG
-  const GeneratorVisualization = () => {
+  const GeneratorVisualization = ({ showControls = true }: { showControls?: boolean }) => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 280 : 320;
-    const rotationSpeed = rpm / 30;
-    const engineRunning = rpm > 100;
+    const rotationSpeed = showControls ? rpm / 30 : 0;
+    const engineRunning = showControls ? rpm > 100 : false;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="engineBlock" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#4b5563" />
@@ -441,7 +441,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
             <stop offset="100%" stopColor="#1d4ed8" />
           </linearGradient>
           <radialGradient id="flywheelGrad" cx="30%" cy="30%" r="70%">
-            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="0%" stopColor="#e2e8f0" />
             <stop offset="50%" stopColor="#64748b" />
             <stop offset="100%" stopColor="#334155" />
           </radialGradient>
@@ -490,7 +490,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
 
         {/* Flywheel */}
         <g transform={`translate(${isMobile ? 155 : 210}, ${isMobile ? 115 : 135}) rotate(${animationFrame * rotationSpeed * 0.5})`}>
-          <circle cx="0" cy="0" r={isMobile ? 30 : 40} fill="url(#flywheelGrad)" stroke="#94a3b8" strokeWidth="2" />
+          <circle cx="0" cy="0" r={isMobile ? 30 : 40} fill="url(#flywheelGrad)" stroke="#e2e8f0" strokeWidth="2" />
           <circle cx="0" cy="0" r={isMobile ? 22 : 30} fill="#374151" stroke="#475569" strokeWidth="1" />
           <circle cx="0" cy="0" r="8" fill="#64748b" />
           {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
@@ -573,7 +573,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
     const governorResponse = isLoadApplied ? Math.min(100, loadPercentage * 1.2) : 0;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="freqGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor={colors.error} />
@@ -711,7 +711,34 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1000,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>⚙️</span>
+        <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Generator Startup</span>
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]}
+      </div>
+    </nav>
+  );
 
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
@@ -728,8 +755,11 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -774,7 +804,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Generator Startup
+          Next
         </button>
 
         {renderNavDots()}
@@ -795,10 +825,23 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0', overflowY: 'auto' }}>
+          {/* Progress indicator */}
+          <div style={{
+            textAlign: 'center',
+            marginBottom: '16px',
+            color: colors.textSecondary,
+            ...typo.small,
+          }}>
+            Step 1 of 3: Make your prediction
+          </div>
+
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -809,6 +852,11 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
               Make Your Prediction
             </p>
+          </div>
+
+          {/* Static visualization for predict phase */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <GeneratorVisualization showControls={false} />
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
@@ -884,9 +932,9 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
           {prediction && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
+              style={{ ...primaryButtonStyle, minHeight: '44px' }}
             >
-              Test My Prediction
+              Next
             </button>
           )}
         </div>
@@ -903,16 +951,47 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Generator Startup Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Watch the startup sequence and observe why it takes 10+ seconds
           </p>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Real-World Application:</strong> Data centers and hospitals use diesel generators exactly like this. Every second of startup delay requires UPS battery backup to bridge critical loads.
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.bgCard}`,
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Watch the RPM increase and frequency stabilize. Notice how the generator must reach 1800 RPM for 60Hz output.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -957,6 +1036,43 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
               ))}
             </div>
 
+            {/* RPM Slider Control */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Target RPM</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{rpm.toFixed(0)} RPM</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1800"
+                value={rpm}
+                onChange={(e) => {
+                  const newRpm = parseInt(e.target.value);
+                  setRpm(newRpm);
+                  setFrequency((4 * newRpm) / 120);
+                  if (newRpm >= 1750) {
+                    setGeneratorState('online');
+                  } else if (newRpm >= 1500) {
+                    setGeneratorState('sync');
+                  } else if (newRpm >= 300) {
+                    setGeneratorState('warmup');
+                  } else if (newRpm > 0) {
+                    setGeneratorState('cranking');
+                  } else {
+                    setGeneratorState('stopped');
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+                aria-label="RPM slider"
+              />
+            </div>
+
             {/* Controls */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
               {generatorState === 'stopped' ? (
@@ -977,6 +1093,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontSize: '16px',
+                    minHeight: '44px',
                   }}
                 >
                   Start Generator
@@ -1002,6 +1119,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                     fontWeight: 600,
                     cursor: 'pointer',
                     fontSize: '16px',
+                    minHeight: '44px',
                   }}
                 >
                   Reset
@@ -1034,9 +1152,10 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
               width: '100%',
               opacity: generatorState === 'online' ? 1 : 0.5,
               cursor: generatorState === 'online' ? 'pointer' : 'not-allowed',
+              minHeight: '44px',
             }}
           >
-            Understand the Physics
+            Next
           </button>
         </div>
 
@@ -1047,18 +1166,52 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionOptions: Record<string, string> = {
+      'a': 'The diesel fuel needs time to ignite and burn efficiently',
+      'b': 'Heavy rotating parts (flywheel, rotor) must accelerate to full speed',
+      'c': 'Safety interlocks require a mandatory delay before operation',
+    };
+    const userPredictionText = prediction ? predictionOptions[prediction] : null;
+    const wasCorrect = prediction === 'b';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Generator Startup
           </h2>
+
+          {/* Reference user's prediction */}
+          {userPredictionText && (
+            <div style={{
+              background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${wasCorrect ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: wasCorrect ? colors.success : colors.warning, margin: 0, fontWeight: 600 }}>
+                {wasCorrect ? 'Your prediction was correct!' : 'Let\'s examine your prediction:'}
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: '8px 0 0 0' }}>
+                You predicted: "{userPredictionText}"
+              </p>
+              {!wasCorrect && (
+                <p style={{ ...typo.small, color: colors.textMuted, margin: '8px 0 0 0' }}>
+                  The correct answer is that heavy rotating parts must accelerate to full speed. Let's explore why.
+                </p>
+              )}
+            </div>
+          )}
 
           <div style={{
             background: colors.bgCard,
@@ -1110,9 +1263,9 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
           >
-            Discover What Happens Under Load
+            Next
           </button>
         </div>
 
@@ -1134,10 +1287,13 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0', overflowY: 'auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1207,7 +1363,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
           {twistPrediction && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
+              style={{ ...primaryButtonStyle, minHeight: '44px' }}
             >
               See What Happens
             </button>
@@ -1226,10 +1382,13 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Frequency Droop Simulator
           </h2>
@@ -1287,6 +1446,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontSize: '16px',
+                    minHeight: '44px',
                   }}
                 >
                   Apply Load
@@ -1306,6 +1466,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontSize: '16px',
+                    minHeight: '44px',
                   }}
                 >
                   Release Load
@@ -1336,6 +1497,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
             style={{
               ...primaryButtonStyle,
               width: '100%',
+              minHeight: '44px',
               opacity: isLoadApplied ? 1 : 0.5,
               cursor: isLoadApplied ? 'pointer' : 'not-allowed',
             }}
@@ -1356,10 +1518,13 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Managing Generator Dynamics
           </h2>
@@ -1405,7 +1570,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
           >
             See Real-World Applications
           </button>
@@ -1420,19 +1585,26 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0', overflowY: 'auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} - Explore all to continue
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1523,6 +1695,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '20px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1537,12 +1710,39 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                 </div>
               ))}
             </div>
+
+            {/* Got It button for within-phase navigation */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: completedApps[selectedApp] ? colors.bgSecondary : colors.accent,
+                color: completedApps[selectedApp] ? colors.textSecondary : 'white',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: '16px',
+                minHeight: '44px',
+              }}
+            >
+              {completedApps[selectedApp] ? 'Reviewed' : 'Got It'}
+            </button>
           </div>
 
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
+              style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
             >
               Take the Knowledge Test
             </button>
@@ -1563,10 +1763,13 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '20px auto 0', textAlign: 'center', overflowY: 'auto' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1588,7 +1791,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
             {passed ? (
               <button
                 onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
+                style={{ ...primaryButtonStyle, minHeight: '44px' }}
               >
                 Complete Lesson
               </button>
@@ -1601,7 +1804,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                   setTestScore(0);
                   goToPhase('hook');
                 }}
-                style={primaryButtonStyle}
+                style={{ ...primaryButtonStyle, minHeight: '44px' }}
               >
                 Review and Try Again
               </button>
@@ -1619,10 +1822,13 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0', overflowY: 'auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1722,6 +1928,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Previous
@@ -1740,6 +1947,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next
@@ -1765,6 +1973,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1789,8 +1998,11 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -1846,6 +2058,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
               background: 'transparent',
               color: colors.textSecondary,
               cursor: 'pointer',
+              minHeight: '44px',
             }}
           >
             Play Again
@@ -1856,6 +2069,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
               ...primaryButtonStyle,
               textDecoration: 'none',
               display: 'inline-block',
+              minHeight: '44px',
             }}
           >
             Return to Dashboard

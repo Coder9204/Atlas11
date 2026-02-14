@@ -16,7 +16,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Workload Matching',
+  twist_play: 'Explore Mixed',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -24,7 +24,7 @@ const phaseLabels: Record<Phase, string> = {
 };
 
 const colors = {
-  textPrimary: '#f8fafc',
+  textPrimary: '#ffffff',
   textSecondary: '#e2e8f0',
   textMuted: '#94a3b8',
   bgPrimary: '#0f172a',
@@ -125,6 +125,29 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Responsive detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Responsive typography
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px',
+  };
 
   // Navigation debouncing
   const isNavigating = useRef(false);
@@ -136,6 +159,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
       setPhase(gamePhase);
     }
   }, [gamePhase, phase]);
+
   // Simulation state
   const [batchSize, setBatchSize] = useState(32);
   const [modelSize, setModelSize] = useState(50); // percentage of max
@@ -151,18 +175,21 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [pendingAnswer, setPendingAnswer] = useState<number | null>(null);
+  const [confirmedAnswers, setConfirmedAnswers] = useState<Set<number>>(new Set());
+  const [activeTransferApp, setActiveTransferApp] = useState(0);
 
   // Internal navigation functions
   const goToPhase = useCallback((p: Phase) => {
     const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
+    if (now - lastClickRef.current < 50) return;
     if (isNavigating.current) return;
 
     lastClickRef.current = now;
     isNavigating.current = true;
 
     setPhase(p);
-    setTimeout(() => { isNavigating.current = false; }, 400);
+    setTimeout(() => { isNavigating.current = false; }, 100);
   }, []);
 
   const goNext = useCallback(() => {
@@ -193,24 +220,32 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
         gap: '16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', gap: '6px' }} role="navigation" aria-label="Phase navigation">
             {phaseOrder.map((p, i) => (
-              <div
+              <button
                 key={p}
-                onClick={() => i < currentIdx && goToPhase(p)}
+                type="button"
+                tabIndex={0}
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                onKeyDown={(e) => e.key === 'Enter' && i <= currentIdx && goToPhase(p)}
+                aria-label={phaseLabels[p]}
+                aria-current={i === currentIdx ? 'step' : undefined}
+                data-navigation-dot="true"
                 style={{
-                  height: '8px',
-                  width: i === currentIdx ? '24px' : '8px',
-                  borderRadius: '5px',
+                  height: '12px',
+                  width: '12px',
+                  borderRadius: '50%',
                   backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
-                  cursor: i < currentIdx ? 'pointer' : 'default',
-                  transition: 'all 0.3s',
+                  cursor: i <= currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s ease',
+                  border: 'none',
+                  padding: 0,
                 }}
                 title={phaseLabels[p]}
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -263,7 +298,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
           Back
         </button>
 
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
           {phaseLabels[phase]}
         </span>
 
@@ -276,7 +311,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
             fontWeight: 700,
             fontSize: '14px',
             background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #1d4ed8 100%)` : 'rgba(30, 41, 59, 0.9)',
-            color: canProceed ? colors.textPrimary : colors.textMuted,
+            color: canProceed ? colors.textPrimary : colors.textSecondary,
             border: 'none',
             cursor: canProceed ? 'pointer' : 'not-allowed',
             opacity: canProceed ? 1 : 0.4,
@@ -291,6 +326,17 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
     );
   };
 
+  // Wrapper function for phase content
+  const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, color: colors.textPrimary, overflow: 'hidden' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{renderProgressBar()}</div>
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '60px', paddingBottom: bottomBarContent ? '100px' : '24px' }}>
+        {content}
+      </div>
+      {bottomBarContent && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{bottomBarContent}</div>}
+    </div>
+  );
+
   // Animation for systolic array
   useEffect(() => {
     if (!showSystolicFlow) return;
@@ -299,30 +345,6 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
     }, 300);
     return () => clearInterval(interval);
   }, [showSystolicFlow]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
 
   // Calculate performance metrics
   const calculatePerformance = useCallback(() => {
@@ -500,9 +522,27 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   ];
 
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = optionIndex;
-    setTestAnswers(newAnswers);
+    // Only allow selection if not already confirmed
+    if (!confirmedAnswers.has(questionIndex)) {
+      setPendingAnswer(optionIndex);
+    }
+  };
+
+  const confirmAnswer = () => {
+    if (pendingAnswer !== null && !confirmedAnswers.has(currentTestQuestion)) {
+      const newAnswers = [...testAnswers];
+      newAnswers[currentTestQuestion] = pendingAnswer;
+      setTestAnswers(newAnswers);
+      setConfirmedAnswers(new Set([...confirmedAnswers, currentTestQuestion]));
+      setPendingAnswer(null);
+    }
+  };
+
+  const goToNextQuestion = () => {
+    if (currentTestQuestion < 9) {
+      setCurrentTestQuestion(currentTestQuestion + 1);
+      setPendingAnswer(null);
+    }
   };
 
   const submitTest = () => {
@@ -532,58 +572,78 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
             <stop offset="0%" stopColor="#22c55e" />
             <stop offset="100%" stopColor="#15803d" />
           </linearGradient>
+          <filter id="glowTPU" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0,0 0,6 9,3" fill="#60a5fa" />
+          </marker>
         </defs>
 
         {/* Background */}
         <rect width="500" height="400" fill="#0f172a" rx="12" />
 
-        {/* TPU Section */}
-        <text x="125" y="30" fill="#3b82f6" fontSize="16" fontWeight="bold" textAnchor="middle">TPU (Systolic Array)</text>
+        {/* Grid lines for performance chart area */}
+        <line x1="50" y1="250" x2="480" y2="250" stroke="rgba(255,255,255,0.08)" strokeDasharray="4,4" />
+        <line x1="50" y1="290" x2="480" y2="290" stroke="rgba(255,255,255,0.08)" strokeDasharray="4,4" />
+        <line x1="50" y1="330" x2="480" y2="330" stroke="rgba(255,255,255,0.08)" strokeDasharray="4,4" />
+        <line x1="50" y1="370" x2="480" y2="370" stroke="rgba(255,255,255,0.08)" strokeDasharray="4,4" />
+        {/* Vertical tick marks */}
+        <line x1="150" y1="245" x2="150" y2="375" stroke="rgba(255,255,255,0.06)" strokeDasharray="4,4" />
+        <line x1="250" y1="245" x2="250" y2="375" stroke="rgba(255,255,255,0.06)" strokeDasharray="4,4" />
+        <line x1="350" y1="245" x2="350" y2="375" stroke="rgba(255,255,255,0.06)" strokeDasharray="4,4" />
 
-        {/* Systolic Array Grid */}
-        <g transform="translate(50, 50)">
+        {/* Axis labels */}
+        <text x="265" y="392" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="400">Compute Intensity / Batch Size</text>
+        <text x="18" y="310" fill="#94a3b8" fontSize="11" textAnchor="middle" transform="rotate(-90, 18, 310)" fontWeight="400">Power / Throughput (TFLOPS)</text>
+
+        {/* TPU Section */}
+        <g>
+          <text x="125" y="28" fill="#3b82f6" fontSize="14" fontWeight="bold" textAnchor="middle">TPU (Systolic Array)</text>
           {[0, 1, 2, 3].map(row =>
             [0, 1, 2, 3].map(col => {
               const isActive = showSystolicFlow && ((row + col) % 4 === animationStep % 4);
               return (
                 <rect
                   key={`cell-${row}-${col}`}
-                  x={col * 35}
-                  y={row * 35}
+                  x={50 + col * 35}
+                  y={50 + row * 35}
                   width="30"
                   height="30"
                   fill={isActive ? '#60a5fa' : '#1e40af'}
                   stroke="#3b82f6"
                   strokeWidth="1"
                   rx="4"
+                  filter={isActive ? 'url(#glowTPU)' : undefined}
                 />
               );
             })
           )}
-          {/* Data flow arrows */}
           {showSystolicFlow && (
             <>
-              <path d="M-10,15 L-10,125" stroke="#60a5fa" strokeWidth="2" markerEnd="url(#arrow)" opacity="0.7" />
-              <path d="M15,-10 L135,-10" stroke="#60a5fa" strokeWidth="2" markerEnd="url(#arrow)" opacity="0.7" />
-              <text x="-15" y="70" fill="#94a3b8" fontSize="8" textAnchor="end">Input A</text>
-              <text x="70" y="-15" fill="#94a3b8" fontSize="8" textAnchor="middle">Input B</text>
+              <line x1="40" y1="65" x2="40" y2="175" stroke="#60a5fa" strokeWidth="2" markerEnd="url(#arrow)" opacity="0.7" />
+              <line x1="65" y1="40" x2="185" y2="40" stroke="#60a5fa" strokeWidth="2" markerEnd="url(#arrow)" opacity="0.7" />
+              <text x="25" y="120" fill="#94a3b8" fontSize="11" textAnchor="end">Input A</text>
+              <text x="120" y="35" fill="#94a3b8" fontSize="11" textAnchor="middle">Input B</text>
             </>
           )}
         </g>
 
         {/* GPU Section */}
-        <text x="375" y="30" fill="#22c55e" fontSize="16" fontWeight="bold" textAnchor="middle">GPU (CUDA Cores)</text>
-
-        {/* CUDA Cores Grid (more irregular) */}
-        <g transform="translate(300, 50)">
+        <g>
+          <text x="375" y="28" fill="#22c55e" fontSize="14" fontWeight="bold" textAnchor="middle">GPU (CUDA Cores)</text>
           {[0, 1, 2, 3, 4, 5].map(row =>
             [0, 1, 2, 3, 4, 5].map(col => {
-              const isActive = Math.random() > 0.3;
+              const isActive = (row + col) % 3 !== 0;
               return (
                 <circle
                   key={`core-${row}-${col}`}
-                  cx={col * 25 + 10}
-                  cy={row * 25 + 10}
+                  cx={300 + col * 25 + 10}
+                  cy={50 + row * 25 + 10}
                   r="8"
                   fill={isActive ? '#4ade80' : '#166534'}
                   opacity={isActive ? 1 : 0.5}
@@ -593,37 +653,36 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
           )}
         </g>
 
-        {/* Performance Comparison */}
-        <g transform="translate(50, 250)">
-          <text x="0" y="0" fill="#f8fafc" fontSize="12" fontWeight="bold">Throughput (TFLOPS)</text>
+        {/* Performance Comparison Bars */}
+        <g>
+        <text x="50" y="258" fill="#f8fafc" fontSize="12" fontWeight="bold">Throughput (TFLOPS)</text>
 
-          {/* TPU Bar */}
-          <rect x="0" y="15" width={perf.tpuThroughput * 2} height="25" fill="url(#tpuGrad)" rx="4" />
-          <text x={perf.tpuThroughput * 2 + 10} y="32" fill="#3b82f6" fontSize="12">{perf.tpuThroughput.toFixed(1)}</text>
+        {/* TPU Bar */}
+        <rect x="50" y="265" width={perf.tpuThroughput * 2.5} height="22" fill="url(#tpuGrad)" rx="4" />
+        <text x={55 + perf.tpuThroughput * 2.5} y="280" fill="#3b82f6" fontSize="11" fontWeight="600">{perf.tpuThroughput.toFixed(1)}</text>
 
-          {/* GPU Bar */}
-          <rect x="0" y="50" width={perf.gpuThroughput * 2} height="25" fill="url(#gpuGrad)" rx="4" />
-          <text x={perf.gpuThroughput * 2 + 10} y="67" fill="#22c55e" fontSize="12">{perf.gpuThroughput.toFixed(1)}</text>
+        {/* GPU Bar */}
+        <rect x="50" y="295" width={perf.gpuThroughput * 2.5} height="22" fill="url(#gpuGrad)" rx="4" />
+        <text x={55 + perf.gpuThroughput * 2.5} y="310" fill="#22c55e" fontSize="11" fontWeight="600">{perf.gpuThroughput.toFixed(1)}</text>
 
-          <text x="0" y="100" fill="#f8fafc" fontSize="12" fontWeight="bold">Efficiency</text>
+        {/* Efficiency line */}
+        <text x="50" y="340" fill="#f8fafc" fontSize="12" fontWeight="bold">Efficiency</text>
+        <text x="50" y="358" fill="#3b82f6" fontSize="11">TPU: {perf.tpuEfficiency.toFixed(0)}%</text>
+        <text x="170" y="358" fill="#22c55e" fontSize="11">GPU: {perf.gpuEfficiency.toFixed(0)}%</text>
 
-          {/* Efficiency indicators */}
-          <text x="0" y="120" fill="#3b82f6" fontSize="11">TPU: {perf.tpuEfficiency.toFixed(0)}%</text>
-          <text x="100" y="120" fill="#22c55e" fontSize="11">GPU: {perf.gpuEfficiency.toFixed(0)}%</text>
-        </g>
+        {/* Performance response curve (TPU throughput vs batch) */}
+        <path d="M50 370 L80 365 L120 355 L160 338 L200 315 L240 290 L280 265 L320 250 L360 245 L400 242 L440 240 L480 238"
+          fill="none" stroke="rgba(59, 130, 246, 0.15)" strokeWidth="2" strokeDasharray="6,4" />
 
         {/* Legend */}
-        <g transform="translate(300, 280)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">Batch Size: {batchSize}</text>
-          <text x="0" y="20" fill="#94a3b8" fontSize="10">Model Size: {modelSize}%</text>
-          <text x="0" y="40" fill="#94a3b8" fontSize="10">Operation: {operationType}</text>
+        <text x="310" y="340" fill="#94a3b8" fontSize="11">Batch: {batchSize}</text>
+        <text x="310" y="358" fill="#94a3b8" fontSize="11">Model: {modelSize}%</text>
+        <text x="420" y="340" fill="#94a3b8" fontSize="11">Op: {operationType}</text>
         </g>
 
-        <defs>
-          <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#60a5fa" />
-          </marker>
-        </defs>
+        {/* Formula */}
+        <rect x="140" y="205" width="220" height="28" rx="6" fill="rgba(59, 130, 246, 0.1)" stroke="rgba(59, 130, 246, 0.3)" strokeWidth="1" />
+        <text x="250" y="224" textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="600">Throughput = Efficiency × Batch × Ops/sec</text>
       </svg>
     );
   };
@@ -631,8 +690,8 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
       <div>
-        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
-          Batch Size: {batchSize}
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          <span data-physics-label="batch">Batch Size:</span> {batchSize} (affects TPU parallelism)
         </label>
         <input
           type="range"
@@ -641,13 +700,15 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
           step="1"
           value={batchSize}
           onChange={(e) => setBatchSize(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setBatchSize(parseInt((e.target as HTMLInputElement).value))}
+          style={{ width: '100%', height: '20px', accentColor: colors.accent, touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, cursor: 'pointer', background: `linear-gradient(to right, ${colors.accent} ${(batchSize / 128) * 100}%, ${colors.bgCard} ${(batchSize / 128) * 100}%)`, borderRadius: '4px' }}
+          aria-label="Batch Size affects TPU parallelism"
         />
       </div>
 
       <div>
-        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
-          Model Size: {modelSize}%
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          <span data-physics-label="model">Model Size:</span> {modelSize}% (compute intensity)
         </label>
         <input
           type="range"
@@ -656,13 +717,15 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
           step="10"
           value={modelSize}
           onChange={(e) => setModelSize(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setModelSize(parseInt((e.target as HTMLInputElement).value))}
+          style={{ width: '100%', height: '20px', accentColor: colors.warning, touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, cursor: 'pointer', background: `linear-gradient(to right, ${colors.warning} ${modelSize}%, ${colors.bgCard} ${modelSize}%)`, borderRadius: '4px' }}
+          aria-label="Model Size compute intensity"
         />
       </div>
 
       <div>
-        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
-          Operation Type:
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          <span data-physics-label="operation">Operation Type:</span>
         </label>
         <div style={{ display: 'flex', gap: '8px' }}>
           {(['matmul', 'conv', 'attention'] as const).map(op => (
@@ -676,6 +739,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
                 background: operationType === op ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
                 color: '#f8fafc',
                 cursor: 'pointer',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -695,6 +759,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
           color: 'white',
           fontWeight: 'bold',
           cursor: 'pointer',
+          minHeight: '44px',
           WebkitTapHighlightColor: 'transparent',
         }}
       >
@@ -705,15 +770,15 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ color: '#3b82f6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>AI Hardware Architecture</span>
             <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #3b82f6, #22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               TPU vs GPU Architecture
             </h1>
-            <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginTop: '8px', fontWeight: 400 }}>
               Why did Google build their own AI chips instead of using GPUs?
             </p>
           </div>
@@ -725,42 +790,33 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
               When Google needed to run AI at massive scale, they found that general-purpose GPUs weren't efficient enough.
               So they designed a completely new type of chip: the Tensor Processing Unit (TPU).
             </p>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '12px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
               But what makes TPUs different? And when should you use each?
             </p>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              padding: '16px 32px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #3b82f6, #2563eb)',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Explore the Difference
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'Next \u2192')
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
+          <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
+            Step 1 of 2: Observe the diagram, then make your prediction
+          </p>
+
+          {/* Static SVG for prediction phase */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderVisualization()}
+          </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '16px', marginBottom: '8px' }}>
+            <p style={{ fontSize: '16px', marginBottom: '8px', color: colors.textSecondary }}>
               Google's TPU and NVIDIA's GPU both process AI workloads. What's the fundamental difference?
             </p>
           </div>
@@ -779,6 +835,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '15px',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -786,75 +843,57 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
               </button>
             ))}
           </div>
-
-          {prediction && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#3b82f6',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, prediction ? 'Test My Prediction' : 'Continue \u2192')
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Compare TPU and GPU Performance</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
             Adjust parameters to see how each architecture performs
           </p>
+
+          {/* Observation guidance */}
+          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #3b82f6' }}>
+            <p style={{ color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: '#3b82f6' }}>What to Watch:</strong> Observe how batch size affects TPU performance. Try adjusting the sliders to see when TPU outperforms GPU and vice versa.
+            </p>
+          </div>
 
           {renderVisualization()}
           {renderControls()}
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
-            <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>Key Observations:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
+          {/* Why this matters */}
+          <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '16px', borderLeft: '4px solid #22c55e' }}>
+            <p style={{ color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: '#22c55e' }}>Why This Matters:</strong> This is why hardware architecture is important in the real world — choosing the right chip for AI workloads can reduce costs by 10× and enable applications that would otherwise be impractical. Every major technology company makes these decisions daily.
+            </p>
+          </div>
+
+          {/* Key terms */}
+          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '16px' }}>
+            <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>Key Terms &amp; Observations</h3>
+            <div style={{ color: colors.textSecondary, lineHeight: 1.8, marginBottom: '12px' }}>
+              <p><strong style={{ color: colors.textPrimary }}>Throughput</strong> is defined as the number of operations completed per second, measured in TFLOPS (trillion floating-point operations per second).</p>
+              <p><strong style={{ color: colors.textPrimary }}>Systolic Array</strong> is a grid of processing elements where data flows rhythmically — the formula is: Output = Σ(A[i] × B[i]) computed in parallel across the array.</p>
+              <p><strong style={{ color: colors.textPrimary }}>CUDA Cores</strong> refers to the thousands of independent processors in a GPU that can each execute different code threads simultaneously.</p>
+            </div>
+            <ul style={{ color: colors.textMuted, lineHeight: 1.8, paddingLeft: '20px' }}>
               <li>TPU throughput increases dramatically with batch size</li>
               <li>GPU maintains more consistent performance across batch sizes</li>
               <li>Matrix multiplication strongly favors TPU's systolic array</li>
               <li>Watch the data flow in the systolic array animation</li>
             </ul>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#3b82f6',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Review the Concepts
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'Review the Concepts')
     );
   }
 
@@ -862,8 +901,8 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'matrix';
 
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -873,66 +912,56 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
           }}>
             <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
-              {wasCorrect ? 'Correct!' : 'Not quite!'}
+              {wasCorrect ? 'Correct! Your prediction was right!' : 'Not quite what you predicted!'}
             </h3>
-            <p>TPUs use systolic arrays - specialized hardware designed specifically for matrix operations that are common in neural networks.</p>
+            <p>As you observed in the experiment, TPUs use systolic arrays - specialized hardware designed specifically for matrix operations that are common in neural networks. The result confirms that architecture choice fundamentally shapes performance.</p>
           </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
             <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>The Systolic Array</h3>
-            <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-              <strong>What it is:</strong> A grid of processing elements where data flows rhythmically (like a heartbeat - hence "systolic") through the array.
+            <p style={{ lineHeight: 1.7, marginBottom: '12px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>What it is:</strong> A grid of processing elements where data flows rhythmically (like a heartbeat - hence "systolic") through the array.
             </p>
-            <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-              <strong>Why it's efficient:</strong> Data is reused as it flows through. Each element performs a multiply-accumulate, passing results to neighbors. This minimizes memory access - the biggest energy cost in computing.
+            <p style={{ lineHeight: 1.7, marginBottom: '12px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Why it's efficient:</strong> Data is reused as it flows through. Each element performs a multiply-accumulate, passing results to neighbors. This minimizes memory access - the biggest energy cost in computing.
             </p>
-            <p style={{ lineHeight: 1.7 }}>
-              <strong>The tradeoff:</strong> Works beautifully for regular matrix operations but struggles with irregular data access patterns.
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>The tradeoff:</strong> Works beautifully for regular matrix operations but struggles with irregular data access patterns.
             </p>
           </div>
 
           <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
             <h3 style={{ color: '#22c55e', marginBottom: '16px' }}>GPU CUDA Cores</h3>
-            <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-              <strong>What they are:</strong> Thousands of small, flexible processors that can each run independent code threads.
+            <p style={{ lineHeight: 1.7, marginBottom: '12px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>What they are:</strong> Thousands of small, flexible processors that can each run independent code threads.
             </p>
-            <p style={{ lineHeight: 1.7 }}>
-              <strong>Why they're flexible:</strong> Each core can do different operations, access arbitrary memory, and handle branching logic. Great for graphics and varied AI workloads.
+            <p style={{ lineHeight: 1.7, color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Why they're flexible:</strong> Each core can do different operations, access arbitrary memory, and handle branching logic. Great for graphics and varied AI workloads.
             </p>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#8b5cf6',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Discover the Twist
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'Discover the Twist')
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>The Twist</h2>
+          <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
+            Step 1 of 2: Observe the new scenario, then make your prediction
+          </p>
+
+          {/* Static SVG for twist prediction phase */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderVisualization()}
+          </div>
 
           <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #a855f7' }}>
-            <p style={{ fontSize: '16px', marginBottom: '12px' }}>
+            <p style={{ fontSize: '16px', marginBottom: '12px', color: colors.textSecondary }}>
               Different AI workloads have very different computational patterns. A chatbot processes one request at a time with low latency needs.
               A training job processes millions of examples in batches.
             </p>
@@ -955,6 +984,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '15px',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -962,38 +992,25 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
               </button>
             ))}
           </div>
-
-          {twistPrediction && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#a855f7',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              See the Answer
-            </button>
-          )}
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, twistPrediction ? 'See the Answer' : 'Continue \u2192')
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>Workload Matching</h2>
+
+          {/* Observation guidance */}
+          <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '16px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #a855f7' }}>
+            <p style={{ color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: '#a855f7' }}>What to Watch:</strong> Explore how different workload characteristics affect hardware choice. Try adjusting batch size and operation type to see the tradeoffs.
+            </p>
+          </div>
 
           {renderVisualization()}
           {renderControls()}
@@ -1001,7 +1018,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
             <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px' }}>
               <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>TPU Excels At:</h4>
-              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
                 <li>Large batch training</li>
                 <li>Matrix-heavy models</li>
                 <li>Transformer attention</li>
@@ -1010,7 +1027,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
             </div>
             <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '16px', borderRadius: '12px' }}>
               <h4 style={{ color: '#22c55e', marginBottom: '8px' }}>GPU Excels At:</h4>
-              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
                 <li>Low-latency inference</li>
                 <li>Varied workloads</li>
                 <li>Small batch sizes</li>
@@ -1018,27 +1035,9 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
               </ul>
             </div>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#a855f7',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Review the Discovery
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'Review the Discovery')
     );
   }
 
@@ -1046,8 +1045,8 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'depends';
 
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1064,7 +1063,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
             <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>The Decision Framework</h3>
-            <div style={{ lineHeight: 1.8 }}>
+            <div style={{ lineHeight: 1.8, color: colors.textSecondary }}>
               <p><strong style={{ color: '#3b82f6' }}>Choose TPU when:</strong></p>
               <ul style={{ paddingLeft: '20px', marginBottom: '16px' }}>
                 <li>Training large models with big batches</li>
@@ -1082,59 +1081,65 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
               </ul>
             </div>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#f59e0b',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            See Real-World Applications
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'See Real-World Applications')
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    const currentApp = transferApplications[activeTransferApp];
+    const allCompleted = transferCompleted.size >= transferApplications.length;
+
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-            Complete all 4 to unlock the test ({transferCompleted.size}/4)
+          <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '24px' }}>
+            Complete all {transferApplications.length} to unlock the test ({transferCompleted.size}/{transferApplications.length})
           </p>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: 'rgba(30, 41, 59, 0.8)',
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '16px',
-                border: transferCompleted.has(index) ? '2px solid #22c55e' : '1px solid #334155',
-              }}
-            >
-              <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>{app.title}</h3>
-              <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-                <p style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '14px' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
+          {/* App navigation tabs */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            {transferApplications.map((app, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveTransferApp(index)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: activeTransferApp === index ? '2px solid #3b82f6' : '1px solid #475569',
+                  background: transferCompleted.has(index) ? 'rgba(34, 197, 94, 0.2)' : activeTransferApp === index ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
+                  color: transferCompleted.has(index) ? '#22c55e' : '#f8fafc',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  minHeight: '44px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {transferCompleted.has(index) ? '✓ ' : ''}{app.title.split(' ').slice(0, 2).join(' ')}
+              </button>
+            ))}
+          </div>
+
+          {/* Current application card */}
+          <div style={{
+            background: 'rgba(30, 41, 59, 0.8)',
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+            border: transferCompleted.has(activeTransferApp) ? '2px solid #22c55e' : '1px solid #334155',
+          }}>
+            <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>{currentApp.title}</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{currentApp.description}</p>
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+              <p style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '14px' }}>{currentApp.question}</p>
+            </div>
+            {!transferCompleted.has(activeTransferApp) ? (
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                  onClick={() => setTransferCompleted(new Set([...transferCompleted, activeTransferApp]))}
                   style={{
                     padding: '10px 20px',
                     borderRadius: '8px',
@@ -1142,49 +1147,103 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
                     background: 'transparent',
                     color: '#3b82f6',
                     cursor: 'pointer',
+                    minHeight: '44px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   Reveal Answer
                 </button>
-              ) : (
-                <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
-                  <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
+                <button
+                  onClick={() => {
+                    setTransferCompleted(new Set([...transferCompleted, activeTransferApp]));
+                    if (activeTransferApp < transferApplications.length - 1) {
+                      setActiveTransferApp(activeTransferApp + 1);
+                    }
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    minHeight: '44px',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  Got It - Continue
+                </button>
+              </div>
+            ) : (
+              <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{currentApp.answer}</p>
+                <button
+                  onClick={() => {
+                    if (activeTransferApp < transferApplications.length - 1) {
+                      setActiveTransferApp(activeTransferApp + 1);
+                    }
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: activeTransferApp < transferApplications.length - 1 ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : '#475569',
+                    color: 'white',
+                    cursor: activeTransferApp < transferApplications.length - 1 ? 'pointer' : 'default',
+                    fontWeight: 'bold',
+                    minHeight: '44px',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {activeTransferApp < transferApplications.length - 1 ? 'Got It - Next Application' : 'All Applications Completed'}
+                </button>
+              </div>
+            )}
+          </div>
 
-          {transferCompleted.size >= 4 && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#22c55e',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Take the Test
-            </button>
-          )}
+          {/* Real-world applications detail (always visible for comprehensive content) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {realWorldApps.map((app, idx) => (
+              <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${app.color}` }}>
+                <h4 style={{ color: app.color, marginBottom: '6px', fontWeight: 700 }}>{app.icon} {app.title}</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px', fontWeight: 400 }}>{app.description}</p>
+                <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '8px' }}>{app.connection}</p>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                  {app.stats.map((s, si) => (
+                    <span key={si} style={{ color: app.color, fontSize: '12px', fontWeight: 600 }}>{s.icon} {s.value} {s.label}</span>
+                  ))}
+                </div>
+                <p style={{ color: colors.textMuted, fontSize: '12px' }}>Companies: {app.companies.join(', ')}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Progress indicator */}
+          <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', marginTop: '16px' }}>
+            {transferApplications.map((_, index) => (
+              <div
+                key={index}
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  background: transferCompleted.has(index) ? '#22c55e' : index === activeTransferApp ? '#3b82f6' : '#475569',
+                }}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(allCompleted, 'Take the Test')
     );
   }
 
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+      return wrapPhaseContent(
+        <div style={{ padding: '24px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1197,47 +1256,74 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
                 {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
               </h2>
               <p style={{ fontSize: '48px', fontWeight: 'bold' }}>{testScore}/10</p>
-              <p style={{ color: '#94a3b8' }}>
+              <p style={{ color: colors.textSecondary }}>
                 {testScore >= 8 ? 'You\'ve mastered AI hardware architecture!' : 'Review the concepts and try again.'}
               </p>
             </div>
 
-            <button
-              onClick={testScore >= 8 ? onPhaseComplete : () => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); }}
-              style={{
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: testScore >= 8 ? '#22c55e' : '#f59e0b',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              {testScore >= 8 ? 'Claim Mastery' : 'Try Again'}
-            </button>
+            {/* Answer review section */}
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '16px' }}>Answer Review</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {testQuestions.map((q, i) => {
+                  const isCorrect = testAnswers[i] !== null && q.options[testAnswers[i]!].correct;
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: isCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                        color: isCorrect ? '#22c55e' : '#ef4444',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                      }}
+                    >
+                      {isCorrect ? '\u2713' : '\u2717'}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
+        </div>,
+        renderBottomBar(true, testScore >= 8 ? 'Claim Mastery' : 'Try Again', () => {
+          if (testScore >= 8) {
+            goNext();
+          } else {
+            setTestSubmitted(false);
+            setTestAnswers(new Array(10).fill(null));
+            setCurrentTestQuestion(0);
+            setPendingAnswer(null);
+            setConfirmedAnswers(new Set());
+          }
+        })
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    const currentAnswer = testAnswers[currentTestQuestion];
+    const isConfirmed = confirmedAnswers.has(currentTestQuestion);
+    const displayAnswer = isConfirmed ? currentAnswer : pendingAnswer;
+    const allAnswered = testAnswers.every(a => a !== null);
+
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2>Knowledge Test</h2>
-            <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1}/10</span>
+            <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of 10</span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
             {testQuestions.map((_, i) => (
               <div
                 key={i}
-                onClick={() => setCurrentTestQuestion(i)}
+                onClick={() => { setCurrentTestQuestion(i); setPendingAnswer(null); }}
                 style={{
                   flex: 1,
                   height: '4px',
@@ -1250,34 +1336,48 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
           </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', color: colors.textMuted, marginBottom: '8px' }}>
+              Scenario: You are an AI infrastructure engineer at a major technology company evaluating hardware options for deploying machine learning workloads at scale. Consider the tradeoffs between specialized and general-purpose architectures.
+            </p>
             <p style={{ fontSize: '16px', lineHeight: 1.6 }}>{currentQ.question}</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-            {currentQ.options.map((opt, i) => (
-              <button
-                key={i}
-                onClick={() => handleTestAnswer(currentTestQuestion, i)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: testAnswers[currentTestQuestion] === i ? '2px solid #3b82f6' : '1px solid #475569',
-                  background: testAnswers[currentTestQuestion] === i ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                  color: '#f8fafc',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '14px',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {opt.text}
-              </button>
-            ))}
+            {currentQ.options.map((opt, i) => {
+              const isSelected = displayAnswer === i;
+              const showResult = isConfirmed && currentAnswer === i;
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleTestAnswer(currentTestQuestion, i)}
+                  disabled={isConfirmed}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: isSelected ? '2px solid #3b82f6' : '1px solid #475569',
+                    background: showResult
+                      ? (opt.correct ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)')
+                      : isSelected ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
+                    color: '#f8fafc',
+                    cursor: isConfirmed ? 'default' : 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    minHeight: '44px',
+                    WebkitTapHighlightColor: 'transparent',
+                    opacity: isConfirmed && !isSelected ? 0.6 : 1,
+                  }}
+                >
+                  {opt.text}
+                  {showResult && (opt.correct ? ' \u2713' : ' \u2717')}
+                </button>
+              );
+            })}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
             <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+              onClick={() => { setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1)); setPendingAnswer(null); }}
               disabled={currentTestQuestion === 0}
               style={{
                 padding: '12px 24px',
@@ -1286,15 +1386,33 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
                 background: 'transparent',
                 color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
               Previous
             </button>
 
-            {currentTestQuestion < 9 ? (
+            {!isConfirmed && pendingAnswer !== null ? (
               <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                onClick={confirmAnswer}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#f59e0b',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  minHeight: '44px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Confirm Answer
+              </button>
+            ) : currentTestQuestion < 9 ? (
+              <button
+                onClick={goToNextQuestion}
                 style={{
                   padding: '12px 24px',
                   borderRadius: '8px',
@@ -1302,6 +1420,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
                   background: '#3b82f6',
                   color: 'white',
                   cursor: 'pointer',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1310,14 +1429,15 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
             ) : (
               <button
                 onClick={submitTest}
-                disabled={testAnswers.includes(null)}
+                disabled={!allAnswered}
                 style={{
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? '#475569' : '#22c55e',
+                  background: allAnswered ? '#22c55e' : '#475569',
                   color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  cursor: allAnswered ? 'pointer' : 'not-allowed',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1331,19 +1451,19 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   }
 
   // MASTERY PHASE
-  const renderMastery = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
-      <div style={{ flex: 1, padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+  if (phase === 'mastery') {
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: '80px', marginBottom: '16px' }}>MASTERY</div>
+          <div style={{ fontSize: '80px', marginBottom: '16px' }}>🏆</div>
           <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>AI Hardware Architecture Master!</h1>
-          <p style={{ color: '#94a3b8', marginBottom: '32px' }}>
+          <p style={{ color: colors.textSecondary, marginBottom: '32px' }}>
             You understand the fundamental differences between TPU and GPU architectures
           </p>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '24px', borderRadius: '16px', marginBottom: '24px', textAlign: 'left' }}>
             <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ lineHeight: 2, paddingLeft: '20px' }}>
+            <ul style={{ lineHeight: 2, paddingLeft: '20px', color: colors.textSecondary }}>
               <li>Systolic arrays and rhythmic data flow</li>
               <li>CUDA cores and parallel flexibility</li>
               <li>Batch size impact on efficiency</li>
@@ -1354,549 +1474,11 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
 
           <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
             <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>The Core Insight</h4>
-            <p style={{ color: '#e2e8f0' }}>
+            <p style={{ color: colors.textSecondary }}>
               Specialized hardware can dramatically outperform general-purpose processors for specific tasks,
               but flexibility has value too. The best choice depends on your workload characteristics.
             </p>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Main render using renderPhase
-  const renderPhase = () => {
-    switch (phase) {
-      case 'mastery': return renderMastery();
-      default: return null;
-    }
-  };
-
-  // For phases that are already defined as if-blocks, we need to handle them
-  // HOOK PHASE
-  if (phase === 'hook') {
-    return (
-      <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-        <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-          <div style={{ padding: '24px', paddingBottom: '100px' }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ marginBottom: '24px' }}>
-                <span style={{ color: '#3b82f6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>AI Hardware Architecture</span>
-                <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #3b82f6, #22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  TPU vs GPU Architecture
-                </h1>
-                <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
-                  Why did Google build their own AI chips instead of using GPUs?
-                </p>
-              </div>
-
-              {renderVisualization()}
-
-              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', borderLeft: '4px solid #3b82f6' }}>
-                <p style={{ fontSize: '16px', lineHeight: 1.6 }}>
-                  When Google needed to run AI at massive scale, they found that general-purpose GPUs weren't efficient enough.
-                  So they designed a completely new type of chip: the Tensor Processing Unit (TPU).
-                </p>
-                <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '12px' }}>
-                  But what makes TPUs different? And when should you use each?
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ flexShrink: 0 }}>{renderBottomBar(true, 'Explore the Difference')}</div>
-      </div>
-    );
-  }
-
-  // PREDICT PHASE
-  if (phase === 'predict') {
-    return (
-      <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-        <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-          <div style={{ padding: '24px', paddingBottom: '100px' }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
-
-              <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-                <p style={{ fontSize: '16px', marginBottom: '8px' }}>
-                  Google's TPU and NVIDIA's GPU both process AI workloads. What's the fundamental difference?
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {predictions.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setPrediction(p.id)}
-                    style={{
-                      padding: '16px',
-                      borderRadius: '12px',
-                      border: prediction === p.id ? '2px solid #3b82f6' : '1px solid #475569',
-                      background: prediction === p.id ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                      color: '#f8fafc',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontSize: '15px',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ flexShrink: 0 }}>{renderBottomBar(!!prediction, 'Test My Prediction')}</div>
-      </div>
-    );
-  }
-
-  // PLAY PHASE
-  if (phase === 'play') {
-    return (
-      <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-        <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-          <div style={{ padding: '24px', paddingBottom: '100px' }}>
-            <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-              <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Compare TPU and GPU Performance</h2>
-              <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-                Adjust parameters to see how each architecture performs
-              </p>
-
-              {renderVisualization()}
-              {renderControls()}
-
-              <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
-                <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>Key Observations:</h3>
-                <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
-                  <li>TPU throughput increases dramatically with batch size</li>
-                  <li>GPU maintains more consistent performance across batch sizes</li>
-                  <li>Matrix multiplication strongly favors TPU's systolic array</li>
-                  <li>Watch the data flow in the systolic array animation</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ flexShrink: 0 }}>{renderBottomBar(true, 'Review the Concepts')}</div>
-      </div>
-    );
-  }
-
-  // REVIEW PHASE
-  if (phase === 'review') {
-    const wasCorrect = prediction === 'matrix';
-    return (
-      <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-        <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-          <div style={{ padding: '24px', paddingBottom: '100px' }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              <div style={{
-                background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '24px',
-                borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
-              }}>
-                <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
-                  {wasCorrect ? 'Correct!' : 'Not quite!'}
-                </h3>
-                <p>TPUs use systolic arrays - specialized hardware designed specifically for matrix operations that are common in neural networks.</p>
-              </div>
-
-              <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-                <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>The Systolic Array</h3>
-                <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-                  <strong>What it is:</strong> A grid of processing elements where data flows rhythmically (like a heartbeat - hence "systolic") through the array.
-                </p>
-                <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-                  <strong>Why it's efficient:</strong> Data is reused as it flows through. Each element performs a multiply-accumulate, passing results to neighbors. This minimizes memory access - the biggest energy cost in computing.
-                </p>
-                <p style={{ lineHeight: 1.7 }}>
-                  <strong>The tradeoff:</strong> Works beautifully for regular matrix operations but struggles with irregular data access patterns.
-                </p>
-              </div>
-
-              <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-                <h3 style={{ color: '#22c55e', marginBottom: '16px' }}>GPU CUDA Cores</h3>
-                <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-                  <strong>What they are:</strong> Thousands of small, flexible processors that can each run independent code threads.
-                </p>
-                <p style={{ lineHeight: 1.7 }}>
-                  <strong>Why they're flexible:</strong> Each core can do different operations, access arbitrary memory, and handle branching logic. Great for graphics and varied AI workloads.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ flexShrink: 0 }}>{renderBottomBar(true, 'Discover the Twist')}</div>
-      </div>
-    );
-  }
-
-  // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
-    return (
-      <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-        <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-          <div style={{ padding: '24px', paddingBottom: '100px' }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>The Twist</h2>
-
-              <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #a855f7' }}>
-                <p style={{ fontSize: '16px', marginBottom: '12px' }}>
-                  Different AI workloads have very different computational patterns. A chatbot processes one request at a time with low latency needs.
-                  A training job processes millions of examples in batches.
-                </p>
-                <p style={{ color: '#c4b5fd', fontWeight: 'bold' }}>
-                  So which architecture should you choose?
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {twistPredictions.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setTwistPrediction(p.id)}
-                    style={{
-                      padding: '16px',
-                      borderRadius: '12px',
-                      border: twistPrediction === p.id ? '2px solid #a855f7' : '1px solid #475569',
-                      background: twistPrediction === p.id ? 'rgba(168, 85, 247, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                      color: '#f8fafc',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontSize: '15px',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ flexShrink: 0 }}>{renderBottomBar(!!twistPrediction, 'See the Answer')}</div>
-      </div>
-    );
-  }
-
-  // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
-    return (
-      <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-        <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-          <div style={{ padding: '24px', paddingBottom: '100px' }}>
-            <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-              <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>Workload Matching</h2>
-
-              {renderVisualization()}
-              {renderControls()}
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
-                <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px' }}>
-                  <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>TPU Excels At:</h4>
-                  <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
-                    <li>Large batch training</li>
-                    <li>Matrix-heavy models</li>
-                    <li>Transformer attention</li>
-                    <li>High throughput needs</li>
-                  </ul>
-                </div>
-                <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '16px', borderRadius: '12px' }}>
-                  <h4 style={{ color: '#22c55e', marginBottom: '8px' }}>GPU Excels At:</h4>
-                  <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
-                    <li>Low-latency inference</li>
-                    <li>Varied workloads</li>
-                    <li>Small batch sizes</li>
-                    <li>Irregular algorithms</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ flexShrink: 0 }}>{renderBottomBar(true, 'Review the Discovery')}</div>
-      </div>
-    );
-  }
-
-  // TWIST REVIEW PHASE
-  if (phase === 'twist_review') {
-    const wasCorrect = twistPrediction === 'depends';
-    return (
-      <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-        <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-          <div style={{ padding: '24px', paddingBottom: '100px' }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              <div style={{
-                background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '24px',
-                borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
-              }}>
-                <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
-                  {wasCorrect ? 'Exactly right!' : 'The key insight:'}
-                </h3>
-                <p>There's no universally "best" architecture. The right choice depends entirely on your specific workload characteristics!</p>
-              </div>
-
-              <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-                <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>The Decision Framework</h3>
-                <div style={{ lineHeight: 1.8 }}>
-                  <p><strong style={{ color: '#3b82f6' }}>Choose TPU when:</strong></p>
-                  <ul style={{ paddingLeft: '20px', marginBottom: '16px' }}>
-                    <li>Training large models with big batches</li>
-                    <li>Workload is matrix-multiplication heavy</li>
-                    <li>Throughput matters more than latency</li>
-                    <li>Power efficiency is critical</li>
-                  </ul>
-
-                  <p><strong style={{ color: '#22c55e' }}>Choose GPU when:</strong></p>
-                  <ul style={{ paddingLeft: '20px' }}>
-                    <li>Need low latency for individual requests</li>
-                    <li>Workload has irregular patterns</li>
-                    <li>Running varied AI models</li>
-                    <li>Need flexibility for experimentation</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ flexShrink: 0 }}>{renderBottomBar(true, 'See Real-World Applications')}</div>
-      </div>
-    );
-  }
-
-  // TRANSFER PHASE
-  if (phase === 'transfer') {
-    return (
-      <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-        <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-          <div style={{ padding: '24px', paddingBottom: '100px' }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-              <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-                Complete all 4 to unlock the test ({transferCompleted.size}/4)
-              </p>
-
-              {transferApplications.map((app, index) => (
-                <div
-                  key={index}
-                  style={{
-                    background: 'rgba(30, 41, 59, 0.8)',
-                    padding: '20px',
-                    borderRadius: '12px',
-                    marginBottom: '16px',
-                    border: transferCompleted.has(index) ? '2px solid #22c55e' : '1px solid #334155',
-                  }}
-                >
-                  <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>{app.title}</h3>
-                  <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-                  <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-                    <p style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '14px' }}>{app.question}</p>
-                  </div>
-                  {!transferCompleted.has(index) ? (
-                    <button
-                      onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                      style={{
-                        padding: '10px 20px',
-                        borderRadius: '8px',
-                        border: '1px solid #3b82f6',
-                        background: 'transparent',
-                        color: '#3b82f6',
-                        cursor: 'pointer',
-                        WebkitTapHighlightColor: 'transparent',
-                      }}
-                    >
-                      Reveal Answer
-                    </button>
-                  ) : (
-                    <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
-                      <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div style={{ flexShrink: 0 }}>{renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}</div>
-      </div>
-    );
-  }
-
-  // TEST PHASE
-  if (phase === 'test') {
-    if (testSubmitted) {
-      return (
-        <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-          <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-          <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-            <div style={{ padding: '24px', paddingBottom: '100px' }}>
-              <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-                <div style={{
-                  background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                  padding: '32px',
-                  borderRadius: '16px',
-                  textAlign: 'center',
-                  marginBottom: '24px',
-                }}>
-                  <h2 style={{ color: testScore >= 8 ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
-                    {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-                  </h2>
-                  <p style={{ fontSize: '48px', fontWeight: 'bold' }}>{testScore}/10</p>
-                  <p style={{ color: '#94a3b8' }}>
-                    {testScore >= 8 ? 'You\'ve mastered AI hardware architecture!' : 'Review the concepts and try again.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div style={{ flexShrink: 0 }}>{renderBottomBar(true, testScore >= 8 ? 'Claim Mastery' : 'Try Again', () => {
-            if (testScore >= 8) {
-              goNext();
-            } else {
-              setTestSubmitted(false);
-              setTestAnswers(new Array(10).fill(null));
-              setCurrentTestQuestion(0);
-            }
-          })}</div>
-        </div>
-      );
-    }
-
-    const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-        <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-          <div style={{ padding: '24px', paddingBottom: '100px' }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2>Knowledge Test</h2>
-                <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1}/10</span>
-              </div>
-
-              <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-                {testQuestions.map((_, i) => (
-                  <div
-                    key={i}
-                    onClick={() => setCurrentTestQuestion(i)}
-                    style={{
-                      flex: 1,
-                      height: '4px',
-                      borderRadius: '2px',
-                      background: testAnswers[i] !== null ? '#3b82f6' : i === currentTestQuestion ? '#64748b' : '#1e293b',
-                      cursor: 'pointer',
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-                <p style={{ fontSize: '16px', lineHeight: 1.6 }}>{currentQ.question}</p>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-                {currentQ.options.map((opt, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleTestAnswer(currentTestQuestion, i)}
-                    style={{
-                      padding: '16px',
-                      borderRadius: '12px',
-                      border: testAnswers[currentTestQuestion] === i ? '2px solid #3b82f6' : '1px solid #475569',
-                      background: testAnswers[currentTestQuestion] === i ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                      color: '#f8fafc',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontSize: '14px',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    {opt.text}
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <button
-                  onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-                  disabled={currentTestQuestion === 0}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: '1px solid #475569',
-                    background: 'transparent',
-                    color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
-                    cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Previous
-                </button>
-
-                {currentTestQuestion < 9 ? (
-                  <button
-                    onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
-                    style={{
-                      padding: '12px 24px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: '#3b82f6',
-                      color: 'white',
-                      cursor: 'pointer',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    Next
-                  </button>
-                ) : (
-                  <button
-                    onClick={submitTest}
-                    disabled={testAnswers.includes(null)}
-                    style={{
-                      padding: '12px 24px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: testAnswers.includes(null) ? '#475569' : '#22c55e',
-                      color: 'white',
-                      cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    Submit
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // MASTERY PHASE
-  if (phase === 'mastery') {
-    return (
-      <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
-        <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-          {renderMastery()}
         </div>
       </div>
     );

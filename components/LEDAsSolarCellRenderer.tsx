@@ -429,6 +429,11 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1001,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -455,7 +460,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -480,6 +485,11 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
 
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1001,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -507,7 +517,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
         >
           Back
         </button>
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
           {phaseLabels[phase]}
         </span>
         <button
@@ -727,7 +737,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
           <text x={width / 2} y={28} fill={colors.textPrimary} fontSize={18} fontWeight="bold" textAnchor="middle">
             LED as Solar Cell - Photovoltaic Mode
           </text>
-          <text x={width / 2} y={46} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+          <text x={width / 2} y={46} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
             Semiconductor P-N Junction Converting Light to Electricity
           </text>
 
@@ -900,8 +910,8 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
             <rect x="8" y={55} width={6} height={40} rx={1} fill="url(#ledscWireAnode)" />
 
             {/* Leg labels */}
-            <text x="-11" y={105} fill="#93c5fd" fontSize={7} textAnchor="middle">-</text>
-            <text x="11" y={105} fill="#fca5a5" fontSize={7} textAnchor="middle">+</text>
+            <text x="-11" y={105} fill="#93c5fd" fontSize={9} textAnchor="middle">-</text>
+            <text x="11" y={105} fill="#fca5a5" fontSize={9} textAnchor="middle">+</text>
 
             {/* Labels */}
             <text x="0" y={-85} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">{ledColor.toUpperCase()} LED</text>
@@ -943,7 +953,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
                 {output.voltage.toFixed(3)}
               </text>
               <text x="35" y={-5} fill={colors.success} fontSize={12} textAnchor="middle">V</text>
-              <text x="0" y={10} fill={colors.textMuted} fontSize={8} textAnchor="middle" letterSpacing="0.5">VOLTAGE</text>
+              <text x="0" y={10} fill={colors.textSecondary} fontSize={8} textAnchor="middle" letterSpacing="0.5">VOLTAGE</text>
 
               {/* Current display */}
               <rect x="-40" y={20} width={80} height={38} rx={4} fill="#030712" stroke="#1f2937" strokeWidth={0.5} />
@@ -951,7 +961,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
                 {(output.current * 1000).toFixed(1)}
               </text>
               <text x="35" y={42} fill={colors.blue} fontSize={10} textAnchor="middle">uA</text>
-              <text x="0" y={55} fill={colors.textMuted} fontSize={8} textAnchor="middle" letterSpacing="0.5">CURRENT</text>
+              <text x="0" y={55} fill={colors.textSecondary} fontSize={8} textAnchor="middle" letterSpacing="0.5">CURRENT</text>
 
               {/* Power display */}
               <rect x="-40" y={65} width={80} height={32} rx={4} fill="#030712" stroke="#1f2937" strokeWidth={0.5} />
@@ -959,13 +969,13 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
                 {(output.power * 1000).toFixed(2)}
               </text>
               <text x="35" y={85} fill={colors.warning} fontSize={9} textAnchor="middle">uW</text>
-              <text x="0" y={95} fill={colors.textMuted} fontSize={7} textAnchor="middle" letterSpacing="0.5">POWER</text>
+              <text x="0" y={95} fill={colors.textSecondary} fontSize={8} textAnchor="middle" letterSpacing="0.5">POWER</text>
 
               {/* Connection indicator */}
-              <circle cx="-35" cy={110} r={4} fill={output.aboveThreshold ? colors.success : colors.textMuted}>
+              <circle cx="-35" cy={110} r={4} fill={output.aboveThreshold ? colors.success : colors.textSecondary}>
                 {output.aboveThreshold && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
               </circle>
-              <text x="-20" y={113} fill={colors.textMuted} fontSize={7}>SIGNAL</text>
+              <text x="-20" y={113} fill={colors.textSecondary} fontSize={8}>SIGNAL</text>
             </g>
           )}
 
@@ -1011,15 +1021,15 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
 
             {/* Photon */}
             <circle cx="15" cy="18" r={4} fill={wavelengthToColor(lightWavelength)} filter="url(#ledscPhotonFilter)" />
-            <text x="28" y="21" fill={colors.textMuted} fontSize={8}>Photon</text>
+            <text x="28" y="21" fill={colors.textSecondary} fontSize={8}>Photon</text>
 
             {/* Electron */}
             <circle cx="15" cy="35" r={4} fill="url(#ledscElectronGlow)" />
-            <text x="28" y="38" fill={colors.textMuted} fontSize={8}>Electron (e-)</text>
+            <text x="28" y="38" fill={colors.textSecondary} fontSize={8}>Electron (e-)</text>
 
             {/* Hole */}
             <circle cx="75" cy="35" r={4} fill="url(#ledscHoleGlow)" />
-            <text x="88" y="38" fill={colors.textMuted} fontSize={8}>Hole (h+)</text>
+            <text x="88" y="38" fill={colors.textSecondary} fontSize={8}>Hole (h+)</text>
           </g>
         </svg>
       </div>
@@ -1113,7 +1123,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
   const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string) => (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
         {content}
       </div>
       {renderBottomBar(canGoNext, nextLabel)}
@@ -1479,22 +1489,44 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
               <button
                 onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
                 style={{
-                  padding: '8px 16px',
+                  padding: '12px 16px',
                   borderRadius: '6px',
                   border: `1px solid ${colors.accent}`,
                   background: 'transparent',
                   color: colors.accent,
                   cursor: 'pointer',
                   fontSize: '13px',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 Reveal Answer
               </button>
             ) : (
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-              </div>
+              <>
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    // Mark as understood - "Got It" button
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: colors.success,
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    minHeight: '44px',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  Got It
+                </button>
+              </>
             )}
           </div>
         ))}
@@ -1548,11 +1580,11 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (

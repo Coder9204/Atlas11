@@ -1060,7 +1060,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           }}>
             <h4 style={{ fontWeight: 600, color: colors.accentSecondary, marginBottom: '8px' }}>How It Works:</h4>
             <p style={{ ...typo.small, color: colors.textSecondary }}>
-              The top metal (higher alpha) expands more when heated, becoming longer than the bottom. Since they are bonded together, the strip must curve to accommodate this length difference!
+              When you increase the temperature, the top metal (higher alpha) expands more, becoming longer than the bottom. This causes the strip to curve downward! When you decrease the temperature, the strip straightens as the metals contract back. This principle is important in real-world applications - bimetallic strips are used in thermostats, circuit breakers, and temperature controls throughout industry.
             </p>
           </div>
         </div>
@@ -1093,8 +1093,8 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>Understanding Bimetallic Bending</h2>
             <p style={{ ...typo.body, color: colors.textSecondary }}>
               {prediction === 'B'
-                ? "Correct! The strip curves toward the lower-expansion metal."
-                : "The answer was B - steel becomes the inner curve!"}
+                ? "As you observed in the experiment, your prediction was correct! The strip curves toward the lower-expansion metal."
+                : "As you saw when experimenting, the result shows steel becomes the inner curve! Your observation confirms the physics."}
             </p>
           </div>
 

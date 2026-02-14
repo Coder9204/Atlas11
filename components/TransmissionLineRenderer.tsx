@@ -21,7 +21,7 @@ interface TransmissionLineRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgCardLight: '#1e293b',
@@ -421,6 +421,11 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -430,10 +435,11 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
         gap: isMobile ? '12px' : '16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
-          <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
+          <div className="navigation-dots" style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
             {phaseOrder.map((p, i) => (
               <div
                 key={p}
+                className="nav-dot"
                 onClick={() => i < currentIdx && goToPhase(p)}
                 style={{
                   height: isMobile ? '10px' : '8px',
@@ -441,15 +447,16 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
                   borderRadius: '5px',
                   backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
                   cursor: i < currentIdx ? 'pointer' : 'default',
-                  transition: 'all 0.3s',
+                  transition: 'all 0.3s ease',
                   minWidth: isMobile ? '10px' : '8px',
                   minHeight: isMobile ? '10px' : '8px'
                 }}
                 title={phaseLabels[p]}
+                aria-label={phaseLabels[p]}
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -490,6 +497,11 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
 
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -511,7 +523,8 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             border: `1px solid ${colors.border}`,
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
           Back
@@ -538,7 +551,8 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.4,
             boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
           {nextLabel}
@@ -747,7 +761,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             <circle cx="25" cy="65" r="6" fill="url(#txlnPowerGlow)">
               <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
             </circle>
-            <text x="25" y="80" fill={colors.textMuted} fontSize="6" textAnchor="middle">POWER</text>
+            <text x="25" y="80" fill={colors.textSecondary} fontSize="8" textAnchor="middle">PWR</text>
 
             {/* Output connector */}
             <rect x="75" y="52" width="20" height="24" rx="2" fill="#374151" stroke="#4b5563" />
@@ -773,15 +787,15 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             <rect x="0" y="20" width="360" height="2" fill="#fef3c7" opacity="0.4" />
 
             {/* Conductor spacing indicators */}
-            <line x1="-5" y1="24" x2="-5" y2="56" stroke={colors.textMuted} strokeWidth="1" strokeDasharray="2,2" />
-            <text x="-15" y="42" fill={colors.textMuted} fontSize="7" textAnchor="middle" transform="rotate(-90, -15, 42)">Z0</text>
+            <line x1="-5" y1="24" x2="-5" y2="56" stroke={colors.textSecondary} strokeWidth="1" strokeDasharray="2,2" />
+            <text x="-15" y="42" fill={colors.textSecondary} fontSize="8" textAnchor="middle" transform="rotate(-90, -15, 42)">Z0</text>
 
             {/* Distance markers */}
             {[0, 90, 180, 270, 360].map((pos, i) => (
               <g key={`marker-${i}`}>
-                <line x1={pos} y1="65" x2={pos} y2="70" stroke={colors.textMuted} strokeWidth="1" />
-                <text x={pos} y="80" fill={colors.textMuted} fontSize="7" textAnchor="middle">
-                  {(lineLength * (i / 4)).toFixed(2)}m
+                <line x1={pos} y1="65" x2={pos} y2="70" stroke={colors.textSecondary} strokeWidth="1" />
+                <text x={pos} y="80" fill={colors.textSecondary} fontSize="8" textAnchor="middle">
+                  {(lineLength * (i / 4)).toFixed(1)}m
                 </text>
               </g>
             ))}
@@ -938,25 +952,25 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             <rect x="560" y="10" width="70" height="130" rx="4" fill="#1e293b" stroke="#334155" />
 
             {/* Metrics display */}
-            <text x="595" y="30" fill={colors.textSecondary} fontSize="7" textAnchor="middle" fontWeight="bold">METRICS</text>
+            <text x="595" y="28" fill={colors.textSecondary} fontSize="8" textAnchor="middle" fontWeight="bold">METRICS</text>
 
-            <text x="565" y="50" fill={colors.textMuted} fontSize="7">Gamma:</text>
-            <text x="625" y="50" fill="#22d3ee" fontSize="8" textAnchor="end" fontFamily="monospace">
+            <text x="565" y="48" fill={colors.textSecondary} fontSize="8">Gamma:</text>
+            <text x="625" y="48" fill="#22d3ee" fontSize="9" textAnchor="end" fontFamily="monospace">
               {output.gamma >= 0 ? '+' : ''}{output.gamma.toFixed(3)}
             </text>
 
-            <text x="565" y="68" fill={colors.textMuted} fontSize="7">VSWR:</text>
-            <text x="625" y="68" fill="#22d3ee" fontSize="8" textAnchor="end" fontFamily="monospace">
+            <text x="565" y="66" fill={colors.textSecondary} fontSize="8">VSWR:</text>
+            <text x="625" y="66" fill="#22d3ee" fontSize="9" textAnchor="end" fontFamily="monospace">
               {output.vswr.toFixed(1)}:1
             </text>
 
-            <text x="565" y="86" fill={colors.textMuted} fontSize="7">Ret.Loss:</text>
-            <text x="625" y="86" fill="#22d3ee" fontSize="8" textAnchor="end" fontFamily="monospace">
+            <text x="565" y="84" fill={colors.textSecondary} fontSize="8">R.Loss:</text>
+            <text x="625" y="84" fill="#22d3ee" fontSize="9" textAnchor="end" fontFamily="monospace">
               {output.returnLoss.toFixed(1)}dB
             </text>
 
-            <text x="565" y="104" fill={colors.textMuted} fontSize="7">Pwr Ref:</text>
-            <text x="625" y="104" fill={output.powerReflected > 10 ? "#f87171" : "#22d3ee"} fontSize="8" textAnchor="end" fontFamily="monospace">
+            <text x="565" y="102" fill={colors.textSecondary} fontSize="8">Pwr Ref:</text>
+            <text x="625" y="102" fill={output.powerReflected > 10 ? "#f87171" : "#22d3ee"} fontSize="9" textAnchor="end" fontFamily="monospace">
               {output.powerReflected.toFixed(1)}%
             </text>
 
@@ -1109,7 +1123,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
   const renderPhaseContent = (content: React.ReactNode, bottomBar: React.ReactNode) => (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
         {content}
       </div>
       {bottomBar}
@@ -1219,6 +1233,18 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Transmission Line Behavior</h2>
           <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
             Adjust impedances and observe reflections
+          </p>
+        </div>
+
+        <div style={{
+          background: 'rgba(6, 182, 212, 0.15)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.primary}`,
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+            <strong style={{ color: colors.primary }}>Observe:</strong> Watch how changing load impedance affects signal reflections and VSWR readings.
           </p>
         </div>
 
@@ -1365,6 +1391,18 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           </p>
         </div>
 
+        <div style={{
+          background: 'rgba(6, 182, 212, 0.15)',
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.primary}`,
+        }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+            <strong style={{ color: colors.primary }}>Observe:</strong> Toggle between Open and Short terminations and watch how the reflection phase changes.
+          </p>
+        </div>
+
         {renderVisualization(true)}
         {renderControls()}
 
@@ -1470,14 +1508,28 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             {!transferCompleted.has(index) ? (
               <button
                 onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
+                style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', minHeight: '44px', WebkitTapHighlightColor: 'transparent' }}
               >
                 Reveal Answer
               </button>
             ) : (
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                <p style={{ color: colors.textPrimary, fontSize: '13px', margin: 0 }}>{app.answer}</p>
               </div>
+            )}
+            {transferCompleted.has(index) && (
+              <button
+                onClick={() => {
+                  // Find next incomplete or just mark as complete
+                  const nextIncomplete = transferApplications.findIndex((_, i) => !transferCompleted.has(i) && i > index);
+                  if (nextIncomplete >= 0) {
+                    // Scroll to next incomplete
+                  }
+                }}
+                style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: colors.success, color: 'white', cursor: 'pointer', fontSize: '13px', minHeight: '44px', fontWeight: 600, WebkitTapHighlightColor: 'transparent' }}
+              >
+                {index < transferApplications.length - 1 ? 'Got It - Next Application' : 'Got It'}
+              </button>
             )}
           </div>
         ))}
@@ -1538,7 +1590,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
       <div style={{ padding: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-          <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+          <span style={{ color: colors.textSecondary, fontWeight: 600 }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
         </div>
         <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
           {testQuestions.map((_, i) => (

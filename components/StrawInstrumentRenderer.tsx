@@ -355,8 +355,8 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#e2e8f0',
     border: '#2a2a3a',
     pipe: '#0EA5E9',
   };
@@ -417,7 +417,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     const strawHeight = strawLength * 6;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="strawGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#0284c7" />
@@ -556,7 +556,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C\''];
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           {scaleStraws.map((_, i) => (
             <linearGradient key={i} id={`scaleGrad${i}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -655,7 +655,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1001,
     }}>
       <div style={{
         height: '100%',
@@ -664,6 +664,27 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         transition: 'width 0.3s ease',
       }} />
     </div>
+  );
+
+  // Navigation bar
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: '4px',
+      left: 0,
+      right: 0,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '12px 16px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      zIndex: 1000,
+    }}>
+      <span style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} - Phase {phaseOrder.indexOf(phase) + 1} of {phaseOrder.length}
+      </span>
+    </nav>
   );
 
   // Navigation dots
@@ -686,6 +707,11 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            minHeight: '44px',
+            minWidth: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           aria-label={phaseLabels[p]}
         />
@@ -705,6 +731,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -722,9 +749,12 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{
           fontSize: '64px',
@@ -776,6 +806,42 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     );
   }
 
+  // Static prediction visualization
+  const PredictVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 200 : 240;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Two Straws - Which makes a higher pitch?
+        </text>
+
+        {/* Long straw */}
+        <g transform="translate(100, 50)">
+          <rect width="50" height="140" fill="url(#strawGrad)" rx="8" />
+          <ellipse cx="25" cy="0" rx="25" ry="6" fill="#075985" opacity="0.7" />
+          <text x="25" y="165" textAnchor="middle" fill={colors.pipe} fontSize="14" fontWeight="600">20 cm</text>
+        </g>
+
+        {/* Short straw */}
+        <g transform="translate(width - 150, 120)">
+          <rect width="50" height="70" fill="#dc2626" rx="8" />
+          <ellipse cx="25" cy="0" rx="25" ry="6" fill="#991b1b" opacity="0.7" />
+          <text x="25" y="95" textAnchor="middle" fill={colors.error} fontSize="14" fontWeight="600">10 cm</text>
+        </g>
+
+        <defs>
+          <linearGradient id="strawGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#0284c7" />
+            <stop offset="50%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#0284c7" />
+          </linearGradient>
+        </defs>
+      </svg>
+    );
+  };
+
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
@@ -789,8 +855,11 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -809,7 +878,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             You have two straws: one is 20 cm long, the other is 10 cm. When you blow across them, which produces the higher pitch?
           </h2>
 
-          {/* Visual diagram */}
+          {/* Visual diagram with SVG */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -817,29 +886,8 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '60px', marginBottom: '16px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '40px',
-                  height: '120px',
-                  background: `linear-gradient(to right, #0284c7, #38bdf8, #0284c7)`,
-                  borderRadius: '8px',
-                  margin: '0 auto 8px',
-                }} />
-                <p style={{ ...typo.small, color: colors.pipe }}>20 cm</p>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Long straw</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '40px',
-                  height: '60px',
-                  background: `linear-gradient(to right, #dc2626, #f87171, #dc2626)`,
-                  borderRadius: '8px',
-                  margin: '0 auto 8px',
-                }} />
-                <p style={{ ...typo.small, color: colors.error }}>10 cm</p>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Short straw</p>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <PredictVisualization />
             </div>
             <p style={{ ...typo.body, color: colors.textSecondary }}>
               Which one makes a higher sound?
@@ -905,16 +953,33 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Straw Instrument Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Adjust the straw length and hear how the pitch changes!
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Observe: Move the slider to change straw length and click "Blow!" to hear the sound. Watch how frequency changes with length.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -1044,8 +1109,11 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1134,8 +1202,11 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -1237,16 +1308,33 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Your Straw Pan Flute
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Click each straw to play a note and notice the length pattern!
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Observe: Click each straw from left to right to play the C major scale. Notice how each tube is proportionally shorter, not equally shorter.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1330,8 +1418,11 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>

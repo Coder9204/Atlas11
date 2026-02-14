@@ -357,8 +357,8 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#e2e8f0',
     border: '#2a2a3a',
   };
 
@@ -418,7 +418,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -468,6 +468,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // Stress Concentration Visualization SVG
@@ -479,7 +480,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     const stretch = appliedStress / 15;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="steelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#6b7280" />
@@ -640,7 +641,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     const crackTipX = 80 + crackLength;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="plateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#64748b" />
@@ -805,7 +806,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Investigate Stress Concentration
+          Start Learning
         </button>
 
         {renderNavDots()}
@@ -854,51 +855,20 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '80px',
-                  height: '120px',
-                  background: `linear-gradient(to bottom, #6b7280, #4b5563)`,
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '8px',
-                }}>
-                  <div style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    background: colors.bgCard,
-                    border: `2px solid ${colors.border}`,
-                  }} />
-                </div>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>Circular Hole</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '80px',
-                  height: '120px',
-                  background: `linear-gradient(to bottom, #6b7280, #4b5563)`,
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '8px',
-                }}>
-                  <div style={{
-                    width: '0',
-                    height: '0',
-                    borderLeft: '15px solid transparent',
-                    borderRight: '15px solid transparent',
-                    borderBottom: `30px solid ${colors.bgCard}`,
-                  }} />
-                </div>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>Sharp V-Notch</p>
-              </div>
-            </div>
+            <svg width="320" height="160" viewBox="0 0 320 160" style={{ maxWidth: '100%' }}>
+              {/* Circular hole plate */}
+              <rect x="20" y="20" width="80" height="120" rx="4" fill="#6b7280" stroke="#9ca3af" strokeWidth="2" />
+              <circle cx="60" cy="80" r="14" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" />
+              <text x="60" y="155" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Circular Hole</text>
+
+              {/* VS text */}
+              <text x="160" y="85" textAnchor="middle" fill={colors.textMuted} fontSize="20">vs</text>
+
+              {/* V-notch plate */}
+              <rect x="220" y="20" width="80" height="120" rx="4" fill="#6b7280" stroke="#9ca3af" strokeWidth="2" />
+              <polygon points="260,60 245,80 260,100 275,80" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" />
+              <text x="260" y="155" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Sharp V-Notch</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -1079,6 +1049,18 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 <strong style={{ color: colors.accent }}>Stress Concentration Factor (Kt):</strong> The ratio of maximum local stress to average stress. Sharper features have higher Kt values and fracture at lower applied loads!
+              </p>
+            </div>
+
+            {/* Real-world relevance */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+              padding: '16px',
+              marginTop: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.success }}>Real-World Relevance:</strong> This principle is why airplane windows have rounded corners, why bridges use curved transitions at joints, and why pressure vessels avoid sharp internal edges. Engineers design to minimize stress concentration everywhere.
               </p>
             </div>
           </div>
@@ -1584,9 +1566,12 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            App {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1692,6 +1677,28 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
               ))}
             </div>
           </div>
+
+          {/* Got It button for current app */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              // Navigate to next incomplete app or stay
+              if (selectedApp < realWorldApps.length - 1) {
+                setSelectedApp(selectedApp + 1);
+              }
+            }}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              marginBottom: '16px',
+              background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, ${colors.secondary})`,
+            }}
+          >
+            {completedApps[selectedApp] ? 'Got It!' : 'Got It'}
+          </button>
 
           {allAppsCompleted && (
             <button

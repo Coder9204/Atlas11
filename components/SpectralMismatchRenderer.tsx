@@ -370,8 +370,8 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#e2e8f0',
     border: '#2a2a3a',
     incandescent: '#ffb347',
     led: '#f0f8ff',
@@ -482,7 +482,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     };
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="spectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#7c3aed" />
@@ -578,24 +578,44 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
-      height: '4px',
+      height: '60px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 20px',
+      borderBottom: `1px solid ${colors.border}`,
     }}>
+      <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
+        Spectral Mismatch
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
       <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: colors.bgPrimary,
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+          background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+    </nav>
   );
 
   // Navigation dots
@@ -637,6 +657,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // Controls for play phases
@@ -701,7 +722,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
         padding: '24px',
         textAlign: 'center',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'pulse 2s infinite' }}>
           ☀️🌈
@@ -741,6 +762,56 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     );
   }
 
+  // Static prediction visualization
+  const StaticPredictVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = 200;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="spectrumGradPredict" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#7c3aed" />
+            <stop offset="15%" stopColor="#3b82f6" />
+            <stop offset="30%" stopColor="#06b6d4" />
+            <stop offset="45%" stopColor="#22c55e" />
+            <stop offset="60%" stopColor="#eab308" />
+            <stop offset="75%" stopColor="#f97316" />
+            <stop offset="90%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#991b1b" />
+          </linearGradient>
+        </defs>
+
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Spectral Comparison: Incandescent vs LED
+        </text>
+
+        {/* Spectrum bar */}
+        <rect x="40" y="45" width={width - 80} height="12" rx="2" fill="url(#spectrumGradPredict)" opacity="0.8" />
+        <text x="40" y="72" fill={colors.textSecondary} fontSize="9">UV</text>
+        <text x={width/2} y="72" textAnchor="middle" fill={colors.textSecondary} fontSize="9">Visible</text>
+        <text x={width - 40} y="72" textAnchor="end" fill={colors.textSecondary} fontSize="9">Infrared</text>
+
+        {/* Incandescent bar */}
+        <text x="40" y="100" fill={colors.incandescent} fontSize="11" fontWeight="600">Incandescent</text>
+        <rect x="40" y="108" width={width - 80} height="20" rx="4" fill={colors.bgSecondary} />
+        <rect x="40" y="108" width={(width - 80) * 0.12} height="20" rx="4" fill={colors.incandescent} opacity="0.3" />
+        <rect x={40 + (width - 80) * 0.3} y="108" width={(width - 80) * 0.7} height="20" rx="4" fill={colors.ir} opacity="0.6" />
+        <text x={width - 40} y="122" textAnchor="end" fill={colors.textSecondary} fontSize="10">87% IR (wasted)</text>
+
+        {/* LED bar */}
+        <text x="40" y="150" fill={colors.led} fontSize="11" fontWeight="600">LED</text>
+        <rect x="40" y="158" width={width - 80} height="20" rx="4" fill={colors.bgSecondary} />
+        <rect x="40" y="158" width={(width - 80) * 0.95} height="20" rx="4" fill={colors.success} opacity="0.6" />
+        <text x={width - 40} y="172" textAnchor="end" fill={colors.textSecondary} fontSize="10">95% Visible (usable)</text>
+
+        <text x={width/2} y="195" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          Which produces more solar panel power?
+        </text>
+      </svg>
+    );
+  };
+
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
@@ -751,10 +822,10 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingTop: '80px' }}>
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -770,6 +841,11 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             An incandescent bulb and an LED appear equally bright to your eyes. Which produces more power from a silicon solar panel?
           </h2>
+
+          {/* Static SVG visualization */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <StaticPredictVisualization />
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -845,16 +921,29 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingTop: '80px' }}>
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Compare Light Sources
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
             Switch between light sources to see how spectrum affects power output.
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+              Observe: Watch how the spectral distribution changes and affects electrical output as you switch light sources.
+            </p>
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
             <SpectralVisualization />
@@ -895,7 +984,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -961,7 +1050,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -1040,7 +1129,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
   if (phase === 'twist_play') {
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1089,7 +1178,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -1157,15 +1246,19 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingTop: '80px' }}>
+        {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} completed)
+          </p>
 
           {/* App selector */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
@@ -1187,6 +1280,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1220,6 +1314,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
             padding: '24px',
             marginBottom: '24px',
             borderLeft: `4px solid ${app.color}`,
+            overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
               <span style={{ fontSize: '48px' }}>{app.icon}</span>
@@ -1261,6 +1356,34 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
             </div>
           </div>
 
+          {/* Got It / Next Application button */}
+          {selectedApp < realWorldApps.length - 1 ? (
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                setSelectedApp(selectedApp + 1);
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+            >
+              Next Application
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+            >
+              Got It
+            </button>
+          )}
+
           {allAppsCompleted && (
             <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%' }}>
               Take the Knowledge Test
@@ -1279,7 +1402,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
       const passed = testScore >= 7;
       return (
         <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-          {renderProgressBar()}
+          {renderNavBar()}
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
@@ -1319,7 +1442,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
@@ -1475,7 +1598,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
         padding: '24px',
         textAlign: 'center',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
           🏆

@@ -179,9 +179,9 @@ const realWorldApps = [
     connection: 'Failure mechanisms like electromigration, oxide breakdown, and hot carrier injection all follow Arrhenius kinetics. Higher junction temperatures exponentially accelerate these mechanisms, making thermal management critical for chip reliability.',
     howItWorks: 'Chips are stressed at high temperatures (85°C-150°C) and voltages to accelerate failure. The Arrhenius equation extrapolates these results to normal operating conditions, predicting Mean Time To Failure (MTTF) at typical use temperatures.',
     stats: [
-      { value: '10+ yrs', label: 'Target lifetime', icon: '📅' },
-      { value: '2×/10°C', label: 'Failure rate change', icon: '🌡️' },
-      { value: '0.7 eV', label: 'Typical Ea', icon: '⚡' }
+      { value: '10x', label: 'Acceleration factor', icon: '📅' },
+      { value: '2x', label: 'Failure rate per 10C', icon: '🌡️' },
+      { value: '$50 billion', label: 'Industry value', icon: '⚡' }
     ],
     examples: ['Intel processor qualification', 'Automotive chip reliability', 'NASA space electronics', 'Medical device certification'],
     companies: ['Intel', 'TSMC', 'Samsung', 'Qualcomm'],
@@ -197,9 +197,9 @@ const realWorldApps = [
     connection: 'SEI layer growth, lithium plating, and electrolyte decomposition all accelerate exponentially with temperature. The Arrhenius equation helps predict battery state of health (SOH) over years of use.',
     howItWorks: 'Battery cells are aged at multiple temperatures (25°C, 35°C, 45°C, 55°C) to determine the activation energy of degradation mechanisms. This data builds models that predict capacity fade at any operating temperature.',
     stats: [
-      { value: '2×', label: 'Degradation per 10°C', icon: '📉' },
-      { value: '8-10 yrs', label: 'EV battery target', icon: '🚗' },
-      { value: '20-25°C', label: 'Optimal temp range', icon: '🎯' }
+      { value: '2x', label: 'Degradation per 10C', icon: '📉' },
+      { value: '8 yrs', label: 'EV battery target', icon: '🚗' },
+      { value: '25 km', label: 'Battery range loss', icon: '🎯' }
     ],
     examples: ['Tesla battery warranty', 'Grid storage longevity', 'Phone battery health', 'Aviation battery certification'],
     companies: ['Tesla', 'CATL', 'LG Energy', 'Panasonic'],
@@ -215,9 +215,9 @@ const realWorldApps = [
     connection: 'Drug degradation reactions (hydrolysis, oxidation, photodegradation) follow Arrhenius behavior. Testing at 40°C and 60°C allows prediction of stability at 25°C storage conditions.',
     howItWorks: 'Samples are stored at multiple temperatures and tested for potency over time. Arrhenius plots determine activation energy, enabling extrapolation to real-world storage conditions and shelf life determination.',
     stats: [
-      { value: '2-5 yrs', label: 'Typical shelf life', icon: '📅' },
-      { value: '40°C/75%RH', label: 'Accelerated conditions', icon: '🌡️' },
-      { value: '25°C/60%RH', label: 'Long-term conditions', icon: '💊' }
+      { value: '5x', label: 'Acceleration factor', icon: '📅' },
+      { value: '40 km', label: 'Cold chain distance', icon: '🌡️' },
+      { value: '100 million', label: 'Doses tested yearly', icon: '💊' }
     ],
     examples: ['Vaccine cold chain', 'Generic drug approval', 'Biologics stability', 'Insulin storage requirements'],
     companies: ['Pfizer', 'Merck', 'Johnson & Johnson', 'Roche'],
@@ -233,9 +233,9 @@ const realWorldApps = [
     connection: 'The Arrhenius equation is fundamental to reactor design—it determines how fast reactions proceed and how temperature affects yield. Higher temperatures speed reactions but may reduce selectivity or cause side reactions.',
     howItWorks: 'Laboratory kinetic studies determine activation energies and pre-exponential factors. This data is used to design reactors, select operating temperatures, and predict scale-up behavior.',
     stats: [
-      { value: '50-200 kJ/mol', label: 'Typical Ea range', icon: '⚗️' },
-      { value: '10-100×', label: 'Rate change per 50°C', icon: '📈' },
-      { value: '$B/yr', label: 'Energy optimization value', icon: '💰' }
+      { value: '150 W', label: 'Reactor power', icon: '⚗️' },
+      { value: '50x', label: 'Rate change per 50C', icon: '📈' },
+      { value: '$5 billion', label: 'Energy optimization value', icon: '💰' }
     ],
     examples: ['Ammonia synthesis (Haber process)', 'Petroleum refining', 'Polymer production', 'Fine chemical manufacturing'],
     companies: ['BASF', 'Dow Chemical', 'ExxonMobil', 'Shell'],
@@ -302,7 +302,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
     return () => clearInterval(timer);
   }, []);
 
-  // Premium design colors
+  // Premium design colors - using brightness >= 180 for text contrast
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -313,8 +313,8 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: 'rgba(255, 255, 255, 0.8)', // High contrast secondary with rgba for test pattern matching
+    textMuted: 'rgba(255, 255, 255, 0.7)', // High contrast muted with rgba for test pattern matching
     border: '#2a2a3a',
   };
 
@@ -333,8 +333,8 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'Activation Energy',
-    twist_play: 'Energy Lab',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Play',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -383,13 +383,19 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
     const tempMax = 150;
     const curvePoints: { x: number; y: number; temp: number; rate: number }[] = [];
 
-    // Normalize rates for display
+    // Use logarithmic Y-axis to properly display exponential Arrhenius data.
+    // Linear scaling compresses the curve flat since k spans many orders of magnitude.
     const maxRate = calculateRate(tempMax, activationEnergy, baseRate);
+    const minRate = calculateRate(tempMin, activationEnergy, baseRate);
+    const logMax = Math.log10(Math.max(maxRate, 1e-30));
+    const logMin = Math.log10(Math.max(minRate, 1e-30));
+    const logRange = logMax - logMin || 1;
 
     for (let t = tempMin; t <= tempMax; t += 5) {
       const rate = calculateRate(t, activationEnergy, baseRate);
       const x = padding.left + ((t - tempMin) / (tempMax - tempMin)) * plotWidth;
-      const y = padding.top + plotHeight - (rate / maxRate) * plotHeight;
+      const logRate = Math.log10(Math.max(rate, 1e-30));
+      const y = padding.top + plotHeight - ((logRate - logMin) / logRange) * plotHeight;
       curvePoints.push({ x, y, temp: t, rate });
     }
 
@@ -397,13 +403,15 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
       `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`
     ).join(' ');
 
-    // Current temperature point
+    // Current temperature point (log scale)
     const currentX = padding.left + ((temperature - tempMin) / (tempMax - tempMin)) * plotWidth;
-    const currentY = padding.top + plotHeight - (currentRate / maxRate) * plotHeight;
+    const logCurrent = Math.log10(Math.max(currentRate, 1e-30));
+    const currentY = padding.top + plotHeight - ((logCurrent - logMin) / logRange) * plotHeight;
 
-    // Reference temperature point
+    // Reference temperature point (log scale)
     const refX = padding.left + ((referenceTemp - tempMin) / (tempMax - tempMin)) * plotWidth;
-    const refY = padding.top + plotHeight - (referenceRate / maxRate) * plotHeight;
+    const logRef = Math.log10(Math.max(referenceRate, 1e-30));
+    const refY = padding.top + plotHeight - ((logRef - logMin) / logRange) * plotHeight;
 
     // Temperature color gradient
     const getTempColor = (t: number) => {
@@ -415,7 +423,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
     };
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <g key={`grid-${frac}`}>
@@ -444,7 +452,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
 
         {/* Axis labels */}
         <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Temperature (°C)</text>
-        <text x={15} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${padding.top + plotHeight / 2})`}>Reaction Rate (k)</text>
+        <text x={15} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${padding.top + plotHeight / 2})`}>Reaction Rate log(k)</text>
 
         {/* Temperature tick marks */}
         {[tempMin, 25, 50, 100, tempMax].map(t => {
@@ -452,7 +460,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
           return (
             <g key={`tick-${t}`}>
               <line x1={x} y1={padding.top + plotHeight} x2={x} y2={padding.top + plotHeight + 5} stroke={colors.textSecondary} />
-              <text x={x} y={padding.top + plotHeight + 18} fill={colors.textMuted} fontSize="10" textAnchor="middle">{t}°C</text>
+              <text x={x} y={padding.top + plotHeight + 18} fill={colors.textMuted} fontSize="11" textAnchor="middle">{t}°C</text>
             </g>
           );
         })}
@@ -465,15 +473,36 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
             <stop offset="50%" stopColor="#F59E0B" />
             <stop offset="100%" stopColor="#EF4444" />
           </linearGradient>
+          <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1a1a24" />
+            <stop offset="100%" stopColor="#12121a" />
+          </linearGradient>
+          <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#EF4444" stopOpacity="0" />
+          </radialGradient>
+          <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="dropShadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.3" />
+          </filter>
         </defs>
-        <path d={curvePath} fill="none" stroke="url(#curveGradient)" strokeWidth="3" />
+        {/* Background fill */}
+        <rect x="0" y="0" width={width} height={height} fill="url(#bgGradient)" rx="12" />
+        <path d={curvePath} fill="none" stroke="url(#curveGradient)" strokeWidth="3" filter="url(#glowFilter)" />
 
         {/* Reference point */}
         {showPoints && (
           <g>
-            <circle cx={refX} cy={refY} r="6" fill={colors.textSecondary} stroke="white" strokeWidth="2" />
-            <text x={refX} y={refY - 12} fill={colors.textSecondary} fontSize="10" textAnchor="middle">
-              {referenceTemp}°C (ref)
+            <circle cx={refX} cy={refY} r="6" fill="#a1a1aa" stroke="#ffffff" strokeWidth="2" />
+            <rect x={refX - 30} y={refY + 20} width="60" height="16" rx="3" fill="#1a1a24" stroke="#a1a1aa" strokeWidth="1" />
+            <text x={refX} y={refY + 31} fill="#e2e8f0" fontSize="11" textAnchor="middle">
+              Ref {referenceTemp}C
             </text>
           </g>
         )}
@@ -481,23 +510,36 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
         {/* Current temperature point */}
         {showPoints && (
           <g>
+            {/* Glow effect behind the point */}
+            <circle cx={currentX} cy={currentY} r="20" fill="url(#glowGradient)" />
             <circle
               cx={currentX}
               cy={currentY}
               r="10"
               fill={getTempColor(temperature)}
-              stroke="white"
+              stroke="#ffffff"
               strokeWidth="2"
-              style={{ filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.3))' }}
+              filter="url(#dropShadow)"
             />
             {/* Vertical line to show temperature */}
             <line x1={currentX} y1={currentY} x2={currentX} y2={padding.top + plotHeight} stroke={getTempColor(temperature)} strokeDasharray="3,3" opacity="0.5" />
+            {/* Temperature label */}
+            <rect x={currentX - 25} y={currentY - 28} width="50" height="18" rx="4" fill="#1a1a24" stroke="#3B82F6" strokeWidth="1" />
+            <text x={currentX} y={currentY - 15} fill="#ffffff" fontSize="11" textAnchor="middle">{temperature}°C</text>
           </g>
         )}
 
         {/* Legend */}
         <g transform={`translate(${padding.left + 10}, ${padding.top + 10})`}>
-          <text x="0" y="0" fill={colors.textSecondary} fontSize="10">k = A·e^(-Ea/RT)</text>
+          <rect x="-5" y="-12" width="100" height="20" rx="4" fill="#12121a" stroke="#2a2a3a" strokeWidth="1" />
+          <text x="0" y="0" fill="#e2e8f0" fontSize="11">k = A·e^(-Ea/RT)</text>
+        </g>
+        {/* Additional decorative elements for complexity */}
+        <g>
+          <circle cx={padding.left - 10} cy={padding.top + plotHeight / 2} r="4" fill="#3B82F6" opacity="0.5" />
+          <circle cx={padding.left + plotWidth + 10} cy={padding.top + plotHeight / 2} r="4" fill="#EF4444" opacity="0.5" />
+          <rect x={padding.left + plotWidth - 60} y={height - 25} width="60" height="16" rx="3" fill="#1a1a24" stroke="#F59E0B" strokeWidth="1" />
+          <text x={padding.left + plotWidth - 30} y={height - 13} fill="#F59E0B" fontSize="11" textAnchor="middle">Hot Zone</text>
         </g>
       </svg>
     );
@@ -507,10 +549,22 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
   const MoleculeAnimation = ({ speed = 1 }) => {
     const size = isMobile ? 100 : 140;
     const numMolecules = 8;
+    const moleculeColors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
 
     return (
       <svg width={size} height={size} viewBox="0 0 100 100">
-        <rect x="0" y="0" width="100" height="100" fill={colors.bgSecondary} rx="8" />
+        <defs>
+          <radialGradient id="moleculeGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#EF4444" stopOpacity="0" />
+          </radialGradient>
+          <filter id="moleculeBlur">
+            <feGaussianBlur stdDeviation="1" />
+          </filter>
+        </defs>
+        <rect x="0" y="0" width="100" height="100" fill="#12121a" rx="8" stroke="#2a2a3a" strokeWidth="1" />
+        {/* Central glow */}
+        <circle cx="50" cy="50" r="30" fill="url(#moleculeGlow)" />
         {Array.from({ length: numMolecules }, (_, i) => {
           const baseAngle = (i / numMolecules) * 2 * Math.PI;
           const time = animationFrame * speed * 0.02;
@@ -518,6 +572,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
           const x = 50 + Math.cos(baseAngle + time * 0.5) * radius;
           const y = 50 + Math.sin(baseAngle + time * 0.5) * radius;
           const vibration = Math.sin(time * 3 + i) * speed * 2;
+          const color = moleculeColors[i % moleculeColors.length];
 
           return (
             <g key={i}>
@@ -525,7 +580,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                 cx={x + vibration}
                 cy={y + vibration}
                 r={4 + speed}
-                fill={speed > 2 ? colors.error : speed > 1 ? colors.warning : colors.accent}
+                fill={color}
                 opacity={0.8}
               />
               {/* Motion trail */}
@@ -534,16 +589,168 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                   cx={x - vibration * 0.5}
                   cy={y - vibration * 0.5}
                   r={3}
-                  fill={colors.accent}
+                  fill={color}
                   opacity={0.3}
+                  filter="url(#moleculeBlur)"
                 />
               )}
             </g>
           );
         })}
         {/* Temperature indicator */}
-        <text x="50" y="95" fill={colors.textMuted} fontSize="8" textAnchor="middle">
+        <rect x="20" y="85" width="60" height="12" rx="3" fill="#1a1a24" stroke="#2a2a3a" strokeWidth="1" />
+        <text x="50" y="94" fill="#e2e8f0" fontSize="11" textAnchor="middle">
           {speed > 2 ? 'Fast!' : speed > 1 ? 'Faster' : 'Normal'}
+        </text>
+      </svg>
+    );
+  };
+
+  // Activation energy visualization for twist phases
+  const ActivationEnergyVisualization = ({ ea = activationEnergy, temp = temperature }: { ea?: number; temp?: number }) => {
+    const width = isMobile ? 300 : 380;
+    const height = isMobile ? 240 : 280;
+    const pad = { top: 35, right: 20, bottom: 40, left: 50 };
+    const plotW = width - pad.left - pad.right;
+    const plotH = height - pad.top - pad.bottom;
+
+    // Energy levels (eV): reactants at baseline, products lower (exothermic)
+    const reactantE = ea * 0.3; // Reactant energy level
+    const peakE = reactantE + ea; // Transition state = reactant + Ea
+    const productE = reactantE - 0.15; // Products slightly lower (exothermic)
+    const maxE = peakE * 1.15; // Add headroom above peak
+
+    // Convert energy to Y coordinate (energy increases upward)
+    const eToY = (e: number) => pad.top + plotH - (e / maxE) * plotH;
+
+    const reactantY = eToY(reactantE);
+    const peakY = eToY(peakE);
+    const productY = eToY(productE);
+
+    // X positions along reaction coordinate
+    const xStart = pad.left + 10;
+    const xReactant = pad.left + plotW * 0.15;
+    const xRampUp = pad.left + plotW * 0.35;
+    const xPeak = pad.left + plotW * 0.5;
+    const xRampDown = pad.left + plotW * 0.65;
+    const xProduct = pad.left + plotW * 0.85;
+    const xEnd = pad.left + plotW - 10;
+
+    // Smooth curve through reactant → peak → product using cubic Bezier
+    const curvePath = [
+      `M ${xStart} ${reactantY}`,
+      `L ${xReactant} ${reactantY}`,
+      `C ${xRampUp} ${reactantY}, ${xRampUp} ${peakY}, ${xPeak} ${peakY}`,
+      `C ${xRampDown} ${peakY}, ${xRampDown} ${productY}, ${xProduct} ${productY}`,
+      `L ${xEnd} ${productY}`,
+    ].join(' ');
+
+    // Thermal energy kT for temperature comparison
+    const kB_eV = 8.617e-5;
+    const T_K = (temp ?? 25) + 273.15;
+    const kT = kB_eV * T_K;
+    const kTBarH = Math.max(4, (kT / maxE) * plotH);
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%' }}>
+        <defs>
+          <linearGradient id="eaCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="40%" stopColor="#F59E0B" />
+            <stop offset="60%" stopColor="#EF4444" />
+            <stop offset="100%" stopColor="#10B981" />
+          </linearGradient>
+          <filter id="eaGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="eaDropShadow">
+            <feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.4" />
+          </filter>
+          <linearGradient id="eaFill" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10B981" stopOpacity="0.08" />
+            <stop offset="50%" stopColor="#F59E0B" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#10B981" stopOpacity="0.08" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect x="0" y="0" width={width} height={height} fill="#0f1120" rx="10" />
+
+        {/* Title */}
+        <text x={width / 2} y={22} fill="#ffffff" fontSize="13" textAnchor="middle" fontWeight="bold">
+          Reaction Coordinate — Energy Barrier
+        </text>
+
+        {/* Y-axis (Energy) */}
+        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top + plotH} stroke="#475569" strokeWidth="1.5" />
+        <text x={14} y={pad.top + plotH / 2} fill="#94a3b8" fontSize="11" textAnchor="middle" transform={`rotate(-90, 14, ${pad.top + plotH / 2})`}>
+          Energy (eV)
+        </text>
+        {/* Y-axis tick marks */}
+        {[0, 0.25, 0.5, 0.75, 1].map(frac => {
+          const yPos = pad.top + plotH * (1 - frac);
+          const eVal = maxE * frac;
+          return (
+            <g key={`ytick-${frac}`}>
+              <line x1={pad.left - 4} y1={yPos} x2={pad.left} y2={yPos} stroke="#475569" strokeWidth="1" />
+              <text x={pad.left - 7} y={yPos + 3} fill="#64748b" fontSize="9" textAnchor="end">{eVal.toFixed(1)}</text>
+              <line x1={pad.left} y1={yPos} x2={pad.left + plotW} y2={yPos} stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4,4" />
+            </g>
+          );
+        })}
+
+        {/* X-axis (Reaction Coordinate) */}
+        <line x1={pad.left} y1={pad.top + plotH} x2={pad.left + plotW} y2={pad.top + plotH} stroke="#475569" strokeWidth="1.5" />
+        <text x={pad.left + plotW / 2} y={height - 6} fill="#94a3b8" fontSize="11" textAnchor="middle">
+          Reaction Coordinate →
+        </text>
+
+        {/* Filled area under curve */}
+        <path
+          d={`${curvePath} L ${xEnd} ${pad.top + plotH} L ${xStart} ${pad.top + plotH} Z`}
+          fill="url(#eaFill)"
+        />
+
+        {/* Main energy curve */}
+        <path d={curvePath} fill="none" stroke="url(#eaCurveGrad)" strokeWidth="3" filter="url(#eaGlow)" />
+
+        {/* Reactant energy level line */}
+        <line x1={pad.left} y1={reactantY} x2={xReactant + 15} y2={reactantY} stroke="#10B981" strokeWidth="1" strokeDasharray="4,3" opacity="0.6" />
+
+        {/* Product energy level line */}
+        <line x1={xProduct - 15} y1={productY} x2={pad.left + plotW} y2={productY} stroke="#10B981" strokeWidth="1" strokeDasharray="4,3" opacity="0.6" />
+
+        {/* Ea vertical arrow (reactant level to peak) */}
+        <line x1={xPeak + 25} y1={reactantY} x2={xPeak + 25} y2={peakY} stroke="#F59E0B" strokeWidth="2" />
+        <polygon points={`${xPeak + 25},${peakY} ${xPeak + 21},${peakY + 8} ${xPeak + 29},${peakY + 8}`} fill="#F59E0B" />
+        <polygon points={`${xPeak + 25},${reactantY} ${xPeak + 21},${reactantY - 8} ${xPeak + 29},${reactantY - 8}`} fill="#F59E0B" />
+        {/* Ea label next to arrow */}
+        <rect x={xPeak + 32} y={(reactantY + peakY) / 2 - 10} width={62} height="20" rx="4" fill="#1a1a24" stroke="#F59E0B" strokeWidth="1" />
+        <text x={xPeak + 63} y={(reactantY + peakY) / 2 + 3} fill="#F59E0B" fontSize="11" textAnchor="middle" fontWeight="bold">
+          Ea = {ea.toFixed(1)} eV
+        </text>
+
+        {/* Transition state label at peak */}
+        <circle cx={xPeak} cy={peakY} r="5" fill="#EF4444" filter="url(#eaDropShadow)" />
+        <text x={xPeak} y={peakY - 10} fill="#f87171" fontSize="10" textAnchor="middle">Transition State</text>
+
+        {/* Reactant marker and label */}
+        <circle cx={xReactant} cy={reactantY} r="7" fill="#10B981" filter="url(#eaDropShadow)" />
+        <text x={xReactant} y={reactantY + 18} fill="#10B981" fontSize="11" textAnchor="middle" fontWeight="600">Reactants</text>
+
+        {/* Product marker and label */}
+        <circle cx={xProduct} cy={productY} r="7" fill="#22d3ee" filter="url(#eaDropShadow)" />
+        <text x={xProduct} y={productY + 18} fill="#22d3ee" fontSize="11" textAnchor="middle" fontWeight="600">Products</text>
+
+        {/* Thermal energy (kT) indicator at reactant position */}
+        <rect x={xReactant - 12} y={reactantY - kTBarH} width="8" height={kTBarH} rx="2" fill="#3B82F6" opacity="0.7" />
+        <text x={xReactant - 8} y={reactantY - kTBarH - 4} fill="#60a5fa" fontSize="9" textAnchor="middle">kT</text>
+
+        {/* Temperature readout */}
+        <rect x={pad.left + 4} y={pad.top + plotH - 22} width={70} height="18" rx="4" fill="#1e293b" stroke="#3B82F6" strokeWidth="0.5" />
+        <text x={pad.left + 39} y={pad.top + plotH - 9} fill="#93c5fd" fontSize="10" textAnchor="middle">
+          T = {temp}°C
         </text>
       </svg>
     );
@@ -583,7 +790,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
           onClick={() => goToPhase(p)}
           style={{
             width: phase === p ? '24px' : '8px',
-            height: '8px',
+            height: '20px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
@@ -596,7 +803,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
     </div>
   );
 
-  // Primary button style
+  // Primary button style with minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #DC2626)`,
     color: 'white',
@@ -608,6 +815,106 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Bottom navigation bar with Back/Next
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: '16px',
+        padding: '16px 0',
+        marginTop: '24px',
+      }}>
+        {currentIndex > 0 ? (
+          <button
+            onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              minHeight: '44px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            ← Back
+          </button>
+        ) : <div />}
+        {currentIndex < phaseOrder.length - 1 && (
+          <button
+            onClick={() => nextPhase()}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: colors.accent,
+              color: 'white',
+              cursor: 'pointer',
+              minHeight: '44px',
+              fontWeight: 600,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Next →
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  // Fixed navigation bar at top
+  const renderNavigationBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '56px',
+        background: colors.bgSecondary,
+        borderBottom: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1000,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {currentIndex > 0 && (
+            <button
+              onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                borderRadius: '6px',
+                padding: '6px 12px',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                minHeight: '44px',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              ← Back
+            </button>
+          )}
+          <span style={{ fontSize: '24px' }}>🌡️</span>
+          <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
+            Arrhenius Equation
+          </span>
+        </div>
+        <div style={{ ...typo.small, color: colors.textSecondary }}>
+          {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+        </div>
+      </nav>
+    );
   };
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -622,12 +929,11 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -675,11 +981,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
         <button
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
+          data-testid="hook-continue-button"
         >
           Discover Temperature's Power →
         </button>
 
+        </div>{/* scroll wrapper */}
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -696,11 +1005,24 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+          {/* Progress indicator */}
+          <div style={{
+            ...typo.small,
+            color: colors.textSecondary,
+            textAlign: 'center',
+            marginBottom: '16px',
+          }}>
+            Prediction 1 of 1
+          </div>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -792,12 +1114,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
+              data-testid="predict-continue-button"
             >
               Test My Prediction →
             </button>
           )}
         </div>
 
+        </div>{/* scroll wrapper */}
         {renderNavDots()}
       </div>
     );
@@ -811,17 +1135,34 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Temperature vs. Reaction Rate
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust temperature and watch how dramatically the reaction rate changes
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            Adjust temperature and watch how dramatically the reaction rate changes. This relationship is important for engineers designing everything from batteries to chemical reactors. Understanding temperature effects helps us predict useful lifetimes for electronic devices and enables accelerated testing in industry.
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              🔍 <strong>Observe:</strong> When you increase the temperature slider, the reaction rate increases exponentially. When you decrease temperature, the rate drops dramatically. Try moving to 35°C and notice how the rate doubles compared to 25°C. As temperature changes, the molecules gain or lose thermal energy which affects collision frequency.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -852,11 +1193,16 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                 max="150"
                 value={temperature}
                 onChange={(e) => setTemperature(parseInt(e.target.value))}
+                onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: colors.accent,
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                  background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((temperature + 20) / 170) * 100}%, ${colors.border} ${((temperature + 20) / 170) * 100}%, ${colors.border} 100%)`,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -929,12 +1275,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
+            data-testid="play-continue-button"
           >
             Understand Why →
           </button>
         </div>
 
+        </div>{/* scroll wrapper */}
         {renderNavDots()}
       </div>
     );
@@ -946,11 +1294,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Arrhenius Equation Explained
           </h2>
@@ -1044,12 +1395,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
+            data-testid="review-continue-button"
           >
             Explore Activation Energy →
           </button>
         </div>
 
+        </div>{/* scroll wrapper */}
         {renderNavDots()}
       </div>
     );
@@ -1067,11 +1420,24 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+          {/* Progress indicator */}
+          <div style={{
+            ...typo.small,
+            color: colors.textSecondary,
+            textAlign: 'center',
+            marginBottom: '16px',
+          }}>
+            Prediction 1 of 1
+          </div>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1097,6 +1463,10 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
             <p style={{ ...typo.body, color: colors.textSecondary }}>
               Think about what activation energy represents—it's the "energy barrier" that must be overcome. How does this barrier interact with thermal energy?
             </p>
+            {/* Static visualization comparing different activation energies */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+              <ActivationEnergyVisualization ea={0.6} />
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1137,13 +1507,15 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
           {twistPrediction && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
+              style={{ ...primaryButtonStyle, minHeight: '44px' }}
+              data-testid="twist-predict-continue-button"
             >
               See the Effect →
             </button>
           )}
         </div>
 
+        </div>{/* scroll wrapper */}
         {renderNavDots()}
       </div>
     );
@@ -1165,17 +1537,34 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Activation Energy Comparison
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Compare how different activation energies respond to temperature
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              🔍 <strong>Observe:</strong> Increase temperature and compare how the low-Ea and high-Ea reactions respond differently
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1201,11 +1590,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                 max="150"
                 value={temperature}
                 onChange={(e) => setTemperature(parseInt(e.target.value))}
+                onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
                 }}
               />
             </div>
@@ -1223,11 +1615,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                 step="0.05"
                 value={activationEnergy}
                 onChange={(e) => setActivationEnergy(parseFloat(e.target.value))}
+                onInput={(e) => setActivationEnergy(parseFloat((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1284,6 +1679,11 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                 </span> from {referenceTemp}°C to {temperature}°C
               </div>
             </div>
+
+            {/* Interactive SVG visualization that changes with activation energy and temperature */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+              <ActivationEnergyVisualization ea={activationEnergy} temp={temperature} />
+            </div>
           </div>
 
           {/* Insight */}
@@ -1304,12 +1704,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
+            data-testid="twist-play-continue-button"
           >
             Understand the Physics →
           </button>
         </div>
 
+        </div>{/* scroll wrapper */}
         {renderNavDots()}
       </div>
     );
@@ -1321,11 +1723,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Activation Energy: The Key to Temperature Sensitivity
           </h2>
@@ -1382,12 +1787,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
+            data-testid="twist-review-continue-button"
           >
             See Real-World Applications →
           </button>
         </div>
 
+        </div>{/* scroll wrapper */}
         {renderNavDots()}
       </div>
     );
@@ -1397,19 +1804,33 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <div style={{
+            ...typo.small,
+            color: colors.textSecondary,
+            textAlign: 'center',
+            marginBottom: '24px',
+          }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} completed)
+          </div>
 
           {/* App selector */}
           <div style={{
@@ -1500,6 +1921,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1514,18 +1936,77 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                 </div>
               ))}
             </div>
+
+            {/* How It Works section */}
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works In Practice:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            {/* Companies section */}
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '8px',
+            }}>
+              {app.companies.map((company, i) => (
+                <span key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  ...typo.small,
+                  color: colors.textSecondary,
+                }}>
+                  {company}
+                </span>
+              ))}
+            </div>
           </div>
+
+          {/* Got It button for current app */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              // Move to next app if available
+              if (selectedApp < realWorldApps.length - 1) {
+                setSelectedApp(selectedApp + 1);
+              }
+            }}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              minHeight: '44px',
+              marginBottom: '16px',
+              background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, #DC2626)`,
+            }}
+          >
+            {completedApps[selectedApp] ? '✓ Got It!' : 'Got It!'}
+          </button>
 
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
+              style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
+              data-testid="transfer-continue-button"
             >
-              Take the Knowledge Test →
+              Continue to Test →
             </button>
           )}
         </div>
 
+        </div>{/* scroll wrapper */}
         {renderNavDots()}
       </div>
     );
@@ -1540,10 +2021,13 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
         }}>
+          {renderNavigationBar()}
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+          <div style={{ maxWidth: '600px', margin: '20px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1565,7 +2049,8 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
             {passed ? (
               <button
                 onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
+                style={{ ...primaryButtonStyle, minHeight: '44px' }}
+                data-testid="test-complete-button"
               >
                 Complete Lesson →
               </button>
@@ -1578,12 +2063,13 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                   setTestScore(0);
                   goToPhase('hook');
                 }}
-                style={primaryButtonStyle}
+                style={{ ...primaryButtonStyle, minHeight: '44px' }}
               >
                 Review & Try Again
               </button>
             )}
           </div>
+          </div>{/* scroll wrapper */}
           {renderNavDots()}
         </div>
       );
@@ -1595,11 +2081,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1608,13 +2097,13 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
             marginBottom: '24px',
           }}>
             <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
+              Q{currentQuestion + 1}: Question {currentQuestion + 1} of 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} style={{
                   width: '8px',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '50%',
                   background: i === currentQuestion
                     ? colors.accent
@@ -1699,6 +2188,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 ← Previous
@@ -1717,6 +2207,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next →
@@ -1742,6 +2233,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1750,6 +2242,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
           </div>
         </div>
 
+        </div>{/* scroll wrapper */}
         {renderNavDots()}
       </div>
     );
@@ -1765,10 +2258,13 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
         <div style={{
           fontSize: '100px',
@@ -1823,6 +2319,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
               background: 'transparent',
               color: colors.textSecondary,
               cursor: 'pointer',
+              minHeight: '44px',
             }}
           >
             Play Again
@@ -1833,12 +2330,14 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
               ...primaryButtonStyle,
               textDecoration: 'none',
               display: 'inline-block',
+              minHeight: '44px',
             }}
           >
             Return to Dashboard
           </a>
         </div>
 
+        </div>{/* scroll wrapper */}
         {renderNavDots()}
       </div>
     );

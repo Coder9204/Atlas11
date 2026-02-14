@@ -11,7 +11,7 @@ interface EncapsulationUVAgingRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -1024,13 +1024,18 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '12px 16px',
         borderBottom: '1px solid rgba(255,255,255,0.1)',
         backgroundColor: colors.bgCard,
-        gap: '16px'
+        gap: '16px',
+        zIndex: 1000,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -1108,12 +1113,13 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
             fontSize: '14px',
+            minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
           Back
         </button>
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
           {phaseLabels[phase]}
         </span>
         <button
@@ -1127,6 +1133,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
             fontWeight: 'bold',
             cursor: canProceed ? 'pointer' : 'not-allowed',
             fontSize: '16px',
+            minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
@@ -1141,7 +1148,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Why Do Old Panels Yellow?
@@ -1192,7 +1199,14 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Make Your Prediction</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Step 2 of 10 - Predict phase: Think about how degradation works
+            </p>
+          </div>
+
           {renderVisualization(false)}
 
           <div style={{
@@ -1213,11 +1227,13 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
               How does yellowing change over a panel's 25-year lifetime?
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} role="radiogroup" aria-label="prediction options">
+              {predictions.map((p, idx) => (
                 <button
                   key={p.id}
                   onClick={() => setPrediction(p.id)}
+                  role="radio"
+                  aria-checked={prediction === p.id}
                   style={{
                     padding: '16px',
                     borderRadius: '8px',
@@ -1227,10 +1243,11 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    minHeight: '44px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  {p.label}
+                  {String.fromCharCode(65 + idx)}. {p.label}
                 </button>
               ))}
             </div>
@@ -1246,7 +1263,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore UV Aging</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1256,6 +1273,20 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
 
           {renderVisualization(true)}
           {renderControls()}
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.solar}`,
+          }}>
+            <h4 style={{ color: colors.solar, marginBottom: '8px' }}>Observation Guide:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Use the sliders to adjust UV exposure years and observe how yellowing, transmittance, and power loss change.
+              Try different encapsulant materials to compare their UV resistance.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1271,6 +1302,21 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
               <li>Find the year when power loss exceeds 5%</li>
             </ul>
           </div>
+
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Real-World Relevance:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Solar panel manufacturers use these same UV degradation models to predict 25-year performance.
+              Encapsulant selection directly impacts warranty terms and project economics for billions of dollars
+              in solar installations worldwide.
+            </p>
+          </div>
         </div>
         {renderBottomBar(true, 'Continue to Review')}
       </div>
@@ -1284,7 +1330,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1295,6 +1341,9 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
+              You predicted: {predictions.find(p => p.id === prediction)?.label || 'No prediction made'}
+            </p>
             <p style={{ color: colors.textPrimary }}>
               Yellowing follows a saturating exponential pattern - the most vulnerable polymer bonds break first,
               then the rate slows as remaining bonds become harder to reach.
@@ -1338,11 +1387,11 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
-              What about the module construction - glass/glass vs glass/backsheet?
+              Step 5 of 10 - What about the module construction - glass/glass vs glass/backsheet?
             </p>
           </div>
 
@@ -1366,11 +1415,13 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
               Which module type will show less encapsulant degradation over 25 years?
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} role="radiogroup" aria-label="twist prediction options">
+              {twistPredictions.map((p, idx) => (
                 <button
                   key={p.id}
                   onClick={() => setTwistPrediction(p.id)}
+                  role="radio"
+                  aria-checked={twistPrediction === p.id}
                   style={{
                     padding: '16px',
                     borderRadius: '8px',
@@ -1380,10 +1431,11 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    minHeight: '44px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  {p.label}
+                  {String.fromCharCode(65 + idx)}. {p.label}
                 </button>
               ))}
             </div>
@@ -1399,7 +1451,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Compare Module Types</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1409,6 +1461,20 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
 
           {renderVisualization(true, true)}
           {renderControls(true)}
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.solar}`,
+          }}>
+            <h4 style={{ color: colors.solar, marginBottom: '8px' }}>Observation Guide:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Use the sliders to compare how different module constructions affect degradation over time.
+              Toggle between glass/glass and glass/backsheet to see the moisture barrier effect.
+            </p>
+          </div>
 
           <div style={{
             background: 'rgba(245, 158, 11, 0.2)',
@@ -1436,7 +1502,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1486,13 +1552,16 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Encapsulant selection impacts solar project economics worldwide
+            </p>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontSize: '14px' }}>
+              Progress: {transferCompleted.size} of {transferApplications.length} applications explored
             </p>
           </div>
 
@@ -1526,14 +1595,33 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
                     color: colors.accent,
                     cursor: 'pointer',
                     fontSize: '13px',
+                    minHeight: '44px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    onClick={() => {}}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      minHeight: '44px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
@@ -1594,7 +1682,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (

@@ -121,12 +121,15 @@ const realWorldApps = [
   }
 ];
 
+const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+
 const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   phase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  const [currentPhase, setCurrentPhase] = useState<typeof PHASES[number]>(phase || 'hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -137,6 +140,8 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [transferUnderstood, setTransferUnderstood] = useState(false);
 
   // Simulation states
   const [coherenceLength, setCoherenceLength] = useState(100); // 0-100%
@@ -155,6 +160,34 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Update currentPhase when prop changes
+  useEffect(() => {
+    if (phase) {
+      setCurrentPhase(phase);
+    }
+  }, [phase]);
+
+  const activePhase = phase || currentPhase;
+  const currentPhaseIndex = PHASES.indexOf(activePhase as typeof PHASES[number]);
+
+  const goToNextPhase = () => {
+    if (onPhaseComplete) {
+      onPhaseComplete();
+    } else {
+      const nextIndex = currentPhaseIndex + 1;
+      if (nextIndex < PHASES.length) {
+        setCurrentPhase(PHASES[nextIndex]);
+      }
+    }
+  };
+
+  const goToPrevPhase = () => {
+    const prevIndex = currentPhaseIndex - 1;
+    if (prevIndex >= 0) {
+      setCurrentPhase(PHASES[prevIndex]);
+    }
+  };
 
   // Responsive typography
   const typo = {
@@ -1111,7 +1144,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
       <h1 style={{ fontSize: isMobile ? '28px' : '40px', fontWeight: 700, marginBottom: '16px', background: 'linear-gradient(to right, #ffffff, #86efac, #22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
         Laser Speckle
       </h1>
-      <p style={{ fontSize: '18px', color: '#94a3b8', maxWidth: '400px', marginBottom: '32px' }}>
+      <p style={{ fontSize: '18px', color: '#e2e8f0', maxWidth: '400px', marginBottom: '32px' }}>
         Why does laser light look like <span style={{ color: '#22c55e', fontWeight: 600 }}>crawling glitter</span>?
       </p>
 
@@ -1141,7 +1174,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             ))}
 
             {/* Eye */}
-            <ellipse cx="180" cy="60" rx="12" ry="8" fill="#64748b" stroke="#94a3b8" strokeWidth="1" />
+            <ellipse cx="180" cy="60" rx="12" ry="8" fill="#64748b" stroke="#e2e8f0" strokeWidth="1" />
             <circle cx="180" cy="60" r="4" fill="#1e293b" />
           </svg>
         </div>
@@ -1149,7 +1182,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '16px' }}>
           Shine a laser pointer at a wall and you'll see a <span style={{ color: '#22c55e' }}>grainy, sparkly pattern</span> that seems to <span style={{ color: '#fbbf24' }}>shimmer and crawl</span> as you move.
         </p>
-        <p style={{ fontSize: '14px', color: '#94a3b8' }}>
+        <p style={{ fontSize: '14px', color: '#e2e8f0' }}>
           This "speckle" doesn't happen with flashlights. Why is laser light so different?
         </p>
       </div>
@@ -1171,8 +1204,40 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '24px' }}>Make Your Prediction</h2>
 
+      {/* SVG visualization for predict phase */}
+      <div style={{ marginBottom: '24px' }}>
+        <svg viewBox="0 0 300 150" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
+          <defs>
+            <linearGradient id="predictLaserBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="1" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.6" />
+            </linearGradient>
+          </defs>
+          {/* Laser source */}
+          <rect x="10" y="60" width="30" height="30" fill="#475569" rx="4" />
+          <circle cx="40" cy="75" r="6" fill="#22c55e" />
+          {/* Beam */}
+          <rect x="40" y="72" width="100" height="6" fill="url(#predictLaserBeam)" />
+          {/* Surface */}
+          <rect x="140" y="40" width="10" height="70" fill="#64748b" />
+          {/* Speckle pattern on screen */}
+          <rect x="180" y="30" width="100" height="90" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="4" />
+          {[...Array(15)].map((_, i) => (
+            <circle
+              key={i}
+              cx={190 + (i % 5) * 18}
+              cy={45 + Math.floor(i / 5) * 25}
+              r={3 + (i % 3) * 2}
+              fill="#22c55e"
+              opacity={0.4 + (i % 4) * 0.2}
+            />
+          ))}
+          <text x="230" y="135" fontSize="10" fill="#e2e8f0" textAnchor="middle">Speckle?</text>
+        </svg>
+      </div>
+
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '600px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
-        <p style={{ fontSize: '16px', color: '#cbd5e1', marginBottom: '16px' }}>
+        <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '16px' }}>
           You shine a laser pointer at a white painted wall. Instead of a smooth dot, you see a grainy, sparkly pattern.
         </p>
         <p style={{ fontSize: '16px', color: '#22c55e', fontWeight: 500 }}>
@@ -1193,6 +1258,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             disabled={showPredictionFeedback}
             style={{
               padding: '16px',
+              minHeight: '44px',
               borderRadius: '12px',
               textAlign: 'left',
               transition: 'all 0.3s',
@@ -1219,7 +1285,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           <p style={{ color: '#22c55e', fontWeight: 600 }}>
             {selectedPrediction === 'C' ? 'Correct!' : 'Not quite!'} Speckle comes from <span style={{ color: '#22c55e' }}>coherent interference</span>!
           </p>
-          <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '8px' }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px', marginTop: '8px' }}>
             Laser light waves all have the same phase relationship. When they scatter from a rough surface, they interfere constructively (bright) and destructively (dark).
           </p>
         </div>
@@ -1230,7 +1296,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   const renderPlay = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Speckle Lab</h2>
-      <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Explore how coherence and surface properties affect the pattern</p>
+      <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>Explore how coherence and surface properties affect the pattern</p>
 
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
         {renderSpeckleVisualization()}
@@ -1295,10 +1361,18 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
       </div>
 
       {/* Key insight */}
-      <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+      <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(34, 197, 94, 0.3)', marginBottom: '16px' }}>
         <p style={{ color: '#22c55e', fontWeight: 600, marginBottom: '8px' }}>Key Insight</p>
-        <p style={{ color: '#cbd5e1', fontSize: '14px' }}>
+        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
           Higher coherence = stronger speckle contrast. The pattern shifts as you change viewing angle because you're sampling different parts of the 3D interference field.
+        </p>
+      </div>
+
+      {/* Real-world relevance */}
+      <div style={{ background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+        <p style={{ color: '#fbbf24', fontWeight: 600, marginBottom: '8px' }}>Real-World Relevance</p>
+        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+          Laser speckle is used in medical imaging to measure blood flow non-invasively, in materials science to detect surface roughness at nanometer scales, and in structural engineering to measure tiny deformations in bridges and buildings.
         </p>
       </div>
 
@@ -1307,12 +1381,81 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
   const renderReview = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '24px' }}>Why Speckle Happens</h2>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '16px' }}>Why Speckle Happens</h2>
+
+      {/* Reference user's prediction */}
+      {selectedPrediction && (
+        <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', marginBottom: '24px', border: '1px solid rgba(34, 197, 94, 0.3)', width: '100%' }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+            You predicted: <span style={{ color: selectedPrediction === 'C' ? '#22c55e' : '#f59e0b', fontWeight: 600 }}>
+              {selectedPrediction === 'C' ? 'Coherent waves interfering (Correct!)' :
+               selectedPrediction === 'A' ? 'Dust particles' :
+               selectedPrediction === 'B' ? 'Laser imperfections' : 'Colored spots on wall'}
+            </span>
+            {selectedPrediction !== 'C' && <span style={{ color: '#e2e8f0' }}> - Now let's see why coherent interference is the real answer.</span>}
+          </p>
+        </div>
+      )}
+
+      {/* SVG diagram for review */}
+      <div style={{ marginBottom: '24px', width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+          <defs>
+            <linearGradient id="reviewBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.5" />
+            </linearGradient>
+          </defs>
+          {/* Background */}
+          <rect width="400" height="180" fill="#0f172a" rx="8" />
+          {/* Laser */}
+          <rect x="20" y="70" width="40" height="40" fill="#475569" rx="4" />
+          <text x="40" y="125" fontSize="10" fill="#e2e8f0" textAnchor="middle">Laser</text>
+          {/* Coherent beam with wave pattern */}
+          <rect x="60" y="85" width="100" height="10" fill="url(#reviewBeamGrad)" />
+          {[0, 1, 2, 3, 4].map(i => (
+            <line key={i} x1={70 + i * 20} y1="82" x2={70 + i * 20} y2="98" stroke="#4ade80" strokeWidth="1" opacity="0.6" />
+          ))}
+          <text x="110" y="75" fontSize="8" fill="#4ade80" textAnchor="middle">Same phase</text>
+          {/* Rough surface */}
+          <rect x="160" y="50" width="15" height="80" fill="#64748b" />
+          <path d="M160,55 L175,58 L160,62 L175,68 L160,72 L175,78 L160,82 L175,88 L160,92 L175,98 L160,105 L175,110 L160,118 L175,125" stroke="#94a3b8" strokeWidth="2" fill="none" />
+          <text x="167" y="145" fontSize="8" fill="#e2e8f0" textAnchor="middle">Rough</text>
+          <text x="167" y="155" fontSize="8" fill="#e2e8f0" textAnchor="middle">Surface</text>
+          {/* Scattered rays */}
+          {[30, 45, 60, 75, 90, 105, 120].map((angle, i) => (
+            <line
+              key={i}
+              x1="175"
+              y1={60 + i * 10}
+              x2={175 + Math.cos(angle * Math.PI / 180) * 50}
+              y2={60 + i * 10 - Math.sin(angle * Math.PI / 180) * 50}
+              stroke="#22c55e"
+              strokeWidth="1"
+              strokeDasharray="3,2"
+              opacity="0.5"
+            />
+          ))}
+          {/* Screen with speckle */}
+          <rect x="280" y="30" width="100" height="120" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="4" />
+          {[...Array(20)].map((_, i) => (
+            <circle
+              key={i}
+              cx={295 + (i % 5) * 18}
+              cy={45 + Math.floor(i / 5) * 25}
+              r={2 + (i % 4) * 1.5}
+              fill="#22c55e"
+              opacity={0.3 + (i % 5) * 0.15}
+            />
+          ))}
+          <text x="330" y="165" fontSize="8" fill="#e2e8f0" textAnchor="middle">Speckle Pattern</text>
+        </svg>
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', width: '100%', marginBottom: '24px' }}>
         <div style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.1))', borderRadius: '16px', padding: '20px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
           <h3 style={{ color: '#22c55e', fontWeight: 600, marginBottom: '12px' }}>Coherent Light</h3>
-          <ul style={{ color: '#cbd5e1', fontSize: '14px', listStyle: 'none', padding: 0, margin: 0 }}>
+          <ul style={{ color: '#e2e8f0', fontSize: '14px', listStyle: 'none', padding: 0, margin: 0 }}>
             <li style={{ marginBottom: '8px' }}>All waves have fixed phase relationship</li>
             <li style={{ marginBottom: '8px' }}>Single wavelength (monochromatic)</li>
             <li style={{ marginBottom: '8px' }}>Waves can interfere constructively or destructively</li>
@@ -1322,7 +1465,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
         <div style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(124, 58, 237, 0.1))', borderRadius: '16px', padding: '20px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
           <h3 style={{ color: '#8b5cf6', fontWeight: 600, marginBottom: '12px' }}>Rough Surface</h3>
-          <ul style={{ color: '#cbd5e1', fontSize: '14px', listStyle: 'none', padding: 0, margin: 0 }}>
+          <ul style={{ color: '#e2e8f0', fontSize: '14px', listStyle: 'none', padding: 0, margin: 0 }}>
             <li style={{ marginBottom: '8px' }}>Surface has microscopic bumps and dips</li>
             <li style={{ marginBottom: '8px' }}>Light scatters from many random points</li>
             <li style={{ marginBottom: '8px' }}>Each point adds different path length</li>
@@ -1334,11 +1477,11 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
       {/* Formula */}
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', width: '100%', marginBottom: '24px', textAlign: 'center', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
         <h3 style={{ color: '#f59e0b', fontWeight: 600, marginBottom: '12px' }}>The Physics</h3>
-        <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>Intensity at any point depends on summing many waves:</p>
+        <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px' }}>Intensity at any point depends on summing many waves:</p>
         <div style={{ fontFamily: 'monospace', fontSize: '18px', color: 'white', marginBottom: '12px' }}>
           I = |E₁ + E₂ + ... + Eₙ|²
         </div>
-        <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
           Each electric field E has amplitude and phase. Random phases from the surface create random total intensity.
         </p>
       </div>
@@ -1349,19 +1492,19 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         <div style={{ display: 'grid', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ color: '#22c55e' }}>1.</span>
-            <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Speckle size ~ wavelength / aperture</span>
+            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Speckle size ~ wavelength / aperture</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ color: '#22c55e' }}>2.</span>
-            <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Pattern changes with viewing angle</span>
+            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Pattern changes with viewing angle</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ color: '#22c55e' }}>3.</span>
-            <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Contrast depends on coherence</span>
+            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Contrast depends on coherence</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ color: '#22c55e' }}>4.</span>
-            <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Moving scatterers cause time-varying speckle</span>
+            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Moving scatterers cause time-varying speckle</span>
           </div>
         </div>
       </div>
@@ -1373,8 +1516,53 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '24px' }}>The Twist</h2>
 
+      {/* SVG visualization for twist predict */}
+      <div style={{ marginBottom: '24px' }}>
+        <svg viewBox="0 0 350 150" style={{ width: '100%', maxWidth: '350px', height: 'auto' }}>
+          <defs>
+            <linearGradient id="twistLaserBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.5" />
+            </linearGradient>
+            <linearGradient id="twistFlashlightBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.2" />
+            </linearGradient>
+          </defs>
+          {/* Background */}
+          <rect width="350" height="150" fill="#0f172a" rx="8" />
+          {/* Laser side */}
+          <rect x="10" y="30" width="30" height="25" fill="#475569" rx="3" />
+          <circle cx="40" cy="42" r="5" fill="#22c55e" />
+          <rect x="40" y="39" width="60" height="6" fill="url(#twistLaserBeam)" />
+          <rect x="100" y="20" width="8" height="45" fill="#64748b" />
+          {/* Speckle result */}
+          <rect x="120" y="15" width="45" height="55" fill="#1e293b" stroke="#475569" rx="3" />
+          {[...Array(8)].map((_, i) => (
+            <circle key={i} cx={130 + (i % 3) * 12} cy={28 + Math.floor(i / 3) * 15} r={2 + i % 3} fill="#22c55e" opacity={0.4 + (i % 4) * 0.15} />
+          ))}
+          <text x="85" y="85" fontSize="9" fill="#22c55e" textAnchor="middle">Laser</text>
+          <text x="142" y="80" fontSize="8" fill="#e2e8f0" textAnchor="middle">Speckle!</text>
+
+          {/* Arrow */}
+          <text x="175" y="75" fontSize="20" fill="#e2e8f0" textAnchor="middle">→</text>
+          <text x="175" y="95" fontSize="8" fill="#e2e8f0" textAnchor="middle">vs</text>
+
+          {/* Flashlight side */}
+          <rect x="195" y="30" width="35" height="25" fill="#475569" rx="3" />
+          <circle cx="230" cy="42" r="6" fill="#fbbf24" />
+          <polygon points="230,35 290,20 290,65 230,50" fill="url(#twistFlashlightBeam)" opacity="0.6" />
+          <rect x="290" y="20" width="8" height="45" fill="#64748b" />
+          {/* Uniform result */}
+          <rect x="308" y="15" width="35" height="55" fill="#1e293b" stroke="#475569" rx="3" />
+          <rect x="312" y="20" width="27" height="45" fill="#fbbf24" opacity="0.15" />
+          <text x="255" y="85" fontSize="9" fill="#fbbf24" textAnchor="middle">Flashlight</text>
+          <text x="325" y="80" fontSize="8" fill="#e2e8f0" textAnchor="middle">???</text>
+        </svg>
+      </div>
+
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '600px', marginBottom: '24px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
-        <p style={{ fontSize: '16px', color: '#cbd5e1', marginBottom: '16px' }}>
+        <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '16px' }}>
           You've been using a <span style={{ color: '#22c55e' }}>laser</span> (coherent light) and seeing strong speckle patterns.
         </p>
         <p style={{ fontSize: '16px', color: '#f59e0b', fontWeight: 500, marginBottom: '16px' }}>
@@ -1388,7 +1576,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             <span style={{ color: '#22c55e', fontSize: '12px' }}>Laser</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ fontSize: '24px' }}>→</span>
+            <span style={{ fontSize: '24px', color: '#e2e8f0' }}>→</span>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ width: '60px', height: '60px', background: 'rgba(251, 191, 36, 0.3)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', border: '2px solid #fbbf24' }}>
@@ -1412,6 +1600,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             disabled={showTwistFeedback}
             style={{
               padding: '16px',
+              minHeight: '44px',
               borderRadius: '12px',
               textAlign: 'left',
               transition: 'all 0.3s',
@@ -1438,7 +1627,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           <p style={{ color: '#22c55e', fontWeight: 600 }}>
             {twistPrediction === 'B' ? 'Exactly right!' : 'That\'s the surprising result!'} Speckle disappears!
           </p>
-          <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '8px' }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px', marginTop: '8px' }}>
             Incoherent light has random, rapidly changing phases. The interference pattern averages out faster than your eye can see, leaving smooth, uniform illumination.
           </p>
         </div>
@@ -1449,7 +1638,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   const renderTwistPlay = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '8px' }}>Laser vs Flashlight</h2>
-      <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Toggle between coherent and incoherent light</p>
+      <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>Toggle between coherent and incoherent light</p>
 
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
         {renderSpeckleVisualization()}
@@ -1515,7 +1704,53 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
   const renderTwistReview = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '24px' }}>Key Discovery</h2>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '16px' }}>Key Discovery</h2>
+
+      {/* Reference user's twist prediction */}
+      {twistPrediction && (
+        <div style={{ background: 'rgba(139, 92, 246, 0.1)', borderRadius: '12px', padding: '16px', marginBottom: '24px', border: '1px solid rgba(139, 92, 246, 0.3)', width: '100%' }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+            You predicted: <span style={{ color: twistPrediction === 'B' ? '#22c55e' : '#f59e0b', fontWeight: 600 }}>
+              {twistPrediction === 'B' ? 'Speckle disappears (Correct!)' :
+               twistPrediction === 'A' ? 'Stronger speckle' :
+               twistPrediction === 'C' ? 'Same pattern' : 'Colorful pattern'}
+            </span>
+            {twistPrediction !== 'B' && <span style={{ color: '#e2e8f0' }}> - The key insight is that coherence is required for stable interference!</span>}
+          </p>
+        </div>
+      )}
+
+      {/* SVG diagram */}
+      <div style={{ marginBottom: '24px', width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <svg viewBox="0 0 400 160" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+          <rect width="400" height="160" fill="#0f172a" rx="8" />
+          {/* Left: Laser with speckle */}
+          <g transform="translate(10, 20)">
+            <rect x="0" y="30" width="35" height="30" fill="#475569" rx="4" />
+            <circle cx="35" cy="45" r="6" fill="#22c55e" />
+            <rect x="35" y="42" width="50" height="6" fill="#22c55e" opacity="0.8" />
+            <rect x="85" y="25" width="8" height="40" fill="#64748b" />
+            <rect x="105" y="15" width="60" height="60" fill="#1e293b" stroke="#22c55e" strokeWidth="2" rx="4" />
+            {[...Array(12)].map((_, i) => (
+              <circle key={i} cx={115 + (i % 4) * 13} cy={28 + Math.floor(i / 4) * 15} r={2 + i % 3} fill="#22c55e" opacity={0.4 + (i % 4) * 0.15} />
+            ))}
+            <text x="90" y="95" fontSize="10" fill="#22c55e" textAnchor="middle">Coherent</text>
+            <text x="90" y="108" fontSize="10" fill="#22c55e" textAnchor="middle">= Speckle</text>
+          </g>
+          {/* Right: Flashlight uniform */}
+          <g transform="translate(200, 20)">
+            <rect x="0" y="30" width="40" height="30" fill="#475569" rx="4" />
+            <circle cx="40" cy="45" r="7" fill="#fbbf24" />
+            <polygon points="40,35 95,20 95,70 40,55" fill="#fbbf24" opacity="0.3" />
+            <rect x="95" y="25" width="8" height="40" fill="#64748b" />
+            <rect x="115" y="15" width="60" height="60" fill="#1e293b" stroke="#fbbf24" strokeWidth="2" rx="4" />
+            <rect x="120" y="20" width="50" height="50" fill="#fbbf24" opacity="0.1" />
+            <text x="145" y="50" fontSize="10" fill="#e2e8f0" textAnchor="middle">Uniform</text>
+            <text x="100" y="95" fontSize="10" fill="#fbbf24" textAnchor="middle">Incoherent</text>
+            <text x="100" y="108" fontSize="10" fill="#fbbf24" textAnchor="middle">= Smooth</text>
+          </g>
+        </svg>
+      </div>
 
       <div style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(34, 197, 94, 0.1))', borderRadius: '16px', padding: '24px', width: '100%', marginBottom: '24px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
         <h3 style={{ color: 'white', fontWeight: 700, fontSize: '20px', marginBottom: '16px', textAlign: 'center' }}>
@@ -1526,14 +1761,14 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             <div style={{ fontSize: '32px' }}>💚</div>
             <div>
               <p style={{ color: '#22c55e', fontWeight: 600 }}>Coherent Light (Laser)</p>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>Fixed phases → stable interference → visible speckle</p>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>Fixed phases → stable interference → visible speckle</p>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div style={{ fontSize: '32px' }}>🔦</div>
             <div>
               <p style={{ color: '#fbbf24', fontWeight: 600 }}>Incoherent Light (Flashlight)</p>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>Random phases → interference averages out → smooth light</p>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>Random phases → interference averages out → smooth light</p>
             </div>
           </div>
         </div>
@@ -1541,7 +1776,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
       <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', width: '100%', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
         <h4 style={{ color: '#22c55e', fontWeight: 600, marginBottom: '12px' }}>Why This Matters</h4>
-        <p style={{ color: '#cbd5e1', fontSize: '14px' }}>
+        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
           Speckle can be a nuisance (noise in laser imaging) or a tool (measuring blood flow, surface roughness). Understanding its origin from coherence helps us both reduce it when unwanted and exploit it for sensing applications.
         </p>
       </div>
@@ -1552,7 +1787,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   const renderTransfer = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Real-World Applications</h2>
-      <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Speckle has surprising uses beyond the lab</p>
+      <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>Speckle has surprising uses beyond the lab</p>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {transferApps.map((app, index) => (
@@ -1584,15 +1819,15 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           <span style={{ fontSize: '32px' }}>{transferApps[activeAppTab].icon}</span>
           <div>
             <h3 style={{ color: 'white', fontWeight: 700, fontSize: '18px' }}>{transferApps[activeAppTab].title}</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>{transferApps[activeAppTab].tagline}</p>
+            <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{transferApps[activeAppTab].tagline}</p>
           </div>
         </div>
 
-        <p style={{ color: '#cbd5e1', marginBottom: '16px', fontSize: '14px' }}>{transferApps[activeAppTab].description}</p>
+        <p style={{ color: '#e2e8f0', marginBottom: '16px', fontSize: '14px' }}>{transferApps[activeAppTab].description}</p>
 
         <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
           <h4 style={{ color: '#f59e0b', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>Physics Connection</h4>
-          <p style={{ color: '#94a3b8', fontSize: '13px' }}>{transferApps[activeAppTab].connection}</p>
+          <p style={{ color: '#e2e8f0', fontSize: '13px' }}>{transferApps[activeAppTab].connection}</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '16px' }}>
@@ -1604,18 +1839,30 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           ))}
         </div>
 
-        {!completedApps.has(activeAppTab) && (
-          <button
-            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
-            style={{ width: '100%', padding: '12px', background: 'linear-gradient(to right, #22c55e, #16a34a)', color: 'white', fontWeight: 600, borderRadius: '8px', border: 'none', cursor: 'pointer' }}
-          >
-            Mark as Understood
-          </button>
-        )}
+        <button
+          onPointerDown={(e) => {
+            e.preventDefault();
+            handleAppComplete(activeAppTab);
+            setTransferUnderstood(true);
+          }}
+          style={{
+            width: '100%',
+            padding: '12px',
+            minHeight: '44px',
+            background: completedApps.has(activeAppTab) ? 'rgba(34, 197, 94, 0.2)' : 'linear-gradient(to right, #22c55e, #16a34a)',
+            color: 'white',
+            fontWeight: 600,
+            borderRadius: '8px',
+            border: completedApps.has(activeAppTab) ? '1px solid #22c55e' : 'none',
+            cursor: 'pointer'
+          }}
+        >
+          {completedApps.has(activeAppTab) ? 'Understood!' : 'Got It'}
+        </button>
       </div>
 
       <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ color: '#94a3b8', fontSize: '14px' }}>Progress:</span>
+        <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Progress:</span>
         <div style={{ display: 'flex', gap: '4px' }}>
           {transferApps.map((_, i) => (
             <div
@@ -1624,47 +1871,135 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             />
           ))}
         </div>
-        <span style={{ color: '#94a3b8', fontSize: '14px' }}>{completedApps.size}/{transferApps.length}</span>
+        <span style={{ color: '#e2e8f0', fontSize: '14px' }}>{completedApps.size}/{transferApps.length}</span>
       </div>
 
     </div>
   );
 
-  const renderTest = () => (
+  const renderTest = () => {
+    const currentQuestion = testQuestions[currentQuestionIndex];
+    const answeredCount = testAnswers.filter(a => a !== null).length;
+
+    return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '24px' }}>Knowledge Test</h2>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Knowledge Test</h2>
+      <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '24px' }}>
+        Question {currentQuestionIndex + 1} of {testQuestions.length}
+      </p>
 
       {!showTestResults ? (
         <div style={{ width: '100%', maxWidth: '600px' }}>
-          {testQuestions.map((q, qIndex) => (
-            <div key={q.id} style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '20px', marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
-              <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
-                <p style={{ color: '#94a3b8', fontSize: '13px', fontStyle: 'italic' }}>{q.scenario}</p>
-              </div>
-              <p style={{ color: 'white', fontWeight: 500, marginBottom: '12px' }}>{qIndex + 1}. {q.question}</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {q.options.map((opt, oIndex) => (
+          {/* Single question view */}
+          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '20px', marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
+            <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '13px', fontStyle: 'italic' }}>{currentQuestion.scenario}</p>
+            </div>
+            <p style={{ color: 'white', fontWeight: 500, marginBottom: '12px' }}>{currentQuestionIndex + 1}. {currentQuestion.question}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {currentQuestion.options.map((opt, oIndex) => {
+                const isSelected = testAnswers[currentQuestionIndex] === oIndex;
+                const isCorrect = opt.correct;
+                const showFeedback = isSelected;
+
+                return (
                   <button
                     key={opt.id}
-                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      handleTestAnswer(currentQuestionIndex, oIndex);
+                    }}
                     style={{
                       padding: '12px',
+                      minHeight: '44px',
                       borderRadius: '8px',
                       textAlign: 'left',
                       fontSize: '14px',
-                      border: 'none',
+                      border: isSelected
+                        ? isCorrect ? '2px solid #22c55e' : '2px solid #f59e0b'
+                        : '2px solid transparent',
                       cursor: 'pointer',
-                      background: testAnswers[qIndex] === oIndex ? 'rgba(34, 197, 94, 0.3)' : 'rgba(51, 65, 85, 0.5)',
+                      background: isSelected
+                        ? isCorrect ? 'rgba(34, 197, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)'
+                        : 'rgba(51, 65, 85, 0.5)',
                       color: '#e2e8f0',
                       transition: 'all 0.2s'
                     }}
                   >
                     {opt.text}
+                    {showFeedback && (
+                      <span style={{ marginLeft: '8px', color: isCorrect ? '#22c55e' : '#f59e0b' }}>
+                        {isCorrect ? '✓' : '○'}
+                      </span>
+                    )}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          ))}
+
+            {/* Show explanation after answering */}
+            {testAnswers[currentQuestionIndex] !== null && (
+              <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                <p style={{ color: '#e2e8f0', fontSize: '13px' }}>{currentQuestion.explanation}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Navigation between questions */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
+            <button
+              onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
+              disabled={currentQuestionIndex === 0}
+              style={{
+                padding: '12px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: currentQuestionIndex > 0 ? 'rgba(71, 85, 105, 0.5)' : 'rgba(71, 85, 105, 0.2)',
+                color: currentQuestionIndex > 0 ? '#e2e8f0' : '#64748b',
+                cursor: currentQuestionIndex > 0 ? 'pointer' : 'not-allowed',
+              }}
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentQuestionIndex(Math.min(testQuestions.length - 1, currentQuestionIndex + 1))}
+              disabled={currentQuestionIndex === testQuestions.length - 1}
+              style={{
+                padding: '12px 24px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: currentQuestionIndex < testQuestions.length - 1 ? 'rgba(71, 85, 105, 0.5)' : 'rgba(71, 85, 105, 0.2)',
+                color: currentQuestionIndex < testQuestions.length - 1 ? '#e2e8f0' : '#64748b',
+                cursor: currentQuestionIndex < testQuestions.length - 1 ? 'pointer' : 'not-allowed',
+              }}
+            >
+              Next Question
+            </button>
+          </div>
+
+          {/* Progress dots */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '16px' }}>
+            {testQuestions.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentQuestionIndex(i)}
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: i === currentQuestionIndex
+                    ? '#22c55e'
+                    : testAnswers[i] !== null
+                      ? '#4ade80'
+                      : 'rgba(71, 85, 105, 0.5)',
+                }}
+              />
+            ))}
+          </div>
 
           <button
             onClick={submitTest}
@@ -1672,6 +2007,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             style={{
               width: '100%',
               padding: '16px',
+              minHeight: '44px',
               borderRadius: '12px',
               fontWeight: 600,
               fontSize: '16px',
@@ -1682,7 +2018,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
               marginTop: '16px'
             }}
           >
-            Submit Answers
+            Submit Answers ({answeredCount}/{testQuestions.length} answered)
           </button>
         </div>
       ) : (
@@ -1692,7 +2028,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             <h3 style={{ color: 'white', fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>
               Score: {testScore}/10
             </h3>
-            <p style={{ color: '#94a3b8' }}>
+            <p style={{ color: '#e2e8f0' }}>
               {testScore >= 8 ? 'Excellent! You understand laser speckle!' : 'Keep learning! Review the concepts and try again.'}
             </p>
           </div>
@@ -1704,11 +2040,11 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={q.id} style={{ padding: '16px', borderRadius: '12px', background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: isCorrect ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)' }}>
-                  <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '8px' }}>{i + 1}. {q.question}</p>
+                  <p style={{ color: '#e2e8f0', fontSize: '13px', marginBottom: '8px' }}>{i + 1}. {q.question}</p>
                   <p style={{ color: isCorrect ? '#22c55e' : '#ef4444', fontWeight: 500, fontSize: '14px' }}>
                     {isCorrect ? 'Correct!' : `Incorrect. Correct answer: ${q.options.find(o => o.correct)?.text}`}
                   </p>
-                  <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '8px' }}>{q.explanation}</p>
+                  <p style={{ color: '#e2e8f0', fontSize: '12px', marginTop: '8px' }}>{q.explanation}</p>
                 </div>
               );
             })}
@@ -1717,35 +2053,36 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
       )}
     </div>
   );
+  };
 
   const renderMastery = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', textAlign: 'center' }}>
       <div style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.1))', borderRadius: '24px', padding: '32px', maxWidth: '500px' }}>
         <div style={{ fontSize: '64px', marginBottom: '24px' }}>💚</div>
         <h1 style={{ color: 'white', fontSize: '28px', fontWeight: 700, marginBottom: '16px' }}>Speckle Master!</h1>
-        <p style={{ color: '#94a3b8', fontSize: '16px', marginBottom: '24px' }}>
+        <p style={{ color: '#e2e8f0', fontSize: '16px', marginBottom: '24px' }}>
           You've mastered the physics of laser speckle and coherent wave interference!
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔬</div>
-            <p style={{ color: '#94a3b8', fontSize: '12px' }}>Coherent</p>
+            <p style={{ color: '#e2e8f0', fontSize: '12px' }}>Coherent</p>
             <p style={{ color: '#22c55e', fontSize: '14px', fontWeight: 600 }}>Interference</p>
           </div>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>✨</div>
-            <p style={{ color: '#94a3b8', fontSize: '12px' }}>Random Phase</p>
+            <p style={{ color: '#e2e8f0', fontSize: '12px' }}>Random Phase</p>
             <p style={{ color: '#22c55e', fontSize: '14px', fontWeight: 600 }}>Speckle Pattern</p>
           </div>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>🩸</div>
-            <p style={{ color: '#94a3b8', fontSize: '12px' }}>Blood Flow</p>
+            <p style={{ color: '#e2e8f0', fontSize: '12px' }}>Blood Flow</p>
             <p style={{ color: '#22c55e', fontSize: '14px', fontWeight: 600 }}>Imaging</p>
           </div>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>📡</div>
-            <p style={{ color: '#94a3b8', fontSize: '12px' }}>Fiber Optic</p>
+            <p style={{ color: '#e2e8f0', fontSize: '12px' }}>Fiber Optic</p>
             <p style={{ color: '#22c55e', fontSize: '14px', fontWeight: 600 }}>Sensing</p>
           </div>
         </div>
@@ -1754,172 +2091,207 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      zIndex: 1000,
-      minHeight: '72px',
-      background: 'rgba(30, 41, 59, 0.98)',
-      borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-      boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
-      padding: '16px 20px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+  const renderNavigationBar = (canProceed: boolean = true, nextLabel: string = 'Next') => {
+    const showBack = currentPhaseIndex > 0;
+
+    return (
+      <nav
+        aria-label="Game navigation"
         style={{
-          marginLeft: 'auto',
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? '#22c55e' : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : '#94a3b8',
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          background: 'rgba(15, 23, 42, 0.98)',
+          borderTop: '1px solid rgba(71, 85, 105, 0.5)',
+          backdropFilter: 'blur(8px)',
         }}
       >
-        {buttonText}
-      </button>
+        {/* Progress bar */}
+        <div
+          role="progressbar"
+          aria-valuenow={currentPhaseIndex + 1}
+          aria-valuemin={1}
+          aria-valuemax={PHASES.length}
+          aria-label={`Progress: phase ${currentPhaseIndex + 1} of ${PHASES.length}`}
+          style={{
+            height: '3px',
+            background: 'rgba(71, 85, 105, 0.3)',
+            width: '100%',
+          }}
+        >
+          <div style={{
+            height: '100%',
+            background: 'linear-gradient(to right, #22c55e, #4ade80)',
+            width: `${((currentPhaseIndex + 1) / PHASES.length) * 100}%`,
+            transition: 'width 0.3s ease',
+          }} />
+        </div>
+
+        {/* Navigation dots */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '8px',
+          padding: '8px 16px',
+        }}>
+          {PHASES.map((p, index) => (
+            <button
+              key={p}
+              aria-label={`Go to ${p} phase`}
+              onClick={() => setCurrentPhase(p)}
+              style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                border: 'none',
+                cursor: 'pointer',
+                background: index === currentPhaseIndex
+                  ? '#22c55e'
+                  : index < currentPhaseIndex
+                    ? '#4ade80'
+                    : 'rgba(71, 85, 105, 0.5)',
+                opacity: index <= currentPhaseIndex ? 1 : 0.5,
+                transition: 'all 0.2s ease',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Navigation buttons */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '12px 16px 16px',
+          gap: '12px',
+        }}>
+          <button
+            onClick={goToPrevPhase}
+            disabled={!showBack}
+            aria-label="Back"
+            style={{
+              padding: '12px 24px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: 'none',
+              background: showBack ? 'rgba(71, 85, 105, 0.5)' : 'rgba(71, 85, 105, 0.2)',
+              color: showBack ? '#e2e8f0' : '#64748b',
+              fontWeight: 600,
+              fontSize: '16px',
+              cursor: showBack ? 'pointer' : 'not-allowed',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Back
+          </button>
+
+          <button
+            onClick={goToNextPhase}
+            disabled={!canProceed}
+            aria-label={nextLabel}
+            style={{
+              padding: '12px 24px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: 'none',
+              background: canProceed
+                ? 'linear-gradient(to right, #22c55e, #16a34a)'
+                : 'rgba(71, 85, 105, 0.3)',
+              color: canProceed ? 'white' : '#64748b',
+              fontWeight: 600,
+              fontSize: '16px',
+              cursor: canProceed ? 'pointer' : 'not-allowed',
+              transition: 'all 0.2s ease',
+              flex: 1,
+              maxWidth: '200px',
+            }}
+          >
+            {nextLabel}
+          </button>
+        </div>
+      </nav>
+    );
+  };
+
+  const renderPhaseContent = () => {
+    switch (activePhase) {
+      case 'hook':
+        return renderHook();
+      case 'predict':
+        return renderPredict();
+      case 'play':
+        return renderPlay();
+      case 'review':
+        return renderReview();
+      case 'twist_predict':
+        return renderTwistPredict();
+      case 'twist_play':
+        return renderTwistPlay();
+      case 'twist_review':
+        return renderTwistReview();
+      case 'transfer':
+        return renderTransfer();
+      case 'test':
+        return renderTest();
+      case 'mastery':
+        return renderMastery();
+      default:
+        return renderHook();
+    }
+  };
+
+  const getNextButtonLabel = () => {
+    switch (activePhase) {
+      case 'hook':
+        return 'Make a Prediction';
+      case 'predict':
+        return 'Test My Prediction';
+      case 'play':
+        return 'Continue to Review';
+      case 'review':
+        return 'Next: A Twist!';
+      case 'twist_predict':
+        return 'Test My Prediction';
+      case 'twist_play':
+        return 'See the Explanation';
+      case 'twist_review':
+        return 'Apply This Knowledge';
+      case 'transfer':
+        return 'Take the Test';
+      case 'test':
+        return showTestResults ? (testScore >= 8 ? 'Complete Mastery' : 'Review & Retry') : 'Next';
+      case 'mastery':
+        return 'Complete Game';
+      default:
+        return 'Next';
+    }
+  };
+
+  const canProceed = () => {
+    switch (activePhase) {
+      case 'predict':
+        return !!selectedPrediction;
+      case 'twist_predict':
+        return !!twistPrediction;
+      case 'transfer':
+        return transferUnderstood || completedApps.size > 0;
+      case 'test':
+        return showTestResults ? testScore >= 8 : true;
+      default:
+        return true;
+    }
+  };
+
+  return (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '140px' }}>
+        {renderPhaseContent()}
+      </div>
+      {renderNavigationBar(canProceed(), getNextButtonLabel())}
     </div>
   );
-
-  // HOOK PHASE
-  if (phase === 'hook') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderHook()}
-        </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
-    );
-  }
-
-  // PREDICT PHASE
-  if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderPredict()}
-        </div>
-        {renderBottomBar(true, !!selectedPrediction, 'Test My Prediction')}
-      </div>
-    );
-  }
-
-  // PLAY PHASE
-  if (phase === 'play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderPlay()}
-        </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
-    );
-  }
-
-  // REVIEW PHASE
-  if (phase === 'review') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderReview()}
-        </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
-    );
-  }
-
-  // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderTwistPredict()}
-        </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
-    );
-  }
-
-  // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderTwistPlay()}
-        </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
-    );
-  }
-
-  // TWIST REVIEW PHASE
-  if (phase === 'twist_review') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderTwistReview()}
-        </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
-    );
-  }
-
-  // TRANSFER PHASE
-  if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderTransfer()}
-        </div>
-        {renderBottomBar(completedApps.size < 4, completedApps.size >= 4, 'Take the Test')}
-      </div>
-    );
-  }
-
-  // TEST PHASE
-  if (phase === 'test') {
-    if (showTestResults) {
-      return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            {renderTest()}
-          </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
-      );
-    }
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderTest()}
-        </div>
-      </div>
-    );
-  }
-
-  // MASTERY PHASE
-  if (phase === 'mastery') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderMastery()}
-        </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
-    );
-  }
-
-  return null;
 };
 
 export default LaserSpeckleRenderer;

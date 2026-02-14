@@ -297,7 +297,7 @@ const phaseLabels: Record<Phase, string> = {
   review: 'Review',
   twist_predict: 'Twist',
   twist_play: 'Explore',
-  twist_review: 'Explain',
+  twist_review: 'Deep Insight',
   transfer: 'Transfer',
   test: 'Test',
   mastery: 'Mastery',
@@ -319,7 +319,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
+  // Responsive typography with font weights
   const typo = {
     title: isMobile ? '24px' : '32px',
     heading: isMobile ? '18px' : '22px',
@@ -328,6 +328,10 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
     label: isMobile ? '10px' : '12px',
     pagePadding: isMobile ? '16px' : '24px',
     cardPadding: isMobile ? '12px' : '16px',
+    // Font weights for typography variety
+    bodyWeight: 400 as const,
+    smallWeight: 400 as const,
+    boldWeight: 700 as const,
   };
 
   // Phase state
@@ -395,7 +399,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
   // Phase-specific state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [expandedApp, setExpandedApp] = useState<number | null>(null);
+  const [expandedApp, setExpandedApp] = useState<number | null>(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -656,7 +660,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                 <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite" />
               </rect>
               <text x="5" y="23" fill={colors.textPrimary} fontSize="8" fontWeight="bold">V_term: {values.terminalVoltage.toFixed(2)}V</text>
-              <text x={Math.max(235 * (values.terminalVoltage / values.openCircuitVoltage) + 3, 160)} y="23" fill={colors.textPrimary} fontSize="7">Loss: {values.voltageDrop.toFixed(3)}V</text>
+              <text x={Math.max(235 * (values.terminalVoltage / values.openCircuitVoltage) + 3, 160)} y="23" fill={colors.textPrimary} fontSize="8">Loss: {values.voltageDrop.toFixed(3)}V</text>
               <text x="117.5" y="45" fill={colors.error} fontSize="10" textAnchor="middle" fontWeight="bold">
                 {((values.voltageDrop / values.openCircuitVoltage) * 100).toFixed(1)}% lost to internal resistance
               </text>
@@ -708,11 +712,12 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
               <circle cx={220 * (loadCurrent / 10)} cy={80 - 80 * (values.terminalVoltage / 4.5)} r="7" fill={colors.accent} stroke="white" strokeWidth="2" filter="url(#glow)">
                 <animate attributeName="r" values="6;8;6" dur="1.5s" repeatCount="indefinite" />
               </circle>
-              <text x="110" y="95" fill={colors.textMuted} fontSize="8" textAnchor="middle">Current (A)</text>
+              <text x="110" y="105" fill={colors.textMuted} fontSize="8" textAnchor="middle">Current (A)</text>
               <text x="-10" y="40" fill={colors.textMuted} fontSize="8" textAnchor="middle" transform="rotate(-90, -10, 40)">Voltage (V)</text>
-              <text x="0" y="92" fill={colors.textMuted} fontSize="7" textAnchor="middle">0</text>
-              <text x="110" y="92" fill={colors.textMuted} fontSize="7" textAnchor="middle">5</text>
-              <text x="220" y="92" fill={colors.textMuted} fontSize="7" textAnchor="middle">10</text>
+              <text x="0" y="92" fill={colors.textMuted} fontSize="8" textAnchor="middle">0</text>
+              <text x="55" y="92" fill={colors.textMuted} fontSize="8" textAnchor="middle">2.5</text>
+              <text x="165" y="92" fill={colors.textMuted} fontSize="8" textAnchor="middle">7.5</text>
+              <text x="220" y="92" fill={colors.textMuted} fontSize="8" textAnchor="middle">10</text>
             </g>
           </g>
 
@@ -729,13 +734,13 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
             <button onClick={() => setIsAnimating(!isAnimating)} style={{
               padding: '10px 20px', borderRadius: '8px', border: 'none',
               background: isAnimating ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-              color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px'
+              color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', minHeight: '44px'
             }}>
               {isAnimating ? 'Stop Current Sweep' : 'Sweep Current (0-10A)'}
             </button>
             <button onClick={() => { setStateOfCharge(100); setTemperature(25); setLoadCurrent(1); setIsAnimating(false); }} style={{
               padding: '10px 20px', borderRadius: '8px', border: `2px solid ${colors.accent}`,
-              background: 'transparent', color: colors.accent, fontWeight: 'bold', cursor: 'pointer', fontSize: '13px'
+              background: 'transparent', color: colors.accent, fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', minHeight: '44px'
             }}>
               Reset All
             </button>
@@ -752,7 +757,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '6px', fontSize: '13px' }}>Load Current: {loadCurrent.toFixed(1)} A</label>
         <input type="range" min="0.1" max="10" step="0.1" value={loadCurrent}
           onChange={(e) => setLoadCurrent(parseFloat(e.target.value))}
-          style={{ width: '100%', height: '28px', cursor: 'pointer' }} />
+          style={{ width: '100%', height: '28px', cursor: 'pointer', accentColor: colors.accent }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '10px' }}>
           <span>Low (0.1A)</span><span>High (10A)</span>
         </div>
@@ -761,7 +766,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '6px', fontSize: '13px' }}>State of Charge: {stateOfCharge}%</label>
         <input type="range" min="5" max="100" step="5" value={stateOfCharge}
           onChange={(e) => setStateOfCharge(parseInt(e.target.value))}
-          style={{ width: '100%', height: '28px', cursor: 'pointer' }} />
+          style={{ width: '100%', height: '28px', cursor: 'pointer', accentColor: colors.accent }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '10px' }}>
           <span>Nearly Empty (5%)</span><span>Full (100%)</span>
         </div>
@@ -771,7 +776,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
           <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '6px', fontSize: '13px' }}>Temperature: {temperature}C</label>
           <input type="range" min="-20" max="50" step="5" value={temperature}
             onChange={(e) => setTemperature(parseInt(e.target.value))}
-            style={{ width: '100%', height: '28px', cursor: 'pointer' }} />
+            style={{ width: '100%', height: '28px', cursor: 'pointer', accentColor: colors.accent }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '10px' }}>
             <span>Freezing (-20C)</span><span>Hot (50C)</span>
           </div>
@@ -790,7 +795,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
   const renderProgressBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '10px 16px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.1)', overflowX: 'auto' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, display: 'flex', alignItems: 'center', gap: '3px', padding: '10px 16px', background: 'rgba(0,0,0,0.95)', borderBottom: '1px solid rgba(255,255,255,0.1)', overflowX: 'auto' }}>
         {phaseOrder.map((p, index) => (
           <React.Fragment key={p}>
             <button onClick={() => index <= currentIndex && goToPhase(p)} disabled={index > currentIndex} style={{
@@ -830,29 +835,29 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
     let nextLabel = 'Continue';
 
     switch (phase) {
-      case 'hook': nextLabel = 'Make a Prediction'; break;
-      case 'predict': canProceed = !!prediction; nextLabel = 'Test My Prediction'; break;
+      case 'hook': nextLabel = 'Start Exploring'; break;
+      case 'predict': canProceed = !!prediction; nextLabel = 'Continue to Experiment'; break;
       case 'play': nextLabel = 'Continue to Review'; break;
       case 'review': nextLabel = 'Next: A Twist!'; break;
-      case 'twist_predict': canProceed = !!twistPrediction; nextLabel = 'Test My Prediction'; break;
-      case 'twist_play': nextLabel = 'See the Explanation'; break;
-      case 'twist_review': nextLabel = 'Real-World Applications'; break;
-      case 'transfer': canProceed = expandedApp !== null; nextLabel = 'Take the Test'; break;
-      case 'test': canProceed = testSubmitted && testScore >= 8; nextLabel = testSubmitted ? (testScore >= 8 ? 'Complete Mastery' : 'Review & Retry') : 'Submit Test'; break;
-      case 'mastery': nextLabel = 'Lesson Complete'; break;
+      case 'twist_predict': canProceed = !!twistPrediction; nextLabel = 'Continue to Experiment'; break;
+      case 'twist_play': nextLabel = 'Continue to Explanation'; break;
+      case 'twist_review': nextLabel = 'Continue to Applications'; break;
+      case 'transfer': canProceed = expandedApp !== null; nextLabel = 'Continue to Test'; break;
+      case 'test': canProceed = testSubmitted && testScore >= 8; nextLabel = testSubmitted ? (testScore >= 8 ? 'Continue to Mastery' : 'Review & Retry') : 'Submit Test'; break;
+      case 'mastery': nextLabel = 'Complete Lesson'; break;
     }
 
     return (
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '14px 20px', background: colors.bgDark, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', gap: '12px', zIndex: 1000 }}>
         <button onClick={goBack} disabled={isFirst} style={{
           padding: '10px 20px', borderRadius: '8px', border: `1px solid ${isFirst ? 'rgba(255,255,255,0.1)' : colors.textMuted}`,
-          background: 'transparent', color: isFirst ? colors.textMuted : colors.textPrimary, fontWeight: 'bold', cursor: isFirst ? 'not-allowed' : 'pointer', fontSize: '13px', opacity: isFirst ? 0.5 : 1
+          background: 'transparent', color: isFirst ? colors.textMuted : colors.textPrimary, fontWeight: 'bold', cursor: isFirst ? 'not-allowed' : 'pointer', fontSize: '13px', opacity: isFirst ? 0.5 : 1, minHeight: '44px', transition: 'all 0.2s ease'
         }}>Back</button>
         <button onClick={phase === 'test' && !testSubmitted ? submitTest : goNext} disabled={!canProceed && phase !== 'test'} style={{
           padding: '10px 28px', borderRadius: '8px', border: 'none',
           background: (canProceed || (phase === 'test' && !testSubmitted)) ? colors.accent : 'rgba(255,255,255,0.1)',
           color: (canProceed || (phase === 'test' && !testSubmitted)) ? 'white' : colors.textMuted, fontWeight: 'bold',
-          cursor: (canProceed || (phase === 'test' && !testSubmitted)) ? 'pointer' : 'not-allowed', fontSize: '13px', flex: 1, maxWidth: '280px'
+          cursor: (canProceed || (phase === 'test' && !testSubmitted)) ? 'pointer' : 'not-allowed', fontSize: '13px', flex: 1, maxWidth: '280px', minHeight: '44px', transition: 'all 0.2s ease'
         }}>{nextLabel}</button>
       </div>
     );
@@ -871,7 +876,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
           <>
             <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
               <h1 style={{ color: colors.accent, fontSize: typo.title, marginBottom: '8px' }}>Battery Internal Resistance</h1>
-              <p style={{ color: colors.textSecondary, fontSize: typo.body, marginBottom: '20px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: typo.body, fontWeight: 400, marginBottom: '20px' }}>
                 The hidden enemy that steals power from every battery
               </p>
             </div>
@@ -889,12 +894,12 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
 
             <div style={{ padding: typo.pagePadding }}>
               <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
-                <p style={{ color: colors.textPrimary, fontSize: typo.body, lineHeight: 1.6 }}>
+                <p style={{ color: colors.textPrimary, fontSize: typo.body, fontWeight: 400, lineHeight: 1.6 }}>
                   Every battery has a hidden enemy inside: <strong style={{ color: colors.resistance }}>internal resistance</strong>.
                   This resistance is not on any circuit diagram - it exists within the battery's own chemistry. When current flows,
                   this resistance steals voltage and converts energy to heat.
                 </p>
-                <p style={{ color: colors.textSecondary, fontSize: typo.small, marginTop: '12px' }}>
+                <p style={{ color: colors.textSecondary, fontSize: typo.small, fontWeight: 400, marginTop: '12px' }}>
                   The effect is small at low currents but becomes <strong>dramatic</strong> under heavy loads. Understanding internal
                   resistance explains countless everyday battery mysteries.
                 </p>
@@ -932,6 +937,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                 </p>
               </div>
 
+              <p style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '12px' }}>Step 1 of 2: Make your prediction</p>
               <h3 style={{ color: colors.textPrimary, fontSize: typo.body, marginBottom: '12px' }}>
                 When you increase the current draw from a battery, the terminal voltage will...
               </h3>
@@ -941,7 +947,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                     padding: '14px', borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: typo.small
+                    color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: typo.small, minHeight: '44px'
                   }}>
                     {p.label}
                   </button>
@@ -962,11 +968,19 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
               <p style={{ color: colors.textSecondary, fontSize: typo.small }}>See how current and state of charge affect voltage</p>
             </div>
 
+            <div style={{ padding: `0 ${typo.pagePadding}`, marginBottom: '12px' }}>
+              <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.voltage}` }}>
+                <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0 }}>
+                  <strong style={{ color: colors.textPrimary }}>Observe carefully:</strong> Notice how the terminal voltage changes as you adjust the controls. Watch the voltage drop increase with higher current.
+                </p>
+              </div>
+            </div>
+
             {renderVisualization(true)}
             {renderControls()}
 
             <div style={{ padding: `0 ${typo.pagePadding}` }}>
-              <div style={{ background: colors.bgCard, padding: '14px', borderRadius: '10px' }}>
+              <div style={{ background: colors.bgCard, padding: '14px', borderRadius: '10px', marginBottom: '12px' }}>
                 <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>Experiments to Try:</h4>
                 <ul style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.8, paddingLeft: '18px', margin: 0 }}>
                   <li>Set current to <strong>10A</strong> and watch voltage drop dramatically</li>
@@ -974,6 +988,11 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                   <li>Compare efficiency at <strong>1A</strong> vs <strong>10A</strong> load</li>
                   <li>Click "Sweep Current" to see the full range of behavior</li>
                 </ul>
+              </div>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                <p style={{ color: colors.textSecondary, fontSize: typo.small, fontWeight: 400, margin: 0 }}>
+                  <strong style={{ color: colors.textPrimary }}>Why this matters:</strong> Internal resistance is important in real-world applications from electric vehicles to smartphones. Engineers design battery systems to minimize resistance losses, which is why this concept is used in the industry to improve technology every day.
+                </p>
               </div>
             </div>
           </>
@@ -992,10 +1011,10 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
               borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`
             }}>
               <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontSize: typo.heading }}>
-                {wasCorrect ? 'Exactly Right!' : 'Not Quite!'}
+                {wasCorrect ? 'Your prediction was correct!' : 'Not Quite What You Predicted!'}
               </h3>
               <p style={{ color: colors.textPrimary, fontSize: typo.body }}>
-                Battery voltage <strong>drops when current increases</strong> because of internal resistance.
+                {wasCorrect ? 'As you predicted, battery' : 'As you observed in the experiment, battery'} voltage <strong>drops when current increases</strong> because of internal resistance.
                 The voltage available at the terminals equals OCV minus the voltage lost across R_internal.
               </p>
             </div>
@@ -1053,6 +1072,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                 </p>
               </div>
 
+              <p style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '12px' }}>Step 1 of 2: Make your prediction</p>
               <h3 style={{ color: colors.textPrimary, fontSize: typo.body, marginBottom: '12px' }}>
                 How does cold temperature affect internal resistance?
               </h3>
@@ -1062,7 +1082,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                     padding: '14px', borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: typo.small
+                    color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: typo.small, minHeight: '44px'
                   }}>
                     {p.label}
                   </button>
@@ -1081,6 +1101,14 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
             <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, fontSize: typo.heading, marginBottom: '6px' }}>Temperature and Current Effects Combined</h2>
               <p style={{ color: colors.textSecondary, fontSize: typo.small }}>See the dramatic impact of cold on high-current applications</p>
+            </div>
+
+            <div style={{ padding: `0 ${typo.pagePadding}`, marginBottom: '12px' }}>
+              <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.voltage}` }}>
+                <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0 }}>
+                  <strong style={{ color: colors.textPrimary }}>Observe carefully:</strong> Notice how temperature dramatically affects voltage under load. Watch what happens to terminal voltage when you combine cold temperature with high current.
+                </p>
+              </div>
             </div>
 
             {renderVisualization(true, true)}
@@ -1160,21 +1188,24 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
         return (
           <div style={{ padding: typo.pagePadding }}>
             <h2 style={{ color: colors.textPrimary, fontSize: typo.heading, marginBottom: '6px', textAlign: 'center' }}>Real-World Applications</h2>
-            <p style={{ color: colors.textSecondary, fontSize: typo.small, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small, textAlign: 'center', marginBottom: '8px' }}>
               Internal resistance affects every battery-powered system on Earth
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: typo.small, textAlign: 'center', marginBottom: '16px' }}>
+              Application {expandedApp !== null ? expandedApp + 1 : 0} of {realWorldApps.length}
             </p>
 
             {realWorldApps.map((app, index) => (
               <div key={index} style={{ background: colors.bgCard, marginBottom: '14px', borderRadius: '12px', border: expandedApp === index ? `2px solid ${app.color}` : '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
                 <button onClick={() => { setExpandedApp(expandedApp === index ? null : index); playSound('click'); }} style={{
-                  width: '100%', padding: '14px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px'
+                  width: '100%', padding: '14px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px', minHeight: '44px'
                 }}>
                   <span style={{ fontSize: '28px' }}>{app.icon}</span>
                   <div style={{ flex: 1 }}>
                     <h3 style={{ color: colors.textPrimary, fontSize: typo.body, margin: 0 }}>{app.title}</h3>
-                    <p style={{ color: colors.textMuted, fontSize: typo.label, margin: '4px 0 0 0' }}>{app.tagline}</p>
+                    <p style={{ color: colors.textSecondary, fontSize: typo.label, margin: '4px 0 0 0' }}>{app.tagline}</p>
                   </div>
-                  <span style={{ color: colors.textMuted, fontSize: '18px' }}>{expandedApp === index ? '−' : '+'}</span>
+                  <span style={{ color: colors.textSecondary, fontSize: '18px' }}>{expandedApp === index ? '−' : '+'}</span>
                 </button>
 
                 {expandedApp === index && (
@@ -1194,7 +1225,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                         <div key={i} style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '8px', flex: '1 1 80px', textAlign: 'center' }}>
                           <div style={{ fontSize: '16px', marginBottom: '4px' }}>{stat.icon}</div>
                           <div style={{ color: app.color, fontSize: '14px', fontWeight: 'bold' }}>{stat.value}</div>
-                          <div style={{ color: colors.textMuted, fontSize: '9px' }}>{stat.label}</div>
+                          <div style={{ color: colors.textSecondary, fontSize: '9px' }}>{stat.label}</div>
                         </div>
                       ))}
                     </div>
@@ -1210,10 +1241,17 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                       ))}
                     </div>
 
-                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
                       <h4 style={{ color: colors.success, fontSize: typo.label, marginBottom: '4px' }}>Future Impact</h4>
                       <p style={{ color: colors.textSecondary, fontSize: typo.label, lineHeight: 1.5 }}>{app.futureImpact}</p>
                     </div>
+
+                    <button onClick={() => { if (index < realWorldApps.length - 1) setExpandedApp(index + 1); playSound('click'); }} style={{
+                      width: '100%', padding: '12px', borderRadius: '8px', border: 'none',
+                      background: colors.accent, color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: typo.small, minHeight: '44px'
+                    }}>
+                      {index < realWorldApps.length - 1 ? 'Got It - Next Application' : 'Got It - Continue'}
+                    </button>
                   </div>
                 )}
               </div>
@@ -1244,7 +1282,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                 {testScore < 8 && (
                   <button onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); }} style={{
                     marginTop: '12px', padding: '10px 20px', borderRadius: '8px', border: 'none',
-                    background: colors.accent, color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: typo.small
+                    background: colors.accent, color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: typo.small, minHeight: '44px'
                   }}>Try Again</button>
                 )}
               </div>
@@ -1282,7 +1320,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
           <div style={{ padding: typo.pagePadding }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h2 style={{ color: colors.textPrimary, fontSize: typo.heading }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary, fontSize: typo.body }}>{currentTestQuestion + 1} / 10</span>
+              <span style={{ color: colors.textSecondary, fontSize: typo.body }}>Question {currentTestQuestion + 1} of 10</span>
             </div>
 
             <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
@@ -1309,7 +1347,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                   padding: '14px', borderRadius: '8px', textAlign: 'left', cursor: 'pointer', fontSize: typo.small,
                   border: testAnswers[currentTestQuestion] === opt.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                   background: testAnswers[currentTestQuestion] === opt.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                  color: colors.textPrimary
+                  color: colors.textPrimary, minHeight: '44px'
                 }}>
                   <span style={{ fontWeight: 'bold', marginRight: '8px' }}>{opt.id.toUpperCase()}.</span>{opt.label}
                 </button>
@@ -1320,18 +1358,18 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
               <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{
                 padding: '10px 20px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`,
                 background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', fontSize: typo.small
+                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', fontSize: typo.small, minHeight: '44px'
               }}>Previous</button>
               {currentTestQuestion < testQuestions.length - 1 ? (
                 <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{
                   padding: '10px 20px', borderRadius: '8px', border: 'none',
-                  background: colors.accent, color: 'white', cursor: 'pointer', fontSize: typo.small
+                  background: colors.accent, color: 'white', cursor: 'pointer', fontSize: typo.small, minHeight: '44px'
                 }}>Next Question</button>
               ) : (
                 <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{
                   padding: '10px 20px', borderRadius: '8px', border: 'none',
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
-                  color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', fontSize: typo.small
+                  color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', fontSize: typo.small, minHeight: '44px'
                 }}>Submit Test</button>
               )}
             </div>
@@ -1406,7 +1444,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '90px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '90px', paddingTop: '60px' }}>
         {renderPhaseContent()}
       </div>
       {renderBottomBar()}

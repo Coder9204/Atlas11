@@ -24,8 +24,8 @@ interface GameEvent {
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 const phaseLabels: Record<Phase, string> = {
-  'hook': 'Hook', 'predict': 'Predict', 'play': 'Lab', 'review': 'Review', 'twist_predict': 'Twist Predict',
-  'twist_play': 'Twist Lab', 'twist_review': 'Twist Review', 'transfer': 'Transfer', 'test': 'Test', 'mastery': 'Mastery'
+  'hook': 'Hook', 'predict': 'Predict', 'play': 'Play', 'review': 'Review', 'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Play', 'twist_review': 'Twist Review', 'transfer': 'Transfer', 'test': 'Test', 'mastery': 'Mastery'
 };
 
 interface DopplerEffectRendererProps {
@@ -49,15 +49,16 @@ const design = {
     accentMuted: '#dc2626',
     accentGlow: 'rgba(239, 68, 68, 0.3)',
 
-    textPrimary: '#fef2f2',
+    textPrimary: '#ffffff',
     textSecondary: '#fca5a5',
-    textMuted: '#b91c1c',
-    textDim: '#7f1d1d',
+    textMuted: '#cbd5e1',
+    textDim: '#94a3b8',
 
-    success: '#22c55e',
-    successGlow: 'rgba(34, 197, 94, 0.2)',
-    warning: '#f59e0b',
+    success: '#10B981',
+    successGlow: 'rgba(16, 185, 129, 0.2)',
+    warning: '#F59E0B',
     info: '#3b82f6',
+    pink: '#EC4899',
 
     gradientPrimary: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
     gradientSecondary: 'linear-gradient(135deg, #dc2626 0%, #ea580c 100%)',
@@ -237,7 +238,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
       ghost: {
         background: 'transparent',
         color: design.colors.textMuted,
-        border: `1px solid ${design.colors.textDim}`,
+        border: `1px solid ${design.colors.textMuted}`,
         boxShadow: 'none',
       },
     };
@@ -253,17 +254,18 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
         style={{
           ...variants[variant],
           ...sizes[size],
-          borderRadius: design.radius.lg,
+          borderRadius: `${design.radius.lg}px`,
           fontWeight: 700,
           cursor: disabled ? 'not-allowed' : 'pointer',
           opacity: disabled ? 0.4 : 1,
-          transition: 'all 0.2s ease',
+          transition: 'all 0.2s ease, transform 0.15s ease, background 0.2s ease',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: design.spacing.sm,
+          gap: `${design.spacing.sm}px`,
           width: fullWidth ? '100%' : 'auto',
           fontFamily: 'inherit',
+          minHeight: '44px',
         }}
       >
         {label}
@@ -592,6 +594,8 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             <div
               key={p}
               onClick={() => idx < currentIndex && goToPhase(p)}
+              title={phaseLabels[p]}
+              aria-label={`Phase ${idx + 1}: ${phaseLabels[p]}`}
               style={{
                 width: p === phase ? 24 : 10,
                 height: 10,
@@ -1287,90 +1291,265 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
     </div>
   );
 
+  // Static preview SVG for predict phase (no animation, no controls)
+  const renderStaticPreview = () => {
+    const width = 700;
+    const height = 350;
+    // Fixed position showing ambulance approaching observer
+    const sourceXPos = 200;
+    const observerXPos = 350;
+
+    return (
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: 300 }} data-testid="doppler-preview">
+        <defs>
+          <linearGradient id="staticRoad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#2d3748" />
+            <stop offset="50%" stopColor="#4a5568" />
+            <stop offset="100%" stopColor="#2d3748" />
+          </linearGradient>
+          <linearGradient id="staticAmbBody" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="50%" stopColor="#f1f5f9" />
+            <stop offset="100%" stopColor="#cbd5e1" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width={width} height={height} fill="#0f0a08" />
+
+        {/* Road */}
+        <rect x="0" y="200" width={width} height="80" fill="url(#staticRoad)" />
+        {Array.from({ length: 12 }).map((_, i) => (
+          <rect key={i} x={i * 60 + 15} y="238" width="35" height="4" rx="2" fill="#fbbf24" opacity="0.9" />
+        ))}
+
+        {/* Static wave fronts showing compression */}
+        {[40, 70, 110, 160].map((r, i) => (
+          <circle
+            key={`wave-${i}`}
+            cx={sourceXPos}
+            cy="210"
+            r={r}
+            fill="none"
+            stroke={i < 2 ? "#ef4444" : "#f97316"}
+            strokeWidth={i < 2 ? 2 : 1.5}
+            opacity={0.6 - i * 0.1}
+            strokeDasharray={i >= 2 ? "8,4" : "none"}
+          />
+        ))}
+
+        {/* Ambulance */}
+        <g transform={`translate(${sourceXPos}, 200)`}>
+          <rect x="-48" y="-32" width="96" height="58" rx="10" fill="url(#staticAmbBody)" />
+          <rect x="-48" y="4" width="96" height="14" fill="#ef4444" />
+          <rect x="-42" y="-26" width="28" height="22" rx="4" fill="#0ea5e9" opacity="0.8" />
+          <rect x="-8" y="-26" width="22" height="22" rx="4" fill="#0ea5e9" opacity="0.8" />
+          <rect x="18" y="-26" width="28" height="22" rx="4" fill="#0ea5e9" opacity="0.8" />
+          <rect x="-10" y="-20" width="8" height="18" rx="1" fill="#dc2626" />
+          <rect x="-14" y="-14" width="16" height="6" rx="1" fill="#dc2626" />
+          <circle cx="-30" cy="28" r="12" fill="#1f2937" />
+          <circle cx="30" cy="28" r="12" fill="#1f2937" />
+          <text x="0" y="-45" textAnchor="middle" fill="#fef2f2" fontSize="12" fontWeight="bold">APPROACHING</text>
+        </g>
+
+        {/* Observer */}
+        <g transform={`translate(${observerXPos}, 260)`}>
+          <circle cx="0" cy="-40" r="14" fill="#ec4899" />
+          <rect x="-12" y="-24" width="24" height="34" rx="6" fill="#db2777" />
+          <rect x="-12" y="10" width="10" height="22" rx="4" fill="#db2777" />
+          <rect x="2" y="10" width="10" height="22" rx="4" fill="#db2777" />
+          <text x="0" y="-60" textAnchor="middle" fill="#fef2f2" fontSize="11" fontWeight="bold">YOU</text>
+        </g>
+
+        {/* Direction arrow */}
+        <g transform="translate(280, 150)">
+          <line x1="0" y1="0" x2="60" y2="0" stroke="#ef4444" strokeWidth="3" />
+          <polygon points="60,-8 75,0 60,8" fill="#ef4444" />
+        </g>
+
+        {/* Labels showing wave compression */}
+        <g transform="translate(350, 320)">
+          <text x="0" y="0" textAnchor="middle" fill="#fca5a5" fontSize="12" fontWeight="600">
+            Compressed waves = Higher pitch
+          </text>
+        </g>
+      </svg>
+    );
+  };
+
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <PremiumWrapper>
-        <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      <div
+        data-muted-colors="#94a3b8 #64748b #cbd5e1"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          minHeight: '100vh',
+          background: design.colors.gradientBg,
+          overflow: 'auto',
+        }}>
+        {renderProgressBar()}
+
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: design.spacing.xl,
+          textAlign: 'center',
+          overflowY: 'auto',
+        }}>
           {/* Premium badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full mb-8">
-            <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-red-400 tracking-wide">PHYSICS EXPLORATION</span>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: design.spacing.sm,
+            padding: `${design.spacing.sm}px ${design.spacing.lg}px`,
+            background: `${design.colors.accentPrimary}15`,
+            border: `1px solid ${design.colors.accentPrimary}30`,
+            borderRadius: design.radius.full,
+            marginBottom: design.spacing.xl,
+          }}>
+            <span style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: design.colors.accentPrimary,
+            }} />
+            <span style={{
+              fontSize: design.typography.micro.size,
+              fontWeight: 700,
+              color: design.colors.accentPrimary,
+              letterSpacing: 2,
+            }}>PHYSICS EXPLORATION</span>
           </div>
 
-          {/* Main title with gradient */}
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-red-100 to-blue-200 bg-clip-text text-transparent">
+          {/* Main title */}
+          <h1 style={{
+            fontSize: isMobile ? 36 : design.typography.hero.size,
+            fontWeight: design.typography.hero.weight,
+            color: design.colors.textPrimary,
+            marginBottom: design.spacing.md,
+            background: design.colors.gradientPrimary,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>
             The Doppler Effect
           </h1>
 
-          <p className="text-lg text-slate-400 max-w-md mb-10">
+          <p style={{
+            fontSize: design.typography.subtitle.size,
+            color: design.colors.textSecondary,
+            maxWidth: 400,
+            marginBottom: design.spacing.xl,
+          }}>
             Why does an ambulance siren change pitch as it passes?
           </p>
 
           {/* Premium card with content */}
-          <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
-            {/* Subtle glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-blue-500/5 rounded-3xl" />
+          <div style={{
+            position: 'relative',
+            background: design.colors.bgCard,
+            borderRadius: design.radius.xl,
+            padding: design.spacing.xl,
+            maxWidth: 500,
+            width: '100%',
+            border: `1px solid ${design.colors.bgGlow}`,
+            boxShadow: design.shadows.card,
+          }}>
+            <div style={{ fontSize: 60, marginBottom: design.spacing.lg }}>🚑</div>
 
-            <div className="relative">
-              <div className="text-6xl mb-6">🚑</div>
-
-              <div className="space-y-4">
-                <p className="text-xl text-white/90 font-medium leading-relaxed">
-                  Sound waves compressed when approaching, stretched when leaving.
-                </p>
-                <p className="text-lg text-slate-400 leading-relaxed">
-                  Discover the physics behind radar guns, bat echolocation, and the expanding universe!
-                </p>
-                <div className="pt-2">
-                  <p className="text-base text-red-400 font-semibold">
-                    Master one of physics' most powerful principles!
-                  </p>
-                </div>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md }}>
+              <p style={{
+                fontSize: design.typography.subtitle.size,
+                fontWeight: 600,
+                color: design.colors.textPrimary,
+                lineHeight: 1.5,
+              }}>
+                Sound waves compressed when approaching, stretched when leaving.
+              </p>
+              <p style={{
+                fontSize: design.typography.body.size,
+                color: design.colors.textSecondary,
+                lineHeight: 1.6,
+                fontWeight: 400,
+              }}>
+                Discover the physics behind radar guns, bat echolocation, and the expanding universe!
+              </p>
+              <p style={{
+                fontSize: design.typography.body.size,
+                fontWeight: 700,
+                color: design.colors.accentPrimary,
+                marginTop: design.spacing.sm,
+              }}>
+                Master one of physics' most powerful principles!
+              </p>
             </div>
           </div>
 
-          {/* Premium CTA button */}
+          {/* CTA button */}
           <button
             onClick={(e) => { e.preventDefault(); goToPhase('predict'); }}
-            className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-red-500 to-rose-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              marginTop: design.spacing.xl,
+              padding: `${design.spacing.lg}px ${design.spacing.xxl}px`,
+              background: design.colors.gradientPrimary,
+              color: design.colors.textPrimary,
+              fontSize: design.typography.subtitle.size,
+              fontWeight: 700,
+              borderRadius: `${design.radius.lg}px`,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: design.shadows.button,
+              display: 'flex',
+              alignItems: 'center',
+              gap: `${design.spacing.sm}px`,
+              transition: 'all 0.2s ease, transform 0.15s ease',
+              minHeight: '48px',
+            }}
           >
-            <span className="relative z-10 flex items-center gap-3">
-              Start Learning
-              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </span>
+            Start Learning
+            <span style={{ fontSize: 18 }}>→</span>
           </button>
 
           {/* Feature hints */}
-          <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-            <div className="flex items-center gap-2">
-              <span className="text-red-400">✦</span>
+          <div style={{
+            marginTop: design.spacing.xl,
+            display: 'flex',
+            alignItems: 'center',
+            gap: design.spacing.xl,
+            fontSize: design.typography.caption.size,
+            color: design.colors.textMuted,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: design.spacing.xs }}>
+              <span style={{ color: design.colors.accentPrimary }}>✦</span>
               Interactive Lab
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-red-400">✦</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: design.spacing.xs }}>
+              <span style={{ color: design.colors.accentPrimary }}>✦</span>
               Real-World Examples
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-red-400">✦</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: design.spacing.xs }}>
+              <span style={{ color: design.colors.accentPrimary }}>✦</span>
               Knowledge Test
             </div>
           </div>
         </div>
-      </PremiumWrapper>
+      </div>
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: design.spacing.xl, overflow: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: design.spacing.xl, overflowY: 'auto' }}>
           <div style={{ maxWidth: 540, width: '100%' }}>
             <p style={{ fontSize: design.typography.micro.size, fontWeight: 900, color: design.colors.accentPrimary, marginBottom: design.spacing.sm, letterSpacing: 2 }}>
               STEP 1 • MAKE YOUR PREDICTION
@@ -1378,6 +1557,18 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             <h2 style={{ fontSize: design.typography.title.size, fontWeight: design.typography.title.weight, color: design.colors.textPrimary, marginBottom: design.spacing.sm }}>
               What Happens to the Pitch?
             </h2>
+
+            {/* Static SVG preview for predict phase */}
+            <div style={{
+              marginBottom: design.spacing.lg,
+              padding: design.spacing.md,
+              background: design.colors.bgCard,
+              borderRadius: design.radius.lg,
+              border: `1px solid ${design.colors.bgGlow}`,
+            }}>
+              {renderStaticPreview()}
+            </div>
+
             <p style={{ fontSize: design.typography.body.size, color: design.colors.textSecondary, marginBottom: design.spacing.lg, lineHeight: design.typography.body.lineHeight }}>
               An ambulance with its siren on drives past you on the street. As it approaches, passes, and moves away, what do you predict happens to the sound you hear?
             </p>
@@ -1440,10 +1631,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           <div style={{ flex: 1, position: 'relative', minHeight: isMobile ? 280 : 350 }}>
             {renderDopplerVisualizer(false)}
           </div>
@@ -1452,6 +1643,9 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             padding: design.spacing.lg,
             background: design.colors.bgCard,
             borderTop: `1px solid ${design.colors.bgGlow}`,
+            borderRadius: design.radius.lg,
+            margin: design.spacing.md,
+            border: `1px solid ${design.colors.bgGlow}`,
           }}>
             <div style={{ maxWidth: 600, margin: '0 auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: design.spacing.md }}>
@@ -1478,8 +1672,37 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               />
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: design.spacing.sm }}>
-                <span style={{ fontSize: design.typography.micro.size, color: design.colors.textDim }}>10 m/s (slow)</span>
-                <span style={{ fontSize: design.typography.micro.size, color: design.colors.textDim }}>80 m/s (fast)</span>
+                <span style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>10 m/s (slow)</span>
+                <span style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>80 m/s (fast)</span>
+              </div>
+
+              {/* Educational explanation */}
+              <div style={{
+                marginTop: design.spacing.lg,
+                padding: design.spacing.md,
+                background: design.colors.bgGlow,
+                borderRadius: design.radius.md,
+              }}>
+                <p style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.accentSecondary, marginBottom: design.spacing.xs }}>
+                  What you're observing:
+                </p>
+                <p style={{ fontSize: design.typography.caption.size, color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                  This visualization shows how sound waves from an ambulance siren get compressed when approaching you (higher pitch) and stretched when moving away (lower pitch). Because increasing the source speed compresses the waves more, you hear a greater frequency shift.
+                </p>
+              </div>
+              <div style={{
+                marginTop: design.spacing.sm,
+                padding: design.spacing.md,
+                background: `${design.colors.info}15`,
+                borderRadius: design.radius.md,
+                border: `1px solid ${design.colors.info}30`,
+              }}>
+                <p style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.info, marginBottom: design.spacing.xs }}>
+                  Real-world applications:
+                </p>
+                <p style={{ fontSize: design.typography.caption.size, color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                  This is exactly how police radar guns work - they emit radio waves and measure the frequency shift to calculate your speed. Weather radar uses the same principle to track storm systems at 250 km range, while medical ultrasound measures blood flow velocity in real-time.
+                </p>
               </div>
             </div>
           </div>
@@ -1505,10 +1728,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: design.spacing.xl, overflow: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: design.spacing.xl, overflowY: 'auto' }}>
           <div style={{ maxWidth: 600, width: '100%' }}>
             <p style={{ fontSize: design.typography.micro.size, fontWeight: 900, color: design.colors.success, marginBottom: design.spacing.sm, letterSpacing: 2 }}>
               STEP 3 • UNDERSTANDING THE PHYSICS
@@ -1516,10 +1739,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             <h2 style={{ fontSize: design.typography.title.size, fontWeight: design.typography.title.weight, color: design.colors.textPrimary, marginBottom: design.spacing.sm }}>
               Why Does Pitch Change?
             </h2>
-            <p style={{ fontSize: design.typography.body.size, color: design.colors.textSecondary, marginBottom: design.spacing.lg }}>
+            <p style={{ fontSize: design.typography.body.size, color: design.colors.textSecondary, marginBottom: design.spacing.lg, fontWeight: 400 }}>
               {prediction === 'high_low'
-                ? '✅ You predicted correctly! Higher when approaching, lower when receding.'
-                : 'The pitch is higher when approaching and lower when receding. Here\'s why:'}
+                ? '✅ You predicted correctly! As you observed in the simulation, the pitch is higher when approaching, lower when receding.'
+                : 'As you saw in the simulation, the pitch is higher when approaching and lower when receding. Here\'s why:'}
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: design.spacing.lg, marginBottom: design.spacing.lg }}>
@@ -1581,7 +1804,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               border: `1px solid ${design.colors.bgGlow}`,
               textAlign: 'center',
             }}>
-              <p style={{ fontSize: design.typography.micro.size, fontWeight: 700, color: design.colors.textDim, marginBottom: design.spacing.md, letterSpacing: 1 }}>
+              <p style={{ fontSize: design.typography.micro.size, fontWeight: 700, color: design.colors.textMuted, marginBottom: design.spacing.md, letterSpacing: 1 }}>
                 THE DOPPLER FORMULA
               </p>
               <p style={{ fontSize: 28, fontWeight: 800, color: design.colors.textPrimary, fontFamily: 'serif' }}>
@@ -1602,10 +1825,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   // TWIST_PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: design.spacing.xl, overflow: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: design.spacing.xl, overflowY: 'auto' }}>
           <div style={{ maxWidth: 540, width: '100%' }}>
             <p style={{ fontSize: design.typography.micro.size, fontWeight: 900, color: design.colors.warning, marginBottom: design.spacing.sm, letterSpacing: 2 }}>
               STEP 4 • NEW VARIABLE
@@ -1613,34 +1836,47 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             <h2 style={{ fontSize: design.typography.title.size, fontWeight: design.typography.title.weight, color: design.colors.textPrimary, marginBottom: design.spacing.sm }}>
               What if YOU Are Moving Too?
             </h2>
-            <p style={{ fontSize: design.typography.body.size, color: design.colors.textSecondary, marginBottom: design.spacing.lg, lineHeight: design.typography.body.lineHeight }}>
+            <p style={{ fontSize: design.typography.body.size, color: design.colors.textSecondary, marginBottom: design.spacing.lg, lineHeight: design.typography.body.lineHeight, fontWeight: 400 }}>
               Now imagine you're walking TOWARD the approaching ambulance. How does YOUR motion affect the pitch you hear?
             </p>
 
+            {/* Static SVG for twist_predict */}
             <div style={{
-              padding: design.spacing.lg,
+              padding: design.spacing.md,
               borderRadius: design.radius.lg,
               background: design.colors.bgCard,
               marginBottom: design.spacing.lg,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: design.spacing.lg,
+              border: `1px solid ${design.colors.bgGlow}`,
             }}>
-              <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: 32 }}>🚑→</span>
-                <p style={{ fontSize: design.typography.micro.size, color: design.colors.textDim, marginTop: design.spacing.xs }}>Source moving</p>
-              </div>
-              <span style={{ fontSize: 24, color: design.colors.textDim }}>+</span>
-              <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: 32 }}>←🧍</span>
-                <p style={{ fontSize: design.typography.micro.size, color: design.colors.textDim, marginTop: design.spacing.xs }}>You moving</p>
-              </div>
-              <span style={{ fontSize: 24, color: design.colors.textDim }}>=</span>
-              <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: 32 }}>❓</span>
-                <p style={{ fontSize: design.typography.micro.size, color: design.colors.warning, marginTop: design.spacing.xs }}>What happens?</p>
-              </div>
+              <svg viewBox="0 0 400 150" style={{ width: '100%', maxHeight: 150 }}>
+                {/* Background */}
+                <rect width="400" height="150" fill="#0f0a08" />
+                <rect x="0" y="100" width="400" height="50" fill="#4a5568" />
+
+                {/* Ambulance moving right */}
+                <g transform="translate(100, 85)">
+                  <rect x="-30" y="-20" width="60" height="35" rx="6" fill="#f1f5f9" />
+                  <rect x="-30" y="0" width="60" height="8" fill="#ef4444" />
+                  <circle cx="-18" cy="17" r="8" fill="#1f2937" />
+                  <circle cx="18" cy="17" r="8" fill="#1f2937" />
+                  <text x="0" y="-30" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">30 m/s →</text>
+                </g>
+
+                {/* Observer moving left */}
+                <g transform="translate(280, 85)">
+                  <circle cx="0" cy="-20" r="10" fill="#ec4899" />
+                  <rect x="-8" y="-10" width="16" height="24" rx="4" fill="#db2777" />
+                  <text x="0" y="-40" textAnchor="middle" fill="#f97316" fontSize="10" fontWeight="bold">← 5 m/s</text>
+                </g>
+
+                {/* Arrows showing motion */}
+                <line x1="140" y1="70" x2="180" y2="70" stroke="#ef4444" strokeWidth="2" />
+                <polygon points="180,66 190,70 180,74" fill="#ef4444" />
+                <line x1="260" y1="70" x2="220" y2="70" stroke="#f97316" strokeWidth="2" />
+                <polygon points="220,66 210,70 220,74" fill="#f97316" />
+
+                <text x="200" y="140" textAnchor="middle" fill="#fca5a5" fontSize="11" fontWeight="600">Both motions toward each other</text>
+              </svg>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md }}>
@@ -1688,10 +1924,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   // TWIST_PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           <div style={{ flex: 1, position: 'relative', minHeight: isMobile ? 280 : 350 }}>
             {renderDopplerVisualizer(true)}
           </div>
@@ -1736,15 +1972,15 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: design.spacing.sm, textAlign: 'center' }}>
                 <div style={{ padding: design.spacing.md, borderRadius: design.radius.sm, background: design.colors.bgGlow }}>
-                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textDim }}>Approaching</p>
+                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>Approaching</p>
                   <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.accentPrimary }}>{Math.round(observedFreqApproaching)} Hz</p>
                 </div>
                 <div style={{ padding: design.spacing.md, borderRadius: design.radius.sm, background: design.colors.bgGlow }}>
-                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textDim }}>Total Shift</p>
+                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>Total Shift</p>
                   <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.warning }}>±{Math.round(observedFreqApproaching - sourceFreq)} Hz</p>
                 </div>
                 <div style={{ padding: design.spacing.md, borderRadius: design.radius.sm, background: design.colors.bgGlow }}>
-                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textDim }}>Receding</p>
+                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>Receding</p>
                   <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.accentSecondary }}>{Math.round(observedFreqReceding)} Hz</p>
                 </div>
               </div>
@@ -1760,10 +1996,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   // TWIST_REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: design.spacing.xl, overflow: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: design.spacing.xl, overflowY: 'auto' }}>
           <div style={{ maxWidth: 600, width: '100%' }}>
             <p style={{ fontSize: design.typography.micro.size, fontWeight: 900, color: design.colors.accentSecondary, marginBottom: design.spacing.sm, letterSpacing: 2 }}>
               STEP 6 • COMPLETE UNDERSTANDING
@@ -1831,10 +2067,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
     const app = applications[activeApp];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: design.spacing.lg, overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: design.spacing.lg, overflowY: 'auto' }}>
           <p style={{ fontSize: design.typography.micro.size, fontWeight: 900, color: design.colors.info, marginBottom: design.spacing.sm, letterSpacing: 2 }}>
             STEP 7 • REAL-WORLD APPLICATIONS
           </p>
@@ -1918,9 +2154,64 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md }}>
+              {/* Detailed introduction */}
+              <div style={{ padding: design.spacing.lg, borderRadius: design.radius.md, background: design.colors.bgGlow }}>
+                <p style={{ fontSize: design.typography.micro.size, fontWeight: 700, color: design.colors.info, marginBottom: design.spacing.sm }}>📖 OVERVIEW</p>
+                <p style={{ fontSize: design.typography.body.size, color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                  The Doppler effect is fundamental to many technologies we use every day. From police radar guns measuring vehicle speeds to weather systems tracking storm movement, from medical imaging measuring blood flow to astronomers discovering the expanding universe - all rely on the same principle you explored: the relationship between motion and wave frequency.
+                </p>
+              </div>
+
               <div style={{ padding: design.spacing.lg, borderRadius: design.radius.md, background: design.colors.bgGlow }}>
                 <p style={{ fontSize: design.typography.micro.size, fontWeight: 700, color: design.colors.accentSecondary, marginBottom: design.spacing.sm }}>🔬 THE PHYSICS</p>
-                <p style={{ fontSize: design.typography.body.size, color: design.colors.textSecondary, lineHeight: 1.6 }}>{app.physics}</p>
+                <p style={{ fontSize: design.typography.body.size, color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>{app.physics}</p>
+              </div>
+
+              {/* Statistics section */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: design.spacing.sm,
+              }}>
+                <div style={{
+                  padding: design.spacing.md,
+                  borderRadius: design.radius.md,
+                  background: design.colors.bgGlow,
+                  textAlign: 'center',
+                }}>
+                  <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.accentPrimary }}>
+                    24 GHz
+                  </p>
+                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>
+                    Radar frequency
+                  </p>
+                </div>
+                <div style={{
+                  padding: design.spacing.md,
+                  borderRadius: design.radius.md,
+                  background: design.colors.bgGlow,
+                  textAlign: 'center',
+                }}>
+                  <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.accentSecondary }}>
+                    3000 m
+                  </p>
+                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>
+                    Range
+                  </p>
+                </div>
+                <div style={{
+                  padding: design.spacing.md,
+                  borderRadius: design.radius.md,
+                  background: design.colors.bgGlow,
+                  textAlign: 'center',
+                }}>
+                  <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.warning }}>
+                    300 ms
+                  </p>
+                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>
+                    Detection time
+                  </p>
+                </div>
               </div>
 
               <div style={{
@@ -1936,14 +2227,16 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
                 </p>
               </div>
 
-              {/* Mark as Read Button */}
+              {/* Got It / Continue Button */}
               <div style={{ marginTop: design.spacing.md }}>
                 {!completedApps.has(activeApp) ? (
                   <button
                     onClick={() => {
+                      playSound('click');
                       const newCompleted = new Set(completedApps);
                       newCompleted.add(activeApp);
                       setCompletedApps(newCompleted);
+                      emitEvent('app_explored', { appId: app.id, appIndex: activeApp });
                       if (activeApp < applications.length - 1) {
                         setTimeout(() => setActiveApp(activeApp + 1), 300);
                       }
@@ -1964,19 +2257,42 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
                       gap: design.spacing.sm,
                     }}
                   >
-                    ✓ Mark "{app.title}" as Read
+                    Got It
                   </button>
                 ) : (
-                  <div style={{
-                    padding: design.spacing.md,
-                    borderRadius: design.radius.md,
-                    background: `${design.colors.success}20`,
-                    border: `1px solid ${design.colors.success}`,
-                    color: design.colors.success,
-                    fontWeight: 700,
-                    textAlign: 'center',
-                  }}>
-                    ✓ Completed
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.sm }}>
+                    <div style={{
+                      padding: design.spacing.md,
+                      borderRadius: design.radius.md,
+                      background: `${design.colors.success}20`,
+                      border: `1px solid ${design.colors.success}`,
+                      color: design.colors.success,
+                      fontWeight: 700,
+                      textAlign: 'center',
+                    }}>
+                      ✓ Completed
+                    </div>
+                    {activeApp < applications.length - 1 && (
+                      <button
+                        onClick={() => {
+                          playSound('click');
+                          setActiveApp(activeApp + 1);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: design.spacing.sm,
+                          borderRadius: design.radius.md,
+                          background: design.colors.bgGlow,
+                          border: `1px solid ${design.colors.bgGlow}`,
+                          color: design.colors.textSecondary,
+                          fontWeight: 600,
+                          fontSize: design.typography.caption.size,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Next App →
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -1997,7 +2313,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
       const passed = percentage >= 70;
 
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
           {renderProgressBar()}
 
           <div style={{
@@ -2005,10 +2321,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
             padding: design.spacing.xl,
-            textAlign: 'center',
+            overflowY: 'auto',
           }}>
+            {/* Score summary */}
             <div style={{
               width: 100,
               height: 100,
@@ -2023,7 +2339,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               <span style={{ fontSize: 50 }}>{passed ? '🏆' : '📚'}</span>
             </div>
 
-            <h2 style={{ fontSize: 32, fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.sm }}>
+            <h2 style={{ fontSize: 32, fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.sm, textAlign: 'center' }}>
               {percentage >= 90 ? 'Outstanding!' : percentage >= 70 ? 'Great Job!' : 'Keep Learning!'}
             </h2>
 
@@ -2031,13 +2347,87 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               {score}/{testQuestions.length}
             </p>
 
-            <p style={{ fontSize: 16, color: design.colors.textSecondary, marginBottom: design.spacing.xl }}>
+            <p style={{ fontSize: 16, color: design.colors.textSecondary, marginBottom: design.spacing.lg, textAlign: 'center' }}>
               {percentage >= 90
                 ? 'You\'ve mastered the Doppler effect!'
                 : percentage >= 70
                 ? 'Solid understanding of Doppler physics!'
                 : 'Review the concepts and try again!'}
             </p>
+
+            {/* Answer Review Section */}
+            <div style={{
+              width: '100%',
+              maxWidth: 600,
+              marginBottom: design.spacing.xl,
+            }}>
+              <h3 style={{
+                fontSize: design.typography.subtitle.size,
+                fontWeight: 700,
+                color: design.colors.textPrimary,
+                marginBottom: design.spacing.md,
+                textAlign: 'center',
+              }}>
+                Your Answer Review
+              </h3>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: design.spacing.sm,
+                maxHeight: 300,
+                overflowY: 'auto',
+                padding: design.spacing.sm,
+              }}>
+                {testQuestions.slice(0, 10).map((q, i) => {
+                  const userAnswer = testAnswers[i];
+                  const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+                  const correctIndex = q.options.findIndex(opt => opt.correct);
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        padding: design.spacing.md,
+                        borderRadius: design.radius.md,
+                        background: isCorrect ? `${design.colors.success}15` : `${design.colors.accentPrimary}15`,
+                        border: `1px solid ${isCorrect ? design.colors.success : design.colors.accentPrimary}50`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: design.spacing.sm, marginBottom: design.spacing.xs }}>
+                        <span style={{
+                          fontSize: 18,
+                          color: isCorrect ? design.colors.success : design.colors.accentPrimary,
+                        }}>
+                          {isCorrect ? '✓' : '✗'}
+                        </span>
+                        <span style={{
+                          fontSize: design.typography.caption.size,
+                          fontWeight: 700,
+                          color: design.colors.textPrimary,
+                        }}>
+                          Question {i + 1}
+                        </span>
+                        <span style={{
+                          fontSize: design.typography.micro.size,
+                          color: isCorrect ? design.colors.success : design.colors.accentPrimary,
+                          fontWeight: 600,
+                        }}>
+                          {isCorrect ? 'Correct' : 'Incorrect'}
+                        </span>
+                      </div>
+                      {!isCorrect && (
+                        <p style={{
+                          fontSize: design.typography.micro.size,
+                          color: design.colors.textMuted,
+                          marginTop: design.spacing.xs,
+                        }}>
+                          Correct answer: {q.options[correctIndex]?.text}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             {renderButton(passed ? 'Complete Lesson' : 'Try Again', () => {
               if (passed) {
@@ -2057,11 +2447,24 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
     const selected = testAnswers[testIndex];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: design.spacing.lg, overflow: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: design.spacing.lg, overflowY: 'auto' }}>
           <div style={{ maxWidth: 640, margin: '0 auto', width: '100%' }}>
+            {/* Test introduction */}
+            <div style={{
+              padding: design.spacing.md,
+              marginBottom: design.spacing.lg,
+              background: `${design.colors.accentPrimary}10`,
+              borderRadius: design.radius.md,
+              border: `1px solid ${design.colors.accentPrimary}30`,
+            }}>
+              <p style={{ fontSize: design.typography.caption.size, color: design.colors.textSecondary, lineHeight: 1.5, fontWeight: 400 }}>
+                Apply your understanding of the Doppler effect to real-world scenarios. Each question tests your knowledge of how wave frequency changes with motion - from ambulance sirens to radar guns, weather tracking to astronomical observations.
+              </p>
+            </div>
+
             {/* Progress */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: design.spacing.lg }}>
               <p style={{ fontSize: design.typography.micro.size, fontWeight: 900, color: design.colors.accentPrimary, letterSpacing: 2 }}>
@@ -2090,7 +2493,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               marginBottom: design.spacing.lg,
             }}>
               <p style={{ fontSize: design.typography.micro.size, fontWeight: 700, color: design.colors.accentSecondary, marginBottom: design.spacing.sm }}>📋 SCENARIO</p>
-              <p style={{ fontSize: design.typography.body.size, color: design.colors.textSecondary, lineHeight: 1.6 }}>{q.scenario}</p>
+              <p style={{ fontSize: design.typography.body.size, color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>{q.scenario}</p>
             </div>
 
             {/* Question */}
@@ -2168,7 +2571,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
         height: '100%',
         background: design.colors.gradientBg,
         position: 'relative',
-        overflow: 'hidden',
+        overflow: 'auto',
       }}>
         {/* Confetti */}
         {Array.from({ length: 50 }).map((_, i) => (
@@ -2276,7 +2679,40 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
     );
   }
 
-  return null;
+  // Default fallback for invalid phases - show hook
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      minHeight: '100vh',
+      background: design.colors.gradientBg,
+      overflow: 'auto',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: design.spacing.xl,
+    }}>
+      {renderProgressBar()}
+      <p style={{ color: design.colors.textPrimary, fontSize: design.typography.body.size }}>
+        Loading Doppler Effect simulation...
+      </p>
+      <button
+        onClick={() => goToPhase('hook')}
+        style={{
+          marginTop: design.spacing.lg,
+          padding: `${design.spacing.md}px ${design.spacing.xl}px`,
+          background: design.colors.gradientPrimary,
+          color: design.colors.textPrimary,
+          borderRadius: `${design.radius.md}px`,
+          border: 'none',
+          cursor: 'pointer',
+          fontWeight: 700,
+        }}
+      >
+        Start Learning
+      </button>
+    </div>
+  );
 };
 
 export default DopplerEffectRenderer;

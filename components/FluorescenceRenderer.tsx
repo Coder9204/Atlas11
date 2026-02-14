@@ -338,8 +338,8 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast for readability
+    textMuted: '#e2e8f0', // Better contrast
     border: '#2a2a3a',
   };
 
@@ -461,19 +461,46 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
+  // Navigation bar component - fixed at top with z-index
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1001,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '20px' }}>🔦</span>
+        <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Fluorescence</span>
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
+    </nav>
+  );
+
   // Fluorescence Scene Visualization
-  const FluorescenceScene = () => {
+  const FluorescenceScene = ({ showControls = true }: { showControls?: boolean }) => {
     const matProps = getMaterialProps(selectedMaterial);
-    const isGlowing = uvOn && matProps.fluorescent;
+    const isGlowing = uvOn && matProps.fluorescent && showControls;
     const ambientLight = roomLightOn ? 0.8 : (uvOn ? 0.2 : 0.05);
     const glowIntensity = (uvIntensity / 100);
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 260 : 320;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} role="img" aria-label="Fluorescence experiment visualization">
         <defs>
           <linearGradient id="labBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={roomLightOn ? '#1e293b' : '#050510'} />
@@ -620,8 +647,10 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -666,7 +695,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Fluorescence →
+          Next
         </button>
 
         {renderNavDots()}
@@ -687,10 +716,12 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -699,7 +730,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              🤔 Make Your Prediction - Step 1 of 3
             </p>
           </div>
 
@@ -707,7 +738,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
             A yellow highlighter appears pale in normal light, but glows bright green under UV. Why does this happen?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram for predict phase */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -715,27 +746,69 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🔦</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>UV Light</p>
-                <p style={{ ...typo.small, color: colors.accent }}>365 nm</p>
+            <svg width="100%" height="160" viewBox="0 0 400 160" role="img" aria-label="UV light hitting highlighter to produce green glow diagram">
+              <defs>
+                <linearGradient id="uvGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#a78bfa" />
+                </linearGradient>
+                <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#22c55e" />
+                  <stop offset="100%" stopColor="#86efac" />
+                </linearGradient>
+              </defs>
+              {/* UV Source */}
+              <rect x="20" y="50" width="60" height="60" rx="8" fill="#374151" />
+              <rect x="30" y="60" width="40" height="40" rx="4" fill="url(#uvGrad)" />
+              <text x="50" y="130" textAnchor="middle" fill={colors.textSecondary} fontSize="12">UV Light</text>
+              <text x="50" y="145" textAnchor="middle" fill={colors.accent} fontSize="10">365 nm</text>
+
+              {/* Arrow 1 */}
+              <path d="M 90 80 L 140 80" stroke={colors.accent} strokeWidth="3" markerEnd="url(#arrowhead)" />
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
+                </marker>
+              </defs>
+
+              {/* Highlighter */}
+              <rect x="150" y="45" width="100" height="70" rx="8" fill="#fef08a" stroke={colors.accent} strokeWidth="2" />
+              <text x="200" y="85" textAnchor="middle" fill="#374151" fontSize="14" fontWeight="600">Highlighter</text>
+              <text x="200" y="135" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Sample</text>
+
+              {/* Arrow 2 */}
+              <path d="M 260 80 L 310 80" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowhead2)" />
+              <defs>
+                <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
+                </marker>
+              </defs>
+
+              {/* Emission */}
+              <circle cx="350" cy="80" r="30" fill="url(#greenGrad)" opacity="0.8" />
+              <text x="350" y="130" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Green Glow</text>
+              <text x="350" y="145" textAnchor="middle" fill="#22c55e" fontSize="10">520 nm</text>
+            </svg>
+
+            {/* Legend */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '24px',
+              marginTop: '16px',
+              flexWrap: 'wrap',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', background: colors.accent, borderRadius: '4px' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>UV Light (invisible)</span>
               </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>📝</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Highlighter</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', background: '#fef08a', borderRadius: '4px', border: '1px solid #d4d4d4' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Highlighter material</span>
               </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>✨</div>
-                <p style={{ ...typo.small, color: '#22c55e' }}>Green Glow</p>
-                <p style={{ ...typo.small, color: colors.success }}>520 nm</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', background: '#22c55e', borderRadius: '4px' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Visible emission</span>
               </div>
             </div>
           </div>
@@ -754,6 +827,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -782,7 +856,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test My Prediction →
+              Next
             </button>
           )}
         </div>
@@ -801,15 +875,24 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Fluorescence Laboratory
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
             Control the light sources and materials to discover what fluoresces
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '12px' }}>
+            Try toggling the UV light and observe what happens. Experiment with different materials!
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Real-world relevance: This same principle is used in forensic analysis to detect hidden evidence, in medical diagnostics to identify diseases, and in fluorescent lighting that powers buildings worldwide.
           </p>
 
           {/* Main visualization */}
@@ -887,23 +970,22 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               </button>
             </div>
 
-            {/* UV intensity slider */}
-            {uvOn && (
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>UV Intensity</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{uvIntensity}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="100"
-                  value={uvIntensity}
-                  onChange={(e) => setUvIntensity(parseInt(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer' }}
-                />
+            {/* UV intensity slider - always visible */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>UV Intensity</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{uvIntensity}%</span>
               </div>
-            )}
+              <input
+                type="range"
+                min="20"
+                max="100"
+                value={uvIntensity}
+                onChange={(e) => setUvIntensity(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+                aria-label="UV Intensity slider"
+              />
+            </div>
 
             {/* Status display */}
             <div style={{
@@ -945,6 +1027,19 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
             </div>
           </div>
 
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Toggle the UV light ON and room light OFF to see fluorescence. Try different materials and adjust UV intensity using the slider to see how brightness changes.
+            </p>
+          </div>
+
           {/* Discovery prompt */}
           {uvOn && !roomLightOn && matProps.fluorescent && (
             <div style={{
@@ -956,7 +1051,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                ✨ Beautiful! The {matProps.name.toLowerCase()} absorbs invisible UV and emits visible {matProps.emissionWavelength < 500 ? 'blue' : matProps.emissionWavelength < 570 ? 'green' : 'red'} light!
+                Beautiful! The {matProps.name.toLowerCase()} absorbs invisible UV and emits visible {matProps.emissionWavelength < 500 ? 'blue' : matProps.emissionWavelength < 570 ? 'green' : 'red'} light!
               </p>
             </div>
           )}
@@ -971,7 +1066,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                🔍 Plain paper has no fluorescent molecules - it just reflects UV without converting it!
+                Plain paper has no fluorescent molecules - it just reflects UV without converting it!
               </p>
             </div>
           )}
@@ -980,7 +1075,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Physics →
+            Next
           </button>
         </div>
 
@@ -996,10 +1091,12 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Fluorescence Process
           </h2>
@@ -1092,7 +1189,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore a New Variable →
+            Next
           </button>
         </div>
 
@@ -1114,10 +1211,13 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1215,10 +1315,13 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Fluorescence vs Phosphorescence
           </h2>
@@ -1416,10 +1519,13 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Singlet vs Triplet States
           </h2>
@@ -1494,13 +1600,19 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            App {selectedApp + 1} of {realWorldApps.length} - Explore how fluorescence impacts everyday life
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1591,6 +1703,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1605,6 +1718,26 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
                 </div>
               ))}
             </div>
+
+            {/* Got It button for within-app progression */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
+              }}
+            >
+              {completedApps[selectedApp] ? 'Got It!' : 'Got It'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1612,7 +1745,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Take the Knowledge Test →
+              Take the Knowledge Test
             </button>
           )}
         </div>
@@ -1631,10 +1764,12 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1687,10 +1822,13 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1857,8 +1995,10 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{

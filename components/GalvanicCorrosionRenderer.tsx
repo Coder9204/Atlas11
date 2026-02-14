@@ -178,9 +178,9 @@ const realWorldApps = [
     connection: 'Just like our demonstration shows electron flow between dissimilar metals, ship hulls experience the same electrochemical attack. Steel hulls connected to bronze propellers create massive galvanic cells where the more active metal corrodes rapidly without protection.',
     howItWorks: 'Marine engineers attach zinc or aluminum sacrificial anodes to steel hulls. These anodes are more electrochemically active than the hull steel, so they corrode preferentially, sacrificing themselves to protect the ship. The anodes must be replaced periodically as they are consumed.',
     stats: [
-      { value: '$80B', label: 'Annual corrosion cost', icon: '💰' },
-      { value: '15-25 yrs', label: 'Ship hull design life', icon: '🚢' },
-      { value: '1-2 yrs', label: 'Anode replacement', icon: '🔄' }
+      { value: '$80 billion', label: 'Annual corrosion cost globally', icon: '💰' },
+      { value: '25 yrs', label: 'Ship hull design life', icon: '🚢' },
+      { value: '850 mV', label: 'Protection potential', icon: '🔄' }
     ],
     examples: ['Zinc anodes welded to steel ship hulls', 'Bronze propellers isolated from steel shafts', 'ICCP systems on aircraft carriers', 'Aluminum anode bars in ballast tanks'],
     companies: ['Cathelco', 'Jotun Marine Coatings', 'DNV Maritime', 'CORROSION Service'],
@@ -196,9 +196,9 @@ const realWorldApps = [
     connection: 'Our galvanic corrosion demonstration shows exactly what happens at every aluminum-to-steel joint in a car body. Road salt spray acts as the electrolyte, turning joints into active galvanic cells.',
     howItWorks: 'Automotive engineers use multiple strategies: structural adhesives create insulating barriers, zinc-rich primers provide sacrificial protection, and e-coat applies uniform corrosion-resistant coatings. Self-piercing rivets with polymer coatings join aluminum to steel without creating bare metal contact.',
     stats: [
-      { value: '40%', label: 'Weight reduction', icon: '⚖️' },
-      { value: '12+ yrs', label: 'Corrosion warranty', icon: '📜' },
-      { value: '$6B+', label: 'Prevention spend', icon: '💵' }
+      { value: '40%', label: 'Weight reduction target', icon: '⚖️' },
+      { value: '12 yrs', label: 'Corrosion warranty period', icon: '📜' },
+      { value: '$6 billion', label: 'Annual prevention spend', icon: '💵' }
     ],
     examples: ['Ford F-150 aluminum body on steel frame', 'Tesla Model S multi-material design', 'BMW i3 carbon fiber chassis', 'Audi Space Frame joints'],
     companies: ['Henkel Adhesives', 'PPG Automotive', 'Novelis Aluminum', 'BASF Coatings'],
@@ -214,9 +214,9 @@ const realWorldApps = [
     connection: 'Our demonstration shows how connecting a more active metal protects a less active one. Pipeline cathodic protection scales this principle to continental distances.',
     howItWorks: 'For short pipelines, magnesium or zinc sacrificial anode beds are buried near the pipe. For long-distance lines, impressed current cathodic protection (ICCP) uses transformer-rectifiers to force current onto the pipe through deep groundbeds.',
     stats: [
-      { value: '2.6M mi', label: 'US pipeline network', icon: '📏' },
-      { value: '99.999%', label: 'Required reliability', icon: '✅' },
-      { value: '-850 mV', label: 'Protection potential', icon: '⚡' }
+      { value: '4200000 km', label: 'US pipeline network total', icon: '📏' },
+      { value: '99%', label: 'Required reliability level', icon: '✅' },
+      { value: '850 mV', label: 'Protection potential target', icon: '⚡' }
     ],
     examples: ['Trans-Alaska Pipeline ICCP system', 'Natural gas distribution networks', 'Offshore platform protection', 'Water transmission mains'],
     companies: ['MATCOR Inc.', 'Corrpro Companies', 'Aegion Corporation', 'Cathodic Technology'],
@@ -232,9 +232,9 @@ const realWorldApps = [
     connection: 'Our galvanic corrosion experiment demonstrates the exact failure mechanism that aerospace engineers fight constantly. When aluminum skin contacts steel fasteners in condensation, galvanic corrosion begins immediately.',
     howItWorks: 'Aerospace engineers use a multi-barrier approach: anodizing creates an aluminum oxide layer, chromate conversion coatings provide backup, and sealants exclude moisture. Titanium fasteners are used near carbon fiber because titanium is more compatible.',
     stats: [
-      { value: '$2.2B', label: 'Annual maintenance', icon: '🔧' },
-      { value: '30+ yrs', label: 'Aircraft service life', icon: '✈️' },
-      { value: '5000+', label: 'Fasteners per wing', icon: '🔩' }
+      { value: '$2 billion', label: 'Annual maintenance cost globally', icon: '🔧' },
+      { value: '30 yrs', label: 'Aircraft service life target', icon: '✈️' },
+      { value: '5000 kg', label: 'Fasteners per wing section', icon: '🔩' }
     ],
     examples: ['Boeing 787 titanium fasteners with CFRP', 'Airbus A380 cadmium-plated fasteners', 'F-35 multi-material airframe', 'Helicopter rotor hub protection'],
     companies: ['Boeing', 'Airbus', 'Lockheed Martin', 'PPG Aerospace'],
@@ -348,8 +348,8 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#D1D5DB',
+    textMuted: '#9CA3AF',
     border: '#2a2a3a',
     anode: '#ef4444',
     cathode: '#3b82f6',
@@ -374,7 +374,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Area Ratio',
+    twist_play: 'Explore Ratio',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -404,6 +404,20 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
       goToPhase(phaseOrder[currentIndex + 1]);
     }
   }, [phase, goToPhase, phaseOrder]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Calculate voltage for display
+  const getVoltage = useCallback(() => {
+    const anodePotential = metalPotentials[anodeMetal];
+    const cathodePotential = metalPotentials[cathodeMetal];
+    return cathodePotential - anodePotential;
+  }, [anodeMetal, cathodeMetal]);
 
   // Progress bar component
   const renderProgressBar = () => (
@@ -452,6 +466,57 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
     </div>
   );
 
+  // Bottom navigation bar with Back and Next
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isTestActive = phase === 'test' && !testSubmitted;
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 24px',
+        borderTop: `1px solid ${colors.border}`,
+        background: colors.bgPrimary,
+      }}>
+        <button
+          onClick={prevPhase}
+          disabled={currentIndex === 0}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: currentIndex === 0 ? colors.border : colors.textSecondary,
+            cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          ← Back
+        </button>
+        {renderNavDots()}
+        <button
+          onClick={nextPhase}
+          disabled={currentIndex === phaseOrder.length - 1 || isTestActive}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: 'none',
+            background: (currentIndex === phaseOrder.length - 1 || isTestActive) ? colors.border : colors.accent,
+            color: 'white',
+            cursor: (currentIndex === phaseOrder.length - 1 || isTestActive) ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: (currentIndex === phaseOrder.length - 1 || isTestActive) ? 0.4 : 1,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #dc2626)`,
@@ -466,16 +531,39 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
     transition: 'all 0.2s ease',
   };
 
-  // Galvanic Cell Visualization
-  const GalvanicVisualization = () => {
+  // Galvanic Cell Visualization - used in play, predict, twist phases
+  const renderGalvanicCellSVG = (showMarker?: boolean, markerValue?: number) => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 280 : 340;
     const anodeX = width * 0.25;
     const cathodeX = width * 0.75;
     const electrodeY = height * 0.55;
     const electrodeHeight = height * 0.35;
-    const anodeWidth = phase === 'twist_play' ? width * 0.08 * (areaRatio / 50) : width * 0.1;
-    const cathodeWidth = phase === 'twist_play' ? width * 0.08 * ((100 - areaRatio) / 50) : width * 0.1;
+    const aw = phase === 'twist_play' ? width * 0.08 * (areaRatio / 50) : width * 0.1;
+    const cw = phase === 'twist_play' ? width * 0.08 * ((100 - areaRatio) / 50) : width * 0.1;
+
+    // Corrosion rate curve path (voltage vs electrolyte for current metals)
+    const curvePoints: string[] = [];
+    const plotX0 = width * 0.1;
+    const plotW = width * 0.8;
+    const plotY0 = height * 0.35;
+    const plotH = height * 0.5;
+    const voltage = getVoltage();
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      const eStr = t * 100;
+      const rate = voltage * (eStr / 100) * 0.5;
+      const px = plotX0 + t * plotW;
+      const py = plotY0 + plotH - (rate / 1.2) * plotH;
+      curvePoints.push(`${i === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)}`);
+    }
+    const curvePath = curvePoints.join(' ');
+
+    // Interactive marker position
+    const markerT = (markerValue ?? electrolyteStrength) / 100;
+    const markerPx = plotX0 + markerT * plotW;
+    const markerRate = voltage * markerT * 0.5;
+    const markerPy = plotY0 + plotH - (markerRate / 1.2) * plotH;
 
     return (
       <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxWidth: width, background: colors.bgCard, borderRadius: '12px' }}>
@@ -483,6 +571,10 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
           <linearGradient id="electrolyteGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor={colors.electrolyte} stopOpacity="0.1" />
             <stop offset="100%" stopColor={colors.electrolyte} stopOpacity="0.3" />
+          </linearGradient>
+          <linearGradient id="curveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.success} />
+            <stop offset="100%" stopColor={colors.error} />
           </linearGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="2" result="blur" />
@@ -493,127 +585,182 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
           </filter>
         </defs>
 
+        {/* Grid lines for reference */}
+        <g>
+          <line x1={plotX0} y1={plotY0} x2={plotX0 + plotW} y2={plotY0} stroke={colors.border} strokeDasharray="4 4" opacity="0.5" />
+          <line x1={plotX0} y1={plotY0 + plotH * 0.25} x2={plotX0 + plotW} y2={plotY0 + plotH * 0.25} stroke={colors.border} strokeDasharray="4 4" opacity="0.4" />
+          <line x1={plotX0} y1={plotY0 + plotH * 0.5} x2={plotX0 + plotW} y2={plotY0 + plotH * 0.5} stroke={colors.border} strokeDasharray="4 4" opacity="0.4" />
+          <line x1={plotX0} y1={plotY0 + plotH * 0.75} x2={plotX0 + plotW} y2={plotY0 + plotH * 0.75} stroke={colors.border} strokeDasharray="4 4" opacity="0.4" />
+          <line x1={plotX0} y1={plotY0 + plotH} x2={plotX0 + plotW} y2={plotY0 + plotH} stroke={colors.border} strokeDasharray="4 4" opacity="0.5" />
+        </g>
+
         {/* Electrolyte container */}
-        <rect
-          x={width * 0.1}
-          y={height * 0.35}
-          width={width * 0.8}
-          height={height * 0.5}
-          fill="url(#electrolyteGrad)"
-          stroke={colors.electrolyte}
-          strokeWidth="2"
-          rx="8"
-        />
-        <text x={width / 2} y={height * 0.9} textAnchor="middle" fill={colors.electrolyte} fontSize="12">
-          Electrolyte ({electrolyteStrength}% salt)
-        </text>
+        <g>
+          <rect
+            x={width * 0.1}
+            y={height * 0.35}
+            width={width * 0.8}
+            height={height * 0.5}
+            fill="url(#electrolyteGrad)"
+            stroke={colors.electrolyte}
+            strokeWidth="2"
+            rx="8"
+          />
+          <text x={width / 2} y={height * 0.9} textAnchor="middle" fill={colors.electrolyte} fontSize="12">
+            Electrolyte ({electrolyteStrength}% concentration)
+          </text>
+        </g>
 
         {/* Anode (corroding metal) */}
-        <rect
-          x={anodeX - anodeWidth / 2}
-          y={electrodeY - electrodeHeight / 2 + (corrosionLevel / 200) * electrodeHeight}
-          width={anodeWidth}
-          height={electrodeHeight * (1 - corrosionLevel / 100)}
-          fill={colors.anode}
-          stroke={colors.error}
-          strokeWidth="2"
-          rx="4"
-          filter={isRunning ? "url(#glow)" : ""}
-        />
-        {/* Corrosion debris */}
-        {isRunning && corrosionLevel > 10 && (
-          <>
-            <circle cx={anodeX + 15} cy={electrodeY + 20} r="3" fill={colors.anode} opacity="0.6" />
-            <circle cx={anodeX - 12} cy={electrodeY + 35} r="2" fill={colors.anode} opacity="0.5" />
-            <circle cx={anodeX + 8} cy={electrodeY + 45} r="2.5" fill={colors.anode} opacity="0.4" />
-          </>
-        )}
-        <text x={anodeX} y={height * 0.18} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
-          Anode
-        </text>
-        <text x={anodeX} y={height * 0.24} textAnchor="middle" fill={colors.anode} fontSize="11">
-          {anodeMetal.toUpperCase()}
-        </text>
-        <text x={anodeX} y={height * 0.29} textAnchor="middle" fill={colors.textMuted} fontSize="10">
-          (Corroding)
-        </text>
+        <g>
+          <rect
+            x={anodeX - aw / 2}
+            y={electrodeY - electrodeHeight / 2 + (corrosionLevel / 200) * electrodeHeight}
+            width={aw}
+            height={electrodeHeight * (1 - corrosionLevel / 100)}
+            fill={colors.anode}
+            stroke={colors.error}
+            strokeWidth="2"
+            rx="4"
+            filter={isRunning ? "url(#glow)" : ""}
+          />
+          {isRunning && corrosionLevel > 10 && (
+            <>
+              <circle cx={anodeX + 15} cy={electrodeY + 20} r="3" fill={colors.anode} opacity="0.6" />
+              <circle cx={anodeX - 12} cy={electrodeY + 35} r="2" fill={colors.anode} opacity="0.5" />
+              <circle cx={anodeX + 8} cy={electrodeY + 45} r="2.5" fill={colors.anode} opacity="0.4" />
+            </>
+          )}
+          <text x={anodeX} y={height * 0.18} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+            Anode
+          </text>
+          <text x={anodeX} y={height * 0.24} textAnchor="middle" fill={colors.anode} fontSize="11">
+            {anodeMetal.toUpperCase()}
+          </text>
+          <text x={anodeX} y={height * 0.29} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            (Corroding)
+          </text>
+        </g>
 
         {/* Cathode (protected metal) */}
-        <rect
-          x={cathodeX - cathodeWidth / 2}
-          y={electrodeY - electrodeHeight / 2}
-          width={cathodeWidth}
-          height={electrodeHeight}
-          fill={colors.cathode}
-          stroke={colors.secondary}
-          strokeWidth="2"
-          rx="4"
-        />
-        <text x={cathodeX} y={height * 0.18} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
-          Cathode
-        </text>
-        <text x={cathodeX} y={height * 0.24} textAnchor="middle" fill={colors.cathode} fontSize="11">
-          {cathodeMetal.toUpperCase()}
-        </text>
-        <text x={cathodeX} y={height * 0.29} textAnchor="middle" fill={colors.textMuted} fontSize="10">
-          (Protected)
-        </text>
+        <g>
+          <rect
+            x={cathodeX - cw / 2}
+            y={electrodeY - electrodeHeight / 2}
+            width={cw}
+            height={electrodeHeight}
+            fill={colors.cathode}
+            stroke={colors.secondary}
+            strokeWidth="2"
+            rx="4"
+          />
+          <text x={cathodeX} y={height * 0.18} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+            Cathode
+          </text>
+          <text x={cathodeX} y={height * 0.24} textAnchor="middle" fill={colors.cathode} fontSize="11">
+            {cathodeMetal.toUpperCase()}
+          </text>
+          <text x={cathodeX} y={height * 0.29} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            (Protected)
+          </text>
+        </g>
 
         {/* Wire connection */}
-        <path
-          d={`M ${anodeX} ${height * 0.32} L ${anodeX} ${height * 0.12} L ${cathodeX} ${height * 0.12} L ${cathodeX} ${height * 0.32}`}
-          fill="none"
-          stroke={colors.electrons}
-          strokeWidth="3"
-        />
+        <g>
+          <path
+            d={`M ${anodeX} ${height * 0.32} L ${anodeX} ${height * 0.12} L ${cathodeX} ${height * 0.12} L ${cathodeX} ${height * 0.32}`}
+            fill="none"
+            stroke={colors.electrons}
+            strokeWidth="3"
+          />
 
-        {/* Electron flow animation */}
-        {isRunning && (
-          <>
-            <circle cx={anodeX + (cathodeX - anodeX) * (electronFlow / 100)} cy={height * 0.12} r="5" fill={colors.electrons} filter="url(#glow)" />
-            <circle cx={anodeX + (cathodeX - anodeX) * ((electronFlow + 33) % 100 / 100)} cy={height * 0.12} r="5" fill={colors.electrons} filter="url(#glow)" />
-            <circle cx={anodeX + (cathodeX - anodeX) * ((electronFlow + 66) % 100 / 100)} cy={height * 0.12} r="5" fill={colors.electrons} filter="url(#glow)" />
-          </>
-        )}
+          {/* Electron flow animation */}
+          {isRunning && (
+            <>
+              <circle cx={anodeX + (cathodeX - anodeX) * (electronFlow / 100)} cy={height * 0.12} r="5" fill={colors.electrons} filter="url(#glow)" />
+              <circle cx={anodeX + (cathodeX - anodeX) * ((electronFlow + 33) % 100 / 100)} cy={height * 0.12} r="5" fill={colors.electrons} filter="url(#glow)" />
+              <circle cx={anodeX + (cathodeX - anodeX) * ((electronFlow + 66) % 100 / 100)} cy={height * 0.12} r="5" fill={colors.electrons} filter="url(#glow)" />
+            </>
+          )}
+        </g>
 
         {/* Ion flow in electrolyte */}
         {isRunning && (
-          <>
+          <g>
             <circle cx={cathodeX - (cathodeX - anodeX) * (electronFlow / 100)} cy={electrodeY} r="4" fill={colors.ions} opacity="0.8" />
             <circle cx={cathodeX - (cathodeX - anodeX) * ((electronFlow + 50) % 100 / 100)} cy={electrodeY + 20} r="4" fill={colors.ions} opacity="0.6" />
-          </>
+          </g>
+        )}
+
+        {/* Corrosion rate curve */}
+        <g>
+          <path d={curvePath} fill="none" stroke="url(#curveGrad)" strokeWidth="2.5" />
+        </g>
+
+        {/* Interactive marker */}
+        {showMarker && (
+          <circle cx={markerPx} cy={markerPy} r="7" fill={colors.warning} stroke="white" strokeWidth="2" />
         )}
 
         {/* Labels */}
-        <text x={width / 2} y={height * 0.08} textAnchor="middle" fill={colors.electrons} fontSize="11">
-          e- flow →
-        </text>
+        <g>
+          <text x={width / 2} y={height * 0.08} textAnchor="middle" fill={colors.electrons} fontSize="11">
+            e⁻ flow →
+          </text>
+        </g>
 
         {/* Voltage display */}
-        <rect x={width / 2 - 55} y={height * 0.38} width="110" height="36" rx="6" fill={colors.bgSecondary} stroke={colors.border} />
-        <text x={width / 2} y={height * 0.44} textAnchor="middle" fill={colors.warning} fontSize="16" fontWeight="bold">
-          {(getCorrosionRate() * 2).toFixed(2)} V
-        </text>
-        <text x={width / 2} y={height * 0.49} textAnchor="middle" fill={colors.textMuted} fontSize="9">
-          Cell Voltage
-        </text>
+        <g>
+          <rect x={width / 2 - 55} y={height * 0.38} width="110" height="36" rx="6" fill={colors.bgSecondary} stroke={colors.border} />
+          <text x={width / 2} y={height * 0.44} textAnchor="middle" fill={colors.warning} fontSize="16" fontWeight="bold">
+            {getVoltage().toFixed(2)} V
+          </text>
+          <text x={width / 2} y={height * 0.49} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            Cell Voltage
+          </text>
+        </g>
 
         {/* Corrosion meter */}
-        <rect x={width - 40} y={height * 0.35} width="20" height={height * 0.5} rx="4" fill={colors.bgSecondary} stroke={colors.border} />
-        <rect
-          x={width - 38}
-          y={height * 0.35 + height * 0.5 * (1 - corrosionLevel / 100)}
-          width="16"
-          height={height * 0.5 * (corrosionLevel / 100)}
-          rx="3"
-          fill={corrosionLevel > 70 ? colors.error : corrosionLevel > 40 ? colors.warning : colors.success}
-        />
-        <text x={width - 30} y={height * 0.92} textAnchor="middle" fill={colors.textMuted} fontSize="8">
-          {corrosionLevel.toFixed(0)}%
-        </text>
+        <g>
+          <rect x={width - 40} y={height * 0.35} width="20" height={height * 0.5} rx="4" fill={colors.bgSecondary} stroke={colors.border} />
+          <rect
+            x={width - 38}
+            y={height * 0.35 + height * 0.5 * (1 - corrosionLevel / 100)}
+            width="16"
+            height={height * 0.5 * (corrosionLevel / 100)}
+            rx="3"
+            fill={corrosionLevel > 70 ? colors.error : corrosionLevel > 40 ? colors.warning : colors.success}
+          />
+          <text x={width - 30} y={height * 0.92} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            {corrosionLevel.toFixed(0)}%
+          </text>
+        </g>
       </svg>
     );
   };
+
+  // Shared page wrapper with scroll support - implemented as a function, NOT a component,
+  // to avoid React reconciliation issues (inline components cause unmount/remount on every render)
+  const wrapPage = (children: React.ReactNode) => (
+    <div style={{
+      minHeight: '100vh',
+      background: colors.bgPrimary,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+    }}>
+      {renderProgressBar()}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+      }}>
+        {children}
+      </div>
+      {renderBottomNav()}
+    </div>
+  );
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
@@ -621,69 +768,64 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
-        {renderProgressBar()}
-
+    return wrapPage(
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          🔋⚡
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          The Hidden Battery in Your Car
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          What if every bolt, screw, and weld in your car was secretly generating electricity?
-          When different metals touch in the presence of moisture, they form tiny batteries
-          that slowly <span style={{ color: colors.accent }}>destroy themselves</span>.
-          This is galvanic corrosion - the same process that sank ships and costs the world trillions each year.
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          textAlign: 'center',
+          minHeight: '60vh',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Galvanic corrosion occurs when two dissimilar metals are electrically connected in an electrolyte. The more active metal becomes the anode and corrodes, while the noble metal is protected as the cathode."
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🔋⚡
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            The Hidden Battery in Your Car
+          </h1>
+
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            What if every bolt, screw, and weld in your car was secretly generating electricity?
+            When different metals touch in the presence of moisture, they form tiny batteries
+            that slowly <span style={{ color: colors.accent }}>destroy themselves</span>.
+            This is galvanic corrosion — the same process that sank ships and costs the world trillions each year.
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Corrosion Engineering
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              &quot;Galvanic corrosion occurs when two dissimilar metals are electrically connected in an electrolyte. The more active metal becomes the anode and corrodes, while the noble metal is protected as the cathode.&quot;
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              — Corrosion Engineering
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Discover Galvanic Corrosion →
+          </button>
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Discover Galvanic Corrosion →
-        </button>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
@@ -696,15 +838,8 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
       { id: 'd', text: 'Neither will corrode - saltwater prevents rust' },
     ];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return wrapPage(
+        <div style={{ maxWidth: '700px', margin: '20px auto 0', padding: '0 24px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -712,7 +847,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             marginBottom: '24px',
             border: `1px solid ${colors.accent}44`,
           }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
               Make Your Prediction
             </p>
           </div>
@@ -721,30 +856,14 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             A steel nail and a copper penny are placed in a glass of saltwater, touching each other. What happens over the next few days?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static galvanic cell diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '24px',
-            textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🔩</div>
-                <p style={{ ...typo.small, color: colors.accent }}>Steel Nail</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.electrolyte }}>+</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🪙</div>
-                <p style={{ ...typo.small, color: colors.cathode }}>Copper Penny</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.electrolyte }}>in</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🧂💧</div>
-                <p style={{ ...typo.small, color: colors.electrolyte }}>Saltwater</p>
-              </div>
-            </div>
+            {renderGalvanicCellSVG()}
           </div>
 
           {/* Options */}
@@ -760,7 +879,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <span style={{
@@ -793,28 +912,22 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             </button>
           )}
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
   // PLAY PHASE - Interactive Galvanic Cell Simulator
   if (phase === 'play') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+    return wrapPage(
+        <div style={{ maxWidth: '800px', margin: '20px auto 0', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Galvanic Corrosion Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Create a galvanic cell and observe how different metals corrode at different rates
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
+            Create a galvanic cell and observe how different metals corrode at different rates.
+            When you increase the electrolyte concentration, notice how the corrosion rate changes because the ionic conductivity increases.
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            The corrosion rate is calculated as: V = (E_cathode - E_anode) × concentration. This is important in engineering applications where dissimilar metals must be joined.
           </p>
 
           {/* Main visualization */}
@@ -825,7 +938,23 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GalvanicVisualization />
+              {renderGalvanicCellSVG(true, electrolyteStrength)}
+            </div>
+
+            {/* Comparison info row */}
+            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', marginBottom: '20px', gap: '12px' }}>
+              <div style={{ textAlign: 'center', flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '8px' }}>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Reference Voltage</div>
+                <div style={{ ...typo.h3, color: colors.warning }}>{getVoltage().toFixed(2)} V</div>
+              </div>
+              <div style={{ textAlign: 'center', flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '8px' }}>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Current Rate</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{(getVoltage() * electrolyteStrength / 100 * 0.5).toFixed(3)} V</div>
+              </div>
+              <div style={{ textAlign: 'center', flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '8px' }}>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Corrosion</div>
+                <div style={{ ...typo.h3, color: corrosionLevel > 70 ? colors.error : corrosionLevel > 40 ? colors.warning : colors.success }}>{corrosionLevel.toFixed(0)}%</div>
+              </div>
             </div>
 
             {/* Anode selector */}
@@ -848,6 +977,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                       color: colors.textPrimary,
                       cursor: 'pointer',
                       fontSize: '13px',
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     {metal.charAt(0).toUpperCase() + metal.slice(1)}
@@ -876,6 +1006,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                       color: colors.textPrimary,
                       cursor: 'pointer',
                       fontSize: '13px',
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     {metal.charAt(0).toUpperCase() + metal.slice(1)}
@@ -892,15 +1023,15 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
               </div>
               <input
                 type="range"
-                min="10"
-                max="100"
+                min={10}
+                max={100}
                 value={electrolyteStrength}
-                onChange={(e) => setElectrolyteStrength(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                onChange={(e) => setElectrolyteStrength(Number(e.target.value))}
+                style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.electrolyte, touchAction: 'pan-y' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Pure Water</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Seawater</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>10 (Min)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>100 (Max)</span>
               </div>
             </div>
 
@@ -916,6 +1047,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   color: 'white',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {isRunning ? 'Stop Reaction' : 'Start Reaction'}
@@ -929,6 +1061,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 Reset
@@ -959,23 +1092,13 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             Understand the Science →
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return wrapPage(
+        <div style={{ maxWidth: '700px', margin: '20px auto 0', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Galvanic Series
           </h2>
@@ -988,10 +1111,10 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
           }}>
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>What You Observed:</strong> When two dissimilar metals are connected in an electrolyte, the more <span style={{ color: colors.anode }}>active</span> metal loses electrons and corrodes, while the more <span style={{ color: colors.cathode }}>noble</span> metal is protected.
+                <strong style={{ color: colors.textPrimary }}>What You Observed:</strong> Because two dissimilar metals are connected in an electrolyte, the more <span style={{ color: colors.anode }}>active</span> metal loses electrons and corrodes, while the more <span style={{ color: colors.cathode }}>noble</span> metal is protected. This demonstrates the principle of galvanic corrosion.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Why It Happens:</strong> Each metal has a characteristic <span style={{ color: colors.warning }}>electrochemical potential</span>. The voltage difference between two metals drives electron flow from anode to cathode.
+                <strong style={{ color: colors.textPrimary }}>Why It Happens:</strong> Each metal has a characteristic <span style={{ color: colors.warning }}>electrochemical potential</span>. The voltage difference between two metals drives electron flow from anode to cathode. This is the key insight that explains galvanic corrosion.
               </p>
               <p>
                 <strong style={{ color: colors.textPrimary }}>The Galvanic Series:</strong> Metals ranked from most active (anodic) to most noble (cathodic):
@@ -1033,7 +1156,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   </div>
                 ))}
               </div>
-              <div style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+              <div style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center' }}>
                 Greater separation = Higher voltage = Faster corrosion
               </div>
             </div>
@@ -1063,9 +1186,6 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             Explore Area Ratio Effects →
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
@@ -1078,15 +1198,8 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
       { id: 'd', text: 'Area ratio does not affect corrosion rate' },
     ];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return wrapPage(
+        <div style={{ maxWidth: '700px', margin: '20px auto 0', padding: '0 24px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1094,7 +1207,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             marginBottom: '24px',
             border: `1px solid ${colors.warning}44`,
           }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
               New Variable: Area Ratio
             </p>
           </div>
@@ -1102,6 +1215,16 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             A small steel rivet holds a large copper sheet. Compare this to a large steel plate with a small copper fastener. Which arrangement causes faster steel corrosion?
           </h2>
+
+          {/* Static SVG for twist predict */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            {renderGalvanicCellSVG()}
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1115,6 +1238,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <span style={{
@@ -1147,23 +1271,13 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             </button>
           )}
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+    return wrapPage(
+        <div style={{ maxWidth: '800px', margin: '20px auto 0', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Area Ratio & Coating Effects
           </h2>
@@ -1178,7 +1292,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GalvanicVisualization />
+              {renderGalvanicCellSVG(true, areaRatio)}
             </div>
 
             {/* Area ratio slider */}
@@ -1192,12 +1306,12 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                 min="10"
                 max="90"
                 value={areaRatio}
-                onChange={(e) => { setAreaRatio(parseInt(e.target.value)); setCorrosionLevel(0); }}
-                style={{ width: '100%', cursor: 'pointer' }}
+                onChange={(e) => { setAreaRatio(Number(e.target.value)); setCorrosionLevel(0); }}
+                style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.warning, touchAction: 'pan-y' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.anode }}>Small Anode</span>
-                <span style={{ ...typo.small, color: colors.cathode }}>Large Cathode</span>
+                <span style={{ ...typo.small, color: colors.anode }}>10 (Min)</span>
+                <span style={{ ...typo.small, color: colors.cathode }}>90 (Max)</span>
               </div>
             </div>
 
@@ -1220,7 +1334,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   background: hasCoating ? colors.success : colors.border,
                   cursor: 'pointer',
                   position: 'relative',
-                  transition: 'background 0.3s',
+                  transition: 'background 0.3s ease',
                 }}
               >
                 <div style={{
@@ -1231,7 +1345,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   position: 'absolute',
                   top: '3px',
                   left: hasCoating ? '33px' : '3px',
-                  transition: 'left 0.3s',
+                  transition: 'left 0.3s ease',
                 }} />
               </button>
               <span style={{ ...typo.small, color: hasCoating ? colors.success : colors.textSecondary, fontWeight: hasCoating ? 600 : 400 }}>
@@ -1251,6 +1365,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   color: 'white',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {isRunning ? 'Stop' : 'Start'} Reaction
@@ -1264,6 +1379,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 Reset
@@ -1309,23 +1425,13 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             Understand Protection Strategies →
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return wrapPage(
+        <div style={{ maxWidth: '700px', margin: '20px auto 0', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Corrosion Protection Strategies
           </h2>
@@ -1399,9 +1505,6 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             See Real-World Applications →
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
@@ -1410,18 +1513,14 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+    return wrapPage(
+        <div style={{ maxWidth: '800px', margin: '20px auto 0', padding: '0 24px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1448,6 +1547,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {completedApps[i] && (
@@ -1486,7 +1586,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
               <span style={{ fontSize: '48px' }}>{app.icon}</span>
               <div>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>{app.tagline}</p>
               </div>
             </div>
 
@@ -1500,7 +1600,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
               padding: '16px',
               marginBottom: '16px',
             }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
                 Connection to Galvanic Corrosion:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
@@ -1514,7 +1614,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
               padding: '16px',
               marginBottom: '16px',
             }}>
-              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
                 How Protection Works:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
@@ -1536,8 +1636,8 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   textAlign: 'center',
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -1565,24 +1665,41 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
               <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
                 Future Impact:
               </h4>
-              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.futureImpact}
               </p>
             </div>
           </div>
 
+          {/* Got It / Continue button */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              if (selectedApp < realWorldApps.length - 1) {
+                setSelectedApp(selectedApp + 1);
+              }
+            }}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              marginBottom: '12px',
+            }}
+          >
+            Got It — Continue →
+          </button>
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
+              style={{ ...primaryButtonStyle, width: '100%', background: `linear-gradient(135deg, ${colors.success}, #059669)` }}
             >
               Take the Knowledge Test →
             </button>
           )}
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
@@ -1590,15 +1707,8 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
   if (phase === 'test') {
     if (testSubmitted) {
       const passed = testScore >= 7;
-      return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
-          {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+      return wrapPage(
+          <div style={{ maxWidth: '600px', margin: '20px auto 0', textAlign: 'center', padding: '0 24px' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1616,6 +1726,27 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                 ? 'You understand galvanic corrosion and protection strategies!'
                 : 'Review the concepts and try again.'}
             </p>
+
+            {/* Answer review indicators */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '24px' }}>
+              {testAnswers.map((ans, i) => {
+                const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                return (
+                  <div key={i} style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: ans === correct ? colors.success : colors.error,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '24px',
+                    fontWeight: 600,
+                  }}>
+                    {i + 1}
+                  </div>
+                );
+              })}
+            </div>
 
             {passed ? (
               <button
@@ -1638,23 +1769,27 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                 Review & Try Again
               </button>
             )}
+
+            <div style={{ marginTop: '16px' }}>
+              <a
+                href="/"
+                style={{
+                  color: colors.textSecondary,
+                  textDecoration: 'none',
+                  ...typo.small,
+                }}
+              >
+                Return to Dashboard
+              </a>
+            </div>
           </div>
-          {renderNavDots()}
-        </div>
       );
     }
 
     const question = testQuestions[currentQuestion];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return wrapPage(
+        <div style={{ maxWidth: '700px', margin: '20px auto 0', padding: '0 24px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1689,8 +1824,8 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             marginBottom: '16px',
             borderLeft: `3px solid ${colors.accent}`,
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Scenario:</strong> {question.scenario}
             </p>
           </div>
 
@@ -1717,6 +1852,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <span style={{
@@ -1754,6 +1890,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 ← Previous
@@ -1772,6 +1909,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease',
                 }}
               >
                 Next →
@@ -1797,6 +1935,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease',
                 }}
               >
                 Submit Test
@@ -1804,100 +1943,93 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             )}
           </div>
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
-        {renderProgressBar()}
-
+    return wrapPage(
         <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Galvanic Corrosion Master!
-        </h1>
-
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand the electrochemistry behind one of the most important engineering challenges in materials science.
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
+          textAlign: 'center',
+          minHeight: '60vh',
         }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'Galvanic series and electrochemical potentials',
-              'Three requirements for galvanic corrosion',
-              'Electron and ion flow in galvanic cells',
-              'Area ratio effects on corrosion rate',
-              'Sacrificial anode protection',
-              'Impressed current cathodic protection',
-              'Electrical isolation strategies',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
-              </div>
-            ))}
+          <div style={{
+            fontSize: '100px',
+            marginBottom: '24px',
+            animation: 'bounce 1s infinite',
+          }}>
+            🏆
+          </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Galvanic Corrosion Master!
+          </h1>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+            You now understand the electrochemistry behind one of the most important engineering challenges in materials science.
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              You Learned:
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+              {[
+                'Galvanic series and electrochemical potentials',
+                'Three requirements for galvanic corrosion',
+                'Electron and ion flow in galvanic cells',
+                'Area ratio effects on corrosion rate',
+                'Sacrificial anode protection',
+                'Impressed current cathodic protection',
+                'Electrical isolation strategies',
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: colors.success }}>✓</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Play Again
+            </button>
+            <a
+              href="/"
+              style={{
+                ...primaryButtonStyle,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Return to Dashboard
+            </a>
           </div>
         </div>
-
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 

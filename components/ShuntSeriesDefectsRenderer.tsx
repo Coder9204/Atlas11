@@ -1247,7 +1247,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
         padding: '12px 24px',
         background: colors.bgDark,
         borderTop: `1px solid rgba(255,255,255,0.1)`,
-        zIndex: 1000,
+        zIndex: 1001,
       }}>
         {renderProgressBar()}
         <div style={{
@@ -1261,6 +1261,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
             disabled={isFirst}
             style={{
               padding: '10px 24px',
+              minHeight: '44px',
               borderRadius: '8px',
               border: `1px solid ${isFirst ? 'transparent' : colors.accent}`,
               background: 'transparent',
@@ -1274,7 +1275,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
           >
             Back
           </button>
-          <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '12px' }}>
             {phaseLabels[phase]}
           </span>
           <button
@@ -1282,6 +1283,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
             disabled={isLast}
             style={{
               padding: '10px 24px',
+              minHeight: '44px',
               borderRadius: '8px',
               border: 'none',
               background: isLast ? colors.success : colors.accent,

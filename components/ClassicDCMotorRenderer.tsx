@@ -1104,6 +1104,69 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             fill={currentDirection === 'ccw' ? 'url(#dcmForceGradient)' : 'rgba(51,65,85,0.8)'}
           />
         </g>
+
+        {/* === SVG TEXT LABELS FOR COMPONENTS === */}
+        {/* North magnet label */}
+        <text
+          x={cx - (isMobile ? 109 : 186)}
+          y={cy - 75}
+          fill="#fca5a5"
+          fontSize={isMobile ? 11 : 14}
+          fontWeight="bold"
+          textAnchor="middle"
+        >
+          N
+        </text>
+
+        {/* South magnet label */}
+        <text
+          x={cx + (isMobile ? 109 : 186)}
+          y={cy - 75}
+          fill="#93c5fd"
+          fontSize={isMobile ? 11 : 14}
+          fontWeight="bold"
+          textAnchor="middle"
+        >
+          S
+        </text>
+
+        {/* Coil/Armature label */}
+        <text
+          x={cx}
+          y={cy - (isMobile ? 55 : 75)}
+          fill="#fbbf24"
+          fontSize={isMobile ? 10 : 12}
+          fontWeight="600"
+          textAnchor="middle"
+        >
+          Armature Coil
+        </text>
+
+        {/* Commutator label */}
+        {showCommutator && (
+          <text
+            x={cx}
+            y={cy + (isMobile ? 70 : 95)}
+            fill="#d97706"
+            fontSize={isMobile ? 10 : 12}
+            fontWeight="600"
+            textAnchor="middle"
+          >
+            Commutator
+          </text>
+        )}
+
+        {/* Magnetic field label */}
+        <text
+          x={cx}
+          y={isMobile ? 18 : 22}
+          fill="#a855f7"
+          fontSize={isMobile ? 9 : 11}
+          fontWeight="500"
+          textAnchor="middle"
+        >
+          Magnetic Field Lines
+        </text>
       </svg>
 
       {/* Labels moved outside SVG using typo system */}
@@ -1177,6 +1240,71 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   // RENDER FUNCTIONS (Phases)
   // ============================================================
 
+  // Top navigation bar with fixed position
+  const renderTopNavBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '12px 20px',
+      borderBottom: `1px solid ${colors.border}`,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+      backgroundColor: colors.bgCard,
+      minHeight: '56px'
+    }}>
+      <button
+        onClick={() => {
+          const idx = validPhases.indexOf(phase);
+          if (idx > 0) goToPhase(validPhases[idx - 1]);
+        }}
+        style={{
+          padding: '10px 20px',
+          borderRadius: '8px',
+          fontWeight: 600,
+          fontSize: '14px',
+          backgroundColor: colors.bgCardLight,
+          color: colors.textSecondary,
+          border: 'none',
+          cursor: 'pointer',
+          minHeight: '44px',
+          minWidth: '80px',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        Back
+      </button>
+      <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 500 }}>
+        {phase.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+      </span>
+      <button
+        onClick={() => {
+          const idx = validPhases.indexOf(phase);
+          if (idx < validPhases.length - 1) goToPhase(validPhases[idx + 1]);
+        }}
+        style={{
+          padding: '10px 20px',
+          borderRadius: '8px',
+          fontWeight: 600,
+          fontSize: '14px',
+          background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+          color: 'white',
+          border: 'none',
+          cursor: 'pointer',
+          minHeight: '44px',
+          minWidth: '80px',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        Next
+      </button>
+    </div>
+  );
+
   // CRITICAL: Bottom bar MUST use position: fixed to ALWAYS be visible
   const renderBottomBar = (showBack: boolean, showNext: boolean, nextLabel: string, nextAction?: () => void, nextColor?: string) => (
     <div style={{
@@ -1196,7 +1324,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     }}>
       {showBack ? (
         <button
-          onPointerDown={() => {
+          onClick={() => {
             const idx = validPhases.indexOf(phase);
             if (idx > 0) goToPhase(validPhases[idx - 1]);
           }}
@@ -1209,16 +1337,17 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             color: colors.textSecondary,
             border: 'none',
             cursor: 'pointer',
-            minHeight: '48px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
-          ← Back
+          Back
         </button>
       ) : <div />}
 
       {showNext ? (
         <button
-          onPointerDown={nextAction || (() => {
+          onClick={nextAction || (() => {
             const idx = validPhases.indexOf(phase);
             if (idx < validPhases.length - 1) goToPhase(validPhases[idx + 1]);
           })}
@@ -1231,8 +1360,9 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             color: 'white',
             border: 'none',
             cursor: 'pointer',
+            transition: 'all 0.2s ease',
             boxShadow: `0 4px 20px ${(nextColor || colors.primary)}40`,
-            minHeight: '52px',
+            minHeight: '44px',
             minWidth: '160px'
           }}
         >
@@ -1241,7 +1371,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
       ) : (
         <div style={{
           padding: '16px 32px',
-          color: colors.textMuted,
+          color: '#e2e8f0',
           fontSize: '14px',
           fontStyle: 'italic'
         }}>
@@ -1256,24 +1386,27 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     return (
       <div style={{
         height: '100dvh',
+        minHeight: '600px',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderTopNavBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          paddingTop: '70px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
             <div style={{ fontSize: '72px', marginBottom: '24px' }}>⚙️🔄⚡</div>
             <h1 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
               How Does a Motor Keep Spinning?
             </h1>
-            <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
+            <p style={{ fontSize: isMobile ? '16px' : '20px', color: '#e2e8f0', marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
               If a magnetic force pushes a coil one way, why doesn't it push it back the other way a moment later?
               <br /><br />
               Discover the ingenious trick that makes motors work.
@@ -1290,13 +1423,13 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               <p style={{ color: '#e2e8f0', fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
                 "The commutator is the heart of the DC motor - it's what transforms oscillation into continuous rotation."
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '13px' }}>
                 — Electric Motor Design Principle
               </p>
             </div>
 
             <button
-              onPointerDown={() => goToPhase('predict')}
+              onClick={() => goToPhase('predict')}
               style={{
                 padding: '18px 48px',
                 fontSize: '18px',
@@ -1306,11 +1439,16 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 border: 'none',
                 borderRadius: '14px',
                 cursor: 'pointer',
-                boxShadow: `0 8px 32px ${colors.primary}50`
+                boxShadow: `0 8px 32px ${colors.primary}50`,
+                minHeight: '44px',
+                transition: 'all 0.2s ease'
               }}
             >
-              Discover the Secret →
+              Discover the Secret
             </button>
+            <p style={{ color: '#64748b', fontSize: '12px', marginTop: '16px' }}>
+              Estimated time: 5-10 minutes
+            </p>
           </div>
         </div>
       </div>
@@ -1329,27 +1467,45 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     return (
       <div style={{
         height: '100dvh',
+        minHeight: '600px',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderTopNavBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          paddingTop: '70px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+            {/* Progress indicator */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: i === 1 ? colors.primary : colors.bgCardLight,
+                  border: `2px solid ${i === 1 ? colors.primary : colors.border}`
+                }} />
+              ))}
+            </div>
+            <p style={{ color: '#e2e8f0', fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+              Step 1 of 4 - Make your prediction
+            </p>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-                Step 1 • Make a Prediction
+                Step 1 - Make a Prediction
               </p>
               <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
                 What keeps the coil spinning?
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
                 In a simple motor with a coil between two magnets, what keeps the coil spinning in the same direction?
               </p>
             </div>
@@ -1369,7 +1525,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               <p style={{ fontSize: '14px', fontWeight: 700, color: colors.primary, marginBottom: '12px' }}>
                 What You're Looking At:
               </p>
-              <ul style={{ margin: 0, paddingLeft: '18px', color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+              <ul style={{ margin: 0, paddingLeft: '18px', color: '#e2e8f0', fontSize: '14px', lineHeight: 1.7 }}>
                 <li style={{ marginBottom: '6px' }}>A <strong style={{ color: colors.copper }}>copper coil</strong> (armature) sits between two permanent magnets</li>
                 <li style={{ marginBottom: '6px' }}>The <strong style={{ color: colors.magnetNorth }}>red magnet (N)</strong> and <strong style={{ color: colors.magnetSouth }}>blue magnet (S)</strong> create a magnetic field</li>
                 <li style={{ marginBottom: '6px' }}>A <strong style={{ color: colors.commutator }}>commutator</strong> at the bottom connects the coil to the power supply</li>
@@ -1388,7 +1544,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               {predictions.map(p => (
                 <button
                   key={p.id}
-                  onPointerDown={() => {
+                  onClick={() => {
                     setPrediction(p.id);
                     playSound('click');
                   }}
@@ -1399,7 +1555,8 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                     backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s ease',
+                    minHeight: '44px'
                   }}
                 >
                   <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
@@ -1417,7 +1574,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 border: `1px solid ${colors.border}`,
                 marginBottom: '24px'
               }}>
-                <label style={{ display: 'block', color: colors.textSecondary, fontSize: '14px', fontWeight: 600, marginBottom: '10px' }}>
+                <label style={{ display: 'block', color: '#e2e8f0', fontSize: '14px', fontWeight: 600, marginBottom: '10px' }}>
                   Why do you think so? (optional)
                 </label>
                 <textarea
@@ -1440,7 +1597,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
           </div>
         </div>
 
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1450,26 +1607,49 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     return (
       <div style={{
         height: '100dvh',
+        minHeight: '600px',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderTopNavBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          paddingTop: '70px'
         }}>
           <div style={{ padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-                Step 2 • Run the Experiment
+                Step 2 - Run the Experiment
               </p>
               <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
                 Build Your DC Motor
               </h2>
+            </div>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.success}15 0%, ${colors.primary}15 100%)`,
+              border: `1px solid ${colors.success}30`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              maxWidth: '600px',
+              margin: '0 auto 20px'
+            }}>
+              <p style={{ color: colors.success, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                Observe what happens:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '18px', color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
+                <li>Watch the coil rotate and notice the torque changes</li>
+                <li>See how the commutator reverses current at dead zones</li>
+                <li>Try different voltage levels to see speed changes</li>
+              </ul>
             </div>
 
             {renderMotorVisualization()}
@@ -1478,7 +1658,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>Voltage (Speed)</span>
+                  <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 600 }}>Voltage (Speed)</span>
                   <span style={{ color: colors.primary, fontSize: '14px', fontWeight: 700 }}>{voltage}%</span>
                 </div>
                 <input
@@ -1487,13 +1667,13 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                   max="100"
                   value={voltage}
                   onChange={(e) => setVoltage(Number(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.primary }}
+                  style={{ width: '100%', accentColor: colors.primary, minHeight: '44px' }}
                 />
               </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
-                  onPointerDown={() => {
+                  onClick={() => {
                     setIsRunning(!isRunning);
                     playSound(isRunning ? 'click' : 'success');
                     emitGameEvent(isRunning ? 'motor_stopped' : 'motor_started', { voltage, magnetCount });
@@ -1507,26 +1687,30 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                     backgroundColor: isRunning ? colors.error : colors.success,
                     color: 'white',
                     border: 'none',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  {isRunning ? '⏹ STOP' : '▶ START'}
+                  {isRunning ? 'STOP' : 'START'}
                 </button>
 
                 <button
-                  onPointerDown={() => setShowCommutator(!showCommutator)}
+                  onClick={() => setShowCommutator(!showCommutator)}
                   style={{
                     padding: '16px',
                     borderRadius: '12px',
                     fontWeight: 600,
                     fontSize: '14px',
                     backgroundColor: showCommutator ? colors.warning : colors.bgCardLight,
-                    color: showCommutator ? 'white' : colors.textSecondary,
+                    color: showCommutator ? 'white' : '#e2e8f0',
                     border: 'none',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  {showCommutator ? '👁 Hide' : '👁 Show'}
+                  {showCommutator ? 'Hide' : 'Show'}
                 </button>
               </div>
             </div>
@@ -1534,14 +1718,34 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             {isRunning && (
               <div style={{ textAlign: 'center', marginTop: '24px' }}>
                 <p style={{ color: colors.success, fontSize: '16px', fontWeight: 600 }}>
-                  Watch the torque graph! The commutator reverses current at the dead zones (0° and 180°).
+                  Watch the torque graph! The commutator reverses current at the dead zones (0 and 180 degrees).
                 </p>
               </div>
             )}
+
+            {/* Real-world relevance */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`,
+              border: `1px solid ${colors.primary}30`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginTop: '24px',
+              maxWidth: '600px',
+              margin: '24px auto 0'
+            }}>
+              <p style={{ color: colors.primary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                Real-World Connection:
+              </p>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
+                This same commutation principle powers billions of devices worldwide - from cordless power tools
+                and car starter motors to electric vehicle components and robotic actuators. Understanding how
+                DC motors work helps engineers design more efficient, powerful, and reliable machines.
+              </p>
+            </div>
           </div>
         </div>
 
-        {renderBottomBar(true, isRunning, 'Understand Commutation →', () => goToPhase('review'), colors.success)}
+        {renderBottomBar(true, isRunning, 'Understand Commutation', () => goToPhase('review'), colors.success)}
       </div>
     );
   }
@@ -1551,32 +1755,62 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     return (
       <div style={{
         height: '100dvh',
+        minHeight: '600px',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderTopNavBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          paddingTop: '70px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-                Step 3 • Understanding
+                Step 3 - Understanding
               </p>
               <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
                 The Magic of Commutation
               </h2>
             </div>
 
+            {/* Reference to user's prediction */}
+            {prediction && (
+              <div style={{
+                background: `linear-gradient(135deg, ${colors.accent}15 0%, ${colors.primary}15 100%)`,
+                border: `1px solid ${colors.accent}30`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px'
+              }}>
+                <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                  Your Prediction:
+                </p>
+                <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+                  You predicted: "{prediction === 'momentum' ? 'Just momentum - it keeps spinning after a push' :
+                    prediction === 'commutator' ? 'A commutator flips current direction at the right time' :
+                    prediction === 'magnet' ? 'The magnets rotate with the coil' :
+                    'The electricity naturally reverses (like AC)'}"
+                  {prediction === 'commutator' && <span style={{ color: colors.success, marginLeft: '8px' }}>Correct!</span>}
+                </p>
+              </div>
+            )}
+
+            {/* Visual diagram for review */}
+            <div style={{ marginBottom: '24px' }}>
+              {renderMotorVisualization()}
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
                 <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>What's Happening</h3>
-                <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                <p style={{ color: '#e2e8f0', lineHeight: 1.7 }}>
                   As the coil rotates, the torque from the magnetic force follows a sine wave - positive half the
                   time, negative half the time. Without commutation, the coil would just <strong style={{ color: colors.textPrimary }}>oscillate back and forth!</strong>
                 </p>
@@ -1584,7 +1818,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
               <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.success}` }}>
                 <h3 style={{ color: colors.success, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Commutator's Job</h3>
-                <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                <p style={{ color: '#e2e8f0', lineHeight: 1.7 }}>
                   The commutator is a mechanical switch that <strong style={{ color: colors.textPrimary }}>reverses the current direction</strong> exactly
                   when torque would become negative. This keeps the torque always positive, creating continuous rotation.
                 </p>
@@ -1592,8 +1826,8 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
               <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.warning}` }}>
                 <h3 style={{ color: colors.warning, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Dead Zones</h3>
-                <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-                  At 0° and 180°, torque is zero (sin(0) = 0). This is why simple motors sometimes stall - if they
+                <p style={{ color: '#e2e8f0', lineHeight: 1.7 }}>
+                  At 0 and 180 degrees, torque is zero (sin(0) = 0). This is why simple motors sometimes stall - if they
                   stop at a dead zone, they can't restart. The coil's <strong style={{ color: colors.textPrimary }}>momentum</strong> carries it through.
                 </p>
               </div>
@@ -1602,7 +1836,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 <h3 style={{ color: colors.error, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Torque Equation</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
                   <div style={{ fontSize: '28px', fontFamily: 'monospace', color: colors.textPrimary, fontWeight: 700 }}>
-                    τ = nBIA sin(θ)
+                    tau = nBIA sin(theta)
                   </div>
                   <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
                     <div>n = number of coil turns</div>
@@ -1615,7 +1849,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
           </div>
         </div>
 
-        {renderBottomBar(true, true, 'Try a Twist →', () => goToPhase('twist_predict'), colors.accent)}
+        {renderBottomBar(true, true, 'Try a Twist', () => goToPhase('twist_predict'), colors.accent)}
       </div>
     );
   }
@@ -1632,27 +1866,45 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     return (
       <div style={{
         height: '100dvh',
+        minHeight: '600px',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderTopNavBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          paddingTop: '70px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+            {/* Progress indicator */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: i <= 2 ? colors.success : i === 3 ? colors.warning : colors.bgCardLight,
+                  border: `2px solid ${i <= 2 ? colors.success : i === 3 ? colors.warning : colors.border}`
+                }} />
+              ))}
+            </div>
+            <p style={{ color: '#e2e8f0', fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+              Step 3 of 4 - New prediction
+            </p>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-                Step 4 • New Variable
+                Step 4 - New Variable
               </p>
               <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
                 Add a Second Magnet!
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '16px' }}>
                 What do you think will happen if you add a second magnet to make the field stronger?
               </p>
             </div>
@@ -1672,7 +1924,8 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                     backgroundColor: twistPrediction === p.id ? `${colors.warning}20` : colors.bgCard,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    minHeight: '44px'
                   }}
                 >
                   <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
@@ -1683,7 +1936,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
           </div>
         </div>
 
-        {renderBottomBar(true, !!twistPrediction, 'Test It →', () => goToPhase('twist_play'), colors.warning)}
+        {renderBottomBar(true, !!twistPrediction, 'Test It', () => goToPhase('twist_play'), colors.warning)}
       </div>
     );
   }
@@ -1693,26 +1946,49 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     return (
       <div style={{
         height: '100dvh',
+        minHeight: '600px',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderTopNavBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          paddingTop: '70px'
         }}>
           <div style={{ padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-                Step 5 • Experiment
+                Step 5 - Experiment
               </p>
               <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
                 Test with Extra Magnets
               </h2>
+            </div>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.warning}15 0%, ${colors.primary}15 100%)`,
+              border: `1px solid ${colors.warning}30`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              maxWidth: '600px',
+              margin: '0 auto 20px'
+            }}>
+              <p style={{ color: colors.warning, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                Observe what happens:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '18px', color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
+                <li>Compare torque with 1 vs 2 magnets</li>
+                <li>Notice how starting behavior changes</li>
+                <li>Watch the force arrow strength</li>
+              </ul>
             </div>
 
             {renderMotorVisualization()}
@@ -1720,7 +1996,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             {/* Controls */}
             <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
+                <p style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
                   Number of Magnets
                 </p>
                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -1736,9 +2012,10 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                       borderRadius: '10px',
                       fontWeight: 700,
                       backgroundColor: magnetCount === 1 ? colors.primary : colors.bgCardLight,
-                      color: magnetCount === 1 ? 'white' : colors.textSecondary,
+                      color: magnetCount === 1 ? 'white' : '#e2e8f0',
                       border: 'none',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      minHeight: '44px'
                     }}
                   >
                     1 Magnet
@@ -1755,9 +2032,10 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                       borderRadius: '10px',
                       fontWeight: 700,
                       backgroundColor: magnetCount === 2 ? colors.primary : colors.bgCardLight,
-                      color: magnetCount === 2 ? 'white' : colors.textSecondary,
+                      color: magnetCount === 2 ? 'white' : '#e2e8f0',
                       border: 'none',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      minHeight: '44px'
                     }}
                   >
                     2 Magnets
@@ -1778,10 +2056,11 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                   backgroundColor: isRunning ? colors.error : colors.success,
                   color: 'white',
                   border: 'none',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '44px'
                 }}
               >
-                {isRunning ? '⏹ STOP' : '▶ START'}
+                {isRunning ? 'STOP' : 'START'}
               </button>
             </div>
 
@@ -1795,7 +2074,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
           </div>
         </div>
 
-        {renderBottomBar(true, isRunning, 'See the Explanation →', () => goToPhase('twist_review'), colors.warning)}
+        {renderBottomBar(true, isRunning, 'See the Explanation', () => goToPhase('twist_review'), colors.warning)}
       </div>
     );
   }
@@ -1805,38 +2084,46 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     return (
       <div style={{
         height: '100dvh',
+        minHeight: '600px',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderTopNavBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          paddingTop: '70px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-                Step 6 • Deep Insight
+                Step 6 - Deep Insight
               </p>
               <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
                 Stronger Magnets = More Torque
               </h2>
             </div>
 
+            {/* Visual diagram for twist review */}
+            <div style={{ marginBottom: '24px' }}>
+              {renderMotorVisualization()}
+            </div>
+
             <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.accent}`, marginBottom: '24px' }}>
               <h3 style={{ color: colors.accent, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Why It Works</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '16px' }}>
-                The torque equation <strong style={{ color: colors.textPrimary }}>τ = nBIA sin(θ)</strong> shows that torque is directly proportional
+              <p style={{ color: '#e2e8f0', lineHeight: 1.7, marginBottom: '16px' }}>
+                The torque equation <strong style={{ color: colors.textPrimary }}>tau = nBIA sin(theta)</strong> shows that torque is directly proportional
                 to magnetic field strength (B). Double the field, double the torque!
               </p>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+              <p style={{ color: '#e2e8f0', lineHeight: 1.7 }}>
                 With more torque, the motor can:
               </p>
-              <ul style={{ color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
+              <ul style={{ color: '#9ca3af', marginTop: '12px', paddingLeft: '20px' }}>
                 <li style={{ marginBottom: '8px' }}>Start more easily from dead zones</li>
                 <li style={{ marginBottom: '8px' }}>Overcome more mechanical resistance</li>
                 <li>Accelerate faster to higher speeds</li>
@@ -1845,7 +2132,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
             <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
               <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Real-World Application</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+              <p style={{ color: '#e2e8f0', lineHeight: 1.7 }}>
                 This is why powerful motors use strong permanent magnets or electromagnets. <strong style={{ color: colors.textPrimary }}>Neodymium magnets</strong> revolutionized
                 motor design by providing very strong fields in small packages - enabling everything from
                 electric cars to micro-drones.
@@ -1854,7 +2141,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
           </div>
         </div>
 
-        {renderBottomBar(true, true, 'Real World Applications →', () => goToPhase('transfer'), colors.success)}
+        {renderBottomBar(true, true, 'Real World Applications', () => goToPhase('transfer'), colors.success)}
       </div>
     );
   }
@@ -1925,7 +2212,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               return (
                 <button
                   key={i}
-                  onPointerDown={() => {
+                  onClick={() => {
                     if (!isLocked) setSelectedApp(i);
                   }}
                   disabled={isLocked}
@@ -1942,7 +2229,8 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                     whiteSpace: 'nowrap',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '6px',
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   <span>{app.icon}</span>
@@ -2052,7 +2340,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
           gap: '12px'
         }}>
           <button
-            onPointerDown={() => goToPhase('twist_review')}
+            onClick={() => goToPhase('twist_review')}
             style={{
               padding: '12px 20px',
               borderRadius: '10px',
@@ -2061,7 +2349,8 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               backgroundColor: colors.bgCardLight,
               color: colors.textSecondary,
               border: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
             }}
           >
             ← Back
@@ -2069,7 +2358,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
           {!isCurrentCompleted ? (
             <button
-              onPointerDown={handleCompleteApp}
+              onClick={handleCompleteApp}
               style={{
                 flex: 1,
                 maxWidth: '300px',
@@ -2082,14 +2371,15 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 color: 'white',
                 border: 'none',
                 cursor: 'pointer',
-                boxShadow: `0 4px 20px ${currentApp.color}40`
+                boxShadow: `0 4px 20px ${currentApp.color}40`,
+                transition: 'all 0.2s ease'
               }}
             >
-              Got It! Continue →
+              Got It
             </button>
           ) : allCompleted ? (
             <button
-              onPointerDown={() => goToPhase('test')}
+              onClick={() => goToPhase('test')}
               style={{
                 flex: 1,
                 maxWidth: '300px',
@@ -2102,15 +2392,35 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 color: 'white',
                 border: 'none',
                 cursor: 'pointer',
-                boxShadow: `0 4px 20px ${colors.success}40`
+                boxShadow: `0 4px 20px ${colors.success}40`,
+                transition: 'all 0.2s ease'
               }}
             >
-              Take the Knowledge Test →
+              Take the Test
             </button>
           ) : (
-            <div style={{ flex: 1, maxWidth: '300px', textAlign: 'center' }}>
-              <span style={{ color: colors.success, fontWeight: 600 }}>✓ {currentApp.title} completed!</span>
-            </div>
+            <button
+              onClick={() => {
+                if (selectedApp < 3) setSelectedApp(selectedApp + 1);
+              }}
+              style={{
+                flex: 1,
+                maxWidth: '300px',
+                padding: '14px 24px',
+                borderRadius: '10px',
+                fontWeight: 700,
+                fontSize: '16px',
+                minHeight: '52px',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: `0 4px 20px ${colors.primary}40`,
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Next Application →
+            </button>
           )}
         </div>
       </div>
@@ -2267,7 +2577,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               return (
                 <button
                   key={opt.id}
-                  onPointerDown={() => {
+                  onClick={() => {
                     if (!isAnswered) {
                       const newAnswers = [...testAnswers];
                       newAnswers[testQuestion] = opt.id;

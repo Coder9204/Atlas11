@@ -21,7 +21,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Limit Lab',
+  twist_play: 'Twist Explore',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -912,8 +912,8 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             ))}
 
             {/* Lightning bolt icon */}
-            <path
-              d="M15 -8 L12 0 L17 0 L13 10 L18 0 L13 0 Z"
+            <polygon
+              points="15,-8 12,0 17,0 13,10 18,0 13,0"
               fill={limitingFactor === 'power' ? '#a855f7' : '#f59e0b'}
               transform="translate(0, -5)"
             />
@@ -989,9 +989,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
               {limitingFactor === 'none' ? (
                 <circle cx="0" cy="0" r="8" fill={colors.success} />
               ) : limitingFactor === 'power' ? (
-                <path d="M0 -8 L-5 2 L-1 2 L-1 8 L5 -2 L1 -2 L1 -8 Z" fill={colors.voltage} />
+                <polygon points="0,-8 -5,2 -1,2 -1,8 5,-2 1,-2 1,-8" fill={colors.voltage} />
               ) : (
-                <path d="M0 -8 L-8 8 L8 8 Z M0 -4 L0 2 M0 5 L0 6" fill="none" stroke={colors.error} strokeWidth="2" />
+                <polygon points="0,-8 -8,8 8,8" fill="none" stroke={colors.error} strokeWidth="2" />
               )}
             </g>
           </g>
@@ -1033,17 +1033,17 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
           </text>
 
           {/* Clock value below clock bar */}
-          <text x="430" y="165" textAnchor="middle" fill={colors.clock} fontSize="10" fontWeight="bold">
+          <text x="432" y="165" textAnchor="middle" fill={colors.clock} fontSize="11" fontWeight="bold">
             {currentClock.toFixed(0)}
           </text>
 
           {/* Voltage value below voltage bar */}
-          <text x="460" y="165" textAnchor="middle" fill={colors.voltage} fontSize="10" fontWeight="bold">
+          <text x="465" y="165" textAnchor="middle" fill={colors.voltage} fontSize="11" fontWeight="bold">
             {currentVoltage.toFixed(2)}V
           </text>
 
           {/* Workload percentage */}
-          <text x="250" y="192" textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+          <text x="250" y="192" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
             {workload}%
           </text>
 
@@ -1055,22 +1055,29 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             {limitingFactor === 'none' ? 'GPU running at requested performance' : limitingFactor === 'power' ? `Throttling to stay under ${powerLimit}W TDP` : `Throttling to stay under ${thermalLimit}C`}
           </text>
 
+          {/* === POWER RESPONSE CURVE (P = CV²f theoretical curve) === */}
+          <path
+            d="M30 340 L70 338 L110 334 L150 325 L190 310 L230 285 L270 250 L310 205 L350 150 L390 95 L430 60 L470 50"
+            fill="none"
+            stroke="rgba(249, 115, 22, 0.12)"
+            strokeWidth="2"
+            strokeDasharray="6,4"
+          />
+
           {/* === FORMULA DISPLAY === */}
-          <g transform="translate(30, 280)">
-            <rect x="0" y="0" width="440" height="35" rx="8" fill="rgba(249, 115, 22, 0.1)" stroke="rgba(249, 115, 22, 0.3)" strokeWidth="1" />
-            <text x="220" y="15" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">
-              P = CV²f
-            </text>
-            <text x="220" y="28" textAnchor="middle" fill={colors.textMuted} fontSize="9">
-              Power = Capacitance × Voltage² × Frequency
-            </text>
-          </g>
+          <rect x="30" y="280" width="440" height="35" rx="8" fill="rgba(249, 115, 22, 0.1)" stroke="rgba(249, 115, 22, 0.3)" strokeWidth="1" />
+          <text x="250" y="295" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">
+            P = CV²f
+          </text>
+          <text x="250" y="308" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            Power = Capacitance × Voltage² × Frequency
+          </text>
 
           {/* Bar labels */}
-          <text x="385" y="25" textAnchor="middle" fill={colors.textMuted} fontSize="9">PWR</text>
-          <text x="430" y="25" textAnchor="middle" fill={colors.textMuted} fontSize="9">CLK</text>
-          <text x="460" y="25" textAnchor="middle" fill={colors.textMuted} fontSize="9">V</text>
-          <text x="300" y="30" textAnchor="middle" fill={colors.textMuted} fontSize="9">TEMP</text>
+          <text x="385" y="25" textAnchor="middle" fill={colors.textMuted} fontSize="11">PWR</text>
+          <text x="432" y="25" textAnchor="middle" fill={colors.textMuted} fontSize="11">CLK</text>
+          <text x="465" y="25" textAnchor="middle" fill={colors.textMuted} fontSize="11">V</text>
+          <text x="300" y="30" textAnchor="middle" fill={colors.textMuted} fontSize="11">TEMP</text>
         </svg>
 
         {/* External labels using typo system */}
@@ -1119,7 +1126,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
     fontWeight: 'bold' as const,
     cursor: 'pointer',
     fontSize: '14px',
+    minHeight: '44px',
     WebkitTapHighlightColor: 'transparent' as const,
+    transition: 'all 0.2s ease',
   };
 
   // Progress bar showing all 10 phases
@@ -1140,21 +1149,31 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
         zIndex: 1000,
         gap: '12px'
       }}>
-        <span style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600 }}>
+        <span style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 600 }}>
           Power States
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
+        <div
+          role="navigation"
+          aria-label="Phase navigation"
+          className="nav-dots"
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}
+        >
           {phaseOrder.map((p, i) => (
-            <div
+            <button
               key={p}
               onClick={() => i <= currentIdx && goToPhase(p)}
+              aria-label={`${phaseLabels[p]} phase${i < currentIdx ? ' (completed)' : i === currentIdx ? ' (current)' : ''}`}
+              aria-current={i === currentIdx ? 'step' : undefined}
+              className="nav-dot"
               style={{
                 width: i === currentIdx ? '20px' : '10px',
                 height: '10px',
                 borderRadius: '5px',
                 backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
                 cursor: i <= currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s ease',
+                border: 'none',
+                padding: 0,
               }}
               title={phaseLabels[p]}
             />
@@ -1190,9 +1209,10 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
         <button
           onClick={goBack}
           disabled={!canGoBack}
+          aria-label="Go back to previous phase"
           style={{
             ...buttonStyle,
-            background: canGoBack ? 'rgba(255,255,255,0.1)' : 'transparent',
+            background: canGoBack ? 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))' : 'transparent',
             color: canGoBack ? colors.textSecondary : colors.textMuted,
             cursor: canGoBack ? 'pointer' : 'not-allowed',
             opacity: canGoBack ? 1 : 0.3,
@@ -1200,15 +1220,16 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
         >
           Back
         </button>
-        <span style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600 }}>
+        <span style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 600 }}>
           {phaseLabels[phase]}
         </span>
         <button
           onClick={goNext}
           disabled={!canProceed}
+          aria-label={`Continue to next phase: ${buttonText}`}
           style={{
             ...buttonStyle,
-            background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+            background: canProceed ? 'linear-gradient(135deg, #f97316, #ea580c)' : 'rgba(255,255,255,0.1)',
             color: canProceed ? 'white' : colors.textMuted,
             cursor: canProceed ? 'pointer' : 'not-allowed',
           }}
@@ -1249,12 +1270,12 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 Your GPU might use 15W at the desktop but boost to 300W+ while gaming.
                 That is a 20x difference! How do GPUs manage such dramatic power swings,
                 and why do they sometimes throttle even when you want maximum performance?
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                 The answer involves voltage, frequency, and careful thermal management.
               </p>
             </div>
@@ -1265,13 +1286,13 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Power scales with voltage SQUARED times frequency: P = CV squared f
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
+                <strong style={{ fontWeight: 700 }}>Key Formula:</strong> Power scales with voltage SQUARED times frequency: P = CV squared f
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Start Exploring')}
       </div>
     );
   }
@@ -1340,6 +1361,31 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             {renderPowerStateVisualization()}
           </div>
 
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(249, 115, 22, 0.15)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              Try adjusting the workload slider and observe how the GPU automatically adjusts clock speed and voltage. Notice what happens when you hit the power or thermal limits.
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '8px',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+              <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Real-world relevance:</strong> This same power management technology enables laptops to last 10+ hours on battery while still delivering gaming performance when plugged in. Data centers use these techniques to save millions in electricity costs annually.
+            </p>
+          </div>
+
           <div style={{ padding: '16px' }}>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
@@ -1351,7 +1397,8 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                 max="100"
                 value={workload}
                 onChange={(e) => setWorkload(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                onInput={(e) => setWorkload(parseInt((e.target as HTMLInputElement).value))}
+                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
               />
             </div>
 
@@ -1366,7 +1413,8 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                 step="10"
                 value={powerLimit}
                 onChange={(e) => setPowerLimit(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                onInput={(e) => setPowerLimit(parseInt((e.target as HTMLInputElement).value))}
+                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
               />
             </div>
 
@@ -1380,8 +1428,55 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                 max="95"
                 value={thermalLimit}
                 onChange={(e) => setThermalLimit(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                onInput={(e) => setThermalLimit(parseInt((e.target as HTMLInputElement).value))}
+                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
               />
+            </div>
+
+            {/* Cause-effect explanation */}
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.15)',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.clock}`,
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Observe:</strong> When you increase the workload, the GPU automatically raises voltage and clock speed. As these values rise, power consumption increases exponentially due to the V-squared relationship. When you hit the power or thermal limit, the GPU throttles by reducing clocks to stay within safe operating parameters.
+              </p>
+            </div>
+
+            {/* Before/After Comparison */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
+              <div style={{
+                flex: 1,
+                background: 'rgba(59, 130, 246, 0.1)',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+              }}>
+                <div style={{ color: colors.clock, fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>Reference: Idle Baseline</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Clock: 300 MHz</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Voltage: 0.75V</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Power: 15W</div>
+              </div>
+              <div style={{
+                flex: 1,
+                background: 'rgba(249, 115, 22, 0.1)',
+                padding: '12px',
+                borderRadius: '8px',
+                border: `1px solid rgba(249, 115, 22, 0.3)`,
+              }}>
+                <div style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>Current State</div>
+                <div style={{ color: colors.textPrimary, fontSize: '13px' }}>Clock: {currentClock.toFixed(0)} MHz</div>
+                <div style={{ color: colors.textPrimary, fontSize: '13px' }}>Voltage: {currentVoltage.toFixed(2)}V</div>
+                <div style={{ color: colors.textPrimary, fontSize: '13px' }}>Power: {currentPower.toFixed(0)}W ({(currentPower / 15).toFixed(1)}x vs baseline)</div>
+              </div>
             </div>
 
             <div style={{
@@ -1390,11 +1485,11 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
               borderRadius: '8px',
               marginTop: '16px',
             }}>
-              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Power Formula: P = CV squared f</h4>
-              <ul style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, paddingLeft: '20px' }}>
-                <li><strong>C:</strong> Capacitance (fixed by chip design)</li>
-                <li><strong>V:</strong> Voltage - reducing this saves the most power!</li>
-                <li><strong>f:</strong> Frequency (clock speed)</li>
+              <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Power Formula: P = CV squared f</h4>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, paddingLeft: '20px', fontWeight: 400 }}>
+                <li><strong style={{ fontWeight: 700 }}>C:</strong> Capacitance (fixed by chip design)</li>
+                <li><strong style={{ fontWeight: 700 }}>V:</strong> Voltage - reducing this saves the most power!</li>
+                <li><strong style={{ fontWeight: 700 }}>f:</strong> Frequency (clock speed)</li>
                 <li>Halving voltage reduces power by 75%</li>
               </ul>
             </div>
@@ -1408,6 +1503,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'gradual';
+    const userPredictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
@@ -1420,14 +1516,57 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 700 }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px', fontWeight: 400 }}>
+              You predicted: {userPredictionLabel}
+            </p>
+            <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
               GPUs use Dynamic Voltage and Frequency Scaling (DVFS) to gradually adjust
               performance based on workload. This saves power during light tasks while
               boosting for demanding games.
             </p>
+          </div>
+
+          {/* SVG Diagram for DVFS concept */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }}>
+              <defs>
+                <linearGradient id="reviewDvfsGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#22c55e" />
+                  <stop offset="50%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="400" height="200" fill="#0f172a" rx="12" />
+
+              {/* Title */}
+              <text x="200" y="25" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">DVFS: Dynamic Voltage & Frequency Scaling</text>
+
+              {/* Workload axis */}
+              <line x1="50" y1="170" x2="350" y2="170" stroke={colors.textMuted} strokeWidth="2" />
+              <text x="200" y="190" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Workload</text>
+              <text x="50" y="185" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Low</text>
+              <text x="350" y="185" fill={colors.textSecondary} fontSize="11" textAnchor="middle">High</text>
+
+              {/* Power/Voltage axis */}
+              <line x1="50" y1="170" x2="50" y2="40" stroke={colors.textMuted} strokeWidth="2" />
+              <text x="25" y="105" fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform="rotate(-90, 25, 105)">Power</text>
+
+              {/* DVFS curve */}
+              <path d="M50 160 Q150 150 200 120 Q250 90 300 60 Q325 45 350 40" fill="none" stroke="url(#reviewDvfsGrad)" strokeWidth="4" strokeLinecap="round" />
+
+              {/* State markers */}
+              <circle cx="80" cy="155" r="8" fill="#22c55e" />
+              <text x="80" y="143" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Idle</text>
+
+              <circle cx="200" cy="120" r="8" fill="#f59e0b" />
+              <text x="200" y="108" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Active</text>
+
+              <circle cx="320" cy="50" r="8" fill="#ef4444" />
+              <text x="320" y="38" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Boost</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1436,22 +1575,22 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of GPU Power</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>The Physics of GPU Power</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Clock Gating:</strong> Transistors that
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Clock Gating:</strong> Transistors that
                 are not in use have their clock signals disabled. No switching = no dynamic power.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Voltage Scaling:</strong> Lower
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Voltage Scaling:</strong> Lower
                 workloads allow lower voltages. Since power scales with V squared, this is very effective.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Boost Clocks:</strong> When power and
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Boost Clocks:</strong> When power and
                 thermal headroom exist, the GPU boosts above base clock for extra performance.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Throttling:</strong> When limits are
+                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Throttling:</strong> When limits are
                 reached, the GPU reduces clocks to stay within safe operating parameters.
               </p>
             </div>
@@ -1473,6 +1612,44 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             <p style={{ color: colors.textSecondary }}>
               Which limit do GPUs hit first?
             </p>
+          </div>
+
+          {/* SVG visualization for twist_predict */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }}>
+              <defs>
+                <linearGradient id="twistPowerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#a855f7" />
+                </linearGradient>
+                <linearGradient id="twistThermalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#f97316" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="400" height="200" fill="#0f172a" rx="12" />
+
+              {/* Power limit bar */}
+              <text x="30" y="50" fill={colors.textSecondary} fontSize="12">Power Limit</text>
+              <rect x="30" y="60" width="150" height="30" fill="url(#twistPowerGrad)" rx="6" />
+              <text x="95" y="80" fill="white" fontSize="11" textAnchor="middle" fontWeight="bold">TDP (Watts)</text>
+
+              {/* Thermal limit bar */}
+              <text x="220" y="50" fill={colors.textSecondary} fontSize="12">Thermal Limit</text>
+              <rect x="220" y="60" width="150" height="30" fill="url(#twistThermalGrad)" rx="6" />
+              <text x="295" y="80" fill="white" fontSize="11" textAnchor="middle" fontWeight="bold">Max Temp (C)</text>
+
+              {/* GPU in center */}
+              <rect x="150" y="120" width="100" height="50" fill="#1e293b" rx="8" stroke="#4b5563" strokeWidth="2" />
+              <text x="200" y="150" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">GPU</text>
+
+              {/* Arrows pointing to GPU */}
+              <path d="M105 90 L160 120" stroke="#8b5cf6" strokeWidth="2" fill="none" markerEnd="url(#arrowPurple)" />
+              <path d="M295 90 L240 120" stroke="#ef4444" strokeWidth="2" fill="none" markerEnd="url(#arrowRed)" />
+
+              {/* Question mark */}
+              <text x="200" y="195" fill={colors.warning} fontSize="18" textAnchor="middle" fontWeight="bold">Which hits first?</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1534,6 +1711,31 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             {renderPowerStateVisualization()}
           </div>
 
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(249, 115, 22, 0.15)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+              Experiment with lowering the power limit or thermal limit to see which one causes throttling first. Notice how the GPU color and status change when limits are hit.
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '8px',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+              <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Real-world relevance:</strong> Overclocking enthusiasts and data center operators tune these limits daily. Understanding which constraint is active helps optimize for either maximum performance or energy efficiency.
+            </p>
+          </div>
+
           <div style={{ padding: '16px' }}>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
@@ -1545,7 +1747,8 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                 max="100"
                 value={workload}
                 onChange={(e) => setWorkload(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                onInput={(e) => setWorkload(parseInt((e.target as HTMLInputElement).value))}
+                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
               />
             </div>
 
@@ -1560,7 +1763,8 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                 step="10"
                 value={powerLimit}
                 onChange={(e) => setPowerLimit(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                onInput={(e) => setPowerLimit(parseInt((e.target as HTMLInputElement).value))}
+                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
               />
             </div>
 
@@ -1574,7 +1778,8 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                 max="95"
                 value={thermalLimit}
                 onChange={(e) => setThermalLimit(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                onInput={(e) => setThermalLimit(parseInt((e.target as HTMLInputElement).value))}
+                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
               />
             </div>
 
@@ -1586,7 +1791,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
               borderLeft: `3px solid ${colors.warning}`,
             }}>
               <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Current Status:</h4>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
                 {limitingFactor === 'none' && 'GPU running freely - neither limit reached'}
                 {limitingFactor === 'power' && `Power limited at ${powerLimit}W - would run hotter with more power`}
                 {limitingFactor === 'thermal' && `Thermal limited at ${thermalLimit}C - needs better cooling to use full power`}
@@ -1602,6 +1807,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'either';
+    const userTwistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
@@ -1614,14 +1820,53 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 700 }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px', fontWeight: 400 }}>
+              You predicted: {userTwistPredictionLabel}
+            </p>
+            <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
               Either limit can be reached first! With excellent cooling, you hit the power limit.
               With a restrictive power limit, you might never reach thermal limits. The GPU
               constantly monitors both.
             </p>
+          </div>
+
+          {/* SVG Diagram for limit comparison */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px' }}>
+              <defs>
+                <linearGradient id="twistReviewPowerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#a855f7" />
+                </linearGradient>
+                <linearGradient id="twistReviewThermalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#f97316" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="400" height="180" fill="#0f172a" rx="12" />
+
+              {/* Title */}
+              <text x="200" y="25" fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="bold">Power vs Thermal: Either Can Limit Performance</text>
+
+              {/* Scenario A: Power-limited */}
+              <rect x="20" y="50" width="170" height="60" fill="rgba(139, 92, 246, 0.2)" rx="8" stroke="#8b5cf6" strokeWidth="1" />
+              <text x="105" y="68" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Good Cooling</text>
+              <text x="105" y="88" fill="#a855f7" fontSize="12" textAnchor="middle" fontWeight="bold">POWER LIMITED</text>
+              <text x="105" y="105" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Hits TDP first</text>
+
+              {/* Scenario B: Thermal-limited */}
+              <rect x="210" y="50" width="170" height="60" fill="rgba(239, 68, 68, 0.2)" rx="8" stroke="#ef4444" strokeWidth="1" />
+              <text x="295" y="68" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Poor Cooling</text>
+              <text x="295" y="88" fill="#ef4444" fontSize="12" textAnchor="middle" fontWeight="bold">THERMAL LIMITED</text>
+              <text x="295" y="105" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Overheats first</text>
+
+              {/* Bottom insight */}
+              <text x="200" y="138" fill={colors.warning} fontSize="12" textAnchor="middle" fontWeight="bold">Which limit matters depends on your setup!</text>
+              <text x="200" y="158" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Better cooling = power-limited | Poor airflow = thermal-limited</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1630,7 +1875,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Understanding the Limits</h3>
+            <h3 style={{ color: colors.warning, marginBottom: '12px', fontWeight: 700 }}>Understanding the Limits</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Power-Limited Scenario:</strong> With
@@ -1667,17 +1912,38 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: 700 }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
+              Complete all 4 applications to unlock the test. Click each card to learn how GPU power management applies in practice.
             </p>
+
+            {/* Introduction Got It button for immediate interaction */}
+            {transferCompleted.size === 0 && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <button
+                  onClick={() => setTransferCompleted(new Set([0]))}
+                  style={{
+                    ...buttonStyle,
+                    padding: '12px 24px',
+                    background: `linear-gradient(135deg, ${colors.accent}, ${colors.warning})`,
+                    border: 'none',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                  }}
+                >
+                  Got It - Start Exploring
+                </button>
+              </div>
+            )}
           </div>
 
           {TRANSFER_APPLICATIONS.map((app, index) => (
             <div
               key={index}
+              data-transfer-card
               style={{
                 background: colors.bgCard,
                 margin: '16px',
@@ -1710,9 +1976,36 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
+                <>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400 }}>{app.answer}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      // Move to next uncompleted application or stay if all done
+                      const nextIndex = TRANSFER_APPLICATIONS.findIndex((_, i) => i > index && !transferCompleted.has(i));
+                      if (nextIndex !== -1) {
+                        // Scroll to next application
+                        const cards = document.querySelectorAll('[data-transfer-card]');
+                        if (cards[nextIndex]) {
+                          cards[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }
+                    }}
+                    style={{
+                      ...buttonStyle,
+                      padding: '8px 16px',
+                      background: colors.success,
+                      border: 'none',
+                      color: 'white',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {index < TRANSFER_APPLICATIONS.length - 1 ? 'Got It - Next Application' : 'Got It'}
+                  </button>
+                </>
               )}
             </div>
           ))}
@@ -1823,8 +2116,8 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestIndex + 1} / {TEST_QUESTIONS.length}</span>
+              <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary, fontWeight: 400 }}>Question {currentTestIndex + 1} of {TEST_QUESTIONS.length}</span>
             </div>
 
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
@@ -1974,7 +2267,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
               You understand GPU power states and thermal management

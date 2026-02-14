@@ -444,7 +444,29 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1000,
+    }}>
+      <span style={{ ...typo.body, color: '#e2e8f0', fontWeight: 600 }}>Jar Lid Expansion</span>
+      <span style={{ ...typo.small, color: '#e2e8f0' }}>{phaseLabels[phase]}</span>
+    </nav>
+  );
 
   // Jar visualization SVG
   const renderJarVisualization = () => {
@@ -575,12 +597,20 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '80px 24px 24px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '64px',
@@ -628,6 +658,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
         </button>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -644,11 +675,26 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '80px 24px 24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Step indicator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '16px',
+          }}>
+            <span style={{ ...typo.small, color: '#e2e8f0' }}>Step 1 of 3</span>
+          </div>
+
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -672,8 +718,20 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: '80px', marginBottom: '16px' }}>🫙 + 🔥 = ❓</div>
-            <p style={{ ...typo.small, color: colors.textMuted }}>Hot water on metal lid</p>
+            {/* Static SVG preview */}
+            <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '250px', marginBottom: '16px' }}>
+              <rect x="0" y="0" width="300" height="200" fill="#1e293b" rx="12" />
+              <path
+                d="M100 60 L100 160 Q100 175 115 175 L185 175 Q200 175 200 160 L200 60"
+                fill="rgba(6, 182, 212, 0.2)"
+                stroke="#67e8f9"
+                strokeWidth="3"
+              />
+              <rect x="95" y="85" width="110" height="85" fill="#f59e0b" opacity="0.5" rx="2" />
+              <rect x="90" y="45" width="120" height="20" fill="#6b7280" stroke="#475569" strokeWidth="2" rx="3" />
+              <text x="150" y="195" textAnchor="middle" fill="#e2e8f0" fontSize="11">Jar with stuck lid</text>
+            </svg>
+            <p style={{ ...typo.small, color: '#e2e8f0' }}>Hot water on metal lid</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -689,6 +747,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -697,7 +756,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                   height: '28px',
                   borderRadius: '50%',
                   background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  color: prediction === opt.id ? 'white' : '#e2e8f0',
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -705,7 +764,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                 }}>
                   {opt.id.toUpperCase()}
                 </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                <span style={{ color: '#e2e8f0', ...typo.body }}>
                   {opt.text}
                 </span>
               </button>
@@ -721,6 +780,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -733,16 +793,23 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '80px 24px 24px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Differential Expansion Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Watch how the metal lid expands more than the glass jar when heated
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
+            Observe how the metal lid expands more than the glass jar when heated
+          </p>
+          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '24px' }}>
+            Adjust the temperature slider to see the expansion difference
           </p>
 
           <div style={{
@@ -785,7 +852,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
 
             {/* Material selector */}
             <div style={{ marginBottom: '24px' }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Lid Material:</p>
+              <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '8px' }}>Lid Material:</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                 {materials.slice(0, 3).map((mat, i) => (
                   <button
@@ -798,11 +865,12 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                       background: selectedLidMaterial === i ? `${mat.color}22` : colors.bgSecondary,
                       cursor: 'pointer',
                       textAlign: 'center',
+                      minHeight: '44px',
                     }}
                   >
                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: mat.color, margin: '0 auto 4px' }} />
-                    <div style={{ ...typo.small, color: colors.textPrimary }}>{mat.name.split(' ')[0]}</div>
-                    <div style={{ fontSize: '10px', color: colors.textMuted }}>alpha={mat.alpha}</div>
+                    <div style={{ ...typo.small, color: '#e2e8f0' }}>{mat.name.split(' ')[0]}</div>
+                    <div style={{ fontSize: '10px', color: '#e2e8f0' }}>alpha={mat.alpha}</div>
                   </button>
                 ))}
               </div>
@@ -821,7 +889,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                 textAlign: 'center',
               }}>
                 <div style={{ ...typo.h3, color: colors.accent }}>{(lidExpansion * 1000).toFixed(1)} um</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Lid Expansion</div>
+                <div style={{ ...typo.small, color: '#e2e8f0' }}>Lid Expansion</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -830,7 +898,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                 textAlign: 'center',
               }}>
                 <div style={{ ...typo.h3, color: '#67e8f9' }}>{(glassExpansion * 1000).toFixed(1)} um</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Glass Expansion</div>
+                <div style={{ ...typo.small, color: '#e2e8f0' }}>Glass Expansion</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -841,7 +909,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                 <div style={{ ...typo.h3, color: gapChange > 0 ? colors.success : colors.error }}>
                   {gapChange > 0 ? '+' : ''}{(gapChange * 1000).toFixed(1)} um
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Gap Change</div>
+                <div style={{ ...typo.small, color: '#e2e8f0' }}>Gap Change</div>
               </div>
             </div>
           </div>
@@ -868,6 +936,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             Understand the Physics
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -880,11 +949,15 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '80px 24px 24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Differential Expansion
           </h2>
@@ -948,6 +1021,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             Discover a Twist
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -966,11 +1040,15 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '80px 24px 24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1058,6 +1136,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
               See the Effect
             </button>
           )}
+        </div>
         </div>
 
         {renderNavDots()}

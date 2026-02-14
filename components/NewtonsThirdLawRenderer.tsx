@@ -354,7 +354,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: 'rgba(156,163,175,0.8)',
+    textSecondary: '#B0B8C4',
     textMuted: '#6B7280',
     border: '#2a2a3a',
   };
@@ -494,13 +494,13 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
   // Progress bar component
   const renderProgressBar = () => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       top: 0,
       left: 0,
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 50,
     }}>
       <div style={{
         height: '100%',
@@ -511,32 +511,105 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+  // Fixed bottom navigation bar with Back/Next + nav dots
+  const renderNavDots = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = phase === 'mastery';
+    const isTestPhase = phase === 'test';
+
+    return (
+      <>
+        <div style={{ height: '70px' }} />
+        <nav style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: colors.bgCard,
+          borderTop: `1px solid ${colors.border}`,
+          boxShadow: '0 -4px 12px rgba(0,0,0,0.5)',
+          padding: '12px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 100,
+        }}>
+          <button
+            onClick={() => { if (!isFirst) goToPhase(phaseOrder[currentIndex - 1]); }}
+            disabled={isFirst}
+            style={{
+              padding: '10px 20px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: isFirst ? colors.textMuted : colors.textSecondary,
+              cursor: isFirst ? 'default' : 'pointer',
+              fontWeight: 600,
+              opacity: isFirst ? 0.5 : 1,
+              fontSize: '14px',
+            }}
+          >
+            ← Back
+          </button>
+
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            {phaseOrder.map((p, i) => (
+              <button
+                key={p}
+                onClick={() => goToPhase(p)}
+                style={{
+                  width: phase === p ? '20px' : '12px',
+                  minWidth: '44px',
+                  minHeight: '44px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  padding: '18px 0',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                }}
+                aria-label={phaseLabels[p]}
+              >
+                <span style={{
+                  width: phase === p ? '20px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                  display: 'block',
+                  transition: 'all 0.3s ease',
+                }} />
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => { if (!isLast && !isTestPhase) nextPhase(); }}
+            disabled={isLast || isTestPhase}
+            style={{
+              padding: '10px 20px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: 'none',
+              background: (isLast || isTestPhase) ? colors.border : colors.accent,
+              color: 'white',
+              cursor: (isLast || isTestPhase) ? 'default' : 'pointer',
+              fontWeight: 600,
+              opacity: (isLast || isTestPhase) ? 0.5 : 1,
+              fontSize: '14px',
+            }}
+          >
+            Next →
+          </button>
+        </nav>
+      </>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -580,12 +653,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -640,6 +710,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
         >
           {hookStep < hookContent.length - 1 ? 'Continue' : 'Make a Prediction'}
         </button>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -658,9 +729,11 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -748,6 +821,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -763,16 +837,21 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Balloon Rocket Launch
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Inflate the balloon and watch it fly!
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            This visualization shows how air escaping the balloon demonstrates Newton's Third Law. Try adjusting the slider to change the balloon size and observe how it affects thrust!
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+            Watch for the action-reaction force arrows. Understanding these forces is essential for rocket propulsion, swimming, and countless real-world applications.
           </p>
 
           {/* Visualization */}
@@ -895,7 +974,15 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                 value={balloonSize}
                 onChange={(e) => setBalloonSize(parseInt(e.target.value))}
                 disabled={isLaunched}
-                style={{ width: '100%', cursor: isLaunched ? 'not-allowed' : 'pointer' }}
+                style={{
+                  width: '100%',
+                  cursor: isLaunched ? 'not-allowed' : 'pointer',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.accent} ${(balloonSize - 20) / 0.8}%, ${colors.border} ${(balloonSize - 20) / 0.8}%)`,
+                  appearance: 'auto',
+                  accentColor: colors.accent,
+                }}
               />
               <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>More air = More thrust!</p>
             </div>
@@ -955,6 +1042,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
             See Results
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -968,16 +1056,16 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     const reviewContent = [
       {
         title: "Newton's Third Law",
-        content: `${wasCorrect ? "Excellent! You got it! " : ""}For every ACTION, there is an equal and opposite REACTION. This is one of the most fundamental principles in all of physics, governing every interaction in the universe.\n\nWhen the balloon pushes air OUT (action), the air pushes the balloon FORWARD (reaction). These forces are equal in strength but opposite in direction! This principle explains how rockets fly, how swimmers propel themselves through water, and why you feel a kick when firing a gun. The key insight is that forces always come in pairs acting on different objects simultaneously.`,
+        content: `${wasCorrect ? "Excellent! You predicted correctly! " : "As you observed in the experiment, "}For every ACTION, there is an equal and opposite REACTION. This is expressed mathematically as:\n\nF_action = -F_reaction\n\nWhen the balloon pushes air OUT (action), the air pushes the balloon FORWARD (reaction). These forces are equal in magnitude but opposite in direction! This principle explains how rockets fly, how swimmers propel themselves through water, and why you feel a kick when firing a gun.`,
         highlight: wasCorrect,
       },
       {
         title: "Action-Reaction Pairs",
-        content: "The key insight: Action and reaction forces act on DIFFERENT objects.\n\n- The balloon pushes on the air (action)\n- The air pushes on the balloon (reaction)\n\nThey're equal in force, but because they act on different things, movement happens!",
+        content: "The key insight: Action and reaction forces act on DIFFERENT objects.\n\n- The balloon pushes on the air (action)\n- The air pushes on the balloon (reaction)\n\nMathematically: F_balloon_on_air = -F_air_on_balloon\n\nThey're equal in force, but because they act on different things, movement happens!",
       },
       {
         title: "Why Movement Occurs",
-        content: "You might wonder: if the forces are equal, why does anything move?\n\nAnswer: The forces act on different objects! The air zooms backward (it's pushed by the balloon), and the balloon zooms forward (it's pushed by the air). Each object responds to the force on IT.",
+        content: "You might wonder: if the forces are equal, why does anything move?\n\nAnswer: The forces act on different objects! The air zooms backward (it's pushed by the balloon), and the balloon zooms forward (it's pushed by the air). Each object responds to the force on IT.\n\nThe relationship F = ma explains why: same force, different masses, different accelerations!",
       },
     ];
 
@@ -1419,14 +1507,19 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1556,16 +1649,47 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
               <h4 style={{ ...typo.small, color: '#a855f7', marginBottom: '8px', fontWeight: 600 }}>Future Impact:</h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.futureImpact}</p>
             </div>
+
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%', marginTop: '16px' }}
+              >
+                Got It!
+              </button>
+            )}
           </div>
+
+          {selectedApp < realWorldApps.length - 1 && (
+            <button
+              onClick={() => {
+                playSound('click');
+                const next = selectedApp + 1;
+                setSelectedApp(next);
+                const newCompleted = [...completedApps];
+                newCompleted[next] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px', background: colors.bgCard, border: `1px solid ${colors.border}`, color: colors.textPrimary }}
+            >
+              Next Application →
+            </button>
+          )}
 
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Take the Knowledge Test
+              Continue to Test
             </button>
           )}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1581,8 +1705,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
           {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1601,6 +1726,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
               {passed ? 'Complete Lesson' : 'Review and Try Again'}
             </button>
           </div>
+          </div>
           {renderNavDots()}
         </div>
       );
@@ -1610,8 +1736,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     const correctId = question.options.find(o => o.correct)?.id;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <span style={{ ...typo.small, color: colors.textSecondary }}>
@@ -1720,6 +1847,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
               </button>
             )}
           </div>
+        </div>
         </div>
         {renderNavDots()}
       </div>

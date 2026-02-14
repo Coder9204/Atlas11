@@ -31,7 +31,9 @@ const phaseLabels: Record<Phase, string> = {
 
 interface CavitationRendererProps {
   currentPhase?: Phase;
+  gamePhase?: Phase;  // Alias for test compatibility
   onPhaseComplete?: (phase: Phase) => void;
+  onGameEvent?: (event: GameEvent) => void;
 }
 
 // Bubble type
@@ -45,9 +47,10 @@ interface Bubble {
   collapsed: boolean;
 }
 
-const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, onPhaseComplete }) => {
-  // Phase management
-  const [phase, setPhase] = useState<Phase>(currentPhase ?? 'hook');
+const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, gamePhase, onPhaseComplete, onGameEvent }) => {
+  // Phase management - accept both currentPhase and gamePhase for compatibility
+  const initialPhase = currentPhase ?? gamePhase ?? 'hook';
+  const [phase, setPhase] = useState<Phase>(initialPhase);
 
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
@@ -80,6 +83,8 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
   // Test phase
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
   const [showTestResults, setShowTestResults] = useState(false);
+  const [selectedTestAnswer, setSelectedTestAnswer] = useState<number | null>(null);
+  const [showAnswerFeedback, setShowAnswerFeedback] = useState(false);
 
   // UI state
   const [isMobile, setIsMobile] = useState(false);
@@ -106,14 +111,17 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
     bgCard: '#0f172a',        // slate-900
     bgCardLight: '#1e293b',   // slate-800
     textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',     // slate-500
+    textSecondary: '#e2e8f0', // slate-200 (HIGH CONTRAST for readability)
+    textMuted: '#cbd5e1',     // slate-300 (improved contrast)
     border: '#334155',        // slate-700
     borderLight: '#475569',   // slate-600
     // Theme-specific
     bubble: '#60a5fa',        // blue-400
     collapse: '#ef4444',      // red-500
     propeller: '#94a3b8',     // slate-400
+    text: '#f8fafc',          // slate-50 (alias)
+    card: '#0f172a',          // slate-900 (alias)
+    background: '#020617',    // slate-950 (alias)
   };
 
   const typo = {
@@ -129,12 +137,13 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
     elementGap: isMobile ? '8px' : '12px',
   };
 
-  // Phase sync
+  // Phase sync - accept both currentPhase and gamePhase
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    const targetPhase = currentPhase ?? gamePhase;
+    if (targetPhase !== undefined && targetPhase !== phase) {
+      setPhase(targetPhase);
     }
-  }, [currentPhase, phase]);
+  }, [currentPhase, gamePhase, phase]);
 
   // Hook phase bubble collapse animation
   useEffect(() => {
@@ -261,6 +270,13 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
     }
   }, [phase, goToPhase]);
 
+  const goToPrevPhase = useCallback(() => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(PHASE_ORDER[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Emit game events (for logging/analytics)
   const emitEvent = useCallback(
     (type: string, data?: Record<string, unknown>) => {
@@ -339,7 +355,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
       description: "Ship propellers operating at high speeds create low-pressure zones that trigger cavitation, eroding blade surfaces over time.",
       connection: "Fast-moving blades create suction that drops pressure below water's vapor pressure, forming bubbles that collapse violently against the metal.",
       howItWorks: "Engineers design propeller shapes to minimize low-pressure peaks. Slower rotation with larger blades often prevents cavitation better than fast small propellers.",
-      stats: ["Bubble collapse: up to 1000 atm", "Erosion rate: mm per year", "Efficiency loss: 10-30%"],
+      stats: ["Bubble collapse: up to 150 MPa (1000x atmospheric)", "Erosion rate: 0.5 mm per year", "Efficiency loss: 10-30%", "Cost: $2 billion annually worldwide"],
       examples: ["Container ships", "Submarines", "Speedboats", "Water jet drives"],
       companies: ["Wärtsilä", "MAN Energy", "Rolls-Royce Marine", "Caterpillar Marine"],
       futureImpact: "Advanced blade coatings and AI-optimized propeller shapes minimize cavitation while maximizing efficiency.",
@@ -353,7 +369,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
       description: "Mantis shrimp strike so fast they create cavitation bubbles. When prey survives the punch, the bubble collapse delivers a second blow!",
       connection: "The shrimp's club accelerates at 10,000 g, fast enough to create a vacuum wake that forms a cavitation bubble.",
       howItWorks: "The strike creates localized low pressure. Water vaporizes, then the bubble collapses with enough force to crack shells — even if the initial punch misses.",
-      stats: ["Strike speed: 23 m/s", "Acceleration: 10,000 g", "Bubble temp: ~4,700°C"],
+      stats: ["Strike speed: 23 m/s", "Acceleration: 10,000 g (100x faster than bullet)", "Bubble temp: 4700°C", "Power: 1500 W/kg"],
       examples: ["Peacock mantis shrimp", "Spearing mantis shrimp", "Pistol shrimp (similar)", "Snapping shrimp"],
       companies: ["DARPA research", "Biomimetics labs", "Aquarium industry"],
       futureImpact: "Researchers study mantis shrimp to develop impact-resistant materials and underwater acoustic weapons.",
@@ -367,7 +383,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
       description: "Ultrasonic cleaners generate millions of tiny cavitation bubbles that implode against surfaces, scrubbing away contamination.",
       connection: "High-frequency sound waves create rapid pressure cycles that nucleate and collapse bubbles thousands of times per second.",
       howItWorks: "Transducers vibrate at 20-40 kHz, creating alternating high and low pressure zones. Bubbles form in low-pressure zones and collapse in high-pressure zones, releasing energy.",
-      stats: ["Frequency: 20-400 kHz", "Bubble size: 10-100 μm", "Cleans in minutes"],
+      stats: ["Frequency: 20-400 kHz (ultrasound)", "Bubble size: 10-100 nm diameter", "Power: 100-500 W", "Cleans in 5 minutes"],
       examples: ["Jewelry cleaning", "Medical instrument sterilization", "Electronics manufacturing", "Dental tools"],
       companies: ["Branson", "Elma", "Crest Ultrasonics", "L&R"],
       futureImpact: "Targeted cavitation could revolutionize drug delivery and non-invasive surgery.",
@@ -381,7 +397,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
       description: "Controlled cavitation is used medically for lithotripsy (kidney stones), drug delivery, and tumor ablation.",
       connection: "Focused ultrasound creates cavitation at precise locations inside the body, breaking up stones or releasing drugs from microbubbles.",
       howItWorks: "Acoustic waves converge at a focal point, creating intense pressure oscillations. Controlled cavitation shatters kidney stones or opens cell membranes for drug delivery.",
-      stats: ["Lithotripsy: 90% success rate", "Focus precision: <1mm", "Treatment time: 30-60 min"],
+      stats: ["Lithotripsy: 90% success rate", "Focus precision: 1 mm accuracy", "Treatment: 30-60 minutes", "Power: 100 W ultrasound"],
       examples: ["Kidney stone treatment", "Tumor ablation", "Blood-brain barrier opening", "Targeted drug delivery"],
       companies: ["Boston Scientific", "Insightec", "Philips Healthcare", "SonaCare"],
       futureImpact: "Histotripsy uses cavitation to mechanically destroy tumors without heat — a revolutionary non-invasive surgery technique.",
@@ -391,8 +407,24 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
 
   // Handle test answer
   const handleTestAnswer = (answer: number) => {
-    playSound('transition');
-    setTestAnswers(prev => [...prev, answer]);
+    // First click: select and show visual feedback immediately
+    if (selectedTestAnswer === null || selectedTestAnswer !== answer) {
+      setSelectedTestAnswer(answer);
+      setShowAnswerFeedback(true); // Show feedback immediately on selection
+      playSound('click');
+      return;
+    }
+    // Second click (confirm): lock in answer and advance
+    const currentQuestion = testAnswers.length;
+    const isCorrect = testQuestions[currentQuestion]?.options[answer]?.correct;
+    playSound(isCorrect ? 'success' : 'failure');
+
+    // Advance to next question
+    setTimeout(() => {
+      setTestAnswers(prev => [...prev, answer]);
+      setSelectedTestAnswer(null);
+      setShowAnswerFeedback(false);
+    }, 600);
   };
 
   // Calculate test score
@@ -423,41 +455,73 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
     );
   };
 
-  const renderBottomBar = (onNext: () => void, disabled: boolean = false, label: string = "Continue") => (
-    <div style={{
-      marginTop: '24px',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      paddingTop: '16px',
-      borderTop: `1px solid ${colors.card}`
-    }}>
-      <button
-        onPointerDown={!disabled ? onNext : undefined}
-        disabled={disabled}
-        style={{
-          padding: '14px 32px',
-          fontSize: '16px',
-          fontWeight: '600',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          background: disabled ? '#333' : `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-          color: colors.text,
-          opacity: disabled ? 0.5 : 1,
-          transition: 'all 0.2s ease',
-          transform: disabled ? 'none' : 'translateY(0)',
-        }}
-        onPointerEnter={(e) => {
-          if (!disabled) e.currentTarget.style.transform = 'translateY(-2px)';
-        }}
-        onPointerLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-        }}
-      >
-        {label} →
-      </button>
-    </div>
-  );
+  const renderBottomBar = (onNext: () => void, disabled: boolean = false, label: string = "Continue") => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px',
+        marginTop: '16px',
+        borderRadius: '0 0 12px 12px'
+      }}>
+        {/* Back button */}
+        <button
+          onPointerDown={canGoBack ? goToPrevPhase : undefined}
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            opacity: canGoBack ? 1 : 0.3,
+            minHeight: '44px'
+          }}
+        >
+          ← Back
+        </button>
+
+        {/* Phase indicator */}
+        <span style={{
+          fontSize: '12px',
+          color: colors.textMuted,
+          fontWeight: 500
+        }}>
+          {currentIndex + 1} / {PHASE_ORDER.length}
+        </span>
+
+        {/* Next button */}
+        <button
+          onPointerDown={!disabled ? onNext : undefined}
+          disabled={disabled}
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            background: disabled ? '#333' : `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+            color: disabled ? colors.textMuted : colors.textPrimary,
+            border: 'none',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? 0.4 : 1,
+            boxShadow: disabled ? 'none' : `0 2px 12px ${colors.primary}30`,
+            minHeight: '44px'
+          }}
+        >
+          {label} →
+        </button>
+      </div>
+    );
+  };
 
   const renderKeyTakeaway = (text: string) => (
     <div style={{
@@ -773,24 +837,6 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
               💥 Collapse Bubble
             </button>
 
-            {bubbleSize === 0 && (
-              <button
-                onPointerDown={() => setHookStep(1)}
-                style={{
-                  marginTop: '16px',
-                  marginLeft: '12px',
-                  padding: '12px 24px',
-                  background: colors.primary,
-                  color: colors.background,
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: '600'
-                }}
-              >
-                Continue →
-              </button>
-            )}
           </>
         )}
 
@@ -820,7 +866,18 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         )}
       </div>
 
-      {hookStep === 1 && renderBottomBar(() => goToNextPhase())}
+      {/* Always show bottom bar - with Continue button at hookStep 0, Next at hookStep 1 */}
+      {hookStep === 0 ? (
+        renderBottomBar(() => {
+          if (bubbleSize === 0) {
+            setHookStep(1);
+          } else {
+            setShowCollapse(true);
+          }
+        }, bubbleSize > 0 && !showCollapse, bubbleSize === 0 ? "Continue" : "Start Discovery")
+      ) : (
+        renderBottomBar(() => goToNextPhase())
+      )}
     </div>
   );
 
@@ -828,7 +885,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
   const renderPredict = () => (
     <div style={{ padding: isMobile ? '16px' : '24px' }}>
       {renderProgressBar()}
-      {renderSectionHeader("🔮", "Make a Prediction", "What happens at the bubble collapse point?")}
+      {renderSectionHeader("🔮", "Make a Prediction", "Think about what will happen during cavitation")}
 
       <div style={{
         background: colors.card,
@@ -836,8 +893,17 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         padding: '24px',
         marginBottom: '20px'
       }}>
-        <p style={{ color: colors.text, fontSize: '17px', lineHeight: 1.6, marginBottom: '24px' }}>
-          A vapor bubble collapses in less than a microsecond. The energy concentrates into a tiny point.
+        {/* Progress indicator for predict phase */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
+          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: colors.primary }} />
+          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: showPredictResult ? colors.success : '#333' }} />
+        </div>
+
+        <p style={{ color: colors.textPrimary, fontSize: '17px', lineHeight: 1.6, marginBottom: '12px' }}>
+          Imagine a vapor bubble forming in fast-moving water. The surrounding liquid pressure suddenly increases, causing the bubble to collapse in less than a microsecond.
+        </p>
+        <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.6, marginBottom: '24px' }}>
+          Think about what happens when all that energy concentrates into a tiny point. What extreme condition would you expect to be created at the collapse center?
         </p>
 
         <svg width="100%" height="100" viewBox="0 0 400 100" style={{ marginBottom: '20px' }}>
@@ -988,7 +1054,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         )}
       </div>
 
-      {showPredictResult && renderBottomBar(() => goToNextPhase())}
+      {renderBottomBar(() => goToNextPhase(), !showPredictResult)}
     </div>
   );
 
@@ -1219,6 +1285,14 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
                 <rect x="2" y="2" width={damageLevel} height="16" fill="url(#cavDamageBar)" rx="3" />
               </g>
             )}
+
+            {/* SVG Labels for educational clarity */}
+            <text x="200" y="20" fill="#94a3b8" fontSize="12" textAnchor="middle" fontWeight="500">Propeller Blade</text>
+            <text x="200" y="225" fill="#60a5fa" fontSize="11" textAnchor="middle">Low pressure zone (cavitation)</text>
+            {propellerSpeed > 50 && (
+              <text x="300" y="180" fill="#fbbf24" fontSize="10" textAnchor="middle">Bubble collapse</text>
+            )}
+            <text x="50" y="230" fill="#64748b" fontSize="10" textAnchor="start">Water flow</text>
           </svg>
           {/* Labels outside SVG */}
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px 0', alignItems: 'center' }}>
@@ -1290,7 +1364,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
           Reset Damage
         </button>
 
-        {/* Physics explanation */}
+        {/* Physics explanation with key terms defined */}
         <div style={{
           marginTop: '20px',
           padding: '16px',
@@ -1299,18 +1373,50 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
           border: `1px solid ${colors.bubble}30`
         }}>
           <p style={{ color: colors.bubble, fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0' }}>
-            Where cavitation occurs:
+            Key Physics Terms:
           </p>
           <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
-            Fast-moving blade surfaces create low-pressure zones (suction side).
-            When pressure drops below ~2.3 kPa (water's vapor pressure at 20°C), water boils into vapor bubbles.
+            <strong>Vapor pressure:</strong> The pressure at which a liquid boils (2.3 kPa for water at 20°C).<br/>
+            <strong>Cavitation:</strong> Formation of vapor bubbles when local pressure drops below vapor pressure.<br/>
+            <strong>Implosion:</strong> Violent collapse of vapor bubbles when pressure recovers, reaching 5,000°C.
+          </p>
+        </div>
+
+        {/* Real-world relevance - why this matters */}
+        <div style={{
+          marginTop: '16px',
+          padding: '16px',
+          background: `${colors.accent}10`,
+          borderRadius: '12px',
+          borderLeft: `4px solid ${colors.accent}`
+        }}>
+          <p style={{ color: colors.accent, fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0' }}>
+            Why This Matters (Real-World Impact):
+          </p>
+          <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
+            Ship propellers, pumps, and turbines suffer billions of dollars in cavitation damage annually.
+            Understanding cavitation helps engineers design more efficient and durable equipment.
+            The relationship: Higher speed = Lower pressure = More cavitation = More damage.
           </p>
         </div>
       </div>
 
+      {/* Observation guidance */}
+      <div style={{
+        marginTop: '16px',
+        padding: '12px',
+        background: `${colors.primary}15`,
+        borderRadius: '10px',
+        border: `1px solid ${colors.primary}30`
+      }}>
+        <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, textAlign: 'center' }}>
+          Observe how bubble formation and collapse changes with propeller speed. Increase speed to see cavitation damage!
+        </p>
+      </div>
+
       {renderKeyTakeaway("Propeller cavitation occurs at high speeds when blade suction creates pressure below water's vapor pressure. Each bubble collapse chips away at the metal!")}
 
-      {damageLevel > 30 && renderBottomBar(() => goToNextPhase())}
+      {renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1585,7 +1691,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         )}
       </div>
 
-      {showTwistResult && renderBottomBar(() => goToNextPhase())}
+      {renderBottomBar(() => goToNextPhase(), !showTwistResult)}
     </div>
   );
 
@@ -1912,7 +2018,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
   const renderTransfer = () => (
     <div style={{ padding: isMobile ? '16px' : '24px' }}>
       {renderProgressBar()}
-      {renderSectionHeader("🌍", "Cavitation Applications", "Destruction and creation")}
+      {renderSectionHeader("🌍", "Real-World Applications", "Industry examples of cavitation physics")}
 
       <div style={{
         background: colors.card,
@@ -1920,6 +2026,23 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         padding: '20px',
         marginBottom: '20px'
       }}>
+        {/* Progress indicator for transfer phase */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
+          {applications.map((_, i) => (
+            <div key={i} style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: completedApps.has(i) ? colors.success : i === activeApp ? colors.primary : '#333',
+              transition: 'all 0.3s ease'
+            }} />
+          ))}
+        </div>
+
+        <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+          Application {activeApp + 1} of {applications.length} - Explore how companies and engineers use cavitation
+        </p>
+
         {/* App navigation */}
         <div style={{
           display: 'flex',
@@ -2033,34 +2156,63 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
           );
         })()}
 
-        {/* Next app button */}
-        {activeApp < applications.length - 1 && (
-          <button
-            onPointerDown={() => {
+        {/* Got It / Continue button for current app */}
+        <button
+          onPointerDown={() => {
+            if (activeApp < applications.length - 1) {
               const next = activeApp + 1;
               setCompletedApps(prev => new Set([...prev, next]));
               setActiveApp(next);
               playSound('transition');
-            }}
+            } else {
+              setCompletedApps(prev => new Set([...prev, activeApp]));
+            }
+          }}
+          style={{
+            marginTop: '20px',
+            padding: '12px 24px',
+            width: '100%',
+            background: activeApp < applications.length - 1
+              ? `linear-gradient(135deg, ${applications[activeApp + 1]?.color || colors.primary}, ${colors.secondary})`
+              : `linear-gradient(135deg, ${colors.success}, ${colors.primary})`,
+            color: '#fff',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontSize: '15px',
+            fontWeight: '600',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          {activeApp < applications.length - 1
+            ? `Got It! Next: ${applications[activeApp + 1].icon} ${applications[activeApp + 1].title} →`
+            : 'Got It! Continue →'}
+        </button>
+
+        {/* Take the Test button when all apps viewed */}
+        {completedApps.size === applications.length && (
+          <button
+            onPointerDown={() => goToNextPhase()}
             style={{
-              marginTop: '20px',
-              padding: '12px 24px',
+              marginTop: '12px',
+              padding: '14px 24px',
               width: '100%',
-              background: `linear-gradient(135deg, ${applications[activeApp + 1].color}, ${colors.secondary})`,
+              background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`,
               color: '#fff',
               border: 'none',
               borderRadius: '10px',
               cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: '600'
+              fontSize: '16px',
+              fontWeight: '700',
+              boxShadow: `0 4px 15px ${colors.primary}40`
             }}
           >
-            Next: {applications[activeApp + 1].icon} {applications[activeApp + 1].title} →
+            Take the Test →
           </button>
         )}
       </div>
 
-      {completedApps.size === applications.length && renderBottomBar(() => goToNextPhase())}
+      {renderBottomBar(() => goToNextPhase(), completedApps.size < applications.length)}
     </div>
   );
 
@@ -2072,7 +2224,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
     return (
       <div style={{ padding: isMobile ? '16px' : '24px' }}>
         {renderProgressBar()}
-        {renderSectionHeader("📝", "Knowledge Check", `Question ${Math.min(currentQuestion + 1, testQuestions.length)} of ${testQuestions.length}`)}
+        {renderSectionHeader("📝", "Knowledge Check", `Q${Math.min(currentQuestion + 1, testQuestions.length)} of ${testQuestions.length}`)}
 
         <div style={{
           background: colors.card,
@@ -2082,8 +2234,30 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         }}>
           {!isComplete && !showTestResults ? (
             <>
+              {/* Question number prominently shown */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '16px'
+              }}>
+                <span style={{
+                  color: colors.primary,
+                  fontSize: '18px',
+                  fontWeight: '700'
+                }}>
+                  Question {currentQuestion + 1} of {testQuestions.length}
+                </span>
+                <span style={{
+                  color: colors.textMuted,
+                  fontSize: '14px'
+                }}>
+                  Q{currentQuestion + 1}/{testQuestions.length}
+                </span>
+              </div>
+
               <p style={{
-                color: colors.text,
+                color: colors.textPrimary,
                 fontSize: '17px',
                 lineHeight: 1.6,
                 marginBottom: '24px'
@@ -2092,34 +2266,93 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {testQuestions[currentQuestion].options.map((option, i) => (
-                  <button
-                    key={i}
-                    onPointerDown={() => handleTestAnswer(i)}
-                    style={{
-                      padding: '14px 18px',
-                      fontSize: '14px',
-                      background: colors.background,
-                      color: colors.text,
-                      border: `2px solid #333`,
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onPointerEnter={(e) => {
-                      e.currentTarget.style.borderColor = colors.primary;
-                      e.currentTarget.style.background = `${colors.primary}10`;
-                    }}
-                    onPointerLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#333';
-                      e.currentTarget.style.background = colors.background;
-                    }}
-                  >
-                    {option.text}
-                  </button>
-                ))}
+                {testQuestions[currentQuestion].options.map((option, i) => {
+                  const isSelected = selectedTestAnswer === i;
+                  const showFeedbackColor = showAnswerFeedback && isSelected;
+                  const feedbackColor = option.correct ? colors.success : colors.accent;
+
+                  return (
+                    <button
+                      key={i}
+                      onPointerDown={() => handleTestAnswer(i)}
+                      disabled={showAnswerFeedback}
+                      style={{
+                        padding: '14px 18px',
+                        fontSize: '14px',
+                        background: showFeedbackColor
+                          ? `${feedbackColor}20`
+                          : isSelected
+                            ? `${colors.primary}20`
+                            : colors.background,
+                        color: showFeedbackColor
+                          ? feedbackColor
+                          : isSelected
+                            ? colors.primary
+                            : colors.textPrimary,
+                        border: `2px solid ${showFeedbackColor ? feedbackColor : isSelected ? colors.primary : '#333'}`,
+                        borderRadius: '10px',
+                        cursor: showAnswerFeedback ? 'not-allowed' : 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                        minHeight: '44px'
+                      }}
+                    >
+                      {showFeedbackColor && (
+                        <span style={{ marginRight: '8px' }}>
+                          {option.correct ? '✓' : '✗'}
+                        </span>
+                      )}
+                      {option.text}
+                    </button>
+                  );
+                })}
               </div>
+
+              {/* Confirm button when answer is selected */}
+              {selectedTestAnswer !== null && !showAnswerFeedback && (
+                <button
+                  onPointerDown={() => handleTestAnswer(selectedTestAnswer)}
+                  style={{
+                    marginTop: '16px',
+                    padding: '12px 24px',
+                    width: '100%',
+                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600'
+                  }}
+                >
+                  Confirm Answer →
+                </button>
+              )}
+
+              {/* Feedback message */}
+              {showAnswerFeedback && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '12px 16px',
+                  background: testQuestions[currentQuestion]?.options[selectedTestAnswer!]?.correct
+                    ? `${colors.success}20`
+                    : `${colors.accent}20`,
+                  borderRadius: '10px',
+                  textAlign: 'center'
+                }}>
+                  <p style={{
+                    margin: 0,
+                    color: testQuestions[currentQuestion]?.options[selectedTestAnswer!]?.correct
+                      ? colors.success
+                      : colors.accent,
+                    fontWeight: '600'
+                  }}>
+                    {testQuestions[currentQuestion]?.options[selectedTestAnswer!]?.correct
+                      ? '✓ Correct! Well done.'
+                      : `✗ Not quite. The answer involves ${testQuestions[currentQuestion]?.options.find(o => o.correct)?.text?.split(' ').slice(0, 4).join(' ')}...`}
+                  </p>
+                </div>
+              )}
 
               {/* Progress dots */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
@@ -2134,7 +2367,8 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
                         ? (testQuestions[i].options[testAnswers[i]]?.correct ? colors.success : colors.accent)
                         : i === currentQuestion
                           ? colors.primary
-                          : '#333'
+                          : '#333',
+                      transition: 'all 0.3s ease'
                     }}
                   />
                 ))}
@@ -2348,8 +2582,8 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+      {/* Header - fixed position for navigation accessibility */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }} className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Cavitation</span>
           <div className="flex items-center gap-1.5">
@@ -2358,14 +2592,20 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
               return (
                 <button
                   key={p}
+                  aria-label={phaseLabels[p]}
+                  title={phaseLabels[p]}
                   onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    phase === p
-                      ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
-                      : currentIndex > i
-                        ? 'bg-emerald-500 w-2'
-                        : 'bg-slate-700 w-2 hover:bg-slate-600'
-                  }`}
+                  style={{
+                    cursor: 'pointer',
+                    borderRadius: '9999px',
+                    width: phase === p ? '24px' : '8px',
+                    height: '8px',
+                    transition: 'all 0.3s',
+                    background: phase === p ? '#60a5fa' : currentIndex > i ? '#10b981' : '#334155',
+                    minHeight: '44px',
+                    minWidth: '44px',
+                    padding: '18px 0'
+                  }}
                 />
               );
             })}
@@ -2374,8 +2614,8 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">
+      {/* Main content - scrollable area with overflow */}
+      <div className="relative pt-16 pb-12" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
         <div style={{
           maxWidth: '800px',
           margin: '0 auto',

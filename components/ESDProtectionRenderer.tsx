@@ -338,8 +338,8 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
     diode: '#22C55E',
     circuit: '#3B82F6',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#cbd5e1',
     border: '#2a2a3a',
   };
 
@@ -787,16 +787,42 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 24px',
+      borderBottom: `1px solid ${colors.border}`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>&#9889;</span>
+        <span style={{ color: colors.textPrimary, fontWeight: 600 }}>ESD Protection</span>
+      </div>
+      <div style={{ color: colors.textSecondary, fontSize: '14px' }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '56px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 999,
     }}>
       <div style={{
         height: '100%',
@@ -846,6 +872,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -863,8 +890,10 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -931,6 +960,36 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
     );
   }
 
+  // Static SVG for predict phase
+  const PredictPhaseSVG = () => (
+    <svg width={isMobile ? 320 : 400} height={200} viewBox="0 0 400 200" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <defs>
+        <linearGradient id="humanGradStatic" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fdba74" />
+          <stop offset="100%" stopColor="#f97316" />
+        </linearGradient>
+        <linearGradient id="chipGradStatic" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#4f46e5" />
+          <stop offset="100%" stopColor="#3730a3" />
+        </linearGradient>
+      </defs>
+      {/* Human finger */}
+      <ellipse cx="80" cy="100" rx="35" ry="55" fill="url(#humanGradStatic)" />
+      <text x="80" y="170" fill={colors.textMuted} fontSize="12" textAnchor="middle">Human</text>
+      <text x="80" y="185" fill={colors.spark} fontSize="11" textAnchor="middle">+4000V</text>
+      {/* Arrow */}
+      <path d="M 130 100 L 180 100 M 170 90 L 180 100 L 170 110" stroke={colors.spark} strokeWidth="3" fill="none" />
+      <text x="155" y="85" fill={colors.spark} fontSize="10" textAnchor="middle">ESD</text>
+      {/* Chip */}
+      <rect x="200" y="60" width="160" height="80" rx="8" fill="url(#chipGradStatic)" opacity="0.6" />
+      <rect x="200" y="60" width="160" height="80" rx="8" fill="none" stroke="#6366f1" strokeWidth="2" />
+      <text x="280" y="105" fill={colors.textPrimary} fontSize="14" textAnchor="middle">IC Chip</text>
+      <text x="280" y="125" fill={colors.textMuted} fontSize="11" textAnchor="middle">Max: 3.3V</text>
+      {/* Question mark */}
+      <text x="280" y="175" fill={colors.accent} fontSize="24" textAnchor="middle" fontWeight="bold">?</text>
+    </svg>
+  );
+
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
@@ -944,10 +1003,12 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -964,7 +1025,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
             When you touch a chip's I/O pin with 4,000+ volts of static charge built up on your body, what happens to the chip?
           </h2>
 
-          {/* Scenario illustration */}
+          {/* Static SVG illustration */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -972,17 +1033,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '40px', marginBottom: '8px' }}>&#128400;</div>
-                <div style={{ color: colors.spark, fontWeight: 600 }}>You (+4000V)</div>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.spark }}>&#9889;&#8594;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '40px', marginBottom: '8px' }}>&#128187;</div>
-                <div style={{ color: colors.circuit, fontWeight: 600 }}>Chip (3.3V max)</div>
-              </div>
-            </div>
+            <PredictPhaseSVG />
             <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
               That's 1,200x more voltage than the chip is designed to handle!
             </p>
@@ -1002,6 +1053,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1047,15 +1099,20 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             ESD Discharge Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Toggle protection and trigger ESD events to see how protection circuits save chips
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Real-world relevance: This same protection saves your phone, laptop, and car electronics every time you touch them after walking on carpet.
           </p>
 
           {/* Main visualization */}
@@ -1085,8 +1142,9 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
                 onClick={() => setHasProtection(!hasProtection)}
                 style={{
                   width: '80px',
-                  height: '40px',
-                  borderRadius: '20px',
+                  height: '44px',
+                  minHeight: '44px',
+                  borderRadius: '22px',
                   border: 'none',
                   background: hasProtection ? colors.success : colors.error,
                   cursor: 'pointer',
@@ -1095,13 +1153,13 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
                 }}
               >
                 <div style={{
-                  width: '32px',
-                  height: '32px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
                   background: 'white',
                   position: 'absolute',
                   top: '4px',
-                  left: hasProtection ? '44px' : '4px',
+                  left: hasProtection ? '40px' : '4px',
                   transition: 'left 0.3s',
                 }} />
               </button>
@@ -1158,6 +1216,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
                 fontWeight: 700,
                 cursor: isDischarging ? 'not-allowed' : 'pointer',
                 boxShadow: isDischarging ? 'none' : `0 4px 20px rgba(251, 191, 36, 0.4)`,
+                minHeight: '44px',
               }}
             >
               {isDischarging ? 'Discharging...' : '&#9889; Trigger ESD Discharge'}
@@ -1207,6 +1266,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
               color: colors.textSecondary,
               cursor: 'pointer',
               marginBottom: '24px',
+              minHeight: '44px',
             }}
           >
             Reset Simulation
@@ -1227,18 +1287,42 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionText = prediction === 'a'
+      ? 'You predicted chips are naturally immune'
+      : prediction === 'b'
+        ? 'You correctly predicted protection circuits clamp voltage'
+        : prediction === 'c'
+          ? 'You predicted voltage is too brief to cause damage'
+          : 'You made a prediction';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             How ESD Protection Works
           </h2>
+
+          {/* Reference to user's prediction */}
+          <div style={{
+            background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
+              {predictionText}. {prediction === 'b' ? 'Great intuition!' : 'Let\'s see what actually happens...'}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1328,10 +1412,12 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1378,6 +1464,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1423,10 +1510,12 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Protection vs Signal Integrity Lab
           </h2>
@@ -1594,10 +1683,12 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Advanced ESD Engineering
           </h2>
@@ -1673,19 +1764,25 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px' }}>
+            Application {completedCount} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1712,6 +1809,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (

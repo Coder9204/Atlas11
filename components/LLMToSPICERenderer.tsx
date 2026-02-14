@@ -214,7 +214,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     bgCard: '#1e293b',
     border: '#475569',
     textPrimary: '#f8fafc',
-    textSecondary: '#94a3b8',
+    textSecondary: '#e2e8f0', // Changed from #94a3b8 for better contrast
   };
 
   // Navigation function
@@ -443,6 +443,11 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -493,6 +498,11 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
 
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -505,6 +515,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
           disabled={!canBack}
           style={{
             padding: isMobile ? '10px 16px' : '12px 24px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: `1px solid ${colors.border}`,
             backgroundColor: 'transparent',
@@ -524,6 +535,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
           disabled={!canGoNext}
           style={{
             padding: isMobile ? '10px 20px' : '12px 28px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: 'none',
             background: canGoNext ? `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` : colors.border,
@@ -567,10 +579,10 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
         <g transform="translate(20, 50)">
           <rect width="140" height="100" fill="rgba(59, 130, 246, 0.2)" rx="8" stroke="#3b82f6" strokeWidth="2" />
           <text x="70" y="20" fill="#3b82f6" fontSize="11" fontWeight="bold" textAnchor="middle">SPECS</text>
-          <text x="10" y="40" fill="#94a3b8" fontSize="9">Vout: {targetVoltage}V</text>
-          <text x="10" y="55" fill="#94a3b8" fontSize="9">Iload: {loadCurrent}mA</text>
-          <text x="10" y="70" fill="#94a3b8" fontSize="9">Ripple: &lt;{rippleTarget}mV</text>
-          <text x="10" y="85" fill="#94a3b8" fontSize="9">Phase: &gt;{phaseMarginTarget} deg</text>
+          <text x="10" y="40" fill="#e2e8f0" fontSize="9">Vout: {targetVoltage}V</text>
+          <text x="10" y="55" fill="#e2e8f0" fontSize="9">Iload: {loadCurrent}mA</text>
+          <text x="10" y="70" fill="#e2e8f0" fontSize="9">Ripple: &lt;{rippleTarget}mV</text>
+          <text x="10" y="85" fill="#e2e8f0" fontSize="9">Phase: &gt;{phaseMarginTarget} deg</text>
         </g>
 
         <path d="M 170 100 L 190 100" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow)" />
@@ -581,7 +593,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
           <text x="70" y="20" fill="#8b5cf6" fontSize="11" fontWeight="bold" textAnchor="middle">LLM GENERATOR</text>
           <text x="70" y="45" fill="#f8fafc" fontSize="9" textAnchor="middle">Generates netlist</text>
           <text x="70" y="60" fill="#f8fafc" fontSize="9" textAnchor="middle">+ testbench</text>
-          <text x="70" y="80" fill="#94a3b8" fontSize="8" textAnchor="middle">Iteration: {iterationCount}</text>
+          <text x="70" y="80" fill="#e2e8f0" fontSize="9" textAnchor="middle">Iteration: {iterationCount}</text>
         </g>
 
         <path d="M 350 100 L 370 100" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow)" />
@@ -600,10 +612,10 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
         <g transform="translate(20, 170)">
           <rect width="220" height="90" fill="rgba(30, 41, 59, 0.8)" rx="8" />
           <text x="110" y="18" fill="#f8fafc" fontSize="11" fontWeight="bold" textAnchor="middle">CURRENT DESIGN</text>
-          <text x="10" y="38" fill="#94a3b8" fontSize="9">L = {currentDesign.inductance} uH</text>
-          <text x="10" y="53" fill="#94a3b8" fontSize="9">C = {currentDesign.capacitance} uF</text>
-          <text x="120" y="38" fill="#94a3b8" fontSize="9">f = {currentDesign.frequency} kHz</text>
-          <text x="120" y="53" fill="#94a3b8" fontSize="9">R_fb = {currentDesign.feedbackResistor} kOhm</text>
+          <text x="10" y="38" fill="#e2e8f0" fontSize="9">L = {currentDesign.inductance} uH</text>
+          <text x="10" y="53" fill="#e2e8f0" fontSize="9">C = {currentDesign.capacitance} uF</text>
+          <text x="120" y="38" fill="#e2e8f0" fontSize="9">f = {currentDesign.frequency} kHz</text>
+          <text x="120" y="53" fill="#e2e8f0" fontSize="9">R_fb = {currentDesign.feedbackResistor} kOhm</text>
 
           <g transform="translate(30, 60)">
             <line x1="0" y1="10" x2="30" y2="10" stroke="#8b5cf6" strokeWidth="2" />
@@ -612,8 +624,8 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             <line x1="80" y1="10" x2="80" y2="25" stroke="#8b5cf6" strokeWidth="2" />
             <line x1="75" y1="25" x2="85" y2="25" stroke="#8b5cf6" strokeWidth="2" />
             <line x1="75" y1="28" x2="85" y2="28" stroke="#8b5cf6" strokeWidth="2" />
-            <text x="40" y="0" fill="#94a3b8" fontSize="7" textAnchor="middle">L</text>
-            <text x="95" y="20" fill="#94a3b8" fontSize="7">C</text>
+            <text x="40" y="0" fill="#e2e8f0" fontSize="8" textAnchor="middle">L</text>
+            <text x="95" y="20" fill="#e2e8f0" fontSize="8">C</text>
           </g>
         </g>
 
@@ -629,7 +641,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
               <text x="10" y="53" fill={passRipple ? '#22c55e' : '#ef4444'} fontSize="9">
                 Ripple: {simResults.ripple.toFixed(1)}mV {passRipple ? 'PASS' : 'FAIL'}
               </text>
-              <text x="10" y="68" fill="#94a3b8" fontSize="9">
+              <text x="10" y="68" fill="#e2e8f0" fontSize="9">
                 Efficiency: {simResults.efficiency.toFixed(1)}%
               </text>
               <text x="10" y="83" fill={passPhase ? '#22c55e' : '#ef4444'} fontSize="9">
@@ -658,10 +670,10 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
 
             <line x1="100" y1="50" x2="100" y2={25 + (90 - simResults.phaseMargin) * 0.3} stroke="#22c55e" strokeWidth="1" strokeDasharray="4,2" />
 
-            <text x="90" y="65" fill="#94a3b8" fontSize="7">f_c</text>
-            <text x="180" y="65" fill="#94a3b8" fontSize="7">freq</text>
-            <text x="-15" y="5" fill="#94a3b8" fontSize="7">0 deg</text>
-            <text x="-20" y="55" fill="#94a3b8" fontSize="7">-180 deg</text>
+            <text x="90" y="65" fill="#e2e8f0" fontSize="9">f_c</text>
+            <text x="180" y="65" fill="#e2e8f0" fontSize="9">freq</text>
+            <text x="-15" y="5" fill="#e2e8f0" fontSize="9">0</text>
+            <text x="-20" y="55" fill="#e2e8f0" fontSize="9">-180</text>
           </g>
         </g>
 
@@ -678,12 +690,12 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             {iterationCount === 0 ? 'WAITING' : allPass ? 'ALL SPECS MET' : 'ITERATE NEEDED'}
           </text>
           {iterationCount > 0 && !allPass && (
-            <text x="110" y="50" fill="#94a3b8" fontSize="10" textAnchor="middle">
+            <text x="110" y="50" fill="#e2e8f0" fontSize="10" textAnchor="middle">
               Adjust design parameters
             </text>
           )}
           {iterationCount > 0 && (
-            <text x="110" y="75" fill="#94a3b8" fontSize="9" textAnchor="middle">
+            <text x="110" y="75" fill="#e2e8f0" fontSize="9" textAnchor="middle">
               {simResults.stable ? 'Control loop is stable' : 'WARNING: Potential instability'}
             </text>
           )}
@@ -691,7 +703,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
 
         <g transform="translate(250, 400)">
           <path d="M 200 0 L 200 30 L -180 30 L -180 -230 L -150 -230" fill="none" stroke="#475569" strokeWidth="2" strokeDasharray="5,3" />
-          <text x="10" y="45" fill="#94a3b8" fontSize="9" textAnchor="middle">Feedback loop: results inform next iteration</text>
+          <text x="10" y="45" fill="#e2e8f0" fontSize="9" textAnchor="middle">Feedback loop: results inform next iteration</text>
         </g>
       </svg>
     );
@@ -735,7 +747,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
         <h4 style={{ color: '#8b5cf6', marginBottom: '12px' }}>Adjust Design (LLM would generate these):</h4>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
-            <label style={{ color: '#94a3b8', fontSize: '12px' }}>Inductance: {currentDesign.inductance}uH</label>
+            <label style={{ color: '#e2e8f0', fontSize: '12px' }}>Inductance: {currentDesign.inductance}uH</label>
             <input
               type="range"
               min="1"
@@ -747,7 +759,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             />
           </div>
           <div>
-            <label style={{ color: '#94a3b8', fontSize: '12px' }}>Capacitance: {currentDesign.capacitance}uF</label>
+            <label style={{ color: '#e2e8f0', fontSize: '12px' }}>Capacitance: {currentDesign.capacitance}uF</label>
             <input
               type="range"
               min="22"
@@ -759,7 +771,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             />
           </div>
           <div>
-            <label style={{ color: '#94a3b8', fontSize: '12px' }}>Frequency: {currentDesign.frequency}kHz</label>
+            <label style={{ color: '#e2e8f0', fontSize: '12px' }}>Frequency: {currentDesign.frequency}kHz</label>
             <input
               type="range"
               min="100"
@@ -771,7 +783,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             />
           </div>
           <div>
-            <label style={{ color: '#94a3b8', fontSize: '12px' }}>Feedback R: {currentDesign.feedbackResistor}kOhm</label>
+            <label style={{ color: '#e2e8f0', fontSize: '12px' }}>Feedback R: {currentDesign.feedbackResistor}kOhm</label>
             <input
               type="range"
               min="1"
@@ -808,7 +820,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string = 'Next') => (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
         {content}
       </div>
       {renderBottomBar(canGoNext, nextLabel)}
@@ -825,7 +837,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #8b5cf6, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               LLM to SPICE Pipeline
             </h1>
-            <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '18px', marginTop: '8px' }}>
               Can an LLM design a regulator that actually meets specs?
             </p>
           </div>
@@ -851,6 +863,39 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
 
+          {/* Static SVG visualization for prediction context */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }}>
+              <rect width="400" height="200" fill="#0f172a" rx="8" />
+              <text x="200" y="25" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">LLM Circuit Design Workflow</text>
+
+              {/* LLM Box */}
+              <rect x="30" y="60" width="100" height="60" fill="rgba(139, 92, 246, 0.2)" rx="8" stroke="#8b5cf6" strokeWidth="2" />
+              <text x="80" y="85" fill="#8b5cf6" fontSize="11" fontWeight="bold" textAnchor="middle">LLM</text>
+              <text x="80" y="105" fill="#e2e8f0" fontSize="9" textAnchor="middle">Generates design</text>
+
+              {/* Arrow */}
+              <path d="M 140 90 L 160 90" stroke="#475569" strokeWidth="2" />
+              <polygon points="160,90 155,85 155,95" fill="#475569" />
+
+              {/* Question Box */}
+              <rect x="170" y="60" width="60" height="60" fill="rgba(245, 158, 11, 0.2)" rx="8" stroke="#f59e0b" strokeWidth="2" />
+              <text x="200" y="95" fill="#f59e0b" fontSize="24" textAnchor="middle">?</text>
+
+              {/* Arrow */}
+              <path d="M 240 90 L 260 90" stroke="#475569" strokeWidth="2" />
+              <polygon points="260,90 255,85 255,95" fill="#475569" />
+
+              {/* SPICE Box */}
+              <rect x="270" y="60" width="100" height="60" fill="rgba(34, 197, 94, 0.2)" rx="8" stroke="#22c55e" strokeWidth="2" />
+              <text x="320" y="85" fill="#22c55e" fontSize="11" fontWeight="bold" textAnchor="middle">SPICE</text>
+              <text x="320" y="105" fill="#e2e8f0" fontSize="9" textAnchor="middle">Validates physics</text>
+
+              <text x="200" y="160" fill="#e2e8f0" fontSize="11" textAnchor="middle">What happens when LLM output meets physics simulation?</text>
+              <text x="200" y="180" fill="#8b5cf6" fontSize="10" textAnchor="middle">Make your prediction below</text>
+            </svg>
+          </div>
+
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
             <p style={{ fontSize: '16px' }}>
               If you ask an LLM to design a buck converter that outputs 3.3V from 12V input with less than 50mV ripple, what should you expect?
@@ -864,6 +909,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
                 onClick={() => setPrediction(p.id)}
                 style={{
                   padding: '16px',
+                  minHeight: '44px',
                   borderRadius: '12px',
                   border: prediction === p.id ? '2px solid #8b5cf6' : '1px solid #475569',
                   background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
@@ -890,7 +936,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Design & Simulate</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
             Adjust design parameters and run SPICE to see if specs are met
           </p>
 
@@ -905,6 +951,15 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
               <li>Adjust feedback resistor - watch phase margin change</li>
               <li>See how many iterations to meet all specs</li>
             </ul>
+          </div>
+
+          <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', border: '1px solid #8b5cf6' }}>
+            <h3 style={{ color: '#8b5cf6', marginBottom: '12px' }}>Real-World Relevance</h3>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
+              This LLM-to-SPICE workflow powers modern electronics design at companies like Texas Instruments and Analog Devices.
+              Engineers use AI to rapidly explore design spaces, but physics simulation remains the ultimate truth source.
+              Every phone charger, laptop power supply, and electric vehicle uses buck converters designed with this exact methodology.
+            </p>
           </div>
         </div>
       </div>,
@@ -940,7 +995,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
 
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ color: '#f59e0b', marginBottom: '8px' }}>What LLMs Do Well:</h4>
-              <ul style={{ color: '#94a3b8', fontSize: '14px', paddingLeft: '20px' }}>
+              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '20px' }}>
                 <li>Generate syntactically correct SPICE netlists</li>
                 <li>Suggest reasonable component values from prior examples</li>
                 <li>Create testbenches for different analyses</li>
@@ -950,7 +1005,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
 
             <div>
               <h4 style={{ color: '#22c55e', marginBottom: '8px' }}>What SPICE Provides:</h4>
-              <ul style={{ color: '#94a3b8', fontSize: '14px', paddingLeft: '20px' }}>
+              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '20px' }}>
                 <li>Actual solutions to circuit differential equations</li>
                 <li>Accurate prediction of voltages, currents, stability</li>
                 <li>Ground truth that cannot be hallucinated</li>
@@ -1014,7 +1069,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Stability Check</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
             Adjust the feedback loop and see how phase margin changes
           </p>
 
@@ -1061,7 +1116,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px' }}>
             <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>The Stability Truth</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
               A design that meets DC specifications can still fail dynamically. Phase margin depends on the exact component values, parasitics, and operating conditions. This is why "looks correct" from an LLM is not the same as "works correctly" from simulation. Real feedback is irreplaceable.
             </p>
           </div>
@@ -1078,7 +1133,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
             LLM + Simulation workflows across hardware design
           </p>
 
@@ -1097,7 +1152,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
                 <h3 style={{ color: '#f8fafc' }}>{app.title}</h3>
                 {transferCompleted.has(index) && <span style={{ color: '#22c55e' }}>Complete</span>}
               </div>
-              <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
               <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
                 <p style={{ color: '#8b5cf6', fontSize: '14px' }}>{app.question}</p>
               </div>
@@ -1116,8 +1171,24 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
-                  <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e', marginBottom: '12px' }}>
+                    <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    style={{
+                      padding: '10px 20px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: '#22c55e',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
@@ -1189,7 +1260,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2>Knowledge Test</h2>
-            <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            <span style={{ color: '#e2e8f0' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
@@ -1292,7 +1363,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
           <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Mastery Achieved!</h1>
-          <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
+          <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>
             You understand the LLM-to-SPICE workflow
           </p>
 
@@ -1309,7 +1380,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
 
           <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', textAlign: 'left' }}>
             <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>The Bigger Picture:</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
               This pattern - AI generates, physics validates - applies broadly. LLMs cannot compute, they approximate. Whenever physical correctness matters (circuits, structures, chemistry), simulation or measurement must close the loop.
             </p>
           </div>

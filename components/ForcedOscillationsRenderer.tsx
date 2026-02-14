@@ -36,7 +36,7 @@ const colors = {
   borderLight: '#475569',
   borderFocus: '#ef4444',
   textPrimary: '#f8fafc',   // Headings
-  textSecondary: '#94a3b8', // Body text
+  textSecondary: '#e2e8f0', // Body text - brightened for contrast
   textTertiary: '#64748b',  // Captions, hints
   textInverse: '#0f172a',   // Text on light backgrounds
 };
@@ -500,31 +500,59 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
   // HELPER RENDER FUNCTIONS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // Progress bar
+  // Phase labels for accessibility
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore Twist',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  // Progress bar (fixed nav)
   const renderProgressBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: space.xs,
-        padding: `${space.md} ${space.lg}`,
-        background: colors.bgSecondary,
-        borderBottom: `1px solid ${colors.border}`
-      }}>
+      <nav
+        aria-label="Phase progress"
+        style={{
+          position: 'fixed' as const,
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: space.xs,
+          padding: `${space.md} ${space.lg}`,
+          background: colors.bgSecondary,
+          borderBottom: `1px solid ${colors.border}`
+        }}>
         {phaseOrder.map((p, idx) => (
-          <div
+          <button
             key={p}
+            aria-label={phaseLabels[p]}
+            title={phaseLabels[p]}
             style={{
               flex: 1,
-              height: '4px',
+              height: '8px',
               borderRadius: radius.full,
               background: idx <= currentIndex
                 ? `linear-gradient(90deg, ${colors.primary}, ${colors.primaryLight})`
                 : colors.bgTertiary,
               transition: 'all 0.4s ease',
-              boxShadow: idx <= currentIndex ? shadows.glow(colors.primary) : 'none'
+              boxShadow: idx <= currentIndex ? shadows.glow(colors.primary) : 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              minHeight: '44px'
             }}
+            onClick={() => idx <= currentIndex && setPhase(p)}
           />
         ))}
         <span style={{
@@ -536,7 +564,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         }}>
           {currentIndex + 1}/{phaseOrder.length}
         </span>
-      </div>
+      </nav>
     );
   };
 
@@ -575,20 +603,56 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     );
   };
 
-  // Bottom navigation bar
+  // Bottom navigation bar (fixed)
   const renderBottomBar = (onNext: () => void, nextLabel: string = 'Continue', disabled: boolean = false) => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+
+    const goBack = () => {
+      if (canGoBack) {
+        setPhase(phaseOrder[currentIndex - 1]);
+      }
+    };
+
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         padding: `${space.lg} ${space.xl}`,
         background: colors.bgSecondary,
         borderTop: `1px solid ${colors.border}`,
         display: 'flex',
-        justifyContent: 'flex-end'
+        justifyContent: 'space-between',
+        alignItems: 'center'
       }}>
         <button
-          onClick={() => !disabled && onNext()}
+          onClick={goBack}
+          disabled={!canGoBack}
           style={{
             padding: `${space.md} ${space.xl}`,
+            minHeight: '44px',
+            fontSize: '15px',
+            fontWeight: 600,
+            color: canGoBack ? colors.textSecondary : colors.textTertiary,
+            background: colors.bgTertiary,
+            border: `1px solid ${colors.border}`,
+            borderRadius: radius.md,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            opacity: canGoBack ? 1 : 0.3,
+            transition: 'all 0.3s ease'
+          }}
+        >
+          ← Back
+        </button>
+        <button
+          onClick={() => !disabled && onNext()}
+          disabled={disabled}
+          style={{
+            padding: `${space.md} ${space.xl}`,
+            minHeight: '44px',
             fontSize: '15px',
             fontWeight: 700,
             color: disabled ? colors.textTertiary : colors.textInverse,
@@ -599,11 +663,9 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
             borderRadius: radius.md,
             cursor: disabled ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s ease',
-            opacity: disabled ? 0.5 : 1,
+            opacity: disabled ? 0.4 : 1,
             boxShadow: disabled ? 'none' : shadows.md,
-            letterSpacing: '0.3px',
-            zIndex: 10,
-            position: 'relative'
+            letterSpacing: '0.3px'
           }}
         >
           {nextLabel}
@@ -756,7 +818,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         border: `1px solid ${colors.border}`,
         boxShadow: shadows.lg
       }}>
-        <svg width="100%" height={isMobile ? '180' : '220'} viewBox="0 0 400 220">
+        <svg width="100%" height={isMobile ? '180' : '220'} viewBox="0 0 400 220" role="img" aria-label="Opera singer breaking wine glass illustration">
           <defs>
             <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.6"/>
@@ -818,6 +880,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         style={{
           marginTop: space.xl,
           padding: `${space.md} ${space.xxl}`,
+          minHeight: '44px',
           fontSize: '16px',
           fontWeight: 700,
           color: colors.textInverse,
@@ -826,9 +889,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           borderRadius: radius.lg,
           cursor: 'pointer',
           boxShadow: shadows.md,
-          transition: 'all 0.3s ease',
-          zIndex: 10,
-          position: 'relative'
+          transition: 'all 0.3s ease'
         }}
       >
         Discover Resonance →
@@ -855,11 +916,47 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       display: 'flex',
       flexDirection: 'column',
       minHeight: '100%',
-      background: colors.bgPrimary
+      background: colors.bgPrimary,
+      overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto' }}>
-        {renderSectionHeader('🤔', 'Your Prediction', 'A swing is pushed at regular intervals...')}
+      <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto', marginTop: '60px', marginBottom: '80px' }}>
+        {renderSectionHeader('🤔', 'Your Prediction', 'Step 1 of 2: Make your prediction')}
+
+        {/* Static SVG for prediction phase */}
+        <div style={{
+          background: colors.bgSecondary,
+          borderRadius: radius.lg,
+          padding: space.lg,
+          marginBottom: space.lg,
+          border: `1px solid ${colors.border}`
+        }}>
+          <svg width="100%" height="180" viewBox="0 0 400 180" role="img" aria-label="Swing illustration for prediction">
+            <defs>
+              <linearGradient id="swingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor={colors.accent}/>
+                <stop offset="100%" stopColor="#b45309"/>
+              </linearGradient>
+            </defs>
+            {/* Background */}
+            <rect width="400" height="180" fill={colors.bgPrimary}/>
+            {/* Swing frame */}
+            <line x1="100" y1="20" x2="200" y2="120" stroke={colors.bgTertiary} strokeWidth="4"/>
+            <line x1="300" y1="20" x2="200" y2="120" stroke={colors.bgTertiary} strokeWidth="4"/>
+            <line x1="100" y1="20" x2="300" y2="20" stroke={colors.bgTertiary} strokeWidth="6"/>
+            {/* Swing seat */}
+            <rect x="175" y="115" width="50" height="10" rx="3" fill="url(#swingGrad)"/>
+            {/* Child figure */}
+            <circle cx="200" cy="95" r="12" fill="#fcd9b6"/>
+            <ellipse cx="200" cy="115" rx="8" ry="12" fill={colors.primary}/>
+            {/* Push arrows */}
+            <path d="M80 100 L60 100 M80 100 L70 95 M80 100 L70 105" stroke={colors.success} strokeWidth="3" fill="none"/>
+            <text x="55" y="130" fill={colors.textSecondary} fontSize="11">Push?</text>
+            {/* Question marks */}
+            <text x="320" y="80" fill={colors.accent} fontSize="24" fontWeight="bold">?</text>
+            <text x="340" y="110" fill={colors.accent} fontSize="18">?</text>
+          </svg>
+        </div>
 
         <div style={{
           padding: space.lg,
@@ -896,6 +993,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
               }}
               style={{
                 padding: `${space.lg} ${space.lg}`,
+                minHeight: '44px',
                 fontSize: '15px',
                 fontWeight: prediction === option.id ? 700 : 500,
                 color: prediction === option.id ? colors.textInverse : colors.textPrimary,
@@ -913,8 +1011,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
                 gap: space.md,
                 transition: 'all 0.2s ease',
                 boxShadow: prediction === option.id ? shadows.md : 'none',
-                zIndex: 10,
-                position: 'relative'
+                cursor: 'pointer'
               }}
             >
               <span style={{ fontSize: '28px' }}>{option.icon}</span>
@@ -949,11 +1046,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       display: 'flex',
       flexDirection: 'column',
       minHeight: '100%',
-      background: colors.bgPrimary
+      background: colors.bgPrimary,
+      overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
-        {renderSectionHeader('🔬', 'Forced Oscillation Lab', 'Adjust the driving frequency and observe resonance')}
+      <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto', marginTop: '60px', marginBottom: '80px' }}>
+        {renderSectionHeader('🔬', 'Forced Oscillation Lab', 'This is important because resonance affects bridges, radios, and instruments!')}
 
         <div style={{
           background: colors.bgSecondary,
@@ -963,7 +1061,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           marginBottom: space.lg
         }}>
           {/* Simulation visualization */}
-          <svg width="100%" height="280" viewBox="0 0 500 280" style={{ borderRadius: radius.md }}>
+          <svg width="100%" height="280" viewBox="0 0 500 280" style={{ borderRadius: radius.md }} role="img" aria-label="Forced oscillation simulation showing spring-mass system">
             <defs>
               <linearGradient id="springGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={colors.accent}/>
@@ -1151,6 +1249,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
                 style={{
                   flex: 1,
                   padding: space.md,
+                  minHeight: '44px',
                   fontSize: '15px',
                   fontWeight: 600,
                   color: colors.textPrimary,
@@ -1159,9 +1258,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
                     : `linear-gradient(135deg, ${colors.success}, ${colors.successLight})`,
                   border: 'none',
                   borderRadius: radius.md,
-                  cursor: 'pointer',
-                  zIndex: 10,
-                  position: 'relative'
+                  cursor: 'pointer'
                 }}
               >
                 {isAnimating ? 'Stop' : 'Start Driving'}

@@ -334,7 +334,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
+    textSecondary: '#e2e8f0',
     textMuted: '#6B7280',
     border: '#2a2a3a',
     moon: '#9CA3AF',
@@ -513,7 +513,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -563,6 +563,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -581,6 +582,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -645,6 +647,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -736,6 +739,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -743,8 +747,11 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Tidal Locking Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Toggle tidal locking on/off. Watch the yellow marker - does it always face Earth?
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px' }}>
+            Observe: Try toggling the lock off to see how different faces become visible when the Moon rotates faster than it orbits.
           </p>
 
           {/* Main visualization */}
@@ -868,6 +875,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -958,6 +966,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -1052,6 +1061,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -1059,8 +1069,11 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Tidal Locking Explorer
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             See how distance and body composition affect the time to tidal locking
+          </p>
+          <p style={{ ...typo.small, color: colors.warning, textAlign: 'center', marginBottom: '24px' }}>
+            Observe: Adjust the sliders to see how dramatically distance affects locking time (scales with distance to the 6th power!).
           </p>
 
           <div style={{
@@ -1165,6 +1178,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -1258,6 +1272,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -1371,6 +1386,27 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             </div>
           </div>
 
+          {/* Got It / Next Application button */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              if (selectedApp < realWorldApps.length - 1) {
+                setSelectedApp(selectedApp + 1);
+              }
+            }}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              marginBottom: '12px',
+              background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+            }}
+          >
+            {selectedApp < realWorldApps.length - 1 ? 'Next Application' : 'Got It'}
+          </button>
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
@@ -1395,6 +1431,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          overflowY: 'auto',
         }}>
           {renderProgressBar()}
 
@@ -1451,6 +1488,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 

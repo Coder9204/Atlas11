@@ -310,8 +310,8 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
     cold: '#3B82F6',
     hot: '#EF4444',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: 'rgba(226, 232, 240, 0.6)',
     border: '#2a2a3a',
   };
 
@@ -385,6 +385,30 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
 
     return (
       <svg width={width} height={height} viewBox="0 0 450 350" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="coldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.cold} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.cold} stopOpacity="0.3" />
+          </linearGradient>
+          <linearGradient id="hotGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.hot} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.hot} stopOpacity="0.3" />
+          </linearGradient>
+          <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="0.3" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <filter id="shadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/>
+          </filter>
+        </defs>
         {/* Background */}
         <rect x="0" y="0" width="450" height="350" fill={colors.bgCard} rx="12" />
 
@@ -454,16 +478,84 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component - fixed top with z-index
+  const renderNavigationBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      padding: '8px 16px',
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+    }}>
+      <button
+        onClick={() => {
+          const currentIndex = phaseOrder.indexOf(phase);
+          if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
+        }}
+        style={{
+          background: 'transparent',
+          border: `1px solid ${colors.border}`,
+          color: phaseOrder.indexOf(phase) > 0 ? colors.textPrimary : colors.textMuted,
+          padding: '8px 16px',
+          borderRadius: '8px',
+          cursor: phaseOrder.indexOf(phase) > 0 ? 'pointer' : 'not-allowed',
+          minHeight: '44px',
+          minWidth: '44px',
+          fontSize: '14px',
+        }}
+        disabled={phaseOrder.indexOf(phase) === 0}
+      >
+        ← Back
+      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ ...typo.small, color: colors.textSecondary }}>
+          {phaseLabels[phase]}
+        </span>
+        <span style={{ ...typo.small, color: colors.textMuted }}>
+          ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+        </span>
+      </div>
+      <button
+        onClick={() => {
+          const currentIndex = phaseOrder.indexOf(phase);
+          if (currentIndex < phaseOrder.length - 1 && phase !== 'test') goToPhase(phaseOrder[currentIndex + 1]);
+        }}
+        style={{
+          background: phaseOrder.indexOf(phase) < phaseOrder.length - 1 && phase !== 'test' ? colors.accent : 'transparent',
+          border: 'none',
+          color: 'white',
+          padding: '8px 16px',
+          borderRadius: '8px',
+          cursor: phaseOrder.indexOf(phase) < phaseOrder.length - 1 && phase !== 'test' ? 'pointer' : 'not-allowed',
+          minHeight: '44px',
+          minWidth: '44px',
+          fontSize: '14px',
+          opacity: phaseOrder.indexOf(phase) < phaseOrder.length - 1 && phase !== 'test' ? 1 : 0.4,
+        }}
+        disabled={phaseOrder.indexOf(phase) === phaseOrder.length - 1 || phase === 'test'}
+      >
+        Next →
+      </button>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '61px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 999,
     }}>
       <div style={{
         height: '100%',
@@ -513,6 +605,86 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Chiller Cycle Visualization (static version for predict phase)
+  const ChillerCycleVisualizationStatic = () => {
+    const width = isMobile ? 320 : 450;
+    const height = isMobile ? 280 : 350;
+    const staticCondenserTemp = 35;
+    const staticEvaporatorTemp = 7;
+    const staticCOP = 5.5;
+
+    return (
+      <svg width={width} height={height} viewBox="0 0 450 350" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="coldGradientStatic" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.cold} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.cold} stopOpacity="0.3" />
+          </linearGradient>
+          <linearGradient id="hotGradientStatic" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.hot} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.hot} stopOpacity="0.3" />
+          </linearGradient>
+          <filter id="glowStatic">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        {/* Background */}
+        <rect x="0" y="0" width="450" height="350" fill={colors.bgCard} rx="12" />
+
+        {/* Evaporator (left side - cold) */}
+        <rect x="30" y="120" width="100" height="110" rx="8" fill={`${colors.cold}22`} stroke={colors.cold} strokeWidth="2" />
+        <text x="80" y="145" fill={colors.cold} fontSize="12" fontWeight="600" textAnchor="middle">EVAPORATOR</text>
+        <text x="80" y="165" fill={colors.textSecondary} fontSize="11" textAnchor="middle">{staticEvaporatorTemp}°C</text>
+        {/* Cooling coils */}
+        <path d="M 45 180 Q 55 185 65 180 Q 75 175 85 180 Q 95 185 105 180 Q 115 175 115 180" fill="none" stroke={colors.cold} strokeWidth="2" />
+        <path d="M 45 200 Q 55 205 65 200 Q 75 195 85 200 Q 95 205 105 200 Q 115 195 115 200" fill="none" stroke={colors.cold} strokeWidth="2" />
+        <text x="80" y="220" fill={colors.textMuted} fontSize="10" textAnchor="middle">Absorbs heat</text>
+
+        {/* Condenser (right side - hot) */}
+        <rect x="320" y="120" width="100" height="110" rx="8" fill={`${colors.hot}22`} stroke={colors.hot} strokeWidth="2" />
+        <text x="370" y="145" fill={colors.hot} fontSize="12" fontWeight="600" textAnchor="middle">CONDENSER</text>
+        <text x="370" y="165" fill={colors.textSecondary} fontSize="11" textAnchor="middle">{staticCondenserTemp}°C</text>
+        {/* Heat rejection fins */}
+        <path d="M 335 180 Q 345 185 355 180 Q 365 175 375 180 Q 385 185 395 180 Q 405 175 405 180" fill="none" stroke={colors.hot} strokeWidth="2" />
+        <path d="M 335 200 Q 345 205 355 200 Q 365 195 375 200 Q 385 205 395 200 Q 405 195 405 200" fill="none" stroke={colors.hot} strokeWidth="2" />
+        <text x="370" y="220" fill={colors.textMuted} fontSize="10" textAnchor="middle">Rejects heat</text>
+
+        {/* Compressor (top) */}
+        <circle cx="225" cy="60" r="35" fill={`${colors.warning}22`} stroke={colors.warning} strokeWidth="2" />
+        <text x="225" y="55" fill={colors.warning} fontSize="12" fontWeight="600" textAnchor="middle">COMPRESSOR</text>
+        <text x="225" y="72" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Work Input</text>
+
+        {/* Expansion valve (bottom) */}
+        <rect x="200" y="280" width="50" height="30" rx="4" fill={`${colors.accent}22`} stroke={colors.accent} strokeWidth="2" />
+        <text x="225" y="300" fill={colors.accent} fontSize="10" fontWeight="600" textAnchor="middle">EXP VALVE</text>
+
+        {/* Refrigerant flow lines */}
+        <path d="M 130 150 L 190 95" fill="none" stroke={colors.cold} strokeWidth="3" />
+        <polygon points="185,100 195,90 190,105" fill={colors.cold} />
+        <path d="M 260 95 L 320 150" fill="none" stroke={colors.hot} strokeWidth="3" />
+        <polygon points="315,145 325,155 310,155" fill={colors.hot} />
+        <path d="M 370 230 L 370 260 L 250 295" fill="none" stroke={colors.warning} strokeWidth="3" />
+        <polygon points="255,290 245,300 255,300" fill={colors.warning} />
+        <path d="M 200 295 L 80 295 L 80 230" fill="none" stroke={colors.accent} strokeWidth="3" />
+        <polygon points="75,235 85,235 80,225" fill={colors.accent} />
+
+        {/* Temperature lift indicator */}
+        <line x1="225" y1="130" x2="225" y2="180" stroke={colors.textSecondary} strokeWidth="1" strokeDasharray="4,4" />
+        <text x="225" y="160" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Lift: {staticCondenserTemp - staticEvaporatorTemp}°C</text>
+
+        {/* COP display */}
+        <rect x="175" y="200" width="100" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" />
+        <text x="225" y="220" fill={colors.textSecondary} fontSize="10" textAnchor="middle">COP</text>
+        <text x="225" y="240" fill={colors.success} fontSize="18" fontWeight="700" textAnchor="middle">{staticCOP.toFixed(1)}</text>
+      </svg>
+    );
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -527,59 +699,69 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          ❄️⚡
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Chiller Coefficient of Performance
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "A chiller uses 1 kW of electricity to remove 5 kW of heat. That's not magic—it's <span style={{ color: colors.accent }}>thermodynamics</span>. Understanding COP reveals why some chillers cost twice as much to operate as others."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          paddingTop: '90px',
+          paddingBottom: '100px',
+          textAlign: 'center',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The key to efficient cooling isn't working harder—it's working smarter by minimizing the temperature lift."
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            ❄️⚡
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Chiller Coefficient of Performance
+          </h1>
+
+          <p style={{
+            ...typo.body,
+            color: '#e2e8f0',
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "A chiller uses 1 kW of electricity to remove 5 kW of heat. That's not magic—it's <span style={{ color: colors.accent }}>thermodynamics</span>. Understanding COP reveals why some chillers cost twice as much to operate as others."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — HVAC Engineering Principle
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', fontStyle: 'italic' }}>
+              "The key to efficient cooling isn't working harder—it's working smarter by minimizing the temperature lift."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              — HVAC Engineering Principle
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Explore Chiller Efficiency →
+          </button>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Chiller Efficiency →
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -596,100 +778,99 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '90px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                🤔 Make Your Prediction - Step 1 of 3
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A chiller operates with a COP of 5.5 when outdoor temperature is 25°C. If outdoor temperature rises to 40°C, what happens to COP?
+            </h2>
+
+            {/* Static SVG Visualization */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '24px',
+            }}>
+              <ChillerCycleVisualizationStatic />
+            </div>
+
+            <p style={{ ...typo.body, color: '#e2e8f0', marginBottom: '20px', textAlign: 'center' }}>
+              Observe: The diagram shows the refrigeration cycle with condenser at 35°C and evaporator at 7°C. What to watch for: How will higher outdoor temperature affect the condenser and COP?
             </p>
-          </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A chiller operates with a COP of 5.5 when outdoor temperature is 25°C. If outdoor temperature rises to 40°C, what happens to COP?
-          </h2>
-
-          {/* Visual */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '20px',
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '48px' }}>🌤️</div>
-              <p style={{ ...typo.small, color: colors.textPrimary }}>25°C Outdoor</p>
-              <p style={{ ...typo.h3, color: colors.success }}>COP = 5.5</p>
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : '#e2e8f0',
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: '#e2e8f0', ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
             </div>
-            <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '48px' }}>☀️🔥</div>
-              <p style={{ ...typo.small, color: colors.textPrimary }}>40°C Outdoor</p>
-              <p style={{ ...typo.h3, color: colors.textMuted }}>COP = ?</p>
-            </div>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction →
               </button>
-            ))}
+            )}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction →
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -700,149 +881,165 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            The Refrigeration Cycle
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust temperatures and watch how COP changes
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '90px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              The Refrigeration Cycle
+            </h2>
+            <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
+              Adjust temperatures and observe how COP changes. When you increase the condenser temperature, the temperature lift increases and COP decreases because more compressor work is needed. Temperature lift is defined as the difference between condenser and evaporator temperatures. This is why engineers in data centers and commercial buildings carefully optimize these settings to reduce energy costs.
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ChillerCycleVisualization showFlow={true} />
-            </div>
-
-            {/* Condenser temperature slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🔥 Condenser Temperature</span>
-                <span style={{
-                  ...typo.small,
-                  color: condenserTemp > 40 ? colors.error : condenserTemp > 32 ? colors.warning : colors.success,
-                  fontWeight: 600
-                }}>
-                  {condenserTemp}°C
-                </span>
-              </div>
-              <input
-                type="range"
-                min="25"
-                max="50"
-                value={condenserTemp}
-                onChange={(e) => setCondenserTemp(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Cool Day</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Hot Day</span>
-              </div>
-            </div>
-
-            {/* Evaporator temperature slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>❄️ Evaporator Temperature</span>
-                <span style={{ ...typo.small, color: colors.cold, fontWeight: 600 }}>{evaporatorTemp}°C</span>
-              </div>
-              <input
-                type="range"
-                min="2"
-                max="15"
-                value={evaporatorTemp}
-                onChange={(e) => setEvaporatorTemp(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Very Cold</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Warmer</span>
-              </div>
-            </div>
-
-            {/* Results display */}
+            {/* Main visualization */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                borderTop: `3px solid ${colors.warning}`,
-              }}>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Temperature Lift</div>
-                <div style={{ ...typo.h3, color: colors.warning }}>{temperatureLift}°C</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <ChillerCycleVisualization showFlow={true} />
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                borderTop: `3px solid ${colors.success}`,
-              }}>
-                <div style={{ ...typo.small, color: colors.textMuted }}>COP</div>
-                <div style={{ ...typo.h3, color: colors.success }}>{currentCOP.toFixed(2)}</div>
+
+              {/* Condenser temperature slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: '#e2e8f0' }}>🔥 Condenser Temperature</span>
+                  <span style={{
+                    ...typo.small,
+                    color: condenserTemp > 40 ? colors.error : condenserTemp > 32 ? colors.warning : colors.success,
+                    fontWeight: 600
+                  }}>
+                    {condenserTemp}°C
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="25"
+                  max="50"
+                  value={condenserTemp}
+                  onChange={(e) => setCondenserTemp(parseInt(e.target.value))}
+                  aria-label="Condenser Temperature"
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    accentColor: colors.hot,
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Cool Day</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Hot Day</span>
+                </div>
               </div>
+
+              {/* Evaporator temperature slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: '#e2e8f0' }}>❄️ Evaporator Temperature</span>
+                  <span style={{ ...typo.small, color: colors.cold, fontWeight: 600 }}>{evaporatorTemp}°C</span>
+                </div>
+                <input
+                  type="range"
+                  min="2"
+                  max="15"
+                  value={evaporatorTemp}
+                  onChange={(e) => setEvaporatorTemp(parseInt(e.target.value))}
+                  aria-label="Evaporator Temperature"
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    accentColor: colors.cold,
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Very Cold</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Warmer</span>
+                </div>
+              </div>
+
+              {/* Results display */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                borderTop: `3px solid ${colors.accent}`,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
               }}>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
-                <div style={{ ...typo.h3, color: colors.accent }}>{(currentCOP / 6 * 100).toFixed(0)}%</div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  borderTop: `3px solid ${colors.warning}`,
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Temperature Lift</div>
+                  <div style={{ ...typo.h3, color: colors.warning }}>{temperatureLift}°C</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  borderTop: `3px solid ${colors.success}`,
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>COP</div>
+                  <div style={{ ...typo.h3, color: colors.success }}>{currentCOP.toFixed(2)}</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  borderTop: `3px solid ${colors.accent}`,
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{(currentCOP / 6 * 100).toFixed(0)}%</div>
+                </div>
               </div>
             </div>
+
+            {/* Discovery insight */}
+            {temperatureLift < 25 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  Lower temperature lift = higher COP! You found the efficiency sweet spot.
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics →
+            </button>
           </div>
 
-          {/* Discovery insight */}
-          {temperatureLift < 25 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                💡 Lower temperature lift = higher COP! You found the efficiency sweet spot.
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics →
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -853,14 +1050,27 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '90px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Science of COP
           </h2>
+
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '24px' }}>
+            As you observed in the experiment, {prediction === 'c' ? 'you correctly predicted that' : 'the result showed that'} higher outdoor temperatures increase condenser temperature and reduce COP. The temperature lift is the key factor.
+          </p>
 
           <div style={{
             background: colors.bgCard,
@@ -913,30 +1123,16 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
             </div>
           </div>
 
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Chillers don't create cooling from electricity—they <strong>move heat</strong> from inside to outside. COP &gt; 1 is possible because we're leveraging thermodynamics, not violating it!
-            </p>
-          </div>
-
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
             Explore Partial Load Effects →
           </button>
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+          </div>
+        </div>
       </div>
     );
   }
@@ -953,11 +1149,20 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '90px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -974,70 +1179,49 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
             A chiller runs at 60% of its rated capacity instead of 100%. What happens to its COP?
           </h2>
 
+          {/* SVG visualization for partial load comparison */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '24px',
             display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '20px',
+            justifyContent: 'center',
+            marginBottom: '24px',
           }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                background: `conic-gradient(${colors.accent} 100%, ${colors.border} 100%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto',
-              }}>
-                <div style={{
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '50%',
-                  background: colors.bgCard,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: colors.accent,
-                }}>100%</div>
-              </div>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Full Load</p>
-            </div>
-            <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                background: `conic-gradient(${colors.success} 60%, ${colors.border} 60%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto',
-              }}>
-                <div style={{
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '50%',
-                  background: colors.bgCard,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: colors.success,
-                }}>60%</div>
-              </div>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Partial Load</p>
-            </div>
+            <svg width="320" height="180" viewBox="0 0 400 300" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="twistPredictGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={colors.accent} stopOpacity="0.8" />
+                  <stop offset="100%" stopColor={colors.success} stopOpacity="0.5" />
+                </linearGradient>
+                <filter id="twistPredictGlow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              {/* Background */}
+              <rect x="0" y="0" width="400" height="300" fill={colors.bgCard} rx="12" />
+
+              {/* Full Load Circle (100%) */}
+              <circle cx="120" cy="130" r="55" fill="none" stroke={colors.accent} strokeWidth="8" filter="url(#twistPredictGlow)" />
+              <circle cx="120" cy="130" r="40" fill={colors.bgCard} />
+              <text x="120" y="135" fill={colors.accent} fontSize="16" fontWeight="700" textAnchor="middle">100%</text>
+              <text x="120" y="210" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Full Load</text>
+
+              {/* VS text */}
+              <text x="200" y="135" fill={colors.textMuted} fontSize="18" textAnchor="middle">vs</text>
+
+              {/* Partial Load Circle (60%) - shown as arc */}
+              <circle cx="280" cy="130" r="55" fill="none" stroke={colors.border} strokeWidth="8" />
+              <circle cx="280" cy="130" r="55" fill="none" stroke={colors.success} strokeWidth="8"
+                strokeDasharray="207.35 138.23" strokeDashoffset="0" filter="url(#twistPredictGlow)" />
+              <circle cx="280" cy="130" r="40" fill={colors.bgCard} />
+              <text x="280" y="135" fill={colors.success} fontSize="16" fontWeight="700" textAnchor="middle">60%</text>
+              <text x="280" y="210" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Partial Load</text>
+
+              {/* Question mark */}
+              <text x="200" y="270" fill={colors.warning} fontSize="24" textAnchor="middle">?</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1083,9 +1267,10 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               See the Load Curve →
             </button>
           )}
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1102,16 +1287,25 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '90px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Part-Load Efficiency Curve
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how COP varies with cooling load
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '24px' }}>
+            Observe how COP varies with cooling load. Watch for the efficiency sweet spot!
           </p>
 
           <div style={{
@@ -1182,7 +1376,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
             {/* Load slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Cooling Load</span>
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>Cooling Load</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{loadPercentage}%</span>
               </div>
               <input
@@ -1191,11 +1385,14 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                 max="100"
                 value={loadPercentage}
                 onChange={(e) => setLoadPercentage(parseInt(e.target.value))}
+                aria-label="Cooling Load"
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  accentColor: colors.accent,
                 }}
               />
             </div>
@@ -1258,9 +1455,10 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           >
             Understand Why →
           </button>
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1271,11 +1469,20 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '90px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Optimizing Chiller Efficiency
           </h2>
@@ -1336,9 +1543,10 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           >
             See Real-World Applications →
           </button>
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1347,19 +1555,32 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '90px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '24px' }}>
+            App {selectedApp + 1} of {realWorldApps.length} - Explore all applications to continue
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1386,6 +1607,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1405,7 +1627,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                <div style={{ ...typo.small, color: '#e2e8f0', fontWeight: 500 }}>
                   {a.title.split(' ').slice(0, 2).join(' ')}
                 </div>
               </button>
@@ -1428,7 +1650,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            <p style={{ ...typo.body, color: '#e2e8f0', marginBottom: '16px' }}>
               {app.description}
             </p>
 
@@ -1441,7 +1663,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How COP Optimization Applies:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
                 {app.connection}
               </p>
             </div>
@@ -1450,6 +1672,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1464,6 +1687,59 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                 </div>
               ))}
             </div>
+
+            {/* Got It button for each app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Move to next uncompleted app if available
+                const nextUncompleted = completedApps.findIndex((c, i) => !c && i !== selectedApp);
+                if (nextUncompleted >= 0) {
+                  setSelectedApp(nextUncompleted);
+                }
+              }}
+              style={{
+                background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                width: '100%',
+                minHeight: '44px',
+              }}
+            >
+              Got It! Continue →
+            </button>
+          </div>
+
+          {/* Progress indicator */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <span style={{ ...typo.small, color: '#e2e8f0' }}>
+              Progress: {completedCount} of {realWorldApps.length} apps completed
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {completedApps.map((completed, i) => (
+                <div key={i} style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  background: completed ? colors.success : colors.border,
+                }} />
+              ))}
+            </div>
           </div>
 
           {allAppsCompleted && (
@@ -1474,9 +1750,10 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               Take the Knowledge Test →
             </button>
           )}
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1489,44 +1766,55 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
+          {renderNavigationBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
-              {passed ? '🎉' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed ? 'You\'ve mastered Chiller COP!' : 'Review the concepts and try again.'}
-            </p>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '24px',
+            paddingTop: '90px',
+            paddingBottom: '100px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+                {passed ? '🎉' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: '#e2e8f0', marginBottom: '32px' }}>
+                {passed ? 'You\'ve mastered Chiller COP!' : 'Review the concepts and try again.'}
+              </p>
 
-            {passed ? (
-              <button onClick={() => { playSound('complete'); nextPhase(); }} style={primaryButtonStyle}>
-                Complete Lesson →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
+              {passed ? (
+                <button onClick={() => { playSound('complete'); nextPhase(); }} style={primaryButtonStyle}>
+                  Complete Lesson →
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review & Try Again
+                </button>
+              )}
+
+              {renderNavDots()}
+            </div>
           </div>
-          {renderNavDots()}
         </div>
       );
     }
@@ -1537,20 +1825,29 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '90px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.small, color: '#e2e8f0' }}>
+                Q{currentQuestion + 1}: Question {currentQuestion + 1} of 10
+              </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} style={{
@@ -1570,7 +1867,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
             marginBottom: '16px',
             borderLeft: `3px solid ${colors.accent}`,
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
               {question.scenario}
             </p>
           </div>
@@ -1596,6 +1893,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1604,7 +1902,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                   height: '24px',
                   borderRadius: '50%',
                   background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : '#e2e8f0',
                   textAlign: 'center',
                   lineHeight: '24px',
                   marginRight: '10px',
@@ -1613,7 +1911,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                 }}>
                   {opt.id.toUpperCase()}
                 </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>{opt.label}</span>
+                <span style={{ color: '#e2e8f0', ...typo.small }}>{opt.label}</span>
               </button>
             ))}
           </div>
@@ -1628,8 +1926,9 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                   borderRadius: '10px',
                   border: `1px solid ${colors.border}`,
                   background: 'transparent',
-                  color: colors.textSecondary,
+                  color: '#e2e8f0',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 ← Previous
@@ -1648,6 +1947,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next →
@@ -1673,15 +1973,17 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
               </button>
             )}
           </div>
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1694,25 +1996,34 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          paddingTop: '90px',
+          paddingBottom: '100px',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
+            🏆
+          </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Chiller COP Master!
-        </h1>
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Chiller COP Master!
+          </h1>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand the thermodynamics behind chiller efficiency and how to optimize cooling systems for maximum performance.
-        </p>
+          <p style={{ ...typo.body, color: '#e2e8f0', maxWidth: '500px', marginBottom: '32px' }}>
+            You now understand the thermodynamics behind chiller efficiency and how to optimize cooling systems for maximum performance.
+          </p>
 
         <div style={{
           background: colors.bgCard,
@@ -1760,6 +2071,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
         </div>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }

@@ -436,6 +436,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // Progress bar component
@@ -487,6 +488,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             disabled={isFirst}
             style={{
               padding: '10px 20px',
+              minHeight: '44px',
               borderRadius: '8px',
               border: `1px solid ${colors.border}`,
               background: 'transparent',
@@ -500,23 +502,35 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             ← Back
           </button>
 
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             {phaseOrder.map((p, i) => (
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
                 style={{
                   width: phase === p ? '20px' : '8px',
-                  height: '8px',
+                  minHeight: '44px',
                   borderRadius: '4px',
                   border: 'none',
-                  background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                  background: 'transparent',
                   cursor: 'pointer',
-                  padding: 0,
+                  padding: '18px 0',
                   transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
                 aria-label={phaseLabels[p]}
-              />
+              >
+                <span style={{
+                  display: 'block',
+                  width: phase === p ? '20px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                  transition: 'all 0.3s ease',
+                }} />
+              </button>
             ))}
           </div>
 
@@ -525,6 +539,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             disabled={isLast || isTestPhase}
             style={{
               padding: '10px 20px',
+              minHeight: '44px',
               borderRadius: '8px',
               border: 'none',
               background: (isLast || isTestPhase) ? colors.border : colors.accent,
@@ -615,6 +630,11 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
           <rect width={svgWidth} height={240} fill="#08050c" />
           <rect width={svgWidth} height={240} fill="url(#torqGrid)" />
+
+          {/* Grid reference lines */}
+          <line x1={0} y1={60} x2={svgWidth} y2={60} stroke="#3a2850" strokeWidth={0.5} opacity={0.4} />
+          <line x1={0} y1={120} x2={svgWidth} y2={120} stroke="#3a2850" strokeWidth={0.5} opacity={0.4} />
+          <line x1={0} y1={180} x2={svgWidth} y2={180} stroke="#3a2850" strokeWidth={0.5} opacity={0.4} />
 
           {/* Wall */}
           <rect x={0} y={hingeY - 80} width={50} height={160} fill="url(#torqWallGrad)" />
@@ -818,7 +838,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center', paddingBottom: '100px', paddingTop: '48px' }}>
 
         <div style={{
           fontSize: '64px',
@@ -888,7 +908,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px', paddingTop: '48px' }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
@@ -1008,7 +1028,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px', paddingTop: '48px' }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Torque Laboratory
@@ -1091,7 +1111,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             <div style={{ marginTop: '24px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Push Position</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                <span style={{ touchAction: 'pan-y', ...typo.small, color: colors.accent, fontWeight: 600 }}>
                   {(pushPosition * 100).toFixed(0)}% from hinge
                 </span>
               </div>
@@ -1109,9 +1129,11 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                 disabled={isPushing}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: isPushing ? 'not-allowed' : 'pointer',
+                  accentColor: colors.accent,
+                  touchAction: 'pan-y',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1119,7 +1141,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                 <span style={{ ...typo.small, color: colors.textMuted }}>At handle</span>
               </div>
               <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginTop: '8px', fontStyle: 'italic' }}>
-                Closer to hinge = more force needed. Farther away = less force needed.
+                When you increase the distance from the hinge, less force is needed. This is why door handles are placed far from hinges - it's practical design used in everyday engineering!
               </p>
             </div>
 
@@ -1139,8 +1161,9 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                   cursor: 'pointer',
                   width: '100%',
                   color: hasFriction ? colors.warning : colors.textSecondary,
-                  ...typo.small,
+                  fontSize: typo.small.fontSize,
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 {hasFriction ? '🔶 Sticky Hinge (Extra Resistance)' : '⚪ Normal Hinge'}
@@ -1163,6 +1186,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                     fontWeight: 700,
                     cursor: isPushing ? 'not-allowed' : 'pointer',
                     opacity: isPushing ? 0.6 : 1,
+                    minHeight: '44px',
                   }}
                 >
                   Push Door!
@@ -1179,6 +1203,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                     fontSize: '16px',
                     fontWeight: 600,
                     cursor: 'pointer',
+                    minHeight: '44px',
                   }}
                 >
                   Reset Door
@@ -1195,6 +1220,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                   fontSize: '14px',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 {showForceVector ? 'Vectors ON' : 'Vectors OFF'}
@@ -1275,7 +1301,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               Key Insight: The Lever Arm Matters!
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
-              To create the same torque, you can use:
+              As you observed in the experiment, to create the same torque, you can use:
             </p>
             <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
               <li>Large force + Short lever arm</li>
@@ -1540,7 +1566,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                 padding: '16px',
                 border: `1px solid ${colors.error}33`,
               }}>
-                <p style={{ ...typo.small, color: colors.error, fontWeight: 600, marginBottom: '12px' }}>Left Weight</p>
+                <p style={{ height: '20px', ...typo.small, color: colors.error, fontWeight: 600, marginBottom: '12px' }}>Left Weight</p>
                 <div style={{ marginBottom: '12px' }}>
                   <input
                     type="range"
@@ -1548,11 +1574,11 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                     max="10"
                     value={leftWeight}
                     onChange={(e) => setLeftWeight(parseInt(e.target.value))}
-                    style={{ width: '100%' }}
+                    style={{ touchAction: 'pan-y', width: '100%' }}
                   />
                   <p style={{ ...typo.small, color: colors.textPrimary, textAlign: 'center', marginTop: '4px' }}>{leftWeight} kg</p>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Position: {(leftPosition * 100).toFixed(0)}%</p>
+                <p style={{ height: '20px', ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Position: {(leftPosition * 100).toFixed(0)}%</p>
                 <input
                   type="range"
                   min="0.1"
@@ -1560,7 +1586,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                   step="0.1"
                   value={leftPosition}
                   onChange={(e) => setLeftPosition(parseFloat(e.target.value))}
-                  style={{ width: '100%' }}
+                  style={{ touchAction: 'pan-y', width: '100%' }}
                 />
               </div>
 
@@ -1570,7 +1596,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                 padding: '16px',
                 border: `1px solid ${colors.success}33`,
               }}>
-                <p style={{ ...typo.small, color: colors.success, fontWeight: 600, marginBottom: '12px' }}>Right Weight</p>
+                <p style={{ height: '20px', ...typo.small, color: colors.success, fontWeight: 600, marginBottom: '12px' }}>Right Weight</p>
                 <div style={{ marginBottom: '12px' }}>
                   <input
                     type="range"
@@ -1578,11 +1604,11 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                     max="10"
                     value={rightWeight}
                     onChange={(e) => setRightWeight(parseInt(e.target.value))}
-                    style={{ width: '100%' }}
+                    style={{ touchAction: 'pan-y', width: '100%' }}
                   />
                   <p style={{ ...typo.small, color: colors.textPrimary, textAlign: 'center', marginTop: '4px' }}>{rightWeight} kg</p>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Position: {(rightPosition * 100).toFixed(0)}%</p>
+                <p style={{ height: '20px', ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Position: {(rightPosition * 100).toFixed(0)}%</p>
                 <input
                   type="range"
                   min="0.1"
@@ -1590,7 +1616,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                   step="0.1"
                   value={rightPosition}
                   onChange={(e) => setRightPosition(parseFloat(e.target.value))}
-                  style={{ width: '100%' }}
+                  style={{ touchAction: 'pan-y', width: '100%' }}
                 />
               </div>
             </div>
@@ -1728,7 +1754,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px', paddingTop: '48px' }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
@@ -1962,7 +1988,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         }}>
           {renderProgressBar()}
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🏆' : '📚'}
@@ -1984,7 +2010,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               <p style={{ ...typo.small, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>
                 Question-by-Question Review
               </p>
-              <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '100px', paddingTop: '48px', flex: 1 }}>
                 {testQuestions.map((q, i) => {
                   const correctOpt = q.options.find(o => o.correct);
                   const isCorrect = testAnswers[i] === correctOpt?.id;
@@ -2072,7 +2098,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px', paddingTop: '48px' }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Knowledge Test

@@ -393,18 +393,25 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
     return (
       <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '16px',
-        marginTop: '24px',
-        borderTop: '1px solid #334155'
+        background: '#0f172a',
+        borderTop: '1px solid #334155',
+        boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.3)',
+        zIndex: 1000,
       }}>
         <button
           onClick={goBack}
           disabled={isFirst}
           style={{
             padding: '12px 24px',
+            minHeight: '48px',
             borderRadius: '8px',
             border: '1px solid #475569',
             background: 'transparent',
@@ -415,7 +422,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
         >
           Back
         </button>
-        <span style={{ color: '#94a3b8', fontSize: '14px' }}>
+        <span style={{ color: '#e2e8f0', fontSize: '14px' }}>
           {phaseLabels[phase]} ({currentIndex + 1}/{phaseOrder.length})
         </span>
         <button
@@ -423,6 +430,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           disabled={isLast}
           style={{
             padding: '12px 24px',
+            minHeight: '48px',
             borderRadius: '8px',
             border: 'none',
             background: isLast ? '#475569' : '#ef4444',
@@ -439,9 +447,9 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
   // Wrapper for phase content
   const renderPhaseContent = (content: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', paddingBottom: '100px' }}>
       {renderProgressBar()}
-      <div style={{ padding: '0 24px 24px 24px' }}>
+      <div style={{ padding: '0 24px 24px 24px', overflowY: 'auto' }}>
         {content}
       </div>
       {renderBottomBar()}
@@ -615,6 +623,9 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           <g transform="translate(20, 40)">
             <rect width="220" height="85" fill="rgba(59, 130, 246, 0.1)" rx="10" stroke="url(#eptInputGradient)" strokeWidth="2" />
             <rect x="2" y="2" width="216" height="81" fill="transparent" rx="8" stroke="rgba(59, 130, 246, 0.3)" strokeWidth="1" strokeDasharray="4 2" />
+            <text x="110" y="25" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="bold">INPUT TOKENS</text>
+            <text x="110" y="50" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">{promptTokens}</text>
+            <text x="110" y="70" textAnchor="middle" fill="#e2e8f0" fontSize="10">Prefill Phase</text>
 
             {/* Animated token particles */}
             {isGenerating && Array.from({ length: 3 }).map((_, i) => (
@@ -637,6 +648,9 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           <g transform="translate(260, 40)">
             <rect width="220" height="85" fill="rgba(34, 197, 94, 0.1)" rx="10" stroke="url(#eptOutputGradient)" strokeWidth="2" />
             <rect x="2" y="2" width="216" height="81" fill="transparent" rx="8" stroke="rgba(34, 197, 94, 0.3)" strokeWidth="1" strokeDasharray="4 2" />
+            <text x="110" y="25" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold">OUTPUT TOKENS</text>
+            <text x="110" y="50" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">{outputTokens}</text>
+            <text x="110" y="70" textAnchor="middle" fill="#e2e8f0" fontSize="10">Decode Phase</text>
 
             {/* Animated token particles */}
             {isGenerating && Array.from({ length: 3 }).map((_, i) => (
@@ -664,10 +678,11 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           {/* GPU Power Display */}
           <g transform="translate(20, 140)">
             <rect width="300" height="70" fill="rgba(30, 41, 59, 0.9)" rx="10" stroke="#475569" strokeWidth="1" />
+            <text x="150" y="14" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">GPU CLUSTER ({numGPUs} GPUs x {gpuPower}W)</text>
 
             {/* GPU icons with heat visualization */}
             {Array.from({ length: Math.min(numGPUs, 8) }).map((_, i) => (
-              <g key={`gpu${i}`} transform={`translate(${15 + i * 35}, 15)`}>
+              <g key={`gpu${i}`} transform={`translate(${15 + i * 35}, 20)`}>
                 <rect
                   width="28"
                   height="40"
@@ -694,13 +709,14 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           {/* Power Consumption Graph */}
           <g transform="translate(330, 140)">
             <rect width="150" height="70" fill="rgba(30, 41, 59, 0.9)" rx="10" stroke="#475569" strokeWidth="1" />
+            <text x="75" y="12" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">POWER</text>
 
             {/* Graph area */}
-            <rect x="10" y="15" width="130" height="40" fill="url(#eptPowerGraphGradient)" rx="4" />
+            <rect x="10" y="18" width="130" height="35" fill="url(#eptPowerGraphGradient)" rx="4" />
 
             {/* Power line visualization */}
             <polyline
-              points={`10,55 ${10 + (130 * Math.min(1, metrics.totalPower / 5000))},${55 - (40 * Math.min(1, metrics.totalPower / 5000))}`}
+              points={`10,53 ${10 + (130 * Math.min(1, metrics.totalPower / 5000))},${53 - (35 * Math.min(1, metrics.totalPower / 5000))}`}
               fill="none"
               stroke="#f59e0b"
               strokeWidth="2"
@@ -708,19 +724,21 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
             />
             <circle
               cx={10 + (130 * Math.min(1, metrics.totalPower / 5000))}
-              cy={55 - (40 * Math.min(1, metrics.totalPower / 5000))}
+              cy={53 - (35 * Math.min(1, metrics.totalPower / 5000))}
               r="4"
               fill="#f59e0b"
               filter="url(#eptActiveGlowFilter)"
             />
+            <text x="75" y="65" textAnchor="middle" fill="#f8fafc" fontSize="11">{metrics.totalPower}W</text>
           </g>
 
           {/* Energy Meter */}
           <g transform="translate(20, 225)">
             <rect width="380" height="95" fill="rgba(239, 68, 68, 0.05)" rx="10" stroke="rgba(239, 68, 68, 0.3)" strokeWidth="2" />
+            <text x="190" y="18" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">ENERGY CONSUMPTION</text>
 
             {/* Glow background */}
-            <ellipse cx="190" cy="47" rx="180" ry="40" fill="url(#eptEnergyGlow)" opacity="0.3" />
+            <ellipse cx="190" cy="52" rx="180" ry="35" fill="url(#eptEnergyGlow)" opacity="0.3" />
 
             {/* Energy bar background */}
             <rect x="20" y="35" width="340" height="24" fill="#1e293b" rx="6" stroke="#334155" strokeWidth="1" />
@@ -748,6 +766,9 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
                 strokeWidth="1"
               />
             ))}
+            <text x="190" y="80" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">
+              {metrics.totalEnergy.toFixed(2)} Wh ({metrics.energyPerToken.toFixed(3)} mWh/token)
+            </text>
           </g>
 
           {/* Efficiency Indicator */}
@@ -851,20 +872,20 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           <div style={{ position: 'relative', top: '50px', left: '20px', width: '220px', textAlign: 'center' }}>
             <div style={{ color: '#3b82f6', fontSize: typo.label, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Input Tokens</div>
             <div style={{ color: '#f8fafc', fontSize: typo.heading, fontWeight: 'bold', marginTop: '4px' }}>{promptTokens.toLocaleString()}</div>
-            <div style={{ color: '#94a3b8', fontSize: typo.small, marginTop: '2px' }}>Prefill: {metrics.prefillTime.toFixed(2)}s</div>
+            <div style={{ color: '#e2e8f0', fontSize: typo.small, marginTop: '2px' }}>Prefill: {metrics.prefillTime.toFixed(2)}s</div>
           </div>
 
           {/* Output Tokens Label */}
           <div style={{ position: 'relative', top: '-35px', left: '260px', width: '220px', textAlign: 'center' }}>
             <div style={{ color: '#22c55e', fontSize: typo.label, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Output Tokens</div>
             <div style={{ color: '#f8fafc', fontSize: typo.heading, fontWeight: 'bold', marginTop: '4px' }}>{outputTokens.toLocaleString()}</div>
-            <div style={{ color: '#94a3b8', fontSize: typo.small, marginTop: '2px' }}>Decode: {metrics.decodeTime.toFixed(2)}s</div>
+            <div style={{ color: '#e2e8f0', fontSize: typo.small, marginTop: '2px' }}>Decode: {metrics.decodeTime.toFixed(2)}s</div>
           </div>
 
           {/* GPU Cluster Label */}
           <div style={{ position: 'relative', top: '15px', left: '20px', width: '300px' }}>
             <div style={{ color: '#f59e0b', fontSize: typo.label, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>GPU Cluster</div>
-            <div style={{ color: '#94a3b8', fontSize: typo.small, marginTop: '55px' }}>
+            <div style={{ color: '#e2e8f0', fontSize: typo.small, marginTop: '55px' }}>
               {numGPUs} GPUs x {gpuPower}W = {metrics.totalPower.toLocaleString()}W
             </div>
           </div>
@@ -872,7 +893,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           {/* Power Graph Label */}
           <div style={{ position: 'relative', top: '-50px', left: '340px', width: '140px', textAlign: 'center' }}>
             <div style={{ color: '#f59e0b', fontSize: typo.label, fontWeight: 'bold' }}>Power</div>
-            <div style={{ color: '#f8fafc', fontSize: typo.body, marginTop: '50px' }}>{metrics.totalPower.toLocaleString()}W</div>
+            <div style={{ color: '#f8fafc', fontSize: typo.body, fontWeight: 'normal', marginTop: '50px' }}>{metrics.totalPower.toLocaleString()}W</div>
           </div>
 
           {/* Energy Consumption Label */}
@@ -893,14 +914,14 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
           {/* Equivalents Labels */}
           <div style={{ position: 'relative', top: '-15px', left: '20px', width: '220px' }}>
-            <div style={{ color: '#94a3b8', fontSize: typo.label, fontWeight: 'bold', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>Equivalents</div>
+            <div style={{ color: '#e2e8f0', fontSize: typo.label, fontWeight: 'bold', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>Equivalents</div>
             <div style={{ color: '#f8fafc', fontSize: typo.small, marginTop: '25px', marginLeft: '50px' }}>Phone charges: {metrics.smartphoneCharges.toFixed(3)}</div>
             <div style={{ color: '#f8fafc', fontSize: typo.small, marginTop: '4px', marginLeft: '50px' }}>LED bulb: {metrics.ledBulbSeconds.toFixed(1)}s</div>
           </div>
 
           {/* Environmental Labels */}
           <div style={{ position: 'relative', top: '-75px', left: '260px', width: '220px' }}>
-            <div style={{ color: '#94a3b8', fontSize: typo.label, fontWeight: 'bold', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>Environmental</div>
+            <div style={{ color: '#e2e8f0', fontSize: typo.label, fontWeight: 'bold', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>Environmental</div>
             <div style={{ color: '#f8fafc', fontSize: typo.small, marginTop: '25px', marginLeft: '50px' }}>CO2: {metrics.co2Grams.toFixed(2)} grams</div>
             <div style={{ color: '#f8fafc', fontSize: typo.small, marginTop: '4px', marginLeft: '50px' }}>Cost: ${(metrics.costCents / 100).toFixed(4)}</div>
           </div>
@@ -916,7 +937,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
           {/* Key Insight Label */}
           <div style={{ position: 'relative', top: isGenerating ? '20px' : '65px', left: '20px', width: '460px', textAlign: 'center' }}>
-            <div style={{ color: '#94a3b8', fontSize: typo.small, fontStyle: 'italic' }}>
+            <div style={{ color: '#e2e8f0', fontSize: typo.small, fontStyle: 'italic' }}>
               Every token = memory movement = real joules = real cost
             </div>
           </div>
@@ -1023,10 +1044,13 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
+      <p style={{ color: '#e2e8f0', fontSize: '14px', textAlign: 'center', marginBottom: '8px' }}>
+        Observe how changing each parameter affects energy consumption. Adjust the sliders to explore.
+      </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-            Prompt Tokens: {promptTokens}
+            Prompt Tokens (input length): {promptTokens}
           </label>
           <input
             type="range"
@@ -1036,12 +1060,13 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
             value={promptTokens}
             onChange={(e) => setPromptTokens(parseInt(e.target.value))}
             style={{ width: '100%' }}
+            aria-label="Prompt Tokens slider controls input length"
           />
         </div>
 
         <div>
           <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-            Output Tokens: {outputTokens}
+            Output Tokens (response length): {outputTokens}
           </label>
           <input
             type="range"
@@ -1051,6 +1076,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
             value={outputTokens}
             onChange={(e) => setOutputTokens(parseInt(e.target.value))}
             style={{ width: '100%' }}
+            aria-label="Output Tokens slider controls response length"
           />
         </div>
       </div>
@@ -1058,7 +1084,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-            Model Size: {modelSize}B parameters
+            Model Size (billions of parameters): {modelSize}B
           </label>
           <input
             type="range"
@@ -1068,12 +1094,13 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
             value={modelSize}
             onChange={(e) => setModelSize(parseInt(e.target.value))}
             style={{ width: '100%' }}
+            aria-label="Model Size slider controls model parameters"
           />
         </div>
 
         <div>
           <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-            Number of GPUs: {numGPUs}
+            GPU Count (parallel processors): {numGPUs}
           </label>
           <input
             type="range"
@@ -1083,13 +1110,14 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
             value={numGPUs}
             onChange={(e) => setNumGPUs(parseInt(e.target.value))}
             style={{ width: '100%' }}
+            aria-label="GPU Count slider controls parallel processors"
           />
         </div>
       </div>
 
       <div>
         <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-          Throughput: {throughput} tokens/second
+          Throughput (tokens per second): {throughput} tok/s
         </label>
         <input
           type="range"
@@ -1099,6 +1127,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           value={throughput}
           onChange={(e) => setThroughput(parseInt(e.target.value))}
           style={{ width: '100%' }}
+          aria-label="Throughput slider controls tokens per second"
         />
       </div>
 
@@ -1107,6 +1136,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
         disabled={isGenerating}
         style={{
           padding: '16px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: isGenerating ? '#475569' : '#22c55e',
@@ -1131,7 +1161,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #ef4444, #22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Energy Per Token
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
+          <p style={{ color: '#e2e8f0', fontSize: '18px', marginTop: '8px' }}>
             Does longer prompting cost money even if the answer is "free"?
           </p>
         </div>
@@ -1165,14 +1195,79 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
     );
   }
 
+  // Static visualization for predict phase (no controls)
+  const renderStaticVisualization = () => (
+    <div style={{ maxWidth: '600px', margin: '0 auto 24px auto' }}>
+      <svg width="100%" height="280" viewBox="0 0 500 280" style={{ maxWidth: '600px' }}>
+        <defs>
+          <linearGradient id="eptStaticEnergyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#22c55e" />
+          </linearGradient>
+          <linearGradient id="eptStaticInputGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </linearGradient>
+          <linearGradient id="eptStaticOutputGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#14532d" />
+          </linearGradient>
+        </defs>
+        <rect width="500" height="280" fill="#0f172a" rx="12" />
+
+        {/* Token flow visualization */}
+        <g transform="translate(20, 30)">
+          <rect width="200" height="70" fill="rgba(59, 130, 246, 0.1)" rx="10" stroke="url(#eptStaticInputGradient)" strokeWidth="2" />
+          <text x="100" y="25" textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="bold">INPUT TOKENS</text>
+          <text x="100" y="50" textAnchor="middle" fill="#f8fafc" fontSize="18">100 - 1000</text>
+        </g>
+
+        <g transform="translate(280, 30)">
+          <rect width="200" height="70" fill="rgba(34, 197, 94, 0.1)" rx="10" stroke="url(#eptStaticOutputGradient)" strokeWidth="2" />
+          <text x="100" y="25" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">OUTPUT TOKENS</text>
+          <text x="100" y="50" textAnchor="middle" fill="#f8fafc" fontSize="18">~200</text>
+        </g>
+
+        {/* Arrow */}
+        <line x1="225" y1="65" x2="270" y2="65" stroke="#06b6d4" strokeWidth="3" />
+        <polygon points="270,65 262,60 262,70" fill="#06b6d4" />
+
+        {/* Energy meter */}
+        <g transform="translate(20, 120)">
+          <rect width="460" height="60" fill="rgba(239, 68, 68, 0.05)" rx="10" stroke="rgba(239, 68, 68, 0.3)" strokeWidth="2" />
+          <text x="230" y="20" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">ENERGY CONSUMPTION</text>
+          <rect x="20" y="30" width="420" height="16" fill="#1e293b" rx="4" />
+          <rect x="22" y="32" width="200" height="12" fill="url(#eptStaticEnergyGradient)" rx="3" />
+          <text x="230" y="42" textAnchor="middle" fill="#f8fafc" fontSize="10">? Wh</text>
+        </g>
+
+        {/* GPU rack */}
+        <g transform="translate(20, 200)">
+          <rect width="460" height="60" fill="rgba(30, 41, 59, 0.9)" rx="10" stroke="#475569" strokeWidth="1" />
+          <text x="30" y="20" fill="#f59e0b" fontSize="11" fontWeight="bold">GPU CLUSTER</text>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <rect key={`gpu${i}`} x={30 + i * 52} y={30} width="40" height="20" fill="#475569" rx="3" />
+          ))}
+        </g>
+      </svg>
+    </div>
+  );
+
   // PREDICT PHASE
   if (phase === 'predict') {
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
 
+        <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '16px' }}>
+          Prediction 1 of 2: Consider the scenario below
+        </p>
+
+        {renderStaticVisualization()}
+
         <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-          <p style={{ fontSize: '16px' }}>
+          <p style={{ fontSize: '16px', color: '#e2e8f0' }}>
             You write a 1000-token prompt instead of a 100-token prompt to ask the same question. How does this affect energy consumption?
           </p>
         </div>
@@ -1184,6 +1279,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
               onClick={() => setPrediction(p.id)}
               style={{
                 padding: '16px',
+                minHeight: '48px',
                 borderRadius: '12px',
                 border: prediction === p.id ? '2px solid #ef4444' : '1px solid #475569',
                 background: prediction === p.id ? 'rgba(239, 68, 68, 0.2)' : 'rgba(30, 41, 59, 0.5)',
@@ -1206,6 +1302,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
               marginTop: '24px',
               width: '100%',
               padding: '16px',
+              minHeight: '44px',
               fontSize: '16px',
               fontWeight: 'bold',
               background: '#ef4444',
@@ -1228,7 +1325,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
     return renderPhaseContent(
       <div style={{ maxWidth: '700px', margin: '0 auto' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Energy Calculator</h2>
-        <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+        <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
           See how token count translates to real energy consumption
         </p>
 
@@ -1245,12 +1342,20 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           </ul>
         </div>
 
+        <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '16px', border: '1px solid #22c55e' }}>
+          <h3 style={{ color: '#22c55e', marginBottom: '12px' }}>Real-World Application:</h3>
+          <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
+            Data centers powering AI consume significant electricity. OpenAI, Google, and Anthropic use thousands of GPUs running 24/7. Understanding energy per token helps engineers optimize systems and reduce environmental impact. API pricing models directly reflect these energy costs.
+          </p>
+        </div>
+
         <button
           onClick={goNext}
           style={{
             marginTop: '24px',
             width: '100%',
             padding: '16px',
+            minHeight: '44px',
             fontSize: '16px',
             fontWeight: 'bold',
             background: '#ef4444',
@@ -1270,6 +1375,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'linear';
+    const userPredictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -1283,6 +1389,9 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
             {wasCorrect ? 'Correct!' : 'Not Quite!'}
           </h3>
+          <p style={{ color: '#e2e8f0', marginBottom: '12px' }}>
+            <strong>Your prediction:</strong> {userPredictionLabel}
+          </p>
           <p>
             Energy scales roughly linearly with tokens. Each token requires loading model weights from memory and performing computations - there is no free lunch. Prompt bloat directly increases energy and latency.
           </p>
@@ -1293,21 +1402,21 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
           <div style={{ marginBottom: '16px' }}>
             <h4 style={{ color: '#f59e0b', marginBottom: '8px' }}>Memory Movement Dominates</h4>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
               For each token, the GPU must load billions of model parameters from memory. This memory bandwidth is the primary energy cost - not the actual computation. More tokens = more memory movement = more energy.
             </p>
           </div>
 
           <div style={{ marginBottom: '16px' }}>
             <h4 style={{ color: '#22c55e', marginBottom: '8px' }}>Real Numbers</h4>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
               A typical ChatGPT query uses 0.001-0.01 kWh (1-10 Wh). That is 10-100x more than a Google search. At billions of queries per day, this adds up to megawatts of power.
             </p>
           </div>
 
           <div>
             <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>Why It Matters</h4>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
               AI is projected to consume 3-4% of global electricity by 2030. Prompt efficiency is not just about cost - it is about sustainability. Every unnecessary token has a carbon footprint.
             </p>
           </div>
@@ -1319,6 +1428,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
             marginTop: '24px',
             width: '100%',
             padding: '16px',
+            minHeight: '44px',
             fontSize: '16px',
             fontWeight: 'bold',
             background: '#ef4444',
@@ -1379,6 +1489,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
               marginTop: '24px',
               width: '100%',
               padding: '16px',
+              minHeight: '44px',
               fontSize: '16px',
               fontWeight: 'bold',
               background: '#f59e0b',
@@ -1404,7 +1515,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
     return renderPhaseContent(
       <div style={{ maxWidth: '700px', margin: '0 auto' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Concise vs Verbose</h2>
-        <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+        <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
           Compare the energy cost of efficient vs bloated prompts
         </p>
 
@@ -1415,11 +1526,11 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px' }}>
               <p style={{ color: '#22c55e', fontWeight: 'bold' }}>Concise ({promptTokens} tokens)</p>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>Energy: {conciseMetrics.totalEnergy.toFixed(3)} Wh</p>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>Energy: {conciseMetrics.totalEnergy.toFixed(3)} Wh</p>
             </div>
             <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '8px' }}>
               <p style={{ color: '#ef4444', fontWeight: 'bold' }}>Verbose ({verbosePrompt} tokens)</p>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>Energy: ~{(conciseMetrics.totalEnergy * 4).toFixed(3)} Wh</p>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>Energy: ~{(conciseMetrics.totalEnergy * 4).toFixed(3)} Wh</p>
             </div>
           </div>
           <p style={{ color: '#f8fafc', marginTop: '12px', fontSize: '14px' }}>
@@ -1433,6 +1544,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
             marginTop: '24px',
             width: '100%',
             padding: '16px',
+            minHeight: '44px',
             fontSize: '16px',
             fontWeight: 'bold',
             background: '#f59e0b',
@@ -1452,6 +1564,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'concise_wins';
+    const userTwistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -1465,6 +1578,9 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
             {wasCorrect ? 'Correct!' : 'Not Quite!'}
           </h3>
+          <p style={{ color: '#e2e8f0', marginBottom: '12px' }}>
+            <strong>Your prediction:</strong> {userTwistPredictionLabel}
+          </p>
           <p>
             Concise prompts can often achieve the same quality at a fraction of the energy cost. Prompt engineering is not just about getting better answers - it is about efficiency. Clear, direct prompts waste less energy.
           </p>
@@ -1472,7 +1588,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
         <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px' }}>
           <h3 style={{ color: '#22c55e', marginBottom: '16px' }}>Efficient Prompting Tips</h3>
-          <ul style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px' }}>
+          <ul style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px' }}>
             <li>Be direct - state what you need clearly</li>
             <li>Avoid unnecessary filler words and context</li>
             <li>Use system prompts wisely - they are repeated every call</li>
@@ -1487,6 +1603,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
             marginTop: '24px',
             width: '100%',
             padding: '16px',
+            minHeight: '44px',
             fontSize: '16px',
             fontWeight: 'bold',
             background: '#22c55e',
@@ -1508,7 +1625,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-        <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+        <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
           Energy per token affects pricing, sustainability, and system design
         </p>
 
@@ -1527,7 +1644,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
               <h3 style={{ color: '#f8fafc' }}>{app.title}</h3>
               {transferCompleted.has(index) && <span style={{ color: '#22c55e' }}>Complete</span>}
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
             <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
               <p style={{ color: '#ef4444', fontSize: '14px' }}>{app.question}</p>
             </div>
@@ -1536,6 +1653,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
                 onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
                 style={{
                   padding: '10px 20px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: '1px solid #ef4444',
                   background: 'transparent',
@@ -1554,13 +1672,36 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           </div>
         ))}
 
+        {transferCompleted.size >= 4 && (
+          <button
+            onClick={goNext}
+            style={{
+              marginTop: '24px',
+              width: '100%',
+              padding: '16px',
+              minHeight: '44px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              background: '#22c55e',
+              border: 'none',
+              borderRadius: '12px',
+              color: 'white',
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            Got It
+          </button>
+        )}
+
         <button
           onClick={goNext}
           disabled={transferCompleted.size < 4}
           style={{
-            marginTop: '24px',
+            marginTop: '12px',
             width: '100%',
             padding: '16px',
+            minHeight: '44px',
             fontSize: '16px',
             fontWeight: 'bold',
             background: transferCompleted.size >= 4 ? '#ef4444' : '#475569',
@@ -1595,6 +1736,31 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
             <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
           </div>
 
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ color: '#e2e8f0', marginBottom: '12px' }}>Answer Review:</h3>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              {testQuestions.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                return (
+                  <span key={qIndex} style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: isCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    color: isCorrect ? '#22c55e' : '#ef4444',
+                    fontWeight: 'bold',
+                  }}>
+                    {isCorrect ? '\u2713' : '\u2717'}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
           {testQuestions.map((q, qIndex) => {
             const userAnswer = testAnswers[qIndex];
             const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
@@ -1606,40 +1772,63 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
                 marginBottom: '12px',
                 borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`,
               }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>{qIndex + 1}. {q.question}</p>
+                <p style={{ fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ color: isCorrect ? '#22c55e' : '#ef4444' }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                  {qIndex + 1}. {q.question}
+                </p>
                 {q.options.map((opt, oIndex) => (
                   <div key={oIndex} style={{
                     padding: '8px',
                     borderRadius: '6px',
                     marginBottom: '4px',
                     background: opt.correct ? 'rgba(34, 197, 94, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                    color: opt.correct ? '#22c55e' : userAnswer === oIndex ? '#ef4444' : '#94a3b8',
+                    color: opt.correct ? '#22c55e' : userAnswer === oIndex ? '#ef4444' : '#e2e8f0',
                   }}>
-                    {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                    {opt.correct ? '\u2713 Correct: ' : userAnswer === oIndex ? '\u2717 Your answer: ' : ''}{opt.text}
                   </div>
                 ))}
               </div>
             );
           })}
 
-          <button
-            onClick={goNext}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: testScore >= 8 ? '#22c55e' : '#ef4444',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            {testScore >= 8 ? 'Complete Mastery' : 'Review & Retry'}
-          </button>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+            <button
+              onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); }}
+              style={{
+                flex: 1,
+                padding: '16px',
+                minHeight: '44px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                background: 'transparent',
+                border: '2px solid #ef4444',
+                borderRadius: '12px',
+                color: '#ef4444',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Replay Quiz
+            </button>
+            <button
+              onClick={goNext}
+              style={{
+                flex: 1,
+                padding: '16px',
+                minHeight: '44px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                background: testScore >= 8 ? '#22c55e' : '#ef4444',
+                border: 'none',
+                borderRadius: '12px',
+                color: 'white',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              {testScore >= 8 ? 'Complete Mastery' : 'Continue'}
+            </button>
+          </div>
         </div>
       );
     }
@@ -1650,7 +1839,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2>Knowledge Test</h2>
-          <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+          <span style={{ color: '#e2e8f0' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
         </div>
 
         <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
@@ -1680,6 +1869,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
               onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
               style={{
                 padding: '16px',
+                minHeight: '44px',
                 borderRadius: '12px',
                 border: testAnswers[currentTestQuestion] === oIndex ? '2px solid #ef4444' : '1px solid #475569',
                 background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
@@ -1700,6 +1890,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
             disabled={currentTestQuestion === 0}
             style={{
               padding: '12px 24px',
+              minHeight: '44px',
               borderRadius: '8px',
               border: '1px solid #475569',
               background: 'transparent',
@@ -1716,6 +1907,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
               onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: '#ef4444',
@@ -1732,6 +1924,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
               disabled={testAnswers.includes(null)}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: testAnswers.includes(null) ? '#475569' : '#22c55e',
@@ -1754,7 +1947,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
       <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
         <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
         <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Mastery Achieved!</h1>
-        <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
+        <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>
           You understand the physics of AI energy consumption
         </p>
 
@@ -1771,7 +1964,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
         <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '20px', borderRadius: '12px', textAlign: 'left' }}>
           <h3 style={{ color: '#22c55e', marginBottom: '12px' }}>Your Impact:</h3>
-          <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
             By understanding energy per token, you can write efficient prompts that achieve the same results with less environmental impact. At scale, this matters for the planet.
           </p>
         </div>
@@ -1781,6 +1974,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           style={{
             marginTop: '24px',
             padding: '16px 32px',
+            minHeight: '44px',
             fontSize: '18px',
             fontWeight: 'bold',
             background: 'linear-gradient(90deg, #ef4444, #22c55e)',

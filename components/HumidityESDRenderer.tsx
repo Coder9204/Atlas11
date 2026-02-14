@@ -334,8 +334,8 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#e2e8f0',
     border: '#2a2a3a',
   };
 
@@ -395,25 +395,54 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
     }
   }, [humidity]);
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component with fixed position top
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
-      height: '4px',
+      height: '56px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      borderBottom: `1px solid ${colors.border}`,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
     }}>
+      {/* Progress bar */}
       <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: colors.bgPrimary,
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+          background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+
+      {/* Phase label */}
+      <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 600 }}>
+        {phaseLabels[phase]}
+      </span>
+
+      {/* Phase indicator */}
+      <span style={{ color: '#e2e8f0', fontSize: '14px' }}>
+        {phaseOrder.indexOf(phase) + 1} of {phaseOrder.length}
+      </span>
+    </nav>
   );
+
+  // Progress bar (alias for renderNavBar for backwards compatibility)
+  const renderProgressBar = () => renderNavBar();
 
   // Navigation dots
   const renderNavDots = () => (
@@ -454,19 +483,37 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Secondary button style for consistent min height
+  const secondaryButtonStyle: React.CSSProperties = {
+    minHeight: '44px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
   // ESD VISUALIZATION COMPONENT
   // ─────────────────────────────────────────────────────────────────────────────
-  const ESDVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
-    const waterMolecules = Math.floor(humidity / 5);
-    const chargeIntensity = humidity < 40 ? (40 - humidity) / 40 : 0;
+  const ESDVisualization = ({ isStatic = false }: { isStatic?: boolean }) => {
+    const width = 480;
+    const height = 320;
+    const displayHumidity = isStatic ? 50 : humidity;
+    const waterMolecules = Math.floor(displayHumidity / 5);
+    const chargeIntensity = displayHumidity < 40 ? (40 - displayHumidity) / 40 : 0;
+    const displayEsdRisk = getESDRisk(displayHumidity);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg
+        width="100%"
+        height="auto"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: `${width}px` }}
+        role="img"
+        aria-label="ESD Risk Visualization showing humidity effect on static electricity"
+      >
         <defs>
           <linearGradient id="airGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#1e3a5f" />
@@ -598,7 +645,7 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
           )}
 
           {/* Continuous micro-discharge when very dry */}
-          {humidity < 25 && !showSpark && (
+          {!isStatic && displayHumidity < 25 && !showSpark && (
             <path
               d={`M -17 0 L ${-25 - Math.sin(animationFrame / 3) * 4} ${Math.cos(animationFrame / 4) * 6}`}
               fill="none"
@@ -614,16 +661,16 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
           <rect x="0" y="0" width="25" height={height - 70} fill="#1f2937" rx="4" stroke="#374151" />
           <rect
             x="3"
-            y={height - 73 - (humidity / 100) * (height - 80)}
+            y={height - 73 - (displayHumidity / 100) * (height - 80)}
             width="19"
-            height={(humidity / 100) * (height - 80)}
-            fill={esdRisk.color}
+            height={(displayHumidity / 100) * (height - 80)}
+            fill={displayEsdRisk.color}
             rx="2"
           />
           {[0, 20, 40, 60, 80, 100].map(val => (
             <g key={val} transform={`translate(0, ${height - 73 - (val / 100) * (height - 80)})`}>
               <line x1="0" y1="0" x2="-5" y2="0" stroke={colors.textMuted} strokeWidth="1" />
-              <text x="-8" y="3" fill={colors.textMuted} fontSize="8" textAnchor="end">{val}</text>
+              <text x="-8" y="3" fill="#e2e8f0" fontSize="8" textAnchor="end">{val}</text>
             </g>
           ))}
         </g>
@@ -632,19 +679,19 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
         <g transform={`translate(15, ${height - 55})`}>
           <rect x="0" y="0" width={width - 30} height="45" fill="#0f172a" rx="8" stroke="#334155" />
           <g transform="translate(20, 15)">
-            <text fill={colors.textMuted} fontSize="9">HUMIDITY</text>
-            <text y="15" fill={esdRisk.color} fontSize="14" fontWeight="bold">{humidity}% RH</text>
+            <text fill="#e2e8f0" fontSize="9">HUMIDITY</text>
+            <text y="15" fill={displayEsdRisk.color} fontSize="14" fontWeight="bold">{displayHumidity}% RH</text>
           </g>
           <g transform={`translate(${(width - 30) * 0.3}, 15)`}>
-            <text fill={colors.textMuted} fontSize="9">ESD RISK</text>
-            <text y="15" fill={esdRisk.color} fontSize="14" fontWeight="bold">{esdRisk.level}</text>
+            <text fill="#e2e8f0" fontSize="9">ESD RISK</text>
+            <text y="15" fill={displayEsdRisk.color} fontSize="14" fontWeight="bold">{displayEsdRisk.level}</text>
           </g>
           <g transform={`translate(${(width - 30) * 0.55}, 15)`}>
-            <text fill={colors.textMuted} fontSize="9">MAX VOLTAGE</text>
-            <text y="15" fill={esdRisk.color} fontSize="14" fontWeight="bold">{(esdRisk.voltage / 1000).toFixed(0)}kV</text>
+            <text fill="#e2e8f0" fontSize="9">MAX VOLTAGE</text>
+            <text y="15" fill={displayEsdRisk.color} fontSize="14" fontWeight="bold">{(displayEsdRisk.voltage / 1000).toFixed(0)}kV</text>
           </g>
           <g transform={`translate(${(width - 30) * 0.8}, 15)`}>
-            <text fill={colors.textMuted} fontSize="9">DEW POINT</text>
+            <text fill="#e2e8f0" fontSize="9">DEW POINT</text>
             <text y="15" fill="#60a5fa" fontSize="14" fontWeight="bold">{dewPoint.toFixed(1)}C</text>
           </g>
         </g>
@@ -656,12 +703,20 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
   // CONDENSATION VISUALIZATION COMPONENT
   // ─────────────────────────────────────────────────────────────────────────────
   const CondensationVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+    const width = 480;
+    const height = 320;
     const condensationIntensity = hasCondensation ? Math.min(1, (twistDewPoint - coldSurfaceTemp) / 10) : 0;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg
+        width="100%"
+        height="auto"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: `${width}px` }}
+        role="img"
+        aria-label="Condensation Visualization showing humidity and temperature interaction"
+      >
         <defs>
           <linearGradient id="condBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#1e293b" />
@@ -835,9 +890,10 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{
           fontSize: '64px',
@@ -902,8 +958,9 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -922,7 +979,7 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
             Indoor humidity drops from 50% to 15% during winter. What happens to static electricity buildup?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram for prediction */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -930,27 +987,7 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>💧💧💧</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Summer (50% RH)</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>?</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Static Risk</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>←</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>💧</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Winter (15% RH)</p>
-              </div>
-            </div>
+            <ESDVisualization isStatic={true} />
           </div>
 
           {/* Options */}
@@ -1012,8 +1049,9 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1171,8 +1209,9 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>

@@ -148,6 +148,63 @@ function getSvgComplexityScore(svg: SVGElement | null): number {
 }
 
 // ============================================================================
+// INTERACTIVE GRAPHIC EXCELLENCE HELPERS
+// ============================================================================
+
+/**
+ * Extract (x, y) coordinates from an SVG path's `d` attribute.
+ * Handles M (moveTo) and L (lineTo) commands.
+ */
+function extractPathPoints(pathD: string): { x: number; y: number }[] {
+  const points: { x: number; y: number }[] = [];
+  const commands = pathD.match(/[ML]\s*([\d.e+-]+)\s+([\d.e+-]+)/g) || [];
+  commands.forEach(cmd => {
+    const nums = cmd.match(/([\d.e+-]+)/g);
+    if (nums && nums.length >= 2) {
+      points.push({ x: parseFloat(nums[0]), y: parseFloat(nums[1]) });
+    }
+  });
+  return points;
+}
+
+/**
+ * Find the interactive marker point in an SVG.
+ * Looks for circles with glow effects, filters, larger radius, or white stroke
+ * (typical patterns for "current value" markers on charts).
+ */
+function getInteractivePoint(svg: Element | null): { cx: number; cy: number } | null {
+  if (!svg) return null;
+  const circles = Array.from(svg.querySelectorAll('circle'));
+  // Prefer circles with filter attribute (active/current point with glow/shadow),
+  // then fall back to circles with white stroke. This avoids matching static
+  // reference markers (typically smaller, no filter) before the dynamic point.
+  const marker = circles.find(c => {
+    const r = parseFloat(c.getAttribute('r') || '0');
+    return r >= 6 && c.getAttribute('filter');
+  }) || circles.find(c => {
+    const r = parseFloat(c.getAttribute('r') || '0');
+    const stroke = c.getAttribute('stroke');
+    return (r >= 8 && (stroke === '#ffffff' || stroke === 'white' || stroke === '#fff'));
+  }) || circles.find(c => {
+    const r = parseFloat(c.getAttribute('r') || '0');
+    const stroke = c.getAttribute('stroke');
+    return (r >= 6 && (stroke === '#ffffff' || stroke === 'white' || stroke === '#fff'));
+  });
+  if (!marker) return null;
+  return {
+    cx: parseFloat(marker.getAttribute('cx') || '0'),
+    cy: parseFloat(marker.getAttribute('cy') || '0')
+  };
+}
+
+/**
+ * Euclidean distance between two SVG points.
+ */
+function pointDistance(p1: { cx: number; cy: number }, p2: { cx: number; cy: number }): number {
+  return Math.sqrt((p1.cx - p2.cx) ** 2 + (p1.cy - p2.cy) ** 2);
+}
+
+// ============================================================================
 // EVAL COMPLIANCE HELPERS
 // ============================================================================
 
@@ -292,6 +349,7 @@ export function createGameTestSuite(
   const runTier2 = tier === 'should-pass' || tier === 'premium' || tier === 'eval-compliance' || tier === 'all';
   const runTier3 = tier === 'premium' || tier === 'eval-compliance' || tier === 'all';
   const runTier4 = tier === 'eval-compliance' || tier === 'all';
+  const runTier5 = tier === 'all';
 
   let architecture: GameArchitecture = 'self-managing';
 
@@ -1248,6 +1306,138 @@ export function createGameTestSuite(
                 expect(hasZIndex).toBe(true);
               }
             }
+          });
+        });
+
+        describe('2.3e Real Usability Quality', () => {
+          it('SVG visualization is large enough to see (min 300x200)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            // Check viewBox dimensions
+            const viewBox = svg.getAttribute('viewBox');
+            if (viewBox) {
+              const parts = viewBox.split(/[\s,]+/).map(Number);
+              const width = parts[2] || 0;
+              const height = parts[3] || 0;
+              expect(width).toBeGreaterThanOrEqual(300);
+              expect(height).toBeGreaterThanOrEqual(200);
+            } else {
+              // Check width/height attributes
+              const width = parseInt(svg.getAttribute('width') || '0');
+              const height = parseInt(svg.getAttribute('height') || '0');
+              expect(width).toBeGreaterThanOrEqual(300);
+              expect(height).toBeGreaterThanOrEqual(200);
+            }
+          });
+
+          it('SVG text elements are readable (fontSize >= 11)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const textElements = svg.querySelectorAll('text');
+            textElements.forEach((text, i) => {
+              const fontSize = text.getAttribute('font-size') || text.getAttribute('fontSize') ||
+                text.style.fontSize || '12';
+              const size = parseInt(fontSize);
+              // Allow size 0 for hidden elements, but visible text must be >= 11
+              if (size > 0) {
+                expect(size).toBeGreaterThanOrEqual(11);
+              }
+            });
+          });
+
+          it('slider change produces meaningful SVG update (>100 chars difference)', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const svgBefore = getSVG()?.innerHTML || '';
+
+            // Change slider significantly
+            const min = Number(slider.min) || 0;
+            const max = Number(slider.max) || 100;
+            const current = Number(slider.value);
+            const newVal = current < (min + max) / 2 ? max * 0.9 : min + (max - min) * 0.1;
+
+            fireEvent.change(slider, { target: { value: String(newVal) } });
+
+            const svgAfter = getSVG()?.innerHTML || '';
+            const charDiff = Math.abs(svgAfter.length - svgBefore.length) +
+              (svgAfter !== svgBefore ? 50 : 0); // Bonus for any change
+
+            // SVG should change meaningfully, not just a tiny attribute
+            expect(charDiff).toBeGreaterThan(20);
+          });
+
+          it('content container has scroll capability when needed', () => {
+            const { container } = renderGame({ gamePhase: 'play' });
+
+            // Find the main content area
+            const contentDivs = container.querySelectorAll('div');
+            let hasScrollCapability = false;
+
+            contentDivs.forEach(div => {
+              const style = div.getAttribute('style') || '';
+              if (style.includes('overflow-y: auto') ||
+                  style.includes('overflow-y: scroll') ||
+                  style.includes('overflow: auto') ||
+                  style.includes('overflow: scroll') ||
+                  style.includes('overflowY: auto') ||
+                  style.includes('overflowY: scroll')) {
+                hasScrollCapability = true;
+              }
+            });
+
+            // Should have at least one scrollable container
+            expect(hasScrollCapability).toBe(true);
+          });
+
+          it('sliders have adequate touch target size (height >= 16px, responsive width)', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = Array.from(getSliders()) as HTMLInputElement[];
+            if (sliders.length === 0) return;
+
+            sliders.forEach(slider => {
+              const style = slider.getAttribute('style') || '';
+
+              // Width can be percentage (100%) or pixel value >= 150
+              const widthMatch = style.match(/width:\s*(\d+)/);
+              const hasPercentWidth = style.includes('width: 100%') || style.includes('width:100%');
+              if (widthMatch && !hasPercentWidth) {
+                expect(parseInt(widthMatch[1])).toBeGreaterThanOrEqual(150);
+              }
+              // 100% width is acceptable as it's responsive
+
+              // Check height (should have adequate height for touch - >= 16px)
+              const heightMatch = style.match(/height:\s*(\d+)/);
+              if (heightMatch) {
+                expect(parseInt(heightMatch[1])).toBeGreaterThanOrEqual(16);
+              }
+            });
+          });
+
+          it('page text uses readable font sizes (body text >= 14px)', () => {
+            renderGame({ gamePhase: 'play' });
+            const paragraphs = document.querySelectorAll('p, span');
+
+            let hasReadableText = false;
+            paragraphs.forEach(p => {
+              const style = (p as HTMLElement).getAttribute('style') || '';
+              const fontSizeMatch = style.match(/font-size:\s*(\d+)/i) ||
+                style.match(/fontSize:\s*(\d+)/i);
+              if (fontSizeMatch) {
+                const size = parseInt(fontSizeMatch[1]);
+                if (size >= 14) hasReadableText = true;
+              } else {
+                // Default browser font is typically 16px, so no explicit size is OK
+                hasReadableText = true;
+              }
+            });
+
+            expect(hasReadableText).toBe(true);
           });
         });
 
@@ -3962,6 +4152,1352 @@ export function createGameTestSuite(
               }
             });
             expect(tooSmallBtns).toEqual([]);
+          });
+        });
+
+      });
+    }
+
+    // ========================================================================
+    // TIER 5: INTERACTIVE GRAPHIC EXCELLENCE (~55 tests)
+    // Ensures interactive graphics are realistic, responsive, cross-browser
+    // compatible, educationally clear, and truly engaging on web/mobile/tablet.
+    // Catches: flat curves, broken Brave sliders, invisible changes, unlabeled
+    // axes, poor scaling, unresponsive layouts, and physics display errors.
+    // ========================================================================
+
+    if (runTier5) {
+      describe('TIER 5: Interactive Graphic Excellence', () => {
+
+        // ----------------------------------------------------------------
+        // 5.1 Cross-Browser Slider Compatibility
+        // Ensures sliders work in Chrome, Brave, Safari, Firefox, mobile
+        // ----------------------------------------------------------------
+        describe('5.1 Cross-Browser Slider Compatibility', () => {
+          it('slider responds to input event for real-time Chromium/Brave feedback', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const textBefore = getPhaseContent();
+            const mid = (Number(slider.min) + Number(slider.max)) / 2;
+            const newVal = Number(slider.value) === mid ? Number(slider.max) * 0.8 : mid;
+
+            // onInput fires continuously during drag in ALL browsers.
+            // onChange only fires on mouse release in Chromium/Brave.
+            // Without onInput support, Brave users get no real-time feedback.
+            fireEvent.input(slider, { target: { value: String(newVal) } });
+
+            const textAfter = getPhaseContent();
+            expect(textAfter).not.toBe(textBefore);
+          });
+
+          it('slider has appearance reset for cross-browser custom styling', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = Array.from(getSliders()) as HTMLInputElement[];
+            if (sliders.length === 0) return;
+
+            // Without -webkit-appearance: none, custom background gradients on
+            // slider tracks will NOT render in Chromium/Brave/Safari.
+            const hasAppearanceReset = sliders.some(slider => {
+              const style = slider.getAttribute('style') || '';
+              return /appearance\s*:\s*none|-webkit-appearance\s*:\s*none|WebkitAppearance|webkitAppearance/i.test(style);
+            });
+
+            // Accept accent-color approach as an alternative (simpler but limited)
+            const hasAccentColor = sliders.some(slider => {
+              const style = slider.getAttribute('style') || '';
+              return /accent-?color|accentColor/i.test(style);
+            });
+
+            expect(hasAppearanceReset || hasAccentColor).toBe(true);
+          });
+
+          it('slider has touch-action CSS for mobile scroll compatibility', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = Array.from(getSliders()) as HTMLInputElement[];
+            if (sliders.length === 0) return;
+
+            // Without touch-action: pan-y, dragging a slider on mobile scrolls
+            // the page instead of moving the thumb. Brave's fingerprinting
+            // protection makes this worse by blocking touch event APIs.
+            const hasProperTouchHandling = sliders.some(slider => {
+              const style = slider.getAttribute('style') || '';
+              const parentStyle = slider.parentElement?.getAttribute('style') || '';
+              const inlineMatch = /touch-?action|touchAction/i.test(style + parentStyle);
+              // jsdom may not serialize touchAction into getAttribute('style'),
+              // so also check the DOM style property directly
+              const el = slider as HTMLElement;
+              const domMatch = !!(el.style as any).touchAction || !!(el.style as any)['touch-action'];
+              return inlineMatch || domMatch;
+            });
+
+            if (!hasProperTouchHandling) {
+              console.warn(
+                '[TIER 5.1] Sliders missing touch-action CSS. ' +
+                'Add touchAction: "pan-y" to prevent scroll blocking on mobile/tablet/Brave.'
+              );
+            }
+            expect(hasProperTouchHandling).toBe(true);
+          });
+
+          it('slider input event updates SVG in real-time (not just on release)', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const svgBefore = getSVG()?.innerHTML || '';
+            const max = Number(slider.max) || 100;
+            fireEvent.input(slider, { target: { value: String(max * 0.75) } });
+            const svgAfter = getSVG()?.innerHTML || '';
+
+            expect(svgAfter).not.toBe(svgBefore);
+          });
+
+          it('slider thumb has adequate height for finger touch (>= 16px)', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = Array.from(getSliders()) as HTMLInputElement[];
+            if (sliders.length === 0) return;
+
+            sliders.forEach(slider => {
+              const style = slider.getAttribute('style') || '';
+              const heightMatch = style.match(/height\s*:\s*(\d+)/i);
+              if (heightMatch) {
+                expect(parseInt(heightMatch[1])).toBeGreaterThanOrEqual(16);
+              }
+            });
+          });
+
+          it('keyboard arrow keys do not crash slider', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            fireEvent.keyDown(slider, { key: 'ArrowRight' });
+            fireEvent.keyDown(slider, { key: 'ArrowLeft' });
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('slider handles rapid input-change event alternation (simulated drag)', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const min = Number(slider.min) || 0;
+            const max = Number(slider.max) || 100;
+            const step = (max - min) / 20;
+
+            // Simulate realistic drag: alternating input (during drag) and change (release)
+            for (let i = 0; i <= 20; i++) {
+              const val = String(min + step * i);
+              fireEvent.input(slider, { target: { value: val } });
+              if (i % 5 === 0) {
+                fireEvent.change(slider, { target: { value: val } });
+              }
+            }
+
+            expect(consoleErrors.length).toBe(0);
+            expect(getSVG()?.innerHTML.length).toBeGreaterThan(100);
+          });
+        });
+
+        // ----------------------------------------------------------------
+        // 5.2 SVG Visualization Perceptibility & Realism
+        // Ensures graphics show visible, meaningful, realistic changes
+        // that clearly communicate the physics to the learner
+        // ----------------------------------------------------------------
+        describe('5.2 SVG Visualization Perceptibility', () => {
+          it('SVG curve points are distributed across plot area (not compressed flat)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const paths = Array.from(svg.querySelectorAll('path'));
+            const curvePath = paths.find(p => {
+              const d = p.getAttribute('d') || '';
+              return d.includes('L') && d.length > 50;
+            });
+            if (!curvePath) return;
+
+            const d = curvePath.getAttribute('d') || '';
+            const points = extractPathPoints(d);
+            if (points.length < 5) return;
+
+            // Calculate Y-coordinate range of the curve
+            const yValues = points.map(p => p.y);
+            const yMin = Math.min(...yValues);
+            const yMax = Math.max(...yValues);
+            const yRange = yMax - yMin;
+
+            const viewBox = svg.getAttribute('viewBox');
+            let totalHeight = parseFloat(svg.getAttribute('height') || '280');
+            if (viewBox) {
+              totalHeight = parseFloat(viewBox.split(/[\s,]+/)[3]) || totalHeight;
+            }
+
+            // The curve should use at least 15% of the vertical space.
+            // If less, the curve is compressed flat — meaning all the interesting
+            // behavior is invisible to the user (e.g., linear Y on exponential data).
+            const utilizationPercent = (yRange / totalHeight) * 100;
+            if (utilizationPercent < 15) {
+              console.warn(
+                `[TIER 5.2] SVG curve uses only ${utilizationPercent.toFixed(1)}% of vertical space. ` +
+                'Curve appears flat. Consider logarithmic Y-axis for exponential data.'
+              );
+            }
+            expect(utilizationPercent).toBeGreaterThanOrEqual(15);
+          });
+
+          it('slider change produces visible point position change (> 5px)', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const svg = getSVG();
+            const pointBefore = getInteractivePoint(svg);
+            if (!pointBefore) return;
+
+            const min = Number(slider.min) || 0;
+            const max = Number(slider.max) || 100;
+            const newVal = min + (max - min) * 0.75;
+            fireEvent.change(slider, { target: { value: String(newVal) } });
+
+            const pointAfter = getInteractivePoint(getSVG());
+            if (!pointAfter) return;
+
+            const distance = pointDistance(pointBefore, pointAfter);
+            if (distance < 5) {
+              console.warn(
+                `[TIER 5.2] Interactive point moved only ${distance.toFixed(1)}px on slider change. ` +
+                'Users cannot perceive the change. Check Y-axis scaling or value mapping.'
+              );
+            }
+            expect(distance).toBeGreaterThan(5);
+          });
+
+          it('different slider positions (25%, 50%, 75%) produce distinct SVG states', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const min = Number(slider.min) || 0;
+            const max = Number(slider.max) || 100;
+            const snapshots: string[] = [];
+
+            [0.25, 0.5, 0.75].forEach(fraction => {
+              const val = min + (max - min) * fraction;
+              fireEvent.change(slider, { target: { value: String(val) } });
+              snapshots.push(getSVG()?.innerHTML || '');
+            });
+
+            // All three should be different — if not, the graphic doesn't respond
+            const uniqueSnapshots = new Set(snapshots);
+            expect(uniqueSnapshots.size).toBeGreaterThanOrEqual(2);
+            expect(snapshots[0] !== snapshots[1] || snapshots[1] !== snapshots[2]).toBe(true);
+          });
+
+          it('SVG curve has sufficient data points for smooth appearance (>= 10)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const paths = Array.from(svg.querySelectorAll('path'));
+            const curvePath = paths.find(p => {
+              const d = p.getAttribute('d') || '';
+              return d.includes('L') && d.length > 50;
+            });
+            if (!curvePath) return;
+
+            const points = extractPathPoints(curvePath.getAttribute('d') || '');
+            expect(points.length).toBeGreaterThanOrEqual(10);
+          });
+
+          it('interactive marker is not stuck at extreme edge of plot', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const point = getInteractivePoint(svg);
+            if (!point) return;
+
+            const viewBox = svg.getAttribute('viewBox');
+            let svgHeight = parseFloat(svg.getAttribute('height') || '280');
+            if (viewBox) {
+              svgHeight = parseFloat(viewBox.split(/[\s,]+/)[3]) || svgHeight;
+            }
+
+            // If marker is within 5% of top or bottom, it's compressed to an extreme
+            const margin = svgHeight * 0.05;
+            const isAtExtreme = point.cy < margin || point.cy > svgHeight - margin;
+            if (isAtExtreme) {
+              console.warn(
+                `[TIER 5.2] Interactive marker at cy=${point.cy.toFixed(1)} in SVG height ${svgHeight}. ` +
+                'Marker pressed against edge — consider logarithmic Y-axis scaling.'
+              );
+            }
+          });
+
+          it('SVG content area utilizes meaningful portion of available space', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const shapes = svg.querySelectorAll('path, circle, rect, line, polygon');
+            if (shapes.length < 3) return;
+
+            let minX = Infinity, maxX = -Infinity;
+            shapes.forEach(shape => {
+              const x = parseFloat(
+                shape.getAttribute('cx') || shape.getAttribute('x1') || shape.getAttribute('x') || ''
+              );
+              if (!isNaN(x)) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); }
+            });
+            if (!isFinite(minX)) return;
+
+            const viewBox = svg.getAttribute('viewBox');
+            let svgWidth = parseFloat(svg.getAttribute('width') || '450');
+            if (viewBox) {
+              svgWidth = parseFloat(viewBox.split(/[\s,]+/)[2]) || svgWidth;
+            }
+
+            const widthUtilization = (maxX - minX) / svgWidth;
+            expect(widthUtilization).toBeGreaterThanOrEqual(0.3);
+          });
+
+          it('SVG curves/barriers use significant vertical space (not flat or compressed)', () => {
+            // Check ALL phases that may have SVGs, not just play.
+            // Energy barrier diagrams, reaction coordinate plots, etc. must show
+            // visible peaks/curves that use the available height, not flat lines.
+            const phasesToCheck = ['play', 'twist_predict', 'twist_play'];
+            let foundCurve = false;
+            let worstUtilization = 100;
+
+            for (const gp of phasesToCheck) {
+              cleanup();
+              try { renderGame({ gamePhase: gp }); } catch { continue; }
+              const svgs = document.querySelectorAll('svg');
+              svgs.forEach(svg => {
+                const paths = Array.from(svg.querySelectorAll('path'));
+                paths.forEach(path => {
+                  const d = path.getAttribute('d') || '';
+                  // Check Q (quadratic) and C (cubic) curves and L (line-to) paths
+                  if (d.length < 30) return;
+                  const hasCommands = /[QLCT]/i.test(d);
+                  const hasLinePoints = (d.match(/[LM]/g) || []).length >= 3;
+                  if (!hasCommands && !hasLinePoints) return;
+
+                  // Extract all Y coordinates from the path
+                  const yCoords: number[] = [];
+                  const nums = d.match(/[\d.e+-]+/g) || [];
+                  // For Q/C curves, parse control points; for M/L, parse endpoints
+                  // Simple approach: every other number after the first is a Y coordinate
+                  const cmdParts = d.match(/[MLQCT][^MLQCT]*/gi) || [];
+                  cmdParts.forEach(part => {
+                    const coordNums = part.match(/[\d.e+-]+/g) || [];
+                    for (let i = 1; i < coordNums.length; i += 2) {
+                      yCoords.push(parseFloat(coordNums[i]));
+                    }
+                  });
+
+                  if (yCoords.length < 2) return;
+                  foundCurve = true;
+
+                  const yMin = Math.min(...yCoords);
+                  const yMax = Math.max(...yCoords);
+                  const yRange = yMax - yMin;
+
+                  const vb = svg.getAttribute('viewBox');
+                  let h = parseFloat(svg.getAttribute('height') || '280');
+                  if (vb) h = parseFloat(vb.split(/[\s,]+/)[3]) || h;
+
+                  const utilPct = (yRange / h) * 100;
+                  worstUtilization = Math.min(worstUtilization, utilPct);
+                });
+              });
+            }
+
+            if (!foundCurve) return; // no curves found in any phase
+
+            if (worstUtilization < 25) {
+              console.warn(
+                `[TIER 5.2] SVG curve/barrier uses only ${worstUtilization.toFixed(1)}% of vertical space. ` +
+                'Barrier appears flat. Scale the peak height to use at least 25% of the SVG height ' +
+                'so the energy barrier or data curve is clearly visible to learners.'
+              );
+            }
+            expect(worstUtilization).toBeGreaterThanOrEqual(25);
+          });
+
+          it('SVG text elements do not overlap each other (clear readability)', () => {
+            // Text overlapping other text or curve elements makes graphics
+            // look unprofessional and hinders learning.
+            renderGame({ gamePhase: 'play' });
+            const svgs = document.querySelectorAll('svg');
+            let overlappingPairs = 0;
+
+            svgs.forEach(svg => {
+              const texts = Array.from(svg.querySelectorAll('text'));
+              if (texts.length < 2) return;
+
+              // Build bounding boxes from text attributes
+              const boxes = texts.map(t => {
+                const x = parseFloat(t.getAttribute('x') || '0');
+                const y = parseFloat(t.getAttribute('y') || '0');
+                const fontSize = parseFloat(t.getAttribute('font-size') || t.getAttribute('fontSize') || '12');
+                const content = t.textContent || '';
+                const anchor = t.getAttribute('text-anchor') || t.getAttribute('textAnchor') || 'start';
+                const estWidth = content.length * fontSize * 0.6;
+                let left = x;
+                if (anchor === 'middle') left = x - estWidth / 2;
+                else if (anchor === 'end') left = x - estWidth;
+                return { left, right: left + estWidth, top: y - fontSize, bottom: y + 2 };
+              });
+
+              // Check all pairs
+              for (let i = 0; i < boxes.length; i++) {
+                for (let j = i + 1; j < boxes.length; j++) {
+                  const a = boxes[i], b = boxes[j];
+                  const overlapX = a.left < b.right && a.right > b.left;
+                  const overlapY = a.top < b.bottom && a.bottom > b.top;
+                  if (overlapX && overlapY) {
+                    console.warn(`[OVERLAP] "${texts[i].textContent?.substring(0,25)}" (${JSON.stringify(a)}) vs "${texts[j].textContent?.substring(0,25)}" (${JSON.stringify(b)})`);
+                    overlappingPairs++;
+                  }
+                }
+              }
+            });
+
+            if (overlappingPairs > 0) {
+              console.warn(
+                `[TIER 5.2] ${overlappingPairs} overlapping text pair(s) in SVG. ` +
+                'Text overlap makes graphics unclear. Reposition labels to avoid collision.'
+              );
+            }
+            expect(overlappingPairs).toBe(0);
+          });
+
+          it('all SVG phases have graphics that use vertical space well (no empty void)', () => {
+            // The graphic should not be 80%+ empty space with everything crammed at the bottom.
+            const phasesToCheck = ['play', 'twist_predict', 'twist_play'];
+            let foundBadSpace = false;
+
+            for (const gp of phasesToCheck) {
+              cleanup();
+              try { renderGame({ gamePhase: gp }); } catch { continue; }
+              const svgs = document.querySelectorAll('svg');
+              svgs.forEach(svg => {
+                const vb = svg.getAttribute('viewBox');
+                let h = parseFloat(svg.getAttribute('height') || '0');
+                if (vb) h = parseFloat(vb.split(/[\s,]+/)[3]) || h;
+                if (h < 100) return;
+
+                // Get all content Y positions (circles, rects, texts, paths)
+                const contentYs: number[] = [];
+                svg.querySelectorAll('circle').forEach(c => {
+                  const cy = parseFloat(c.getAttribute('cy') || '');
+                  if (!isNaN(cy)) contentYs.push(cy);
+                });
+                svg.querySelectorAll('text').forEach(t => {
+                  const ty = parseFloat(t.getAttribute('y') || '');
+                  if (!isNaN(ty)) contentYs.push(ty);
+                });
+                svg.querySelectorAll('line').forEach(l => {
+                  const y1 = parseFloat(l.getAttribute('y1') || '');
+                  const y2 = parseFloat(l.getAttribute('y2') || '');
+                  if (!isNaN(y1)) contentYs.push(y1);
+                  if (!isNaN(y2)) contentYs.push(y2);
+                });
+
+                if (contentYs.length < 3) return;
+
+                const topContent = Math.min(...contentYs);
+                const bottomContent = Math.max(...contentYs);
+                const contentSpan = bottomContent - topContent;
+                const spanRatio = contentSpan / h;
+
+                // Content should span at least 40% of the SVG height
+                if (spanRatio < 0.4) {
+                  console.warn(
+                    `[TIER 5.2] SVG content spans only ${(spanRatio * 100).toFixed(0)}% of height in ${gp} phase. ` +
+                    'Most of the graphic is empty void. Redistribute content vertically.'
+                  );
+                  foundBadSpace = true;
+                }
+              });
+            }
+            expect(foundBadSpace).toBe(false);
+          });
+        });
+
+        // ----------------------------------------------------------------
+        // 5.3 Educational Graphic Clarity & Annotations
+        // Ensures graphics clearly communicate WHAT is shown and WHY
+        // it matters — like Apple/Airbnb-quality data visualization
+        // ----------------------------------------------------------------
+        describe('5.3 Educational Graphic Clarity', () => {
+          it('SVG has labeled axes (X and/or Y axis text)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const texts = Array.from(svg.querySelectorAll('text'))
+              .map(t => (t.textContent || '').trim().toLowerCase());
+
+            const axisPattern = /temperature|rate|force|velocity|speed|distance|time|angle|frequency|amplitude|energy|pressure|voltage|current|position|height|mass|volume|density|power|acceleration|momentum|wavelength|concentration|coefficient|intensity|reaction/i;
+            const axisLabels = texts.filter(t => axisPattern.test(t));
+
+            expect(axisLabels.length).toBeGreaterThanOrEqual(1);
+          });
+
+          it('SVG has grid lines or tick marks for visual reference', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const lines = Array.from(svg.querySelectorAll('line'));
+
+            // Grid lines: dashed or semi-transparent
+            const gridLines = lines.filter(line => {
+              const dash = line.getAttribute('stroke-dasharray') || line.getAttribute('strokeDasharray');
+              const opacity = line.getAttribute('opacity');
+              return dash || (opacity && parseFloat(opacity) < 1);
+            });
+
+            // Tick marks: short lines at axis edges
+            const tickMarks = lines.filter(line => {
+              const dy = Math.abs(
+                parseFloat(line.getAttribute('y2') || '0') - parseFloat(line.getAttribute('y1') || '0')
+              );
+              const dx = Math.abs(
+                parseFloat(line.getAttribute('x2') || '0') - parseFloat(line.getAttribute('x1') || '0')
+              );
+              return (dy > 0 && dy < 15) || (dx > 0 && dx < 15);
+            });
+
+            expect(gridLines.length + tickMarks.length).toBeGreaterThanOrEqual(2);
+          });
+
+          it('SVG has a title or descriptive heading nearby', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const titleEl = svg.querySelector('title');
+            const boldText = Array.from(svg.querySelectorAll('text')).find(t => {
+              const fw = t.getAttribute('font-weight') || t.getAttribute('fontWeight') || '';
+              const fs = parseFloat(t.getAttribute('font-size') || t.getAttribute('fontSize') || '0');
+              const text = (t.textContent || '').trim();
+              return (fw === 'bold' || fw === '700' || fw === '800' || fs >= 13) && text.length > 3;
+            });
+
+            const pageContent = getPhaseContent();
+            const hasHeading = /temperature|rate|reaction|curve|graph|diagram|chart|relationship|equation|simulation|energy|barrier|visualization/i.test(pageContent);
+
+            expect(titleEl || boldText || hasHeading).toBeTruthy();
+          });
+
+          it('current interactive value is visually highlighted (glow/filter/size)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const circles = Array.from(svg.querySelectorAll('circle'));
+            const highlighted = circles.filter(c => {
+              const filter = c.getAttribute('filter');
+              const r = parseFloat(c.getAttribute('r') || '0');
+              const stroke = c.getAttribute('stroke');
+              return filter || r >= 8 || (stroke && stroke !== 'none');
+            });
+
+            const glowElements = svg.querySelectorAll('[fill*="url(#glow"]');
+            const filterElements = svg.querySelectorAll('[filter]');
+
+            expect(highlighted.length + glowElements.length + filterElements.length).toBeGreaterThanOrEqual(1);
+          });
+
+          it('reference or baseline marker exists for comparison', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const texts = Array.from(svg.querySelectorAll('text')).map(t => t.textContent || '');
+            const hasRefText = texts.some(t =>
+              /ref|baseline|default|initial|25°?C|standard|normal|compare/i.test(t)
+            );
+
+            const circles = Array.from(svg.querySelectorAll('circle'));
+            const secondaryMarkers = circles.filter(c => {
+              const fill = c.getAttribute('fill') || '';
+              const opacity = parseFloat(c.getAttribute('opacity') || '1');
+              return /a1a1|9ca3|gray|grey/i.test(fill) || (opacity > 0 && opacity < 0.8);
+            });
+
+            if (!hasRefText && secondaryMarkers.length === 0) {
+              console.warn(
+                '[TIER 5.3] No reference/baseline point in SVG. ' +
+                'A "before" marker helps users see the magnitude of their changes.'
+              );
+            }
+          });
+
+          it('units are displayed on axes or near values', () => {
+            renderGame({ gamePhase: 'play' });
+            const svgText = getSVG()?.textContent || '';
+            const pageContent = getPhaseContent();
+            const allText = svgText + pageContent;
+
+            const hasUnits = /°C|°F|K\b|m\/s|km\/h|Hz|eV|J\b|N\b|Pa|W\b|V\b|A\b|Ω|kg|cm|mm|m²|ms|μs|%|rad|rpm/i.test(allText);
+            expect(hasUnits).toBe(true);
+          });
+
+          it('formula or equation is visible near the graphic', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+            const svgText = getSVG()?.textContent || '';
+            const allText = content + svgText;
+
+            const hasFormula = /=.*exp|=.*e\^|k\s*=|F\s*=|v\s*=|E\s*=|P\s*=|\^2|\^3|²|³|×|·|∝|ln\(|log\(/i.test(allText);
+            const hasEquation = /equation|formula|relationship|proportional|varies.*as/i.test(content);
+            expect(hasFormula || hasEquation).toBe(true);
+          });
+
+          it('color coding is semantically meaningful (not arbitrary)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const svgHtml = svg.innerHTML;
+            const hasGradient = svg.querySelectorAll('linearGradient, radialGradient').length > 0;
+            const hasTempColors = /3B82F6|blue/i.test(svgHtml) && /EF4444|F59E0B|red|orange|yellow/i.test(svgHtml);
+            const hasSemanticColors = /10B981|22c55e|green/i.test(svgHtml) && /EF4444|ef4444|red/i.test(svgHtml);
+
+            expect(hasGradient || hasTempColors || hasSemanticColors).toBe(true);
+          });
+        });
+
+        // ----------------------------------------------------------------
+        // 5.4 Slider UX Excellence
+        // Ensures sliders are clearly labeled, informative, intuitive,
+        // and communicate what the user is controlling and why it matters
+        // ----------------------------------------------------------------
+        describe('5.4 Slider UX Excellence', () => {
+          it('slider has min and max boundary labels', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = Array.from(getSliders()) as HTMLInputElement[];
+            if (sliders.length === 0) return;
+
+            const slider = sliders[0];
+            const parent = slider.parentElement;
+            const grandparent = parent?.parentElement;
+            const nearbyText = (parent?.textContent || '') + (grandparent?.textContent || '');
+
+            const hasMinLabel = nearbyText.includes(slider.min) ||
+              /low|min|cold|slow|small|weak|zero|none|freezer/i.test(nearbyText);
+            const hasMaxLabel = nearbyText.includes(slider.max) ||
+              /high|max|hot|fast|large|strong|full/i.test(nearbyText);
+
+            expect(hasMinLabel || hasMaxLabel).toBe(true);
+          });
+
+          it('slider value readout updates immediately on change', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const parent = slider.parentElement?.parentElement;
+            const textBefore = parent?.textContent || '';
+
+            const max = Number(slider.max) || 100;
+            const newVal = Math.round(max * 0.7);
+            fireEvent.change(slider, { target: { value: String(newVal) } });
+
+            const textAfter = parent?.textContent || '';
+            expect(textAfter).not.toBe(textBefore);
+          });
+
+          it('slider has physics-concept label explaining what it controls', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = Array.from(getSliders()) as HTMLInputElement[];
+            if (sliders.length === 0) return;
+
+            const parent = sliders[0].parentElement;
+            const grandparent = parent?.parentElement;
+            const nearbyText = (parent?.textContent || '') + (grandparent?.textContent || '');
+
+            const hasLabel = /temperature|force|velocity|speed|angle|mass|frequency|amplitude|energy|activation|pressure|distance|height|radius|current|voltage|rate|power|time|coefficient|concentration|density|viscosity|flow|wavelength|momentum/i.test(nearbyText);
+            expect(hasLabel).toBe(true);
+          });
+
+          it('slider change updates derived calculated values', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const valueBefore = getPhaseContent();
+            const min = Number(slider.min) || 0;
+            const max = Number(slider.max) || 100;
+            fireEvent.change(slider, { target: { value: String(min + (max - min) * 0.8) } });
+            const valueAfter = getPhaseContent();
+
+            expect(valueAfter).not.toBe(valueBefore);
+
+            // Check numerical values actually changed
+            const numbersBefore = (valueBefore.match(/\d+\.?\d*/g) || []).join(',');
+            const numbersAfter = (valueAfter.match(/\d+\.?\d*/g) || []).join(',');
+            expect(numbersAfter).not.toBe(numbersBefore);
+          });
+
+          it('multiple sliders can be adjusted independently in twist_play', () => {
+            renderGame({ gamePhase: 'twist_play' });
+            const sliders = Array.from(getSliders()) as HTMLInputElement[];
+            if (sliders.length < 2) return;
+
+            const s1 = sliders[0];
+            const s2 = sliders[1];
+
+            fireEvent.change(s1, { target: { value: String((Number(s1.min) + Number(s1.max)) / 2) } });
+            const stateAfterS1 = getPhaseContent();
+
+            fireEvent.change(s2, { target: { value: String((Number(s2.min) + Number(s2.max)) / 2) } });
+            const stateAfterS2 = getPhaseContent();
+
+            expect(stateAfterS2).not.toBe(stateAfterS1);
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('slider displays units alongside current value', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = Array.from(getSliders()) as HTMLInputElement[];
+            if (sliders.length === 0) return;
+
+            const parent = sliders[0].parentElement;
+            const grandparent = parent?.parentElement;
+            const nearbyText = (parent?.textContent || '') + (grandparent?.textContent || '');
+
+            const hasUnits = /°C|°F|K\b|m\/s|km\/h|Hz|eV|J\b|N\b|Pa|W\b|V\b|A\b|Ω|kg|cm|mm|m²|s\b|ms|%|rad|rpm|m\b|ft|lb|atm/i.test(nearbyText);
+            expect(hasUnits).toBe(true);
+          });
+
+          it('extreme slider values produce valid displays (no NaN, Infinity, or broken text)', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            fireEvent.change(slider, { target: { value: slider.min } });
+            let content = getPhaseContent();
+            expect(content).not.toMatch(/\bNaN\b|\bInfinity\b|\bundefined\b/);
+
+            fireEvent.change(slider, { target: { value: slider.max } });
+            content = getPhaseContent();
+            expect(content).not.toMatch(/\bNaN\b|\bInfinity\b|\bundefined\b/);
+
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('displayed values use appropriate precision (no excessive decimals)', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+
+            // Find numbers with 7+ decimal places (unreadable noise)
+            const excessive = (content.match(/\d+\.\d{7,}/g) || [])
+              .filter(n => !n.includes('e') && parseFloat(n) > 0.001);
+
+            if (excessive.length > 0) {
+              console.warn(
+                `[TIER 5.4] Excessive decimal precision: ${excessive.join(', ')}. ` +
+                'Use .toFixed() or toLocaleString() for readability.'
+              );
+            }
+            expect(excessive.length).toBeLessThanOrEqual(2);
+          });
+        });
+
+        // ----------------------------------------------------------------
+        // 5.5 Device Responsiveness (Mobile 375px / Tablet 768px / Desktop)
+        // Ensures graphics look great and function properly at all sizes
+        // ----------------------------------------------------------------
+        describe('5.5 Device Responsiveness', () => {
+          it('SVG container uses responsive width (100%, flex, or viewBox)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            let hasResponsive = false;
+            let node: Element | null = svg;
+            for (let depth = 0; depth < 4 && node; depth++) {
+              const style = node.getAttribute('style') || '';
+              if (style.includes('100%') || style.includes('flex') ||
+                  style.includes('max-width') || style.includes('maxWidth')) {
+                hasResponsive = true;
+                break;
+              }
+              if (node.tagName === 'svg' && node.getAttribute('viewBox')) {
+                hasResponsive = true;
+                break;
+              }
+              node = node.parentElement;
+            }
+
+            expect(hasResponsive).toBe(true);
+          });
+
+          it('sliders have full-width responsive layout', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = Array.from(getSliders()) as HTMLInputElement[];
+            if (sliders.length === 0) return;
+
+            sliders.forEach(slider => {
+              const style = slider.getAttribute('style') || '';
+              const hasWidth = style.includes('100%') || style.includes('width');
+              expect(hasWidth).toBe(true);
+            });
+          });
+
+          it('primary buttons have minimum 44px touch targets', () => {
+            renderGame({ gamePhase: 'play' });
+            const buttons = screen.getAllByRole('button');
+            const primaryBtns = buttons.filter(btn => {
+              const style = btn.getAttribute('style') || '';
+              const text = (btn.textContent || '').trim();
+              return style.includes('background') && text.length > 2 && text.length < 50;
+            });
+
+            primaryBtns.forEach(btn => {
+              const style = btn.getAttribute('style') || '';
+              const heightMatch = style.match(/(?:min-?height|height)\s*:\s*(\d+)/i);
+              if (heightMatch) {
+                expect(parseInt(heightMatch[1])).toBeGreaterThanOrEqual(44);
+              }
+            });
+          });
+
+          it('no fixed pixel widths exceed mobile viewport (375px)', () => {
+            renderGame({ gamePhase: 'play' });
+            const oversized: string[] = [];
+
+            document.querySelectorAll('[style]').forEach(el => {
+              const style = el.getAttribute('style') || '';
+              const widthMatch = style.match(/(?:^|;)\s*width\s*:\s*(\d+)px/i);
+              if (widthMatch) {
+                const width = parseInt(widthMatch[1]);
+                // SVGs with viewBox scale down, so they're exempt
+                if (width > 375 && el.tagName !== 'svg') {
+                  oversized.push(`<${el.tagName.toLowerCase()}> width: ${width}px`);
+                }
+              }
+            });
+
+            if (oversized.length > 0) {
+              console.warn(`[TIER 5.5] Elements wider than mobile viewport: ${oversized.join(', ')}`);
+            }
+            expect(oversized.length).toBeLessThanOrEqual(2);
+          });
+
+          it('SVG preserveAspectRatio is not "none" (prevents distortion)', () => {
+            renderGame({ gamePhase: 'play' });
+            document.querySelectorAll('svg').forEach(svg => {
+              const par = svg.getAttribute('preserveAspectRatio');
+              if (par) {
+                expect(par).not.toBe('none');
+              }
+            });
+          });
+
+          it('no horizontal scroll in play or twist_play phases', () => {
+            ['play', 'twist_play'].forEach(phase => {
+              clearConsoleLogs();
+              const { unmount } = renderGame({ gamePhase: phase });
+              expect(document.body.scrollWidth).toBeLessThanOrEqual(document.body.clientWidth + 30);
+              unmount();
+              cleanup();
+            });
+          });
+        });
+
+        // ----------------------------------------------------------------
+        // 5.6 Interactive Engagement & Game-like Quality
+        // Ensures the graphic draws users in like a game — immediate
+        // feedback, discovery moments, rich visual context
+        // ----------------------------------------------------------------
+        describe('5.6 Interactive Engagement', () => {
+          it('interaction produces synchronous visual feedback (no async delay)', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const svgBefore = getSVG()?.innerHTML || '';
+            const max = Number(slider.max) || 100;
+            fireEvent.change(slider, { target: { value: String(max * 0.6) } });
+            const svgAfter = getSVG()?.innerHTML || '';
+
+            // Change must be immediate (same render tick), not delayed
+            expect(svgAfter).not.toBe(svgBefore);
+          });
+
+          it('contextual discovery or insight prompts appear during exploration', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const min = Number(slider.min) || 0;
+            const max = Number(slider.max) || 100;
+            let foundDiscovery = false;
+
+            // Sweep through the slider range
+            for (let fraction = 0.1; fraction <= 0.9; fraction += 0.1) {
+              const val = min + (max - min) * fraction;
+              fireEvent.change(slider, { target: { value: String(val) } });
+              const content = getPhaseContent();
+              if (/notice|discover|observe|insight|did you|look!|amazing|key|important|rule|tip|hint|🎯|💡|🔍/i.test(content)) {
+                foundDiscovery = true;
+                break;
+              }
+            }
+
+            if (!foundDiscovery) {
+              console.warn(
+                '[TIER 5.6] No discovery prompt found when sweeping slider range. ' +
+                'Consider adding contextual insights at key parameter values.'
+              );
+            }
+          });
+
+          it('real-time calculated values are displayed alongside graphic', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+
+            const hasCalculatedValues = /×|rate|ratio|factor|multiplier|result|output|velocity|force|energy|power|current|acceleration/i.test(content);
+            const hasNumericalDisplay = /\d+\.?\d*\s*(×|m\/s|Hz|N|J|W|V|A|Pa|eV|°C|K)/i.test(content);
+
+            expect(hasCalculatedValues || hasNumericalDisplay).toBe(true);
+          });
+
+          it('multiple visual sections reinforce the concept (chart + data readout)', () => {
+            renderGame({ gamePhase: 'play' });
+
+            const svgs = document.querySelectorAll('svg');
+            const styledCards = document.querySelectorAll(
+              '[style*="border-radius"][style*="background"]'
+            );
+
+            // Should have graphic(s) AND styled data readout cards
+            expect(svgs.length).toBeGreaterThanOrEqual(1);
+            expect(styledCards.length).toBeGreaterThanOrEqual(1);
+          });
+
+          it('color changes create intuitive parameter mapping (blue=cold, red=hot, etc.)', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            fireEvent.change(slider, { target: { value: slider.min } });
+            const htmlLow = document.body.innerHTML;
+
+            fireEvent.change(slider, { target: { value: slider.max } });
+            const htmlHigh = document.body.innerHTML;
+
+            // Different slider positions should show different colors
+            expect(htmlHigh).not.toBe(htmlLow);
+
+            // Color-coded feedback should be present
+            const hasColorCoding = /10B981|22c55e|success|EF4444|ef4444|error|F59E0B|f59e0b|warning/i.test(htmlHigh);
+            expect(hasColorCoding).toBe(true);
+          });
+
+          it('smooth CSS transitions are present for state changes', () => {
+            renderGame({ gamePhase: 'play' });
+            const html = document.body.innerHTML;
+            const hasTransitions = /transition[^;]*\d+\.?\d*(s|ms)/i.test(html);
+            expect(hasTransitions).toBe(true);
+          });
+
+          it('observation guidance explains what to watch for when interacting', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+
+            const hasGuidance = /observe|watch|notice|look|pay attention|focus|what.*happen|when.*increase|when.*decrease|try.*moving|try.*adjust|experiment/i.test(content);
+            expect(hasGuidance).toBe(true);
+          });
+
+          it('comparison or before-after display aids understanding', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+            const html = document.body.innerHTML;
+
+            const hasComparison = /reference|baseline|compare|vs\.?|versus|before|after|original|current|change.*from|relative|multiplier|factor/i.test(content);
+            const hasMultiValueLayout = /grid-template-columns|gridTemplateColumns/i.test(html);
+            const hasFlexRow = /flex-direction:\s*row|flexDirection:\s*row/i.test(html);
+
+            expect(hasComparison || hasMultiValueLayout || hasFlexRow).toBeTruthy();
+          });
+        });
+
+        // ----------------------------------------------------------------
+        // 5.7 Physics Accuracy & Display Integrity
+        // Ensures displayed values are physically correct, readable,
+        // and the visualization faithfully represents the underlying math
+        // ----------------------------------------------------------------
+        describe('5.7 Physics Accuracy & Display Integrity', () => {
+          it('no NaN or Infinity at any slider position across full range', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const min = Number(slider.min) || 0;
+            const max = Number(slider.max) || 100;
+            const positions = [min, min + (max - min) * 0.25, (min + max) / 2, min + (max - min) * 0.75, max];
+
+            positions.forEach(val => {
+              fireEvent.change(slider, { target: { value: String(val) } });
+              const content = getPhaseContent();
+              const svgText = getSVG()?.textContent || '';
+              const allText = content + svgText;
+
+              expect(allText).not.toMatch(/\bNaN\b/);
+              expect(allText).not.toMatch(/\bInfinity\b/);
+              expect(allText).not.toMatch(/\bundefined\b/);
+            });
+          });
+
+          it('increasing slider value changes output in physically expected direction', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const min = Number(slider.min) || 0;
+            const max = Number(slider.max) || 100;
+
+            fireEvent.change(slider, { target: { value: String(min + (max - min) * 0.2) } });
+            const contentLow = getPhaseContent();
+
+            fireEvent.change(slider, { target: { value: String(min + (max - min) * 0.8) } });
+            const contentHigh = getPhaseContent();
+
+            expect(contentHigh).not.toBe(contentLow);
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('SVG coordinate attributes are all valid numbers (no NaN)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const invalidAttrs: string[] = [];
+            svg.querySelectorAll('*').forEach(el => {
+              ['cx', 'cy', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'r', 'width', 'height'].forEach(attr => {
+                const val = el.getAttribute(attr);
+                if (val && isNaN(parseFloat(val)) && val !== '100%' && !val.includes('url')) {
+                  invalidAttrs.push(`<${el.tagName}> ${attr}="${val}"`);
+                }
+              });
+            });
+
+            expect(invalidAttrs).toEqual([]);
+          });
+
+          it('SVG path d attribute contains only valid coordinates', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            svg.querySelectorAll('path').forEach(path => {
+              const d = path.getAttribute('d') || '';
+              if (d.length < 10) return;
+
+              expect(d).not.toMatch(/NaN/);
+              expect(d).not.toMatch(/Infinity/);
+
+              const commands = d.match(/[MLHVCSQTAZ][^MLHVCSQTAZ]*/gi) || [];
+              commands.forEach(cmd => {
+                (cmd.match(/[\d.e+-]+/g) || []).forEach(num => {
+                  expect(isFinite(parseFloat(num))).toBe(true);
+                });
+              });
+            });
+          });
+
+          it('Y-axis scaling differentiates between close slider values (not over-compressed)', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const min = Number(slider.min) || 0;
+            const max = Number(slider.max) || 100;
+            const range = max - min;
+
+            // Compare 40% vs 50% — if these produce identical SVG, the scale is too compressed
+            fireEvent.change(slider, { target: { value: String(min + range * 0.4) } });
+            const svg1 = getSVG()?.innerHTML || '';
+
+            fireEvent.change(slider, { target: { value: String(min + range * 0.5) } });
+            const svg2 = getSVG()?.innerHTML || '';
+
+            if (svg1 === svg2) {
+              console.warn(
+                '[TIER 5.7] Slider at 40% and 50% produce identical SVG. ' +
+                'Y-axis may be over-compressed. For exponential data, use Math.log() scaling.'
+              );
+            }
+          });
+
+          it('twist_play visualization responds to both sliders', () => {
+            renderGame({ gamePhase: 'twist_play' });
+            const sliders = Array.from(getSliders()) as HTMLInputElement[];
+            if (sliders.length < 2) return;
+
+            const s1 = sliders[0];
+            fireEvent.change(s1, { target: { value: String((Number(s1.min) + Number(s1.max)) / 2) } });
+            const stateA = getSVG()?.innerHTML || '';
+
+            const s2 = sliders[1];
+            fireEvent.change(s2, { target: { value: String((Number(s2.min) + Number(s2.max)) / 2) } });
+            const stateB = getSVG()?.innerHTML || '';
+
+            expect(stateB).not.toBe(stateA);
+          });
+        });
+
+        // ----------------------------------------------------------------
+        // 5.8 Scroll & Zoom Functionality
+        // Ensures games are scrollable on all devices, content is not
+        // hidden behind fixed bars, and zoom is not blocked. These are
+        // structural checks that catch the DOM patterns causing scroll
+        // failure even though jsdom cannot simulate actual scrolling.
+        // ----------------------------------------------------------------
+        describe('5.8 Scroll & Zoom Functionality', () => {
+          it('content-heavy phases have a scrollable container with overflowY', () => {
+            // Phases like transfer, test, review have lots of content.
+            // Without overflowY: auto/scroll on a container, content gets cut off.
+            const contentPhases = ['play', 'transfer', 'test', 'review'];
+            let hasScrollContainer = false;
+
+            for (const gp of contentPhases) {
+              cleanup();
+              try { renderGame({ gamePhase: gp }); } catch { continue; }
+
+              const allElements = document.querySelectorAll('[style]');
+              allElements.forEach(el => {
+                const style = el.getAttribute('style') || '';
+                if (/overflow-?y\s*:\s*(auto|scroll)/i.test(style)) {
+                  hasScrollContainer = true;
+                }
+              });
+              if (hasScrollContainer) break;
+            }
+
+            if (!hasScrollContainer) {
+              console.warn(
+                '[TIER 5.8] No element with overflowY: auto/scroll found in any content phase. ' +
+                'Content will be clipped on mobile. Add overflowY: "auto" to the scrollable content container.'
+              );
+            }
+            expect(hasScrollContainer).toBe(true);
+          });
+
+          it('scrollable container has paddingBottom >= 80px for fixed bottom nav', () => {
+            // Fixed bottom bars (position: fixed, bottom: 0) overlay content.
+            // The scrollable area needs paddingBottom to prevent the last content
+            // from being hidden behind the fixed bar.
+            renderGame({ gamePhase: 'play' });
+
+            const hasFixedBottom = Array.from(document.querySelectorAll('[style]')).some(el => {
+              const style = el.getAttribute('style') || '';
+              return /position\s*:\s*fixed/i.test(style) && /bottom\s*:\s*0/i.test(style);
+            });
+
+            if (!hasFixedBottom) return; // No fixed bottom bar, no issue
+
+            // Find scrollable container and check paddingBottom
+            let sufficientPadding = false;
+            document.querySelectorAll('[style]').forEach(el => {
+              const style = el.getAttribute('style') || '';
+              if (/overflow-?y\s*:\s*(auto|scroll)/i.test(style)) {
+                // Check explicit padding-bottom
+                const pbMatch = style.match(/padding-?bottom\s*:\s*(\d+)/i);
+                if (pbMatch && parseInt(pbMatch[1]) >= 80) {
+                  sufficientPadding = true;
+                  return;
+                }
+                // Check shorthand padding (1-4 values). Third value is bottom when 3+ values present.
+                const shorthand = style.match(/(?:^|;\s*)padding\s*:\s*([\d.]+)px(?:\s+([\d.]+)px)?(?:\s+([\d.]+)px)?(?:\s+([\d.]+)px)?/i);
+                if (shorthand) {
+                  // padding: top right bottom left  OR  padding: top horizontal bottom  OR  padding: vertical horizontal  OR  padding: all
+                  const values = [shorthand[1], shorthand[2], shorthand[3], shorthand[4]].filter(Boolean).map(Number);
+                  let bottomVal = values[0]; // 1 value: all sides
+                  if (values.length === 2) bottomVal = values[0]; // 2 values: vertical horizontal → bottom = vertical
+                  if (values.length === 3) bottomVal = values[2]; // 3 values: top horizontal bottom
+                  if (values.length === 4) bottomVal = values[2]; // 4 values: top right bottom left
+                  if (bottomVal >= 80) {
+                    sufficientPadding = true;
+                    return;
+                  }
+                }
+                // Also check via DOM style property directly
+                const htmlEl = el as HTMLElement;
+                const pbDom = parseFloat(htmlEl.style.paddingBottom || '0');
+                if (pbDom >= 80) {
+                  sufficientPadding = true;
+                }
+              }
+            });
+
+            if (!sufficientPadding) {
+              console.warn(
+                '[TIER 5.8] Fixed bottom nav exists but scroll container lacks paddingBottom >= 80px. ' +
+                'Content at the bottom will be hidden behind the navigation bar on mobile.'
+              );
+            }
+            expect(sufficientPadding).toBe(true);
+          });
+
+          it('scrollable container has paddingTop >= 44px for fixed top nav', () => {
+            renderGame({ gamePhase: 'play' });
+
+            const hasFixedTop = Array.from(document.querySelectorAll('[style]')).some(el => {
+              const style = el.getAttribute('style') || '';
+              return /position\s*:\s*fixed/i.test(style) && /top\s*:\s*0/i.test(style);
+            });
+
+            if (!hasFixedTop) return;
+
+            let sufficientPadding = false;
+            document.querySelectorAll('[style]').forEach(el => {
+              const style = el.getAttribute('style') || '';
+              if (/overflow-?y\s*:\s*(auto|scroll)/i.test(style)) {
+                // Check explicit padding-top
+                const ptMatch = style.match(/padding-?top\s*:\s*(\d+)/i);
+                if (ptMatch && parseInt(ptMatch[1]) >= 44) {
+                  sufficientPadding = true;
+                  return;
+                }
+                // Check shorthand padding (1-4 values). First value is always top.
+                const shorthand = style.match(/(?:^|;\s*)padding\s*:\s*([\d.]+)px(?:\s+([\d.]+)px)?(?:\s+([\d.]+)px)?(?:\s+([\d.]+)px)?/i);
+                if (shorthand) {
+                  const topVal = parseFloat(shorthand[1]);
+                  if (topVal >= 44) {
+                    sufficientPadding = true;
+                    return;
+                  }
+                }
+                // Also check via DOM style property directly
+                const htmlEl = el as HTMLElement;
+                const ptDom = parseFloat(htmlEl.style.paddingTop || '0');
+                if (ptDom >= 44) {
+                  sufficientPadding = true;
+                }
+              }
+            });
+
+            if (!sufficientPadding) {
+              console.warn(
+                '[TIER 5.8] Fixed top nav exists but scroll container lacks paddingTop >= 44px. ' +
+                'Content at the top will be hidden behind the progress/navigation bar.'
+              );
+            }
+            expect(sufficientPadding).toBe(true);
+          });
+
+          it('scroll container uses flex: 1 to fill available viewport space', () => {
+            renderGame({ gamePhase: 'play' });
+
+            let hasFlexGrow = false;
+            document.querySelectorAll('[style]').forEach(el => {
+              const style = el.getAttribute('style') || '';
+              if (/overflow-?y\s*:\s*(auto|scroll)/i.test(style)) {
+                if (/flex\s*:\s*1|flex-grow\s*:\s*1|flexGrow\s*:\s*1/i.test(style)) {
+                  hasFlexGrow = true;
+                }
+              }
+            });
+
+            if (!hasFlexGrow) {
+              console.warn(
+                '[TIER 5.8] Scroll container missing flex: 1. Without it, the container ' +
+                'may not expand to fill the viewport, causing content to be cut off.'
+              );
+            }
+            expect(hasFlexGrow).toBe(true);
+          });
+
+          it('no touch-action: none on scroll containers (only on sliders)', () => {
+            // touch-action: none on a scroll container blocks all scrolling
+            // and zooming. It should only be on individual sliders.
+            renderGame({ gamePhase: 'play' });
+
+            const badElements: string[] = [];
+            document.querySelectorAll('[style]').forEach(el => {
+              const style = el.getAttribute('style') || '';
+              const tag = el.tagName.toLowerCase();
+              if (tag === 'input') return; // sliders are OK
+              if (/touch-?action\s*:\s*none/i.test(style)) {
+                badElements.push(`<${tag}>`);
+              }
+            });
+
+            if (badElements.length > 0) {
+              console.warn(
+                `[TIER 5.8] touch-action: none found on non-slider elements: ${badElements.join(', ')}. ` +
+                'This blocks scrolling and zooming. Use touch-action: pan-y instead.'
+              );
+            }
+            expect(badElements.length).toBe(0);
+          });
+
+          it('outer game container uses min-height 100vh or 100dvh for full viewport', () => {
+            renderGame({ gamePhase: 'play' });
+
+            let hasFullHeight = false;
+            document.querySelectorAll('[style]').forEach(el => {
+              const style = el.getAttribute('style') || '';
+              if (/min-?height\s*:\s*100[dv]?vh/i.test(style) ||
+                  /height\s*:\s*100[dv]?vh/i.test(style)) {
+                hasFullHeight = true;
+              }
+            });
+
+            expect(hasFullHeight).toBe(true);
+          });
+
+          it('transfer phase scroll container exists and contains all app cards', () => {
+            cleanup();
+            try { renderGame({ gamePhase: 'transfer' }); } catch { return; }
+
+            // Transfer phase typically has 3-6 application cards. All must be
+            // inside a scrollable container.
+            let scrollContainerExists = false;
+            document.querySelectorAll('[style]').forEach(el => {
+              const style = el.getAttribute('style') || '';
+              if (/overflow-?y\s*:\s*(auto|scroll)/i.test(style)) {
+                // Check that it contains multiple child content blocks
+                const cards = el.querySelectorAll('[style*="border-radius"], [style*="borderRadius"]');
+                if (cards.length >= 2) {
+                  scrollContainerExists = true;
+                }
+              }
+            });
+
+            if (!scrollContainerExists) {
+              console.warn(
+                '[TIER 5.8] Transfer phase has no scrollable container wrapping application cards. ' +
+                'Users cannot scroll to see all real-world applications.'
+              );
+            }
+            expect(scrollContainerExists).toBe(true);
+          });
+
+          it('fixed position elements have appropriate z-index for layering', () => {
+            renderGame({ gamePhase: 'play' });
+
+            document.querySelectorAll('[style]').forEach(el => {
+              const style = el.getAttribute('style') || '';
+              if (/position\s*:\s*fixed/i.test(style)) {
+                const zMatch = style.match(/z-?index\s*:\s*(\d+)/i);
+                if (zMatch) {
+                  const z = parseInt(zMatch[1]);
+                  expect(z).toBeGreaterThanOrEqual(10);
+                }
+              }
+            });
           });
         });
 

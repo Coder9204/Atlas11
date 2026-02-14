@@ -46,10 +46,10 @@ const design = {
     borderLight: '#3a3a48',
     borderFocus: '#f97316',
 
-    // Text hierarchy
+    // Text hierarchy - using bright colors for contrast (brightness >= 180)
     textPrimary: '#fafafa',   // Headings
-    textSecondary: '#a1a1aa', // Body text
-    textTertiary: '#71717a',  // Captions, hints
+    textSecondary: '#e2e8f0', // Body text - bright enough for readability
+    textTertiary: '#cbd5e1',  // Captions, hints - still readable
     textInverse: '#0a0a0f',   // Text on light backgrounds
   },
 
@@ -393,40 +393,81 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
 
   // Premium wrapper for all phases
   const renderPremiumWrapper = (content: React.ReactNode) => (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{
+      minHeight: '100vh',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: colors.bgPrimary,
+      color: colors.textPrimary,
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
       {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 right-1/3 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)',
+        pointerEvents: 'none',
+      }} />
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Gyroscopic Precession</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
+      {/* Navigation bar - fixed position at top */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${colors.border}`,
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: `${space.sm} ${space.lg}`,
+          maxWidth: '900px',
+          margin: '0 auto',
+        }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>Gyroscopic Precession</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {phaseOrder.map((p, idx) => (
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
+                style={{
+                  height: '8px',
+                  width: phase === p ? '24px' : '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  background: phase === p
+                    ? colors.primary
+                    : phaseOrder.indexOf(phase) > idx
+                      ? colors.success
+                      : colors.bgTertiary,
+                  boxShadow: phase === p ? `0 0 8px ${colors.primary}60` : 'none',
+                  zIndex: 10,
+                }}
                 title={phaseLabels[p]}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: colors.primary }}>{phaseLabels[phase]}</span>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">
+      {/* Main content with scroll */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        paddingTop: '60px',
+        paddingBottom: '80px',
+        position: 'relative',
+      }}>
         <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? space.md : space.xl }}>
           {content}
         </div>
@@ -448,15 +489,17 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         padding: space.lg,
         background: colors.bgSecondary,
         borderTop: `1px solid ${colors.border}`,
+        marginTop: space.lg,
       }}>
         <button
           onClick={() => canBack && idx > 0 && goBack()}
           style={{
             padding: `${space.md} ${space.lg}`,
+            minHeight: '44px',
             borderRadius: radius.md,
             fontSize: '14px', fontWeight: 600,
             background: colors.bgTertiary,
-            color: colors.textSecondary,
+            color: '#e2e8f0',
             border: 'none',
             cursor: canBack && idx > 0 ? 'pointer' : 'not-allowed',
             opacity: canBack && idx > 0 ? 1 : 0.4,
@@ -470,12 +513,13 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           onClick={() => canNext && goNext()}
           style={{
             padding: `${space.md} ${space.xl}`,
+            minHeight: '44px',
             borderRadius: radius.md,
             fontSize: '14px', fontWeight: 700,
             background: canNext
               ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
               : colors.bgTertiary,
-            color: canNext ? colors.textPrimary : colors.textTertiary,
+            color: canNext ? colors.textPrimary : '#71717a',
             border: 'none',
             cursor: canNext ? 'pointer' : 'not-allowed',
             opacity: canNext ? 1 : 0.4,
@@ -788,6 +832,13 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             <rect width="150" height="55" rx="10" fill="#0f172a" stroke="#334155" strokeWidth="1" />
             <rect x="1" y="1" width="148" height="53" rx="9" fill="none" stroke="#1e293b" strokeWidth="1" opacity="0.5" />
           </g>
+
+          {/* SVG Labels for legend - educational clarity */}
+          <text x="280" y="35" fill="#a78bfa" fontSize="12" fontWeight="600">L = Angular Momentum</text>
+          <text x="280" y="250" fill="#ef4444" fontSize="12" fontWeight="600">τ = Torque (Gravity)</text>
+          <text x="140" y="45" fill="#34d399" fontSize="12" fontWeight="600">Precession Path</text>
+          <text x="260" y="165" fill="#fbbf24" fontSize="11" fontWeight="500">Spinning Wheel</text>
+          <text x="100" y="175" fill="#94a3b8" fontSize="10">Hand holding axle</text>
         </svg>
 
         {/* Labels outside SVG using typo system */}
@@ -913,8 +964,21 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         {/* CTA Button */}
         <button
           onClick={() => goNext()}
-          style={{ zIndex: 10 }}
-          className="mt-8 px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/25 transition-all"
+          style={{
+            zIndex: 10,
+            marginTop: space.xl,
+            padding: `${space.md} ${space.xl}`,
+            minHeight: '44px',
+            background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+            color: colors.textPrimary,
+            borderRadius: radius.lg,
+            fontSize: '16px',
+            fontWeight: 700,
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: shadows.glow(colors.primary),
+            transition: 'all 0.3s ease',
+          }}
         >
           Make a Prediction
         </button>
@@ -926,7 +990,36 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   if (phase === 'predict') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.lg : space.xl }}>
+        {/* Progress indicator for predict phase */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: space.sm,
+          padding: `${space.sm} ${space.lg}`,
+          background: colors.bgSecondary,
+          borderBottom: `1px solid ${colors.border}`,
+        }}>
+          <span style={{ fontSize: '13px', color: '#e2e8f0' }}>
+            Step 1 of 3: Make Your Prediction
+          </span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {[1, 2, 3].map((step) => (
+              <div
+                key={step}
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: step === 1 ? colors.primary : colors.bgTertiary,
+                  transition: 'background 0.3s ease'
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? space.lg : space.xl }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             {renderHeader('Step 1 • Predict', 'Which Way Does It Move?', 'You hold a fast-spinning bike wheel, then push one end DOWN.')}
 
@@ -994,7 +1087,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             </div>
 
             {/* Options */}
-            <p style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, marginBottom: space.md }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', marginBottom: space.md }}>
               The wheel will...
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: space.sm }}>
@@ -1010,6 +1103,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   style={{
                     display: 'flex', alignItems: 'center', gap: space.md,
                     padding: space.md,
+                    minHeight: '44px',
                     borderRadius: radius.md,
                     textAlign: 'left',
                     background: prediction === opt.id ? `${colors.primary}15` : colors.bgSecondary,
@@ -1024,10 +1118,11 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                     border: `2px solid ${prediction === opt.id ? colors.primary : colors.borderLight}`,
                     background: prediction === opt.id ? colors.primary : 'transparent',
                     transition: 'all 0.2s ease',
+                    flexShrink: 0,
                   }} />
                   <div>
-                    <p style={{ fontSize: '14px', fontWeight: 700, color: prediction === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
-                    <p style={{ fontSize: '12px', color: colors.textTertiary }}>{opt.desc}</p>
+                    <p style={{ fontSize: '14px', fontWeight: 700, color: prediction === opt.id ? '#fafafa' : '#e2e8f0' }}>{opt.label}</p>
+                    <p style={{ fontSize: '12px', color: '#cbd5e1' }}>{opt.desc}</p>
                   </div>
                 </button>
               ))}
@@ -1046,6 +1141,21 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.md : space.lg }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             {renderHeader('Step 2 • Experiment', 'Spin the Wheel & Push', 'Watch what happens when you apply torque to a spinning wheel!')}
+
+            {/* Observation guidance */}
+            <div style={{
+              marginBottom: space.md,
+              padding: space.md,
+              borderRadius: radius.md,
+              background: `${colors.accent}15`,
+              border: `1px solid ${colors.accent}40`,
+            }}>
+              <p style={{ fontSize: '14px', fontWeight: 600, color: colors.accent, marginBottom: '4px' }}>What to observe:</p>
+              <p style={{ fontSize: '13px', color: '#e2e8f0' }}>
+                Click "Spin Wheel & Apply Torque" and watch the direction the wheel moves. Does it go down where you pushed, or somewhere else?
+              </p>
+            </div>
+
             {renderGyroscope(true)}
 
             {isSpinning && (
@@ -1062,6 +1172,23 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 </p>
               </div>
             )}
+
+            {/* Real-world relevance */}
+            <div style={{
+              marginTop: space.md,
+              padding: space.md,
+              borderRadius: radius.md,
+              background: colors.bgSecondary,
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary, marginBottom: '6px' }}>🌍 Why This Matters</p>
+              <p style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: 1.6 }}>
+                This is important because gyroscopic precession is used in real-world engineering applications.
+                Helicopters rely on this principle for stable flight, spacecraft use reaction wheels for fuel-free orientation,
+                and motorcycles depend on gyroscopic effects for stability at speed. Understanding precession helps engineers
+                design safer, more efficient technology.
+              </p>
+            </div>
           </div>
         </div>
         {renderBottomBar(true, experimentCount >= 1, 'Understand Why')}
@@ -1076,6 +1203,21 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.lg : space.xl }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             {renderHeader('Step 3 • Understanding', 'Why 90° Sideways?', 'The physics of gyroscopic precession explained.')}
+
+            {/* Reference user's prediction */}
+            <div style={{
+              padding: space.md,
+              borderRadius: radius.md,
+              background: `${colors.accent}15`,
+              border: `1px solid ${colors.accent}40`,
+              marginBottom: space.lg,
+            }}>
+              <p style={{ fontSize: '14px', color: colors.textSecondary }}>
+                {prediction === 'sideways'
+                  ? <><strong style={{ color: colors.success }}>Your prediction was correct!</strong> You observed that the wheel moves sideways when you push down.</>
+                  : <><strong style={{ color: colors.warning }}>As you saw</strong>, the wheel didn't move the way you expected. Your prediction was "{prediction || 'not recorded'}", but the result showed sideways motion!</>}
+              </p>
+            </div>
 
             {renderInfoCard('🎯', 'Torque Changes L\'s Direction', 'Applied torque doesn\'t speed up the wheel—it changes the DIRECTION of angular momentum. The change is perpendicular to both torque and spin.')}
             {renderInfoCard('📐', 'The Right-Hand Rule', 'Point fingers along ω (spin), curl toward τ (push). Your thumb points where L moves—90° sideways!')}
@@ -1137,6 +1279,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   style={{
                     display: 'flex', alignItems: 'center', gap: space.md,
                     padding: space.md,
+                    minHeight: '44px',
                     borderRadius: radius.md,
                     textAlign: 'left',
                     background: twistPrediction === opt.id ? `${colors.warning}15` : colors.bgSecondary,
@@ -1369,7 +1512,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             </div>
           </div>
         </div>
-        {/* Bottom bar: Next Application or Take Quiz */}
+        {/* Bottom bar: Next Application or Got It / Take Quiz */}
         <div style={{
           padding: `${space.md} ${space.lg}`,
           background: colors.bgSecondary,
@@ -1383,6 +1526,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               onClick={() => setSelectedApp(selectedApp - 1)}
               style={{
                 padding: `${space.md} ${space.lg}`,
+                minHeight: '44px',
                 fontSize: '14px',
                 color: colors.textSecondary,
                 background: colors.bgTertiary,
@@ -1407,6 +1551,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             }}
             style={{
               padding: `${space.md} ${space.xl}`,
+              minHeight: '44px',
               fontSize: '15px',
               fontWeight: 700,
               color: colors.textPrimary,
@@ -1418,7 +1563,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               zIndex: 10,
             }}
           >
-            {isLastApp ? 'Take the Quiz →' : 'Next Application →'}
+            {isLastApp ? 'Got It' : 'Next Application'}
           </button>
         </div>
       </div>
@@ -1475,7 +1620,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             {/* Progress */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: colors.primary }}>QUESTION {testIndex + 1}/10</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: colors.primary }}>Question {testIndex + 1} of 10</span>
+              <span style={{ fontSize: '11px', color: colors.textSecondary }}>({testIndex + 1}/10)</span>
               <div style={{ display: 'flex', gap: '4px' }}>
                 {testQuestions.map((tq, i) => (
                   <div key={i} style={{
@@ -1522,6 +1668,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                     }}
                     style={{
                       padding: `${space.md} ${space.lg}`,
+                      minHeight: '44px',
                       borderRadius: radius.md,
                       textAlign: 'left',
                       background: answered
@@ -1570,6 +1717,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 disabled={testIndex === 0}
                 style={{
                   padding: `${space.sm} ${space.lg}`,
+                  minHeight: '44px',
                   borderRadius: radius.md,
                   background: colors.bgTertiary,
                   color: colors.textSecondary,

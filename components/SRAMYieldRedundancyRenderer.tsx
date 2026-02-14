@@ -29,8 +29,8 @@ const phaseLabels: Record<SRAMPhase, string> = {
   review: 'Review',
   twist_predict: 'Twist',
   twist_play: 'Explore',
-  twist_review: 'Explain',
-  transfer: 'Apply',
+  twist_review: 'Insight',
+  transfer: 'Transfer',
   test: 'Test',
   mastery: 'Mastery',
 };
@@ -184,19 +184,12 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
 
   // Navigation functions
   const goToPhase = useCallback((newPhase: SRAMPhase) => {
-    if (navigationRef.current) return;
-    navigationRef.current = true;
-
     playSound('transition');
     setPhase(newPhase);
 
     if (onGameEvent) {
       onGameEvent({ type: 'phase_complete', phase: newPhase });
     }
-
-    setTimeout(() => {
-      navigationRef.current = false;
-    }, 300);
   }, [onGameEvent]);
 
   const goNext = useCallback(() => {
@@ -360,25 +353,25 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   const transferApplications = [
     {
       title: 'DRAM Error Correction',
-      description: 'Modern DRAM modules use ECC to detect and correct single-bit errors in real-time.',
+      description: 'Modern DRAM modules use ECC to detect and correct single-bit errors in real-time. A typical 64GB server module processes over 10 billion reads per second.',
       question: 'Why is ECC standard in server DRAM but optional in consumer PCs?',
       answer: 'Servers run continuously with critical data, making silent data corruption unacceptable. The ~3% cost/power overhead of ECC is justified. Consumer PCs run shorter workloads where the statistical risk is lower and cost sensitivity is higher.',
     },
     {
       title: 'Flash Memory Management',
-      description: 'NAND flash has high defect rates that increase with wear, requiring sophisticated management.',
+      description: 'NAND flash has high defect rates that increase with wear, requiring sophisticated management. Modern SSDs use 1TB+ capacity with over 100 billion memory cells.',
       question: 'How do SSDs maintain reliability despite flash memory wear?',
       answer: 'SSDs use multiple layers of ECC (BCH or LDPC codes), wear leveling to distribute writes, spare blocks to replace worn-out cells, and over-provisioning (hidden extra capacity). These techniques mask the underlying unreliability.',
     },
     {
       title: 'Cache Memory Design',
-      description: 'CPU caches use fast SRAM that must be extremely reliable for correct program execution.',
+      description: 'CPU caches use fast SRAM that must be extremely reliable for correct program execution. Modern CPUs have 32MB+ of L3 cache operating at over 4 GHz.',
       question: 'Why do L1 caches often use parity while L2/L3 use ECC?',
       answer: 'L1 caches prioritize speed, using parity (fast detection, no correction) and relying on cache miss to recover. L2/L3 caches are larger and slower, making ECC correction worthwhile. The latency penalty is hidden by L1.',
     },
     {
       title: 'Wafer Sort and Testing',
-      description: 'Memory chips are tested at the wafer level to identify and map out defects before packaging.',
+      description: 'Memory chips are tested at the wafer level to identify and map out defects before packaging. A 300mm wafer can yield over 500 memory dies, each tested in under 200ms.',
       question: 'How does redundancy repair interact with wafer testing?',
       answer: 'During wafer sort, each die is tested to create a "repair signature" - which spare rows/columns replace which defective ones. This information is programmed into on-chip fuses. Only unrepairable dice are discarded.',
     },
@@ -497,45 +490,55 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
 
   const renderProgressBar = () => (
     <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
       justifyContent: 'center',
       gap: '8px',
       padding: '16px',
       background: colors.bgDark,
       borderBottom: '1px solid rgba(255,255,255,0.1)',
+      zIndex: 1001,
     }}>
       {phaseOrder.map((p, index) => {
         const isActive = p === phase;
         const isPast = phaseOrder.indexOf(p) < phaseOrder.indexOf(phase);
+        const isClickable = isPast || isActive;
         return (
           <div
             key={p}
-            onClick={() => isPast && goToPhase(p)}
+            onClick={() => isClickable && isPast && goToPhase(p)}
+            aria-label={`${phaseLabels[p]} phase${isActive ? ' (current)' : isPast ? ' (completed)' : ''}`}
+            tabIndex={isClickable ? 0 : -1}
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               cursor: isPast ? 'pointer' : 'default',
               opacity: isActive ? 1 : isPast ? 0.7 : 0.4,
+              background: 'transparent',
             }}
           >
-            <div style={{
+            <div
+              title={`${phaseLabels[p]} phase${isActive ? ' (current)' : isPast ? ' (completed)' : ''}`}
+              style={{
               width: isMobile ? '10px' : '12px',
               height: isMobile ? '10px' : '12px',
               borderRadius: '50%',
               background: isActive ? colors.accent : isPast ? colors.success : 'rgba(255,255,255,0.3)',
               border: isActive ? `2px solid ${colors.accent}` : 'none',
               boxShadow: isActive ? `0 0 8px ${colors.accentGlow}` : 'none',
+              cursor: isPast ? 'pointer' : 'default',
             }} />
-            {!isMobile && (
-              <span style={{
-                fontSize: '9px',
-                color: isActive ? colors.accent : colors.textMuted,
-                marginTop: '4px',
-              }}>
-                {phaseLabels[p]}
-              </span>
-            )}
+            <span style={{
+              fontSize: '10px',
+              color: isActive ? colors.accent : colors.textSecondary,
+              marginTop: '4px',
+            }}>
+              {phaseLabels[p]}
+            </span>
           </div>
         );
       })}
@@ -846,6 +849,27 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             filter="url(#sramyStatusGlow)"
           />
 
+          {/* SVG labels for educational context */}
+          <g>
+            <text x={20} y={gridStartY + arrayRows * cellSize - 12} fill={colors.accent} fontSize="12" fontWeight="bold">Repair Analysis</text>
+            <text x={20} y={gridStartY + arrayRows * cellSize + 5} fill={colors.textSecondary} fontSize="11">Defects: {yieldData.defects.length}</text>
+            <text x={20} y={gridStartY + arrayRows * cellSize + 20} fill={colors.textSecondary} fontSize="11">Repaired: {yieldData.repairedDefects}</text>
+            <text x={20} y={gridStartY + arrayRows * cellSize + 35} fill={yieldData.remainingDefects === 0 ? colors.success : colors.error} fontSize="11">Remaining: {yieldData.remainingDefects}</text>
+            <text x={20} y={gridStartY + arrayRows * cellSize + 50} fill={colors.repaired} fontSize="11">Spare Rows: {spareRows} | Spare Cols: {spareCols}</text>
+          </g>
+
+          <g>
+            <text x={260} y={gridStartY + arrayRows * cellSize - 12} fill={yieldData.remainingDefects === 0 ? colors.success : colors.warning} fontSize="12" fontWeight="bold">Yield Status</text>
+            <text x={260} y={gridStartY + arrayRows * cellSize + 5} fill={colors.textSecondary} fontSize="11">Raw Yield: {yieldData.rawYield.toFixed(1)}%</text>
+            <text x={260} y={gridStartY + arrayRows * cellSize + 20} fill={colors.textSecondary} fontSize="11">After Repair: {yieldData.repairedYield.toFixed(1)}%</text>
+            <text x={260} y={gridStartY + arrayRows * cellSize + 35} fill={yieldData.remainingDefects === 0 ? colors.success : colors.error} fontSize="12" fontWeight="bold">
+              {yieldData.remainingDefects === 0 ? 'PASS' : 'FAIL'}
+            </text>
+          </g>
+
+          {/* Array dimension labels */}
+          <text x={gridStartX} y={gridStartY - 62} fill={colors.textMuted} fontSize="11">Memory Array ({arrayRows}x{arrayCols})</text>
+
           {/* Raw yield bar background */}
           <rect x={330} y={gridStartY + arrayRows * cellSize + 8} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
           {/* Raw yield bar fill */}
@@ -869,6 +893,10 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             fill={yieldData.repairedYield > 80 ? 'url(#sramyYieldSuccess)' : 'url(#sramyYieldWarning)'}
             rx={3}
           />
+
+          {/* Yield bar labels */}
+          <text x={435} y={gridStartY + arrayRows * cellSize + 19} fill={colors.textMuted} fontSize="11">Raw</text>
+          <text x={435} y={gridStartY + arrayRows * cellSize + 41} fill={colors.textMuted} fontSize="11">Repaired</text>
         </svg>
 
         {/* Legend moved outside SVG */}
@@ -1093,7 +1121,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           step="8"
           value={arrayRows}
           onChange={(e) => { setArrayRows(parseInt(e.target.value)); setArrayCols(parseInt(e.target.value)); }}
-          style={{ width: '100%' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -1108,7 +1136,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           step="0.1"
           value={defectDensity}
           onChange={(e) => setDefectDensity(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -1123,7 +1151,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           step="1"
           value={spareRows}
           onChange={(e) => setSpareRows(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -1138,7 +1166,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           step="1"
           value={spareCols}
           onChange={(e) => setSpareCols(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
       </div>
 
@@ -1174,7 +1202,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
                 step="1"
                 value={eccBits}
                 onChange={(e) => setEccBits(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
               />
             </div>
           )}
@@ -1208,17 +1236,18 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
       justifyContent: 'space-between',
-      zIndex: 1000,
+      zIndex: 1001,
     }}>
       <button
         onClick={goBack}
         disabled={!canGoBack}
         style={{
           padding: '12px 24px',
+          minHeight: '44px',
           borderRadius: '8px',
-          border: `1px solid ${colors.textMuted}`,
+          border: `1px solid ${colors.textSecondary}`,
           background: 'transparent',
-          color: canGoBack ? colors.textPrimary : colors.textMuted,
+          color: canGoBack ? colors.textPrimary : colors.textSecondary,
           fontWeight: 'bold',
           cursor: canGoBack ? 'pointer' : 'not-allowed',
           fontSize: '14px',
@@ -1232,10 +1261,11 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
         disabled={!canProceed}
         style={{
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
+          color: canProceed ? 'white' : colors.textSecondary,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
@@ -1250,9 +1280,9 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               SRAM Yield & Redundancy
@@ -1290,7 +1320,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Exploring')}
       </div>
     );
   }
@@ -1298,9 +1328,9 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1352,13 +1382,16 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Redundancy Repair</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust array size, defect density, and spare rows/columns
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', fontStyle: 'italic' }}>
+              Observe how changing parameters affects yield and repair success
             </p>
           </div>
 
@@ -1378,6 +1411,11 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
               <li>Try high defect density (2+) - can redundancy still help?</li>
               <li>Notice: more spares = more overhead but higher yield</li>
             </ul>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '12px' }}>
+              This concept is important in real-world semiconductor industry and technology design.
+              Engineers use redundancy to make practical manufacturing economically viable, enabling
+              the production of billions of chips used in everyday applications from phones to servers.
+            </p>
           </div>
         </div>
         {renderBottomBar(true, true, 'Continue to Review')}
@@ -1390,9 +1428,9 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
     const wasCorrect = prediction === 'exponential';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1401,11 +1439,11 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? 'Correct! Your prediction was right.' : 'Not Quite! As you predicted, let\'s see what actually happens.'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
               Yield follows a Poisson distribution: Y = exp(-D x A), where D is defect density
-              and A is area. Larger arrays have exponentially lower yield without redundancy.
+              and A is area. As you observed in the experiment, larger arrays have exponentially lower yield without redundancy.
             </p>
           </div>
 
@@ -1446,9 +1484,9 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1507,9 +1545,9 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Explore ECC + Redundancy</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1545,9 +1583,9 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
     const wasCorrect = twistPrediction === 'combined';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1598,9 +1636,9 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1611,6 +1649,25 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
               Complete all 4 applications to unlock the test
             </p>
+          </div>
+
+          <div style={{ padding: '0 16px', marginBottom: '8px' }}>
+            <button
+              onClick={goNext}
+              style={{
+                width: '100%',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              Continue to Test
+            </button>
           </div>
 
           {transferApplications.map((app, index) => (
@@ -1656,7 +1713,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             </div>
           ))}
         </div>
-        {renderBottomBar(true, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(true, true, 'Next')}
       </div>
     );
   }
@@ -1665,9 +1722,9 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1705,14 +1762,19 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
               <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
             </div>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '16px' }}>
+              Test your understanding of SRAM yield, redundancy repair, and error correction.
+              Answer all questions to demonstrate mastery of semiconductor memory reliability concepts.
+              Each question covers a key aspect of how manufacturers achieve acceptable yield despite inevitable defects.
+            </p>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
                 <div
@@ -1810,11 +1872,11 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>{'\ud83c\udfc6'}</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered SRAM yield and redundancy</p>
           </div>

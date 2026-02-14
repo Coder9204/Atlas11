@@ -85,7 +85,7 @@ const realWorldApps = [
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -990,7 +990,68 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const phases: StableLevitationRendererProps['phase'][] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const currentPhaseIndex = phases.indexOf(phase);
+  const progressPercent = ((currentPhaseIndex + 1) / phases.length) * 100;
+
+  const renderNavHeader = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      background: colors.bgDark,
+      borderBottom: `1px solid rgba(255,255,255,0.1)`,
+      padding: '12px 16px',
+      zIndex: 1001,
+    }}>
+      {/* Progress bar */}
+      <div
+        role="progressbar"
+        aria-valuenow={progressPercent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        style={{
+          width: '100%',
+          height: '4px',
+          background: 'rgba(255,255,255,0.1)',
+          borderRadius: '2px',
+          marginBottom: '8px',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{
+          width: `${progressPercent}%`,
+          height: '100%',
+          background: colors.accent,
+          borderRadius: '2px',
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+      {/* Navigation dots */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+        {phases.map((p, index) => (
+          <button
+            key={p}
+            aria-label={`${p.replace('_', ' ')} phase`}
+            title={p.replace('_', ' ')}
+            style={{
+              width: '10px',
+              height: '10px',
+              minHeight: '10px',
+              borderRadius: '50%',
+              border: 'none',
+              background: index === currentPhaseIndex ? colors.accent : index < currentPhaseIndex ? colors.success : 'rgba(255,255,255,0.2)',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = true) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
@@ -1000,14 +1061,38 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      zIndex: 1001,
     }}>
+      {showBack && phase !== 'hook' ? (
+        <button
+          onClick={() => {/* Back handled by parent */}}
+          aria-label="Back"
+          style={{
+            padding: '12px 24px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`,
+            background: 'transparent',
+            color: colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            fontSize: '16px',
+          }}
+        >
+          Back
+        </button>
+      ) : (
+        <div />
+      )}
       <button
         onClick={onPhaseComplete}
         disabled={disabled && !canProceed}
+        aria-label="Next"
         style={{
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
@@ -1026,7 +1111,8 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavHeader()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               The Floating Ball Mystery
@@ -1067,7 +1153,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Make a Prediction', false)}
       </div>
     );
   }
@@ -1076,7 +1162,8 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavHeader()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           {renderVisualization(false, false)}
 
           <div style={{
@@ -1127,11 +1214,24 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavHeader()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Stable Levitation</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Tilt the dryer and watch the ball's response
+            </p>
+          </div>
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(56, 189, 248, 0.1)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.airflow}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              Observe how the ball responds to different tilt angles. Notice the restoring force that brings it back to center.
             </p>
           </div>
 
@@ -1164,7 +1264,8 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavHeader()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1214,7 +1315,8 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavHeader()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1272,11 +1374,24 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavHeader()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Different Ball Weights</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Change ball mass and observe stability changes
+            </p>
+          </div>
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.1)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.warning}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              Observe how ball mass affects stability. Compare light foam balls with heavier balls at various tilt angles.
             </p>
           </div>
 
@@ -1308,7 +1423,8 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavHeader()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',

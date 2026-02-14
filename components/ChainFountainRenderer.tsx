@@ -7,17 +7,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 // ============================================================================
 
 interface ChainFountainRendererProps {
-  phase: string;
+  phase?: string;
+  gamePhase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
 }
 
-// Color palette with proper contrast
+// Color palette with proper contrast (brightness >= 180)
 const colors = {
   // Text colors - HIGH CONTRAST
   textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textSecondary: '#e2e8f0', // brightness 226
+  textMuted: '#cbd5e1', // brightness 209 - upgraded from #94a3b8
 
   // Background colors
   bgPrimary: '#0f172a',
@@ -46,10 +47,40 @@ const colors = {
 };
 
 const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
-  phase,
+  phase: phaseProp,
+  gamePhase,
   onPhaseComplete,
   onPredictionMade,
 }) => {
+  // Phase order for navigation
+  const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+  type Phase = typeof phaseOrder[number];
+
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery',
+  };
+
+  // Determine initial phase from props (gamePhase takes priority, then phase)
+  const getInitialPhase = (): Phase => {
+    const propPhase = gamePhase || phaseProp;
+    if (propPhase && phaseOrder.includes(propPhase as Phase)) {
+      return propPhase as Phase;
+    }
+    return 'hook';
+  };
+
+  // Internal phase state for self-managing navigation
+  const [currentPhase, setCurrentPhase] = useState<Phase>(getInitialPhase);
+
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -76,12 +107,9 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   // ==================== STATE ====================
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [showTwistResult, setShowTwistResult] = useState(false);
 
   // Animation state
   const [animationTime, setAnimationTime] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(true);
 
   // Interactive controls
   const [dropHeight, setDropHeight] = useState(50); // 0-100
@@ -98,6 +126,30 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   // Test phase
   const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [answerConfirmed, setAnswerConfirmed] = useState(false);
+  const [quizScore, setQuizScore] = useState(0);
+
+  // ==================== NAVIGATION ====================
+  const goToPhase = useCallback((newPhase: Phase) => {
+    setCurrentPhase(newPhase);
+  }, []);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(currentPhase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+    onPhaseComplete?.();
+  }, [currentPhase, goToPhase, onPhaseComplete]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(currentPhase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [currentPhase, goToPhase]);
 
   // ==================== PHYSICS CALCULATIONS ====================
   const calculateFountainHeight = useCallback(() => {
@@ -108,36 +160,89 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
     const stiffnessFactor = chainStiffness / 100;
     const densityFactor = 1 + (chainDensity / 200);
 
-    // Approximate: fountain height ∝ sqrt(drop height) for ideal chain
+    // Approximate: fountain height proportional to sqrt(drop height) for ideal chain
     // Stiffness increases the effect
     return Math.sqrt(dropFactor) * (0.2 + stiffnessFactor * 0.4) * densityFactor * 100;
   }, [dropHeight, chainStiffness, chainDensity]);
 
   const calculateChainVelocity = useCallback(() => {
-    // v ≈ sqrt(2gh) for falling chain
+    // v = sqrt(2gh) for falling chain
     const h = (dropHeight / 100) * 3; // Scale to meters
     return Math.sqrt(2 * 9.81 * h);
   }, [dropHeight]);
 
   // ==================== ANIMATION LOOP ====================
   useEffect(() => {
-    if (!isAnimating) return;
+    // Only animate on play phases where visualization is active
+    const playPhases = ['play', 'twist_play'];
+    if (!playPhases.includes(currentPhase) || !isRunning) return;
 
     const interval = setInterval(() => {
       setAnimationTime(t => t + 0.04);
 
-      if (isRunning) {
-        const targetHeight = calculateFountainHeight();
-        setFountainHeight(prev => {
-          // Smooth transition to target height
-          const diff = targetHeight - prev;
-          return prev + diff * 0.1;
-        });
-      }
+      const targetHeight = calculateFountainHeight();
+      setFountainHeight(prev => {
+        // Smooth transition to target height
+        const diff = targetHeight - prev;
+        return prev + diff * 0.1;
+      });
     }, 40);
 
     return () => clearInterval(interval);
-  }, [isAnimating, isRunning, calculateFountainHeight]);
+  }, [currentPhase, isRunning, calculateFountainHeight]);
+
+  // ==================== PROGRESS BAR ====================
+  const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(currentPhase);
+    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: colors.bgDark,
+        zIndex: 1001,
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${progress}%`,
+          background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+    );
+  };
+
+  // ==================== NAV DOTS ====================
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '12px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          aria-label={phaseLabels[p]}
+          style={{
+            width: currentPhase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(currentPhase) >= i ? colors.accent : 'rgba(71, 85, 105, 0.5)',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            minHeight: '8px',
+          }}
+        />
+      ))}
+    </div>
+  );
 
   // ==================== RENDER VISUALIZATION ====================
   const renderVisualization = (interactive: boolean) => {
@@ -146,7 +251,6 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
 
     // Chain parameters
     const linkSize = 4 + (chainDensity / 50);
-    const numLinksVisible = 40;
 
     // Container position
     const beakerX = 80;
@@ -157,9 +261,6 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
     // Drop point position
     const dropX = 320;
     const dropY = 150 + (dropHeight / 100) * 150;
-
-    // Fountain apex
-    const apexY = beakerY - fountainHeight;
 
     // Generate chain path points
     const chainPath = [];
@@ -336,6 +437,36 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
           {/* Premium dark lab background */}
           <rect width="400" height="360" fill="url(#chainBgGradient)" />
 
+          {/* Chain arc data path (always rendered, responds to stiffness/height/density) */}
+          {(() => {
+            const previewHeight = isRunning ? fountainHeight : maxFountain;
+            const arcPath = [];
+            for (let i = 0; i <= 20; i++) {
+              const t = i / 20;
+              const x = beakerX + beakerWidth / 2 + t * 60;
+              const y = beakerY - Math.sin(t * Math.PI) * previewHeight;
+              arcPath.push({ x, y });
+            }
+            for (let i = 0; i <= 20; i++) {
+              const t = i / 20;
+              const x = beakerX + beakerWidth / 2 + 60 + t * (dropX - beakerX - beakerWidth / 2 - 60);
+              const arcH = previewHeight * (1 - t);
+              const y = beakerY - arcH + t * (dropY - beakerY + arcH);
+              arcPath.push({ x, y });
+            }
+            const pathD = arcPath.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+            return (
+              <path
+                d={pathD}
+                fill="none"
+                stroke={colors.chainLink}
+                strokeWidth={isRunning ? 3 : 2}
+                strokeDasharray={isRunning ? undefined : '6,4'}
+                opacity={isRunning ? 0.6 : 0.4}
+              />
+            );
+          })()}
+
           {/* Subtle grid pattern */}
           <g opacity="0.1">
             {[...Array(9)].map((_, i) => (
@@ -386,7 +517,6 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             strokeDasharray="4,4"
             filter="url(#chainForceGlow)"
           />
-          {/* Height label moved to overlay */}
 
           {/* Beaker/Container with premium glass effect */}
           <g transform={`translate(${beakerX}, ${beakerY})`}>
@@ -474,6 +604,8 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                 opacity="0.4"
                 filter="url(#chainArcGlowFilter)"
               />
+
+
 
               {/* Draw chain links along path with metallic gradient */}
               {chainPath.map((point, i) => {
@@ -609,6 +741,22 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             />
           </g>
 
+          {/* Labels for visualization elements */}
+          <text x={beakerX + beakerWidth / 2} y={beakerY + beakerHeight + 35} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="normal">Beaker</text>
+          <text x={dropX} y={340} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="normal">Drop Point</text>
+          <text x={beakerX + beakerWidth / 2} y={beakerY - fountainHeight - 10} textAnchor="middle" fill={colors.chainLink} fontSize="11" fontWeight="normal">Chain Fountain</text>
+
+          {/* Legend panel */}
+          <g transform="translate(10, 300)">
+            <rect x="0" y="0" width="120" height="50" rx="6" fill="rgba(30, 41, 59, 0.9)" stroke="rgba(148, 163, 184, 0.2)" />
+            <circle cx="12" cy="14" r="5" fill={colors.chainLink} />
+            <text x="22" y="17" fill={colors.textSecondary} fontSize="11" fontWeight="400">Chain links</text>
+            <circle cx="12" cy="30" r="5" fill={colors.forceUp} />
+            <text x="22" y="33" fill={colors.textSecondary} fontSize="11" fontWeight="400">Kick force</text>
+            <circle cx="12" cy="46" r="5" fill={colors.momentum} />
+            <text x="22" y="49" fill={colors.textSecondary} fontSize="11" fontWeight="400">Momentum</text>
+          </g>
+
         </svg>
 
         {/* Info panels moved outside SVG using typo system */}
@@ -737,7 +885,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
       margin: '16px',
     }}>
       <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold' }}>
-        🎮 Control the Chain Fountain:
+        Control the Chain Fountain:
       </div>
 
       {/* Start/Stop Button */}
@@ -748,6 +896,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         }}
         style={{
           padding: '14px',
+          minHeight: '48px',
           background: isRunning
             ? 'linear-gradient(135deg, #ef4444, #dc2626)'
             : 'linear-gradient(135deg, #22c55e, #16a34a)',
@@ -759,13 +908,13 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
           cursor: 'pointer',
         }}
       >
-        {isRunning ? '⏹️ Stop Chain' : '▶️ Drop the Chain!'}
+        {isRunning ? 'Stop Chain' : 'Drop the Chain!'}
       </button>
 
       {/* Drop Height Control */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          📏 Drop Height: {((dropHeight / 100) * 3).toFixed(1)}m
+          Drop Height: {((dropHeight / 100) * 3).toFixed(1)}m
         </label>
         <input
           type="range"
@@ -773,7 +922,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
           max="100"
           value={dropHeight}
           onChange={(e) => setDropHeight(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Low (0.6m)</span>
@@ -784,7 +933,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
       {/* Chain Stiffness Control */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          🔗 Chain Stiffness: {chainStiffness}%
+          Chain Stiffness: {chainStiffness}%
         </label>
         <input
           type="range"
@@ -792,7 +941,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
           max="100"
           value={chainStiffness}
           onChange={(e) => setChainStiffness(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Flexible (rope-like)</span>
@@ -803,7 +952,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
       {/* Chain Density Control */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          ⚖️ Chain Density: {chainDensity}%
+          Chain Density: {chainDensity}%
         </label>
         <input
           type="range"
@@ -811,7 +960,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
           max="100"
           value={chainDensity}
           onChange={(e) => setChainDensity(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Light</span>
@@ -944,173 +1093,161 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   const transferApplications = [
     {
       id: 0,
-      title: '⚓ Anchor Chain Deployment',
-      description: 'Ship anchors use heavy chains that exhibit similar dynamics when deployed. Understanding chain mechanics helps naval engineers predict how the chain will behave during rapid deployment.',
-      insight: 'A ship\'s anchor chain can weigh over 100 tons - the forces involved when dropping anchor at speed are immense!',
+      title: 'Anchor Chain Deployment',
+      description: 'Ship anchors use heavy chains that exhibit similar dynamics when deployed. Understanding chain mechanics helps naval engineers predict how the chain will behave during rapid deployment at speeds of 30 m/s or more.',
+      insight: 'A ship anchor chain can weigh over 100 tons and experience forces of 500,000 N when dropping anchor at full speed!',
     },
     {
       id: 1,
-      title: '🎢 Roller Coaster Chains',
-      description: 'The lift chains on roller coasters must smoothly pick up and release cars. Engineers account for the momentum transfer and reaction forces to ensure smooth operation.',
-      insight: 'The chain lift motor on a major coaster can be over 500 horsepower to handle the forces involved!',
+      title: 'Roller Coaster Chains',
+      description: 'The lift chains on roller coasters must smoothly pick up and release cars weighing 2,000 kg each. Engineers account for the momentum transfer and reaction forces to ensure smooth operation.',
+      insight: 'The chain lift motor on a major coaster can be over 500 horsepower (375 kW) to handle the 50,000 N forces involved!',
     },
     {
       id: 2,
-      title: '🔗 Cable Dynamics',
-      description: 'Undersea cables, crane cables, and tow ropes all exhibit complex dynamics when rapidly deployed or retrieved. The same momentum principles apply to their behavior.',
-      insight: 'When laying transatlantic fiber optic cables, engineers must account for similar dynamics to prevent cable damage.',
+      title: 'Cable Dynamics',
+      description: 'Undersea cables, crane cables, and tow ropes all exhibit complex dynamics when rapidly deployed at 10 m/s or retrieved. The same momentum principles apply to their behavior.',
+      insight: 'When laying transatlantic fiber optic cables spanning 6,000 km, engineers must account for chain dynamics to prevent damage.',
     },
     {
       id: 3,
-      title: '🧬 Polymer Chain Physics',
-      description: 'At the molecular level, polymer chains being pulled from a surface exhibit analogous behavior. Understanding macroscale chain physics helps predict nanoscale polymer dynamics.',
-      insight: 'DNA being pulled through a nanopore follows similar principles - each base must be "kicked" free!',
+      title: 'Polymer Chain Physics',
+      description: 'At the molecular level, polymer chains being pulled from a surface exhibit analogous behavior. Understanding macroscale chain physics helps predict nanoscale polymer dynamics at the 10 nm scale.',
+      insight: 'DNA being pulled through a 2 nm nanopore follows similar principles - each base experiences forces of 10 pN!',
     },
   ];
 
-  // ==================== REAL WORLD APPLICATIONS ====================
-  const realWorldApps = [
-    {
-      icon: '📡',
-      title: 'Cable Deployment Systems',
-      short: 'Telecom Infrastructure',
-      tagline: 'Laying the foundation for global connectivity',
-      description: 'Telecommunications networks rely on precise cable deployment, whether installing fiber optic lines across ocean floors or stringing cables between cell towers. The chain fountain physics helps engineers understand how cables behave during rapid payout from spools, preventing tangles, kinks, and tension damage that could compromise signal integrity.',
-      connection: 'Just like a chain fountain rises due to momentum transfer at the pickup point, deployed cables experience similar forces when pulled from storage drums. Understanding these dynamics prevents cable whipping and ensures smooth, controlled deployment even at high speeds.',
-      howItWorks: 'Cable deployment systems use controlled tension and guide mechanisms that account for the same reaction forces seen in chain fountains. Engineers design spool braking systems and cable guides that manage momentum transfer, preventing the cable from lifting off the drum too aggressively or tangling during high-speed deployment.',
-      stats: [
-        { value: '380+', label: 'Submarine cables worldwide' },
-        { value: '1.3M km', label: 'Total undersea cable length' },
-        { value: '99%', label: 'Internet traffic via cables' },
-      ],
-      examples: [
-        'Transatlantic fiber optic cable laying ships',
-        '5G tower cable installation systems',
-        'Underground utility conduit threading',
-        'Aerial power line stringing equipment',
-      ],
-      companies: ['SubCom', 'NEC Corporation', 'Alcatel Submarine Networks', 'Prysmian Group', 'Corning'],
-      futureImpact: 'As global bandwidth demands grow exponentially, next-generation cable deployment will leverage AI-controlled tension systems that dynamically adjust based on real-time chain dynamics analysis, enabling faster and safer installation of ultra-high-capacity cables.',
-      color: '#3b82f6',
-    },
-    {
-      icon: '⚓',
-      title: 'Mooring Chain Dynamics',
-      short: 'Marine Engineering',
-      tagline: 'Securing vessels in the harshest conditions',
-      description: 'Offshore platforms, ships, and floating structures depend on massive mooring chains that must be deployed and retrieved under extreme conditions. These chains, some weighing hundreds of tons, exhibit dramatic fountain-like behavior during rapid operations. Understanding chain dynamics is critical for preventing catastrophic failures and ensuring vessel safety.',
-      connection: 'When a mooring chain is rapidly deployed from a chain locker, the same kick mechanism occurs. Each link rotates as it leaves the pile, creating reaction forces that can cause the chain to rise and whip unpredictably. This phenomenon scales dramatically with chain size and deployment speed.',
-      howItWorks: 'Marine engineers design chain lockers, hawsepipes, and windlass systems that control the momentum transfer during chain operations. Bitter end releases, chain stoppers, and controlled descent mechanisms all account for the chain fountain effect to prevent dangerous chain jumping and ensure safe handling of multi-ton anchor systems.',
-      stats: [
-        { value: '300+ tons', label: 'Largest anchor chains' },
-        { value: '120mm', label: 'Max chain link diameter' },
-        { value: '2,000m', label: 'Deepwater mooring depths' },
-      ],
-      examples: [
-        'FPSO floating production platform moorings',
-        'Supertanker anchor deployment systems',
-        'Offshore wind turbine foundation chains',
-        'Deep-sea drilling rig positioning systems',
-      ],
-      companies: ['Vryhof Anchors', 'Bruce Anchor Group', 'Vicinay Marine', 'Ramnas', 'Asian Star Anchor Chain'],
-      futureImpact: 'Autonomous vessel operations and unmanned offshore platforms will require predictive chain dynamics modeling to enable remote anchor handling, with sensors monitoring real-time chain behavior to optimize deployment and prevent accidents without human intervention.',
-      color: '#0ea5e9',
-    },
-    {
-      icon: '🤖',
-      title: 'Robotic Arm Cable Management',
-      short: 'Industrial Automation',
-      tagline: 'Enabling precision in motion',
-      description: 'Industrial robots require sophisticated cable management systems to route power, data, and pneumatic lines through articulating joints. As robotic arms move through complex trajectories, cables experience dynamic forces similar to chain fountains. Poor cable management leads to premature wear, signal interference, and costly production downtime.',
-      connection: 'When a robot arm accelerates, cables attached to it experience momentum transfer effects analogous to chain fountains. Cables can lift, whip, or develop excessive slack if the dynamics are not properly managed. The same physics of link rotation and reaction forces applies to cable behavior at bend points and guide tubes.',
-      howItWorks: 'Cable carrier systems (energy chains) guide cables through robot movements using articulated links that control bending radius and prevent tangling. These systems account for acceleration forces and momentum transfer, ensuring cables follow predictable paths without the chaotic behavior seen in uncontrolled chain deployments.',
-      stats: [
-        { value: '3.5M+', label: 'Industrial robots worldwide' },
-        { value: '10M+', label: 'Flex cycles rated lifetime' },
-        { value: '150m/min', label: 'Max cable travel speeds' },
-      ],
-      examples: [
-        'Automotive welding robot cable tracks',
-        'Pick-and-place machine tether systems',
-        'CNC machine tool cable carriers',
-        'Surgical robot instrument cabling',
-      ],
-      companies: ['igus', 'KUKA', 'FANUC', 'ABB Robotics', 'Tsubaki Kabelschlepp'],
-      futureImpact: 'Next-generation collaborative robots will use smart cable systems with embedded sensors that predict cable fatigue and adjust motion profiles in real-time, applying chain dynamics principles to extend cable life and prevent unexpected failures during human-robot collaboration.',
-      color: '#8b5cf6',
-    },
-    {
-      icon: '🪂',
-      title: 'Parachute Deployment Mechanisms',
-      short: 'Aerospace Systems',
-      tagline: 'Split-second reliability when it matters most',
-      description: 'Parachute deployment is a precisely engineered sequence where suspension lines must unfurl from packed configurations without tangling. The dynamics of line deployment mirror chain fountain physics, as packed lines experience momentum transfer and reaction forces during the violent extraction process. Successful deployment depends on understanding these dynamics.',
-      connection: 'When a parachute deploys, suspension lines are rapidly pulled from their packed arrangement. Each line segment experiences a kick as it transitions from stationary to moving, similar to chain links leaving a container. Managing these forces prevents line-over malfunctions and ensures clean canopy inflation.',
-      howItWorks: 'Parachute engineers design packing methods, deployment bags, and line stow configurations that control the order and speed of line deployment. Rubber bands, line stows, and staged extraction sequences manage momentum transfer to ensure lines deploy sequentially without the chaotic dynamics that could cause entanglement or canopy damage.',
-      stats: [
-        { value: '200+ mph', label: 'Deployment speeds' },
-        { value: '< 3 sec', label: 'Full inflation time' },
-        { value: '99.97%', label: 'Modern reliability rate' },
-      ],
-      examples: [
-        'Military personnel parachute systems',
-        'Mars rover landing deceleration chutes',
-        'Aircraft emergency extraction systems',
-        'Cargo airdrop deployment mechanisms',
-      ],
-      companies: ['Airborne Systems', 'Safran Aerosystems', 'Pioneer Aerospace', 'Mills Manufacturing', 'Zodiac Aerospace'],
-      futureImpact: 'Advanced planetary exploration missions will use deployable aerodynamic decelerators with AI-optimized line deployment sequences, applying chain dynamics modeling to ensure reliable parachute deployment in unknown atmospheric conditions across the solar system.',
-      color: '#f59e0b',
-    },
-  ];
-
-  // ==================== BOTTOM BAR RENDERER ====================
-  const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
-    <div style={{
+  // ==================== NAVIGATION BAR ====================
+  const renderNavBar = (showBack: boolean, backLabel: string, showNext: boolean, nextLabel: string, nextEnabled: boolean, onNext?: () => void) => (
+    <nav style={{
       position: 'fixed',
-      bottom: 0,
+      top: 0,
       left: 0,
       right: 0,
-      padding: '16px 20px',
-      background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
-      borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+      height: '56px',
+      background: 'linear-gradient(to bottom, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95))',
+      borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
       zIndex: 1000,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
     }}>
-      {showButton && (
+      {showBack ? (
         <button
-          onClick={() => onPhaseComplete?.()}
-          disabled={!buttonEnabled}
+          onClick={prevPhase}
           style={{
-            width: '100%',
-            padding: '14px 24px',
-            background: buttonEnabled
-              ? 'linear-gradient(135deg, #fbbf24, #d97706)'
-              : 'rgba(71, 85, 105, 0.5)',
-            border: 'none',
-            borderRadius: '12px',
-            color: buttonEnabled ? '#0f172a' : colors.textMuted,
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: buttonEnabled ? 'pointer' : 'not-allowed',
-            opacity: buttonEnabled ? 1 : 0.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 16px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: `1px solid rgba(148, 163, 184, 0.3)`,
+            background: 'transparent',
+            color: colors.textSecondary,
+            cursor: 'pointer',
+            fontSize: '14px',
           }}
         >
-          {buttonText}
+          Back
         </button>
-      )}
-    </div>
+      ) : <div style={{ width: '80px' }} />}
+
+      <span style={{ color: colors.textMuted, fontSize: '13px' }}>
+        Step {phaseOrder.indexOf(currentPhase) + 1} of {phaseOrder.length}
+      </span>
+
+      {showNext ? (
+        <button
+          onClick={onNext || nextPhase}
+          disabled={!nextEnabled}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 16px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: 'none',
+            background: nextEnabled
+              ? 'linear-gradient(135deg, #fbbf24, #d97706)'
+              : 'rgba(71, 85, 105, 0.5)',
+            color: nextEnabled ? '#0f172a' : colors.textMuted,
+            cursor: nextEnabled ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            opacity: nextEnabled ? 1 : 0.5,
+          }}
+        >
+          {nextLabel}
+        </button>
+      ) : <div style={{ width: '80px' }} />}
+    </nav>
   );
+
+  // ==================== BOTTOM BAR RENDERER ====================
+  const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string, onButtonClick?: () => void) => {
+    const handleClick = buttonEnabled ? () => {
+      if (onButtonClick) {
+        onButtonClick();
+      } else {
+        nextPhase();
+      }
+    } : undefined;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 20px',
+        background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+        borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+        zIndex: 1000,
+      }}>
+        {showButton && (
+          <button
+            onClick={handleClick}
+            disabled={!buttonEnabled}
+            style={{
+              width: '100%',
+              padding: '14px 24px',
+              minHeight: '48px',
+              background: buttonEnabled
+                ? 'linear-gradient(135deg, #fbbf24, #d97706)'
+                : 'rgba(71, 85, 105, 0.5)',
+              border: 'none',
+              borderRadius: '12px',
+              color: buttonEnabled ? '#0f172a' : colors.textMuted,
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: buttonEnabled ? 'pointer' : 'not-allowed',
+              opacity: buttonEnabled ? 1 : 0.5,
+            }}
+          >
+            {buttonText}
+          </button>
+        )}
+      </div>
+    );
+  };
 
   // ==================== PHASE RENDERERS ====================
 
   // HOOK PHASE
-  if (phase === 'hook') {
+  if (currentPhase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar(false, '', true, 'Start', true)}
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
-              ⛓️ The Self-Siphoning Chain
+              The Self-Siphoning Chain
             </h1>
             <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px' }}>
               Game 112: Chain Fountain
@@ -1126,12 +1263,12 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
               padding: '20px',
               marginBottom: '16px',
             }}>
-              <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px' }}>
-                🤯 The Internet's Favorite Physics Demo
+              <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px', fontWeight: 700 }}>
+                The Internet's Favorite Physics Demo
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6', fontWeight: 400 }}>
                 Take a chain, pile it in a beaker, and let one end drop to the floor. Instead of
-                simply sliding over the rim, the chain <strong style={{ color: colors.chainLink }}>
+                simply sliding over the rim, the chain <strong style={{ color: colors.chainLink, fontWeight: 700 }}>
                 rises up into the air</strong> before falling - creating a beautiful fountain!
               </p>
             </div>
@@ -1141,27 +1278,39 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
               borderRadius: '12px',
               padding: '20px',
             }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px', fontWeight: 700 }}>
                 Also called the <span style={{ color: colors.accent }}>Mould Effect</span>
               </h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', fontWeight: 400 }}>
                 Named after Steve Mould who popularized it on YouTube, this effect puzzled
                 physicists until 2014 when researchers figured out the elegant explanation.
                 The secret lies in how momentum is transferred at the pickup point.
               </p>
             </div>
           </div>
+
+          {renderNavDots()}
         </div>
-        {renderBottomBar(true, true, "Let's Explore! →")}
+        {renderBottomBar(true, true, "Let's Explore!")}
       </div>
     );
   }
 
   // PREDICT PHASE
-  if (phase === 'predict') {
+  if (currentPhase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar(true, 'Back', true, 'Next', !!prediction)}
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+          {/* Progress indicator */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <span style={{ color: colors.textMuted, fontSize: '13px' }}>
+              Prediction 1 of 2
+            </span>
+          </div>
+
           {/* 1. STATIC GRAPHIC FIRST */}
           {renderVisualization(false)}
 
@@ -1173,7 +1322,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📋 What You're Looking At:
+              What You're Looking At:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               A <strong>beaker filled with chain</strong> sits on a table. One end of the chain
@@ -1181,15 +1330,15 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
               which in turn pulls more chain from the beaker.
             </p>
             <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '8px' }}>
-              The green arrows show the "kick" force - the reaction when links are picked up.
-              Purple arrows show the chain's momentum direction.
+              Watch how the green arrows show the "kick" force - the reaction when links are picked up.
+              Notice how the purple arrows show the chain's momentum direction.
             </p>
           </div>
 
           {/* 3. PREDICTION QUESTION BELOW */}
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
-              🤔 When you drop one end of the chain, what happens?
+              When you drop one end of the chain, what happens?
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1202,6 +1351,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                   }}
                   style={{
                     padding: '16px',
+                    minHeight: '48px',
                     background: prediction === p.id
                       ? 'linear-gradient(135deg, #fbbf24, #d97706)'
                       : 'rgba(51, 65, 85, 0.7)',
@@ -1219,23 +1369,28 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
               ))}
             </div>
           </div>
+
+          {renderNavDots()}
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
 
   // PLAY PHASE
-  if (phase === 'play') {
+  if (currentPhase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar(true, 'Back', true, 'Next', true)}
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px' }}>
-              🔬 Create Your Chain Fountain!
+              Create Your Chain Fountain!
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Drop the chain and watch the fountain form
+              Drop the chain and watch how the fountain forms
             </p>
           </div>
 
@@ -1249,32 +1404,60 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
-              🎯 Try These Experiments:
+              What to Watch For:
             </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginBottom: '8px' }}>
+              Notice how the chain rises above the beaker rim before falling. Observe how changing the parameters affects the fountain height.
+            </p>
             <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
-              <li>Higher drop height → higher fountain</li>
-              <li>Stiffer chain → more pronounced fountain</li>
-              <li>Flexible chain → barely any fountain</li>
-              <li>Watch how the arc shape changes</li>
+              <li>Higher drop height causes higher fountain</li>
+              <li>Stiffer chain results in more pronounced fountain</li>
+              <li>Flexible chain creates barely any fountain</li>
+              <li>Watch how the arc shape changes with settings</li>
             </ul>
           </div>
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
+              Key Physics Terms:
+            </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginBottom: '8px' }}>
+              <strong style={{ color: colors.chainLink }}>Momentum</strong> is defined as mass times velocity (p = mv). The chain fountain demonstrates how momentum is transferred at the pickup point.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginBottom: '8px' }}>
+              <strong style={{ color: colors.forceUp }}>Reaction Force</strong> refers to Newton's Third Law - for every action there is an equal and opposite reaction. This is calculated from F = dp/dt.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6' }}>
+              Understanding chain dynamics is important for real-world engineering applications like anchor deployment, cable systems, and industrial machinery. This practical knowledge is useful in designing systems that involve flexible chains and ropes.
+            </p>
+          </div>
+
+          {renderNavDots()}
         </div>
-        {renderBottomBar(true, true, 'See What I Learned →')}
+        {renderBottomBar(true, true, 'See What I Learned')}
       </div>
     );
   }
 
   // REVIEW PHASE
-  if (phase === 'review') {
+  if (currentPhase === 'review') {
     const selectedPrediction = predictions.find(p => p.id === prediction);
     const isCorrect = selectedPrediction?.correct === true;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar(true, 'Back', true, 'Next', true)}
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {isCorrect ? '🎯' : '💡'}
+              {isCorrect ? '!' : '!'}
             </div>
             <h2 style={{
               color: isCorrect ? colors.success : colors.warning,
@@ -1283,6 +1466,36 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             }}>
               {isCorrect ? 'Great Observation!' : 'Surprising, Right?'}
             </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              {isCorrect ? 'You correctly predicted the chain would rise!' : 'Most people don\'t expect the chain to rise above the rim.'}
+            </p>
+          </div>
+
+          {/* Visual diagram for review */}
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', display: 'block', margin: '0 auto' }}>
+              {/* Simple diagram showing the kick mechanism */}
+              <rect width="300" height="200" fill={colors.bgDark} rx="8" />
+
+              {/* Beaker */}
+              <rect x="50" y="80" width="60" height="80" fill="none" stroke={colors.beakerEdge} strokeWidth="2" rx="2" />
+
+              {/* Chain arc */}
+              <path d="M 80 80 Q 80 30 130 30 Q 180 30 180 100" fill="none" stroke={colors.chainLink} strokeWidth="4" />
+
+              {/* Kick arrow */}
+              <line x1="80" y1="80" x2="80" y2="50" stroke={colors.forceUp} strokeWidth="3" />
+              <polygon points="75,55 80,45 85,55" fill={colors.forceUp} />
+
+              {/* Labels */}
+              <text x="90" y="55" fill={colors.textSecondary} fontSize="11">Kick!</text>
+              <text x="150" y="180" fill={colors.textMuted} fontSize="11" textAnchor="middle">Chain rises before falling</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1292,10 +1505,10 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📚 The Physics Explained:
+              The Physics Explained:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
-              The key is what happens at the <strong style={{ color: colors.chainLink }}>pickup point</strong>.
+              As you observed, the key is what happens at the <strong style={{ color: colors.chainLink }}>pickup point</strong>.
               Each chain link can't simply slide upward - it must rotate to change direction.
               When it rotates, it pushes against the surface (or other links) below it.
             </p>
@@ -1327,7 +1540,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🔄 The Momentum Balance:
+              The Momentum Balance:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
               The falling chain gains downward momentum from gravity. The kick transfers some
@@ -1335,20 +1548,31 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
               the <strong>ratio of kick force to chain weight</strong>.
             </p>
           </div>
+
+          {renderNavDots()}
         </div>
-        {renderBottomBar(true, true, 'Ready for a Challenge →')}
+        {renderBottomBar(true, true, 'Ready for a Challenge')}
       </div>
     );
   }
 
   // TWIST_PREDICT PHASE
-  if (phase === 'twist_predict') {
+  if (currentPhase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar(true, 'Back', true, 'Next', !!twistPrediction)}
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <span style={{ color: colors.textMuted, fontSize: '13px' }}>
+              Prediction 2 of 2
+            </span>
+          </div>
+
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px', marginBottom: '8px' }}>
-              🌀 Plot Twist!
+              Plot Twist!
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               What's actually doing the pushing?
@@ -1364,18 +1588,18 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🤔 The Mystery Force:
+              The Mystery Force:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               We've established that the chain rises above the container. But what exactly is
-              providing that upward force? The chain is just sitting there in the beaker -
-              why would pulling on one end make the rest jump up?
+              providing that upward force? Watch the pickup point carefully - the chain is just
+              sitting there in the beaker. Why would pulling on one end make the rest jump up?
             </p>
           </div>
 
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
-              🤔 What creates the upward force?
+              What creates the upward force?
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1387,6 +1611,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                   }}
                   style={{
                     padding: '16px',
+                    minHeight: '48px',
                     background: twistPrediction === p.id
                       ? 'linear-gradient(135deg, #f59e0b, #d97706)'
                       : 'rgba(51, 65, 85, 0.7)',
@@ -1404,23 +1629,28 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
               ))}
             </div>
           </div>
+
+          {renderNavDots()}
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'See The Mechanism →')}
+        {renderBottomBar(true, !!twistPrediction, 'See The Mechanism')}
       </div>
     );
   }
 
   // TWIST_PLAY PHASE
-  if (phase === 'twist_play') {
+  if (currentPhase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar(true, 'Back', true, 'Next', true)}
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px' }}>
-              🔬 The Kick Mechanism
+              The Kick Mechanism
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Watch the pickup point carefully
+              Watch the pickup point carefully and observe the forces
             </p>
           </div>
 
@@ -1434,8 +1664,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
-              💡 Key Observations:
+              What to Watch For - Key Observations:
             </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginBottom: '8px' }}>
+              Notice how each link must rotate to change from horizontal to vertical orientation. Observe the reaction forces at work.
+            </p>
             <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
               <li>Each link must rotate to change from horizontal to vertical</li>
               <li>The link pushes down on what's below it while rotating</li>
@@ -1443,23 +1676,28 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
               <li>This "kick" launches the chain upward!</li>
             </ul>
           </div>
+
+          {renderNavDots()}
         </div>
-        {renderBottomBar(true, true, 'Understand the Kick →')}
+        {renderBottomBar(true, true, 'Understand the Kick')}
       </div>
     );
   }
 
   // TWIST_REVIEW PHASE
-  if (phase === 'twist_review') {
+  if (currentPhase === 'twist_review') {
     const selectedTwist = twistPredictions.find(p => p.id === twistPrediction);
     const isCorrect = selectedTwist?.correct === true;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar(true, 'Back', true, 'Next', true)}
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {isCorrect ? '🎯' : '🤯'}
+              {isCorrect ? '!' : '!'}
             </div>
             <h2 style={{
               color: isCorrect ? colors.success : colors.accent,
@@ -1468,6 +1706,42 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             }}>
               {isCorrect ? 'Physics Intuition!' : 'The Elegant "Kick"!'}
             </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              {isCorrect ? 'You correctly identified the kick mechanism!' : 'The answer reveals a beautiful physics principle.'}
+            </p>
+          </div>
+
+          {/* Visual diagram for twist review */}
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '300px', display: 'block', margin: '0 auto' }}>
+              <rect width="300" height="180" fill={colors.bgDark} rx="8" />
+
+              {/* Link rotation diagram */}
+              <circle cx="100" cy="90" r="15" fill="none" stroke={colors.chainLink} strokeWidth="2" strokeDasharray="4,2" />
+              <rect x="95" y="70" width="10" height="40" fill={colors.chainLink} rx="2" />
+
+              {/* Rotation arrow */}
+              <path d="M 120 75 A 25 25 0 0 1 120 105" fill="none" stroke={colors.momentum} strokeWidth="2" />
+              <polygon points="118,105 125,110 122,100" fill={colors.momentum} />
+
+              {/* Force arrows */}
+              <line x1="100" y1="115" x2="100" y2="140" stroke={colors.forceDown} strokeWidth="2" />
+              <polygon points="95,135 100,145 105,135" fill={colors.forceDown} />
+              <text x="110" y="140" fill={colors.textMuted} fontSize="11">Push down</text>
+
+              <line x1="100" y1="65" x2="100" y2="40" stroke={colors.forceUp} strokeWidth="2" />
+              <polygon points="95,45 100,35 105,45" fill={colors.forceUp} />
+              <text x="110" y="45" fill={colors.textMuted} fontSize="11">Kick up!</text>
+
+              {/* Labels */}
+              <text x="200" y="90" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Link rotates</text>
+              <text x="200" y="105" fill={colors.textSecondary} fontSize="11" textAnchor="middle">= reaction force</text>
+            </svg>
           </div>
 
           <div style={{
@@ -1477,7 +1751,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🦶 The Kick Explained:
+              The Kick Explained:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
               Think of each chain link as a tiny lever. When the chain above pulls it upward,
@@ -1499,7 +1773,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📏 Why Stiffness Matters:
+              Why Stiffness Matters:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
               A stiffer chain (like ball chain) has links that resist bending. They must rotate
@@ -1507,25 +1781,30 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
               without any kick - no fountain!
             </p>
           </div>
+
+          {renderNavDots()}
         </div>
-        {renderBottomBar(true, true, 'See Real Applications →')}
+        {renderBottomBar(true, true, 'See Real Applications')}
       </div>
     );
   }
 
   // TRANSFER PHASE
-  if (phase === 'transfer') {
+  if (currentPhase === 'transfer') {
     const allCompleted = transferCompleted.size >= 4;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar(true, 'Back', true, 'Next', allCompleted)}
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
-              🌍 Real-World Applications
+              Real-World Applications
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Explore all {transferApplications.length} applications to continue
+              Application {Math.min(transferCompleted.size + 1, 4)} of {transferApplications.length} - Explore all to continue
             </p>
             <div style={{
               display: 'flex',
@@ -1550,9 +1829,6 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
           {transferApplications.map((app) => (
             <div
               key={app.id}
-              onClick={() => {
-                setTransferCompleted(prev => new Set([...prev, app.id]));
-              }}
               style={{
                 background: transferCompleted.has(app.id)
                   ? 'rgba(16, 185, 129, 0.1)'
@@ -1563,18 +1839,17 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                 margin: '12px 16px',
                 padding: '16px',
                 borderRadius: '12px',
-                cursor: 'pointer',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px', margin: 0 }}>
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px', margin: 0, fontWeight: 700 }}>
                   {app.title}
                 </h3>
                 {transferCompleted.has(app.id) && (
-                  <span style={{ color: colors.success, fontSize: '18px' }}>✓</span>
+                  <span style={{ color: colors.success, fontSize: '14px', fontWeight: 400 }}>Completed</span>
                 )}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginTop: '8px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginTop: '8px', fontWeight: 400 }}>
                 {app.description}
               </p>
               <div style={{
@@ -1583,49 +1858,97 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                 padding: '10px',
                 marginTop: '10px',
               }}>
-                <p style={{ color: colors.accent, fontSize: '12px', margin: 0 }}>
-                  💡 {app.insight}
+                <p style={{ color: colors.accent, fontSize: '12px', margin: 0, fontWeight: 400 }}>
+                  {app.insight}
                 </p>
               </div>
+              {!transferCompleted.has(app.id) && (
+                <button
+                  onClick={() => setTransferCompleted(prev => new Set([...prev, app.id]))}
+                  style={{
+                    marginTop: '12px',
+                    padding: '10px 20px',
+                    minHeight: '44px',
+                    background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#0f172a',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    width: '100%',
+                  }}
+                >
+                  Got It
+                </button>
+              )}
             </div>
           ))}
+
+          {renderNavDots()}
         </div>
-        {renderBottomBar(true, allCompleted, allCompleted ? 'Take the Test →' : `Explore ${4 - transferCompleted.size} More`)}
+        {renderBottomBar(allCompleted, true, 'Take the Test')}
       </div>
     );
   }
 
   // TEST PHASE
-  if (phase === 'test') {
-    const answeredCount = Object.keys(testAnswers).length;
-    const allAnswered = answeredCount === testQuestions.length;
+  if (currentPhase === 'test') {
+    const currentQuestion = testQuestions[currentQuestionIndex];
+    const isLastQuestion = currentQuestionIndex === testQuestions.length - 1;
+    const correctOption = currentQuestion?.options.find(o => o.correct);
+    const isCorrectAnswer = selectedAnswer === correctOption?.id;
+
+    // Handle confirming the answer
+    const handleConfirmAnswer = () => {
+      if (selectedAnswer && currentQuestion) {
+        // Check if correct and update score
+        if (isCorrectAnswer) {
+          setQuizScore(prev => prev + 1);
+        }
+        // Save the answer
+        setTestAnswers(prev => ({ ...prev, [currentQuestion.id]: selectedAnswer }));
+        setAnswerConfirmed(true);
+      }
+    };
+
+    // Handle moving to next question
+    const handleNextQuestion = () => {
+      if (isLastQuestion) {
+        setTestSubmitted(true);
+      } else {
+        setCurrentQuestionIndex(prev => prev + 1);
+        setSelectedAnswer(null);
+        setAnswerConfirmed(false);
+      }
+    };
 
     if (testSubmitted) {
-      const correctCount = testQuestions.filter(q => {
-        const correctOption = q.options.find(o => o.correct);
-        return testAnswers[q.id] === correctOption?.id;
-      }).length;
+      const correctCount = quizScore;
       const score = Math.round((correctCount / testQuestions.length) * 100);
 
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {renderProgressBar()}
+          {renderNavBar(true, 'Back', true, 'Done', true)}
+
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-                {score >= 80 ? '🏆' : score >= 60 ? '📚' : '💪'}
+                {score >= 80 ? '!' : score >= 60 ? '!' : '!'}
               </div>
               <h2 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
                 {score}% Score
               </h2>
               <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
-                {correctCount} of {testQuestions.length} correct
+                {correctCount}/{testQuestions.length} correct
               </p>
             </div>
 
             {testQuestions.map((q, idx) => {
-              const correctOption = q.options.find(o => o.correct);
+              const qCorrectOption = q.options.find(o => o.correct);
               const userAnswer = testAnswers[q.id];
-              const isCorrect = userAnswer === correctOption?.id;
+              const isCorrect = userAnswer === qCorrectOption?.id;
 
               return (
                 <div
@@ -1640,7 +1963,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                 >
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
                     <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '16px' }}>
-                      {isCorrect ? '✓' : '✗'}
+                      {isCorrect ? 'Correct' : 'Incorrect'}
                     </span>
                     <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold' }}>
                       Q{idx + 1}
@@ -1651,33 +1974,43 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                   </p>
                   {!isCorrect && (
                     <p style={{ color: colors.success, fontSize: '11px', margin: 0 }}>
-                      Correct: {correctOption?.text}
+                      Correct: {qCorrectOption?.text}
                     </p>
                   )}
                 </div>
               );
             })}
+
+            {renderNavDots()}
           </div>
-          {renderBottomBar(true, true, score >= 70 ? 'Complete! 🎉' : 'Review & Continue →')}
+          {renderBottomBar(true, true, score >= 70 ? 'Move Forward' : 'Try Again')}
         </div>
       );
     }
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar(true, 'Back', false, '', false)}
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
-              📝 Knowledge Check
+              Knowledge Check
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              {answeredCount} of {testQuestions.length} answered
+              Question {currentQuestionIndex + 1} of {testQuestions.length}
+            </p>
+            <p style={{ color: colors.accent, fontSize: '14px', marginTop: '4px' }}>
+              Score: {quizScore}/{currentQuestionIndex + (answerConfirmed ? 1 : 0)}
+            </p>
+            <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px', maxWidth: '320px', margin: '8px auto 0' }}>
+              Test your understanding of chain fountain physics, momentum transfer, and the reaction forces that create this fascinating effect. Select the best answer for each question.
             </p>
           </div>
 
-          {testQuestions.map((q, idx) => (
+          {currentQuestion && (
             <div
-              key={q.id}
               style={{
                 background: colors.bgCard,
                 margin: '12px 16px',
@@ -1686,51 +2019,120 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
               }}
             >
               <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>
-                {idx + 1}. {q.question}
+                Q{currentQuestionIndex + 1} of {testQuestions.length}: {currentQuestion.question}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {q.options.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setTestAnswers(prev => ({ ...prev, [q.id]: option.id }))}
-                    style={{
-                      padding: '10px 14px',
-                      background: testAnswers[q.id] === option.id
-                        ? 'rgba(251, 191, 36, 0.3)'
-                        : 'rgba(51, 65, 85, 0.5)',
-                      border: testAnswers[q.id] === option.id
-                        ? '1px solid rgba(251, 191, 36, 0.5)'
-                        : '1px solid transparent',
-                      borderRadius: '8px',
-                      color: colors.textSecondary,
-                      fontSize: '13px',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {option.text}
-                  </button>
-                ))}
+                {currentQuestion.options.map((option) => {
+                  let buttonStyle: React.CSSProperties = {
+                    padding: '10px 14px',
+                    minHeight: '44px',
+                    background: selectedAnswer === option.id
+                      ? 'rgba(251, 191, 36, 0.3)'
+                      : 'rgba(51, 65, 85, 0.5)',
+                    border: selectedAnswer === option.id
+                      ? '1px solid rgba(251, 191, 36, 0.5)'
+                      : '1px solid transparent',
+                    borderRadius: '8px',
+                    color: colors.textSecondary,
+                    fontSize: '13px',
+                    textAlign: 'left',
+                    cursor: answerConfirmed ? 'default' : 'pointer',
+                  };
+
+                  // Show correct/incorrect styling after confirmation
+                  if (answerConfirmed) {
+                    if (option.correct) {
+                      buttonStyle.background = 'rgba(16, 185, 129, 0.3)';
+                      buttonStyle.border = '1px solid rgba(16, 185, 129, 0.5)';
+                    } else if (selectedAnswer === option.id && !option.correct) {
+                      buttonStyle.background = 'rgba(239, 68, 68, 0.3)';
+                      buttonStyle.border = '1px solid rgba(239, 68, 68, 0.5)';
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => !answerConfirmed && setSelectedAnswer(option.id)}
+                      disabled={answerConfirmed}
+                      style={buttonStyle}
+                    >
+                      {option.text}
+                    </button>
+                  );
+                })}
               </div>
+
+              {/* Feedback after confirmation */}
+              {answerConfirmed && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  background: isCorrectAnswer ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  border: `1px solid ${isCorrectAnswer ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                }}>
+                  <p style={{
+                    color: isCorrectAnswer ? colors.success : colors.error,
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    margin: 0,
+                  }}>
+                    {isCorrectAnswer ? 'Correct!' : 'Incorrect'}
+                  </p>
+                  {!isCorrectAnswer && (
+                    <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '8px 0 0 0' }}>
+                      The correct answer was: {correctOption?.text}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-          ))}
+          )}
+
+          {renderNavDots()}
         </div>
-        {allAnswered ? (
-          <div style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '16px 20px',
-            background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
-            borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-            zIndex: 1000,
-          }}>
+
+        {/* Bottom action button */}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 20px',
+          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+          zIndex: 1000,
+        }}>
+          {!answerConfirmed ? (
             <button
-              onClick={() => setTestSubmitted(true)}
+              onClick={handleConfirmAnswer}
+              disabled={!selectedAnswer}
               style={{
                 width: '100%',
                 padding: '14px 24px',
+                minHeight: '48px',
+                background: selectedAnswer
+                  ? 'linear-gradient(135deg, #fbbf24, #d97706)'
+                  : 'rgba(71, 85, 105, 0.5)',
+                border: 'none',
+                borderRadius: '12px',
+                color: selectedAnswer ? '#0f172a' : colors.textMuted,
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: selectedAnswer ? 'pointer' : 'not-allowed',
+                opacity: selectedAnswer ? 1 : 0.5,
+              }}
+            >
+              Confirm Answer
+            </button>
+          ) : (
+            <button
+              onClick={handleNextQuestion}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                minHeight: '48px',
                 background: 'linear-gradient(135deg, #fbbf24, #d97706)',
                 border: 'none',
                 borderRadius: '12px',
@@ -1740,23 +2142,24 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                 cursor: 'pointer',
               }}
             >
-              Submit Answers
+              {isLastQuestion ? 'See Results' : 'Next Question'}
             </button>
-          </div>
-        ) : (
-          renderBottomBar(false, false, '')
-        )}
+          )}
+        </div>
       </div>
     );
   }
 
   // MASTERY PHASE
-  if (phase === 'mastery') {
+  if (currentPhase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar(true, 'Back', false, '', false)}
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '72px', marginBottom: '16px' }}>🏆</div>
+            <div style={{ fontSize: '72px', marginBottom: '16px' }}>!</div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
               Chain Dynamics Master!
             </h1>
@@ -1772,14 +2175,14 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>
-              🎓 What You've Learned:
+              What You've Learned:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '2', paddingLeft: '20px', margin: 0 }}>
               <li>Chains rise due to "kick" from link rotation</li>
               <li>Newton's 3rd law creates the upward force</li>
-              <li>Stiff chains = bigger fountain</li>
-              <li>Higher drop = higher fountain (more momentum)</li>
-              <li>Same physics applies to cables & polymers</li>
+              <li>Stiff chains create bigger fountain</li>
+              <li>Higher drop creates higher fountain (more momentum)</li>
+              <li>Same physics applies to cables and polymers</li>
             </ul>
           </div>
 
@@ -1791,7 +2194,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             border: '1px solid rgba(251, 191, 36, 0.3)',
           }}>
             <h3 style={{ color: colors.accent, fontSize: '16px', marginBottom: '12px' }}>
-              🚀 Try It Yourself:
+              Try It Yourself:
             </h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
               Get a ball chain (like the ones used for keychains or light pulls), pile it in
@@ -1800,16 +2203,33 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
               friends.
             </p>
           </div>
+
+          {renderNavDots()}
         </div>
-        {renderBottomBar(true, true, 'Complete Game →')}
+        {renderBottomBar(true, true, 'Complete Game', onPhaseComplete)}
       </div>
     );
   }
 
-  // Default fallback
+  // Default fallback - should render hook phase
   return (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <p style={{ color: colors.textSecondary }}>Loading phase: {phase}...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {renderProgressBar()}
+      {renderNavBar(false, '', true, 'Start', true)}
+
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
+            The Self-Siphoning Chain
+          </h1>
+          <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px' }}>
+            Game 112: Chain Fountain
+          </p>
+          <p style={{ color: colors.textSecondary }}>Loading phase: {currentPhase}...</p>
+        </div>
+        {renderNavDots()}
+      </div>
+      {renderBottomBar(true, true, "Let's Explore!")}
     </div>
   );
 };

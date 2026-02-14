@@ -863,6 +863,10 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
 
   const renderProgressBar = () => (
     <div style={{
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
       justifyContent: 'center',
       gap: isMobile ? '6px' : '8px',
@@ -870,6 +874,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
       background: colors.bgDark,
       borderBottom: '1px solid rgba(255,255,255,0.1)',
       flexWrap: 'wrap' as const,
+      zIndex: 1000,
     }}>
       {phaseOrder.map((p, index) => {
         const currentIndex = phaseOrder.indexOf(phase);
@@ -880,6 +885,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
             key={p}
             onClick={() => index <= currentIndex && goToPhase(p)}
             disabled={index > currentIndex}
+            aria-label={phaseLabels[p]}
             style={{
               ...buttonStyle,
               width: isMobile ? '28px' : '32px',
@@ -895,6 +901,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              transition: 'all 0.2s ease',
             }}
             title={phaseLabels[p]}
           >

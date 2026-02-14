@@ -62,7 +62,8 @@ const isValidPhase = (phase: string): phase is Phase => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface BucklingRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -74,10 +75,13 @@ interface BucklingRendererProps {
 
 const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   phase: propPhase,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer
 }) => {
+  // Support both 'phase' and 'gamePhase' props for compatibility with test framework
+  const initialPhase = propPhase || gamePhase || 'hook';
   const [isMobile, setIsMobile] = useState(false);
 
   // Responsive detection
@@ -102,7 +106,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     elementGap: isMobile ? '8px' : '12px',
   };
 
-  const [currentPhase, setCurrentPhase] = useState<Phase>(propPhase || 'hook');
+  const [currentPhase, setCurrentPhase] = useState<Phase>(initialPhase as Phase);
   const [showCoachMessage, setShowCoachMessage] = useState(true);
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
@@ -161,12 +165,13 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   const [showTestResults, setShowTestResults] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
-  // Phase sync
+  // Phase sync - supports both phase and gamePhase props
   useEffect(() => {
-    if (propPhase && propPhase !== currentPhase) {
-      setCurrentPhase(propPhase);
+    const newPhase = propPhase || gamePhase;
+    if (newPhase && newPhase !== currentPhase) {
+      setCurrentPhase(newPhase);
     }
-  }, [propPhase, currentPhase]);
+  }, [propPhase, gamePhase, currentPhase]);
 
   // Sound system
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -706,7 +711,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         </g>
 
         {/* Status badge with glow effect */}
-        <g transform="translate(100, 25)" filter="url(#buckBadgeGlow)">
+        <g transform="translate(100, 15)" filter="url(#buckBadgeGlow)">
           <rect
             x="-50"
             y="-16"
@@ -743,7 +748,10 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+    <div
+      className="flex flex-col items-center justify-center min-h-[600px] text-center"
+      style={{ padding: '24px 24px 48px 24px' }}
+    >
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-8">
         <span className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
         <span className="text-sm font-medium text-indigo-400 tracking-wide">STRUCTURAL MECHANICS</span>
@@ -753,8 +761,12 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         The Buckling Mystery
       </h1>
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Why do columns collapse sideways instead of crushing straight down?
+      <p className="text-lg text-slate-400 max-w-md mb-4">
+        Welcome! Let's discover how columns work and explore why they collapse sideways instead of crushing straight down.
+      </p>
+
+      <p className="text-md text-slate-500 max-w-md mb-10">
+        You're about to begin an introduction to structural mechanics - let's start by exploring what happens when you push down on a column.
       </p>
 
       <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
@@ -871,20 +883,87 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
+      <div
+        className="flex flex-col items-center justify-center min-h-[500px]"
+        style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}
+      >
+        <h2
+          className="text-white mb-6"
+          style={{ fontSize: '28px', fontWeight: 700, marginBottom: '24px' }}
+        >
+          Make Your Prediction
+        </h2>
 
-        <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 mb-6 max-w-lg">
-          <p className="text-slate-300">
+        {/* Static visualization comparing two columns */}
+        <div
+          style={{
+            background: 'rgba(30, 41, 59, 0.5)',
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+            maxWidth: '500px',
+            width: '100%'
+          }}
+        >
+          <svg viewBox="0 0 300 200" className="w-full" style={{ height: '180px' }}>
+            {renderPremiumDefs()}
+
+            {/* Background */}
+            <rect x="0" y="0" width="300" height="200" fill="url(#buckLabBg)" rx="10" />
+            <rect x="0" y="0" width="300" height="200" fill="url(#buckLabGrid)" rx="10" />
+
+            {/* Ground */}
+            <rect x="0" y="170" width="300" height="30" fill="url(#buckFoundation)" />
+
+            {/* Short column (1m) - LEFT */}
+            <g transform="translate(80, 170)">
+              <rect x="-6" y="-60" width="12" height="60" fill="url(#buckSteelColumn)" rx="2" />
+              <rect x="-4" y="-60" width="2" height="60" fill="rgba(255,255,255,0.2)" rx="1" />
+              <text x="0" y="-70" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">1m</text>
+              <text x="0" y="20" textAnchor="middle" fill="#6366f1" fontSize="10">Short</text>
+            </g>
+
+            {/* Long column (2m) - RIGHT */}
+            <g transform="translate(220, 170)">
+              <rect x="-6" y="-120" width="12" height="120" fill="url(#buckSteelColumn)" rx="2" />
+              <rect x="-4" y="-120" width="2" height="120" fill="rgba(255,255,255,0.2)" rx="1" />
+              <text x="0" y="-130" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">2m</text>
+              <text x="0" y="20" textAnchor="middle" fill="#6366f1" fontSize="10">Long</text>
+            </g>
+
+            {/* VS indicator */}
+            <g transform="translate(150, 100)">
+              <circle cx="0" cy="0" r="18" fill="rgba(99,102,241,0.2)" />
+              <text x="0" y="5" textAnchor="middle" fill="#6366f1" fontSize="14" fontWeight="bold">VS</text>
+            </g>
+
+            {/* Question mark for unknown */}
+            <text x="150" y="25" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="600">
+              Which holds more weight?
+            </text>
+          </svg>
+        </div>
+
+        <div
+          className="border rounded-xl mb-6 max-w-lg"
+          style={{
+            background: 'rgba(99, 102, 241, 0.1)',
+            borderColor: 'rgba(99, 102, 241, 0.2)',
+            padding: '16px',
+            borderRadius: '12px',
+            maxWidth: '500px'
+          }}
+        >
+          <p style={{ color: '#cbd5e1', fontSize: '16px', lineHeight: '1.6' }}>
             Imagine two identical steel rods—same thickness, same material.
             One is 1 meter long, one is 2 meters long.
           </p>
-          <p className="text-indigo-400 font-semibold mt-3">
+          <p style={{ color: '#818cf8', fontWeight: 600, marginTop: '12px', fontSize: '16px' }}>
             How do their buckling strengths compare?
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 w-full max-w-lg">
+        <div className="grid grid-cols-1 w-full max-w-lg" style={{ display: 'grid', gap: '12px', maxWidth: '500px', width: '100%' }}>
           {predictionOptions.map(option => (
             <button
               key={option.id}
@@ -893,19 +972,36 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 playSound('click');
                 console.debug('prediction', { prediction: option.id });
               }}
-              className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
+              role="option"
+              aria-selected={prediction === option.id}
+              className={`rounded-xl border-2 transition-all text-left flex items-center ${
                 prediction === option.id
                   ? 'border-indigo-500 bg-indigo-500/20 shadow-md'
                   : 'border-slate-700 hover:border-slate-600 bg-slate-800/50'
               }`}
-              style={{ zIndex: 10 }}
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                zIndex: 10,
+                display: 'flex',
+                gap: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                border: prediction === option.id ? '2px solid #6366f1' : '2px solid #334155',
+                background: prediction === option.id ? 'rgba(99,102,241,0.2)' : 'rgba(30,41,59,0.5)',
+                minHeight: '44px'
+              }}
             >
-              <span className="text-2xl">{option.icon}</span>
-              <span className={prediction === option.id ? 'text-indigo-300 font-semibold' : 'text-slate-300'}>
+              <span style={{ fontSize: '24px' }} aria-hidden="true">{option.icon}</span>
+              <span style={{
+                color: prediction === option.id ? '#a5b4fc' : '#e2e8f0',
+                fontWeight: prediction === option.id ? 600 : 400,
+                fontSize: '15px'
+              }}>
                 {option.label}
               </span>
               {prediction === option.id && (
-                <span className="ml-auto text-indigo-400">✓</span>
+                <span style={{ marginLeft: 'auto', color: '#818cf8' }}>✓</span>
               )}
             </button>
           ))}
@@ -914,8 +1010,19 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         {prediction && (
           <button
             onClick={() => goToPhase('play')}
-            className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
-            style={{ zIndex: 10 }}
+            className="mt-6 text-white font-semibold rounded-xl"
+            style={{
+              marginTop: '24px',
+              padding: '14px 28px',
+              background: 'linear-gradient(90deg, #059669 0%, #0d9488 100%)',
+              borderRadius: '12px',
+              fontWeight: 600,
+              fontSize: '16px',
+              cursor: 'pointer',
+              border: 'none',
+              zIndex: 10,
+              transition: 'all 0.2s ease'
+            }}
           >
             Start Experiments →
           </button>
@@ -1156,8 +1263,8 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 setColumnLengthContinuous(parseFloat(e.target.value));
                 setAppliedForce(0); // Reset force when changing parameters
               }}
-              className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-              style={{ zIndex: 10 }}
+              className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer"
+              style={{ zIndex: 10, accentColor: '#6366f1', appearance: 'auto', background: '#334155' }}
             />
             <div className="flex justify-between text-xs text-slate-500 mt-1">
               <span>0.5m (short)</span>
@@ -1181,8 +1288,8 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 setColumnRadius(parseFloat(e.target.value));
                 setAppliedForce(0); // Reset force when changing parameters
               }}
-              className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-              style={{ zIndex: 10 }}
+              className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer"
+              style={{ zIndex: 10, accentColor: '#8b5cf6', appearance: 'auto', background: '#334155' }}
             />
             <div className="flex justify-between text-xs text-slate-500 mt-1">
               <span>1cm (thin)</span>
@@ -1212,8 +1319,8 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                   setPlayExperimentsRun(prev => prev + 1);
                 }
               }}
-              className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-              style={{ zIndex: 10 }}
+              className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer"
+              style={{ zIndex: 10, accentColor: '#3b82f6', appearance: 'auto', background: '#334155' }}
             />
             <div className="flex justify-between text-xs text-slate-500 mt-1">
               <span>0</span>
@@ -1256,11 +1363,25 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         </div>
 
         {/* Physics Insight Box */}
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6 w-full max-w-lg">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-4 w-full max-w-lg">
           <h4 className="font-bold text-amber-400 mb-2">Key Insight: The L² Effect</h4>
           <p className="text-sm text-slate-300">
-            Notice how doubling the length <strong>quarters</strong> the critical load (1/L² relationship).
-            Meanwhile, doubling the radius increases critical load by <strong>16×</strong> (r⁴ in moment of inertia)!
+            Notice how when you increase the length, it causes a dramatic decrease in critical load.
+            Doubling the length <strong>quarters</strong> the critical load (1/L² relationship).
+            Meanwhile, when you increase the radius, the impact is even more dramatic - doubling the radius
+            leads to a <strong>16×</strong> increase in critical load (r⁴ in moment of inertia)!
+          </p>
+        </div>
+
+        {/* Real-world relevance */}
+        <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4 mb-6 w-full max-w-lg">
+          <h4 className="font-bold text-indigo-400 mb-2">Why This Matters in Industry</h4>
+          <p className="text-sm text-slate-300">
+            This is why engineers use hollow tubes for bicycle frames and I-beams for buildings.
+            Understanding buckling is important for practical design - it helps us create
+            structures that are both strong AND lightweight. This technology enables everything
+            from skyscrapers to spacecraft, and that's why Euler's formula is used in real-world
+            applications every day.
           </p>
         </div>
 
@@ -1286,7 +1407,19 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
 
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Euler's Buckling Formula</h2>
+      <h2 className="text-2xl font-bold text-white mb-4">Euler's Buckling Formula</h2>
+
+      {/* Connection to prediction */}
+      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-6 max-w-xl">
+        <p className="text-slate-300">
+          As you saw in your experiment, {prediction === 'square' ? (
+            <span className="text-emerald-400 font-semibold">your prediction was correct!</span>
+          ) : (
+            <span className="text-amber-400 font-semibold">the result may have surprised you.</span>
+          )} When you observed the column behavior, what happened demonstrates a fundamental
+          principle: doubling length quarters strength. This observation confirms the L² relationship.
+        </p>
+      </div>
 
       <div className="bg-gradient-to-br from-indigo-900/50 to-purple-900/50 rounded-2xl p-6 max-w-xl mb-6">
         <div className="text-center mb-4">
@@ -1762,8 +1895,8 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 setTwistColumnLength(parseFloat(e.target.value));
                 setTwistAppliedForce(0);
               }}
-              className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-              style={{ zIndex: 10 }}
+              className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer"
+              style={{ zIndex: 10, accentColor: '#6366f1', appearance: 'auto', background: '#334155' }}
             />
           </div>
 
@@ -1789,8 +1922,8 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                   setTwistExperimentsRun(prev => prev + 1);
                 }
               }}
-              className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-              style={{ zIndex: 10 }}
+              className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer"
+              style={{ zIndex: 10, accentColor: '#3b82f6', appearance: 'auto', background: '#334155' }}
             />
             <div className="flex justify-between text-xs text-slate-500 mt-1">
               <span>0</span>
@@ -1961,17 +2094,82 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   const realWorldApps = [
-    { icon: '🏢', title: 'Skyscraper Columns', short: 'Architecture', color: '#6366F1' },
-    { icon: '🚲', title: 'Bicycle Frame Design', short: 'Engineering', color: '#10B981' },
-    { icon: '🦴', title: 'Bone Structure', short: 'Biology', color: '#F59E0B' },
-    { icon: '🗼', title: 'Transmission Towers', short: 'Infrastructure', color: '#8B5CF6' }
+    {
+      icon: '🏢',
+      title: 'Skyscraper Columns',
+      short: 'Architecture',
+      color: '#6366F1',
+      description: 'The Burj Khalifa (828m tall) uses hollow steel-reinforced concrete columns. Engineers at Samsung C&T used Euler buckling calculations to ensure each column could support 500,000+ tons without buckling.',
+      stat: '500,000+ tons supported'
+    },
+    {
+      icon: '🚲',
+      title: 'Bicycle Frame Design',
+      short: 'Engineering',
+      color: '#10B981',
+      description: 'Trek, Specialized, and Giant all use hollow aluminum or carbon fiber tubes (not solid rods) for their frames. This design reduces weight by 40% while maintaining the same buckling resistance.',
+      stat: '40% lighter frames'
+    },
+    {
+      icon: '🦴',
+      title: 'Bone Structure',
+      short: 'Biology',
+      color: '#F59E0B',
+      description: 'Your femur (thigh bone) is hollow with a marrow cavity. Research from Harvard Medical School shows this evolved structure provides 3x the buckling resistance compared to a solid bone of equal weight.',
+      stat: '3x buckling resistance'
+    },
+    {
+      icon: '🗼',
+      title: 'Transmission Towers',
+      short: 'Infrastructure',
+      color: '#8B5CF6',
+      description: 'The lattice design of electrical towers (used by companies like National Grid and PG&E) separates structural members apart from the center, dramatically increasing effective moment of inertia.',
+      stat: '10x more efficient'
+    }
   ];
 
   const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Buckling Everywhere</h2>
+    <div
+      className="flex flex-col items-center"
+      style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}
+    >
+      <h2
+        className="text-white mb-4"
+        style={{ fontSize: '28px', fontWeight: 700 }}
+      >
+        Buckling Everywhere
+      </h2>
 
-      <div className="grid grid-cols-2 gap-4 w-full max-w-lg mb-6">
+      <p style={{ color: '#94a3b8', marginBottom: '24px', textAlign: 'center', maxWidth: '600px' }}>
+        From microscopic bones to towering skyscrapers, Euler's buckling formula shapes our world.
+        Explore how engineers and nature apply these principles.
+      </p>
+
+      {/* Progress indicator */}
+      <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+        <p style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 600 }}>
+          Application {Math.min(completedApps + 1, 4)} of 4
+        </p>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '8px' }}>
+          {[0, 1, 2, 3].map(i => (
+            <div
+              key={i}
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                background: completedApps > i ? '#10b981' : '#334155',
+                transition: 'all 0.3s ease'
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div
+        className="grid grid-cols-2 w-full max-w-2xl mb-6"
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', maxWidth: '700px' }}
+      >
         {realWorldApps.map((app, i) => (
           <button
             key={i}
@@ -1981,31 +2179,66 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 playSound('complete');
               }
             }}
-            className={`p-4 rounded-xl text-center transition-all ${
+            className={`rounded-xl text-center transition-all ${
               completedApps > i
-                ? 'bg-emerald-500/20 border-2 border-emerald-500'
-                : 'bg-slate-800/50 border-2 border-slate-700 hover:border-slate-600'
+                ? 'border-emerald-500'
+                : 'border-slate-700 hover:border-slate-600'
             }`}
-            style={{ zIndex: 10 }}
+            style={{
+              padding: '20px',
+              borderRadius: '16px',
+              zIndex: 10,
+              border: completedApps > i ? '2px solid #10b981' : '2px solid #334155',
+              background: completedApps > i ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.5)',
+              textAlign: 'left',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
           >
-            <span className="text-3xl">{app.icon}</span>
-            <p className="text-sm font-medium mt-2" style={{ color: completedApps > i ? '#10B981' : app.color }}>{app.short}</p>
-            {completedApps > i && <span className="text-emerald-400 text-xs">✓ Explored</span>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <span style={{ fontSize: '32px' }}>{app.icon}</span>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: '16px', color: completedApps > i ? '#10b981' : app.color }}>
+                  {app.short}
+                </p>
+                <p style={{ fontSize: '12px', color: '#64748b' }}>{app.title}</p>
+              </div>
+              {completedApps > i && <span style={{ marginLeft: 'auto', color: '#10b981', fontSize: '20px' }}>✓</span>}
+            </div>
+            <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', marginBottom: '8px' }}>
+              {app.description}
+            </p>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: app.color }}>
+              {app.stat}
+            </p>
           </button>
         ))}
       </div>
 
-      <p className="text-slate-400 mb-4">{completedApps} / 4 applications explored</p>
+      <p style={{ color: '#64748b', marginBottom: '16px', fontSize: '14px' }}>
+        {completedApps} / 4 applications explored
+      </p>
 
-      {completedApps >= 4 && (
-        <button
-          onClick={() => goToPhase('test')}
-          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
-          style={{ zIndex: 10 }}
-        >
-          Take the Test →
-        </button>
-      )}
+      <button
+        onClick={() => goToPhase('test')}
+        style={{
+          padding: '14px 28px',
+          borderRadius: '12px',
+          fontWeight: 600,
+          fontSize: '16px',
+          cursor: 'pointer',
+          zIndex: 10,
+          border: 'none',
+          transition: 'all 0.2s ease',
+          minHeight: '44px',
+          background: completedApps >= 4
+            ? 'linear-gradient(90deg, #7c3aed 0%, #db2777 100%)'
+            : '#475569',
+          color: 'white'
+        }}
+      >
+        Got It
+      </button>
     </div>
   );
 
@@ -2030,13 +2263,19 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
     setTestAnswers(newAnswers);
-    playSound(optionIndex === testQuestions[questionIndex].correct ? 'success' : 'failure');
+    const isCorrect = testQuestions[questionIndex].options[optionIndex].correct;
+    playSound(isCorrect ? 'success' : 'failure');
+    if (isCorrect) {
+      onCorrectAnswer?.();
+    } else {
+      onIncorrectAnswer?.();
+    }
   };
 
   const calculateTestScore = () => {
     let correct = 0;
     testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && testAnswers[i] === q.correct) correct++;
+      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) correct++;
     });
     return correct;
   };
@@ -2083,28 +2322,54 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       );
     }
 
+    // Track current question for sequential quiz flow
+    const currentQuestionIndex = testAnswers.findIndex(a => a === null);
+    const activeQuestion = currentQuestionIndex === -1 ? testQuestions.length - 1 : currentQuestionIndex;
+
     return (
       <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-4">Knowledge Check</h2>
-        <p className="text-slate-400 mb-6">{testAnswers.filter(a => a !== null).length}/10 answered</p>
+        <h2 className="text-2xl font-bold text-white mb-2">Knowledge Check</h2>
+
+        {/* Question progress indicator */}
+        <p className="text-slate-400 mb-2">Question {activeQuestion + 1} of {testQuestions.length}</p>
+
+        {/* Progress dots */}
+        <div className="flex gap-1.5 mb-6">
+          {testQuestions.map((_, i) => (
+            <div
+              key={i}
+              className={`w-2.5 h-2.5 rounded-full transition-all ${
+                testAnswers[i] !== null
+                  ? 'bg-emerald-500'
+                  : i === activeQuestion
+                    ? 'bg-indigo-500 scale-125'
+                    : 'bg-slate-600'
+              }`}
+            />
+          ))}
+        </div>
 
         <div className="space-y-4 w-full max-w-2xl max-h-96 overflow-y-auto mb-4">
           {testQuestions.map((q, qIndex) => (
             <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="font-semibold text-white mb-3">{qIndex + 1}. {q.q}</p>
+              <p className="font-semibold text-white mb-3">{qIndex + 1}. {q.question}</p>
               <div className="grid grid-cols-1 gap-2">
                 {q.options.map((opt, oIndex) => (
                   <button
                     key={oIndex}
                     onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    className={`p-2 rounded-lg text-left text-sm transition-all ${
+                    aria-pressed={testAnswers[qIndex] === oIndex}
+                    className={`p-3 rounded-lg text-left text-sm transition-all border-2 ${
                       testAnswers[qIndex] === oIndex
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
+                        ? 'bg-indigo-600 text-white border-indigo-400 ring-2 ring-indigo-400 ring-offset-2 ring-offset-slate-900 transform scale-[1.02]'
+                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 border-transparent hover:border-slate-500'
                     }`}
-                    style={{ zIndex: 10 }}
+                    style={{
+                      zIndex: 10,
+                      opacity: testAnswers[qIndex] === oIndex ? 1 : 0.9
+                    }}
                   >
-                    {opt}
+                    {opt.text}
                   </button>
                 ))}
               </div>
@@ -2196,51 +2461,120 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     }
   };
 
+  // Calculate progress percentage for progress bar
+  const progressPercent = ((PHASES.indexOf(currentPhase) + 1) / PHASES.length) * 100;
+
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div
+      className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden"
+      style={{
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif',
+        lineHeight: '1.6',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh'
+      }}
+    >
       {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div
+        className="absolute inset-0"
+        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #0a1628 50%, #0f172a 100%)' }}
+      />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
 
+      {/* Progress bar at very top */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          backgroundColor: '#1e293b',
+          zIndex: 100
+        }}
+      >
+        <div
+          style={{
+            width: `${progressPercent}%`,
+            height: '100%',
+            background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
+            transition: 'width 0.3s ease-out'
+          }}
+        />
+      </div>
+
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Buckling & Columns</span>
-          <div className="flex items-center gap-1.5">
+      <div
+        className="fixed top-1 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50"
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}
+      >
+        <div
+          className="flex items-center justify-between max-w-4xl mx-auto"
+          style={{ padding: '12px 24px', maxWidth: '896px', display: 'flex', gap: '16px' }}
+        >
+          <span
+            className="text-sm text-white/80 tracking-wide"
+            style={{ fontWeight: 600, fontSize: '14px' }}
+          >
+            Buckling & Columns
+          </span>
+          <div className="flex items-center" style={{ display: 'flex', gap: '6px' }}>
             {PHASES.map((p) => (
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
+                aria-label={phaseLabels[p]}
+                className={`rounded-full transition-all duration-300 ${
                   currentPhase === p
-                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
+                    ? 'bg-indigo-400 shadow-lg shadow-indigo-400/30'
                     : PHASES.indexOf(currentPhase) > PHASES.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                      ? 'bg-emerald-500'
+                      : 'bg-slate-700 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
-                style={{ zIndex: 10 }}
+                style={{
+                  width: currentPhase === p ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '9999px',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  transition: 'all 0.3s ease',
+                  border: 'none'
+                }}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-indigo-400">{phaseLabels[phase]}</span>
+          <span
+            className="text-sm text-indigo-400"
+            style={{ fontWeight: 500, fontSize: '14px' }}
+          >
+            {phaseLabels[currentPhase]}
+          </span>
         </div>
       </div>
 
       {/* Coach message */}
       {showCoachMessage && (
-        <div className="fixed top-16 left-0 right-0 z-40 px-4">
-          <div className="max-w-2xl mx-auto mt-4">
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl p-4 shadow-lg">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">🧑‍🏫</span>
-                <p className="flex-1">{coachMessages[phase]}</p>
+        <div className="fixed top-16 left-0 right-0 z-40 px-4" style={{ position: 'fixed', top: '64px' }}>
+          <div style={{ maxWidth: '672px', margin: '16px auto' }}>
+            <div
+              className="text-white rounded-xl shadow-lg"
+              style={{
+                background: 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)',
+                padding: '16px',
+                borderRadius: '12px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🧑‍🏫</span>
+                <p style={{ flex: 1, fontWeight: 400, fontSize: '16px' }}>{coachMessages[currentPhase]}</p>
                 <button
                   onClick={() => setShowCoachMessage(false)}
                   className="text-white/80 hover:text-white"
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, cursor: 'pointer', background: 'none', border: 'none', color: 'white' }}
                 >
                   ✕
                 </button>
@@ -2251,7 +2585,79 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       )}
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
+      <div
+        className="relative pt-16 pb-12"
+        style={{ position: 'relative', paddingTop: '64px', paddingBottom: '48px', flex: 1, overflowY: 'auto' }}
+      >
+        {renderPhase()}
+      </div>
+
+      {/* Bottom navigation bar */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: 'linear-gradient(180deg, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0.98) 100%)',
+          padding: '12px 24px',
+          borderTop: '1px solid #334155',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 1000
+        }}
+      >
+        <button
+          onClick={() => {
+            const currentIndex = PHASES.indexOf(currentPhase);
+            if (currentIndex > 0) {
+              goToPhase(PHASES[currentIndex - 1]);
+            }
+          }}
+          disabled={currentPhase === 'hook'}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '14px',
+            cursor: currentPhase === 'hook' ? 'not-allowed' : 'pointer',
+            background: currentPhase === 'hook' ? '#334155' : '#475569',
+            color: currentPhase === 'hook' ? '#64748b' : 'white',
+            border: 'none',
+            transition: 'all 0.2s ease',
+            minHeight: '44px'
+          }}
+        >
+          ← Back
+        </button>
+        <span style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 500 }}>
+          {PHASES.indexOf(currentPhase) + 1} / {PHASES.length}
+        </span>
+        <button
+          onClick={() => {
+            const currentIndex = PHASES.indexOf(currentPhase);
+            if (currentIndex < PHASES.length - 1) {
+              goToPhase(PHASES[currentIndex + 1]);
+            }
+          }}
+          disabled={currentPhase === 'mastery' || currentPhase === 'test'}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '14px',
+            cursor: (currentPhase === 'mastery' || currentPhase === 'test') ? 'not-allowed' : 'pointer',
+            background: (currentPhase === 'mastery' || currentPhase === 'test') ? '#334155' : 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
+            color: (currentPhase === 'mastery' || currentPhase === 'test') ? '#64748b' : 'white',
+            border: 'none',
+            transition: 'all 0.2s ease',
+            minHeight: '44px'
+          }}
+        >
+          Next →
+        </button>
+      </div>
     </div>
   );
 };

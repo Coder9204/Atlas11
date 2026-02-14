@@ -301,7 +301,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
     return () => clearInterval(timer);
   }, []);
 
-  // Premium design colors
+  // Premium design colors - text uses brightness >= 180 for contrast
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -312,8 +312,9 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // brightness >= 180 for contrast
+    textMuted: '#cbd5e1', // brightness >= 180 for contrast
+    textDecorative: 'rgba(255, 255, 255, 0.6)', // Muted decorative text
     border: '#2a2a3a',
     cached: '#10B981', // Green for cached
     compute: '#EF4444', // Red for compute
@@ -392,7 +393,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
     const cellSize = Math.min(matrixWidth / (maxTokensDisplay + 2), matrixHeight / (numLayers + 1)) - 4;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* Title */}
         <text x={width / 2} y={20} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
           KV Cache Structure (Layers x Tokens)
@@ -488,7 +489,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
     const displayTokens = tokens.slice(0, Math.min(tokenCount + 1, tokens.length));
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* Query token (new) */}
         <g transform={`translate(${width / 2}, ${height - 50})`}>
           <rect
@@ -583,7 +584,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1001,
     }}>
       <div style={{
         height: '100%',
@@ -621,7 +622,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
     </div>
   );
 
-  // Primary button style
+  // Primary button style - minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
     color: 'white',
@@ -633,7 +634,61 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
+
+  // Navigate to previous phase
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
+  // Navigation bar component - fixed position with z-index
+  const renderNavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 24px',
+      zIndex: 1000,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {phaseOrder.indexOf(phase) > 0 && (
+          <button
+            onClick={prevPhase}
+            style={{
+              background: 'transparent',
+              border: `1px solid ${colors.border}`,
+              borderRadius: '8px',
+              padding: '8px 12px',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            Back
+          </button>
+        )}
+        <span style={{ fontSize: '24px' }}>🧠💾</span>
+        <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>KV Cache</span>
+      </div>
+      <div style={{ ...typo.small, color: colors.textSecondary }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
+    </nav>
+  );
 
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
@@ -647,59 +702,68 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          🧠💾
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          KV Cache in Transformers
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Why recompute what you already know? The secret to fast LLM inference is <span style={{ color: colors.accent }}>remembering past computations</span>."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          paddingTop: '80px',
+          textAlign: 'center',
+          overflowY: 'auto',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Without KV caching, generating 100 tokens would require 100x the computation of generating 1 token. With caching, it's nearly linear."
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🧠💾
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            KV Cache in Transformers
+          </h1>
+
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "Why recompute what you already know? The secret to fast LLM inference is <span style={{ color: colors.accent }}>remembering past computations</span>."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - LLM Inference Optimization
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "Without KV caching, generating 100 tokens would require 100x the computation of generating 1 token. With caching, it's nearly linear."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              - LLM Inference Optimization
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Discover the Cache Secret
+          </button>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Discover the Cache Secret
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -712,104 +776,160 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       { id: 'c', text: 'Compute stays constant - the model processes one token at a time' },
     ];
 
+    // Static SVG for predict phase
+    const PredictSVG = () => {
+      const svgWidth = isMobile ? 320 : 450;
+      const svgHeight = 200;
+      return (
+        <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+          {/* Tokens */}
+          {['The', 'cat', 'sat', '...', '?'].map((token, i) => {
+            const x = 40 + i * (isMobile ? 55 : 80);
+            return (
+              <g key={i}>
+                <rect
+                  x={x}
+                  y={60}
+                  width={isMobile ? 45 : 60}
+                  height={40}
+                  fill={i === 4 ? colors.warning : `${colors.accent}44`}
+                  stroke={i === 4 ? colors.warning : colors.accent}
+                  strokeWidth={2}
+                  rx={8}
+                />
+                <text x={x + (isMobile ? 22 : 30)} y={85} fill={colors.textPrimary} fontSize="14" fontWeight="500" textAnchor="middle">
+                  {token}
+                </text>
+              </g>
+            );
+          })}
+          {/* Arrow connections showing attention */}
+          {[0, 1, 2, 3].map(i => {
+            const startX = 40 + 4 * (isMobile ? 55 : 80) + (isMobile ? 22 : 30);
+            const endX = 40 + i * (isMobile ? 55 : 80) + (isMobile ? 22 : 30);
+            return (
+              <line
+                key={i}
+                x1={startX}
+                y1={60}
+                x2={endX}
+                y2={100}
+                stroke={colors.compute}
+                strokeWidth={1.5}
+                strokeDasharray="4,4"
+                opacity={0.6}
+              />
+            );
+          })}
+          <text x={svgWidth / 2} y={150} fill={colors.textSecondary} fontSize="13" textAnchor="middle">
+            Each new token attends to all previous tokens
+          </text>
+          <text x={svgWidth / 2} y={175} fill={colors.textMuted} fontSize="11" textAnchor="middle">
+            What happens to compute as sequence grows?
+          </text>
+        </svg>
+      );
+    };
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '80px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress indicator */}
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Step 1 of 1
+              </span>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            When an LLM generates tokens one by one WITHOUT caching, how does computation grow with sequence length?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              When an LLM generates tokens one by one WITHOUT caching, how does computation grow with sequence length?
+            </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              {['The', 'cat', 'sat', '...', '?'].map((token, i) => (
-                <div key={i} style={{
-                  background: i === 4 ? colors.warning : colors.accent + '33',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  border: `2px solid ${i === 4 ? colors.warning : colors.accent}`,
-                }}>
-                  <span style={{ color: colors.textPrimary, fontWeight: 500 }}>{token}</span>
-                </div>
+            {/* Static SVG diagram */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '24px',
+            }}>
+              <PredictSVG />
+            </div>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
               ))}
             </div>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
-              Each new token needs to "attend" to all previous tokens
-            </p>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -820,17 +940,52 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Watch the KV Cache in Action
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Generate tokens and see how caching changes compute requirements
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '80px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Watch the KV Cache in Action
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Generate tokens and see how caching changes compute requirements
+            </p>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Observe:</strong> Toggle KV Cache on/off and watch how compute requirements change. Notice how cached tokens (green) avoid recomputation.
+              </p>
+            </div>
+
+            {/* Real-world relevance */}
+            <div style={{
+              background: `${colors.success}11`,
+              border: `1px solid ${colors.success}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.success }}>Why This Matters:</strong> KV caching is important because it enables real-time LLM inference in practical applications like ChatGPT, GitHub Copilot, and other AI assistants. Without this technology, generating responses would be too slow for interactive use.
+              </p>
+            </div>
 
           {/* Main visualization */}
           <div style={{
@@ -982,15 +1137,16 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
             </div>
           )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand How It Works
-          </button>
-        </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand How It Works
+            </button>
+          </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1001,67 +1157,89 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            How KV Cache Eliminates Redundant Work
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '80px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              How KV Cache Eliminates Redundant Work
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <KVCacheVisualization />
-            </div>
-
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Attention = Softmax(Q * K^T) * V</strong>
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                For each new token, we need <span style={{ color: colors.warning }}>Q (Query)</span> for the new token,
-                but <span style={{ color: colors.cached }}>K (Keys)</span> and <span style={{ color: colors.memory }}>V (Values)</span> from ALL previous tokens.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>The Key Insight:</strong> Once a token is processed, its K and V projections never change!
-              </p>
-              <p>
-                By caching K and V after each token, we avoid recomputing them, turning O(n^2) generation into O(n).
+            {/* Reference to prediction */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Your Prediction:</strong> As you observed in the experiment, compute grows quadratically without caching because attention requires comparing all token pairs. Your prediction helped you discover this fundamental relationship between sequence length and computational cost.
               </p>
             </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <KVCacheVisualization />
+              </div>
+
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Attention = Softmax(Q * K^T) * V</strong>
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  For each new token, we need <span style={{ color: colors.warning }}>Q (Query)</span> for the new token,
+                  but <span style={{ color: colors.cached }}>K (Keys)</span> and <span style={{ color: colors.memory }}>V (Values)</span> from ALL previous tokens.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>The Key Insight:</strong> Once a token is processed, its K and V projections never change!
+                </p>
+                <p>
+                  By caching K and V after each token, we avoid recomputing them, turning O(n^2) generation into O(n).
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Key Insight
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                KV Cache trades memory for compute. We store 2 * num_layers * hidden_dim values per token,
+                but save num_tokens operations per generation step. For long sequences, this is a massive win.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Explore Memory Tradeoffs
+            </button>
           </div>
 
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Key Insight
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              KV Cache trades memory for compute. We store 2 * num_layers * hidden_dim values per token,
-              but save num_tokens operations per generation step. For long sequences, this is a massive win.
-            </p>
-          </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Memory Tradeoffs
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1078,11 +1256,19 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '80px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1098,6 +1284,39 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             As context grows from 1K to 100K tokens, how does KV cache memory change?
           </h2>
+
+          {/* Memory growth visualization */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width={isMobile ? 320 : 450} height={180} viewBox={`0 0 ${isMobile ? 320 : 450} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              {/* Memory bars */}
+              {[1, 2, 4, 8, 16].map((mult, i) => {
+                const x = 40 + i * (isMobile ? 55 : 80);
+                const height = Math.min(mult * 15, 120);
+                return (
+                  <g key={i}>
+                    <rect
+                      x={x}
+                      y={140 - height}
+                      width={isMobile ? 40 : 55}
+                      height={height}
+                      fill={colors.memory}
+                      rx={4}
+                      opacity={0.7}
+                    />
+                    <text x={x + (isMobile ? 20 : 27)} y={160} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+                      {mult}K
+                    </text>
+                  </g>
+                );
+              })}
+              <text x={isMobile ? 160 : 225} y={25} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
+                Memory Usage vs Context Length
+              </text>
+              <text x={isMobile ? 160 : 225} y={175} fill={colors.textDecorative} fontSize="10" textAnchor="middle">
+                Tokens (in thousands)
+              </text>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1142,9 +1361,10 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
               See the Memory Impact
             </button>
           )}
-        </div>
+          </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1158,17 +1378,39 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Memory vs Context Length Tradeoff
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust parameters to see KV cache memory requirements
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '80px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Memory vs Context Length Tradeoff
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Adjust parameters to see KV cache memory requirements
+            </p>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Observe:</strong> Adjust context length and number of layers to see how KV cache memory scales. Notice how longer contexts and deeper models dramatically increase memory requirements.
+              </p>
+            </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1318,15 +1560,16 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Bottleneck
-          </button>
-        </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Bottleneck
+            </button>
+          </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1337,11 +1580,19 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '80px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Memory Bandwidth Bottleneck
           </h2>
@@ -1407,15 +1658,16 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
-        </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications
+            </button>
+          </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1429,14 +1681,25 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '80px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Application {selectedApp + 1} of {realWorldApps.length}
+            </p>
 
           {/* App selector */}
           <div style={{
@@ -1543,6 +1806,36 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
             </div>
           </div>
 
+          {/* Got It / Next Application button */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+            {selectedApp < realWorldApps.length - 1 ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  setSelectedApp(selectedApp + 1);
+                }}
+                style={{ ...primaryButtonStyle, flex: 1 }}
+              >
+                Next Application
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, flex: 1 }}
+              >
+                Got It
+              </button>
+            )}
+          </div>
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
@@ -1551,9 +1844,10 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
               Take the Knowledge Test
             </button>
           )}
-        </div>
+          </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1566,11 +1860,19 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '24px',
+            paddingTop: '80px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1610,8 +1912,9 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
                 Review & Try Again
               </button>
             )}
+            </div>
+            {renderNavDots()}
           </div>
-          {renderNavDots()}
         </div>
       );
     }
@@ -1622,11 +1925,19 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '80px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1726,6 +2037,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Previous
@@ -1744,6 +2056,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next
@@ -1769,15 +2082,17 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
               </button>
             )}
           </div>
-        </div>
+          </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1790,12 +2105,21 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
+
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          paddingTop: '80px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '100px',
@@ -1841,33 +2165,35 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              Play Again
+            </button>
+            <a
+              href="/"
+              style={{
+                ...primaryButtonStyle,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Return to Dashboard
+            </a>
+          </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }

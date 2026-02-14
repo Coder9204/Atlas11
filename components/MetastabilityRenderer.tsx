@@ -339,8 +339,8 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // Updated for better contrast
+    textMuted: '#94a3b8', // Updated for better contrast
     border: '#2a2a3a',
     clock: '#3B82F6', // Blue for clock signals
     data: '#10B981', // Green for data signals
@@ -436,7 +436,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     const isInViolationZone = showMetastable;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* Clock signal label and waveform */}
         <text x="20" y={clockY - 25} fill={colors.clock} fontSize="12" fontWeight="600">CLK B</text>
         <polyline
@@ -566,7 +566,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     const centerY = height / 2;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* Clock domain A label */}
         <rect x="10" y="20" width="80" height="25" fill={colors.data + '33'} rx="4" />
         <text x="50" y="37" fill={colors.data} fontSize="11" textAnchor="middle" fontWeight="600">CLK A</text>
@@ -647,16 +647,40 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
+  // Navigation bar component
+  const renderNavBar = () => (
     <div style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '60px',
+      background: colors.bgSecondary,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 20px',
+      borderBottom: `1px solid ${colors.border}`,
+    }}>
+      <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Metastability</span>
+      <span style={{ color: colors.textSecondary, fontSize: '14px' }}>{phaseLabels[phase]}</span>
+      <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+        {phaseOrder.indexOf(phase) + 1} / {phaseOrder.length}
+      </span>
+    </div>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '60px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -706,6 +730,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -723,8 +748,11 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '84px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -777,7 +805,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     );
   }
 
-  // PREDICT PHASE
+  // PREDICT PHASE - with SVG visualization
   if (phase === 'predict') {
     const options = [
       { id: 'a', text: 'The flip-flop always captures the correct value, just with a small delay' },
@@ -785,15 +813,21 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
       { id: 'c', text: 'The flip-flop automatically resets to 0 for safety' },
     ];
 
+    const predictWidth = isMobile ? 340 : 400;
+    const predictHeight = 150;
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -810,35 +844,48 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
             A flip-flop samples its data input right as the data is changing. What happens to the output?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram showing timing conflict */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
             textAlign: 'center',
+            display: 'flex',
+            justifyContent: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📊</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Data Changing</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>⏰</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Clock Edge</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{
-                background: colors.error + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.error}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>❓</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Output?</p>
-              </div>
-            </div>
+            <svg width={predictWidth} height={predictHeight} viewBox={`0 0 ${predictWidth} ${predictHeight}`}>
+              {/* Data signal transitioning */}
+              <text x="10" y="30" fill={colors.data} fontSize="12" fontWeight="600">DATA</text>
+              <polyline
+                points={`30,50 100,50 110,20 200,20`}
+                fill="none"
+                stroke={colors.data}
+                strokeWidth="3"
+              />
+
+              {/* Clock edge */}
+              <text x="220" y="30" fill={colors.clock} fontSize="12" fontWeight="600">CLK</text>
+              <polyline
+                points={`240,50 240,20 270,20`}
+                fill="none"
+                stroke={colors.clock}
+                strokeWidth="3"
+              />
+
+              {/* Conflict zone */}
+              <rect x="100" y="10" width="20" height="50" fill={colors.error + '44'} rx="4" />
+              <text x="110" y="80" fill={colors.error} fontSize="10" textAnchor="middle">Conflict!</text>
+
+              {/* Output with question mark */}
+              <rect x={predictWidth - 80} y="20" width="60" height="40" fill={colors.bgSecondary} stroke={colors.error} strokeWidth="2" rx="4" />
+              <text x={predictWidth - 50} y="45" fill={colors.error} fontSize="16" textAnchor="middle" fontWeight="700">???</text>
+              <text x={predictWidth - 50} y="80" fill={colors.textMuted} fontSize="10" textAnchor="middle">Output?</text>
+
+              {/* Arrow */}
+              <line x1="270" y1="40" x2={predictWidth - 90} y2="40" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="4,2" />
+              <polygon points={`${predictWidth - 90},40 ${predictWidth - 100},35 ${predictWidth - 100},45`} fill={colors.textMuted} />
+            </svg>
           </div>
 
           {/* Options */}
@@ -855,6 +902,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -900,15 +948,21 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Observe Metastability in Action
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Adjust the setup time margin and watch what happens when data changes near the clock edge
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Real-world impact: This exact issue causes random crashes in high-speed networking equipment, memory controllers, and multi-processor systems.
           </p>
 
           {/* Main visualization */}
@@ -1037,15 +1091,37 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionCorrect = prediction === 'b';
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Reference user's prediction */}
+          {prediction && (
+            <div style={{
+              background: predictionCorrect ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${predictionCorrect ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: predictionCorrect ? colors.success : colors.warning, margin: 0 }}>
+                {predictionCorrect
+                  ? 'Your prediction was correct! The output does get stuck between 0 and 1.'
+                  : 'Based on your prediction, let\'s see what actually happens when data changes at the clock edge.'}
+              </p>
+            </div>
+          )}
+
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Does Metastability Occur?
           </h2>
@@ -1057,7 +1133,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg width={isMobile ? 300 : 400} height={180} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
+              <svg width={isMobile ? 300 : 400} height={180} viewBox={`0 0 ${isMobile ? 300 : 400} 180`} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
                 {/* Energy diagram */}
                 <text x="20" y="20" fill={colors.textSecondary} fontSize="12">Energy Landscape</text>
 
@@ -1141,10 +1217,13 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1173,6 +1252,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1218,10 +1298,13 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Design Your Synchronizer
           </h2>
@@ -1386,10 +1469,13 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Science of Reliable Synchronization
           </h2>
@@ -1479,19 +1565,26 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} - Explore all to continue
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1582,6 +1675,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1596,6 +1690,31 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
                 </div>
               ))}
             </div>
+
+            {/* Got It button for within-app navigation */}
+            {!completedApps[selectedApp] ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%', marginTop: '8px' }}
+              >
+                Got It
+              </button>
+            ) : (
+              <div style={{
+                background: `${colors.success}22`,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                marginTop: '8px',
+              }}>
+                <span style={{ color: colors.success, fontWeight: 600 }}>Completed - Select another application above</span>
+              </div>
+            )}
           </div>
 
           {allAppsCompleted && (
@@ -1622,7 +1741,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '84px',
+          overflowY: 'auto',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
@@ -1678,10 +1800,13 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '84px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1848,8 +1973,11 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '84px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{

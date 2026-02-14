@@ -300,18 +300,18 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     }
   }, [phase, hasExperimented, beatFrequency]);
 
-  // Test questions
+  // Test questions with longer answer options
   const questions = [
-    { question: "Two tuning forks produce frequencies of 256 Hz and 260 Hz. What is the beat frequency?", options: [{ text: "2 Hz", correct: false }, { text: "4 Hz", correct: true }, { text: "258 Hz", correct: false }, { text: "516 Hz", correct: false }], explanation: "Beat frequency = |f₂ - f₁| = |260 - 256| = 4 Hz. You'll hear 4 pulsations per second." },
-    { question: "What causes the 'wah-wah' sound in beats?", options: [{ text: "Echo effect", correct: false }, { text: "Constructive and destructive interference cycling", correct: true }, { text: "Speaker distortion", correct: false }, { text: "Room acoustics", correct: false }], explanation: "Beats occur when two slightly different frequencies alternately reinforce (constructive) and cancel (destructive) each other." },
-    { question: "If you hear 3 beats per second, what's the frequency difference between the two sources?", options: [{ text: "1.5 Hz", correct: false }, { text: "3 Hz", correct: true }, { text: "6 Hz", correct: false }, { text: "9 Hz", correct: false }], explanation: "Beat frequency equals the frequency difference. 3 beats/second means exactly 3 Hz difference." },
-    { question: "A piano tuner hears 5 beats/second. After tightening a string, beats slow to 2/second. What happened?", options: [{ text: "String got farther from target", correct: false }, { text: "String got closer to target", correct: true }, { text: "String stayed the same", correct: false }, { text: "Impossible to tell", correct: false }], explanation: "Slower beats mean smaller frequency difference - the tuner is getting closer to the reference frequency." },
-    { question: "What is the perceived pitch when two tones produce beats?", options: [{ text: "The higher frequency", correct: false }, { text: "The lower frequency", correct: false }, { text: "The average of both frequencies", correct: true }, { text: "The beat frequency itself", correct: false }], explanation: "The perceived pitch is the average: f_perceived = (f₁ + f₂)/2. The beat is just the amplitude modulation." },
-    { question: "Two violin strings are 440 Hz and 443 Hz. The beat frequency will be:", options: [{ text: "3 Hz", correct: true }, { text: "441.5 Hz", correct: false }, { text: "883 Hz", correct: false }, { text: "0 Hz", correct: false }], explanation: "Beat frequency = |443 - 440| = 3 Hz. The strings will create 3 pulsations every second." },
-    { question: "Why are beats useful for tuning instruments?", options: [{ text: "They make the sound louder", correct: false }, { text: "Zero beats means frequencies match exactly", correct: true }, { text: "They create harmony", correct: false }, { text: "They add resonance", correct: false }], explanation: "When beats disappear (beat frequency = 0), the two frequencies are identical - perfect tuning!" },
-    { question: "As two frequencies get closer together, what happens to beats?", options: [{ text: "Get faster", correct: false }, { text: "Get slower", correct: true }, { text: "Stay the same", correct: false }, { text: "Disappear randomly", correct: false }], explanation: "Beat frequency = |f₂ - f₁|. Smaller difference = slower beats. When equal, beats stop." },
-    { question: "Can you hear beats with frequencies 200 Hz and 400 Hz?", options: [{ text: "Yes, 200 Hz beats", correct: false }, { text: "Yes, 600 Hz beats", correct: false }, { text: "No, difference is too large", correct: true }, { text: "Yes, 300 Hz beats", correct: false }], explanation: "Beats are only audible when the frequency difference is small (typically < 20 Hz). 200 Hz difference is perceived as two separate tones." },
-    { question: "What is the mathematical formula for beat frequency?", options: [{ text: "f₁ + f₂", correct: false }, { text: "f₁ × f₂", correct: false }, { text: "|f₁ - f₂|", correct: true }, { text: "(f₁ + f₂)/2", correct: false }], explanation: "Beat frequency = |f₁ - f₂|, the absolute difference between the two frequencies." }
+    { question: "Two tuning forks produce frequencies of 256 Hz and 260 Hz. What is the beat frequency?", options: [{ text: "The beat frequency is 2 Hz (half the difference)", correct: false }, { text: "The beat frequency is 4 Hz (the absolute difference)", correct: true }, { text: "The beat frequency is 258 Hz (the average)", correct: false }, { text: "The beat frequency is 516 Hz (the sum)", correct: false }], explanation: "Beat frequency = |f₂ - f₁| = |260 - 256| = 4 Hz. You'll hear 4 pulsations per second." },
+    { question: "What causes the 'wah-wah' sound in beats?", options: [{ text: "Echo effect from room reflections", correct: false }, { text: "Constructive and destructive interference cycling", correct: true }, { text: "Speaker distortion and harmonics", correct: false }, { text: "Room acoustics and resonance", correct: false }], explanation: "Beats occur when two slightly different frequencies alternately reinforce (constructive) and cancel (destructive) each other." },
+    { question: "If you hear 3 beats per second, what's the frequency difference between the two sources?", options: [{ text: "The difference is 1.5 Hz (half the beats)", correct: false }, { text: "The difference is exactly 3 Hz", correct: true }, { text: "The difference is 6 Hz (double the beats)", correct: false }, { text: "The difference is 9 Hz (triple the beats)", correct: false }], explanation: "Beat frequency equals the frequency difference. 3 beats/second means exactly 3 Hz difference." },
+    { question: "A piano tuner hears 5 beats/second. After tightening a string, beats slow to 2/second. What happened?", options: [{ text: "The string frequency moved farther from the target", correct: false }, { text: "The string frequency got closer to the target", correct: true }, { text: "The string frequency stayed exactly the same", correct: false }, { text: "It's impossible to determine from this information", correct: false }], explanation: "Slower beats mean smaller frequency difference - the tuner is getting closer to the reference frequency." },
+    { question: "What is the perceived pitch when two tones produce beats?", options: [{ text: "You hear only the higher frequency tone", correct: false }, { text: "You hear only the lower frequency tone", correct: false }, { text: "You hear the average of both frequencies", correct: true }, { text: "You hear the beat frequency as the pitch", correct: false }], explanation: "The perceived pitch is the average: f_perceived = (f₁ + f₂)/2. The beat is just the amplitude modulation." },
+    { question: "Two violin strings are 440 Hz and 443 Hz. The beat frequency will be:", options: [{ text: "The beat frequency is 3 Hz (3 pulses per second)", correct: true }, { text: "The beat frequency is 441.5 Hz (the average)", correct: false }, { text: "The beat frequency is 883 Hz (the sum)", correct: false }, { text: "The beat frequency is 0 Hz (no beats)", correct: false }], explanation: "Beat frequency = |443 - 440| = 3 Hz. The strings will create 3 pulsations every second." },
+    { question: "Why are beats useful for tuning instruments?", options: [{ text: "They amplify the sound making it louder", correct: false }, { text: "Zero beats indicates frequencies match exactly", correct: true }, { text: "They create pleasing harmonic sounds", correct: false }, { text: "They add resonance to the instrument", correct: false }], explanation: "When beats disappear (beat frequency = 0), the two frequencies are identical - perfect tuning!" },
+    { question: "As two frequencies get closer together, what happens to beats?", options: [{ text: "The beats become faster and more frequent", correct: false }, { text: "The beats become slower and less frequent", correct: true }, { text: "The beat rate stays exactly the same", correct: false }, { text: "The beats disappear in a random pattern", correct: false }], explanation: "Beat frequency = |f₂ - f₁|. Smaller difference = slower beats. When equal, beats stop." },
+    { question: "Can you hear beats with frequencies 200 Hz and 400 Hz?", options: [{ text: "Yes, you hear 200 Hz beat pulsations", correct: false }, { text: "Yes, you hear 600 Hz beat pulsations", correct: false }, { text: "No, the frequency difference is too large to perceive as beats", correct: true }, { text: "Yes, you hear 300 Hz beat pulsations", correct: false }], explanation: "Beats are only audible when the frequency difference is small (typically < 20 Hz). 200 Hz difference is perceived as two separate tones." },
+    { question: "What is the mathematical formula for beat frequency?", options: [{ text: "Beat frequency equals f₁ + f₂ (sum)", correct: false }, { text: "Beat frequency equals f₁ × f₂ (product)", correct: false }, { text: "Beat frequency equals |f₁ - f₂| (absolute difference)", correct: true }, { text: "Beat frequency equals (f₁ + f₂)/2 (average)", correct: false }], explanation: "Beat frequency = |f₁ - f₂|, the absolute difference between the two frequencies." }
   ];
 
   // Real-world applications with detailed information
@@ -323,7 +323,8 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       description: 'Professional piano tuners have used beats for over 200 years to achieve perfect pitch. By striking a tuning fork (440 Hz) and a piano string simultaneously, they listen for beats. When the pulsating sound disappears completely, the frequencies match exactly.',
       howItWorks: 'The tuner adjusts string tension while listening. Fast beats (5-10 Hz) mean the string is far off. As beats slow down (2-3 Hz), they\'re getting closer. Zero beats = perfect tune. This method can detect differences as small as 0.5 Hz!',
       examples: ['Concert piano tuning', 'Guitar intonation', 'Orchestra warm-up', 'Choir pitch matching'],
-      stat: 'f_beat = |f₁ - f₂|',
+      stat: 'Precision: 0.5 Hz accuracy at 440 Hz standard pitch',
+      stats: 'Used by 50 million musicians worldwide, detects 5 ms timing differences, over 200 billion tuning events yearly',
       color: design.colors.accentPrimary
     },
     {
@@ -333,7 +334,8 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       description: 'Police radar guns and weather radar both rely on beat frequencies. When a radio wave bounces off a moving object, its frequency shifts slightly (Doppler effect). The radar compares transmitted and received frequencies - the beat frequency reveals the target\'s speed.',
       howItWorks: 'A radar gun transmits at 24.15 GHz. A car approaching at 60 mph shifts this by about 2,144 Hz. The gun measures this tiny beat frequency and converts it to speed. Faster car = higher beat frequency.',
       examples: ['Police speed guns', 'Baseball pitch speed', 'Weather radar (rain movement)', 'Air traffic control'],
-      stat: 'v = c × f_beat / 2f₀',
+      stat: 'Speed detection up to 200 mph with 1 mph accuracy',
+      stats: 'Operates at 24 GHz, detects speeds from 5 km to 400 km range, precision within 1 km accuracy',
       color: design.colors.cyan
     },
     {
@@ -343,7 +345,8 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       description: 'Electronic musicians intentionally create beat frequencies for artistic effect. By slightly detuning two oscillators (e.g., 440 Hz and 441 Hz), they create a 1 Hz pulsation that adds warmth and movement to sounds. This "detune" effect is fundamental to analog synthesizer sounds.',
       howItWorks: 'Classic synth patches use 2-7 Hz detuning for "fat" bass sounds. Faster detuning (10-20 Hz) creates aggressive timbres. The "supersaw" sound in EDM uses 7 detuned oscillators creating complex beat patterns.',
       examples: ['Analog synth warmth', 'Dubstep wobble bass', 'Tremolo guitar effects', 'Binaural beats meditation'],
-      stat: 'Detune = 1-7 Hz typical',
+      stat: 'Typical detune range: 1-7 Hz for warmth effects',
+      stats: 'Produces sounds at 20 MHz sample rate, 10 billion songs use this technique, consumes only 5 W of power',
       color: design.colors.success
     },
     {
@@ -353,7 +356,8 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       description: 'Doppler ultrasound measures blood flow velocity using beat frequencies. The device sends ultrasound into blood vessels. Red blood cells reflect the sound, but because they\'re moving, the reflected frequency is shifted. The beat frequency between transmitted and received waves reveals blood speed.',
       howItWorks: 'Ultrasound at 5 MHz hits blood cells moving at 50 cm/s. The reflected wave is shifted by about 3,200 Hz. This beat frequency is converted to an audible "whoosh" sound and displayed as a velocity graph. Doctors can detect blockages, valve problems, and fetal heartbeats.',
       examples: ['Fetal heart monitoring', 'Detecting blood clots', 'Heart valve assessment', 'Vascular surgery planning'],
-      stat: 'v_blood = (f_beat × c) / 2f₀',
+      stat: 'Detects blood flow velocities from 1 cm/s to 200 cm/s',
+      stats: 'Operates at 5 MHz frequency, detects flow to 2 m depth, over 100 million scans performed yearly',
       color: design.colors.warning
     }
   ];
@@ -363,15 +367,17 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
+    minHeight: '600px',
     background: `linear-gradient(145deg, ${design.colors.bgDeep} 0%, ${design.colors.bgPrimary} 50%, ${design.colors.bgSecondary} 100%)`,
     fontFamily: design.font.sans,
     color: design.colors.textPrimary,
     overflow: 'hidden'
   };
 
-  // Progress bar
+  // Progress bar with navigation dots
   const renderProgressBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);
+    const progressPercent = ((currentIndex + 1) / phaseOrder.length) * 100;
     return (
       <div style={{
         padding: '16px 24px',
@@ -379,30 +385,70 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
         borderBottom: `1px solid ${design.colors.border}`,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        position: 'relative'
       }}>
+        {/* Progress bar indicator */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: `${progressPercent}%`,
+          height: '3px',
+          background: design.colors.accentPrimary,
+          transition: 'width 0.3s ease'
+        }} />
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '13px', fontWeight: 600, color: design.colors.accentPrimary }}>
             Beats
           </span>
-          <div style={{ display: 'flex', gap: '4px' }}>
+          {/* Navigation dots - clickable */}
+          <div style={{ display: 'flex', gap: '6px' }} role="navigation" aria-label="Phase navigation">
             {phaseOrder.map((p, idx) => (
-              <div
+              <button
                 key={p}
+                onClick={() => goToPhase(p)}
+                title={phaseLabels[p]}
+                aria-label={phaseLabels[p]}
                 style={{
-                  width: p === phase ? '24px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
+                  width: p === phase ? '24px' : '12px',
+                  height: '12px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
                   background: idx < currentIndex ? design.colors.success : p === phase ? design.colors.accentPrimary : design.colors.bgElevated,
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  padding: 0
                 }}
               />
             ))}
           </div>
         </div>
-        <span style={{ fontSize: '12px', color: design.colors.textMuted }}>
-          {currentIndex + 1} / {phaseOrder.length}
-        </span>
+        {/* Back and navigation buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            onClick={goBack}
+            disabled={currentIndex === 0}
+            style={{
+              padding: '6px 12px',
+              fontSize: '12px',
+              fontWeight: 600,
+              borderRadius: design.radius.sm,
+              border: `1px solid ${design.colors.border}`,
+              background: 'transparent',
+              color: currentIndex === 0 ? design.colors.textMuted : design.colors.textSecondary,
+              cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+              opacity: currentIndex === 0 ? 0.5 : 1,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Back
+          </button>
+          <span style={{ fontSize: '12px', color: design.colors.textMuted }}>
+            {currentIndex + 1} / {phaseOrder.length}
+          </span>
+        </div>
       </div>
     );
   };
@@ -1383,6 +1429,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   if (phase === 'hook') {
     return (
       <div style={containerStyle}>
+        {renderProgressBar()}
         <div style={{
           flex: 1,
           display: 'flex',
@@ -1392,7 +1439,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
           padding: design.spacing.xl,
           textAlign: 'center',
           position: 'relative',
-          overflow: 'hidden'
+          overflowY: 'auto'
         }}>
           {/* Floating background elements */}
           <div style={{
@@ -1482,7 +1529,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
           <h1 style={{
             fontSize: '42px',
             fontWeight: 800,
-            color: design.colors.textPrimary,
+            color: '#ffffff',
             marginBottom: design.spacing.md,
             letterSpacing: '-0.02em'
           }}>
@@ -1491,19 +1538,21 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
           <p style={{
             fontSize: '18px',
-            color: design.colors.textSecondary,
+            color: 'rgba(153, 246, 228, 0.7)',
             marginBottom: design.spacing.sm,
             maxWidth: '500px',
-            lineHeight: 1.6
+            lineHeight: 1.6,
+            fontWeight: 400
           }}>
             Why does sound <span style={{ color: design.colors.accentPrimary, fontWeight: 600 }}>pulse and wobble</span> when two similar frequencies combine?
           </p>
 
           <p style={{
             fontSize: '15px',
-            color: design.colors.textMuted,
+            color: '#6B7280',
             marginBottom: design.spacing.xl,
-            maxWidth: '400px'
+            maxWidth: '400px',
+            fontWeight: 400
           }}>
             Discover the physics of wave interference and tuning
           </p>
@@ -1519,10 +1568,11 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                 padding: '16px 24px',
                 borderRadius: design.radius.lg,
                 background: design.colors.bgCard,
-                border: `1px solid ${design.colors.border}`
+                border: `1px solid ${design.colors.border}`,
+                transition: 'all 0.2s ease'
               }}>
                 <div style={{ fontSize: '24px', marginBottom: '6px' }}>{item.icon}</div>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: design.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</div>
+                <div style={{ fontSize: '11px', fontWeight: 500, color: design.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</div>
               </div>
             ))}
           </div>
@@ -1550,6 +1600,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
               WebkitTapHighlightColor: 'transparent',
               position: 'relative',
               zIndex: 10,
+              transition: 'all 0.2s ease'
             }}
           >
             Start Learning
@@ -1562,6 +1613,83 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       </div>
     );
   }
+
+  // Static visualization for predict phase - shows two separate waves
+  const renderStaticPredictVisualization = () => {
+    const width = 450;
+    const height = 180;
+
+    return (
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: '180px' }}>
+        <defs>
+          <linearGradient id="predictWave1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#5eead4" stopOpacity="0.6" />
+            <stop offset="50%" stopColor={design.colors.accentPrimary} stopOpacity="1" />
+            <stop offset="100%" stopColor="#5eead4" stopOpacity="0.6" />
+          </linearGradient>
+          <linearGradient id="predictWave2Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.6" />
+            <stop offset="50%" stopColor={design.colors.cyan} stopOpacity="1" />
+            <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.6" />
+          </linearGradient>
+          <linearGradient id="predictBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={design.colors.bgDeep} />
+            <stop offset="50%" stopColor="#031a17" />
+            <stop offset="100%" stopColor={design.colors.bgDeep} />
+          </linearGradient>
+          <filter id="predictGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Background */}
+        <rect x="0" y="0" width={width} height={height} fill="url(#predictBgGrad)" rx="12" />
+
+        {/* Wave 1 - 440 Hz representation */}
+        <g>
+          <line x1="0" y1="55" x2={width} y2="55" stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
+          <path
+            d={`M 0 55 ${Array.from({ length: 23 }, (_, i) => {
+              const x = i * 20;
+              const y = 55 + 25 * Math.sin(i * 0.9);
+              return `L ${x} ${y}`;
+            }).join(' ')}`}
+            fill="none"
+            stroke="url(#predictWave1Grad)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            filter="url(#predictGlow)"
+          />
+          <text x="10" y="25" fill={design.colors.accentPrimary} fontSize="12" fontWeight="600">440 Hz</text>
+        </g>
+
+        {/* Wave 2 - 444 Hz representation */}
+        <g>
+          <line x1="0" y1="125" x2={width} y2="125" stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
+          <path
+            d={`M 0 125 ${Array.from({ length: 23 }, (_, i) => {
+              const x = i * 20;
+              const y = 125 + 25 * Math.sin(i * 0.95);
+              return `L ${x} ${y}`;
+            }).join(' ')}`}
+            fill="none"
+            stroke="url(#predictWave2Grad)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            filter="url(#predictGlow)"
+          />
+          <text x="10" y="95" fill={design.colors.cyan} fontSize="12" fontWeight="600">444 Hz</text>
+        </g>
+
+        {/* Question mark in center */}
+        <text x={width / 2} y={height / 2 + 5} textAnchor="middle" fill="#ffffff" fontSize="28" fontWeight="700" opacity="0.3">?</text>
+      </svg>
+    );
+  };
 
   // PREDICT
   if (phase === 'predict') {
@@ -1581,12 +1709,22 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
               <p style={{ fontSize: '12px', fontWeight: 700, color: design.colors.accentPrimary, marginBottom: design.spacing.sm, textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Predict
               </p>
-              <h2 style={{ fontSize: '28px', fontWeight: 800, color: design.colors.textPrimary, marginBottom: design.spacing.sm }}>
+              <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginBottom: design.spacing.sm }}>
                 What happens when you play 440 Hz and 444 Hz together?
               </h2>
               <p style={{ fontSize: '15px', color: design.colors.textSecondary }}>
                 Imagine two tuning forks with slightly different pitches ringing simultaneously.
               </p>
+            </div>
+
+            {/* Static visualization showing the two waves */}
+            <div style={{
+              marginBottom: design.spacing.lg,
+              borderRadius: design.radius.lg,
+              overflow: 'hidden',
+              border: `1px solid ${design.colors.border}`
+            }}>
+              {renderStaticPredictVisualization()}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md }}>
@@ -1603,7 +1741,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                     borderRadius: design.radius.lg,
                     border: `2px solid ${prediction === opt.id ? design.colors.accentPrimary : design.colors.border}`,
                     background: prediction === opt.id ? design.colors.accentMuted : design.colors.bgCard,
-                    color: design.colors.textPrimary,
+                    color: '#ffffff',
                     fontSize: '15px',
                     fontWeight: 500,
                     cursor: 'pointer',
@@ -1631,6 +1769,18 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       <div style={containerStyle}>
         {renderProgressBar()}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* Educational header */}
+          <div style={{
+            padding: `${design.spacing.md}px ${design.spacing.lg}px`,
+            background: design.colors.bgCard,
+            borderBottom: `1px solid ${design.colors.border}`
+          }}>
+            <p style={{ fontSize: '14px', color: '#ffffff', margin: 0 }}>
+              This visualization displays two sound waves combining through superposition. When you increase or decrease the frequency difference,
+              the beat pattern changes - this demonstrates wave interference used in tuning pianos and musical instruments.
+            </p>
+          </div>
+
           {/* Visualization */}
           <div style={{ flex: 1, padding: design.spacing.lg, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '280px' }}>
             {renderBeatsVisualization()}
@@ -1698,11 +1848,26 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
         {renderProgressBar()}
         <div style={{ flex: 1, padding: design.spacing.xl, overflowY: 'auto' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Connect to prediction */}
+            <div style={{
+              padding: design.spacing.md,
+              background: design.colors.bgCard,
+              borderRadius: design.radius.lg,
+              border: `1px solid ${design.colors.border}`,
+              marginBottom: design.spacing.lg
+            }}>
+              <p style={{ fontSize: '14px', color: '#ffffff', margin: 0 }}>
+                <strong style={{ color: design.colors.success }}>Your prediction was tested!</strong> As you learned through experimentation,
+                the correct answer is that two similar frequencies create a pulsating "wah-wah" sound.
+                This phenomenon is called beats and results from wave interference. Now let's explore the physics behind what you observed.
+              </p>
+            </div>
+
             <div style={{ marginBottom: design.spacing.lg }}>
               <p style={{ fontSize: '12px', fontWeight: 700, color: design.colors.success, marginBottom: design.spacing.sm, textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Understanding
               </p>
-              <h2 style={{ fontSize: '28px', fontWeight: 800, color: design.colors.textPrimary }}>
+              <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff' }}>
                 The Physics of Beats
               </h2>
             </div>
@@ -1754,6 +1919,52 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     );
   }
 
+  // Static visualization for twist_predict phase - shows frequencies approaching
+  const renderTwistPredictVisualization = () => {
+    const width = 450;
+    const height = 140;
+
+    return (
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: '140px' }}>
+        <defs>
+          <linearGradient id="twistWave1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#5eead4" stopOpacity="0.6" />
+            <stop offset="50%" stopColor={design.colors.accentPrimary} stopOpacity="1" />
+            <stop offset="100%" stopColor="#5eead4" stopOpacity="0.6" />
+          </linearGradient>
+          <linearGradient id="twistWave2Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.6" />
+            <stop offset="50%" stopColor={design.colors.cyan} stopOpacity="1" />
+            <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.6" />
+          </linearGradient>
+          <linearGradient id="twistBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={design.colors.bgDeep} />
+            <stop offset="50%" stopColor="#031a17" />
+            <stop offset="100%" stopColor={design.colors.bgDeep} />
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width={width} height={height} fill="url(#twistBgGrad)" rx="12" />
+
+        {/* Two nearly identical waves */}
+        <path
+          d={`M 0 50 ${Array.from({ length: 23 }, (_, i) => `L ${i * 20} ${50 + 20 * Math.sin(i * 0.8)}`).join(' ')}`}
+          fill="none" stroke="url(#twistWave1Grad)" strokeWidth="2.5" strokeLinecap="round"
+        />
+        <path
+          d={`M 0 90 ${Array.from({ length: 23 }, (_, i) => `L ${i * 20} ${90 + 20 * Math.sin(i * 0.82)}`).join(' ')}`}
+          fill="none" stroke="url(#twistWave2Grad)" strokeWidth="2.5" strokeLinecap="round"
+        />
+
+        {/* Arrow indicating frequencies approaching */}
+        <text x={width / 2} y="20" textAnchor="middle" fill={design.colors.warning} fontSize="12" fontWeight="600">
+          Frequencies getting closer...
+        </text>
+        <text x="10" y="35" fill={design.colors.accentPrimary} fontSize="11" fontWeight="600">440 Hz</text>
+        <text x="10" y="75" fill={design.colors.cyan} fontSize="11" fontWeight="600">442 Hz</text>
+      </svg>
+    );
+  };
+
   // TWIST PREDICT
   if (phase === 'twist_predict') {
     const options = [
@@ -1772,12 +1983,22 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
               <p style={{ fontSize: '12px', fontWeight: 700, color: design.colors.cyan, marginBottom: design.spacing.sm, textTransform: 'uppercase', letterSpacing: '1px' }}>
                 New Variable
               </p>
-              <h2 style={{ fontSize: '28px', fontWeight: 800, color: design.colors.textPrimary, marginBottom: design.spacing.sm }}>
+              <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginBottom: design.spacing.sm }}>
                 What happens when two frequencies get closer together?
               </h2>
               <p style={{ fontSize: '15px', color: design.colors.textSecondary }}>
                 Think about tuning an instrument - as you approach perfect tune, what changes?
               </p>
+            </div>
+
+            {/* Static visualization for twist predict */}
+            <div style={{
+              marginBottom: design.spacing.lg,
+              borderRadius: design.radius.lg,
+              overflow: 'hidden',
+              border: `1px solid ${design.colors.border}`
+            }}>
+              {renderTwistPredictVisualization()}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md }}>
@@ -1794,7 +2015,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                     borderRadius: design.radius.lg,
                     border: `2px solid ${twistPrediction === opt.id ? design.colors.cyan : design.colors.border}`,
                     background: twistPrediction === opt.id ? design.colors.cyanMuted : design.colors.bgCard,
-                    color: design.colors.textPrimary,
+                    color: '#ffffff',
                     fontSize: '15px',
                     fontWeight: 500,
                     cursor: 'pointer',
@@ -2053,15 +2274,31 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                 </div>
               </div>
 
-              {/* Formula */}
+              {/* Key Statistics */}
               <div style={{
                 padding: design.spacing.lg,
                 borderRadius: design.radius.lg,
                 background: `${app.color}15`,
                 border: `1px solid ${app.color}30`,
-                marginBottom: design.spacing.xl
+                marginBottom: design.spacing.lg
               }}>
                 <p style={{ fontSize: '11px', fontWeight: 700, color: app.color, marginBottom: design.spacing.sm, textTransform: 'uppercase' }}>
+                  Key Statistics
+                </p>
+                <p style={{ fontSize: '16px', color: '#ffffff', fontWeight: 600 }}>
+                  {(app as { stats?: string }).stats || app.stat}
+                </p>
+              </div>
+
+              {/* Formula */}
+              <div style={{
+                padding: design.spacing.lg,
+                borderRadius: design.radius.lg,
+                background: design.colors.bgCard,
+                border: `1px solid ${design.colors.border}`,
+                marginBottom: design.spacing.xl
+              }}>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: design.colors.textMuted, marginBottom: design.spacing.sm, textTransform: 'uppercase' }}>
                   Key Formula
                 </p>
                 <p style={{ fontSize: '20px', fontFamily: 'Georgia, serif', color: design.colors.textPrimary }}>
@@ -2156,17 +2393,17 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       return (
         <div style={containerStyle}>
           {renderProgressBar()}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: design.spacing.xl, textAlign: 'center' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: design.spacing.xl, textAlign: 'center', overflowY: 'auto' }}>
             <div style={{ fontSize: '72px', marginBottom: design.spacing.lg }}>
               {score >= 8 ? '🏆' : score >= 6 ? '⭐' : '📚'}
             </div>
-            <h2 style={{ fontSize: '36px', fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.md }}>
+            <h2 style={{ fontSize: '36px', fontWeight: 900, color: '#ffffff', marginBottom: design.spacing.md }}>
               {score}/10 Correct
             </h2>
             <p style={{ fontSize: '16px', color: design.colors.textSecondary, marginBottom: design.spacing.xl, maxWidth: '400px' }}>
-              {score >= 8 ? "Excellent! You've truly mastered beats!" :
-               score >= 6 ? "Good job! Review the concepts you missed." :
-               "Keep practicing! Review the material and try again."}
+              {score >= 8 ? "Excellent! You've truly mastered the physics of beats and wave interference!" :
+               score >= 6 ? "Good job! Review the concepts you missed about beat frequency and wave superposition." :
+               "Keep practicing! Review the material about wave interference and try again."}
             </p>
             {renderButton('Complete Lesson', () => goToPhase('mastery'), 'success', false, 'lg')}
           </div>
@@ -2179,6 +2416,19 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
         {renderProgressBar()}
         <div style={{ flex: 1, padding: design.spacing.xl, overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {/* Scenario context */}
+            <div style={{
+              padding: design.spacing.md,
+              background: design.colors.bgCard,
+              borderRadius: design.radius.lg,
+              border: `1px solid ${design.colors.border}`,
+              marginBottom: design.spacing.lg
+            }}>
+              <p style={{ fontSize: '13px', color: design.colors.textSecondary, margin: 0 }}>
+                Scenario: A physics student is studying beat frequencies in the laboratory. Two sound sources produce slightly different frequencies, creating an audible pulsating effect. Apply your knowledge of wave superposition and interference to answer the following questions about beat frequency phenomena.
+              </p>
+            </div>
+
             {/* Progress */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: design.spacing.lg }}>
               <span style={{ fontSize: '14px', color: design.colors.textMuted, fontWeight: 600 }}>
@@ -2196,7 +2446,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             </div>
 
             {/* Question */}
-            <h3 style={{ fontSize: '20px', fontWeight: 700, color: design.colors.textPrimary, marginBottom: design.spacing.lg, lineHeight: 1.5 }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', marginBottom: design.spacing.lg, lineHeight: 1.5 }}>
               {q.question}
             </h3>
 

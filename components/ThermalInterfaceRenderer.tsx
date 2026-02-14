@@ -313,8 +313,8 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#e2e8f0',
     border: '#2a2a3a',
     cold: '#3B82F6',
     hot: '#EF4444',
@@ -545,7 +545,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -595,6 +595,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────

@@ -409,6 +409,71 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
     </div>
   );
 
+  // Back button handler
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Fixed bottom navigation bar
+  const renderBottomNav = (nextAction?: () => void, nextLabel?: string, nextDisabled?: boolean) => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirstPhase = currentIndex === 0;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '12px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 100,
+      }}>
+        <button
+          onClick={prevPhase}
+          disabled={isFirstPhase}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: isFirstPhase ? colors.textMuted : colors.textSecondary,
+            cursor: isFirstPhase ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: isFirstPhase ? 0.5 : 1,
+          }}
+        >
+          ← Back
+        </button>
+        {nextAction && (
+          <button
+            onClick={nextAction}
+            disabled={nextDisabled}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: nextDisabled ? colors.border : `linear-gradient(135deg, ${colors.accent}, #0D9488)`,
+              color: 'white',
+              cursor: nextDisabled ? 'not-allowed' : 'pointer',
+              fontWeight: 600,
+              opacity: nextDisabled ? 0.5 : 1,
+            }}
+          >
+            {nextLabel || 'Next →'}
+          </button>
+        )}
+      </nav>
+    );
+  };
+
   // Navigation dots
   const renderNavDots = () => (
     <div style={{
@@ -456,7 +521,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
     const height = isMobile ? 280 : 340;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         <defs>
           <linearGradient id="tubeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#4a6a8c" />
@@ -597,7 +662,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
     const height = isMobile ? 240 : 280;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         <defs>
           <linearGradient id="meterTubeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#4a6a8c" />
@@ -679,62 +744,68 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
     return (
       <div style={{
         minHeight: '100vh',
+        height: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          💨🌊
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } } .muted-secondary { color: #94a3b8; } .muted-dim { color: #6B7280; }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          The Venturi Effect
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Why does water shoot <span style={{ color: colors.accent }}>farther</span> when you cover part of a garden hose with your thumb? The answer reveals one of the most useful principles in fluid physics."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          paddingBottom: '100px',
+          textAlign: 'center',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "When fluid flows through a constriction, its velocity increases and pressure decreases. This simple principle powers everything from carburetors to medical oxygen masks."
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            💨🌊
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } } .muted-secondary { color: #94a3b8; } .muted-dim { color: #6B7280; }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            The Venturi Effect
+          </h1>
+
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "Why does water shoot <span style={{ color: colors.accent }}>farther</span> when you cover part of a garden hose with your thumb? The answer reveals one of the most useful principles in fluid physics."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Bernoulli's Principle (1738)
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+            boxShadow: `0 4px 24px ${colors.accentGlow}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "When fluid flows through a constriction, its velocity increases and pressure decreases. This simple principle powers everything from carburetors to medical oxygen masks."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              - Bernoulli's Principle (1738)
+            </p>
+          </div>
+
+          {renderNavDots()}
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Start Exploring
-        </button>
-
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('click'); nextPhase(); }, 'Start Exploring')}
       </div>
     );
   }
@@ -749,106 +820,103 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
-            </p>
-          </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                🤔 Make Your Prediction
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Water flows through a pipe that narrows in the middle. If the same amount of water must pass through every second, what happens to the water speed in the narrow section?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              Water flows through a pipe that narrows in the middle. If the same amount of water must pass through every second, what happens to the water speed in the narrow section?
+            </h2>
 
-          {/* SVG Diagram */}
-          <svg viewBox="0 0 400 180" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
-            <defs>
-              <filter id="venturiPredGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-              <linearGradient id="venturiPredGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#06b6d4" /></linearGradient>
-            </defs>
-            <rect width="400" height="180" fill="#0f172a" rx="12" />
-            <g transform="translate(0,40)">
-              {/* Tube walls */}
-              <path d="M 30 20 L 140 20 L 160 40 L 240 40 L 260 20 L 370 20" stroke="#64748b" strokeWidth="2" fill="none" />
-              <path d="M 30 80 L 140 80 L 160 60 L 240 60 L 260 80 L 370 80" stroke="#64748b" strokeWidth="2" fill="none" />
-              {/* Flow fill */}
-              <path d="M 30 20 L 140 20 L 160 40 L 240 40 L 260 20 L 370 20 L 370 80 L 260 80 L 240 60 L 160 60 L 140 80 L 30 80 Z" fill="url(#venturiPredGrad)" opacity="0.2" />
-              {/* Flow arrows */}
-              <g filter="url(#venturiPredGlow)">
-                <line x1="60" y1="50" x2="120" y2="50" stroke="#3b82f6" strokeWidth="3" />
-                <polygon points="120,44 132,50 120,56" fill="#3b82f6" />
-                <line x1="170" y1="50" x2="230" y2="50" stroke="#ef4444" strokeWidth="3" />
-                <polygon points="230,44 242,50 230,56" fill="#ef4444" />
-                <line x1="280" y1="50" x2="340" y2="50" stroke="#3b82f6" strokeWidth="3" />
-                <polygon points="340,44 352,50 340,56" fill="#3b82f6" />
+            {/* SVG Diagram */}
+            <svg viewBox="0 0 400 180" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+              <defs>
+                <filter id="venturiPredGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                <linearGradient id="venturiPredGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#06b6d4" /></linearGradient>
+              </defs>
+              <rect width="400" height="180" fill="#0f172a" rx="12" />
+              <g transform="translate(0,40)">
+                {/* Tube walls */}
+                <path d="M 30 20 L 140 20 L 160 40 L 240 40 L 260 20 L 370 20" stroke="#64748b" strokeWidth="2" fill="none" />
+                <path d="M 30 80 L 140 80 L 160 60 L 240 60 L 260 80 L 370 80" stroke="#64748b" strokeWidth="2" fill="none" />
+                {/* Flow fill */}
+                <path d="M 30 20 L 140 20 L 160 40 L 240 40 L 260 20 L 370 20 L 370 80 L 260 80 L 240 60 L 160 60 L 140 80 L 30 80 Z" fill="url(#venturiPredGrad)" opacity="0.2" />
+                {/* Flow arrows */}
+                <g filter="url(#venturiPredGlow)">
+                  <line x1="60" y1="50" x2="120" y2="50" stroke="#3b82f6" strokeWidth="3" />
+                  <polygon points="120,44 132,50 120,56" fill="#3b82f6" />
+                  <line x1="170" y1="50" x2="230" y2="50" stroke="#ef4444" strokeWidth="3" />
+                  <polygon points="230,44 242,50 230,56" fill="#ef4444" />
+                  <line x1="280" y1="50" x2="340" y2="50" stroke="#3b82f6" strokeWidth="3" />
+                  <polygon points="340,44 352,50 340,56" fill="#3b82f6" />
+                </g>
+                <text x="85" y="15" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide</text>
+                <text x="200" y="35" textAnchor="middle" fill="#f97316" fontSize="11" fontWeight="600">Narrow (?)</text>
+                <text x="315" y="15" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide</text>
               </g>
-              <text x="85" y="15" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide</text>
-              <text x="200" y="35" textAnchor="middle" fill="#f97316" fontSize="11" fontWeight="600">Narrow (?)</text>
-              <text x="315" y="15" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide</text>
-            </g>
-            <text x="200" y="165" textAnchor="middle" fill="#64748b" fontSize="10">Same water volume per second must pass through each section</text>
-          </svg>
+              <text x="200" y="165" textAnchor="middle" fill="#64748b" fontSize="10">Same water volume per second must pass through each section</text>
+            </svg>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {renderNavDots()}
           </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('success'); nextPhase(); }, 'Test My Prediction', !prediction)}
       </div>
     );
   }
@@ -857,181 +925,183 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Venturi Tube Simulator
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust flow rate and constriction to see how velocity and pressure change.
-          </p>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Venturi Tube Simulator
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
+              Watch how velocity and pressure change as fluid flows through different pipe sections.
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+              When you increase flow rate, velocity increases. When area decreases, pressure drops because kinetic energy goes up. This is useful in engineering applications like carburetors and flow meters.
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <VenturiVisualization />
-            </div>
-
-            {/* Flow rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Rate</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                value={flowRate}
-                onChange={(e) => setFlowRate(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((flowRate - 20) / 80) * 100}%, ${colors.border} ${((flowRate - 20) / 80) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Constriction slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Constriction (% of original area)</span>
-                <span style={{ ...typo.small, color: colors.flow, fontWeight: 600 }}>{constrictionSize}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={constrictionSize}
-                onChange={(e) => setConstrictionSize(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.flow} ${((constrictionSize - 20) / 60) * 100}%, ${colors.border} ${((constrictionSize - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Toggle controls */}
-            <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={showPressure}
-                  onChange={(e) => setShowPressure(e.target.checked)}
-                  style={{ accentColor: colors.accent }}
-                />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Show Pressure</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={showVelocity}
-                  onChange={(e) => setShowVelocity(e.target.checked)}
-                  style={{ accentColor: colors.accent }}
-                />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Show Velocity</span>
-              </label>
-              <button
-                onClick={() => setIsFlowing(!isFlowing)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isFlowing ? colors.error : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isFlowing ? 'Stop Flow' : 'Start Flow'}
-              </button>
-            </div>
-
-            {/* Stats display */}
+            {/* Main visualization */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: '#22c55e' }}>{wideVelocity.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>v1 (m/s)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.flow }}>{narrowVelocity.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>v2 (m/s)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: '#ef4444' }}>{widePressure.toFixed(0)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>P1 (kPa)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.pressure }}>{narrowPressure.toFixed(0)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>P2 (kPa)</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Discovery prompt */}
-          {areaRatio > 2 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
               marginBottom: '24px',
-              textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Notice how velocity increases {areaRatio.toFixed(1)}x while pressure drops! This is the Venturi effect.
-              </p>
-            </div>
-          )}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <VenturiVisualization />
+              </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
+              {/* Flow rate slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Rate</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="100"
+                  value={flowRate}
+                  onChange={(e) => setFlowRate(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    background: `linear-gradient(to right, ${colors.accent} ${((flowRate - 20) / 80) * 100}%, ${colors.border} ${((flowRate - 20) / 80) * 100}%)`,
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Constriction slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Constriction (% of original area)</span>
+                  <span style={{ ...typo.small, color: colors.flow, fontWeight: 600 }}>{constrictionSize}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="80"
+                  value={constrictionSize}
+                  onChange={(e) => setConstrictionSize(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    background: `linear-gradient(to right, ${colors.flow} ${((constrictionSize - 20) / 60) * 100}%, ${colors.border} ${((constrictionSize - 20) / 60) * 100}%)`,
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Toggle controls */}
+              <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={showPressure}
+                    onChange={(e) => setShowPressure(e.target.checked)}
+                    style={{ accentColor: colors.accent }}
+                  />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Show Pressure</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={showVelocity}
+                    onChange={(e) => setShowVelocity(e.target.checked)}
+                    style={{ accentColor: colors.accent }}
+                  />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Show Velocity</span>
+                </label>
+                <button
+                  onClick={() => setIsFlowing(!isFlowing)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isFlowing ? colors.error : colors.success,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isFlowing ? 'Stop Flow' : 'Start Flow'}
+                </button>
+              </div>
+
+              {/* Stats display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '12px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: '#22c55e' }}>{wideVelocity.toFixed(1)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>v1 (m/s)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.flow }}>{narrowVelocity.toFixed(1)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>v2 (m/s)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: '#ef4444' }}>{widePressure.toFixed(0)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>P1 (kPa)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.pressure }}>{narrowPressure.toFixed(0)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>P2 (kPa)</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Discovery prompt */}
+            {areaRatio > 2 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  Notice how velocity increases {areaRatio.toFixed(1)}x while pressure drops! This is the Venturi effect.
+                </p>
+              </div>
+            )}
+
+            {renderNavDots()}
+          </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('success'); nextPhase(); }, 'Understand the Physics')}
       </div>
     );
   }
@@ -1040,82 +1110,93 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Physics of the Venturi Effect
-          </h2>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              The Physics of the Venturi Effect
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Continuity Equation: A1v1 = A2v2</strong>
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                Mass is conserved - if area <span style={{ color: colors.flow }}>decreases</span>, velocity must <span style={{ color: colors.accent }}>increase</span> to maintain the same flow rate. This is why water speeds up in a narrow section.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Bernoulli's Principle: P + 1/2 pv^2 = constant</strong>
-              </p>
-              <p>
-                Energy is conserved - if velocity <span style={{ color: colors.accent }}>increases</span>, pressure must <span style={{ color: colors.pressure }}>decrease</span>. Kinetic energy up means pressure energy down.
+            <div style={{
+              background: `${colors.success}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.success}44`,
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                As you observed in the experiment, velocity increased when the pipe narrowed - exactly what you predicted!
               </p>
             </div>
-          </div>
 
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Key Insight: The Venturi Effect
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              Combining continuity and Bernoulli:
-            </p>
-            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-              <li>Narrow section = Higher velocity (continuity)</li>
-              <li>Higher velocity = Lower pressure (Bernoulli)</li>
-              <li><strong>Narrow section = Low pressure zone!</strong></li>
-            </ul>
-          </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Continuity Equation: A1v1 = A2v2</strong>
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  Mass is conserved - if area <span style={{ color: colors.flow }}>decreases</span>, velocity must <span style={{ color: colors.accent }}>increase</span> to maintain the same flow rate. This is why water speeds up in a narrow section.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Bernoulli's Principle: P + 1/2 pv^2 = constant</strong>
+                </p>
+                <p>
+                  Energy is conserved - if velocity <span style={{ color: colors.accent }}>increases</span>, pressure must <span style={{ color: colors.pressure }}>decrease</span>. Kinetic energy up means pressure energy down.
+                </p>
+              </div>
+            </div>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
-              Why This Matters
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              The low-pressure zone at a constriction can be used to draw in other fluids - this is how carburetors mix fuel, aspirators create vacuum, and spray bottles atomize liquids!
-            </p>
-          </div>
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Key Insight: The Venturi Effect
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+                Combining continuity and Bernoulli:
+              </p>
+              <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+                <li>Narrow section = Higher velocity (continuity)</li>
+                <li>Higher velocity = Lower pressure (Bernoulli)</li>
+                <li><strong>Narrow section = Low pressure zone!</strong></li>
+              </ul>
+            </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover a New Application
-          </button>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+                Why This Matters
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                The low-pressure zone at a constriction can be used to draw in other fluids - this is how carburetors mix fuel, aspirators create vacuum, and spray bottles atomize liquids!
+              </p>
+            </div>
+
+            {renderNavDots()}
+          </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('success'); nextPhase(); }, 'Discover a New Application')}
       </div>
     );
   }
@@ -1130,111 +1211,108 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🔄 New Challenge: The Venturi Flow Meter
-            </p>
-          </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                🔄 New Challenge: The Venturi Flow Meter
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Engineers need to measure flow rate in a pipe without inserting any probes. What do you predict - how can a Venturi tube help?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              Engineers need to measure flow rate in a pipe without inserting any probes. What do you predict - how can a Venturi tube help?
+            </h2>
 
-          <svg viewBox="0 0 400 160" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
-            <defs>
-              <filter id="twistPGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-              <linearGradient id="twistPGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#ef4444" /></linearGradient>
-            </defs>
-            <rect width="400" height="160" fill="#0f172a" rx="12" />
-            <g transform="translate(0,30)">
-              <path d="M 30 20 L 140 20 L 160 35 L 240 35 L 260 20 L 370 20" stroke="#64748b" strokeWidth="2" fill="none" />
-              <path d="M 30 80 L 140 80 L 160 65 L 240 65 L 260 80 L 370 80" stroke="#64748b" strokeWidth="2" fill="none" />
-              <path d="M 30 20 L 140 20 L 160 35 L 240 35 L 260 20 L 370 20 L 370 80 L 260 80 L 240 65 L 160 65 L 140 80 L 30 80 Z" fill="url(#twistPGrad)" opacity="0.15" />
-              {/* Pressure gauges */}
-              <g filter="url(#twistPGlow)">
-                <rect x="75" y="-5" width="30" height="25" rx="4" fill="#1e293b" stroke="#f59e0b" strokeWidth="1" />
-                <text x="90" y="14" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600">P1</text>
-                <rect x="185" y="10" width="30" height="25" rx="4" fill="#1e293b" stroke="#ef4444" strokeWidth="1" />
-                <text x="200" y="27" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="600">P2</text>
+            <svg viewBox="0 0 400 160" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+              <defs>
+                <filter id="twistPGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                <linearGradient id="twistPGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#ef4444" /></linearGradient>
+              </defs>
+              <rect width="400" height="160" fill="#0f172a" rx="12" />
+              <g transform="translate(0,30)">
+                <path d="M 30 20 L 140 20 L 160 35 L 240 35 L 260 20 L 370 20" stroke="#64748b" strokeWidth="2" fill="none" />
+                <path d="M 30 80 L 140 80 L 160 65 L 240 65 L 260 80 L 370 80" stroke="#64748b" strokeWidth="2" fill="none" />
+                <path d="M 30 20 L 140 20 L 160 35 L 240 35 L 260 20 L 370 20 L 370 80 L 260 80 L 240 65 L 160 65 L 140 80 L 30 80 Z" fill="url(#twistPGrad)" opacity="0.15" />
+                {/* Pressure gauges */}
+                <g filter="url(#twistPGlow)">
+                  <rect x="75" y="-5" width="30" height="25" rx="4" fill="#1e293b" stroke="#f59e0b" strokeWidth="1" />
+                  <text x="90" y="14" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600">P1</text>
+                  <rect x="185" y="10" width="30" height="25" rx="4" fill="#1e293b" stroke="#ef4444" strokeWidth="1" />
+                  <text x="200" y="27" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="600">P2</text>
+                </g>
+                <text x="200" y="95" textAnchor="middle" fill="#94a3b8" fontSize="10">Measure ΔP to find flow rate?</text>
               </g>
-              <text x="200" y="95" textAnchor="middle" fill="#94a3b8" fontSize="10">Measure ΔP to find flow rate?</text>
-            </g>
-          </svg>
+            </svg>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              We know that flow rate affects velocity, and velocity affects pressure...
-            </p>
-            <p style={{ ...typo.body, color: colors.accent, marginTop: '12px', fontWeight: 600 }}>
-              Can we work backwards from pressure to find flow rate?
-            </p>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary }}>
+                We know that flow rate affects velocity, and velocity affects pressure...
+              </p>
+              <p style={{ ...typo.body, color: colors.accent, marginTop: '12px', fontWeight: 600 }}>
+                Can we work backwards from pressure to find flow rate?
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {renderNavDots()}
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Try the Flow Meter
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('success'); nextPhase(); }, 'Try the Flow Meter', !twistPrediction)}
       </div>
     );
   }
@@ -1243,122 +1321,121 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Venturi Flow Meter
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust the flow rate and see how pressure difference reveals flow velocity
-          </p>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <VenturiMeterVisualization />
-            </div>
-
-            {/* Flow rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Actual Flow Rate</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{meterFlowRate}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                value={meterFlowRate}
-                onChange={(e) => setMeterFlowRate(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Toggle readings */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={showMeterReadings}
-                  onChange={(e) => setShowMeterReadings(e.target.checked)}
-                  style={{ accentColor: colors.accent }}
-                />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Show Pressure Readings</span>
-              </label>
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.flow }}>{meterWideVelocity.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>v1 (m/s)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: '#22d3ee' }}>{meterNarrowVelocity.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>v2 (m/s)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{(REFERENCE_PRESSURE - meterNarrowPressure).toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Delta P (kPa)</div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{
-            background: `${colors.success}22`,
-            border: `1px solid ${colors.success}`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-              The pressure difference increases with flow rate! We can calculate flow from Delta P.
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Venturi Flow Meter
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust the flow rate and see how pressure difference reveals flow velocity
             </p>
-          </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Math
-          </button>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <VenturiMeterVisualization />
+              </div>
+
+              {/* Flow rate slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Actual Flow Rate</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{meterFlowRate}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="100"
+                  value={meterFlowRate}
+                  onChange={(e) => setMeterFlowRate(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Toggle readings */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={showMeterReadings}
+                    onChange={(e) => setShowMeterReadings(e.target.checked)}
+                    style={{ accentColor: colors.accent }}
+                  />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Show Pressure Readings</span>
+                </label>
+              </div>
+
+              {/* Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.flow }}>{meterWideVelocity.toFixed(1)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>v1 (m/s)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: '#22d3ee' }}>{meterNarrowVelocity.toFixed(1)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>v2 (m/s)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.success }}>{(REFERENCE_PRESSURE - meterNarrowPressure).toFixed(1)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Delta P (kPa)</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                The pressure difference increases with flow rate! We can calculate flow from Delta P.
+              </p>
+            </div>
+
+            {renderNavDots()}
+          </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('success'); nextPhase(); }, 'Understand the Math')}
       </div>
     );
   }
@@ -1367,91 +1444,90 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            How Venturi Meters Measure Flow
-          </h2>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              How Venturi Meters Measure Flow
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px', color: colors.flow }}>1</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Measure Pressure Drop</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px', color: colors.flow }}>1</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Measure Pressure Drop</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Pressure taps at the inlet and throat measure <span style={{ color: colors.success }}>Delta P = P1 - P2</span>. Higher flow = bigger pressure difference.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Pressure taps at the inlet and throat measure <span style={{ color: colors.success }}>Delta P = P1 - P2</span>. Higher flow = bigger pressure difference.
-              </p>
-            </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px', color: colors.flow }}>2</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Apply Bernoulli</h3>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px', color: colors.flow }}>2</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Apply Bernoulli</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  From <span style={{ color: colors.accent }}>Delta P = 1/2 p (v2^2 - v1^2)</span>, we can calculate velocity from the pressure difference.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                From <span style={{ color: colors.accent }}>Delta P = 1/2 p (v2^2 - v1^2)</span>, we can calculate velocity from the pressure difference.
-              </p>
-            </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px', color: colors.flow }}>3</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Calculate Flow Rate</h3>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px', color: colors.flow }}>3</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Calculate Flow Rate</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  <span style={{ color: colors.success }}>Q = A x v</span> gives us volumetric flow rate. Flow is proportional to the square root of Delta P!
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                <span style={{ color: colors.success }}>Q = A x v</span> gives us volumetric flow rate. Flow is proportional to the square root of Delta P!
-              </p>
+
+              <div style={{
+                background: `${colors.success}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.success}33`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+                  Why Venturi Meters Are Brilliant
+                </h3>
+                <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+                  <li>No moving parts - extremely reliable</li>
+                  <li>Non-intrusive - nothing blocks the flow</li>
+                  <li>Low permanent pressure loss (10-30%)</li>
+                  <li>Works with liquids and gases</li>
+                  <li>Accuracy of 0.5-2% is typical</li>
+                </ul>
+              </div>
             </div>
 
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
-                Why Venturi Meters Are Brilliant
-              </h3>
-              <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-                <li>No moving parts - extremely reliable</li>
-                <li>Non-intrusive - nothing blocks the flow</li>
-                <li>Low permanent pressure loss (10-30%)</li>
-                <li>Works with liquids and gases</li>
-                <li>Accuracy of 0.5-2% is typical</li>
-              </ul>
-            </div>
+            {renderNavDots()}
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('success'); nextPhase(); }, 'See Real-World Applications')}
       </div>
     );
   }
@@ -1460,178 +1536,217 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
+
+    // Mark current app as viewed
+    const markCurrentAppComplete = () => {
+      if (!completedApps[selectedApp]) {
+        const newCompleted = [...completedApps];
+        newCompleted[selectedApp] = true;
+        setCompletedApps(newCompleted);
+      }
+      // Move to next app if available
+      if (selectedApp < realWorldApps.length - 1) {
+        setSelectedApp(selectedApp + 1);
+      }
+    };
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
-                  </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.short}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
-              </div>
-            </div>
-
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
+            {/* Progress indicator */}
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} completed)
             </p>
 
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How the Venturi Effect Applies:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
+            {/* App selector */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '12px',
+              marginBottom: '24px',
             }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.short}
+                  </div>
+                </button>
               ))}
             </div>
 
+            {/* Selected app details */}
             <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginTop: '16px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
             }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How It Works:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.howItWorks}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
               </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How the Venturi Effect Applies:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginTop: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How It Works:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.howItWorks}
+                </p>
+              </div>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginTop: '12px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  Industry Leaders:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.companies.join(', ')}
+                </p>
+              </div>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginTop: '12px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  Future Impact:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.futureImpact}
+                </p>
+              </div>
+
+              {/* Got It button */}
+              <button
+                onClick={() => { playSound('click'); markCurrentAppComplete(); }}
+                style={{
+                  marginTop: '20px',
+                  width: '100%',
+                  padding: '14px 24px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                }}
+              >
+                {selectedApp < realWorldApps.length - 1 ? 'Got It - Next App →' : 'Got It'}
+              </button>
             </div>
 
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginTop: '12px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                Industry Leaders:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.companies.join(', ')}
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginTop: '12px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                Future Impact:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.futureImpact}
-              </p>
-            </div>
+            {renderNavDots()}
           </div>
-
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(
+          allAppsCompleted ? () => { playSound('success'); nextPhase(); } : undefined,
+          allAppsCompleted ? 'Take the Knowledge Test' : undefined,
+          !allAppsCompleted
+        )}
       </div>
     );
   }
@@ -1642,54 +1757,47 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          height: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🏆' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand the Venturi effect and Bernoulli\'s principle!'
-                : 'Review the concepts and try again.'}
-            </p>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+            <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '80px',
+                marginBottom: '24px',
+              }}>
+                {passed ? '🏆' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You understand the Venturi effect and Bernoulli\'s principle!'
+                  : 'Review the concepts and try again.'}
+              </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
-            )}
+              {renderNavDots()}
+            </div>
           </div>
-          {renderNavDots()}
+          {renderBottomNav(
+            passed ? () => { playSound('complete'); nextPhase(); } : () => {
+              setTestSubmitted(false);
+              setTestAnswers(Array(10).fill(null));
+              setCurrentQuestion(0);
+              setTestScore(0);
+              goToPhase('hook');
+            },
+            passed ? 'Complete Lesson' : 'Review and Try Again'
+          )}
         </div>
       );
     }
@@ -1698,13 +1806,16 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1792,70 +1903,73 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
           </div>
 
           {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white',
+                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
+            </div>
+
+            {renderNavDots()}
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1864,87 +1978,98 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Venturi Effect Master!
-        </h1>
-
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand one of the most useful principles in fluid dynamics - used in everything from airplane instruments to medical equipment.
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
+          paddingBottom: '100px',
+          textAlign: 'center',
         }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'Continuity equation: A1v1 = A2v2 (mass conservation)',
-              'Narrow section = higher velocity',
-              'Bernoulli: P + 1/2 pv^2 = constant (energy conservation)',
-              'Higher velocity = lower pressure',
-              'Venturi effect powers carburetors, atomizers, flow meters',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
-              </div>
-            ))}
+          <div style={{
+            fontSize: '100px',
+            marginBottom: '24px',
+            animation: 'bounce 1s infinite',
+          }}>
+            🏆
           </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Venturi Effect Master!
+          </h1>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+            You now understand one of the most useful principles in fluid dynamics - used in everything from airplane instruments to medical equipment.
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              You Learned:
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+              {[
+                'Continuity equation: A1v1 = A2v2 (mass conservation)',
+                'Narrow section = higher velocity',
+                'Bernoulli: P + 1/2 pv^2 = constant (energy conservation)',
+                'Higher velocity = lower pressure',
+                'Venturi effect powers carburetors, atomizers, flow meters',
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: colors.success }}>✓</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+              }}
+            >
+              Play Again
+            </button>
+            <a
+              href="/"
+              style={{
+                ...primaryButtonStyle,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Return to Dashboard
+            </a>
+          </div>
+
+          {renderNavDots()}
         </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

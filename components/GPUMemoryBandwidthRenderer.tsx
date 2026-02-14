@@ -112,7 +112,7 @@ const realWorldApps = [
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast (brightness >= 180)
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -255,24 +255,28 @@ const TRANSFER_APPLICATIONS = [
     description: 'Modern games load massive textures, meshes, and shader data. A 4K game might need 8+ GB of VRAM with 500+ GB/s bandwidth to maintain 60fps.',
     question: 'Why do 4K games need so much more bandwidth than 1080p?',
     answer: '4K has 4x the pixels of 1080p. Each frame requires 4x more texture fetches, framebuffer writes, and shader computations, all demanding proportionally more bandwidth.',
+    stats: '4K = 8.3M pixels per frame, requiring 500+ GB/s at 120 FPS',
   },
   {
     title: 'AI Training',
     description: 'Training large language models requires loading billions of parameters and gradients. Data center GPUs use HBM with 2+ TB/s bandwidth.',
     question: 'Why do AI chips use HBM instead of GDDR?',
     answer: 'AI training is extremely bandwidth-limited. HBM provides 3-4x more bandwidth than GDDR in the same power envelope, making it essential for training efficiency.',
+    stats: 'H100 delivers 3.35 TB/s via 1024-bit HBM3 bus, 3x faster than GDDR6X',
   },
   {
     title: 'Video Editing',
     description: '8K video editing requires real-time playback and effects. Each frame is 33+ megapixels that must flow through the GPU memory system.',
     question: 'How does memory bandwidth affect video timeline scrubbing?',
     answer: 'Scrubbing through 8K footage requires loading new frames instantly. Insufficient bandwidth causes stuttering and dropped frames during preview.',
+    stats: '8K at 60fps = 4.8 GB/s raw throughput, requiring 960+ GB/s bandwidth',
   },
   {
     title: 'Scientific Simulation',
     description: 'Weather models, fluid dynamics, and molecular simulations process enormous datasets. GPU memory bandwidth often limits simulation resolution.',
     question: 'Why do scientific GPUs prioritize bandwidth over gaming features?',
     answer: 'Simulations are compute and bandwidth limited, not graphics-feature limited. More bandwidth enables larger, more accurate models with finer resolution.',
+    stats: 'Frontier uses 37,000 GPUs with 10+ EB/s aggregate bandwidth for 1.2 exaflops',
   },
 ];
 
@@ -991,6 +995,24 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
             {/* Panel inner highlight */}
             <rect x={21} y={231} width={358} height={22} rx={7} fill="rgba(255,255,255,0.02)" />
           </g>
+
+          {/* SVG Labels for GPU and Memory */}
+          <text x={75} y={40} fill="#e2e8f0" fontSize="12" fontWeight="bold" textAnchor="middle">GPU</text>
+          <text x={75} y={195} fill="#e2e8f0" fontSize="11" textAnchor="middle">Shader Cores</text>
+          <text x={310} y={40} fill="#e2e8f0" fontSize="12" fontWeight="bold" textAnchor="middle">{memoryType === 'hbm2e' ? 'HBM' : 'GDDR'} Memory</text>
+          <text x={200} y={190} fill="#e2e8f0" fontSize="11" textAnchor="middle">Data Bus ({effectiveBusWidth}-bit)</text>
+          {/* Axis labels for bandwidth meter */}
+          <text x={22} y={228} fill="#e2e8f0" fontSize="11" textAnchor="start">Data Rate / Speed (GB/s)</text>
+          <text x={378} y={228} fill="#e2e8f0" fontSize="11" textAnchor="end">{bandwidth.toFixed(0)} GB/s</text>
+
+          {/* Legend */}
+          <g className="legend-panel">
+            <rect x={20} y={5} width={130} height={28} rx={4} fill="rgba(30, 41, 59, 0.9)" stroke="#334155" strokeWidth="0.5" />
+            <circle cx={32} cy={19} r={4} fill="#8b5cf6" />
+            <text x={42} y={23} fill="#e2e8f0" fontSize="11">GPU Die</text>
+            <circle cx={92} cy={19} r={4} fill="#3b82f6" />
+            <text x={102} y={23} fill="#e2e8f0" fontSize="11">Memory</text>
+          </g>
         </svg>
 
         {/* External labels using typo system */}
@@ -1034,7 +1056,9 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
     fontWeight: 'bold' as const,
     cursor: 'pointer',
     fontSize: '14px',
+    minHeight: '44px',
     WebkitTapHighlightColor: 'transparent' as const,
+    transition: 'all 0.2s ease',
   };
 
   // Progress bar showing all 10 phases
@@ -1052,9 +1076,9 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
         padding: '12px 16px',
         borderBottom: '1px solid rgba(255,255,255,0.1)',
         backgroundColor: colors.bgDark,
-        zIndex: 1000,
+        zIndex: 9999,
         gap: '12px'
-      }}>
+      }} role="navigation" aria-label="Progress">
         <span style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600 }}>
           Memory Bandwidth
         </span>
@@ -1099,9 +1123,9 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 1000,
+        zIndex: 9999,
         gap: '12px'
-      }}>
+      }} role="navigation" aria-label="Phase navigation">
         <button
           onClick={goBack}
           disabled={!canGoBack}
@@ -1123,7 +1147,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
           disabled={!canProceed}
           style={{
             ...buttonStyle,
-            background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+            background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #0891b2 100%)` : 'rgba(255,255,255,0.1)',
             color: canProceed ? 'white' : colors.textMuted,
             cursor: canProceed ? 'pointer' : 'not-allowed',
           }}
@@ -1141,14 +1165,14 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Why Do GPUs Need Wide Memory Buses?
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               The physics of parallel data transfer
             </p>
           </div>
@@ -1185,21 +1209,25 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Start Predicting')}
       </div>
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
+    const predictProgress = prediction ? 1 : 0;
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What Determines Memory Bandwidth?</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               How do GPUs achieve such high bandwidth?
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '8px' }}>
+              Progress: {predictProgress} of 1 prediction made
             </p>
           </div>
 
@@ -1232,7 +1260,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(!!prediction, 'Test My Prediction')}
+        {renderBottomBar(!!prediction, 'Continue to Experiment')}
       </div>
     );
   }
@@ -1240,13 +1268,19 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Memory Bandwidth Lab</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust bus width and clock speed to see bandwidth change
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', fontStyle: 'italic' }}>
+              Observe how the data flow animation changes as you adjust parameters. Try adjusting sliders to see the effect on bandwidth.
+            </p>
+            <p style={{ color: colors.accent, fontSize: '12px', marginTop: '8px', background: 'rgba(6, 182, 212, 0.1)', padding: '8px 12px', borderRadius: '6px', display: 'inline-block' }}>
+              Real-world relevance: This exact calculation determines whether your GPU can run 4K games at 60fps or train AI models efficiently.
             </p>
           </div>
 
@@ -1266,7 +1300,15 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
                 step="64"
                 value={busWidth}
                 onChange={(e) => setBusWidth(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                onInput={(e) => setBusWidth(parseInt((e.target as HTMLInputElement).value))}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  cursor: 'pointer',
+                  accentColor: colors.accent,
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                }}
               />
             </div>
 
@@ -1281,7 +1323,15 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
                 step="100"
                 value={clockSpeed}
                 onChange={(e) => setClockSpeed(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                onInput={(e) => setClockSpeed(parseInt((e.target as HTMLInputElement).value))}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  cursor: 'pointer',
+                  accentColor: colors.accent,
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                }}
               />
             </div>
 
@@ -1339,6 +1389,60 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
                 {busWidth} bits x {clockSpeed} MHz x {memoryType === 'gddr6x' ? '4' : '2'} / 8 = {calculateBandwidth().toFixed(0)} GB/s
               </p>
             </div>
+
+            {/* Cause-effect explanation */}
+            <div style={{
+              background: 'rgba(6, 182, 212, 0.1)',
+              padding: '16px',
+              borderRadius: '8px',
+              marginTop: '12px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>
+                When you increase the bus width, bandwidth increases proportionally because more data lanes transfer data in parallel.
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                When you increase the clock speed, bandwidth increases linearly because each lane transfers data faster. Doubling either parameter doubles the total bandwidth.
+              </p>
+            </div>
+
+            {/* Before/After comparison */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '12px',
+              marginTop: '12px',
+            }}>
+              <div style={{
+                flex: 1,
+                background: colors.bgCard,
+                padding: '12px',
+                borderRadius: '8px',
+                textAlign: 'center',
+                border: `1px solid ${colors.memory}`,
+              }}>
+                <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 400, marginBottom: '4px' }}>128-bit Reference</p>
+                <p style={{ color: colors.memory, fontSize: '18px', fontWeight: 700 }}>
+                  {((128 * clockSpeed * (memoryType === 'gddr6x' ? 4 : 2)) / 8 / 1000).toFixed(0)} GB/s
+                </p>
+              </div>
+              <div style={{
+                flex: 1,
+                background: colors.bgCard,
+                padding: '12px',
+                borderRadius: '8px',
+                textAlign: 'center',
+                border: `1px solid ${colors.accent}`,
+              }}>
+                <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 400, marginBottom: '4px' }}>Current Config</p>
+                <p style={{ color: colors.accent, fontSize: '18px', fontWeight: 700 }}>
+                  {calculateBandwidth().toFixed(0)} GB/s
+                </p>
+                <p style={{ color: colors.success, fontSize: '12px', fontWeight: 600 }}>
+                  {(calculateBandwidth() / ((128 * clockSpeed * (memoryType === 'gddr6x' ? 4 : 2)) / 8 / 1000)).toFixed(1)}x faster
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         {renderBottomBar(true, 'Continue to Review')}
@@ -1349,9 +1453,10 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'both';
+    const predictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{
@@ -1364,10 +1469,55 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '8px' }}>
+              Your prediction: "{predictionLabel}"
+            </p>
             <p style={{ color: colors.textPrimary }}>
               Bandwidth = Width x Speed. Both matter! A 256-bit bus at 2000 MHz moves twice as
               much data as a 128-bit bus at the same speed - or a 256-bit bus at 1000 MHz.
             </p>
+          </div>
+
+          {/* Visual diagram SVG for review */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
+            <svg width="100%" height="160" viewBox="0 0 400 160" style={{ maxWidth: '400px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
+              <defs>
+                <linearGradient id="reviewBusGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#06b6d4" />
+                  <stop offset="100%" stopColor="#8b5cf6" />
+                </linearGradient>
+              </defs>
+              {/* Title */}
+              <text x={200} y={25} fill="#e2e8f0" fontSize="14" fontWeight="bold" textAnchor="middle">Bandwidth Formula Visualization</text>
+
+              {/* Bus Width visual */}
+              <rect x={30} y={45} width={100} height={40} rx={4} fill="#3b82f6" opacity="0.8" />
+              <text x={80} y={70} fill="#e2e8f0" fontSize="11" textAnchor="middle">Bus Width</text>
+
+              {/* Multiply sign */}
+              <text x={145} y={70} fill="#f59e0b" fontSize="20" fontWeight="bold" textAnchor="middle">x</text>
+
+              {/* Clock Speed visual */}
+              <rect x={160} y={45} width={100} height={40} rx={4} fill="#8b5cf6" opacity="0.8" />
+              <text x={210} y={70} fill="#e2e8f0" fontSize="11" textAnchor="middle">Clock Speed</text>
+
+              {/* Equals sign */}
+              <text x={280} y={70} fill="#f59e0b" fontSize="20" fontWeight="bold" textAnchor="middle">=</text>
+
+              {/* Bandwidth result */}
+              <rect x={300} y={45} width={80} height={40} rx={4} fill="url(#reviewBusGrad)" />
+              <text x={340} y={70} fill="#ffffff" fontSize="11" fontWeight="bold" textAnchor="middle">Bandwidth</text>
+
+              {/* Bottom explanation */}
+              <text x={200} y={110} fill="#94a3b8" fontSize="10" textAnchor="middle">256 bits x 2000 MHz x 2 (DDR) / 8 = 128 GB/s</text>
+              <text x={200} y={130} fill="#06b6d4" fontSize="11" textAnchor="middle">Both factors multiply together!</text>
+
+              {/* Legend */}
+              <g className="legend-panel">
+                <rect x={130} y={140} width={140} height={16} rx={4} fill="rgba(30, 41, 59, 0.9)" />
+                <text x={200} y={152} fill="#e2e8f0" fontSize="9" textAnchor="middle">Bandwidth = Width x Speed x DDR / 8</text>
+              </g>
+            </svg>
           </div>
 
           <div style={{
@@ -1405,8 +1555,9 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
+    const twistPredictProgress = twistPrediction ? 1 : 0;
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1414,6 +1565,42 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
             <p style={{ color: colors.textSecondary }}>
               How do AI chips achieve 2+ TB/s bandwidth?
             </p>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '8px' }}>
+              Progress: {twistPredictProgress} of 1 prediction made
+            </p>
+          </div>
+
+          {/* HBM vs GDDR comparison SVG visualization */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
+              {/* GDDR side */}
+              <text x={100} y={25} fill="#e2e8f0" fontSize="14" fontWeight="bold" textAnchor="middle">GDDR6</text>
+              <rect x={50} y={40} width={100} height={60} rx={4} fill="#3b82f6" stroke="#60a5fa" strokeWidth="1" />
+              <text x={100} y={75} fill="#e2e8f0" fontSize="10" textAnchor="middle">256-bit bus</text>
+              <text x={100} y={120} fill="#e2e8f0" fontSize="11" textAnchor="middle">~1 TB/s</text>
+              <text x={100} y={140} fill="#94a3b8" fontSize="9" textAnchor="middle">Side-by-side chips</text>
+
+              {/* VS */}
+              <text x={200} y={80} fill="#f59e0b" fontSize="16" fontWeight="bold" textAnchor="middle">vs</text>
+
+              {/* HBM side - stacked visualization */}
+              <text x={300} y={25} fill="#e2e8f0" fontSize="14" fontWeight="bold" textAnchor="middle">HBM3</text>
+              <g>
+                <rect x={260} y={70} width={80} height={15} rx={2} fill="#14b8a6" stroke="#2dd4bf" strokeWidth="0.5" />
+                <rect x={260} y={55} width={80} height={15} rx={2} fill="#0d9488" stroke="#2dd4bf" strokeWidth="0.5" />
+                <rect x={260} y={40} width={80} height={15} rx={2} fill="#0f766e" stroke="#2dd4bf" strokeWidth="0.5" />
+                <text x={300} y={63} fill="#e2e8f0" fontSize="8" textAnchor="middle">Stacked Dies</text>
+              </g>
+              <text x={300} y={105} fill="#e2e8f0" fontSize="10" textAnchor="middle">1024-bit bus</text>
+              <text x={300} y={120} fill="#e2e8f0" fontSize="11" textAnchor="middle">~3+ TB/s</text>
+              <text x={300} y={140} fill="#94a3b8" fontSize="9" textAnchor="middle">Vertically stacked</text>
+
+              {/* Legend */}
+              <g className="legend-panel">
+                <rect x={130} y={155} width={140} height={20} rx={4} fill="rgba(30, 41, 59, 0.9)" />
+                <text x={200} y={169} fill="#e2e8f0" fontSize="9" textAnchor="middle">Memory Architecture Comparison</text>
+              </g>
+            </svg>
           </div>
 
           <div style={{
@@ -1453,7 +1640,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(!!twistPrediction, 'Continue to Explore')}
       </div>
     );
   }
@@ -1461,7 +1648,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1550,9 +1737,10 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'hbm';
+    const twistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{
@@ -1565,10 +1753,56 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '8px' }}>
+              Your prediction: "{twistPredictionLabel}"
+            </p>
             <p style={{ color: colors.textPrimary }}>
               HBM stacks memory chips vertically and uses Through-Silicon Vias (TSVs) to create
               an extremely wide 1024+ bit bus in a tiny area, enabling massive bandwidth.
             </p>
+          </div>
+
+          {/* Visual diagram SVG for twist review */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
+              <defs>
+                <linearGradient id="twistHbmGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#0d9488" />
+                  <stop offset="100%" stopColor="#2dd4bf" />
+                </linearGradient>
+              </defs>
+              {/* Title */}
+              <text x={200} y={20} fill="#e2e8f0" fontSize="13" fontWeight="bold" textAnchor="middle">HBM: Vertical Stacking = Wider Bus</text>
+
+              {/* GDDR side - horizontal layout */}
+              <text x={80} y={45} fill="#e2e8f0" fontSize="11" textAnchor="middle">GDDR (Side-by-side)</text>
+              <rect x={20} y={55} width={30} height={25} rx={2} fill="#3b82f6" />
+              <rect x={55} y={55} width={30} height={25} rx={2} fill="#3b82f6" />
+              <rect x={90} y={55} width={30} height={25} rx={2} fill="#3b82f6" />
+              <rect x={125} y={55} width={30} height={25} rx={2} fill="#3b82f6" />
+              <text x={80} y={100} fill="#94a3b8" fontSize="9" textAnchor="middle">256-bit bus (limited by PCB space)</text>
+
+              {/* Arrow */}
+              <text x={200} y={75} fill="#f59e0b" fontSize="16" fontWeight="bold" textAnchor="middle">vs</text>
+
+              {/* HBM side - stacked */}
+              <text x={320} y={45} fill="#e2e8f0" fontSize="11" textAnchor="middle">HBM (Stacked)</text>
+              <rect x={290} y={80} width={60} height={12} rx={2} fill="url(#twistHbmGrad)" />
+              <rect x={290} y={66} width={60} height={12} rx={2} fill="url(#twistHbmGrad)" />
+              <rect x={290} y={52} width={60} height={12} rx={2} fill="url(#twistHbmGrad)" />
+              <text x={320} y={100} fill="#94a3b8" fontSize="9" textAnchor="middle">1024-bit bus (TSVs)</text>
+
+              {/* Key insight */}
+              <rect x={50} y={115} width={300} height={35} rx={6} fill="rgba(6, 182, 212, 0.2)" />
+              <text x={200} y={133} fill="#06b6d4" fontSize="10" fontWeight="bold" textAnchor="middle">Stacking memory vertically allows 4x wider bus</text>
+              <text x={200} y={146} fill="#e2e8f0" fontSize="9" textAnchor="middle">in the same footprint = 3-4x more bandwidth!</text>
+
+              {/* Legend */}
+              <g className="legend-panel">
+                <rect x={140} y={158} width={120} height={16} rx={4} fill="rgba(30, 41, 59, 0.9)" />
+                <text x={200} y={170} fill="#e2e8f0" fontSize="9" textAnchor="middle">HBM vs GDDR Architecture</text>
+              </g>
+            </svg>
           </div>
 
           <div style={{
@@ -1606,14 +1840,17 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', marginBottom: '8px' }}>
+              Progress: {transferCompleted.size} of {TRANSFER_APPLICATIONS.length} applications completed
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
               Complete all 4 applications to unlock the test
             </p>
           </div>
@@ -1633,7 +1870,8 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
                 <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
                 {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>{app.description}</p>
+              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 600, marginBottom: '12px' }}>{app.stats}</p>
               <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
               </div>
@@ -1643,19 +1881,35 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
                   style={{
                     ...buttonStyle,
                     padding: '8px 16px',
-                    background: 'transparent',
-                    border: `1px solid ${colors.accent}`,
-                    color: colors.accent,
+                    background: `linear-gradient(135deg, ${colors.accent} 0%, #0891b2 100%)`,
+                    border: 'none',
+                    color: 'white',
                     fontSize: '13px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  Reveal Answer
+                  Got It - Discover Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
+                <>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    onClick={() => {/* Already completed */}}
+                    style={{
+                      ...buttonStyle,
+                      padding: '8px 16px',
+                      background: `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
+                      border: 'none',
+                      color: 'white',
+                      fontSize: '13px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Got It
+                  </button>
+                </>
               )}
             </div>
           ))}
@@ -1669,7 +1923,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
           {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
             <div style={{
@@ -1734,13 +1988,13 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
     const allAnswered = testAnswers.every(a => a !== null);
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestIndex + 1} / {TEST_QUESTIONS.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestIndex + 1} of {TEST_QUESTIONS.length}</span>
             </div>
 
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
@@ -1879,7 +2133,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 50%, ${colors.bgPrimary} 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>

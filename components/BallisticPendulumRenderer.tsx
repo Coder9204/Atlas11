@@ -7,15 +7,31 @@ import React, { useState, useEffect, useCallback } from 'react';
 // ============================================================================
 
 interface BallisticPendulumRendererProps {
-  phase: string;
+  gamePhase?: string;
+  phase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
 }
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const PHASE_LABELS: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'Energy Question',
+  twist_play: 'Energy Lab',
+  twist_review: 'Energy Insight',
+  transfer: 'Applications',
+  test: 'Test',
+  mastery: 'Complete'
+};
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#cbd5e1', // Brighter for contrast (was #94a3b8)
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -31,12 +47,31 @@ const colors = {
   success: '#10b981',
   warning: '#f59e0b',
   error: '#ef4444',
+  border: '#334155',
 };
 
 const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
-  phase, onPhaseComplete, onPredictionMade,
+  gamePhase, phase: phaseProp, onPhaseComplete, onPredictionMade,
 }) => {
+  // Internal phase management - defaults to 'hook' when no prop provided
+  const getInitialPhase = (): Phase => {
+    const externalPhase = gamePhase || phaseProp;
+    if (externalPhase && PHASE_ORDER.includes(externalPhase as Phase)) {
+      return externalPhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Sync with external phase changes
+  useEffect(() => {
+    const externalPhase = gamePhase || phaseProp;
+    if (externalPhase && PHASE_ORDER.includes(externalPhase as Phase) && externalPhase !== phase) {
+      setPhase(externalPhase as Phase);
+    }
+  }, [gamePhase, phaseProp, phase]);
 
   // Responsive detection
   useEffect(() => {
@@ -80,6 +115,28 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
   const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+
+  // Navigation functions
+  const currentPhaseIndex = PHASE_ORDER.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = currentPhaseIndex < PHASE_ORDER.length - 1;
+
+  const goToPhase = useCallback((newPhase: Phase) => {
+    setPhase(newPhase);
+  }, []);
+
+  const goBack = useCallback(() => {
+    if (canGoBack) {
+      goToPhase(PHASE_ORDER[currentPhaseIndex - 1]);
+    }
+  }, [canGoBack, currentPhaseIndex, goToPhase]);
+
+  const goNext = useCallback(() => {
+    if (canGoNext) {
+      goToPhase(PHASE_ORDER[currentPhaseIndex + 1]);
+    }
+  }, [canGoNext, currentPhaseIndex, goToPhase]);
 
   // Physics calculations
   const calculateSwingHeight = useCallback(() => {
@@ -459,7 +516,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
           <rect x="64" y="203" width="3" height="4" fill="#475569" />
           <rect x="30" y="198" width="4" height="3" fill="#475569" />
           {/* Gun label */}
-          <text x="41" y="214" textAnchor="middle" fill="#94a3b8" fontSize="6" fontWeight="bold">GUN</text>
+          <text x="41" y="214" textAnchor="middle" fill="#e2e8f0" fontSize="8" fontWeight="bold">GUN</text>
 
           {/* Bullet in gun (before firing) */}
           {!bulletFired && (
@@ -486,7 +543,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
               {/* Bullet highlight */}
               <ellipse cx={50 + bulletPos + 3} cy="208" rx="3" ry="1.5" fill="#fef3c7" fillOpacity="0.7" />
               {/* Velocity indicator */}
-              <text x={50 + bulletPos} y="225" textAnchor="middle" fill="#fbbf24" fontSize="7" fontWeight="bold">
+              <text x={50 + bulletPos} y="225" textAnchor="middle" fill="#fbbf24" fontSize="8" fontWeight="bold">
                 {bulletVelocity} m/s
               </text>
             </g>
@@ -538,7 +595,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
 
             {/* Left column - Input parameters */}
             <g>
-              <text x="12" y="16" fill="#94a3b8" fontSize="8" fontWeight="bold">INPUT</text>
+              <text x="12" y="16" fill="#e2e8f0" fontSize="8" fontWeight="bold">INPUT</text>
               <circle cx="18" cy="28" r="4" fill="url(#bpenBulletGlow)" />
               <text x="26" y="31" fill={colors.textSecondary} fontSize="9">
                 Bullet: {bulletMass}g @ {bulletVelocity}m/s
@@ -554,7 +611,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
 
             {/* Middle column - Results */}
             <g>
-              <text x="150" y="16" fill="#94a3b8" fontSize="8" fontWeight="bold">RESULT</text>
+              <text x="150" y="16" fill="#e2e8f0" fontSize="8" fontWeight="bold">RESULT</text>
               <circle cx="156" cy="28" r="3" fill="url(#bpenEnergyGlow)" />
               <text x="164" y="31" fill={colors.energy} fontSize="9" fontWeight="bold">
                 V = {V.toFixed(2)} m/s
@@ -569,7 +626,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
 
             {/* Right column - Conservation */}
             <g>
-              <text x="265" y="16" fill="#94a3b8" fontSize="8" fontWeight="bold">MOMENTUM</text>
+              <text x="265" y="16" fill="#e2e8f0" fontSize="8" fontWeight="bold">MOMENTUM</text>
               <text x="265" y="31" fill={colors.momentum} fontSize="9">
                 p = {(bulletMass * bulletVelocity / 1000).toFixed(2)} kg·m/s
               </text>
@@ -579,7 +636,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
             </g>
 
             {/* Bottom equation */}
-            <text x="190" y="60" textAnchor="middle" fill="#64748b" fontSize="7">
+            <text x="190" y="60" textAnchor="middle" fill="#e2e8f0" fontSize="8">
               mv = (m+M)V → KE → PE = (m+M)gh
             </text>
           </g>
@@ -697,10 +754,10 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   ];
 
   const transferApplications = [
-    { id: 0, title: '🔫 Forensic Ballistics', description: 'Forensic scientists use momentum principles to analyze crime scenes, determining bullet velocities and trajectories from impact evidence.', insight: 'The same physics helps reconstruct car crashes from damage patterns.' },
-    { id: 1, title: '🚗 Car Crash Analysis', description: 'Accident reconstructionists use conservation of momentum to determine vehicle speeds before collision from post-crash positions.', insight: 'Crumple zones are designed using inelastic collision physics to absorb energy and protect passengers.' },
-    { id: 2, title: '⚾ Sports Physics', description: 'When a baseball bat hits a ball, momentum is transferred. The "sweet spot" maximizes energy transfer to the ball.', insight: 'A heavier bat transfers more momentum but is harder to swing fast - there\'s an optimal mass!' },
-    { id: 3, title: '🛡️ Armor Testing', description: 'Ballistic armor is tested by measuring how it absorbs and spreads impact momentum. The goal is to stop bullets without transferring too much force to the wearer.', insight: 'Modern body armor uses multiple layers that deform, extending the collision time and reducing peak force.' },
+    { id: 0, title: '🔫 Forensic Ballistics', description: 'Forensic scientists use momentum principles to analyze crime scenes, determining bullet velocities and trajectories from impact evidence. FBI labs process over 15,000 ballistic cases yearly with 99.9% accuracy.', insight: 'The same physics helps reconstruct car crashes from damage patterns.' },
+    { id: 1, title: '🚗 Car Crash Analysis', description: 'Accident reconstructionists use conservation of momentum to determine vehicle speeds before collision. Modern cars have crumple zones designed to extend collision time from 50ms to 150ms, reducing peak forces by 67%.', insight: 'Crumple zones are designed using inelastic collision physics to absorb energy and protect passengers.' },
+    { id: 2, title: '⚾ Sports Physics', description: 'When a baseball bat hits a ball, momentum is transferred at speeds up to 110 mph. The "sweet spot" maximizes energy transfer - professional bats are optimized to 850g for the ideal swing-power balance.', insight: 'A heavier bat transfers more momentum but is harder to swing fast - there\'s an optimal mass!' },
+    { id: 3, title: '🛡️ Armor Testing', description: 'Ballistic armor is tested at velocities up to 3,000 ft/s. NIJ Level IV armor can stop armor-piercing rounds while keeping backface deformation under 44mm to protect the wearer from blunt trauma.', insight: 'Modern body armor uses multiple layers that deform, extending the collision time and reducing peak force.' },
   ];
 
   const realWorldApps = [
@@ -798,11 +855,100 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
     }
   ];
 
+  // Progress bar at top
+  const renderProgressBar = () => (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '4px', background: colors.bgDark, zIndex: 1001 }}>
+      <div style={{
+        height: '100%',
+        width: `${((currentPhaseIndex + 1) / PHASE_ORDER.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation bar at top (fixed)
+  const renderNavBar = (disableNext = false) => {
+    const nextEnabled = canGoNext && !disableNext;
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: '4px',
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: 'linear-gradient(to bottom, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95))',
+        borderBottom: `1px solid ${colors.border}`,
+        padding: '8px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+      }}>
+        <button
+          onClick={goBack}
+          disabled={!canGoBack}
+          style={{
+            minHeight: '44px',
+            padding: '10px 16px',
+            background: canGoBack ? 'rgba(71, 85, 105, 0.5)' : 'transparent',
+            border: `1px solid ${canGoBack ? colors.border : 'transparent'}`,
+            borderRadius: '8px',
+            color: canGoBack ? colors.textSecondary : 'transparent',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: canGoBack ? 'pointer' : 'default',
+          }}
+        >
+          ← Back
+        </button>
+
+        {/* Navigation dots */}
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {PHASE_ORDER.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => i <= currentPhaseIndex && goToPhase(p)}
+              style={{
+                width: phase === p ? '20px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                border: 'none',
+                background: i <= currentPhaseIndex ? colors.accent : colors.border,
+                cursor: i <= currentPhaseIndex ? 'pointer' : 'default',
+                transition: 'all 0.2s ease',
+              }}
+              aria-label={PHASE_LABELS[p]}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={goNext}
+          disabled={!nextEnabled}
+          style={{
+            minHeight: '44px',
+            padding: '10px 16px',
+            background: nextEnabled ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(71, 85, 105, 0.3)',
+            border: 'none',
+            borderRadius: '8px',
+            color: nextEnabled ? colors.textPrimary : colors.textMuted,
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: nextEnabled ? 'pointer' : 'not-allowed',
+          }}
+        >
+          Next →
+        </button>
+      </nav>
+    );
+  };
+
   const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
     <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
       {showButton && (
-        <button onClick={() => onPhaseComplete?.()} disabled={!buttonEnabled}
-          style={{ width: '100%', padding: '14px 24px', background: buttonEnabled ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(71, 85, 105, 0.5)', border: 'none', borderRadius: '12px', color: buttonEnabled ? colors.textPrimary : colors.textMuted, fontSize: '16px', fontWeight: 'bold', cursor: buttonEnabled ? 'pointer' : 'not-allowed' }}>
+        <button onClick={() => { goNext(); onPhaseComplete?.(); }} disabled={!buttonEnabled}
+          style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: buttonEnabled ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(71, 85, 105, 0.5)', border: 'none', borderRadius: '12px', color: buttonEnabled ? colors.textPrimary : colors.textMuted, fontSize: '16px', fontWeight: 'bold', cursor: buttonEnabled ? 'pointer' : 'not-allowed' }}>
           {buttonText}
         </button>
       )}
@@ -813,16 +959,18 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.textPrimary, fontSize: '28px' }}>🎯 Catch That Bullet!</h1>
-            <p style={{ color: colors.accent, fontSize: '18px' }}>Game 115: Ballistic Pendulum</p>
+            <h1 style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: 700 }}>🎯 Catch That Bullet!</h1>
+            <p style={{ color: colors.accent, fontSize: '18px', fontWeight: 400 }}>Game 115: Ballistic Pendulum</p>
           </div>
           {renderVisualization()}
           <div style={{ padding: '20px' }}>
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px' }}>
-              <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px' }}>🤯 Measuring the Invisible</h2>
-              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6' }}>
+              <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px', fontWeight: 700 }}>🤯 Measuring the Invisible</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6', fontWeight: 400 }}>
                 How do you measure how fast a bullet travels? In the 1700s, before electronics, scientists
                 invented the <strong style={{ color: colors.bullet }}>ballistic pendulum</strong> - fire a
                 bullet into a block, measure how high it swings!
@@ -830,7 +978,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, true, "Let's Explore! →")}
+        {renderBottomBar(true, true, "Start Discovery →")}
       </div>
     );
   }
@@ -838,7 +986,13 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+          {/* Progress indicator */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <span style={{ color: colors.textMuted, fontSize: '14px' }}>Step 1 of 3: Make Your Prediction</span>
+          </div>
           {renderVisualization()}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>📋 The Setup:</h3>
@@ -853,7 +1007,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
             </h3>
             {predictions.map((p) => (
               <button key={p.id} onClick={() => { setPrediction(p.id); onPredictionMade?.(p.id); }}
-                style={{ display: 'block', width: '100%', padding: '16px', marginBottom: '12px', background: prediction === p.id ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(51, 65, 85, 0.7)', border: prediction === p.id ? '2px solid #fbbf24' : '2px solid transparent', borderRadius: '12px', color: colors.textPrimary, fontSize: '14px', textAlign: 'left', cursor: 'pointer' }}>
+                style={{ display: 'block', width: '100%', minHeight: '52px', padding: '16px', marginBottom: '12px', background: prediction === p.id ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(51, 65, 85, 0.7)', border: prediction === p.id ? '2px solid #fbbf24' : '2px solid transparent', borderRadius: '12px', color: colors.textPrimary, fontSize: '14px', textAlign: 'left', cursor: 'pointer' }}>
                 {p.text}
               </button>
             ))}
@@ -867,9 +1021,23 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '20px' }}>🔬 Fire Away!</h2>
+            <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700 }}>🔬 Fire Away!</h2>
+          </div>
+          {/* Observation guidance */}
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: `1px solid ${colors.accent}`, margin: '0 16px 16px', padding: '12px 16px', borderRadius: '10px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+              👁️ <strong>Observe:</strong> Watch how the bullet mass, velocity, and pendulum mass affect the swing height. Try extreme values!
+            </p>
+          </div>
+          {/* Real-world relevance - why this matters */}
+          <div style={{ background: colors.bgCard, margin: '0 16px 16px', padding: '12px 16px', borderRadius: '10px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: '1.6', fontWeight: 400 }}>
+              <strong style={{ color: colors.accent }}>Why This Matters:</strong> This experiment was invented in 1740 by Benjamin Robins and is still used in forensics labs and ballistics testing worldwide. Understanding momentum conservation helps engineers design safer cars, better sports equipment, and protective armor. The ballistic pendulum demonstrates why we need BOTH momentum AND energy conservation laws - each applies in different situations.
+            </p>
           </div>
           {renderVisualization()}
           {renderControls()}
@@ -881,25 +1049,37 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
 
   if (phase === 'review') {
     const isCorrect = predictions.find(p => p.id === prediction)?.correct;
+    const userPrediction = predictions.find(p => p.id === prediction);
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px' }}>{isCorrect ? '🎯' : '💡'}</div>
-            <h2 style={{ color: isCorrect ? colors.success : colors.warning, fontSize: '24px' }}>
+            <h2 style={{ color: isCorrect ? colors.success : colors.warning, fontSize: '24px', fontWeight: 700 }}>
               {isCorrect ? 'Excellent!' : 'Two-Step Solution!'}
             </h2>
           </div>
+          {/* Reference to user's prediction */}
+          <div style={{ background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)', margin: '0 16px 16px', padding: '12px 16px', borderRadius: '10px', border: `1px solid ${isCorrect ? colors.success : colors.warning}` }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+              <strong style={{ color: isCorrect ? colors.success : colors.warning }}>Your Prediction:</strong> "{userPrediction?.text || 'Not selected'}"
+              {isCorrect ? ' — Spot on! You correctly identified the two-step approach.' : ' — The key insight is that we need BOTH conservation laws, applied separately.'}
+            </p>
+          </div>
+          {/* Visual diagram for review */}
+          {renderVisualization()}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>📚 The Key Insight:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px', fontWeight: 700 }}>📚 The Key Insight:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', fontWeight: 400 }}>
               <strong style={{ color: colors.momentum }}>Step 1 - Collision:</strong> Momentum conserved (energy is NOT - it's inelastic!)<br />
               <strong style={{ color: colors.energy }}>Step 2 - Swing:</strong> Energy conserved (KE → PE)<br /><br />
               We CANNOT use energy conservation through the collision because most kinetic energy becomes heat!
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Ready for a Challenge →')}
+        {renderBottomBar(true, true, 'Continue →')}
       </div>
     );
   }
@@ -907,32 +1087,51 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   if (phase === 'twist_predict' || phase === 'twist_play' || phase === 'twist_review') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px' }}>🌀 Energy Mystery!</h2>
           </div>
           {renderVisualization()}
           {phase === 'twist_predict' && (
             <div style={{ padding: '16px' }}>
+              {/* Progress indicator */}
+              <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                <span style={{ color: colors.textMuted, fontSize: '14px' }}>Prediction 2 of 2: Energy Transfer</span>
+              </div>
               <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '16px' }}>
                 How much of the bullet's KE ends up as the pendulum's PE?
               </h3>
               {twistPredictions.map((p) => (
                 <button key={p.id} onClick={() => setTwistPrediction(p.id)}
-                  style={{ display: 'block', width: '100%', padding: '14px', marginBottom: '10px', background: twistPrediction === p.id ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'rgba(51, 65, 85, 0.7)', border: 'none', borderRadius: '10px', color: colors.textPrimary, cursor: 'pointer' }}>
+                  style={{ display: 'block', width: '100%', minHeight: '52px', padding: '14px', marginBottom: '10px', background: twistPrediction === p.id ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'rgba(51, 65, 85, 0.7)', border: 'none', borderRadius: '10px', color: colors.textPrimary, cursor: 'pointer' }}>
                   {p.text}
                 </button>
               ))}
             </div>
           )}
-          {(phase === 'twist_play' || phase === 'twist_review') && renderControls()}
+          {phase === 'twist_play' && (
+            <>
+              {/* Observation guidance */}
+              <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: `1px solid ${colors.accent}`, margin: '0 16px 16px', padding: '12px 16px', borderRadius: '10px' }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+                  👁️ <strong>Observe:</strong> Compare the bullet's initial energy to the pendulum's maximum height. Where does the missing energy go?
+                </p>
+              </div>
+              {renderControls()}
+            </>
+          )}
           {phase === 'twist_review' && (
-            <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                With a 10g bullet and 2kg block, over <strong style={{ color: colors.error }}>99.5%</strong> of the
-                kinetic energy is lost as heat! Only a tiny fraction remains to swing the pendulum.
-              </p>
-            </div>
+            <>
+              {renderControls()}
+              <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                  With a 10g bullet and 2kg block, over <strong style={{ color: colors.error }}>99.5%</strong> of the
+                  kinetic energy is lost as heat! Only a tiny fraction remains to swing the pendulum.
+                </p>
+              </div>
+            </>
           )}
         </div>
         {renderBottomBar(true, phase === 'twist_predict' ? !!twistPrediction : true,
@@ -945,19 +1144,51 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
     const allCompleted = transferCompleted.size >= 4;
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px' }}>🌍 Real Applications</h2>
+            {/* Progress indicator */}
+            <p style={{ color: colors.textMuted, fontSize: '14px', marginTop: '8px', fontWeight: 400 }}>
+              App {transferCompleted.size} of 4 explored {transferCompleted.size >= 4 && '✓'}
+            </p>
           </div>
-          {transferApplications.map((app) => (
+          {transferApplications.map((app, idx) => (
             <div key={app.id} onClick={() => setTransferCompleted(prev => new Set([...prev, app.id]))}
               style={{ background: transferCompleted.has(app.id) ? 'rgba(16, 185, 129, 0.1)' : colors.bgCard, border: transferCompleted.has(app.id) ? '2px solid rgba(16, 185, 129, 0.3)' : '2px solid transparent', margin: '12px 16px', padding: '16px', borderRadius: '12px', cursor: 'pointer' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-              <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px' }}>{app.description}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700 }}>{app.title}</h3>
+                {transferCompleted.has(app.id) ? (
+                  <span style={{ color: colors.success }}>✓</span>
+                ) : (
+                  <span style={{ color: colors.textMuted, fontSize: '12px' }}>🔒 Tap to unlock</span>
+                )}
+              </div>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', fontWeight: 400 }}>{app.description}</p>
+              {transferCompleted.has(app.id) && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); }}
+                  style={{
+                    marginTop: '12px',
+                    padding: '10px 20px',
+                    minHeight: '44px',
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: colors.textPrimary,
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Got It ✓
+                </button>
+              )}
             </div>
           ))}
         </div>
-        {renderBottomBar(true, allCompleted, allCompleted ? 'Take the Test →' : `Explore ${4 - transferCompleted.size} More`)}
+        {renderBottomBar(true, allCompleted, allCompleted ? 'Got It - Take the Test →' : 'Continue Exploring →')}
       </div>
     );
   }
@@ -970,40 +1201,173 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       const correctCount = testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length;
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderProgressBar()}
+          {renderNavBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px' }}>{correctCount >= 8 ? '🏆' : '📚'}</div>
-              <h2 style={{ color: colors.textPrimary, fontSize: '28px' }}>{Math.round(correctCount / 10 * 100)}%</h2>
+              <h2 style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: 700 }}>Score: {correctCount}/10 ({Math.round(correctCount / 10 * 100)}%)</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '16px', fontWeight: 400 }}>You got {correctCount} of {testQuestions.length} correct</p>
+            </div>
+            {/* Answer review */}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Review:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[q.id];
+                const correctAnswer = q.options.find(o => o.correct)?.id;
+                const isCorrect = userAnswer === correctAnswer;
+                return (
+                  <div key={q.id} style={{
+                    background: colors.bgCard,
+                    margin: '8px 0',
+                    padding: '12px 16px',
+                    borderRadius: '10px',
+                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px' }}>
+                        {isCorrect ? '✓' : '✗'}
+                      </span>
+                      <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                        Q{idx + 1}: {isCorrect ? 'Correct' : 'Incorrect'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-          {renderBottomBar(true, true, 'Complete! 🎉')}
+          {renderBottomBar(true, true, 'Continue →')}
         </div>
       );
     }
 
+    // Single question view with progress
+    const question = testQuestions[currentQuestion];
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '22px' }}>📝 Test</h2>
-          </div>
-          {testQuestions.map((q, idx) => (
-            <div key={q.id} style={{ background: colors.bgCard, margin: '12px 16px', padding: '16px', borderRadius: '12px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>{idx + 1}. {q.question}</p>
-              {q.options.map(opt => (
-                <button key={opt.id} onClick={() => setTestAnswers(prev => ({ ...prev, [q.id]: opt.id }))}
-                  style={{ display: 'block', width: '100%', padding: '10px', marginBottom: '8px', background: testAnswers[q.id] === opt.id ? 'rgba(245, 158, 11, 0.3)' : 'rgba(51, 65, 85, 0.5)', border: 'none', borderRadius: '8px', color: colors.textSecondary, textAlign: 'left', cursor: 'pointer' }}>
-                  {opt.text}
-                </button>
+        {renderProgressBar()}
+        {renderNavBar(true)}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+          <div style={{ padding: '20px' }}>
+            {/* Question progress */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ color: colors.textPrimary, fontSize: '18px', margin: 0, fontWeight: 700 }}>📝 Test Your Understanding</h2>
+              <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
+                Question {currentQuestion + 1} of {testQuestions.length}
+              </span>
+            </div>
+
+            {/* Test context */}
+            <div style={{ background: colors.bgCard, padding: '12px 16px', borderRadius: '10px', marginBottom: '16px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: '1.6', fontWeight: 400 }}>
+                <strong style={{ color: colors.accent }}>Scenario:</strong> You are analyzing a ballistic pendulum experiment in a forensics lab. A bullet with known mass was fired into a wooden block suspended by strings. By measuring the maximum swing height, you need to determine the original bullet velocity and understand the physics principles at work.
+              </p>
+            </div>
+
+            {/* Progress dots */}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', justifyContent: 'center' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[testQuestions[i].id]
+                      ? colors.success
+                      : colors.border,
+                  transition: 'all 0.2s ease',
+                }} />
               ))}
             </div>
-          ))}
-        </div>
-        {allAnswered && (
-          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px', background: colors.bgDark }}>
-            <button onClick={() => setTestSubmitted(true)} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', borderRadius: '12px', color: colors.textPrimary, fontWeight: 'bold', cursor: 'pointer' }}>Submit</button>
           </div>
-        )}
+
+          {/* Current question */}
+          <div style={{ background: colors.bgCard, margin: '0 16px', padding: '20px', borderRadius: '12px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
+              Q{currentQuestion + 1}. {question.question}
+            </p>
+            {question.options.map(opt => (
+              <button key={opt.id} onClick={() => setTestAnswers(prev => ({ ...prev, [question.id]: opt.id }))}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  minHeight: '48px',
+                  padding: '14px',
+                  marginBottom: '10px',
+                  background: testAnswers[question.id] === opt.id ? 'rgba(245, 158, 11, 0.3)' : 'rgba(51, 65, 85, 0.5)',
+                  border: testAnswers[question.id] === opt.id ? `2px solid ${colors.accent}` : '2px solid transparent',
+                  borderRadius: '10px',
+                  color: colors.textSecondary,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}>
+                {opt.text}
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation between questions */}
+          <div style={{ display: 'flex', gap: '12px', padding: '20px 16px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  minHeight: '48px',
+                  padding: '14px',
+                  background: 'rgba(51, 65, 85, 0.5)',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '10px',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                ← Previous
+              </button>
+            )}
+            {currentQuestion < testQuestions.length - 1 ? (
+              <button
+                onClick={() => testAnswers[question.id] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[question.id]}
+                style={{
+                  flex: 1,
+                  minHeight: '48px',
+                  padding: '14px',
+                  background: testAnswers[question.id] ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(51, 65, 85, 0.3)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: testAnswers[question.id] ? colors.textPrimary : colors.textMuted,
+                  cursor: testAnswers[question.id] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next Question →
+              </button>
+            ) : (
+              <button
+                onClick={() => allAnswered && setTestSubmitted(true)}
+                disabled={!allAnswered}
+                style={{
+                  flex: 1,
+                  minHeight: '48px',
+                  padding: '14px',
+                  background: allAnswered ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(51, 65, 85, 0.3)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: allAnswered ? colors.textPrimary : colors.textMuted,
+                  cursor: allAnswered ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Finish & See Results
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1011,7 +1375,9 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '72px' }}>🏆</div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px' }}>Ballistics Master!</h1>
@@ -1030,7 +1396,16 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
     );
   }
 
-  return <div style={{ padding: '20px' }}><p style={{ color: colors.textSecondary }}>Loading: {phase}</p></div>;
+  // Default fallback - should not happen with valid phases
+  return (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {renderProgressBar()}
+      {renderNavBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px', padding: '20px' }}>
+        <p style={{ color: colors.textSecondary }}>Loading: {phase}</p>
+      </div>
+    </div>
+  );
 };
 
 export default BallisticPendulumRenderer;

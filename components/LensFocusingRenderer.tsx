@@ -932,8 +932,13 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Lens Optics Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust focal length and object distance to see how images form.
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
+            This visualization shows how light rays bend through a convex lens to form images.
+            Watch how the image changes as you adjust the controls.
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+            When you increase the object distance, the image becomes smaller. When you decrease the focal length, light bends more sharply which affects where the image forms.
+            This is why camera lenses are used in photography - adjusting focus allows us to capture sharp images at different distances.
           </p>
 
           {/* Main visualization */}
@@ -964,6 +969,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
                   height: '8px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: colors.accent,
                 }}
               />
             </div>
@@ -988,6 +994,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
                   height: '8px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: colors.success,
                 }}
               />
             </div>
@@ -1122,6 +1129,11 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Thin Lens Equation
           </h2>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
+            As you observed in your experiment, the image location depends on where the object is placed relative to the focal length.
+            Your prediction about lens focusing was correct - the focal length determines exactly where a sharp image forms!
+          </p>
 
           <div style={{
             background: colors.bgCard,

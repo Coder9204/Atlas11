@@ -1149,7 +1149,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             Reflection Playground
           </h2>
           <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '24px', fontSize: typo.body }}>
-            Adjust the angle and observe how incidence always equals reflection
+            Adjust the angle and observe how incidence always equals reflection. This is why mirrors are used in everyday technology from vehicle mirrors to telescopes.
           </p>
 
           {renderReflectionVisualization()}
@@ -1167,6 +1167,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               <li>Set angle to <strong>45 degrees</strong> - light turns 90 degrees</li>
               <li>Toggle <strong>Virtual Image</strong> - see where the reflection appears to come from</li>
               <li>Notice the angles are always <strong>equal</strong> on both sides of the normal</li>
+              <li><strong>When you increase</strong> the incident angle, the reflected angle increases by the same amount - they are always equal</li>
             </ul>
           </div>
         </div>
@@ -1195,7 +1196,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               {wasCorrect ? 'Correct!' : 'Let\'s explore this!'}
             </h3>
             <p style={{ fontSize: typo.body, lineHeight: 1.6 }}>
-              The light bounces at <strong>30 degrees on the opposite side</strong> of the normal. This is the Law of Reflection: the angle of incidence equals the angle of reflection, always measured from the normal (perpendicular line).
+              {wasCorrect ? 'Your prediction was correct!' : 'As you observed in the experiment,'} the light bounces at <strong>30 degrees on the opposite side</strong> of the normal. This is the Law of Reflection: the angle of incidence equals the angle of reflection, always measured from the normal (perpendicular line).
             </p>
           </div>
 
@@ -1582,12 +1583,43 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               background: 'rgba(16, 185, 129, 0.1)',
               padding: '12px',
               borderRadius: '8px',
+              marginBottom: '16px',
             }}>
               <h4 style={{ color: colors.success, marginBottom: '8px', fontSize: typo.small, fontWeight: 700 }}>Future Impact:</h4>
               <p style={{ color: 'rgba(148,163,184,1)', fontSize: typo.small, margin: 0, lineHeight: 1.6 }}>
                 {app.futureImpact}
               </p>
             </div>
+
+            {/* Got It button for continuing to next app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                  const nextCompleted = [...newCompleted];
+                  nextCompleted[selectedApp + 1] = true;
+                  setCompletedApps(nextCompleted);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                color: colors.textPrimary,
+                fontSize: typo.body,
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: `0 2px 12px ${app.color}40`,
+              }}
+            >
+              Got It - {selectedApp < realWorldApps.length - 1 ? 'Continue' : 'Done'}
+            </button>
           </div>
         </div>
       </div>,
@@ -1647,7 +1679,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontSize: typo.heading, margin: 0 }}>Knowledge Test</h2>
-            <span style={{ color: colors.textMuted, fontSize: typo.body }}>{currentTestQuestion + 1}/10</span>
+            <span style={{ color: colors.textMuted, fontSize: typo.body }}>Question {currentTestQuestion + 1} of 10</span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>

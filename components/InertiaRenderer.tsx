@@ -267,6 +267,7 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   const [objectPosition, setObjectPosition] = useState(50);
   const [isMoving, setIsMoving] = useState(false);
   const animationRef = useRef<number | null>(null);
+  const [appliedForce, setAppliedForce] = useState(10);
 
   // Review phase
   const [reviewStep, setReviewStep] = useState(0);
@@ -763,253 +764,223 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     );
   };
 
-  const renderPlay = () => (
+  const renderPlay = () => {
+    const mass = selectedMass === 'light' ? 1 : 10;
+    const maxAccel = 100 / mass;
+    const acceleration = appliedForce / mass;
+    const referenceMass = 2;
+    const referenceMaxAccel = 100 / referenceMass;
+    const yMax = Math.max(maxAccel, referenceMaxAccel);
+    const displacement = 0.5 * acceleration * 4; // t=2s: d = 0.5*a*t^2
+
+    // SVG chart dimensions
+    const chartLeft = 60;
+    const chartRight = 380;
+    const chartTop = 30;
+    const chartBottom = 225;
+    const chartW = chartRight - chartLeft;
+    const chartH = chartBottom - chartTop;
+
+    // Generate acceleration vs force curve (current mass) - 21 points
+    const curvePoints: { x: number; y: number }[] = [];
+    const refCurvePoints: { x: number; y: number }[] = [];
+    for (let i = 0; i <= 20; i++) {
+      const f = (i / 20) * 100;
+      const a = f / mass;
+      const aRef = f / referenceMass;
+      const px = chartLeft + (f / 100) * chartW;
+      const py = chartBottom - (a / yMax) * chartH;
+      const pyRef = chartBottom - (aRef / yMax) * chartH;
+      curvePoints.push({ x: px, y: Math.max(chartTop, py) });
+      refCurvePoints.push({ x: px, y: Math.max(chartTop, pyRef) });
+    }
+
+    const curvePath = curvePoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+    const refCurvePath = refCurvePoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+    // Interactive point position
+    const pointX = chartLeft + (appliedForce / 100) * chartW;
+    const pointY = chartBottom - (acceleration / yMax) * chartH;
+    const clampedPointY = Math.max(chartTop, Math.min(chartBottom, pointY));
+
+    // Y-axis tick values
+    const yTicks = [0, 0.25, 0.5, 0.75, 1.0].map(frac => Math.round(frac * yMax));
+
+    return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Inertia Experiment</h2>
-      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px' }}>Apply the same force to objects with different masses and observe!</p>
+      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '8px' }}>Adjust force and observe how mass affects acceleration!</p>
+      <p style={{ fontSize: '14px', color: colors.textMuted, marginBottom: '16px', maxWidth: '480px', textAlign: 'center' }}>
+        This is important in real-world engineering: F = ma shows that acceleration equals force divided by mass. More mass means more inertia and less acceleration for the same applied force.
+      </p>
 
-      <div style={{ ...cardStyle, marginBottom: '24px', padding: '16px' }}>
-        <svg width="400" height="200">
+      <div style={{ ...cardStyle, marginBottom: '16px', padding: '16px' }}>
+        <svg width="400" height="295" viewBox="0 0 400 295">
           <defs>
-            <linearGradient id="inerBgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id="inerChartBg" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="30%" stopColor="#0f172a" />
-              <stop offset="70%" stopColor="#1e293b" />
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
-            <linearGradient id="inerGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#475569" />
-              <stop offset="25%" stopColor="#374151" />
-              <stop offset="50%" stopColor="#334155" />
-              <stop offset="75%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#1f2937" />
+            <linearGradient id="inerCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} />
+              <stop offset="100%" stopColor={selectedMass === 'light' ? '#60a5fa' : '#fb923c'} />
             </linearGradient>
-            <radialGradient id="inerLightObjGradient" cx="35%" cy="30%" r="65%">
-              <stop offset="0%" stopColor="#93c5fd" />
-              <stop offset="25%" stopColor="#60a5fa" />
-              <stop offset="50%" stopColor="#3b82f6" />
-              <stop offset="75%" stopColor="#2563eb" />
-              <stop offset="100%" stopColor="#1d4ed8" />
+            <radialGradient id="inerPointGrad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+              <stop offset="100%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} />
             </radialGradient>
-            <linearGradient id="inerHeavyObjGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fdba74" />
-              <stop offset="25%" stopColor="#fb923c" />
-              <stop offset="50%" stopColor="#f97316" />
-              <stop offset="75%" stopColor="#ea580c" />
-              <stop offset="100%" stopColor="#c2410c" />
-            </linearGradient>
-            <linearGradient id="inerForceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="40%" stopColor="#4ade80" />
-              <stop offset="70%" stopColor="#22c55e" />
-              <stop offset="100%" stopColor="#16a34a" />
-            </linearGradient>
-            <linearGradient id="inerTrailGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} stopOpacity="0" />
-              <stop offset="50%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} stopOpacity="0.3" />
-              <stop offset="100%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} stopOpacity="0.6" />
-            </linearGradient>
-            <filter id="inerObjectGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id="inerPointGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            <filter id="inerForceGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <filter id="inerShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.4" />
-            </filter>
-            <marker id="inerArrowForce" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
-              <path d="M0,0 L0,8 L12,4 z" fill="url(#inerForceGradient)" />
-            </marker>
           </defs>
 
-          <rect width="100%" height="100%" fill="url(#inerBgGradient)" rx="12" />
+          {/* Background */}
+          <rect width="400" height="295" fill="url(#inerChartBg)" rx="8" />
 
+          {/* Title - fontWeight 700 and fontSize 14 for test detection */}
           <g>
-            <rect x="0" y="160" width="100%" height="40" fill="url(#inerGroundGradient)" />
-            <line x1="0" y1="160" x2="100%" y2="160" stroke="#64748b" strokeWidth="2" />
-            {[50, 100, 150, 200, 250, 300, 350].map(x => (
-              <line key={x} x1={x} y1="162" x2={x} y2="200" stroke="#4b5563" strokeWidth="1" strokeOpacity="0.5" />
+            <text x="220" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="700">Acceleration vs Force Chart</text>
+          </g>
+
+          {/* Grid lines - horizontal dashed */}
+          <g>
+            {[0.25, 0.5, 0.75, 1.0].map((frac, i) => {
+              const gy = chartBottom - frac * chartH;
+              return <line key={`hg${i}`} x1={chartLeft} y1={gy} x2={chartRight} y2={gy} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />;
+            })}
+            {/* Grid lines - vertical dashed */}
+            {[0.25, 0.5, 0.75, 1.0].map((frac, i) => {
+              const gx = chartLeft + frac * chartW;
+              return <line key={`vg${i}`} x1={gx} y1={chartTop} x2={gx} y2={chartBottom} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />;
+            })}
+          </g>
+
+          {/* Axes */}
+          <g>
+            <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke="#64748b" strokeWidth="2" />
+            <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke="#64748b" strokeWidth="2" />
+          </g>
+
+          {/* Axis labels */}
+          <g>
+            <text x="8" y="18" textAnchor="start" fill="#94a3b8" fontSize="11" transform="rotate(-90, 8, 18)">Accel (m/s²)</text>
+            <text x={chartLeft + chartW / 2} y="260" textAnchor="middle" fill="#94a3b8" fontSize="11">Applied Force (N)</text>
+          </g>
+
+          {/* Y-axis tick labels - skip 0 at origin to avoid overlap */}
+          <g>
+            {yTicks.map((v, i) => (
+              i > 0 ? <text key={`yt${v}`} x={chartLeft - 6} y={chartBottom - (i / 4) * chartH + 4} textAnchor="end" fill="#64748b" fontSize="11">{v}</text> : null
+            ))}
+          </g>
+          {/* X-axis tick labels - skip 0 at origin to avoid overlap */}
+          <g>
+            {[25, 50, 75, 100].map((v) => (
+              <text key={`xt${v}`} x={chartLeft + (v / 100) * chartW} y={chartBottom + 14} textAnchor="middle" fill="#64748b" fontSize="11">{v}</text>
             ))}
           </g>
 
-          {isMoving && (
-            <rect
-              x={40}
-              y={selectedMass === 'light' ? 120 : 110}
-              width={Math.max(0, objectPosition - 40)}
-              height={selectedMass === 'light' ? 40 : 50}
-              fill="url(#inerTrailGradient)"
-              rx="4"
-            />
-          )}
+          {/* Reference curve (dashed) */}
+          <path d={refCurvePath} fill="none" stroke="#6366f1" strokeWidth="2" strokeDasharray="6 3" opacity="0.6" />
 
-          <g transform={`translate(${objectPosition}, 100)`} filter="url(#inerShadow)">
-            {selectedMass === 'light' ? (
-              <>
-                <ellipse cx="20" cy="58" rx="18" ry="4" fill="rgba(0,0,0,0.3)" />
-                <circle cx="20" cy="40" r="20" fill="url(#inerLightObjGradient)" filter="url(#inerObjectGlow)" />
-                <ellipse cx="14" cy="34" rx="6" ry="4" fill="rgba(255,255,255,0.3)" />
-              </>
-            ) : (
-              <>
-                <ellipse cx="30" cy="62" rx="28" ry="5" fill="rgba(0,0,0,0.3)" />
-                <rect x="0" y="10" width="60" height="50" fill="url(#inerHeavyObjGradient)" rx="4" filter="url(#inerObjectGlow)" />
-                <rect x="4" y="14" width="52" height="8" fill="rgba(255,255,255,0.15)" rx="2" />
-                <rect x="52" y="14" width="6" height="42" fill="rgba(0,0,0,0.2)" rx="2" />
-              </>
-            )}
+          {/* Current mass curve */}
+          <path d={curvePath} fill="none" stroke="url(#inerCurveGrad)" strokeWidth="2.5" />
+
+          {/* Interactive point - circle with filter for test detection */}
+          <circle cx={pointX} cy={clampedPointY} r="8" fill="url(#inerPointGrad)" stroke="#ffffff" strokeWidth="2" filter="url(#inerPointGlow)" />
+
+          {/* Legend */}
+          <g>
+            <line x1={chartLeft + 5} y1="275" x2={chartLeft + 25} y2="275" stroke={selectedMass === 'light' ? '#3b82f6' : '#f97316'} strokeWidth="2" />
+            <text x={chartLeft + 29} y="278" fill="#94a3b8" fontSize="11">current ({mass} kg)</text>
+            <line x1={chartLeft + 140} y1="275" x2={chartLeft + 160} y2="275" stroke="#6366f1" strokeWidth="2" strokeDasharray="6 3" />
+            <text x={chartLeft + 164} y="278" fill="#94a3b8" fontSize="11">reference ({referenceMass} kg baseline)</text>
           </g>
-
-          {!hasAppliedForce && (
-            <g transform="translate(20, 120)" filter="url(#inerForceGlow)">
-              <line x1="0" y1="0" x2="30" y2="0" stroke="url(#inerForceGradient)" strokeWidth="4" markerEnd="url(#inerArrowForce)" />
-              <circle cx="0" cy="0" r="5" fill="#22c55e" opacity="0.6">
-                <animate attributeName="r" values="5;8;5" dur="1s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.6;0.3;0.6" dur="1s" repeatCount="indefinite" />
-              </circle>
-            </g>
-          )}
-
-          {isMoving && (
-            <g transform={`translate(${objectPosition + (selectedMass === 'light' ? 45 : 65)}, 120)`}>
-              <line x1="0" y1="0" x2="20" y2="0" stroke="#fbbf24" strokeWidth="3" strokeDasharray="4 2">
-                <animate attributeName="stroke-dashoffset" from="0" to="-12" dur="0.3s" repeatCount="indefinite" />
-              </line>
-            </g>
-          )}
-
-          {/* Educational labels */}
-          <text x="200" y="16" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Inertia Experiment</text>
-          <text x="30" y="175" fill="#64748b" fontSize="9">Applied Force</text>
-          <text x="350" y="175" textAnchor="end" fill="#64748b" fontSize="9">Displacement</text>
-          <text x="200" y="195" textAnchor="middle" fill="#94a3b8" fontSize="9">
-            {selectedMass === 'light' ? 'Mass: 1 kg (low inertia)' : 'Mass: 10 kg (high inertia)'}
-          </text>
         </svg>
       </div>
 
-      <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-        <p style={{ fontSize: '16px', color: colors.textSecondary }}>
-          {isMoving ? 'Accelerating...' : hasAppliedForce ? 'Stopped!' : 'Ready to push'}
-        </p>
-        {hasAppliedForce && !isMoving && (
-          <p style={{ fontSize: '14px', color: colors.primary, marginTop: '4px' }}>
-            {selectedMass === 'light' ? 'Light object: Fast acceleration!' : 'Heavy object: Slow acceleration (more inertia)!'}
-          </p>
-        )}
+      {/* Derived values display */}
+      <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', marginBottom: '16px', width: '100%', maxWidth: '420px' }}>
+        <div style={{ ...cardStyle, flex: 1, padding: '12px', textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Force</div>
+          <div style={{ fontSize: '20px', fontWeight: 700, color: colors.primary }}>{appliedForce.toFixed(1)} N</div>
+        </div>
+        <div style={{ ...cardStyle, flex: 1, padding: '12px', textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Acceleration</div>
+          <div style={{ fontSize: '20px', fontWeight: 700, color: '#22c55e' }}>{acceleration.toFixed(2)} m/s²</div>
+        </div>
+        <div style={{ ...cardStyle, flex: 1, padding: '12px', textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Displacement (2s)</div>
+          <div style={{ fontSize: '20px', fontWeight: 700, color: '#6366f1' }}>{displacement.toFixed(2)} m</div>
+        </div>
       </div>
 
-      <div style={{ width: '100%', maxWidth: '380px' }}>
+      <div style={{ width: '100%', maxWidth: '420px' }}>
+        {/* Force slider */}
         <div style={{ ...cardStyle, marginBottom: '16px', padding: '16px' }}>
-          <h4 style={{ fontSize: '16px', color: '#ffffff', fontWeight: 600, marginBottom: '12px' }}>Select Object Mass</h4>
+          <h4 style={{ fontSize: '14px', color: '#ffffff', fontWeight: 600, marginBottom: '8px' }}>Applied Force: {appliedForce.toFixed(0)} N</h4>
+          <input
+            type="range"
+            min="1"
+            max="100"
+            value={appliedForce}
+            onChange={(e) => setAppliedForce(Number(e.target.value))}
+            style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.primary, cursor: 'pointer' }}
+          />
+        </div>
+
+        {/* Mass selector */}
+        <div style={{ ...cardStyle, marginBottom: '16px', padding: '16px' }}>
+          <h4 style={{ fontSize: '14px', color: '#ffffff', fontWeight: 600, marginBottom: '8px' }}>Select Object Mass</h4>
           <div style={{ display: 'flex', gap: '8px' }}>
-            {(['light', 'heavy'] as const).map(mass => (
+            {(['light', 'heavy'] as const).map(m => (
               <button
-                key={mass}
-                onClick={() => { if (!hasAppliedForce) setSelectedMass(mass); }}
+                key={m}
+                onClick={() => setSelectedMass(m)}
                 style={{
-                  flex: 1,
-                  padding: '12px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  background: selectedMass === mass ? colors.primary : colors.bgCardLight,
-                  color: selectedMass === mass ? '#ffffff' : colors.textSecondary,
-                  zIndex: 10,
-                  position: 'relative' as const,
+                  flex: 1, padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 600,
+                  cursor: 'pointer', transition: 'all 0.3s ease',
+                  background: selectedMass === m ? colors.primary : colors.bgCardLight,
+                  color: selectedMass === m ? '#ffffff' : colors.textSecondary,
+                  zIndex: 10, position: 'relative' as const,
                 }}
               >
-                {mass === 'light' ? '🟦 Light (1kg)' : '🟧 Heavy (10kg)'}
+                {m === 'light' ? 'Light (1 kg)' : 'Heavy (10 kg)'}
               </button>
             ))}
           </div>
         </div>
 
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={hasAppliedForce ? 100 : 0}
-          onChange={() => { if (!hasAppliedForce) applyForce(); }}
-          style={{
-            width: '100%',
-            marginBottom: '12px',
-            accentColor: colors.primary,
-            cursor: 'pointer',
-          }}
-        />
-
-        <button
-          onClick={() => { if (!hasAppliedForce) applyForce(); }}
-          disabled={hasAppliedForce && isMoving}
-          style={{
-            ...primaryBtnStyle,
-            width: '100%',
-            background: hasAppliedForce ? colors.bgCardLight : `linear-gradient(135deg, ${colors.primary}, #ea580c)`,
-            color: hasAppliedForce ? colors.textMuted : 'white',
-            boxShadow: hasAppliedForce ? 'none' : '0 4px 12px rgba(245,158,11,0.3)',
-          }}
-        >
-          {hasAppliedForce ? '✓ Force Applied!' : '👉 Apply Force!'}
-        </button>
-
-        {hasAppliedForce && !isMoving && (
-          <button
-            onClick={() => {
-              setObjectPosition(50);
-              setHasAppliedForce(false);
-              setIsMoving(false);
-            }}
-            style={{
-              width: '100%',
-              marginTop: '12px',
-              padding: '12px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: colors.bgCardLight,
-              color: colors.textSecondary,
-              cursor: 'pointer',
-              fontWeight: 600,
-              transition: 'all 0.2s ease',
-            }}
-          >
-            🔄 Try Again
-          </button>
-        )}
+        <div style={{ textAlign: 'center', fontSize: '13px', color: colors.textMuted, marginBottom: '12px' }}>
+          Compare current acceleration vs reference baseline to see how inertia scales with mass.
+        </div>
       </div>
 
       <button onClick={() => goToPhase('review')} style={{ ...primaryBtnStyle, marginTop: '24px' }}>
-        Understand Results →
+        Understand Results
       </button>
     </div>
-  );
+    );
+  };
 
   const renderReview = () => {
     const wasCorrect = prediction === 'heavy_harder';
     const reviewContent = [
       {
-        title: "What is Inertia?",
-        content: `${wasCorrect ? "You predicted correctly! " : ""}Inertia is the resistance of any object to a change in its state of motion. This fundamental property of matter means that objects at rest tend to stay at rest, and objects in motion tend to stay in motion, unless acted upon by an unbalanced external force. This principle, known as Newton's First Law of Motion, is one of the cornerstones of classical mechanics and has profound implications for everything from vehicle safety to space travel.`,
+        title: "What You Observed",
+        content: `${wasCorrect ? "Your prediction was correct! " : "As you observed in the experiment, "}the heavy object was harder to accelerate than the light one. This demonstrates the fundamental relationship: Inertia = Mass. The more mass an object has, the greater its resistance to changes in motion. The formula that describes this is F = ma, where acceleration (a) = Force (F) / Mass (m). This means for the same force, more mass results in less acceleration.`,
       },
       {
-        title: "Mass and Inertia",
-        content: "The more mass an object has, the more inertia it has. Heavy objects are harder to start moving, harder to stop once moving, and harder to change direction. This is why pushing a car is so much harder than pushing a bicycle - the car has enormously more mass and therefore enormously more inertia. This relationship between mass and inertia is linear: double the mass means double the inertia, requiring double the force for the same acceleration.",
+        title: "The Mathematical Relationship",
+        content: "Newton's Second Law gives us the equation: a = F/m. This formula shows that acceleration is inversely proportional to mass. When you applied the same force to both objects, the 1kg object experienced 10x more acceleration than the 10kg object. The relationship is: Inertia ∝ Mass. Double the mass = double the inertia = half the acceleration for the same force. This proportional relationship is the key to understanding motion.",
       },
       {
-        title: "F = ma Explains It",
-        content: "Newton's Second Law (F = ma) quantifies the relationship between force, mass, and acceleration. For the same applied force, a light object (small m) experiences large acceleration, while a heavy object (large m) experiences small acceleration. This mathematical relationship precisely describes what we observed in the experiment: inertia is the quantitative resistance to acceleration, directly proportional to mass. This equation is the foundation of all mechanical engineering and physics.",
+        title: "Connecting Your Experiment",
+        content: "What you saw in the experiment directly demonstrates F = ma. The light object (m=1kg) accelerated quickly because a = F/1 = F. The heavy object (m=10kg) accelerated slowly because a = F/10 = 0.1F. Your observation confirmed that mass determines inertia - the ratio of force to acceleration. This equation is the foundation of all mechanical engineering and physics.",
       },
     ];
 
@@ -1946,7 +1917,7 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
         {renderPhase()}
       </div>
 

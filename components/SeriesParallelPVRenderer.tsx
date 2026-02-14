@@ -314,7 +314,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
+    textSecondary: '#e2e8f0',
     textMuted: '#6B7280',
     border: '#2a2a3a',
   };
@@ -420,7 +420,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       const startY = (height - panelH) / 2;
 
       return (
-        <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
           {/* Wires - top rail */}
           <line
             x1={startX - 20}
@@ -535,7 +535,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       const miniH = panelH / 2;
 
       return (
-        <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
           {/* Left rail (positive) */}
           <line
             x1={startX - 30}
@@ -611,6 +611,45 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
     }
   };
 
+  // Legend component for SVG elements
+  const renderLegend = () => (
+    <div data-testid="legend" style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '16px',
+      justifyContent: 'center',
+      padding: '12px 16px',
+      background: colors.bgSecondary,
+      borderRadius: '8px',
+      marginTop: '12px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ width: '16px', height: '16px', background: colors.bgSecondary, border: `2px solid ${colors.border}`, borderRadius: '2px' }} />
+        <span style={{ ...typo.small, color: colors.textSecondary }}>Solar Panel</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ width: '16px', height: '16px', background: `${colors.warning}33`, border: `2px solid ${colors.warning}`, borderRadius: '2px' }} />
+        <span style={{ ...typo.small, color: colors.textSecondary }}>Shaded Panel</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ width: '12px', height: '12px', background: colors.error, borderRadius: '50%' }} />
+        <span style={{ ...typo.small, color: colors.textSecondary }}>Positive (+)</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ width: '12px', height: '12px', background: colors.textMuted, borderRadius: '50%' }} />
+        <span style={{ ...typo.small, color: colors.textSecondary }}>Negative (-)</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ width: '16px', height: '4px', background: colors.accent, borderRadius: '2px' }} />
+        <span style={{ ...typo.small, color: colors.textSecondary }}>Wire</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ width: '10px', height: '10px', background: colors.warning, borderRadius: '50%' }} />
+        <span style={{ ...typo.small, color: colors.textSecondary }}>Current Flow</span>
+      </div>
+    </div>
+  );
+
   // Progress bar component
   const renderProgressBar = () => (
     <div style={{
@@ -620,7 +659,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1001,
     }}>
       <div style={{
         height: '100%',
@@ -634,10 +673,16 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
   // Navigation dots
   const renderNavDots = () => (
     <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
       justifyContent: 'center',
       gap: '8px',
       padding: '16px 0',
+      background: colors.bgPrimary,
+      zIndex: 1000,
     }}>
       {phaseOrder.map((p, i) => (
         <button
@@ -651,6 +696,11 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            minHeight: '44px',
+            minWidth: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           aria-label={phaseLabels[p]}
         />
@@ -670,6 +720,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -741,12 +792,59 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
     );
   }
 
+  // Static diagram for predict phase
+  const PredictDiagram = () => {
+    const width = isMobile ? 320 : 400;
+    const height = 180;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Series row */}
+        <text x={width / 2} y={20} fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="600">Series vs Parallel Wiring</text>
+
+        {/* Series diagram */}
+        <text x={20} y={55} fill={colors.warning} fontSize="11" fontWeight="600">SERIES</text>
+        {[0, 1, 2, 3].map(i => (
+          <g key={`s-${i}`}>
+            <rect x={60 + i * 50} y={40} width={40} height={30} fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" rx="3" />
+            <text x={80 + i * 50} y={60} fill={colors.accent} fontSize="10" textAnchor="middle">40V</text>
+            {i < 3 && <line x1={100 + i * 50} y1={55} x2={110 + i * 50} y2={55} stroke={colors.accent} strokeWidth="2" />}
+          </g>
+        ))}
+        <text x={280} y={60} fill={colors.textPrimary} fontSize="11" fontWeight="600">= 160V</text>
+
+        {/* Parallel diagram */}
+        <text x={20} y={110} fill={colors.success} fontSize="11" fontWeight="600">PARALLEL</text>
+        {[0, 1, 2, 3].map(i => (
+          <g key={`p-${i}`}>
+            <rect x={60 + i * 50} y={95} width={40} height={30} fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" rx="3" />
+            <text x={80 + i * 50} y={115} fill={colors.accent} fontSize="10" textAnchor="middle">10A</text>
+          </g>
+        ))}
+        {/* Parallel bus bars */}
+        <line x1={60} y1={130} x2={260} y2={130} stroke={colors.success} strokeWidth="3" />
+        <line x1={60} y1={90} x2={260} y2={90} stroke={colors.success} strokeWidth="3" />
+        {[0, 1, 2, 3].map(i => (
+          <g key={`pv-${i}`}>
+            <line x1={80 + i * 50} y1={90} x2={80 + i * 50} y2={95} stroke={colors.success} strokeWidth="2" />
+            <line x1={80 + i * 50} y1={125} x2={80 + i * 50} y2={130} stroke={colors.success} strokeWidth="2" />
+          </g>
+        ))}
+        <text x={280} y={115} fill={colors.textPrimary} fontSize="11" fontWeight="600">= 40A</text>
+
+        {/* Bottom labels */}
+        <text x={width / 4} y={165} fill={colors.warning} fontSize="10" textAnchor="middle">160V x 10A = 1600W</text>
+        <text x={3 * width / 4} y={165} fill={colors.success} fontSize="10" textAnchor="middle">40V x 40A = 1600W</text>
+      </svg>
+    );
+  };
+
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
       { id: 'a', text: 'Series produces more total power because voltage adds up' },
       { id: 'b', text: 'Parallel produces more total power because current adds up' },
-      { id: 'c', text: 'Both produce the same total power—P = V × I is equal either way' },
+      { id: 'c', text: 'Both produce the same total power—P = V x I is equal either way' },
     ];
 
     return (
@@ -754,6 +852,8 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -766,7 +866,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
@@ -774,25 +874,16 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             You have four identical 400W solar panels. Does wiring them in series or parallel produce more power?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram for predict phase */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
             display: 'flex',
-            justifyContent: 'space-around',
-            flexWrap: 'wrap',
-            gap: '20px',
+            justifyContent: 'center',
           }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>➡️➡️➡️➡️</div>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Series: 160V × 10A</p>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>⬇️⬇️⬇️⬇️</div>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Parallel: 40V × 40A</p>
-            </div>
+            <PredictDiagram />
           </div>
 
           {/* Options */}
@@ -809,6 +900,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -837,7 +929,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test My Prediction →
+              Test My Prediction
             </button>
           )}
         </div>

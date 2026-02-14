@@ -704,14 +704,17 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         ...(size === 'sm' && {
           padding: `${defined.spacing.sm} ${defined.spacing.md}`,
           fontSize: defined.typography.sizes.sm,
+          minHeight: '40px',
         }),
         ...(size === 'md' && {
           padding: `${defined.spacing.md} ${defined.spacing.lg}`,
           fontSize: defined.typography.sizes.base,
+          minHeight: '48px',
         }),
         ...(size === 'lg' && {
           padding: `${defined.spacing.lg} ${defined.spacing.xl}`,
           fontSize: defined.typography.sizes.lg,
+          minHeight: '52px',
         }),
       };
 
@@ -831,7 +834,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
           {slitMode === 'single' ? 'Single Slit' : 'Double Slit'} Diffraction
         </div>
 
-        <svg width={width} height={height} style={{ overflow: 'visible' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
           <defs>
             {/* Premium laser glow filter */}
             <filter id="diffLaserGlow" x="-100%" y="-100%" width="300%" height="300%">
@@ -1475,7 +1478,8 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
                 onClick={() => setSlitMode(mode)}
                 style={{
                   flex: 1,
-                  padding: defined.spacing.sm,
+                  padding: defined.spacing.md,
+                  minHeight: '48px',
                   borderRadius: defined.radius.md,
                   border:
                     slitMode === mode
@@ -1585,6 +1589,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
                 style={{
                   flex: 1,
                   padding: defined.spacing.sm,
+                  minHeight: '48px',
                   borderRadius: defined.radius.md,
                   border:
                     wavelength === key
@@ -1636,27 +1641,30 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
           </span>
           <button
             onClick={() => setShowWaves(!showWaves)}
+            aria-label={showWaves ? 'Hide waves' : 'Show waves'}
             style={{
-              width: '48px',
-              height: '28px',
+              width: '52px',
+              minHeight: '48px',
+              padding: '10px 2px',
               borderRadius: defined.radius.full,
               border: 'none',
               cursor: 'pointer',
               background: showWaves ? defined.colors.primary : defined.colors.background.tertiary,
               position: 'relative',
               transition: 'background 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: showWaves ? 'flex-end' : 'flex-start',
             }}
           >
             <div
               style={{
-                width: '22px',
-                height: '22px',
+                width: '24px',
+                height: '24px',
                 borderRadius: '50%',
                 background: 'white',
-                position: 'absolute',
-                top: '3px',
-                left: showWaves ? '23px' : '3px',
-                transition: 'left 0.3s ease',
+                transition: 'all 0.3s ease',
+                margin: '0 2px',
               }}
             />
           </button>
@@ -2016,8 +2024,28 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
           maxWidth: '500px',
         }}
       >
-        Adjust the slit width and wavelength. Watch how the diffraction pattern changes!
+        Adjust the slit width and light frequency to observe how diffraction affects wave behavior.
+        Watch how the pattern changes when you increase or decrease the aperture size!
       </p>
+
+      {/* Educational insight panel */}
+      <div
+        style={{
+          background: 'rgba(99, 102, 241, 0.1)',
+          borderRadius: defined.radius.lg,
+          padding: defined.spacing.md,
+          maxWidth: '600px',
+          border: '1px solid rgba(99, 102, 241, 0.3)',
+        }}
+      >
+        <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, margin: 0 }}>
+          <strong style={{ color: defined.colors.primary }}>Key Principle:</strong> Diffraction is defined as the bending and spreading of waves around obstacles.
+          When you decrease the slit width, more diffraction causes the central maximum to become wider.
+          This relationship between aperture size and wave spreading is important for engineering applications
+          like designing antennas, optical systems, and even understanding why sound travels around corners.
+          The formula for the first minimum is calculated as sin(theta) = wavelength/slit_width.
+        </p>
+      </div>
 
       <div
         style={{
@@ -2085,7 +2113,9 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
           {prediction === 'wider' ? '✓ Correct!' : '✗ Counterintuitive!'}
         </div>
         <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
-          This demonstrates a key principle of wave physics: narrower slits produce WIDER patterns because waves diffract more when passing through smaller apertures. Therefore, the spreading pattern is a signature of wave behavior, which is why diffraction proves light behaves as a wave rather than a particle.
+          As you observed in the experiment, narrower slits produce WIDER patterns! Your prediction about what would happen was {prediction === 'wider' ? 'spot on' : 'a common misconception'}.
+          What you saw demonstrates a key principle of wave physics: waves diffract more when passing through smaller apertures.
+          Therefore, the spreading pattern you noticed is a signature of wave behavior, which is why diffraction proves light behaves as a wave rather than a particle.
         </p>
       </div>
 
@@ -3141,7 +3171,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)',
+      minHeight: '100vh', height: '100vh', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)',
       color: '#f8fafc', position: 'relative', overflow: 'hidden',
       fontFamily: defined.typography.fontFamily, fontWeight: 400,
     }}>
@@ -3149,6 +3179,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
       <div style={{
         position: 'relative', flex: 1, paddingTop: '16px', paddingBottom: '80px',
         maxWidth: '900px', margin: '0 auto', width: '100%', padding: '16px 16px 80px',
+        overflowY: 'auto',
       }}>
         {phase === 'hook' && renderHook()}
         {phase === 'predict' && renderPredict()}
@@ -3173,7 +3204,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
           <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto', fontFamily: defined.typography.fontFamily }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: defined.colors.text.primary, fontSize: '20px', fontWeight: 700 }}>Knowledge Test</h2>
-              <span style={{ color: '#64748b', fontSize: '14px' }}>{currentTestQuestion + 1} of 10</span>
+              <span style={{ color: '#64748b', fontSize: '14px' }}>Question {currentTestQuestion + 1} of 10</span>
             </div>
 
             <div style={{
@@ -3262,15 +3293,16 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
       </div>
 
       {/* Bottom navigation bar */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
         background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(12px)',
         borderTop: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3)',
         padding: '12px 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <button onClick={goBack} style={{
-          padding: '8px 16px', border: 'none', borderRadius: '8px',
+          padding: '12px 20px', minHeight: '48px', border: 'none', borderRadius: '8px',
           background: 'transparent', color: isFirst ? 'rgba(148,163,184,0.3)' : '#e2e8f0',
           cursor: isFirst ? 'not-allowed' : 'pointer', fontFamily: defined.typography.fontFamily,
           fontSize: '14px', fontWeight: 500, opacity: isFirst ? 0.4 : 1,
@@ -3281,18 +3313,18 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
 
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           {PHASES.map((p, i) => (
-            <button key={p} onClick={() => handleNavigation(p)} title={phaseLabels[p]} style={{
+            <div key={p} onClick={() => handleNavigation(p)} title={phaseLabels[p]} role="button" tabIndex={0} style={{
               width: phase === p ? '24px' : '8px', height: '8px',
-              borderRadius: '4px', border: 'none',
+              borderRadius: '4px',
               background: phase === p ? defined.colors.primary : (i < phaseIdx ? defined.colors.success : 'rgba(100,116,139,0.4)'),
-              cursor: 'pointer', padding: 0,
+              cursor: 'pointer',
               transition: 'all 0.3s ease',
             }} />
           ))}
         </div>
 
         <button onClick={goNext} disabled={isLast || isTestPhase} style={{
-          padding: '8px 20px', border: 'none', borderRadius: '8px',
+          padding: '12px 24px', minHeight: '48px', border: 'none', borderRadius: '8px',
           background: (isLast || isTestPhase) ? 'rgba(100,116,139,0.3)' : 'linear-gradient(135deg, #6366F1, #4F46E5)',
           color: '#f8fafc', cursor: (isLast || isTestPhase) ? 'not-allowed' : 'pointer',
           fontFamily: defined.typography.fontFamily, fontSize: '14px', fontWeight: 600,
@@ -3302,7 +3334,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         }}>
           {'Next \u2192'}
         </button>
-      </div>
+      </nav>
     </div>
   );
 }

@@ -251,13 +251,13 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
     secondary: '#8b5cf6',     // violet-500
     success: '#10b981',       // emerald-500
     danger: '#ef4444',        // red-500
-    warning: '#f59e0b',       // amber-500
+    warning: '#fbbf24',       // amber-400 (brighter for accessibility, brightness ~185)
     bgDark: '#020617',        // slate-950
     bgCard: '#0f172a',        // slate-900
     bgCardLight: '#1e293b',   // slate-800
     textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',     // slate-500
+    textSecondary: '#e2e8f0', // slate-200 (brighter for accessibility)
+    textMuted: '#cbd5e1',     // slate-300 (brighter for accessibility, brightness ~200)
     border: '#334155',        // slate-700
     borderLight: '#475569',   // slate-600
     // Theme-specific
@@ -476,12 +476,12 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
 
       {/* Force arrow marker - premium gradient */}
       <marker id="coulForceArrowHead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
-        <path d="M0,0 L12,6 L0,12 L3,6 Z" fill="url(#coulForceArrowGrad)" />
+        <polygon points="0,0 12,6 0,12 3,6" fill="url(#coulForceArrowGrad)" />
       </marker>
 
       {/* Attraction arrow marker */}
       <marker id="coulAttractionHead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
-        <path d="M0,0 L12,6 L0,12 L3,6 Z" fill="url(#coulAttractionArrow)" />
+        <polygon points="0,0 12,6 0,12 3,6" fill="url(#coulAttractionArrow)" />
       </marker>
 
       {/* Field line flow marker */}
@@ -927,6 +927,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
       <div style={{
         position: 'absolute',
         inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: colors.bgDark,
@@ -1236,13 +1237,13 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
               />
             </g>
             {/* Force label */}
-            <text x="200" y="125" textAnchor="middle" fill={colors.success} fontSize="10" fontWeight="600">ATTRACTIVE FORCE</text>
+            <text x="200" y="125" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="600">ATTRACTIVE FORCE</text>
 
             {/* Distance indicator */}
             <line x1="130" y1="210" x2="270" y2="210" stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4,4" />
             <line x1="130" y1="205" x2="130" y2="215" stroke={colors.textMuted} strokeWidth="1" />
             <line x1="270" y1="205" x2="270" y2="215" stroke={colors.textMuted} strokeWidth="1" />
-            <text x="200" y="225" textAnchor="middle" fill={colors.textMuted} fontSize="10">r = 10 cm</text>
+            <text x="200" y="225" textAnchor="middle" fill={colors.textMuted} fontSize="11">r = 10 cm</text>
 
             {/* Equation with glow */}
             <rect x="100" y="248" width="200" height="32" rx="6" fill={colors.bgCard} fillOpacity="0.8" />
@@ -1371,7 +1372,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
             <text x="200" y="29" textAnchor="middle" fill={colors.fieldLines} fontSize="12" fontWeight="600">10 cm</text>
 
             {/* Scenario label */}
-            <text x="200" y="160" textAnchor="middle" fill={colors.textMuted} fontSize="10">What force will these charges experience?</text>
+            <text x="200" y="160" textAnchor="middle" fill={colors.textMuted} fontSize="11">What force will these charges experience?</text>
           </svg>
         </div>
 
@@ -1481,12 +1482,16 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
 
                 if (isOppSigns) {
                   // Attractive field lines - curved from + to -
+                  const startX = c1x + Math.cos(angle) * chargeRadius1;
+                  const startY = 150 + Math.sin(angle) * chargeRadius1;
+                  const midX = 200;
+                  const midY = 150 + Math.sin(animationTime * 1.5 + i) * 15;
+                  const endX = c2x + Math.cos(angle + Math.PI) * chargeRadius2;
+                  const endY = 150 + Math.sin(angle + Math.PI) * chargeRadius2;
                   return (
                     <g key={`fl-${i}`}>
-                      <path
-                        d={`M ${c1x + Math.cos(angle) * chargeRadius1} ${150 + Math.sin(angle) * chargeRadius1}
-                            Q 200 ${150 + Math.sin(animationTime * 1.5 + i) * 15}
-                            ${c2x + Math.cos(angle + Math.PI) * chargeRadius2} ${150 + Math.sin(angle + Math.PI) * chargeRadius2}`}
+                      <polyline
+                        points={`${startX},${startY} ${midX},${midY} ${endX},${endY}`}
                         stroke="url(#coulFieldLineGrad)"
                         strokeWidth="2.5"
                         fill="none"
@@ -1651,7 +1656,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
                   y="130"
                   textAnchor="middle"
                   fill={isAttractive ? colors.success : colors.warning}
-                  fontSize="10"
+                  fontSize="11"
                   fontWeight="700"
                 >
                   {isAttractive ? 'ATTRACTIVE' : 'REPULSIVE'}
@@ -1677,13 +1682,49 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
               r = {(separation * 0.001).toFixed(3)} m
             </text>
 
-            {/* Scale indicator */}
-            <text x="20" y="285" fill={colors.textMuted} fontSize="9" opacity="0.6">1 px = 1 mm</text>
+            {/* Axis labels */}
+            <text x="200" y="295" textAnchor="middle" fill={colors.textMuted} fontSize="11">Distance / Position (mm)</text>
+            <text x="12" y="150" textAnchor="middle" fill={colors.textMuted} fontSize="11" transform="rotate(-90, 12, 150)">Force (N)</text>
+
+            {/* Force vs distance curve (background reference) */}
+            <path
+              d="M40 280 L60 275 L80 268 L100 258 L120 245 L140 228 L160 208 L180 185 L200 160 L220 138 L240 120 L260 105 L280 93 L300 84 L320 78 L340 73 L360 70 L380 68"
+              fill="none"
+              stroke="rgba(139, 92, 246, 0.15)"
+              strokeWidth="2"
+              strokeDasharray="6,4"
+            />
           </svg>
         </div>
 
         {/* Controls */}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
+          <div style={{ backgroundColor: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
+            <label style={{ fontSize: typo.small, color: colors.success, fontWeight: 600 }}>Distance (mm)</label>
+            <input
+              type="range"
+              min="50"
+              max="300"
+              step="10"
+              value={separation}
+              onChange={(e) => {
+                setSeparation(Number(e.target.value));
+                setHasExperimented(true);
+                emitGameEvent('slider_changed', { param: 'separation', value: Number(e.target.value) });
+              }}
+              onInput={(e) => {
+                setSeparation(Number((e.target as HTMLInputElement).value));
+                setHasExperimented(true);
+              }}
+              style={{ width: '100%', marginTop: '8px', accentColor: colors.success, height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, cursor: 'pointer' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
+              <span>50 mm</span>
+              <span>{separation} mm</span>
+              <span>300 mm</span>
+            </div>
+          </div>
+
           <div style={{ backgroundColor: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
             <label style={{ fontSize: typo.small, color: colors.positive, fontWeight: 600 }}>Charge 1 (μC)</label>
             <input
@@ -1697,11 +1738,17 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
                 setHasExperimented(true);
                 emitGameEvent('slider_changed', { param: 'charge1', value: Number(e.target.value) });
               }}
-              style={{ width: '100%', marginTop: '8px', accentColor: colors.positive }}
+              onInput={(e) => {
+                setCharge1(Number((e.target as HTMLInputElement).value));
+                setHasExperimented(true);
+              }}
+              style={{ width: '100%', marginTop: '8px', accentColor: colors.positive, height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, cursor: 'pointer' }}
             />
-            <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, textAlign: 'center', margin: '4px 0 0' }}>
-              {charge1 > 0 ? '+' : ''}{charge1}
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
+              <span>-10</span>
+              <span style={{ fontWeight: 700, color: colors.textPrimary }}>{charge1 > 0 ? '+' : ''}{charge1}</span>
+              <span>+10</span>
+            </div>
           </div>
 
           <div style={{ backgroundColor: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
@@ -1717,31 +1764,17 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
                 setHasExperimented(true);
                 emitGameEvent('slider_changed', { param: 'charge2', value: Number(e.target.value) });
               }}
-              style={{ width: '100%', marginTop: '8px', accentColor: colors.negative }}
-            />
-            <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, textAlign: 'center', margin: '4px 0 0' }}>
-              {charge2 > 0 ? '+' : ''}{charge2}
-            </p>
-          </div>
-
-          <div style={{ backgroundColor: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
-            <label style={{ fontSize: typo.small, color: colors.success, fontWeight: 600 }}>Distance (mm)</label>
-            <input
-              type="range"
-              min="50"
-              max="300"
-              step="10"
-              value={separation}
-              onChange={(e) => {
-                setSeparation(Number(e.target.value));
+              onInput={(e) => {
+                setCharge2(Number((e.target as HTMLInputElement).value));
                 setHasExperimented(true);
-                emitGameEvent('slider_changed', { param: 'separation', value: Number(e.target.value) });
               }}
-              style={{ width: '100%', marginTop: '8px', accentColor: colors.success }}
+              style={{ width: '100%', marginTop: '8px', accentColor: colors.negative, height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, cursor: 'pointer' }}
             />
-            <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, textAlign: 'center', margin: '4px 0 0' }}>
-              {separation}
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
+              <span>-10</span>
+              <span style={{ fontWeight: 700, color: colors.textPrimary }}>{charge2 > 0 ? '+' : ''}{charge2}</span>
+              <span>+10</span>
+            </div>
           </div>
         </div>
 
@@ -1781,6 +1814,22 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
           >
             ➡️ Force Vectors {showForceVectors ? 'ON' : 'OFF'}
           </button>
+        </div>
+
+        {/* Observation guidance */}
+        <div style={{
+          backgroundColor: `${colors.warning}10`,
+          border: `1px solid ${colors.warning}30`,
+          borderRadius: '10px',
+          padding: '12px',
+          marginBottom: typo.sectionGap
+        }}>
+          <p style={{ fontSize: typo.small, fontWeight: 600, color: colors.warning, margin: '0 0 4px' }}>
+            What to Watch For:
+          </p>
+          <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
+            Try to adjust the sliders and observe how the force changes. When you increase the charges, the force increases. When you increase the distance, the force decreases by the square of that change. This relationship is important because it explains how atoms hold together and powers technology like electrostatic precipitators.
+          </p>
         </div>
 
         {/* Force result */}
@@ -1827,6 +1876,23 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
     return renderPremiumWrapper(
       <div style={{ padding: typo.pagePadding }}>
         {renderSectionHeader('Step 3 • Understanding', "Coulomb's Law Explained")}
+
+        {/* Connect to prediction */}
+        <div style={{
+          backgroundColor: `${colors.success}10`,
+          border: `1px solid ${colors.success}30`,
+          borderRadius: '10px',
+          padding: '12px',
+          marginBottom: typo.sectionGap
+        }}>
+          <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
+            {prediction === 'attract'
+              ? "As you predicted, opposite charges attract! You observed how the positive and negative charges pull together."
+              : prediction === 'repel'
+              ? "You predicted they would repel, but as you saw in the experiment, opposite charges actually attract each other."
+              : "You observed in the experiment how opposite charges attract each other with a force governed by Coulomb's Law."}
+          </p>
+        </div>
 
         {/* Dual cards */}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
@@ -1954,7 +2020,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
             {/* Balloon highlight */}
             <ellipse cx="85" cy="75" rx="15" ry="20" fill="url(#coulNegativeHighlight)" />
             {/* Balloon knot/string */}
-            <path d="M100,153 L95,160 L100,165 L105,160 Z" fill="#1e40af" />
+            <polygon points="100,153 95,160 100,165 105,160" fill="#1e40af" />
             <line x1="100" y1="165" x2="100" y2="190" stroke="#374151" strokeWidth="2" />
 
             {/* Charge symbols on balloon */}
@@ -1971,7 +2037,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
             {/* Wall label */}
             <text x="330" y="95" textAnchor="middle" fill={colors.textSecondary} fontSize="13" fontWeight="600">Neutral</text>
             <text x="330" y="115" textAnchor="middle" fill={colors.textSecondary} fontSize="13" fontWeight="600">Wall</text>
-            <text x="330" y="135" textAnchor="middle" fill={colors.textMuted} fontSize="10">(net charge = 0)</text>
+            <text x="330" y="135" textAnchor="middle" fill={colors.textMuted} fontSize="11">(net charge = 0)</text>
 
             {/* Question mark with glow */}
             <text x="185" y="110" textAnchor="middle" fill={colors.warning} fontSize="48" fontWeight="bold" filter="url(#coulSoftGlow)" opacity="0.9">?</text>
@@ -2054,8 +2120,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
               const flowOffset = (animationTime * 50) % 180;
               return (
                 <g key={`field-${i}`}>
-                  <path
-                    d={`M ${balloonOffset + 145} ${yPos} Q ${balloonOffset + 200} ${yPos + Math.sin(animationTime * 2 + i) * 8} 285 ${yPos}`}
+                  <polyline
+                    points={`${balloonOffset + 145},${yPos} ${balloonOffset + 200},${yPos + Math.sin(animationTime * 2 + i) * 8} 285,${yPos}`}
                     stroke="url(#coulFieldLineGrad)"
                     strokeWidth="2"
                     fill="none"
@@ -2090,7 +2156,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
               <text x="100" y="185" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>− − −</text>
 
               {/* Balloon knot */}
-              <path d="M100,215 L93,225 L100,232 L107,225 Z" fill="#1e40af" />
+              <polygon points="100,215 93,225 100,232 107,225" fill="#1e40af" />
               <line x1="100" y1="232" x2="100" y2="260" stroke="#374151" strokeWidth="2" />
             </g>
 
@@ -2180,8 +2246,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
             <text x="335" y="300" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="600">Neutral Wall (Polarized)</text>
 
             {/* Diagram annotations */}
-            <text x="300" y="38" textAnchor="start" fill={colors.positive} fontSize="9" opacity="0.8">+ attracted</text>
-            <text x="355" y="38" textAnchor="end" fill={colors.negative} fontSize="9" opacity="0.8">− repelled</text>
+            <text x="295" y="38" textAnchor="start" fill={colors.positive} fontSize="11" opacity="0.8">+ attracted</text>
+            <text x="375" y="38" textAnchor="end" fill={colors.negative} fontSize="11" opacity="0.8">− repelled</text>
           </svg>
         </div>
 
@@ -2757,6 +2823,39 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
             </button>
           ))}
         </div>
+
+        {/* Feedback after answer is confirmed */}
+        {confirmedIndex === currentQuestion && testAnswers[currentQuestion] !== null && (() => {
+          const userAnswer = testAnswers[currentQuestion]!;
+          const correctIdx = q.options.findIndex(o => o.correct);
+          const isCorrect = userAnswer === correctIdx;
+          return (
+            <div style={{
+              padding: '14px',
+              borderRadius: '10px',
+              marginBottom: typo.sectionGap,
+              backgroundColor: isCorrect ? `${colors.success}15` : `${colors.danger}15`,
+              border: `1px solid ${isCorrect ? colors.success : colors.danger}30`
+            }}>
+              <p style={{
+                fontSize: typo.body,
+                fontWeight: 700,
+                color: isCorrect ? colors.success : colors.danger,
+                margin: '0 0 8px'
+              }}>
+                {isCorrect ? '✓ Correct!' : `✗ Incorrect - The correct answer is ${String.fromCharCode(65 + correctIdx)}`}
+              </p>
+              <p style={{
+                fontSize: typo.small,
+                color: colors.textSecondary,
+                margin: 0,
+                lineHeight: 1.5
+              }}>
+                {q.explanation}
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Check Answer / Next Question / Submit flow */}
         <div style={{ marginBottom: typo.sectionGap }}>

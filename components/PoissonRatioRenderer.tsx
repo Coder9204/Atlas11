@@ -311,8 +311,8 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // Improved contrast (brightness >= 180)
+    textMuted: '#cbd5e1', // Improved contrast (brightness >= 180)
     border: '#2a2a3a',
   };
 

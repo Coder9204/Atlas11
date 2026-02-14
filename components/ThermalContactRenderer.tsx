@@ -429,7 +429,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     };
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="hotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#fef3c7" />
@@ -492,7 +492,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                   <rect x={40 - Math.random() * 10} y={15 + i * 22} width={10 + Math.random() * 10} height="8" fill="#475569" rx="1" />
                 </g>
               ))}
-              <text x="30" y="65" textAnchor="middle" fill="#94a3b8" fontSize="7">CONTACT POINTS</text>
+              <text x="30" y="65" textAnchor="middle" fill="#e2e8f0" fontSize="7">CONTACT POINTS</text>
             </>
           )}
           {/* Thermal paste fill */}
@@ -553,7 +553,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     };
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="cpuGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />
@@ -660,7 +660,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
       <div style={{
         height: '100%',
@@ -674,10 +674,16 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
   // Navigation dots
   const renderNavDots = () => (
     <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
       justifyContent: 'center',
       gap: '8px',
       padding: '16px 0',
+      background: colors.bgPrimary,
+      zIndex: 1000,
     }}>
       {phaseOrder.map((p, i) => (
         <button
@@ -691,6 +697,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            minHeight: '44px',
           }}
           aria-label={phaseLabels[p]}
         />
@@ -710,6 +717,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ---------------------------------------------------------------------------
@@ -781,6 +789,69 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     );
   }
 
+  // Static SVG for predict phase
+  const PredictVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 200 : 240;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="hotGradPredict" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fef3c7" />
+            <stop offset="50%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+          <linearGradient id="coldGradPredict" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#e0f2fe" />
+            <stop offset="50%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#0284c7" />
+          </linearGradient>
+        </defs>
+
+        {/* Title */}
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Metal Surfaces in Contact
+        </text>
+
+        {/* Hot Block */}
+        <g transform="translate(40, 50)">
+          <rect width="100" height="100" fill="url(#hotGradPredict)" stroke="#f97316" strokeWidth="2" rx="8" />
+          <text x="50" y="55" textAnchor="middle" fill="white" fontSize="20" fontWeight="700">HOT</text>
+          <text x="50" y="75" textAnchor="middle" fill="white" fontSize="12" opacity="0.8">80°C</text>
+        </g>
+
+        {/* Interface Zone with question marks */}
+        <g transform={`translate(140, 50)`}>
+          <rect
+            width="60"
+            height="100"
+            fill={`${colors.warning}33`}
+            stroke={colors.warning}
+            strokeWidth="2"
+            strokeDasharray="4"
+            rx="4"
+          />
+          <text x="30" y="45" textAnchor="middle" fill={colors.warning} fontSize="28" fontWeight="700">?</text>
+          <text x="30" y="70" textAnchor="middle" fill={colors.warning} fontSize="10">What fills</text>
+          <text x="30" y="82" textAnchor="middle" fill={colors.warning} fontSize="10">the gaps?</text>
+        </g>
+
+        {/* Cold Block */}
+        <g transform={`translate(200, 50)`}>
+          <rect width="100" height="100" fill="url(#coldGradPredict)" stroke="#38bdf8" strokeWidth="2" rx="8" />
+          <text x="50" y="55" textAnchor="middle" fill="white" fontSize="20" fontWeight="700">COLD</text>
+          <text x="50" y="75" textAnchor="middle" fill="white" fontSize="12" opacity="0.8">20°C</text>
+        </g>
+
+        {/* Microscope hint */}
+        <text x={width/2} y={height - 20} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          Even polished surfaces have microscopic roughness
+        </text>
+      </svg>
+    );
+  };
+
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
@@ -794,6 +865,8 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -814,7 +887,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             Two polished metal blocks are pressed firmly together. What fills the microscopic gaps between their surfaces?
           </h2>
 
-          {/* Diagram */}
+          {/* Static SVG Diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -822,33 +895,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{
-                background: 'linear-gradient(135deg, #f97316, #dc2626)',
-                padding: '30px',
-                borderRadius: '8px',
-              }}>
-                <span style={{ fontSize: '24px', color: 'white' }}>HOT</span>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>⟷</div>
-              <div style={{
-                background: `${colors.warning}33`,
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px dashed ${colors.warning}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.warning }}>???</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Interface</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>⟷</div>
-              <div style={{
-                background: 'linear-gradient(135deg, #38bdf8, #0284c7)',
-                padding: '30px',
-                borderRadius: '8px',
-              }}>
-                <span style={{ fontSize: '24px', color: 'white' }}>COLD</span>
-              </div>
-            </div>
+            <PredictVisualization />
           </div>
 
           {/* Options */}
@@ -865,6 +912,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -910,6 +958,8 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -917,9 +967,23 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Thermal Contact Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Compare heat transfer through different interface types.
           </p>
+
+          {/* Observation Guidance */}
+          <div style={{
+            background: `${colors.accentBlue}22`,
+            border: `1px solid ${colors.accentBlue}44`,
+            borderRadius: '12px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.accentBlue, margin: 0 }}>
+              👁️ Observe: Watch the heat flow arrows and temperature changes. Try each interface type and compare how fast the temperatures equalize.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -960,6 +1024,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                       background: interfaceType === opt.id ? `${colors.accent}22` : colors.bgSecondary,
                       cursor: 'pointer',
                       textAlign: 'center',
+                      minHeight: '44px',
                     }}
                   >
                     <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{opt.name}</div>
@@ -988,6 +1053,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                   color: 'white',
                   fontWeight: 600,
                   cursor: simRunning ? 'not-allowed' : 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 {simRunning ? 'Simulating...' : 'Start Heat Transfer'}
@@ -1007,6 +1073,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                   color: colors.textSecondary,
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Reset
@@ -1227,6 +1294,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1272,6 +1340,8 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -1279,9 +1349,23 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             CPU Cooling Comparison
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Watch the dramatic difference thermal paste makes.
           </p>
+
+          {/* Observation Guidance */}
+          <div style={{
+            background: `${colors.accentBlue}22`,
+            border: `1px solid ${colors.accentBlue}44`,
+            borderRadius: '12px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.accentBlue, margin: 0 }}>
+              👁️ Observe: Toggle between paste/no-paste and apply CPU load. Notice how the temperature stabilizes at very different levels.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1540,19 +1624,25 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} explored)
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1579,6 +1669,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1612,6 +1703,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             padding: '24px',
             marginBottom: '24px',
             borderLeft: `4px solid ${app.color}`,
+            overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
               <span style={{ fontSize: '48px' }}>{app.icon}</span>
@@ -1659,7 +1751,30 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             </div>
           </div>
 
-          {allAppsCompleted && (
+          {/* Got It / Next Application button */}
+          {!allAppsCompleted ? (
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Move to next uncompleted app
+                const nextIndex = completedApps.findIndex((c, i) => i > selectedApp && !c);
+                if (nextIndex !== -1) {
+                  setSelectedApp(nextIndex);
+                } else {
+                  const firstUncompleted = completedApps.findIndex(c => !c);
+                  if (firstUncompleted !== -1) {
+                    setSelectedApp(firstUncompleted);
+                  }
+                }
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+            >
+              {selectedApp < realWorldApps.length - 1 ? 'Got It - Next Application' : 'Got It'}
+            </button>
+          ) : (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}

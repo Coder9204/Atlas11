@@ -1009,6 +1009,10 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Drop dye into water and observe how it spreads
           </p>
+          <p style={{ color: premiumDesign.colors.text.muted, fontSize: typo.small, marginTop: '8px', maxWidth: '500px', margin: '8px auto 0' }}>
+            Diffusion is defined as the net movement of particles from a region of higher concentration to a region of lower concentration.
+            This is important in real-world applications from drug delivery to industrial chemical processes used in everyday life.
+          </p>
         </div>
 
         <div style={{
@@ -1396,12 +1400,16 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
     const reviewContent = [
       {
         title: "What You Observed",
-        content: `In hot water, the dye spreads much faster than in cold water. ${wasCorrect ? "Your prediction was correct!" : "This might be surprising!"} But WHY does this happen? The temperature of the water has a dramatic effect on how quickly substances spread through it. This is one of the most important principles in heat transfer and fluid dynamics.`,
+        content: `In hot water, the dye spreads much faster than in cold water. ${wasCorrect ? "Your prediction was correct!" : "This might be surprising!"} But WHY does this happen? The temperature of the water has a dramatic effect on how quickly substances spread through it. This is one of the most important principles in heat transfer and fluid dynamics.\n\nKey relationship: Diffusion Rate ∝ Temperature (higher T = faster spreading)`,
         highlight: wasCorrect,
       },
       {
         title: "The Secret: Two Different Processes",
         content: "There are TWO ways substances spread through fluids:\n\nDIFFUSION: This is random molecular motion that happens everywhere. Molecules are always vibrating and bumping into each other, slowly spreading from areas of high concentration to low concentration.\n\nCONVECTION: This is bulk fluid movement driven by temperature differences. Hot fluid rises because it's less dense, while cold fluid sinks. This creates currents that can move substances much faster than diffusion alone.",
+      },
+      {
+        title: "The Physics Formula",
+        content: "Fick's Law describes diffusion mathematically:\n\nJ = -D × (dC/dx)\n\nWhere J = diffusion flux, D = diffusion coefficient, and dC/dx = concentration gradient.\n\nThe diffusion coefficient D is proportional to temperature: D ∝ T. This relationship shows why higher temperatures lead to faster diffusion - molecules have more kinetic energy!",
       },
       {
         title: "Why Hot Water Wins",

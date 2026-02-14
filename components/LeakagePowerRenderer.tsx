@@ -34,9 +34,9 @@ const playSound = (type: 'click' | 'success' | 'error' | 'transition') => {
 };
 
 const colors = {
-  textPrimary: '#f8fafc',
+  textPrimary: '#ffffff',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -435,6 +435,11 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -461,7 +466,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -577,7 +582,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
     <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '56px' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ flexShrink: 0 }}>{bottomBarContent}</div>}
@@ -628,7 +633,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
         {/* Chip visualization with leakage */}
         <g transform="translate(30, 50)">
           <rect x="0" y="0" width="100" height="100" fill="#1e293b" rx="8" stroke="#475569" strokeWidth="2" />
-          <text x="50" y="20" fill="#94a3b8" fontSize="10" textAnchor="middle">CPU Die</text>
+          <text x="50" y="20" fill="#e2e8f0" fontSize="10" textAnchor="middle">CPU Die</text>
 
           {/* Transistor representation */}
           <rect x="20" y="35" width="60" height="40" fill="#334155" rx="4" />
@@ -653,7 +658,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
         {/* Power bars */}
         <g transform="translate(150, 55)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="11" fontWeight="bold">Power Components</text>
+          <text x="0" y="0" fill="#e2e8f0" fontSize="11" fontWeight="bold">Power Components</text>
 
           {/* Dynamic Power */}
           <g transform="translate(0, 15)">
@@ -690,7 +695,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
         {/* Temperature Gauge */}
         <g transform="translate(30, 180)">
-          <text x="50" y="0" fill="#94a3b8" fontSize="11" fontWeight="bold" textAnchor="middle">Temperature</text>
+          <text x="50" y="0" fill="#e2e8f0" fontSize="11" fontWeight="bold" textAnchor="middle">Temperature</text>
           <rect x="35" y="10" width="30" height="80" fill="#1e293b" rx="4" />
           <rect
             x="35"
@@ -710,17 +715,17 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
           <rect x="0" y="0" width="320" height="70" fill="rgba(30, 41, 59, 0.8)" rx="8" />
 
           <g transform="translate(20, 20)">
-            <text x="0" y="0" fill="#94a3b8" fontSize="10">Total Power</text>
+            <text x="0" y="0" fill="#e2e8f0" fontSize="10">Total Power</text>
             <text x="0" y="18" fill="#f8fafc" fontSize="16" fontWeight="bold">{power.totalPower.toFixed(1)} mW</text>
           </g>
 
           <g transform="translate(110, 20)">
-            <text x="0" y="0" fill="#94a3b8" fontSize="10">Leakage %</text>
+            <text x="0" y="0" fill="#e2e8f0" fontSize="10">Leakage %</text>
             <text x="0" y="18" fill={colors.static} fontSize="16" fontWeight="bold">{power.leakagePercent.toFixed(1)}%</text>
           </g>
 
           <g transform="translate(200, 20)">
-            <text x="0" y="0" fill="#94a3b8" fontSize="10">Battery Life</text>
+            <text x="0" y="0" fill="#e2e8f0" fontSize="10">Battery Life</text>
             <text x="0" y="18" fill={colors.success} fontSize="16" fontWeight="bold">{power.batteryLife.toFixed(1)} hrs</text>
           </g>
         </g>
@@ -745,7 +750,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
             stroke={clockGating ? colors.success : '#475569'}
             strokeWidth="1"
           />
-          <text x="70" y="22" fill={clockGating ? colors.success : '#94a3b8'} fontSize="10" textAnchor="middle">
+          <text x="70" y="22" fill={clockGating ? colors.success : '#e2e8f0'} fontSize="10" textAnchor="middle">
             Clock Gating: {clockGating ? 'ON' : 'OFF'}
           </text>
 
@@ -756,7 +761,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
             stroke={powerGating ? colors.success : '#475569'}
             strokeWidth="1"
           />
-          <text x="220" y="22" fill={powerGating ? colors.success : '#94a3b8'} fontSize="10" textAnchor="middle">
+          <text x="220" y="22" fill={powerGating ? colors.success : '#e2e8f0'} fontSize="10" textAnchor="middle">
             Power Gating: {powerGating ? 'ON' : 'OFF'}
           </text>
 
@@ -767,7 +772,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
             stroke={dvfs ? colors.success : '#475569'}
             strokeWidth="1"
           />
-          <text x="370" y="22" fill={dvfs ? colors.success : '#94a3b8'} fontSize="10" textAnchor="middle">
+          <text x="370" y="22" fill={dvfs ? colors.success : '#e2e8f0'} fontSize="10" textAnchor="middle">
             DVFS: {dvfs ? 'ON' : 'OFF'}
           </text>
         </g>
@@ -1062,12 +1067,49 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
     );
   }
 
+  // Static SVG for predict phase - shows idle phone concept
+  const renderPredictVisualization = () => (
+    <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px', display: 'block', margin: '0 auto 24px' }}>
+      <defs>
+        <linearGradient id="phoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#334155" />
+          <stop offset="100%" stopColor="#1e293b" />
+        </linearGradient>
+      </defs>
+
+      {/* Background */}
+      <rect width="400" height="200" fill="#0f172a" rx="12" />
+
+      {/* Phone shape */}
+      <rect x="160" y="20" width="80" height="160" rx="12" fill="url(#phoneGrad)" stroke="#475569" strokeWidth="2" />
+
+      {/* Screen (dark/off) */}
+      <rect x="168" y="35" width="64" height="115" rx="4" fill="#0f172a" />
+
+      {/* Status text */}
+      <text x="200" y="90" fill="#e2e8f0" fontSize="10" textAnchor="middle">IDLE</text>
+      <text x="200" y="105" fill="#e2e8f0" fontSize="8" textAnchor="middle">Screen Off</text>
+
+      {/* Power question marks */}
+      <text x="80" y="100" fill={colors.accent} fontSize="28" textAnchor="middle" fontWeight="bold">?</text>
+      <text x="320" y="100" fill={colors.accent} fontSize="28" textAnchor="middle" fontWeight="bold">?</text>
+
+      {/* Labels */}
+      <text x="80" y="130" fill="#e2e8f0" fontSize="10" textAnchor="middle">Power</text>
+      <text x="80" y="145" fill="#e2e8f0" fontSize="10" textAnchor="middle">Usage</text>
+      <text x="320" y="130" fill="#e2e8f0" fontSize="10" textAnchor="middle">Battery</text>
+      <text x="320" y="145" fill="#e2e8f0" fontSize="10" textAnchor="middle">Drain</text>
+    </svg>
+  );
+
   // PREDICT PHASE
   if (phase === 'predict') {
     return wrapPhaseContent(
       <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px', fontSize: typo.heading }}>Make Your Prediction</h2>
+
+          {renderPredictVisualization()}
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
             <p style={{ fontSize: typo.body, marginBottom: '8px', lineHeight: 1.6 }}>
@@ -1089,6 +1131,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: typo.body,
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                   transition: 'all 0.2s',
                 }}
@@ -1128,6 +1171,15 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
               <li>Reduce voltage - see V^2 effect on dynamic power</li>
             </ul>
           </div>
+
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '16px', borderLeft: `4px solid ${colors.accent}` }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.body }}>Why This Matters in the Real World</h3>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.6 }}>
+              Understanding leakage power is crucial for engineers designing mobile devices, laptops, and data centers.
+              This is why your phone gets warm in your pocket and why data centers spend billions on cooling -
+              practical applications that affect technology we use every day.
+            </p>
+          </div>
         </div>
       </div>,
       renderBottomBar(true, 'Review the Physics')
@@ -1137,6 +1189,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'substantial';
+    const predictionLabel = predictions.find(p => p.id === prediction)?.label || 'your prediction';
 
     return wrapPhaseContent(
       <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
@@ -1149,10 +1202,13 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, fontSize: typo.heading }}>
-              {wasCorrect ? 'Correct!' : 'Not quite!'}
+              {wasCorrect ? 'Your prediction was correct!' : 'Your prediction needs revision!'}
             </h3>
+            <p style={{ fontSize: typo.small, color: colors.textMuted, marginBottom: '8px' }}>
+              You predicted: "{predictionLabel}"
+            </p>
             <p style={{ fontSize: typo.body, lineHeight: 1.6 }}>
-              Substantial power IS consumed even at idle due to leakage currents. Modern chips can never truly be "off" while powered - electrons tunnel through transistor gates even when they should be blocking current.
+              As you observed in the simulation, substantial power IS consumed even at idle due to leakage currents. Modern chips can never truly be "off" while powered - electrons tunnel through transistor gates even when they should be blocking current.
             </p>
           </div>
 
@@ -1379,14 +1435,33 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
                     color: colors.accent,
                     cursor: 'pointer',
                     fontSize: typo.small,
+                    minHeight: '44px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>{app.answer}</p>
+                  </div>
+                  <button
+                    onClick={() => playSound('click')}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: typo.small,
+                      minHeight: '44px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
@@ -1443,7 +1518,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontSize: typo.heading }}>Knowledge Test</h2>
-            <span style={{ color: colors.textMuted, fontSize: typo.body }}>{currentTestQuestion + 1}/10</span>
+            <span style={{ color: colors.textSecondary, fontSize: typo.body }}>Question {currentTestQuestion + 1} of 10</span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>

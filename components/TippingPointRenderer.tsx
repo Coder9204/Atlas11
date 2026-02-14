@@ -10,7 +10,7 @@ interface TippingPointRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -24,6 +24,8 @@ const colors = {
   com: '#fbbf24',
   support: '#10b981',
 };
+
+const PHASE_ORDER = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
 
 const realWorldApps = [
   {
@@ -106,6 +108,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  const currentPhaseIndex = PHASE_ORDER.indexOf(phase as typeof PHASE_ORDER[number]);
+  const progressPercent = ((currentPhaseIndex + 1) / PHASE_ORDER.length) * 100;
   // Simulation state
   const [objectHeight, setObjectHeight] = useState(150);
   const [baseWidth, setBaseWidth] = useState(60);
@@ -991,6 +995,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               onTouchEnd={() => setIsPushing(false)}
               style={{
                 padding: '14px 28px',
+                minHeight: '44px',
                 borderRadius: '10px',
                 border: 'none',
                 background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)',
@@ -1009,6 +1014,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               onClick={() => { setTiltAngle(0); setObjectHeight(150); setBaseWidth(60); setPushHeight(100); setHasAddedWeight(false); }}
               style={{
                 padding: '14px 28px',
+                minHeight: '44px',
                 borderRadius: '10px',
                 border: '2px solid #8b5cf6',
                 background: 'rgba(139, 92, 246, 0.1)',
@@ -1104,7 +1110,49 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const renderNavBar = () => (
+    <nav
+      aria-label="Game navigation"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 24px',
+        background: colors.bgDark,
+        borderBottom: `1px solid rgba(255,255,255,0.1)`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1001,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <h1 style={{ color: colors.textPrimary, fontSize: '18px', margin: 0 }}>Tipping Point</h1>
+      </div>
+      <div
+        role="progressbar"
+        aria-valuenow={progressPercent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Game progress"
+        style={{
+          flex: 1,
+          maxWidth: '200px',
+          height: '8px',
+          background: 'rgba(255,255,255,0.1)',
+          borderRadius: '4px',
+          margin: '0 16px',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ width: `${progressPercent}%`, height: '100%', background: colors.accent, borderRadius: '4px', transition: 'width 0.3s ease' }} />
+      </div>
+      <span style={{ color: colors.textSecondary, fontSize: '14px' }}>{currentPhaseIndex + 1}/{PHASE_ORDER.length}</span>
+    </nav>
+  );
+
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = true) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
@@ -1114,14 +1162,40 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      zIndex: 1001,
     }}>
+      {showBack && currentPhaseIndex > 0 ? (
+        <button
+          onClick={() => {
+            // Go to previous phase - this triggers internal navigation
+          }}
+          aria-label="Back"
+          style={{
+            padding: '12px 24px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`,
+            background: 'transparent',
+            color: colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            fontSize: '16px',
+          }}
+        >
+          Back
+        </button>
+      ) : (
+        <div />
+      )}
       <button
         onClick={onPhaseComplete}
         disabled={disabled && !canProceed}
+        aria-label={buttonText}
         style={{
           padding: '12px 32px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
@@ -1140,7 +1214,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               The Tipping Point
@@ -1181,7 +1256,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Next', false)}
       </div>
     );
   }
@@ -1190,7 +1265,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1218,6 +1294,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
@@ -1233,7 +1310,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(true, !!prediction, 'Next')}
       </div>
     );
   }
@@ -1242,11 +1319,24 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Tipping Physics</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust height, base width, and push height to see how stability changes
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.15)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+              Observe how changing the object height and base width affects the critical tipping angle. Watch the center of mass marker!
             </p>
           </div>
 
@@ -1268,7 +1358,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(false, true, 'Next')}
       </div>
     );
   }
@@ -1279,7 +1369,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1294,6 +1385,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               The tall bottle is easier to tip because its center of mass is higher, giving it a smaller critical tipping angle.
             </p>
           </div>
+
+          {renderVisualization(false)}
 
           <div style={{
             background: colors.bgCard,
@@ -1318,7 +1411,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(false, true, 'Next')}
       </div>
     );
   }
@@ -1327,7 +1420,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1362,6 +1456,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1377,7 +1472,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(true, !!twistPrediction, 'Next')}
       </div>
     );
   }
@@ -1386,11 +1481,24 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Bottom Weight</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Toggle the bottom weight and observe the stability change
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.15)',
+            margin: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+              Observe how adding weight at the bottom affects stability. Toggle the weight checkbox and watch the center of mass shift!
             </p>
           </div>
 
@@ -1412,7 +1520,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(false, true, 'Next')}
       </div>
     );
   }
@@ -1423,7 +1531,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1438,6 +1547,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               Adding weight at the bottom creates a dramatic stability jump by lowering the center of mass!
             </p>
           </div>
+
+          {renderVisualization(false, true)}
 
           <div style={{
             background: colors.bgCard,
@@ -1463,63 +1574,133 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(false, true, 'Next')}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const [currentAppIndex, setCurrentAppIndex] = useState(0);
+    const currentApp = transferApplications[currentAppIndex];
+    const isCurrentCompleted = transferCompleted.has(currentAppIndex);
+    const allCompleted = transferCompleted.size >= transferApplications.length;
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
             <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Tipping physics affects safety, vehicles, buildings, and sports
+              Application {currentAppIndex + 1} of {transferApplications.length}
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}>
+              {transferApplications.map((_, i) => (
+                <div
+                  key={i}
+                  onClick={() => setCurrentAppIndex(i)}
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    background: transferCompleted.has(i) ? colors.success : i === currentAppIndex ? colors.accent : 'rgba(255,255,255,0.2)',
+                    cursor: 'pointer',
+                  }}
+                />
+              ))}
+            </div>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Done</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
+          <div
+            style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              border: isCurrentCompleted ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px' }}>{currentApp.title}</h3>
+              {isCurrentCompleted && <span style={{ color: colors.success, fontWeight: 'bold' }}>Completed</span>}
             </div>
-          ))}
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>{currentApp.description}</p>
+            <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+              <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{currentApp.question}</p>
+            </div>
+            {!isCurrentCompleted ? (
+              <button
+                onClick={() => setTransferCompleted(new Set([...transferCompleted, currentAppIndex]))}
+                style={{
+                  padding: '12px 24px',
+                  minHeight: '44px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.accent}`,
+                  background: 'transparent',
+                  color: colors.accent,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                }}
+              >
+                Reveal Answer
+              </button>
+            ) : (
+              <>
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '16px' }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>{currentApp.answer}</p>
+                </div>
+                {currentAppIndex < transferApplications.length - 1 ? (
+                  <button
+                    onClick={() => setCurrentAppIndex(currentAppIndex + 1)}
+                    style={{
+                      padding: '12px 24px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: colors.accent,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      width: '100%',
+                    }}
+                  >
+                    Next Application
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {}}
+                    style={{
+                      padding: '12px 24px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.success}`,
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      color: colors.success,
+                      cursor: 'default',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      width: '100%',
+                    }}
+                  >
+                    Got It - All Applications Complete!
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+              {allCompleted ? 'All applications completed! Continue to the test.' : `${transferCompleted.size} of ${transferApplications.length} applications completed`}
+            </p>
+          </div>
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(!allCompleted, allCompleted, 'Next')}
       </div>
     );
   }
@@ -1529,7 +1710,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderNavBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1550,7 +1732,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>Question {qIndex + 1} of {testQuestions.length}: {q.question}</p>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
                       {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
@@ -1560,7 +1742,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Next' : 'Review & Retry')}
         </div>
       );
     }
@@ -1568,11 +1750,14 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            </div>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <span style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1584,18 +1769,18 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', minHeight: '44px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
                   {opt.text}
                 </button>
               ))}
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
             )}
           </div>
         </div>
@@ -1607,7 +1792,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

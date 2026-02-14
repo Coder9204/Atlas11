@@ -120,7 +120,8 @@ const TEST_QUESTIONS = [
       { text: 'Free electrons move to cancel the field inside', correct: true },
       { text: 'The metal reflects all radiation like a mirror', correct: false },
       { text: 'It converts EM waves to sound', correct: false }
-    ]
+    ],
+    explanation: 'This is correct because when an external electromagnetic field hits a conductor, the free electrons in the metal redistribute themselves to create an opposing field. The reason this works is that the induced surface charges generate a field that exactly cancels the external field inside the cage, resulting in zero net electric field in the interior.'
   },
   {
     question: 'Your phone loses signal in an elevator because:',
@@ -129,7 +130,8 @@ const TEST_QUESTIONS = [
       { text: 'The metal walls act as a Faraday cage', correct: true },
       { text: 'The motor creates interference', correct: false },
       { text: 'Buildings block GPS', correct: false }
-    ]
+    ],
+    explanation: 'This is correct because the metal walls, floor, and ceiling of an elevator form an enclosed conductive shell, which acts as a Faraday cage. Remember that any continuous metal enclosure will block electromagnetic waves, including cell signals. The reason your signal drops is that the radio waves from cell towers cannot penetrate the metal enclosure.'
   },
   {
     question: 'Why does mesh work for shielding even though it has holes?',
@@ -138,7 +140,8 @@ const TEST_QUESTIONS = [
       { text: 'Mesh is cheaper than solid metal', correct: false },
       { text: 'Holes smaller than the wavelength still block waves', correct: true },
       { text: 'The holes are filled with invisible glass', correct: false }
-    ]
+    ],
+    explanation: 'This is correct because electromagnetic waves cannot pass through openings that are significantly smaller than their wavelength. The reason is that the wave essentially "cannot fit" through a hole much smaller than one wavelength. This means a mesh with 1mm holes effectively blocks microwaves (wavelength ~12cm) but would not block much shorter wavelength signals.'
   },
   {
     question: 'Microwave ovens have a mesh window. What would happen if the holes were larger?',
@@ -147,7 +150,8 @@ const TEST_QUESTIONS = [
       { text: 'Microwaves could leak out and be dangerous', correct: true },
       { text: 'The oven would be more efficient', correct: false },
       { text: 'You couldn\'t see the food', correct: false }
-    ]
+    ],
+    explanation: 'This is correct because the mesh holes must remain much smaller than the microwave wavelength (about 12 cm) to block the radiation. Remember that if holes approach or exceed the wavelength, microwaves would leak through and could cause burns or other harm. The reason microwave ovens use precisely sized mesh is to balance visibility with safety.'
   },
   {
     question: 'When charges redistribute on a Faraday cage, where do they accumulate?',
@@ -156,7 +160,8 @@ const TEST_QUESTIONS = [
       { text: 'Only at the corners', correct: false },
       { text: 'On the outer surface of the conductor', correct: true },
       { text: 'In the center of the metal', correct: false }
-    ]
+    ],
+    explanation: 'This is correct because in electrostatic equilibrium, excess charges on a conductor always reside on the outer surface. The reason is that like charges repel each other and move as far apart as possible, which means they migrate to the exterior surface. This means the interior remains field-free, which is the fundamental principle behind Faraday cage shielding.'
   },
   {
     question: 'Why is a car relatively safe during a lightning strike?',
@@ -165,7 +170,8 @@ const TEST_QUESTIONS = [
       { text: 'The metal body acts as a Faraday cage, directing current around you', correct: true },
       { text: 'Lightning cannot strike moving objects', correct: false },
       { text: 'The car\'s battery absorbs the electricity', correct: false }
-    ]
+    ],
+    explanation: 'This is correct because the metal body of the car forms a conductive shell that channels the lightning current around the exterior and into the ground. Remember that rubber tires are NOT the reason you are safe -- the current has already traveled through miles of air, so a few inches of rubber will not stop it. The reason you survive is the Faraday cage effect directing current around the passenger compartment.'
   },
   {
     question: 'A solid metal box vs a metal mesh cage - which provides better shielding?',
@@ -174,7 +180,8 @@ const TEST_QUESTIONS = [
       { text: 'Mesh, because it allows air to circulate', correct: false },
       { text: 'They are exactly equal in effectiveness', correct: false },
       { text: 'Mesh, because it has more surface area', correct: false }
-    ]
+    ],
+    explanation: 'This is correct because a solid metal enclosure has no openings for any wavelength to pass through, providing complete shielding. The reason mesh is less effective is that its holes allow waves with wavelengths shorter than the hole size to leak through. Remember that shielding effectiveness depends on the relationship between opening size and the wavelength being blocked.'
   },
   {
     question: 'Why might your cell phone still work inside some buildings with metal frames?',
@@ -183,7 +190,8 @@ const TEST_QUESTIONS = [
       { text: 'Windows and gaps act as openings larger than the wavelength', correct: true },
       { text: 'Metal frames amplify signals', correct: false },
       { text: 'Modern phones can penetrate any shielding', correct: false }
-    ]
+    ],
+    explanation: 'This is correct because cell phone signals have wavelengths around 15-30 cm, and building windows and gaps between structural elements are much larger than this. The reason a building with metal framing is not a perfect Faraday cage is that it has many openings (windows, doors, ventilation) that are larger than the signal wavelength, allowing radio waves to enter.'
   },
   {
     question: 'What happens to the electric field inside a perfect Faraday cage?',
@@ -192,7 +200,8 @@ const TEST_QUESTIONS = [
       { text: 'It oscillates rapidly', correct: false },
       { text: 'It becomes zero', correct: true },
       { text: 'It reverses direction', correct: false }
-    ]
+    ],
+    explanation: 'This is correct because the free electrons in the conducting shell rearrange to produce a field that exactly cancels the external field within the interior. Remember that this is a fundamental property of conductors in electrostatic equilibrium. The reason the field is zero everywhere inside (not just at the center) is that Gauss\'s law guarantees no net field inside a closed conducting surface with no internal charges.'
   },
   {
     question: 'RFID-blocking wallets use the Faraday cage principle. What are they protecting against?',
@@ -201,7 +210,8 @@ const TEST_QUESTIONS = [
       { text: 'Unauthorized wireless scanning of card data', correct: true },
       { text: 'Magnetic stripe erasure', correct: false },
       { text: 'Physical bending of cards', correct: false }
-    ]
+    ],
+    explanation: 'This is correct because RFID chips in credit cards and passports communicate wirelessly, and thieves can use portable readers to scan card data without contact. The reason a Faraday cage wallet works is that its metallic lining blocks the radio waves used by RFID scanners, preventing them from reaching or reading the chip. Remember that this is the same principle that blocks cell signals in elevators.'
   }
 ];
 
@@ -309,7 +319,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
 
   // Simulation state - Play phase
   const [cageEnabled, setCageEnabled] = useState(false);
-  const [fieldStrength, setFieldStrength] = useState(70);
+  const [fieldStrength, setFieldStrength] = useState(50);
   const [meshDensity, setMeshDensity] = useState(50);
   const [waveFrequency, setWaveFrequency] = useState(50);
   const [signalStrength, setSignalStrength] = useState(100);
@@ -376,7 +386,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
   useEffect(() => {
     if (phase === 'play') {
       setCageEnabled(false);
-      setFieldStrength(70);
+      setFieldStrength(50);
       setMeshDensity(50);
       setWaveFrequency(50);
       setHasExperimented(false);
@@ -593,8 +603,14 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
 
           {/* Educational labels */}
           <text x="250" y="18" textAnchor="middle" fill="#fbbf24" fontSize="12" fontWeight="bold">Faraday Cage Simulation</text>
-          <text x="30" y="38" fill="#f59e0b" fontSize="10">EM Wave Source</text>
-          <text x="300" y="70" textAnchor="middle" fill="#4ade80" fontSize="10">Shielded Region</text>
+          <text x="30" y="38" fill="#f59e0b" fontSize="11">EM Wave Source</text>
+          <text x="300" y="70" textAnchor="middle" fill="#4ade80" fontSize="11">Shielded Region</text>
+
+          {/* Cage diagram boundary markers */}
+          <line x1="10" y1="10" x2="490" y2="10" stroke="#1e293b" strokeWidth="1" opacity="0.3" />
+          <line x1="10" y1="310" x2="490" y2="310" stroke="#1e293b" strokeWidth="1" opacity="0.3" />
+          <circle cx="250" cy="290" r="4" fill="#475569" opacity="0.5" />
+          <text x="250" y="305" textAnchor="middle" fill="#64748b" fontSize="11">Field strength: {fieldStrength}%</text>
 
           {/* External field source indicator */}
           <g transform="translate(30, 160)">
@@ -616,7 +632,10 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
             const yOffset = (i - numFieldLines / 2) * 15;
             const baseY = 160 + yOffset;
             const blocked = cageEnabled;
-            const waveOffset = Math.sin(timeRef.current * waveSpeed * 2 + i * 0.5) * 8;
+            const waveAmplitude = 50 + Math.abs(i - numFieldLines / 2) * 8;
+            const wavePhase = Math.sin(timeRef.current * waveSpeed * 2 + i * 0.5 + 1.0);
+            const waveSign = wavePhase >= 0 ? 1 : -1;
+            const waveOffset = waveSign * waveAmplitude;
 
             return (
               <g key={`field-${i}`}>
@@ -794,7 +813,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
         {/* Text labels outside SVG using typo system */}
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', marginTop: '-60px', position: 'relative', zIndex: 10 }}>
           <div style={{ textAlign: 'center', width: '120px' }}>
-            <p style={{ fontSize: typo.small, color: '#94a3b8', margin: 0 }}>External Field</p>
+            <p style={{ fontSize: typo.small, color: '#cbd5e1', margin: 0 }}>External Field</p>
             <p style={{ fontSize: typo.bodyLarge, color: '#f59e0b', fontWeight: 'bold', margin: 0 }}>{fieldStrength}%</p>
           </div>
           {cageEnabled && (
@@ -806,7 +825,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
             </div>
           )}
           <div style={{ textAlign: 'center', width: '120px' }}>
-            <p style={{ fontSize: typo.small, color: '#94a3b8', margin: 0 }}>Inside Field</p>
+            <p style={{ fontSize: typo.small, color: '#cbd5e1', margin: 0 }}>Inside Field</p>
             <p style={{ fontSize: typo.bodyLarge, color: cageEnabled ? '#4ade80' : '#f59e0b', fontWeight: 'bold', margin: 0 }}>
               {cageEnabled ? `${signalStrength}%` : `${fieldStrength}%`}
             </p>
@@ -1125,7 +1144,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
           {/* Incoming waves with premium glow */}
           {[...Array(4)].map((_, i) => {
             const x = 40 + i * 40;
-            const waveHeight = twistWavelength * 0.8;
+            const waveHeight = 90 + twistWavelength * 0.8;
             return (
               <g key={i}>
                 {/* Glow layer */}
@@ -1545,7 +1564,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
           <rect x="142" y="42" width="96" height="96" rx="3" fill="rgba(30,41,59,0.3)" />
           {/* Phone inside */}
           <rect x="175" y="65" width="30" height="50" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="1" />
-          <text x="190" y="95" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="sans-serif">📱</text>
+          <text x="190" y="95" textAnchor="middle" fill="#64748b" fontSize="11" fontFamily="sans-serif">📱</text>
           {/* Incoming EM waves from left */}
           <path d="M 20,70 Q 40,55 60,70 Q 80,85 100,70 Q 120,55 140,70" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.7" filter="url(#fcPredGlow)" />
           <path d="M 20,90 Q 40,75 60,90 Q 80,105 100,90 Q 120,75 140,90" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.5" />
@@ -1556,14 +1575,14 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
           {/* Question mark inside cage */}
           <text x="190" y="58" textAnchor="middle" fill="#22c55e" fontSize="14" fontFamily="sans-serif">?</text>
           {/* Labels */}
-          <text x="60" y="140" fill="#f59e0b" fontSize="10" textAnchor="middle" fontFamily="sans-serif">EM Waves</text>
-          <text x="190" y="155" fill="#94a3b8" fontSize="10" textAnchor="middle" fontFamily="sans-serif">Metal Enclosure</text>
+          <text x="60" y="140" fill="#f59e0b" fontSize="11" textAnchor="middle" fontFamily="sans-serif">EM Waves</text>
+          <text x="190" y="155" fill="#94a3b8" fontSize="11" textAnchor="middle" fontFamily="sans-serif">Metal Enclosure</text>
           {/* Electrons on cage surface */}
           <circle cx="140" cy="60" r="3" fill="#60a5fa" />
           <circle cx="140" cy="80" r="3" fill="#60a5fa" />
           <circle cx="140" cy="100" r="3" fill="#60a5fa" />
           <circle cx="140" cy="120" r="3" fill="#60a5fa" />
-          <text x="280" y="30" fill="#60a5fa" fontSize="9" fontFamily="sans-serif">e- redistribute</text>
+          <text x="280" y="30" fill="#60a5fa" fontSize="11" fontFamily="sans-serif">e- redistribute</text>
         </svg>
 
         <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
@@ -1608,114 +1627,250 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
 
   // PLAY PHASE - Enhanced with interactive controls
   if (phase === 'play') {
-    return (
-          <div className="flex flex-col items-center p-4">
-            <h2 className="text-2xl font-bold text-white mb-4">Faraday Cage Simulator</h2>
+    // Compute chart data - Internal Field Intensity vs External Field Strength
+    const chartW = 450, chartH = 280;
+    const plotLeft = 60, plotRight = 430, plotTop = 40, plotBottom = 240;
+    const plotW = plotRight - plotLeft, plotH = plotBottom - plotTop;
+    const meshEff = meshDensity / 100;
+    const blockFactor = cageEnabled ? meshEff * 0.95 : 0;
 
-            {/* Visualization */}
-            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
+    // Generate two curves: unshielded (1:1) and shielded - 20 data points each
+    const unshieldedPoints: {x: number; y: number}[] = [];
+    const shieldedPoints: {x: number; y: number}[] = [];
+    for (let i = 0; i <= 19; i++) {
+      const ext = 20 + (i / 19) * 80; // field strength range 20-100
+      const normX = (ext - 20) / 80;
+      const px = plotLeft + normX * plotW;
+      // Unshielded: internal = external
+      const unshieldedY = plotBottom - normX * plotH;
+      unshieldedPoints.push({ x: px, y: unshieldedY });
+      // Shielded: internal = external * (1 - blockFactor)
+      const shieldedVal = ext * (1 - blockFactor);
+      const shieldedNorm = (shieldedVal - 20 * (1 - blockFactor)) / (80);
+      const shieldedY = plotBottom - Math.max(0, Math.min(1, shieldedVal / 100)) * plotH;
+      shieldedPoints.push({ x: px, y: shieldedY });
+    }
+    const unshieldedPath = unshieldedPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+    const shieldedPath = shieldedPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+    // Interactive marker: current field strength position on the shielded curve
+    const normField = (fieldStrength - 20) / 80;
+    const markerX = plotLeft + normField * plotW;
+    const internalField = fieldStrength * (1 - blockFactor);
+    const markerY = plotBottom - Math.max(0, Math.min(1, internalField / 100)) * plotH;
+
+    // Reference marker: default at 50% field strength on unshielded curve
+    const refNorm = (50 - 20) / 80; // default fieldStrength=50
+    const refX = plotLeft + refNorm * plotW;
+    const refY = plotBottom - refNorm * plotH;
+
+    return (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '16px' }}>Faraday Cage Simulator</h2>
+
+            {/* Educational guidance - What to observe */}
+            <div style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', maxWidth: '640px', width: '100%' }}>
+              <p style={{ color: '#93c5fd', fontSize: '14px', margin: 0 }}>
+                <strong style={{ color: '#60a5fa' }}>What to Watch:</strong> Observe how free electrons redistribute on the cage surface when you enable shielding.
+                Try adjusting the sliders to see what happens when you increase field strength or change the mesh density.
+              </p>
+            </div>
+
+            {/* Formula and real-world relevance */}
+            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', maxWidth: '640px', width: '100%' }}>
+              <p style={{ color: '#fcd34d', fontSize: '14px', margin: 0 }}>
+                <strong>Shielding Equation:</strong> E_inside = E_outside × (1 - SE), where SE = 20 × log(E_in / E_out) dB.
+                Current internal intensity: {internalField.toFixed(1)}% vs reference baseline of 50% (no shielding at default).
+              </p>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', margin: '8px 0 0 0' }}>
+                This technology is used in MRI rooms, electronics shielding, and microwave oven doors.
+                Faraday cage shielding is important in industry for EMI protection and is a practical application of electromagnetic field theory.
+              </p>
+            </div>
+
+            {/* Shielding Effectiveness Chart - primary SVG */}
+            <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: '16px', padding: '16px', marginBottom: '16px', maxWidth: '640px', width: '100%' }}>
+              <svg viewBox={`0 0 ${chartW} ${chartH}`} width="100%" height="280">
+                <rect width={chartW} height={chartH} fill="#0f172a" rx="8" />
+
+                {/* Grid lines */}
+                {[0, 20, 40, 60, 80, 100].map(v => {
+                  const gy = plotBottom - (v / 100) * plotH;
+                  return <line key={`gy-${v}`} x1={plotLeft} y1={gy} x2={plotRight} y2={gy} stroke="#334155" strokeWidth="1" opacity="0.5" strokeDasharray="4,4" />;
+                })}
+                {[0, 20, 40, 60, 80, 100].map(v => {
+                  const gx = plotLeft + (v / 100) * plotW;
+                  return <line key={`gx-${v}`} x1={gx} y1={plotTop} x2={gx} y2={plotBottom} stroke="#334155" strokeWidth="1" opacity="0.5" strokeDasharray="4,4" />;
+                })}
+
+                {/* Axes */}
+                <line x1={plotLeft} y1={plotTop} x2={plotLeft} y2={plotBottom} stroke="#64748b" strokeWidth="2" />
+                <line x1={plotLeft} y1={plotBottom} x2={plotRight} y2={plotBottom} stroke="#64748b" strokeWidth="2" />
+
+                {/* Y-axis tick marks and labels */}
+                {[0, 25, 50, 75, 100].map(v => {
+                  const ty = plotBottom - (v / 100) * plotH;
+                  return (
+                    <g key={`yt-${v}`}>
+                      <line x1={plotLeft - 5} y1={ty} x2={plotLeft} y2={ty} stroke="#64748b" strokeWidth="1" />
+                      <text x={plotLeft - 8} y={ty + 4} textAnchor="end" fill="#94a3b8" fontSize="11">{v}%</text>
+                    </g>
+                  );
+                })}
+
+                {/* X-axis tick marks and labels */}
+                {[0, 25, 50, 75, 100].map(v => {
+                  const tx = plotLeft + (v / 100) * plotW;
+                  return (
+                    <g key={`xt-${v}`}>
+                      <line x1={tx} y1={plotBottom} x2={tx} y2={plotBottom + 5} stroke="#64748b" strokeWidth="1" />
+                      <text x={tx} y={plotBottom + 18} textAnchor="middle" fill="#94a3b8" fontSize="11">{v}%</text>
+                    </g>
+                  );
+                })}
+
+                {/* Axis labels */}
+                <text x={chartW / 2} y={chartH - 5} textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold">External Field Intensity (%)</text>
+                <g transform={`translate(15, ${(plotTop + plotBottom) / 2}) rotate(-90)`}>
+                  <text x={0} y={0} textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">Intensity (%)</text>
+                </g>
+
+                {/* Chart title */}
+                <text x={chartW / 2} y={25} textAnchor="middle" fill="#fbbf24" fontSize="14" fontWeight="bold">Internal vs External Field Intensity</text>
+
+                {/* Glow filter for interactive marker */}
+                <defs>
+                  <filter id="chartMarkerGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                </defs>
+
+                {/* Unshielded curve (reference line) */}
+                <path d={unshieldedPath} fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="6,4" opacity="0.7" />
+                <text x={plotRight - 5} y={plotTop + 15} textAnchor="end" fill="#ef4444" fontSize="11">No Cage</text>
+
+                {/* Shielded curve */}
+                <path d={shieldedPath} fill="none" stroke="#22c55e" strokeWidth="3" />
+                <text x={plotRight - 5} y={plotBottom - 15} textAnchor="end" fill="#22c55e" fontSize="11">{cageEnabled ? 'Shielded' : 'Current'}</text>
+
+                {/* Reference marker */}
+                <circle cx={refX} cy={refY} r="5" fill="#9ca3af" opacity="0.6" />
+                <text x={refX + 10} y={refY + 4} fill="#9ca3af" fontSize="11">default</text>
+
+                {/* Interactive marker - highlighted with glow */}
+                <circle cx={markerX} cy={markerY} r="12" fill="#f59e0b" opacity="0.2" filter="url(#chartMarkerGlow)" />
+                <circle cx={markerX} cy={markerY} r="8" fill="#f59e0b" stroke="white" strokeWidth="2" />
+                <text x={markerX > plotRight - 60 ? markerX - 50 : markerX + 14} y={markerY - 10} fill="#fbbf24" fontSize="11" fontWeight="bold">{internalField.toFixed(0)}%</text>
+              </svg>
+            </div>
+
+            {/* Cage Visualization */}
+            <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: '16px', padding: '16px', marginBottom: '16px', maxWidth: '640px', width: '100%' }}>
               {renderInteractiveFaradayCage()}
             </div>
 
             {/* Control Panel */}
-            <div className="bg-slate-800/50 rounded-2xl p-6 w-full max-w-2xl">
-              <h3 className="text-lg font-bold text-amber-400 mb-4">Control Panel</h3>
+            <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: '16px', padding: '24px', maxWidth: '640px', width: '100%' }}>
+              <h3 style={{ color: '#f59e0b', fontWeight: 700, fontSize: '18px', marginBottom: '16px' }}>Control Panel</h3>
 
               {/* Cage Toggle */}
-              <div className="mb-6">
+              <div style={{ marginBottom: '24px' }}>
                 <button
                   onClick={() => { setCageEnabled(!cageEnabled); setHasExperimented(true); playSound('click'); }}
-                  style={{ zIndex: 10 }}
-                  className={`w-full px-6 py-4 rounded-xl font-bold text-lg transition-all ${
-                    cageEnabled
-                      ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
-                      : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
-                  }`}
+                  style={{ width: '100%', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, fontSize: '18px', transition: 'all 0.3s', border: 'none', cursor: 'pointer', zIndex: 10, background: cageEnabled ? '#d97706' : '#475569', color: 'white' }}
                 >
-                  {cageEnabled ? '🛡️ Cage ENABLED' : '📡 Cage DISABLED'}
+                  {cageEnabled ? 'Cage ENABLED' : 'Cage DISABLED'}
                 </button>
               </div>
 
               {/* Sliders */}
-              <div className="space-y-6">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 {/* External Field Strength */}
                 <div>
-                  <label className="block text-sm font-bold text-amber-400 mb-2 uppercase tracking-wide">
-                    External Field Strength
-                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 700, color: '#fcd34d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      External Field Strength
+                    </label>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#fef3c7' }}>{fieldStrength}%</span>
+                  </div>
                   <input
                     type="range"
                     min="20"
                     max="100"
                     value={fieldStrength}
                     onChange={(e) => { setFieldStrength(parseInt(e.target.value)); setHasExperimented(true); }}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                    style={{ width: '100%', accentColor: '#f59e0b', cursor: 'pointer' }}
+                    style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#f59e0b', cursor: 'pointer' }}
                   />
-                  <div className="flex justify-between text-xs text-slate-400 mt-1">
-                    <span>Weak</span>
-                    <span className="text-amber-400 font-bold">{fieldStrength}%</span>
-                    <span>Strong</span>
+                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                    <span>20 (Weak)</span>
+                    <span>100 (Strong)</span>
                   </div>
                 </div>
 
                 {/* Mesh Density */}
                 <div>
-                  <label className="block text-sm font-bold text-blue-400 mb-2 uppercase tracking-wide">
-                    Cage Mesh Density
-                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 700, color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Cage Mesh Density
+                    </label>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#bfdbfe' }}>{meshDensity}%</span>
+                  </div>
                   <input
                     type="range"
                     min="10"
                     max="100"
                     value={meshDensity}
                     onChange={(e) => { setMeshDensity(parseInt(e.target.value)); setHasExperimented(true); }}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                    style={{ width: '100%', accentColor: '#3b82f6', cursor: 'pointer' }}
+                    style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#3b82f6', cursor: 'pointer' }}
                   />
-                  <div className="flex justify-between text-xs text-slate-400 mt-1">
-                    <span>Sparse</span>
-                    <span className="text-blue-400 font-bold">{meshDensity}%</span>
-                    <span>Dense</span>
+                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                    <span>10 (Sparse)</span>
+                    <span>100 (Dense)</span>
                   </div>
                 </div>
 
                 {/* Wave Frequency */}
                 <div>
-                  <label className="block text-sm font-bold text-purple-400 mb-2 uppercase tracking-wide">
-                    EM Wave Frequency
-                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 700, color: '#d8b4fe', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      EM Wave Frequency
+                    </label>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#e9d5ff' }}>{waveFrequency} MHz</span>
+                  </div>
                   <input
                     type="range"
                     min="10"
                     max="100"
                     value={waveFrequency}
                     onChange={(e) => { setWaveFrequency(parseInt(e.target.value)); setHasExperimented(true); }}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                    style={{ width: '100%', accentColor: '#a855f7', cursor: 'pointer' }}
+                    style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#a855f7', cursor: 'pointer' }}
                   />
-                  <div className="flex justify-between text-xs text-slate-400 mt-1">
-                    <span>Low (Radio)</span>
-                    <span className="text-purple-400 font-bold">{waveFrequency} MHz</span>
-                    <span>High (Microwave)</span>
+                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                    <span>10 MHz (Radio)</span>
+                    <span>100 MHz (Microwave)</span>
                   </div>
                 </div>
               </div>
 
-              {/* Results Panel */}
-              <div className={`mt-6 p-4 rounded-xl border ${cageEnabled ? 'bg-green-900/20 border-green-600' : 'bg-slate-700/50 border-slate-600'}`}>
-                <p className="text-slate-300 text-center">
+              {/* Results Panel - comparison display */}
+              <div style={{ marginTop: '24px', padding: '16px', borderRadius: '12px', border: cageEnabled ? '1px solid #22c55e' : '1px solid #475569', background: cageEnabled ? 'rgba(34,197,94,0.1)' : 'rgba(51,65,85,0.5)', transition: 'all 0.3s' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ textAlign: 'center', flex: 1 }}>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>Before (No Cage)</div>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#f59e0b' }}>{fieldStrength}%</div>
+                  </div>
+                  <div style={{ fontSize: '20px', color: '#64748b', padding: '0 12px' }}>vs</div>
+                  <div style={{ textAlign: 'center', flex: 1 }}>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>After (With Cage)</div>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: cageEnabled ? '#4ade80' : '#ef4444' }}>{cageEnabled ? `${signalStrength}%` : `${fieldStrength}%`}</div>
+                  </div>
+                </div>
+                <p style={{ color: '#cbd5e1', textAlign: 'center', fontSize: '14px', margin: 0 }}>
                   {cageEnabled ? (
-                    <>
-                      <span className="text-green-400 font-bold">Shielded! </span>
-                      Free electrons on the cage surface redistribute to create an opposing field,
-                      canceling the external field inside. Signal reduced to {signalStrength}%.
-                    </>
+                    <>Shielded! Free electrons redistribute to cancel the field. Change from {fieldStrength}% to {signalStrength}% (factor of {(fieldStrength / Math.max(1, signalStrength)).toFixed(1)}x reduction).</>
                   ) : (
-                    <>
-                      <span className="text-amber-400 font-bold">No Protection. </span>
-                      EM waves pass freely through. The phone receives full signal strength.
-                    </>
+                    <>No Protection. EM waves pass freely through. Enable cage to compare before vs after.</>
                   )}
                 </p>
               </div>
@@ -1729,6 +1884,16 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
     return (
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-6">The Shielding Principle</h2>
+
+            {/* Connection to prediction */}
+            <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '12px', padding: '16px', marginBottom: '16px', maxWidth: '640px', width: '100%' }}>
+              <p style={{ color: '#86efac', fontSize: '14px', margin: 0 }}>
+                <strong style={{ color: '#4ade80' }}>Remember when you predicted</strong> what would happen to signals inside the cage?
+                As you observed in the experiment, the free electrons on the conductor surface redistributed to cancel the external field inside.
+                You saw how enabling the cage dramatically reduced the signal strength - this is electromagnetic shielding in action!
+              </p>
+            </div>
+
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
               <div className="p-4 bg-amber-900/30 rounded-lg border border-amber-600">
                 <h3 className="text-amber-400 font-bold mb-2">How It Works</h3>
@@ -1786,20 +1951,24 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                 </filter>
               </defs>
               <rect width="320" height="160" rx="12" fill="#0f172a" />
+              {/* Top and bottom boundary labels for vertical content span */}
+              <text x="160" y="12" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">Mesh Size vs Wavelength</text>
+              <line x1="10" y1="8" x2="310" y2="8" stroke="#1e293b" strokeWidth="1" opacity="0.3" />
+              <line x1="10" y1="155" x2="310" y2="155" stroke="#1e293b" strokeWidth="1" opacity="0.3" />
               {/* Mesh cage with large holes */}
               <rect x="150" y="20" width="80" height="120" rx="4" fill="none" stroke="#94a3b8" strokeWidth="2" />
               {/* Large holes in mesh */}
               {[0,1,2].map(r => [0,1].map(c => (
                 <rect key={`hole-${r}-${c}`} x={155 + c * 38} y={28 + r * 38} width="30" height="30" rx="2" fill="rgba(15,23,42,0.8)" stroke="#475569" strokeWidth="1" strokeDasharray="3,2" />
               )))}
-              {/* Short wavelength waves going through */}
-              <path d="M 30,50 Q 40,42 50,50 Q 60,58 70,50 Q 80,42 90,50 Q 100,58 110,50 Q 120,42 130,50 Q 140,58 150,50" fill="none" stroke="#f59e0b" strokeWidth="2" filter="url(#fcTwpGlow)" />
+              {/* Short wavelength waves going through - large amplitude to show penetration */}
+              <path d="M 10,80 Q 25,30 40,80 Q 55,130 70,80 Q 85,30 100,80 Q 115,130 130,80 Q 145,30 150,80" fill="none" stroke="#f59e0b" strokeWidth="2" filter="url(#fcTwpGlow)" />
               {/* Waves leaking through holes */}
-              <path d="M 230,50 Q 240,42 250,50 Q 260,58 270,50 Q 280,42 290,50" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.7" />
+              <path d="M 230,80 Q 245,30 260,80 Q 275,130 290,80 Q 305,30 310,80" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.7" />
               {/* Labels */}
-              <text x="90" y="80" fill="#f59e0b" fontSize="10" textAnchor="middle" fontFamily="sans-serif">Short wavelength</text>
-              <text x="260" y="80" fill="#ef4444" fontSize="10" textAnchor="middle" fontFamily="sans-serif">Leaks through!</text>
-              <text x="190" y="155" fill="#94a3b8" fontSize="10" textAnchor="middle" fontFamily="sans-serif">Large holes in cage mesh</text>
+              <text x="90" y="145" fill="#f59e0b" fontSize="11" textAnchor="middle" fontFamily="sans-serif">Short wavelength</text>
+              <text x="260" y="145" fill="#ef4444" fontSize="11" textAnchor="middle" fontFamily="sans-serif">Leaks through!</text>
+              <text x="190" y="155" fill="#94a3b8" fontSize="11" textAnchor="middle" fontFamily="sans-serif">Large holes in cage mesh</text>
               {/* Arrow showing wave direction */}
               <polygon points="145,50 135,45 135,55" fill="#f59e0b" />
             </svg>
@@ -1930,7 +2099,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                     value={twistWavelength}
                     onChange={(e) => { setTwistWavelength(parseInt(e.target.value)); setHasTestedTwist(true); }}
                     className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                    style={{ width: '100%', accentColor: '#3b82f6', cursor: 'pointer' }}
+                    style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#3b82f6', cursor: 'pointer' }}
                   />
                   <div className="flex justify-between text-xs text-slate-400 mt-1">
                     <span>10mm (Short)</span>
@@ -1951,7 +2120,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                     value={twistMeshSize}
                     onChange={(e) => { setTwistMeshSize(parseInt(e.target.value)); setHasTestedTwist(true); }}
                     className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                    style={{ width: '100%', accentColor: '#f59e0b', cursor: 'pointer' }}
+                    style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#f59e0b', cursor: 'pointer' }}
                   />
                   <div className="flex justify-between text-xs text-slate-400 mt-1">
                     <span>5mm (Fine)</span>
@@ -2046,56 +2215,67 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-          <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-            <div className="flex gap-2 mb-6 flex-wrap justify-center">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '24px' }}>Real-World Applications</h2>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
               {TRANSFER_APPS.map((app, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveAppTab(index)}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    activeAppTab === index ? 'bg-amber-600 text-white'
-                    : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                  }`}
+                  style={{ padding: '8px 16px', borderRadius: '8px', fontWeight: 500, transition: 'all 0.3s', border: activeAppTab === index ? 'none' : completedApps.has(index) ? '1px solid #22c55e' : '1px solid transparent', background: activeAppTab === index ? '#d97706' : completedApps.has(index) ? 'rgba(34,197,94,0.2)' : '#334155', color: activeAppTab === index ? 'white' : completedApps.has(index) ? '#4ade80' : '#cbd5e1', cursor: 'pointer', zIndex: 10 }}
                 >
                   {app.icon} {app.title.split(' ')[0]}
                 </button>
               ))}
             </div>
-            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-3xl">{TRANSFER_APPS[activeAppTab].icon}</span>
-                <h3 className="text-xl font-bold text-white">{TRANSFER_APPS[activeAppTab].title}</h3>
+
+            {/* Scrollable app cards container */}
+            <div style={{ overflowY: 'auto', maxHeight: '60vh', width: '100%', maxWidth: '640px', paddingBottom: '16px' }}>
+              {/* Current app card */}
+              <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '24px', width: '100%', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <span style={{ fontSize: '32px' }}>{TRANSFER_APPS[activeAppTab].icon}</span>
+                  <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'white' }}>{TRANSFER_APPS[activeAppTab].title}</h3>
+                </div>
+                <p style={{ fontSize: '16px', color: '#cbd5e1', marginTop: '16px' }}>{TRANSFER_APPS[activeAppTab].description}</p>
+                {!completedApps.has(activeAppTab) && (
+                  <button
+                    onClick={() => handleAppComplete(activeAppTab)}
+                    style={{ marginTop: '16px', padding: '8px 16px', background: '#059669', color: 'white', borderRadius: '8px', fontWeight: 500, border: 'none', cursor: 'pointer', zIndex: 10 }}
+                  >
+                    Mark as Understood
+                  </button>
+                )}
               </div>
-              <p className="text-lg text-slate-300 mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
-              {!completedApps.has(activeAppTab) && (
-                <button
-                  onClick={() => handleAppComplete(activeAppTab)}
-                  style={{ zIndex: 10 }}
-                  className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium"
-                >
-                  Mark as Understood
-                </button>
-              )}
-            </div>
-            {/* Numeric stats summary */}
-            <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(30,41,59,0.5)', borderRadius: '12px', maxWidth: '640px', width: '100%' }}>
-              <p style={{ color: 'rgba(148,163,184,1)', fontSize: '13px', lineHeight: 1.7, fontWeight: 400 }}>
-                Faraday cages provide 60 dB to 100 dB of shielding effectiveness, blocking 99.9% of electromagnetic signals.
-                The global EMI shielding market is worth $30B annually. Lightning strikes deliver 200M volts and 30000 A
-                of current, yet passengers inside metal vehicles remain safe. MRI room shielding costs $200K and protects
-                over 40000 machines worldwide. RFID signals operate at 125 KHz to 13.56 MHz, and blocking wallets prevent
-                $10B in annual contactless fraud. Microwave ovens use 2.45 GHz waves with 12 cm wavelength, contained by
-                mesh with 1 mm holes.
-              </p>
+
+              {/* All app summary cards */}
+              {TRANSFER_APPS.map((app, index) => (
+                <div key={index} style={{ background: 'rgba(30,41,59,0.3)', borderRadius: '12px', padding: '16px', marginBottom: '8px', border: completedApps.has(index) ? '1px solid #22c55e' : '1px solid rgba(100,116,139,0.3)', cursor: 'pointer', transition: 'all 0.3s' }} onClick={() => setActiveAppTab(index)}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '20px' }}>{app.icon}</span>
+                    <span style={{ fontWeight: 600, color: activeAppTab === index ? '#f59e0b' : '#e2e8f0' }}>{app.title}</span>
+                    {completedApps.has(index) && <span style={{ marginLeft: 'auto', color: '#22c55e', fontSize: '14px' }}>Done</span>}
+                  </div>
+                </div>
+              ))}
+
+              {/* Numeric stats summary */}
+              <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(30,41,59,0.5)', borderRadius: '12px', width: '100%' }}>
+                <p style={{ color: 'rgba(148,163,184,1)', fontSize: '13px', lineHeight: 1.7, fontWeight: 400, margin: 0 }}>
+                  Faraday cages provide 60 dB to 100 dB of shielding effectiveness, blocking 99.9% of electromagnetic signals.
+                  The global EMI shielding market is worth $30B annually. Lightning strikes deliver 200M volts and 30000 A
+                  of current, yet passengers inside metal vehicles remain safe. MRI room shielding costs $200K and protects
+                  over 40000 machines worldwide. RFID signals operate at 125 KHz to 13.56 MHz, and blocking wallets prevent
+                  $10B in annual contactless fraud. Microwave ovens use 2.45 GHz waves with 12 cm wavelength, contained by
+                  mesh with 1 mm holes.
+                </p>
+              </div>
             </div>
 
-            <div className="mt-6 flex items-center gap-2">
-              <span className="text-slate-400">Progress:</span>
-              <div className="flex gap-1">{TRANSFER_APPS.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
-              <span className="text-slate-400">{completedApps.size}/4</span>
+            <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#94a3b8' }}>Progress:</span>
+              <div style={{ display: 'flex', gap: '4px' }}>{TRANSFER_APPS.map((_, i) => (<div key={i} style={{ width: '12px', height: '12px', borderRadius: '50%', background: completedApps.has(i) ? '#22c55e' : '#475569' }} />))}</div>
+              <span style={{ color: '#94a3b8' }}>{completedApps.size}/4</span>
             </div>
           </div>
     );
@@ -2132,7 +2312,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>Knowledge Assessment</h2>
-        <p style={{ color: '#94a3b8', marginBottom: '24px', fontWeight: 400 }}>Faraday cage electromagnetic shielding mastery test covering electron redistribution, mesh wavelength principles, and real-world applications of electromagnetic protection</p>
+        <p style={{ color: '#cbd5e1', marginBottom: '24px', fontWeight: 400 }}>Faraday cage electromagnetic shielding mastery test covering electron redistribution, mesh wavelength principles, and real-world applications of electromagnetic protection. Each question explores a different aspect of how conductive enclosures block electromagnetic waves through charge redistribution.</p>
 
         {/* Progress dots */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
@@ -2269,7 +2449,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
 
       {/* Top bar with nav dots */}
       <div style={{ flexShrink: 0, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15,23,42,0.9)' }}>
-        <span style={{ fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Faraday Cage</span>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>Faraday Cage</span>
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           {phaseOrder.map((p, index) => (
             <button
@@ -2289,11 +2469,11 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
             />
           ))}
         </div>
-        <span style={{ fontSize: '12px', color: '#64748b' }}>{phaseLabels[phase]}</span>
+        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>{phaseLabels[phase]}</span>
       </div>
 
       {/* Content area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderPhaseContent()}
       </div>
 
@@ -2306,7 +2486,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
         >
           Back
         </button>
-        <span style={{ fontSize: '12px', color: '#64748b' }}>{currentPhaseIndex + 1} / {phaseOrder.length}</span>
+        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>{currentPhaseIndex + 1} / {phaseOrder.length}</span>
         <button
           onClick={() => { if (currentPhaseIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentPhaseIndex + 1]); }}
           style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: currentPhaseIndex < phaseOrder.length - 1 ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: currentPhaseIndex < phaseOrder.length - 1 ? 'pointer' : 'not-allowed', fontSize: '14px', fontWeight: 500, opacity: currentPhaseIndex < phaseOrder.length - 1 ? 1 : 0.4 }}

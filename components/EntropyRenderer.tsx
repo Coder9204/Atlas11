@@ -540,24 +540,39 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     setIsSimulating(true);
   }, []);
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Navigation bar component
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
-      height: '4px',
+      height: '56px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      borderBottom: `1px solid ${colors.border}`,
     }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '24px' }}>🎲</span>
+        <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Entropy</span>
+      </div>
+      <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
+        {phaseLabels[phase]} ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
+      </div>
       <div style={{
-        height: '100%',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        height: '3px',
         width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
         background: `linear-gradient(90deg, ${colors.accent}, #EC4899)`,
         transition: 'width 0.3s ease',
       }} />
-    </div>
+    </nav>
   );
 
   // Navigation dots
@@ -599,17 +614,31 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+    minWidth: '44px',
+  };
+
+  // Secondary button style
+  const secondaryButtonStyle: React.CSSProperties = {
+    background: colors.bgCard,
+    color: colors.textPrimary,
+    border: `1px solid ${colors.border}`,
+    borderRadius: '12px',
+    padding: '14px 24px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    minHeight: '44px',
+    minWidth: '44px',
   };
 
   // Particle Visualization Component
-  const ParticleVisualization = ({ width = 320, height = 280 }: { width?: number; height?: number }) => {
+  const ParticleVisualization = ({ width = 320, height = 280, isStatic = false }: { width?: number; height?: number; isStatic?: boolean }) => {
     const entropy = calculateEntropy();
     const microstates = calculateMicrostates();
-    const scale = width / 100;
 
     return (
       <div style={{ textAlign: 'center' }}>
-        <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
           <defs>
             <radialGradient id="hotParticle" cx="30%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#fca5a5" />
@@ -628,52 +657,75 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+            <linearGradient id="containerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
           </defs>
 
-          {/* Container background */}
-          <rect x="10" y="30" width={width - 20} height={height - 80} rx="8" fill="#0f172a" stroke={colors.border} strokeWidth="2" />
+          {/* Main container group */}
+          <g id="container-group">
+            {/* Container background */}
+            <rect x="10" y="30" width={width - 20} height={height - 80} rx="8" fill="url(#containerGradient)" stroke={colors.border} strokeWidth="2" />
 
-          {/* Barrier */}
-          {!barrierRemoved && (
-            <rect x={width/2 - 3} y="35" width="6" height={height - 90} rx="2" fill="#64748b" />
-          )}
+            {/* Grid lines for visual reference */}
+            <g id="grid-lines" opacity="0.2">
+              <line x1={width * 0.25} y1="30" x2={width * 0.25} y2={height - 50} stroke={colors.border} strokeWidth="1" />
+              <line x1={width * 0.75} y1="30" x2={width * 0.75} y2={height - 50} stroke={colors.border} strokeWidth="1" />
+              <line x1="10" y1={height * 0.4} x2={width - 10} y2={height * 0.4} stroke={colors.border} strokeWidth="1" />
+            </g>
+          </g>
 
-          {/* Barrier removed indicator */}
-          {barrierRemoved && (
-            <line x1={width/2} y1="35" x2={width/2} y2={height - 55} stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" />
-          )}
+          {/* Barrier group */}
+          <g id="barrier-group">
+            {!barrierRemoved && (
+              <>
+                <rect x={width/2 - 4} y="35" width="8" height={height - 90} rx="3" fill="#475569" />
+                <rect x={width/2 - 2} y="35" width="4" height={height - 90} rx="2" fill="#64748b" />
+              </>
+            )}
+            {barrierRemoved && (
+              <line x1={width/2} y1="35" x2={width/2} y2={height - 55} stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" />
+            )}
+          </g>
 
-          {/* Particles */}
-          {particles.map((p, i) => (
-            <circle
-              key={i}
-              cx={10 + p.x * (width - 20) / 100}
-              cy={30 + p.y * (height - 80) / 100}
-              r={isMobile ? 4 : 5}
-              fill={p.type === 'hot' ? 'url(#hotParticle)' : 'url(#coldParticle)'}
-              filter="url(#particleGlow)"
-            />
-          ))}
+          {/* Particles group */}
+          <g id="particles-group">
+            {particles.map((p, i) => (
+              <circle
+                key={i}
+                cx={10 + p.x * (width - 20) / 100}
+                cy={30 + p.y * (height - 80) / 100}
+                r={isMobile ? 4 : 5}
+                fill={p.type === 'hot' ? 'url(#hotParticle)' : 'url(#coldParticle)'}
+                filter="url(#particleGlow)"
+              />
+            ))}
+          </g>
 
-          {/* Labels */}
-          <text x={width * 0.25} y="20" textAnchor="middle" fill={colors.hot} fontSize="12" fontWeight="600">
-            Hot ({particles.filter(p => p.x < 50 && p.type === 'hot').length})
-          </text>
-          <text x={width * 0.75} y="20" textAnchor="middle" fill={colors.cold} fontSize="12" fontWeight="600">
-            Cold ({particles.filter(p => p.x >= 50 && p.type === 'cold').length})
-          </text>
+          {/* Labels group */}
+          <g id="labels-group">
+            <text x={width * 0.25} y="20" textAnchor="middle" fill={colors.hot} fontSize="12" fontWeight="600">
+              Hot ({particles.filter(p => p.x < 50 && p.type === 'hot').length})
+            </text>
+            <text x={width * 0.75} y="20" textAnchor="middle" fill={colors.cold} fontSize="12" fontWeight="600">
+              Cold ({particles.filter(p => p.x >= 50 && p.type === 'cold').length})
+            </text>
+          </g>
 
-          {/* Stats bar */}
-          <rect x="10" y={height - 40} width={width - 20} height="35" rx="6" fill={colors.bgSecondary} />
-          <text x="20" y={height - 18} fill={colors.textSecondary} fontSize="11">
-            S = {entropy.toFixed(2)}
-          </text>
-          <text x={width/2} y={height - 18} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
-            Omega = {microstates.toLocaleString()}
-          </text>
-          <text x={width - 20} y={height - 18} textAnchor="end" fill={colors.textSecondary} fontSize="11">
-            t = {timeElapsed}
-          </text>
+          {/* Stats bar group */}
+          <g id="stats-group">
+            <rect x="10" y={height - 40} width={width - 20} height="35" rx="6" fill={colors.bgSecondary} />
+            <text x="20" y={height - 18} fill="#e2e8f0" fontSize="11">
+              S = {entropy.toFixed(2)}
+            </text>
+            <text x={width/2} y={height - 18} textAnchor="middle" fill="#e2e8f0" fontSize="11">
+              Omega = {microstates.toLocaleString()}
+            </text>
+            <text x={width - 20} y={height - 18} textAnchor="end" fill="#e2e8f0" fontSize="11">
+              t = {timeElapsed}
+            </text>
+          </g>
         </svg>
       </div>
     );
@@ -694,9 +746,10 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <div style={{
           fontSize: '64px',
@@ -713,7 +766,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
 
         <p style={{
           ...typo.body,
-          color: colors.textSecondary,
+          color: '#e2e8f0',
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
@@ -730,7 +783,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
         }}>
           <ParticleVisualization width={isMobile ? 280 : 340} height={220} />
 
-          <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '16px', fontStyle: 'italic' }}>
+          <p style={{ ...typo.small, color: '#e2e8f0', marginTop: '16px', fontStyle: 'italic' }}>
             "The second law of thermodynamics holds, I think, the supreme position among the laws of Nature." - Sir Arthur Eddington
           </p>
         </div>
@@ -769,16 +822,30 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
         flexDirection: 'column',
         alignItems: 'center',
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
           Make Your Prediction
         </h2>
-        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+        <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '24px' }}>
           Phase 2 of 10: Predict
         </p>
+
+        {/* Static visualization for predict phase */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '16px',
+          maxWidth: '400px',
+          width: '100%',
+          marginBottom: '16px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <ParticleVisualization width={isMobile ? 280 : 360} height={200} isStatic={true} />
+        </div>
 
         <div style={{
           background: colors.bgCard,
@@ -794,12 +861,12 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
               <div style={{ fontSize: '32px' }}>🔴🔴</div>
               <div style={{ color: colors.hot, fontWeight: 600 }}>Hot Side</div>
             </div>
-            <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>+</div>
+            <div style={{ fontSize: '24px', color: '#e2e8f0', alignSelf: 'center' }}>+</div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '32px' }}>🔵🔵</div>
               <div style={{ color: colors.cold, fontWeight: 600 }}>Cold Side</div>
             </div>
-            <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>=</div>
+            <div style={{ fontSize: '24px', color: '#e2e8f0', alignSelf: 'center' }}>=</div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '32px' }}>🔴🔵</div>
               <div style={{ color: colors.accent, fontWeight: 600 }}>Mixed</div>
@@ -890,14 +957,15 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
         flexDirection: 'column',
         alignItems: 'center',
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>
           Entropy Laboratory
         </h2>
-        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+        <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '24px' }}>
           Phase 3 of 10: Experiment
         </p>
 
@@ -921,8 +989,8 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
           marginBottom: '24px',
         }}>
           <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-            <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-              Particles: {particleCount}
+            <label style={{ ...typo.small, color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
+              Number of Particles: {particleCount}
             </label>
             <input
               type="range"
@@ -931,6 +999,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
               value={particleCount}
               onChange={(e) => setParticleCount(parseInt(e.target.value))}
               style={{ width: '100%', accentColor: colors.accent }}
+              aria-label="Number of Particles"
             />
           </div>
 
@@ -952,24 +1021,19 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
                 padding: '16px',
                 fontWeight: 700,
                 cursor: 'pointer',
+                minHeight: '44px',
               }}
             >
-              {!barrierRemoved ? '🚀 Remove Barrier' : isSimulating ? '⏸️ Pause' : '▶️ Play'}
+              {!barrierRemoved ? 'Remove Barrier' : isSimulating ? 'Pause' : 'Play'}
             </button>
             <button
               onClick={resetSimulation}
               style={{
+                ...secondaryButtonStyle,
                 flex: 1,
-                background: colors.bgCard,
-                color: colors.textPrimary,
-                border: `1px solid ${colors.border}`,
-                borderRadius: '12px',
-                padding: '16px',
-                fontWeight: 700,
-                cursor: 'pointer',
               }}
             >
-              ↺ Reset
+              Reset
             </button>
           </div>
         </div>
@@ -981,7 +1045,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
           padding: '20px',
           maxWidth: '500px',
           width: '100%',
-          marginBottom: '24px',
+          marginBottom: '16px',
           border: `1px solid ${colors.accent}33`,
           textAlign: 'center',
         }}>
@@ -991,9 +1055,28 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
           <div style={{ fontSize: '24px', color: colors.textPrimary, fontFamily: 'serif', marginBottom: '8px' }}>
             S = k<sub>B</sub> ln(Omega)
           </div>
-          <p style={{ ...typo.small, color: colors.textSecondary }}>
+          <p style={{ ...typo.small, color: '#e2e8f0' }}>
             Entropy (S) equals Boltzmann's constant times the natural log of microstates (Omega).
             More ways to arrange = higher entropy!
+          </p>
+        </div>
+
+        {/* Real-world relevance */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '12px',
+          padding: '20px',
+          maxWidth: '500px',
+          width: '100%',
+          marginBottom: '24px',
+          border: `1px solid ${colors.success}33`,
+        }}>
+          <h4 style={{ ...typo.small, color: colors.success, fontWeight: 700, marginBottom: '8px' }}>
+            Real-World Applications
+          </h4>
+          <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+            This same principle explains why ice melts in warm water, why perfume spreads through a room,
+            and why heat engines can never be 100% efficient. Entropy is the reason time has a direction!
           </p>
         </div>
 
@@ -1073,16 +1156,35 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
         flexDirection: 'column',
         alignItems: 'center',
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>
           Understanding Entropy
         </h2>
-        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+        <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '16px' }}>
           Phase 4 of 10: Review
         </p>
+
+        {/* Reference user's prediction */}
+        {prediction && (
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            maxWidth: '600px',
+            width: '100%',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+              You predicted that particles {prediction === 'c' ? 'could theoretically separate but with vanishingly small probability' : prediction === 'a' ? 'would eventually separate' : prediction === 'b' ? 'could never separate' : 'would only separate at absolute zero'}.
+              {prediction === 'c' ? ' That\'s exactly right!' : ' Let\'s see why the answer is actually about probability, not impossibility.'}
+            </p>
+          </div>
+        )}
 
         <div style={{
           display: 'grid',
@@ -1105,7 +1207,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
               </div>
               <ul style={{ margin: 0, paddingLeft: '20px' }}>
                 {concept.points.map((point, j) => (
-                  <li key={j} style={{ ...typo.small, color: colors.textSecondary, marginBottom: '6px' }}>
+                  <li key={j} style={{ ...typo.small, color: '#e2e8f0', marginBottom: '6px' }}>
                     {point}
                   </li>
                 ))}
@@ -1146,14 +1248,15 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
         flexDirection: 'column',
         alignItems: 'center',
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <h2 style={{ ...typo.h2, color: '#06B6D4', marginBottom: '8px', textAlign: 'center' }}>
           The Twist Challenge
         </h2>
-        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+        <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '24px' }}>
           Phase 5 of 10: New Variable
         </p>
 
@@ -1193,6 +1296,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
                 textAlign: 'left',
                 cursor: twistPrediction ? 'default' : 'pointer',
                 transition: 'all 0.2s ease',
+                minHeight: '44px',
               }}
               disabled={twistPrediction !== null}
             >
@@ -1215,7 +1319,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
             <p style={{ ...typo.body, color: colors.success, fontWeight: 600, marginBottom: '8px' }}>
               The key insight!
             </p>
-            <p style={{ ...typo.small, color: colors.textSecondary }}>
+            <p style={{ ...typo.small, color: '#e2e8f0' }}>
               Refrigerators use electrical work to pump heat "uphill." The work input generates MORE entropy (waste heat dumped into your kitchen) than the entropy removed from inside. Total entropy still increases!
             </p>
             <button
@@ -1248,14 +1352,15 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
         flexDirection: 'column',
         alignItems: 'center',
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <h2 style={{ ...typo.h2, color: '#06B6D4', marginBottom: '8px' }}>
           Local Order, Global Disorder
         </h2>
-        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+        <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '24px' }}>
           Phase 6 of 10: Heat Flow
         </p>
 
@@ -1436,14 +1541,15 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
         flexDirection: 'column',
         alignItems: 'center',
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavBar()}
 
         <h2 style={{ ...typo.h2, color: '#06B6D4', marginBottom: '8px' }}>
           The Deep Insight
         </h2>
-        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+        <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '24px' }}>
           Phase 7 of 10: Deep Understanding
         </p>
 
@@ -1459,7 +1565,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
           <h3 style={{ ...typo.h3, color: '#06B6D4', marginBottom: '16px', textAlign: 'center' }}>
             Order CAN Be Created - At a Cost!
           </h3>
-          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+          <p style={{ ...typo.body, color: '#e2e8f0', marginBottom: '16px' }}>
             The Second Law doesn't forbid local decreases in entropy. It just demands payment:
           </p>
 
@@ -1476,7 +1582,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
                 <span style={{ fontSize: '24px' }}>{item.icon}</span>
                 <div>
                   <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{item.title}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{item.desc}</div>
+                  <div style={{ ...typo.small, color: '#e2e8f0' }}>{item.desc}</div>
                 </div>
               </div>
             ))}
@@ -1492,7 +1598,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
             <p style={{ ...typo.body, color: colors.success, fontWeight: 600, margin: 0 }}>
               In every case: Delta S_local + Delta S_environment &gt;= 0
             </p>
-            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', marginTop: '8px' }}>
               The entropy bill always gets paid!
             </p>
           </div>

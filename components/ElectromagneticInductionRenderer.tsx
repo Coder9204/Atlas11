@@ -420,8 +420,8 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
       </p>
 
       {/* Premium Card with Visualization */}
-      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 max-w-2xl shadow-2xl">
-        <svg width={isMobile ? 280 : 360} height={200} className="mx-auto mb-4">
+      <div style={{ backdropFilter: 'blur(16px)', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: isMobile ? '24px' : '32px', maxWidth: '672px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <svg width={isMobile ? 280 : 360} height={200} viewBox={`0 0 ${isMobile ? 280 : 360} 200`} style={{ display: 'block', margin: '0 auto 16px', maxWidth: '100%' }}>
           <defs>
             <linearGradient id="hookBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
@@ -514,15 +514,31 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
       {/* CTA Button */}
       <button
         onClick={() => goToPhase('predict')}
-        className="group mt-8 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-lg font-semibold rounded-2xl hover:from-blue-500 hover:to-cyan-500 transition-all duration-300 shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] flex items-center gap-2"
+        style={{
+          marginTop: '32px',
+          padding: '16px 32px',
+          background: 'linear-gradient(135deg, #2563eb, #0891b2)',
+          color: '#ffffff',
+          fontSize: '18px',
+          fontWeight: 600,
+          borderRadius: '16px',
+          border: 'none',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          lineHeight: 1.5
+        }}
       >
         Discover the Secret
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
       </button>
 
-      <p className="mt-4 text-slate-500 text-sm">Tap to begin your exploration</p>
+      <p style={{ marginTop: '16px', color: '#64748b', fontSize: '14px', lineHeight: 1.5 }}>Tap to begin your exploration</p>
     </div>
   );
 
@@ -551,11 +567,114 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
       }
     };
 
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-        <h2 className={`${typo.heading} font-bold text-white mb-6`}>Make Your Prediction</h2>
+    const width = isMobile ? 300 : 380;
+    const height = 180;
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
+        <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: '#ffffff', marginBottom: '24px', lineHeight: 1.4 }}>Make Your Prediction</h2>
+
+        <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '672px', marginBottom: '24px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          {/* Static SVG diagram for predict phase */}
+          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto 16px', maxWidth: '100%' }}>
+            <defs>
+              <linearGradient id="predictBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0f172a" />
+                <stop offset="50%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </linearGradient>
+              <linearGradient id="predictCoil" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fbbf24" />
+                <stop offset="50%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#d97706" />
+              </linearGradient>
+              <linearGradient id="predictNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f87171" />
+                <stop offset="50%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#dc2626" />
+              </linearGradient>
+              <linearGradient id="predictSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#60a5fa" />
+                <stop offset="50%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#2563eb" />
+              </linearGradient>
+              <radialGradient id="predictMeter" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#475569" />
+                <stop offset="70%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </radialGradient>
+              <pattern id="predictGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+                <rect width="15" height="15" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+              </pattern>
+            </defs>
+
+            {/* Background */}
+            <rect x="0" y="0" width={width} height={height} fill="url(#predictBg)" rx="12" />
+            <rect x="0" y="0" width={width} height={height} fill="url(#predictGrid)" rx="12" />
+
+            {/* Coil in center */}
+            <g>
+              {[...Array(8)].map((_, i) => (
+                <ellipse
+                  key={i}
+                  cx={width / 2}
+                  cy={height / 2}
+                  rx={22 + i * 4}
+                  ry={40}
+                  fill="none"
+                  stroke="url(#predictCoil)"
+                  strokeWidth="3.5"
+                  opacity={0.9 - i * 0.08}
+                />
+              ))}
+            </g>
+
+            {/* Wire connections to galvanometer */}
+            <line x1={width / 2 - 54} y1={height / 2 - 32} x2={width / 2 - 80} y2={height / 2 - 45} stroke="url(#predictCoil)" strokeWidth="3" strokeLinecap="round" />
+            <line x1={width / 2 - 54} y1={height / 2 + 32} x2={width / 2 - 80} y2={height / 2 + 45} stroke="url(#predictCoil)" strokeWidth="3" strokeLinecap="round" />
+
+            {/* Galvanometer */}
+            <circle cx={width / 2 - 100} cy={height / 2} r={24} fill="url(#predictMeter)" stroke="#475569" strokeWidth="2" />
+            <circle cx={width / 2 - 100} cy={height / 2} r={18} fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            {[-25, 0, 25].map((angle, i) => (
+              <line
+                key={i}
+                x1={width / 2 - 100 + Math.sin(angle * Math.PI / 180) * 13}
+                y1={height / 2 - Math.cos(angle * Math.PI / 180) * 13}
+                x2={width / 2 - 100 + Math.sin(angle * Math.PI / 180) * 16}
+                y2={height / 2 - Math.cos(angle * Math.PI / 180) * 16}
+                stroke="#64748b"
+                strokeWidth="1"
+              />
+            ))}
+            {/* Meter needle */}
+            <line
+              x1={width / 2 - 100}
+              y1={height / 2}
+              x2={width / 2 - 100}
+              y2={height / 2 - 14}
+              stroke="#22c55e"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            <circle cx={width / 2 - 100} cy={height / 2} r={4} fill="#22c55e" />
+
+            {/* Bar magnet moving toward coil */}
+            <g>
+              <rect x={width / 2 + 60} y={height / 2 - 18} width={35} height={36} rx="4" fill="url(#predictNorth)" />
+              <rect x={width / 2 + 95} y={height / 2 - 18} width={35} height={36} rx="4" fill="url(#predictSouth)" />
+              <text x={width / 2 + 77} y={height / 2 + 5} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">N</text>
+              <text x={width / 2 + 112} y={height / 2 + 5} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">S</text>
+            </g>
+
+            {/* Motion arrow */}
+            <path d={`M ${width / 2 + 55} ${height / 2} L ${width / 2 + 40} ${height / 2}`} stroke="#22c55e" strokeWidth="3" strokeLinecap="round" />
+            <polygon points={`${width / 2 + 40},${height / 2 - 5} ${width / 2 + 30},${height / 2} ${width / 2 + 40},${height / 2 + 5}`} fill="#22c55e" />
+
+            {/* Label */}
+            <text x={width / 2} y={height - 12} textAnchor="middle" fill="#94a3b8" fontSize="11">Magnet approaching coil</text>
+          </svg>
+
           <p className={`${typo.body} text-slate-300 mb-4`}>
             A bar magnet is pushed toward a coil of wire connected to a meter. The meter needle deflects, indicating electric current!
           </p>
@@ -591,7 +710,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
         {prediction && (
           <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
             <p className="text-emerald-400 font-semibold">
-              {prediction === 'b' ? '✓ Correct!' : '✗ Not quite.'} This is <span className="text-cyan-400">Faraday's Law of Electromagnetic Induction</span>!
+              {prediction === 'b' ? 'Correct!' : 'Not quite.'} This is <span className="text-cyan-400">Faraday's Law of Electromagnetic Induction</span>!
             </p>
             <p className="text-slate-400 text-sm mt-2">
               A changing magnetic field creates an electric field - this is one of the most important discoveries in physics!
@@ -621,12 +740,17 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
     const emfIntensity = Math.min(Math.abs(inducedEMF) / 50, 1);
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className={`${typo.heading} font-bold text-white mb-4`}>Electromagnetic Induction Lab</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', gap: '16px' }}>
+        <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: '#ffffff', marginBottom: '16px', lineHeight: 1.4 }}>Electromagnetic Induction Lab</h2>
+
+        {/* What the visualization shows */}
+        <p style={{ fontSize: '14px', color: '#94a3b8', textAlign: 'center', maxWidth: '600px', lineHeight: 1.6 }}>
+          Watch how moving a magnet through a coil induces an electrical current. This demonstrates Faraday's Law in action.
+        </p>
 
         {/* Main Visualization */}
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-          <svg width={width} height={height} className="mx-auto">
+        <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto', maxWidth: '100%' }}>
             <defs>
               <linearGradient id="labBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" />
@@ -773,40 +897,61 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
         </div>
 
         {/* Controls */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-2xl mb-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', width: '100%', maxWidth: '672px', marginBottom: '16px' }}>
           <button
             onClick={() => isAnimating ? stopAnimation() : startMagnetDemo()}
-            className={`p-3 rounded-xl font-semibold transition-colors ${
-              isAnimating ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
-            } text-white`}
+            style={{
+              padding: '12px',
+              borderRadius: '12px',
+              fontWeight: 600,
+              transition: 'all 0.2s ease',
+              backgroundColor: isAnimating ? '#dc2626' : '#2563eb',
+              color: '#ffffff',
+              border: 'none',
+              cursor: 'pointer'
+            }}
           >
             {isAnimating ? 'Stop' : 'Start Demo'}
           </button>
 
           <button
             onClick={() => setShowFieldLines(!showFieldLines)}
-            className={`p-3 rounded-xl font-medium transition-colors ${
-              showFieldLines ? 'bg-cyan-600' : 'bg-slate-600'
-            } text-white`}
+            style={{
+              padding: '12px',
+              borderRadius: '12px',
+              fontWeight: 500,
+              transition: 'all 0.2s ease',
+              backgroundColor: showFieldLines ? '#0891b2' : '#475569',
+              color: '#ffffff',
+              border: 'none',
+              cursor: 'pointer'
+            }}
           >
             Field Lines: {showFieldLines ? 'ON' : 'OFF'}
           </button>
 
-          <div className="p-3 bg-slate-700/50 rounded-xl text-center">
-            <div className="text-sm text-slate-400">Turns</div>
+          <div style={{ padding: '12px', backgroundColor: 'rgba(71, 85, 105, 0.5)', borderRadius: '12px', textAlign: 'center' }}>
+            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>Turns</div>
             <input
               type="range"
               min="10"
               max="100"
               value={coilTurns}
               onChange={(e) => setCoilTurns(parseInt(e.target.value))}
-              className="w-full"
+              style={{
+                width: '100%',
+                height: '8px',
+                borderRadius: '4px',
+                background: 'linear-gradient(90deg, #3b82f6, #0891b2)',
+                cursor: 'pointer',
+                accentColor: '#3b82f6'
+              }}
             />
-            <div className="text-cyan-400 font-bold">{coilTurns}</div>
+            <div style={{ color: '#22d3ee', fontWeight: 700, marginTop: '4px' }}>{coilTurns}</div>
           </div>
 
-          <div className="p-3 bg-slate-700/50 rounded-xl text-center">
-            <div className="text-sm text-slate-400">Field (B)</div>
+          <div style={{ padding: '12px', backgroundColor: 'rgba(71, 85, 105, 0.5)', borderRadius: '12px', textAlign: 'center' }}>
+            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>Field (B)</div>
             <input
               type="range"
               min="0.1"
@@ -814,21 +959,33 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
               step="0.1"
               value={fieldStrength}
               onChange={(e) => setFieldStrength(parseFloat(e.target.value))}
-              className="w-full"
+              style={{
+                width: '100%',
+                height: '8px',
+                borderRadius: '4px',
+                background: 'linear-gradient(90deg, #3b82f6, #0891b2)',
+                cursor: 'pointer',
+                accentColor: '#3b82f6'
+              }}
             />
-            <div className="text-cyan-400 font-bold">{fieldStrength.toFixed(1)} T</div>
+            <div style={{ color: '#22d3ee', fontWeight: 700, marginTop: '4px' }}>{fieldStrength.toFixed(1)} T</div>
           </div>
         </div>
 
+        {/* Why this matters */}
+        <p style={{ fontSize: '14px', color: '#94a3b8', textAlign: 'center', maxWidth: '600px', marginBottom: '16px', lineHeight: 1.6 }}>
+          This principle powers generators, transformers, and electric motors - the backbone of modern electrical technology.
+        </p>
+
         {/* Faraday's Law explanation */}
-        <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
-          <h3 className="text-lg font-semibold text-cyan-400 mb-3">Faraday's Law:</h3>
-          <div className="text-center mb-3">
-            <span className="font-mono text-xl text-white bg-slate-700 px-4 py-2 rounded">
+        <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.7)', borderRadius: '12px', padding: '16px', maxWidth: '672px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#22d3ee', marginBottom: '12px', lineHeight: 1.4 }}>Faraday's Law:</h3>
+          <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+            <span style={{ fontFamily: 'monospace', fontSize: '20px', color: '#ffffff', backgroundColor: '#334155', padding: '8px 16px', borderRadius: '8px' }}>
               EMF = -N x dPhi/dt
             </span>
           </div>
-          <ul className={`space-y-2 ${typo.small} text-slate-300`}>
+          <ul style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#cbd5e1', lineHeight: 1.5 }}>
             <li><strong>EMF:</strong> Induced voltage (volts)</li>
             <li><strong>N:</strong> Number of coil turns (more turns = more EMF)</li>
             <li><strong>dPhi/dt:</strong> Rate of change of magnetic flux (faster change = more EMF)</li>
@@ -838,7 +995,17 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
 
         <button
           onClick={() => { stopAnimation(); goToPhase('review'); }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-cyan-500 transition-all duration-300"
+          style={{
+            marginTop: '24px',
+            padding: '12px 24px',
+            background: 'linear-gradient(135deg, #2563eb, #0891b2)',
+            color: '#ffffff',
+            fontWeight: 600,
+            borderRadius: '12px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}
         >
           Review the Concepts
         </button>
@@ -852,6 +1019,13 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className={`${typo.heading} font-bold text-white mb-6`}>Understanding Electromagnetic Induction</h2>
+
+      {/* Reference to prediction */}
+      <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', padding: '16px', marginBottom: '24px', maxWidth: '672px', border: '1px solid rgba(16, 185, 129, 0.2)', lineHeight: 1.6 }}>
+        <p style={{ color: '#34d399', fontSize: '15px' }}>
+          As you predicted, the changing magnetic field is what causes current to flow. This is exactly what Faraday discovered - a changing magnetic field induces an electric field that pushes charges through the wire.
+        </p>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6">
@@ -924,15 +1098,107 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
       playSound(id === 'c' ? 'success' : 'failure');
     };
 
+    const width = isMobile ? 300 : 380;
+    const height = 180;
+
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-4">
-          <span className="text-purple-400 text-sm font-medium">Twist Challenge</span>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '9999px', backgroundColor: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)', marginBottom: '16px' }}>
+          <span style={{ color: '#c084fc', fontSize: '14px', fontWeight: 500 }}>Twist Challenge</span>
         </div>
 
-        <h2 className={`${typo.heading} font-bold text-purple-400 mb-6`}>The Superconductor Surprise</h2>
+        <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: '#c084fc', marginBottom: '24px', lineHeight: 1.4 }}>The Superconductor Surprise</h2>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '672px', marginBottom: '24px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          {/* Static SVG diagram for twist predict phase */}
+          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto 16px', maxWidth: '100%' }}>
+            <defs>
+              <linearGradient id="twistPredictBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0f172a" />
+                <stop offset="50%" stopColor="#1e1b4b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </linearGradient>
+              <linearGradient id="twistSuperRing" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e879f9" />
+                <stop offset="50%" stopColor="#c026d3" />
+                <stop offset="100%" stopColor="#9333ea" />
+              </linearGradient>
+              <filter id="twistGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <pattern id="twistGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+                <rect width="15" height="15" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+              </pattern>
+            </defs>
+
+            {/* Background */}
+            <rect x="0" y="0" width={width} height={height} fill="url(#twistPredictBg)" rx="12" />
+            <rect x="0" y="0" width={width} height={height} fill="url(#twistGrid)" rx="12" />
+
+            {/* External magnetic field lines */}
+            {[-30, -15, 0, 15, 30].map((offset, i) => (
+              <line
+                key={i}
+                x1={20}
+                y1={height / 2 + offset}
+                x2={width - 20}
+                y2={height / 2 + offset}
+                stroke="#60a5fa"
+                strokeWidth="2"
+                strokeDasharray="6 4"
+                opacity={0.6}
+              />
+            ))}
+
+            {/* Superconducting ring with glow */}
+            <ellipse
+              cx={width / 2}
+              cy={height / 2}
+              rx={55}
+              ry={35}
+              fill="none"
+              stroke="#a855f7"
+              strokeWidth="14"
+              opacity="0.3"
+              filter="url(#twistGlow)"
+            />
+            <ellipse
+              cx={width / 2}
+              cy={height / 2}
+              rx={55}
+              ry={35}
+              fill="none"
+              stroke="url(#twistSuperRing)"
+              strokeWidth="8"
+            />
+
+            {/* Field lines through ring */}
+            {[-15, 0, 15].map((offset, i) => (
+              <line
+                key={i}
+                x1={width / 2 - 40}
+                y1={height / 2 + offset}
+                x2={width / 2 + 40}
+                y2={height / 2 + offset}
+                stroke="#60a5fa"
+                strokeWidth="2.5"
+                opacity="0.9"
+              />
+            ))}
+
+            {/* Labels */}
+            <text x={width / 2} y={25} textAnchor="middle" fill="#a855f7" fontSize="12" fontWeight="bold">Superconducting Ring</text>
+            <text x={width / 2} y={height - 12} textAnchor="middle" fill="#60a5fa" fontSize="11">External magnetic field B</text>
+
+            {/* Question mark indicator */}
+            <circle cx={width - 35} cy={35} r={18} fill="#1e1b4b" stroke="#a855f7" strokeWidth="2" />
+            <text x={width - 35} y={42} textAnchor="middle" fill="#a855f7" fontSize="20" fontWeight="bold">?</text>
+          </svg>
+
           <p className={`${typo.body} text-slate-300 mb-4`}>
             A superconducting ring (zero electrical resistance) is placed in a magnetic field. Then the external field is suddenly turned off.
           </p>
@@ -968,7 +1234,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
         {twistPrediction && (
           <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
             <p className="text-emerald-400 font-semibold">
-              {twistPrediction === 'c' ? '✓ Correct!' : '✗ Surprising!'} The field is trapped forever in a superconducting loop!
+              {twistPrediction === 'c' ? 'Correct!' : 'Surprising!'} The field is trapped forever in a superconducting loop!
             </p>
             <p className="text-slate-400 text-sm mt-2">
               This is called "flux trapping" - a superconductor perfectly opposes any flux change, maintaining the field indefinitely.
@@ -1294,22 +1560,33 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
         <div className="flex flex-col items-center p-6">
           <h2 className={`${typo.heading} font-bold text-white mb-4`}>Knowledge Assessment</h2>
 
-          {/* Progress */}
-          <div className="flex gap-1 mb-6">
+          {/* Question number indicator */}
+          <div className="text-lg font-semibold text-cyan-400 mb-3">
+            Question {currentQuestion + 1} of {testQuestions.length}
+          </div>
+
+          {/* Progress dots */}
+          <div className="flex gap-2 mb-6">
             {testQuestions.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentQuestion(i)}
-                className={`w-8 h-8 rounded-full text-sm font-medium transition-all ${
-                  currentQuestion === i
-                    ? 'bg-blue-600 text-white'
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: currentQuestion === i
+                    ? '#3b82f6'
                     : testAnswers[i] !== null
-                    ? 'bg-emerald-600/50 text-emerald-400'
-                    : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
-                }`}
-              >
-                {i + 1}
-              </button>
+                    ? '#10b981'
+                    : '#475569',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  transform: currentQuestion === i ? 'scale(1.3)' : 'scale(1)',
+                }}
+                aria-label={`Go to question ${i + 1}`}
+              />
             ))}
           </div>
 
@@ -1333,11 +1610,27 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
                     setTestAnswers(newAnswers);
                     playSound('click');
                   }}
-                  className={`p-4 rounded-lg text-left transition-all ${
-                    testAnswers[currentQuestion] === option.id
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                  }`}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '8px',
+                    textAlign: 'left',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: testAnswers[currentQuestion] === option.id
+                      ? '#2563eb'
+                      : '#334155',
+                    color: testAnswers[currentQuestion] === option.id
+                      ? '#ffffff'
+                      : '#cbd5e1',
+                    border: testAnswers[currentQuestion] === option.id
+                      ? '2px solid #60a5fa'
+                      : '2px solid transparent',
+                    transform: testAnswers[currentQuestion] === option.id
+                      ? 'scale(1.02)'
+                      : 'scale(1)',
+                    boxShadow: testAnswers[currentQuestion] === option.id
+                      ? '0 4px 12px rgba(59, 130, 246, 0.3)'
+                      : 'none',
+                  }}
                 >
                   <span className="font-bold">{option.id.toUpperCase()}.</span> {option.label}
                 </button>
@@ -1527,40 +1820,153 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
     mastery: 'Master'
   };
 
+  // Get previous and next phases for navigation
+  const currentIndex = validPhases.indexOf(phase);
+  const prevPhase = currentIndex > 0 ? validPhases[currentIndex - 1] : null;
+  const nextPhase = currentIndex < validPhases.length - 1 ? validPhases[currentIndex + 1] : null;
+
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#0a0f1a',
+        color: '#ffffff',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}
+    >
       {/* Premium Background Layers */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/50 via-transparent to-cyan-950/50" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent" />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.5), transparent, rgba(6, 95, 70, 0.5))' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at top, rgba(30, 64, 175, 0.2), transparent, transparent)' }} />
 
       {/* Ambient Glow Circles */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-3/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl" />
+      <div style={{ position: 'absolute', top: '25%', left: '0', width: '200px', height: '200px', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: '50%', filter: 'blur(48px)', transform: 'translateX(-50%)' }} />
+      <div style={{ position: 'absolute', bottom: '25%', right: '0', width: '200px', height: '200px', backgroundColor: 'rgba(6, 182, 212, 0.1)', borderRadius: '50%', filter: 'blur(48px)', transform: 'translateX(50%)' }} />
 
-      {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className={`${typo.small} font-medium text-slate-400`}>Electromagnetic Induction</span>
-          <div className="flex gap-1.5 items-center">
+      {/* Top Navigation Bar */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        backdropFilter: 'blur(16px)',
+        backgroundColor: 'rgba(15, 23, 42, 0.7)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          maxWidth: '896px',
+          margin: '0 auto'
+        }}>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#94a3b8' }}>Electromagnetic Induction</span>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             {validPhases.map((p, i) => (
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p ? 'bg-blue-500 w-6' : validPhases.indexOf(phase) > i ? 'bg-blue-500 w-2' : 'bg-slate-600 w-2'
-                }`}
                 title={phaseNames[p]}
+                aria-label={phaseNames[p]}
+                style={{
+                  width: phase === p ? '24px' : '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: phase === p ? '#3b82f6' : validPhases.indexOf(phase) > i ? '#3b82f6' : '#475569',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  padding: 0,
+                }}
               />
             ))}
           </div>
-          <span className={`${typo.small} text-slate-500`}>{phaseNames[phase]}</span>
+          <span style={{ fontSize: '14px', color: '#64748b' }}>{phaseNames[phase]}</span>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 pt-14 pb-8">
+      {/* Main content area with scroll */}
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        paddingTop: '56px',
+        paddingBottom: '80px',
+        flex: 1,
+        overflowY: 'auto'
+      }}>
         {renderPhase()}
+      </div>
+
+      {/* Bottom Navigation Bar */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        backdropFilter: 'blur(16px)',
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '12px 16px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          maxWidth: '896px',
+          margin: '0 auto',
+          gap: '16px'
+        }}>
+          {/* Back Button */}
+          <button
+            onClick={() => prevPhase && goToPhase(prevPhase)}
+            disabled={!prevPhase}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              backgroundColor: prevPhase ? '#334155' : '#1e293b',
+              color: prevPhase ? '#ffffff' : '#64748b',
+              border: 'none',
+              cursor: prevPhase ? 'pointer' : 'not-allowed',
+              fontWeight: 600,
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+              opacity: prevPhase ? 1 : 0.5
+            }}
+          >
+            Back
+          </button>
+
+          {/* Phase indicator */}
+          <span style={{ fontSize: '12px', color: '#64748b' }}>
+            {currentIndex + 1} / {validPhases.length}
+          </span>
+
+          {/* Next Button */}
+          <button
+            onClick={() => nextPhase && goToPhase(nextPhase)}
+            disabled={!nextPhase}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              background: nextPhase ? 'linear-gradient(135deg, #2563eb, #0891b2)' : '#1e293b',
+              color: nextPhase ? '#ffffff' : '#64748b',
+              border: 'none',
+              cursor: nextPhase ? 'pointer' : 'not-allowed',
+              fontWeight: 600,
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+              opacity: nextPhase ? 1 : 0.5
+            }}
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

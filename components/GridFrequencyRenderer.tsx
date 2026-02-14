@@ -278,6 +278,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
@@ -330,8 +331,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
   };
 
@@ -392,15 +393,25 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const freqStatus = getFrequencyStatus();
 
   // Grid Visualization SVG Component
-  const GridVisualization = () => {
+  const GridVisualization = ({ isStatic = false }: { isStatic?: boolean }) => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 260 : 320;
 
-    // Frequency wave parameters
-    const wavelength = 60 / frequency * 40;
+    // Frequency wave parameters - use static 60Hz for predict phase
+    const displayFreq = isStatic ? 60 : frequency;
+    const wavelength = 60 / displayFreq * 40;
+    const staticStatus = { status: 'Normal', color: colors.success };
+    const displayStatus = isStatic ? staticStatus : freqStatus;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%', height: 'auto' }}
+        role="img"
+        aria-label="Grid frequency visualization"
+      >
         <defs>
           <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
@@ -434,8 +445,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           d={(() => {
             let path = 'M 40 70';
             for (let x = 0; x <= width - 60; x += 2) {
-              const phase = (x / wavelength + animationFrame * 0.1) * Math.PI * 2;
-              const y = 70 + Math.sin(phase) * 30;
+              const phaseVal = (x / wavelength + (isStatic ? 0 : animationFrame * 0.1)) * Math.PI * 2;
+              const y = 70 + Math.sin(phaseVal) * 30;
               path += ` L ${40 + x} ${y}`;
             }
             return path;
@@ -451,12 +462,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
 
         {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={freqStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={freqStatus.color} fontSize="24" fontWeight="bold">
-          {frequency.toFixed(2)} Hz
+        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={displayStatus.color} strokeWidth="2" />
+        <text x={width/2} y={height - 72} textAnchor="middle" fill={displayStatus.color} fontSize="24" fontWeight="bold">
+          {displayFreq.toFixed(2)} Hz
         </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={freqStatus.color} fontSize="12">
-          {freqStatus.status}
+        <text x={width/2} y={height - 56} textAnchor="middle" fill={displayStatus.color} fontSize="12">
+          {displayStatus.status}
         </text>
 
         {/* Supply/Demand indicators */}
@@ -474,27 +485,81 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         {/* Inertia indicator (spinning generator icon) */}
         <g transform={`translate(${width/2}, 140)`}>
           <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+          <circle cx="0" cy="0" r="20" fill="none" stroke={colors.accent} strokeWidth="1" strokeDasharray="4,2" opacity="0.5" />
           <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
             <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
             <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
           </g>
           <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
         </g>
+
+        {/* Decorative power flow paths */}
+        <path d="M 30 70 Q 35 60 40 70" fill="none" stroke={colors.accent} strokeWidth="1" opacity="0.4" />
+        <path d={`M ${width - 30} 70 Q ${width - 25} 80 ${width - 20} 70`} fill="none" stroke={colors.accent} strokeWidth="1" opacity="0.4" />
+
+        {/* Animated pulse on frequency display */}
+        <circle cx={width/2} cy={height - 75} r="4" fill={displayStatus.color} opacity="0.6">
+          <animate attributeName="r" values="4;8;4" dur="1.5s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.5s" repeatCount="indefinite" />
+        </circle>
+
         <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </svg>
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
+  // Go to previous phase
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Navigation bar component - fixed top with z-index
+  const renderNavBar = () => (
+    <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
+      height: '56px',
+      background: colors.bgSecondary,
+      borderBottom: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1000,
+    }}>
+      <button
+        onClick={prevPhase}
+        disabled={phase === 'hook'}
+        style={{
+          ...secondaryButtonStyle,
+          opacity: phase === 'hook' ? 0.5 : 1,
+          cursor: phase === 'hook' ? 'not-allowed' : 'pointer',
+          padding: '8px 16px',
+          minHeight: '36px',
+        }}
+      >
+        ← Back
+      </button>
+      <span style={{ ...typo.small, color: '#e2e8f0' }}>Grid Frequency Control</span>
+      <span style={{ ...typo.small, color: '#e2e8f0' }}>{phaseLabels[phase]}</span>
+    </nav>
+  );
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: '56px',
+      left: 0,
+      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 999,
     }}>
       <div style={{
         height: '100%',
@@ -532,7 +597,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     </div>
   );
 
-  // Primary button style
+  // Primary button style - 44px minimum touch target
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
     color: 'white',
@@ -544,6 +609,21 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Secondary button style - 44px minimum touch target
+  const secondaryButtonStyle: React.CSSProperties = {
+    background: 'transparent',
+    color: '#e2e8f0',
+    border: `1px solid ${colors.border}`,
+    padding: isMobile ? '12px 20px' : '14px 24px',
+    borderRadius: '10px',
+    fontSize: isMobile ? '14px' : '16px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    minHeight: '44px',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -558,59 +638,72 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          ⚡🔌
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Grid Frequency Control
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering's greatest achievements."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          paddingTop: '80px',
+          textAlign: 'center',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It's a constant balancing act happening millions of times per second."
+          <p className="text-muted" style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '2px' }}>
+            Power Systems
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Power Systems Engineering
+
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            ⚡🔌
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Grid Frequency Control
+          </h1>
+
+          <p style={{
+            ...typo.body,
+            color: '#e2e8f0',
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering&apos;s greatest achievements.
           </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', fontStyle: 'italic' }}>
+              The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It&apos;s a constant balancing act happening millions of times per second.
+            </p>
+            <p style={{ ...typo.small, color: '#e2e8f0', marginTop: '8px' }}>
+              — Power Systems Engineering
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Explore Grid Frequency →
+          </button>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Grid Frequency →
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -627,11 +720,22 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px', paddingTop: '80px' }}>
+          {/* Progress indicator */}
+          <div style={{
+            ...typo.small,
+            color: '#e2e8f0',
+            marginBottom: '16px',
+            textAlign: 'center',
+          }}>
+            Step 1 of 2: Make your prediction
+          </div>
+
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -648,7 +752,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             At 6 PM, millions of people arrive home and turn on their air conditioners simultaneously. What happens to grid frequency?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static graphic visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -656,27 +760,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Plants</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>60 Hz</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Grid Frequency</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏠❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Homes + AC</p>
-              </div>
-            </div>
+            <GridVisualization isStatic={true} />
           </div>
 
           {/* Options */}
@@ -693,6 +777,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -701,7 +786,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   height: '28px',
                   borderRadius: '50%',
                   background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  color: prediction === opt.id ? 'white' : '#e2e8f0',
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -709,7 +794,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 }}>
                   {opt.id.toUpperCase()}
                 </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                <span style={{ color: '#e2e8f0', ...typo.body }}>
                   {opt.text}
                 </span>
               </button>
@@ -737,17 +822,31 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px', paddingTop: '80px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Grid Frequency Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
             Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+              👀 <strong>Observe:</strong> Try adjusting the generation and load sliders. Watch how the frequency changes when supply and demand become unbalanced. Notice how higher inertia reduces the frequency swings.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -892,9 +991,22 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             </div>
           )}
 
+          {/* Real-world relevance */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Real-world relevance:</strong> Power grid operators monitor frequency 24/7 to maintain stability. In the real world, even a 0.5 Hz deviation can trigger emergency protocols affecting millions of homes and businesses.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
           >
             Understand the Physics →
           </button>
@@ -907,18 +1019,43 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionOptions: Record<string, string> = {
+      'a': 'frequency increases',
+      'b': 'frequency decreases (load acts as a brake)',
+      'c': 'frequency stays exactly at 60 Hz',
+    };
+    const userPredictionText = prediction ? predictionOptions[prediction] : 'no prediction';
+    const wasCorrect = prediction === 'b';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px', paddingTop: '80px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Frequency = Balance
           </h2>
+
+          {/* Reference user's prediction */}
+          <div style={{
+            background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${wasCorrect ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
+              {wasCorrect
+                ? `Your prediction was correct! You predicted that ${userPredictionText}. When demand exceeds supply, generators slow down and frequency drops.`
+                : `You predicted that ${userPredictionText}. Actually, when demand exceeds supply, the extra load acts as a brake on generators, causing frequency to decrease below 60 Hz.`
+              }
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -988,11 +1125,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px', paddingTop: '80px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1008,6 +1146,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             As solar panels replace coal plants (80% renewable penetration), what happens to grid frequency stability?
           </h2>
+
+          {/* Static graphic showing the scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <GridVisualization isStatic={true} />
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1065,17 +1214,31 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px', paddingTop: '80px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             High-Renewable Grid Simulation
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
             See how battery storage provides synthetic inertia
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: '#e2e8f0', margin: 0 }}>
+              👀 <strong>Observe:</strong> Increase renewable penetration and watch inertia drop. Toggle the battery to see how synthetic inertia stabilizes frequency even with high renewable penetration.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1229,18 +1392,43 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
+    const twistPredictionOptions: Record<string, string> = {
+      'a': 'frequency becomes more stable with solar',
+      'b': 'frequency becomes less stable (no spinning inertia)',
+      'c': 'no change with inverters',
+    };
+    const userTwistPredictionText = twistPrediction ? twistPredictionOptions[twistPrediction] : 'no prediction';
+    const wasTwistCorrect = twistPrediction === 'b';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px', paddingTop: '80px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Future of Grid Stability
           </h2>
+
+          {/* Reference user's twist prediction */}
+          <div style={{
+            background: wasTwistCorrect ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${wasTwistCorrect ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: wasTwistCorrect ? colors.success : colors.warning, margin: 0 }}>
+              {wasTwistCorrect
+                ? `Your prediction was correct! You predicted that ${userTwistPredictionText}. Solar panels provide no spinning mass, so high-renewable grids need synthetic inertia from batteries.`
+                : `You predicted that ${userTwistPredictionText}. Actually, solar panels provide no spinning inertia, making the grid less stable without additional measures like battery storage.`
+              }
+            </p>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
             <div style={{
@@ -1311,14 +1499,20 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px', paddingTop: '80px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1423,6 +1617,24 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 </div>
               ))}
             </div>
+
+            {/* Got It button for within-phase navigation - hidden when all apps completed */}
+            {!allAppsCompleted && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  if (selectedApp < realWorldApps.length - 1) {
+                    setSelectedApp(selectedApp + 1);
+                  }
+                }}
+                style={{ ...secondaryButtonStyle, width: '100%', marginTop: '16px' }}
+              >
+                Got It{selectedApp < realWorldApps.length - 1 ? ' - Next Application' : ''}
+              </button>
+            )}
           </div>
 
           {allAppsCompleted && (
@@ -1448,11 +1660,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          overflowY: 'auto',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', paddingTop: '80px', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1504,11 +1717,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px', paddingTop: '80px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1517,7 +1731,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
+              Question {currentQuestion + 1} / 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
@@ -1630,16 +1844,59 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               >
                 Next →
               </button>
+            ) : showSubmitConfirm ? (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <p style={{ ...typo.small, color: colors.warning, textAlign: 'center', margin: 0 }}>
+                  Are you sure you want to submit your answers?
+                </p>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => setShowSubmitConfirm(false)}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      cursor: 'pointer',
+                      minHeight: '44px',
+                    }}
+                  >
+                    Review Answers
+                  </button>
+                  <button
+                    onClick={() => {
+                      const score = testAnswers.reduce((acc, ans, i) => {
+                        const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                        return acc + (ans === correct ? 1 : 0);
+                      }, 0);
+                      setTestScore(score);
+                      setTestSubmitted(true);
+                      playSound(score >= 7 ? 'complete' : 'failure');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      minHeight: '44px',
+                    }}
+                  >
+                    Confirm Submit
+                  </button>
+                </div>
+              </div>
             ) : (
               <button
                 onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
+                  if (testAnswers.every(a => a !== null)) {
+                    setShowSubmitConfirm(true);
+                  }
                 }}
                 disabled={testAnswers.some(a => a === null)}
                 style={{
@@ -1651,6 +1908,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1675,8 +1933,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{

@@ -451,7 +451,10 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          data-surface={surfaceType}
+          data-depth={textureDepth}
+          data-angle={lightAngle}
+          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px', transition: 'all 0.3s ease' }}
         >
           <defs>
             <linearGradient id="siliconGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -543,22 +546,26 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
             <button
               onClick={() => setIsAnimating(!isAnimating)}
+              aria-label={isAnimating ? 'Stop animation' : 'Animate angle'}
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating ? `linear-gradient(135deg, ${colors.error}, #dc2626)` : `linear-gradient(135deg, ${colors.success}, #059669)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.3s ease',
               }}
             >
               {isAnimating ? 'Stop' : 'Animate Angle'}
             </button>
             <button
               onClick={() => { setSurfaceType('smooth'); setTextureDepth(50); setLightAngle(30); }}
+              aria-label="Reset visualization"
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
@@ -568,7 +575,9 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.3s ease',
               }}
             >
               Reset
@@ -590,6 +599,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
             <button
               key={type}
               onClick={() => setSurfaceType(type)}
+              aria-label={`Select ${type} surface`}
               style={{
                 padding: '10px 16px',
                 borderRadius: '8px',
@@ -599,7 +609,9 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
                 cursor: 'pointer',
                 fontSize: '13px',
                 textTransform: 'capitalize',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.3s ease',
               }}
             >
               {type}
@@ -686,25 +698,34 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   // Progress bar component
   const renderProgressBar = () => (
     <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '12px 16px',
       background: colors.bgDark,
       borderBottom: `1px solid rgba(255,255,255,0.1)`,
+      zIndex: 1000,
+      minHeight: '44px',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <button
           onClick={goBack}
           disabled={currentIdx === 0}
+          aria-label="Go back"
           style={{
             padding: '8px 12px',
             borderRadius: '6px',
             border: 'none',
             background: currentIdx > 0 ? 'rgba(255,255,255,0.1)' : 'transparent',
-            color: currentIdx > 0 ? colors.textPrimary : colors.textMuted,
+            color: currentIdx > 0 ? colors.textPrimary : colors.textSecondary,
             cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
             fontSize: '14px',
+            minHeight: '44px',
+            transition: 'all 0.3s ease',
           }}
         >
           Back
@@ -715,19 +736,22 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
           <div
             key={p}
             onClick={() => i <= currentIdx && goToPhase(p)}
+            role="button"
+            aria-label={phaseLabels[p]}
+            title={phaseLabels[p]}
             style={{
               width: i === currentIdx ? '24px' : '8px',
               height: '8px',
               borderRadius: '4px',
               background: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
               cursor: i <= currentIdx ? 'pointer' : 'default',
-              transition: 'all 0.3s',
+              transition: 'all 0.3s ease',
             }}
           />
         ))}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+        <span style={{ color: colors.textSecondary, fontSize: '12px' }}>
           {currentIdx + 1}/{phaseOrder.length}
         </span>
         <span style={{
@@ -756,42 +780,48 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      zIndex: 1000,
+      zIndex: 1001,
     }}>
       <button
         onClick={goBack}
         disabled={currentIdx === 0}
+        aria-label="Go back"
         style={{
           padding: '12px 24px',
           borderRadius: '8px',
-          border: `1px solid ${colors.textMuted}`,
+          border: `1px solid ${colors.textSecondary}`,
           background: 'transparent',
-          color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+          color: currentIdx > 0 ? colors.textSecondary : colors.textSecondary,
           fontWeight: 'bold',
           cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
           fontSize: '14px',
+          minHeight: '44px',
           opacity: currentIdx > 0 ? 1 : 0.5,
           WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.3s ease',
         }}
       >
         Back
       </button>
-      <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+      <span style={{ color: colors.textSecondary, fontSize: '12px' }}>
         {phaseLabels[phase]}
       </span>
       <button
         onClick={goNext}
         disabled={!canProceed}
+        aria-label={buttonText}
         style={{
           padding: '12px 32px',
           borderRadius: '8px',
           border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #d97706)` : 'rgba(255,255,255,0.1)',
+          color: canProceed ? 'white' : colors.textSecondary,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
+          minHeight: '44px',
           WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.3s ease',
         }}
       >
         {buttonText}
@@ -802,9 +832,9 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Silicon Surface Texturing
@@ -844,7 +874,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Prediction')}
       </div>
     );
   }
@@ -852,9 +882,9 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -897,7 +927,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(true, !!prediction, 'Continue to Experiment')}
       </div>
     );
   }
@@ -905,13 +935,25 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Light Trapping Lab</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Compare smooth vs textured surfaces
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.solar}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Watch how light rays behave differently on each surface type. Notice the absorption percentage and number of bounces.
             </p>
           </div>
 
@@ -943,9 +985,9 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     const wasCorrect = prediction === 'rough_better';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1000,9 +1042,9 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1060,13 +1102,25 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Compare Texture Types</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Switch between random and periodic textures
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.solar}`,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Compare random and periodic textures. Which achieves higher absorption? Watch how the light bounce patterns differ.
             </p>
           </div>
 
@@ -1098,9 +1152,9 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     const wasCorrect = twistPrediction === 'periodic_better';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1151,9 +1205,9 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1161,7 +1215,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
             <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               Surface texturing applies far beyond solar cells
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
               Complete all 4 applications to unlock the test
             </p>
           </div>
@@ -1175,6 +1229,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
                 padding: '16px',
                 borderRadius: '12px',
                 border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                transition: 'all 0.3s ease',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -1196,14 +1251,36 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
                     color: colors.accent,
                     cursor: 'pointer',
                     fontSize: '13px',
+                    minHeight: '44px',
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    onClick={() => {}}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      minHeight: '44px',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
@@ -1218,9 +1295,9 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1258,13 +1335,13 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1300,14 +1377,17 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
             <button
               onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
               disabled={currentTestQuestion === 0}
+              aria-label="Previous question"
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
+                border: `1px solid ${colors.textSecondary}`,
                 background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+                color: currentTestQuestion === 0 ? colors.textSecondary : colors.textPrimary,
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.3s ease',
               }}
             >
               Previous
@@ -1315,14 +1395,17 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
             {currentTestQuestion < testQuestions.length - 1 ? (
               <button
                 onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                aria-label="Next question"
                 style={{
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: colors.accent,
+                  background: `linear-gradient(135deg, ${colors.accent}, #d97706)`,
                   color: 'white',
                   cursor: 'pointer',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 Next
@@ -1331,14 +1414,17 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
               <button
                 onClick={submitTest}
                 disabled={testAnswers.includes(null)}
+                aria-label="Submit test"
                 style={{
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                  background: testAnswers.includes(null) ? colors.textSecondary : `linear-gradient(135deg, ${colors.success}, #059669)`,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 Submit Test
@@ -1353,9 +1439,9 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

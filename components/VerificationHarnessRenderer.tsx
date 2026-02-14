@@ -34,7 +34,7 @@ interface VerificationHarnessRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgCardLight: '#1e293b',
@@ -360,6 +360,11 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -386,7 +391,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               />
             ))}
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
             {currentIdx + 1} / {phaseOrder.length}
           </span>
         </div>
@@ -423,6 +428,11 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
 
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -449,7 +459,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         >
           Back
         </button>
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
           {phaseLabels[phase]}
         </span>
         <button
@@ -684,7 +694,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
           <g transform="translate(30, 70)">
             {/* Code Input Box */}
             <rect x="0" y="0" width="100" height="60" rx="6" fill="url(#vharPanelMetal)" stroke="#475569" strokeWidth="1.5" filter="url(#vharPanelShadow)" />
-            <text x="50" y="18" fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">INPUT</text>
+            <text x="50" y="18" fill="#e2e8f0" fontSize="9" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">INPUT</text>
             <rect x="8" y="24" width="84" height="28" rx="3" fill="#0f172a" />
             <text x="50" y="42" fill="#22d3ee" fontSize="10" textAnchor="middle" fontFamily="monospace">function()</text>
 
@@ -705,7 +715,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               <rect x="0" y="0" width="100" height="60" rx="6" fill={hasBenchmark ? 'rgba(22,101,52,0.3)' : 'rgba(185,28,28,0.2)'} stroke={hasBenchmark ? '#22c55e' : '#dc2626'} strokeWidth="2" filter="url(#vharPanelShadow)" />
               <text x="50" y="18" fill={hasBenchmark ? '#4ade80' : '#f87171'} fontSize="9" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">BENCHMARK</text>
               <rect x="8" y="24" width="84" height="28" rx="3" fill="#0f172a" />
-              <text x="50" y="42" fill={hasBenchmark ? '#22c55e' : '#94a3b8'} fontSize="10" textAnchor="middle" fontFamily="monospace">
+              <text x="50" y="42" fill={hasBenchmark ? '#22c55e' : '#e2e8f0'} fontSize="10" textAnchor="middle" fontFamily="monospace">
                 {hasBenchmark ? `${iterations} iter` : 'disabled'}
               </text>
               {/* Status indicator */}
@@ -729,7 +739,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               <rect x="0" y="0" width="100" height="60" rx="6" fill={hasCorrectness ? 'rgba(22,101,52,0.3)' : 'rgba(185,28,28,0.2)'} stroke={hasCorrectness ? '#22c55e' : '#dc2626'} strokeWidth="2" filter="url(#vharPanelShadow)" />
               <text x="50" y="18" fill={hasCorrectness ? '#4ade80' : '#f87171'} fontSize="9" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">CORRECTNESS</text>
               <rect x="8" y="24" width="84" height="28" rx="3" fill="#0f172a" />
-              <text x="50" y="42" fill={hasCorrectness ? '#22c55e' : '#94a3b8'} fontSize="10" textAnchor="middle" fontFamily="monospace">
+              <text x="50" y="42" fill={hasCorrectness ? '#22c55e' : '#e2e8f0'} fontSize="10" textAnchor="middle" fontFamily="monospace">
                 {hasCorrectness ? 'tests pass' : 'disabled'}
               </text>
               {/* Status indicator */}
@@ -744,7 +754,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               <rect x={-barWidth/2} y={-maxBarHeight} width={barWidth} height={maxBarHeight} rx="6" fill="url(#vharBaselineBar)" filter="url(#vharBarShadow)" />
               {/* Bar highlight */}
               <rect x={-barWidth/2 + 4} y={-maxBarHeight + 4} width="8" height={maxBarHeight - 8} rx="3" fill="rgba(255,255,255,0.15)" />
-              <text x="0" y="20" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">Baseline</text>
+              <text x="0" y="20" fill="#e2e8f0" fontSize="11" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">Baseline</text>
               <text x="0" y={-maxBarHeight - 12} fill="#60a5fa" fontSize="14" textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
                 {metrics.baselineMs}ms
               </text>
@@ -768,7 +778,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               {hasBenchmark && (
                 <rect x={-barWidth/2 + 4} y={-(metrics.perceivedMs / metrics.baselineMs) * maxBarHeight + 4} width="8" height={(metrics.perceivedMs / metrics.baselineMs) * maxBarHeight - 8} rx="3" fill="rgba(255,255,255,0.15)" />
               )}
-              <text x="0" y="20" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">
+              <text x="0" y="20" fill="#e2e8f0" fontSize="11" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">
                 {hasBenchmark ? 'Measured' : 'Claimed'}
               </text>
               <text
@@ -872,11 +882,11 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               {/* Legend */}
               <g transform="translate(10, 75)">
                 <rect x="0" y="0" width="12" height="12" rx="2" fill="url(#vharFlameHot)" />
-                <text x="16" y="10" fill="#94a3b8" fontSize="8" fontFamily="system-ui, sans-serif">Hot (optimize)</text>
+                <text x="16" y="10" fill="#e2e8f0" fontSize="8" fontFamily="system-ui, sans-serif">Hot (optimize)</text>
                 <rect x="90" y="0" width="12" height="12" rx="2" fill="url(#vharFlameWarm)" />
-                <text x="106" y="10" fill="#94a3b8" fontSize="8" fontFamily="system-ui, sans-serif">Warm</text>
+                <text x="106" y="10" fill="#e2e8f0" fontSize="8" fontFamily="system-ui, sans-serif">Warm</text>
                 <rect x="160" y="0" width="12" height="12" rx="2" fill="url(#vharFlameCool)" />
-                <text x="176" y="10" fill="#94a3b8" fontSize="8" fontFamily="system-ui, sans-serif">Cool</text>
+                <text x="176" y="10" fill="#e2e8f0" fontSize="8" fontFamily="system-ui, sans-serif">Cool</text>
               </g>
             </g>
           )}
@@ -973,8 +983,8 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
   const renderControls = (showProfiling: boolean = false) => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Optimization Level: {optimizationLevel}% (LLM's claimed improvement)
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
+          Optimization Level (speed improvement): {optimizationLevel}% (LLM's claimed improvement)
         </label>
         <input
           type="range"
@@ -984,12 +994,13 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
           value={optimizationLevel}
           onChange={(e) => setOptimizationLevel(parseInt(e.target.value))}
           style={{ width: '100%' }}
+          aria-label="Optimization Level (speed improvement)"
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Benchmark Iterations: {iterations}
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
+          Benchmark Iterations (measurement precision): {iterations}
         </label>
         <input
           type="range"
@@ -999,6 +1010,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
           value={iterations}
           onChange={(e) => setIterations(parseInt(e.target.value))}
           style={{ width: '100%' }}
+          aria-label="Benchmark Iterations (measurement precision)"
         />
       </div>
 
@@ -1047,7 +1059,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
                 Verification Harness
               </h1>
-              <p style={{ color: colors.textSecondary, fontSize: '18px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '18px', fontWeight: 400 }}>
                 Will the model optimize the wrong thing without measurements?
               </p>
             </div>
@@ -1060,12 +1072,12 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               borderRadius: '12px',
               margin: '16px 0',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 "I optimized this function to be 3x faster!" claims the LLM. But how do you
                 know? Without benchmarks, you are trusting a story. Performance is physics -
                 real time and energy - and physics requires measurement.
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                 Toggle the benchmark to see the difference between claims and verification.
               </p>
             </div>
@@ -1076,7 +1088,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
                 Try turning off the benchmark and see how the status changes!
               </p>
             </div>
@@ -1142,8 +1154,20 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Verification</h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
                 Toggle benchmarks and tests to see what makes claims reliable
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(6, 182, 212, 0.15)',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              borderLeft: `3px solid ${colors.primary}`,
+              marginBottom: '16px',
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, margin: 0 }}>
+                Observe how the verification status changes as you toggle benchmarks and correctness tests. Watch the RELIABLE badge appear only when both are enabled.
               </p>
             </div>
 
@@ -1156,7 +1180,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               borderRadius: '12px',
             }}>
               <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Key Observations:</h4>
-              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
                 <li>Without benchmarks, claimed speedups are just stories</li>
                 <li>Without correctness tests, fast wrong answers are worse than slow correct ones</li>
                 <li>More iterations give more stable benchmark results</li>
@@ -1285,8 +1309,20 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Profiling Value</h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
                 Enable flamegraph profiling and see what it reveals
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(6, 182, 212, 0.15)',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              borderLeft: `3px solid ${colors.primary}`,
+              marginBottom: '16px',
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, margin: 0 }}>
+                Observe how the flamegraph reveals WHERE time is spent. Toggle the profiling checkbox to see how flamegraphs identify hotspots.
               </p>
             </div>
 
@@ -1300,7 +1336,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
               borderLeft: `3px solid ${colors.perf.baseline}`,
             }}>
               <h4 style={{ color: colors.perf.baseline, marginBottom: '8px' }}>Flamegraph Insight:</h4>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
                 A flamegraph shows the call stack over time. Wide bars mean functions that
                 take lots of time. Without this, you might optimize a function that only
                 takes 2% of total time while the real bottleneck sits at 80%.
@@ -1409,13 +1445,38 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
                       color: colors.accent,
                       cursor: 'pointer',
                       fontSize: '13px',
+                      minHeight: '44px',
                     }}
                   >
                     Reveal Answer
                   </button>
                 ) : (
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  <div>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
+                      <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400 }}>{app.answer}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (index < transferApplications.length - 1) {
+                          const nextIncomplete = transferApplications.findIndex((_, i) => i > index && !transferCompleted.has(i));
+                          if (nextIncomplete !== -1) {
+                            // Scroll to next incomplete
+                          }
+                        }
+                      }}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: colors.success,
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        minHeight: '44px',
+                      }}
+                    >
+                      Got It
+                    </button>
                   </div>
                 )}
               </div>
@@ -1472,7 +1533,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary, fontWeight: 400 }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1554,7 +1615,10 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
       display: 'flex',
       flexDirection: 'column',
       backgroundColor: colors.bgPrimary,
-      color: colors.textPrimary
+      color: colors.textPrimary,
+      paddingTop: '50px',
+      paddingBottom: '70px',
+      overflowY: 'auto'
     }}>
       {renderProgressBar()}
       {renderContent()}

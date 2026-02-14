@@ -845,6 +845,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
                 boxShadow: showHiddenAssumptions
                   ? '0 4px 20px rgba(16, 185, 129, 0.4)'
@@ -866,6 +867,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                minHeight: '44px',
                 WebkitTapHighlightColor: 'transparent',
                 transition: 'all 0.2s ease',
               }}
@@ -974,12 +976,42 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
     return (
       <div style={{
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: isMobile ? '4px' : '8px',
+        gap: '8px',
         padding: '16px',
-        flexWrap: 'wrap',
       }}>
+        {/* Progress bar */}
+        <div
+          role="progressbar"
+          aria-valuenow={currentIndex + 1}
+          aria-valuemin={1}
+          aria-valuemax={10}
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            height: '6px',
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '3px',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{
+            width: `${((currentIndex + 1) / 10) * 100}%`,
+            height: '100%',
+            background: colors.accent,
+            borderRadius: '3px',
+            transition: 'width 0.3s ease',
+          }} />
+        </div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: isMobile ? '4px' : '8px',
+          flexWrap: 'wrap',
+        }}>
         {phaseOrder.map((p, index) => {
           const isCompleted = index < currentIndex;
           const isCurrent = index === currentIndex;
@@ -1021,8 +1053,8 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
               </div>
               {!isMobile && (
                 <span style={{
-                  fontSize: '9px',
-                  color: isCurrent ? colors.accent : colors.textMuted,
+                  fontSize: '10px',
+                  color: isCurrent ? colors.accent : colors.textSecondary,
                   marginTop: '4px',
                   textAlign: 'center',
                   maxWidth: '60px',
@@ -1033,6 +1065,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
             </div>
           );
         })}
+        </div>
       </div>
     );
   };
@@ -1087,7 +1120,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
 
     return (
       <div style={{
-        position: 'absolute',
+        position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1097,7 +1130,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 1000,
+        zIndex: 1001,
       }}>
         <button
           onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])}
@@ -1112,6 +1145,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
             cursor: isFirst ? 'not-allowed' : 'pointer',
             fontSize: '14px',
             opacity: isFirst ? 0.5 : 1,
+            minHeight: '44px',
           }}
         >
           Back
@@ -1137,6 +1171,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
             fontWeight: 'bold',
             cursor: canProceed() ? 'pointer' : 'not-allowed',
             fontSize: '16px',
+            minHeight: '44px',
           }}
         >
           {getNextLabel()}
@@ -1230,6 +1265,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
                       cursor: 'pointer',
                       textAlign: 'left',
                       fontSize: '14px',
+                      minHeight: '44px',
                       WebkitTapHighlightColor: 'transparent',
                     }}
                   >
@@ -1248,6 +1284,18 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Assumption Impact</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
                 Adjust assumptions and watch outputs update live
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.15)',
+              margin: '16px',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Try this:</strong> Observe how revealing hidden assumptions changes the risk score. Try changing confidence levels and see output sensitivity.
               </p>
             </div>
 
@@ -1367,6 +1415,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
                       cursor: 'pointer',
                       textAlign: 'left',
                       fontSize: '14px',
+                      minHeight: '44px',
                       WebkitTapHighlightColor: 'transparent',
                     }}
                   >
@@ -1385,6 +1434,18 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
               <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Range-Based Estimation</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
                 Enable ranges and see how uncertainty is captured
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.15)',
+              margin: '16px',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              borderLeft: `3px solid ${colors.warning}`,
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+                <strong style={{ color: colors.warning }}>Try this:</strong> Observe how enabling ranges changes the cost estimates. Notice how wider ranges affect design decisions.
               </p>
             </div>
 
@@ -1503,14 +1564,35 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
                       color: colors.accent,
                       cursor: 'pointer',
                       fontSize: '13px',
+                      minHeight: '44px',
                       WebkitTapHighlightColor: 'transparent',
                     }}
                   >
                     Reveal Answer
                   </button>
                 ) : (
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  <div>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                      <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        // Already completed, just acknowledge
+                      }}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: colors.success,
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        minHeight: '44px',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      Got It
+                    </button>
                   </div>
                 )}
               </div>
@@ -1561,7 +1643,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
             <div style={{ padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-                <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+                <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
               </div>
               <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
                 {testQuestions.map((_, i) => (
@@ -1573,16 +1655,16 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {currentQ.options.map((opt, oIndex) => (
-                  <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', WebkitTapHighlightColor: 'transparent' }}>
+                  <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', minHeight: '44px', WebkitTapHighlightColor: 'transparent' }}>
                     {opt.text}
                   </button>
                 ))}
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-              <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
+              <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', minHeight: '44px', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
               {currentTestQuestion < testQuestions.length - 1 ? (
-                <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
+                <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', minHeight: '44px', WebkitTapHighlightColor: 'transparent' }}>Next</button>
               ) : null}
             </div>
           </div>
@@ -1636,8 +1718,20 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
       overflow: 'hidden',
       background: colors.bgPrimary,
     }}>
-      {renderProgressBar()}
-      {renderContent()}
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1001,
+        background: colors.bgDark,
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        {renderProgressBar()}
+      </nav>
+      <div style={{ marginTop: isMobile ? '60px' : '80px', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderContent()}
+      </div>
       {renderBottomBar()}
     </div>
   );

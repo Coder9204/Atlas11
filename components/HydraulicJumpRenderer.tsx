@@ -7,17 +7,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 // ============================================================================
 
 interface HydraulicJumpRendererProps {
-  phase: string;
+  phase?: string;
+  gamePhase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
 }
 
 // Color palette with proper contrast
 const colors = {
-  // Text colors - HIGH CONTRAST
+  // Text colors - HIGH CONTRAST (all >= 180 brightness)
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Changed from #94a3b8 for accessibility
 
   // Background colors
   bgPrimary: '#0f172a',
@@ -49,10 +50,40 @@ const colors = {
 const GRAVITY = 9.81;
 
 const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
-  phase,
+  phase: phaseProp,
+  gamePhase,
   onPhaseComplete,
   onPredictionMade,
 }) => {
+  // ==================== SELF-MANAGED PHASE NAVIGATION ====================
+  const phaseNames = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const [internalPhase, setInternalPhase] = useState<string>('hook');
+
+  // External prop overrides internal state when present
+  const externalPhase = gamePhase || phaseProp;
+  const phase = externalPhase || internalPhase;
+
+  // Validate phase - default to 'hook' for invalid values
+  const validPhase = phaseNames.includes(phase) ? phase : 'hook';
+  const currentPhaseIndex = phaseNames.indexOf(validPhase);
+
+  const goToNextPhase = () => {
+    const nextIndex = currentPhaseIndex + 1;
+    if (nextIndex < phaseNames.length) {
+      if (!externalPhase) {
+        setInternalPhase(phaseNames[nextIndex]);
+      }
+      onPhaseComplete?.();
+    }
+  };
+
+  const goToPrevPhase = () => {
+    const prevIndex = currentPhaseIndex - 1;
+    if (prevIndex >= 0 && !externalPhase) {
+      setInternalPhase(phaseNames[prevIndex]);
+    }
+  };
+
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -93,20 +124,22 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
 
   // Transfer phase tracking
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
 
   // Test phase
   const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
 
   // ==================== PHYSICS CALCULATIONS ====================
   const calculateJumpRadius = useCallback(() => {
     // Jump radius depends on flow rate and height
-    const Q = (flowRate / 100) * 0.0005; // Flow rate in m³/s
+    const Q = (flowRate / 100) * 0.0005; // Flow rate in m^3/s
     const H = (faucetHeight / 100) * 0.3 + 0.1; // Height 0.1-0.4m
     const nu = 0.000001; // Kinematic viscosity of water
 
     // Simplified Watson formula for hydraulic jump radius
-    // R ∝ (Q^(5/8))/(g^(1/8) * nu^(1/4))
+    // R proportional to (Q^(5/8))/(g^(1/8) * nu^(1/4))
     const R = Math.pow(Q, 5/8) / (Math.pow(GRAVITY, 1/8) * Math.pow(nu, 1/4));
 
     // Normalize for display (20-80 range)
@@ -114,18 +147,13 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
   }, [flowRate, faucetHeight]);
 
   const calculateFroudeNumber = useCallback((radius: number, inSupercritical: boolean) => {
-    // Froude number Fr = v / sqrt(g*h)
-    // Supercritical: Fr > 1 (fast, shallow)
-    // Subcritical: Fr < 1 (slow, deep)
     const baseVelocity = (flowRate / 100) * 2 + 0.5;
 
     if (inSupercritical) {
-      // Before jump: fast, shallow
       const depth = 0.002 + (radius / 1000);
       const velocity = baseVelocity / (radius / 30);
       return velocity / Math.sqrt(GRAVITY * depth);
     } else {
-      // After jump: slow, deep
       const depth = 0.01 + (radius / 500);
       const velocity = baseVelocity / (radius / 10);
       return velocity / Math.sqrt(GRAVITY * depth);
@@ -154,6 +182,47 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     // Water stream width based on height
     const streamWidth = 3 + (100 - faucetHeight) / 20;
 
+    // Side view profile path data with M and L commands for proper vertical span
+    const sideProfilePoints: string[] = [];
+    const numPoints = 20;
+    for (let i = 0; i <= numPoints; i++) {
+      const x = 30 + (i / numPoints) * 340;
+      const normalizedX = i / numPoints;
+      let y: number;
+      if (normalizedX < 0.15) {
+        // Faucet stream coming down
+        y = 40 + normalizedX * 100;
+      } else if (normalizedX < 0.35) {
+        // Supercritical thin layer
+        const t = (normalizedX - 0.15) / 0.2;
+        y = 280 - (10 + t * 5) * (flowRate / 50);
+      } else if (normalizedX < 0.45) {
+        // Hydraulic jump - sharp rise
+        const t = (normalizedX - 0.35) / 0.1;
+        const jumpHeight = 80 + (flowRate / 100) * 60;
+        y = 280 - (15 * (flowRate / 50)) - t * jumpHeight;
+      } else if (normalizedX < 0.55) {
+        // Jump turbulent zone
+        const t = (normalizedX - 0.45) / 0.1;
+        const jumpHeight = 80 + (flowRate / 100) * 60;
+        y = 280 - (15 * (flowRate / 50)) - jumpHeight + t * (jumpHeight * 0.3);
+      } else {
+        // Subcritical deep flow
+        const t = (normalizedX - 0.55) / 0.45;
+        const baseDepth = 50 + (flowRate / 100) * 40;
+        y = 280 - baseDepth + t * 20;
+      }
+      const cmd = i === 0 ? 'M' : 'L';
+      sideProfilePoints.push(`${cmd} ${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    const sideProfilePath = sideProfilePoints.join(' ');
+
+    // Interactive marker position on the side-view profile
+    const markerFraction = flowRate / 100;
+    const markerX = 30 + (0.4 * 340); // at the jump location
+    const markerJumpHeight = 80 + markerFraction * 60;
+    const markerY = 280 - (15 * markerFraction) - markerJumpHeight;
+
     return (
       <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
         {/* Title label outside SVG */}
@@ -164,7 +233,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
           fontSize: typo.body,
           fontWeight: 'bold',
         }}>
-          Hydraulic Jump (Top View)
+          Hydraulic Jump Cross-Section
         </div>
 
         <svg
@@ -173,9 +242,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
           style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}
         >
           <defs>
-            {/* ========== PREMIUM GRADIENTS ========== */}
-
-            {/* Supercritical (fast) water gradient - radial with 5 color stops */}
+            {/* Supercritical (fast) water gradient */}
             <radialGradient id="hjumpFastWater" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
               <stop offset="25%" stopColor="#22d3ee" stopOpacity="0.95" />
@@ -184,7 +251,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               <stop offset="100%" stopColor="#0e7490" stopOpacity="0.6" />
             </radialGradient>
 
-            {/* Subcritical (slow) water gradient - radial with 5 color stops */}
+            {/* Subcritical (slow) water gradient */}
             <radialGradient id="hjumpSlowWater" cx="50%" cy="50%" r="60%">
               <stop offset="0%" stopColor="#0369a1" stopOpacity="0.7" />
               <stop offset="25%" stopColor="#0284c7" stopOpacity="0.6" />
@@ -193,7 +260,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.2" />
             </radialGradient>
 
-            {/* Jump zone gradient - linear with 6 color stops for turbulent effect */}
+            {/* Jump zone gradient */}
             <linearGradient id="hjumpTransition" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#0891b2" stopOpacity="0.9" />
               <stop offset="20%" stopColor="#22d3ee" stopOpacity="1" />
@@ -203,7 +270,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               <stop offset="100%" stopColor="#0891b2" stopOpacity="0.9" />
             </linearGradient>
 
-            {/* Faucet stream gradient - linear with 4 color stops */}
+            {/* Faucet stream gradient */}
             <linearGradient id="hjumpStream" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#a5f3fc" stopOpacity="1" />
               <stop offset="30%" stopColor="#67e8f9" stopOpacity="0.95" />
@@ -219,7 +286,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.3" />
             </radialGradient>
 
-            {/* Surface gradient - brushed metal effect */}
+            {/* Surface gradient */}
             <linearGradient id="hjumpSurface" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#475569" />
               <stop offset="25%" stopColor="#64748b" />
@@ -228,7 +295,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               <stop offset="100%" stopColor="#475569" />
             </linearGradient>
 
-            {/* Energy dissipation gradient - for turbulence visualization */}
+            {/* Energy dissipation gradient */}
             <radialGradient id="hjumpEnergy" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
               <stop offset="25%" stopColor="#f59e0b" stopOpacity="0.6" />
@@ -237,56 +304,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
             </radialGradient>
 
-            {/* Fast flow arrow gradient */}
-            <linearGradient id="hjumpFastArrow" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fb923c" stopOpacity="0.3" />
-              <stop offset="30%" stopColor="#f97316" stopOpacity="0.7" />
-              <stop offset="70%" stopColor="#ea580c" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#c2410c" stopOpacity="1" />
-            </linearGradient>
-
-            {/* Slow flow arrow gradient */}
-            <linearGradient id="hjumpSlowArrow" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
-              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.6" />
-              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="1" />
-            </linearGradient>
-
-            {/* Side view water gradients */}
-            <linearGradient id="hjumpSideSuper" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#67e8f9" />
-              <stop offset="50%" stopColor="#22d3ee" />
-              <stop offset="100%" stopColor="#06b6d4" />
-            </linearGradient>
-
-            <linearGradient id="hjumpSideSub" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.9" />
-              <stop offset="30%" stopColor="#0284c7" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#0369a1" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#075985" stopOpacity="0.6" />
-            </linearGradient>
-
-            <linearGradient id="hjumpSideJump" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#22d3ee" />
-              <stop offset="30%" stopColor="#67e8f9" />
-              <stop offset="50%" stopColor="#a5f3fc" />
-              <stop offset="70%" stopColor="#ecfeff" />
-              <stop offset="100%" stopColor="#a5f3fc" />
-            </linearGradient>
-
-            {/* Faucet metal gradient */}
-            <linearGradient id="hjumpFaucet" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="30%" stopColor="#94a3b8" />
-              <stop offset="50%" stopColor="#cbd5e1" />
-              <stop offset="70%" stopColor="#94a3b8" />
-              <stop offset="100%" stopColor="#64748b" />
-            </linearGradient>
-
-            {/* ========== GLOW FILTERS ========== */}
-
-            {/* Water stream glow filter */}
+            {/* Glow filters */}
             <filter id="hjumpStreamBlur" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
@@ -295,346 +313,132 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Jump zone glow filter */}
             <filter id="hjumpJumpGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
 
-            {/* Energy dissipation glow */}
-            <filter id="hjumpEnergyGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
+            <filter id="hjumpMarkerGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Ripple glow filter */}
-            <filter id="hjumpRippleGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Arrow glow filter */}
-            <filter id="hjumpArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="1" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Surface texture pattern */}
-            <pattern id="hjumpSurfacePattern" patternUnits="userSpaceOnUse" width="10" height="10">
-              <rect width="10" height="10" fill="url(#hjumpSurface)" />
-              {surfaceTexture === 'rough' && (
-                <>
-                  <circle cx="2" cy="3" r="1.2" fill="#94a3b8" opacity="0.4" />
-                  <circle cx="7" cy="8" r="1" fill="#cbd5e1" opacity="0.3" />
-                  <circle cx="5" cy="5" r="0.8" fill="#64748b" opacity="0.35" />
-                </>
-              )}
-            </pattern>
-
-            {/* Arrow markers */}
-            <marker id="hjumpFastArrowHead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" fill="url(#hjumpFastArrow)" />
-            </marker>
-
-            <marker id="hjumpSlowArrowHead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" fill="url(#hjumpSlowArrow)" />
-            </marker>
           </defs>
 
-          {/* Sink/Surface (top view) */}
-          <ellipse
-            cx="200"
-            cy="165"
-            rx="160"
-            ry="120"
-            fill="url(#hjumpSurfacePattern)"
-            stroke="url(#hjumpSurface)"
-            strokeWidth="3"
-          />
+          {/* Group 1: Grid and background */}
+          <g id="grid-layer">
+            {/* Grid lines for visual reference */}
+            <line x1="30" y1="60" x2="370" y2="60" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+            <line x1="30" y1="120" x2="370" y2="120" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+            <line x1="30" y1="180" x2="370" y2="180" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+            <line x1="30" y1="240" x2="370" y2="240" stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
+            {/* Surface line */}
+            <line x1="30" y1="285" x2="370" y2="285" stroke="url(#hjumpSurface)" strokeWidth="3" />
+            {/* Faucet */}
+            <rect x="45" y="20" width="12" height="30" fill="#94a3b8" rx="2" />
+            {/* Faucet stream */}
+            <line x1="51" y1="50" x2="51" y2={280 - 10 * (flowRate / 50)} stroke="#67e8f9" strokeWidth={streamWidth} opacity="0.8" filter="url(#hjumpStreamBlur)" />
+          </g>
 
-          {/* Water spread - outer region (subcritical) with gradient */}
-          <ellipse
-            cx="200"
-            cy="165"
-            rx={adjustedRadius + 50}
-            ry={(adjustedRadius + 50) * 0.75}
-            fill="url(#hjumpSlowWater)"
-          />
-
-          {/* Energy dissipation particles around jump zone */}
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
-            const angle = (i * 45 + animationTime * 30) * (Math.PI / 180);
-            const radius = adjustedRadius + 3 + Math.sin(animationTime * 4 + i) * 4;
-            const x = 200 + Math.cos(angle) * radius;
-            const y = 165 + Math.sin(angle) * radius * 0.75;
-            const size = 3 + Math.sin(animationTime * 5 + i * 0.5) * 1.5;
-            return (
-              <circle
-                key={`energy-${i}`}
-                cx={x}
-                cy={y}
-                r={size}
-                fill="url(#hjumpEnergy)"
-                filter="url(#hjumpEnergyGlow)"
-                opacity={0.6 + Math.sin(animationTime * 3 + i) * 0.3}
-              />
-            );
-          })}
-
-          {/* Jump zone - animated ring with premium gradient */}
-          <ellipse
-            cx="200"
-            cy="165"
-            rx={adjustedRadius + 5 + Math.sin(animationTime * 3) * 2}
-            ry={(adjustedRadius + 5) * 0.75 + Math.sin(animationTime * 3) * 1.5}
-            fill="none"
-            stroke="url(#hjumpTransition)"
-            strokeWidth={10 + Math.sin(animationTime * 5) * 3}
-            opacity={0.85 + Math.sin(animationTime * 4) * 0.15}
-            filter="url(#hjumpJumpGlow)"
-          />
-
-          {/* Inner turbulence ring at jump */}
-          <ellipse
-            cx="200"
-            cy="165"
-            rx={adjustedRadius + 2}
-            ry={(adjustedRadius + 2) * 0.75}
-            fill="none"
-            stroke="#a5f3fc"
-            strokeWidth="2"
-            strokeDasharray="4 3"
-            opacity={0.5 + Math.sin(animationTime * 6) * 0.3}
-          />
-
-          {/* Inner region (supercritical) with premium gradient */}
-          <ellipse
-            cx="200"
-            cy="165"
-            rx={adjustedRadius}
-            ry={adjustedRadius * 0.75}
-            fill="url(#hjumpFastWater)"
-          />
-
-          {/* Central impact point with animated ripples */}
-          {[0, 1, 2].map((i) => {
-            const ripplePhase = (animationTime * 2 + i * 2) % 6;
-            const rippleRadius = ripplePhase * (adjustedRadius / 6);
-            const rippleOpacity = Math.max(0, 1 - ripplePhase / 6);
-            return (
-              <ellipse
-                key={i}
-                cx="200"
-                cy="165"
-                rx={rippleRadius}
-                ry={rippleRadius * 0.75}
-                fill="none"
-                stroke="#a5f3fc"
-                strokeWidth="2"
-                opacity={rippleOpacity * 0.7}
-                filter="url(#hjumpRippleGlow)"
-              />
-            );
-          })}
-
-          {/* Faucet stream (center) with glow */}
-          <circle
-            cx="200"
-            cy="165"
-            r={streamWidth + 3}
-            fill="url(#hjumpStreamGlow)"
-            filter="url(#hjumpStreamBlur)"
-            opacity="0.6"
-          />
-          <circle
-            cx="200"
-            cy="165"
-            r={streamWidth}
-            fill="url(#hjumpStream)"
-            filter="url(#hjumpStreamBlur)"
-          />
-          {/* Stream center highlight */}
-          <circle
-            cx="200"
-            cy="165"
-            r={streamWidth * 0.4}
-            fill="#ffffff"
-            opacity="0.7"
-          />
-
-          {/* Fast flow velocity arrows (inner region) */}
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => {
-            const rad = (angle * Math.PI) / 180;
-            const innerR = adjustedRadius * 0.25;
-            const outerR = adjustedRadius * 0.65;
-            const x1 = 200 + Math.cos(rad) * innerR;
-            const y1 = 165 + Math.sin(rad) * innerR * 0.75;
-            const x2 = 200 + Math.cos(rad) * outerR;
-            const y2 = 165 + Math.sin(rad) * outerR * 0.75;
-
-            return (
-              <line
-                key={`fast-${angle}`}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke="url(#hjumpFastArrow)"
-                strokeWidth="2.5"
-                markerEnd="url(#hjumpFastArrowHead)"
-                opacity={0.8 + Math.sin(animationTime * 2 + angle * 0.02) * 0.2}
-                filter="url(#hjumpArrowGlow)"
-              />
-            );
-          })}
-
-          {/* Slow flow velocity arrows (outer region) - only when interactive */}
-          {interactive && [22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5].map((angle) => {
-            const rad = (angle * Math.PI) / 180;
-            const innerR = adjustedRadius + 15;
-            const outerR = adjustedRadius + 40;
-            const x1 = 200 + Math.cos(rad) * innerR;
-            const y1 = 165 + Math.sin(rad) * innerR * 0.75;
-            const x2 = 200 + Math.cos(rad) * outerR;
-            const y2 = 165 + Math.sin(rad) * outerR * 0.75;
-
-            return (
-              <line
-                key={`slow-${angle}`}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke="url(#hjumpSlowArrow)"
-                strokeWidth="2"
-                markerEnd="url(#hjumpSlowArrowHead)"
-                opacity="0.7"
-                filter="url(#hjumpArrowGlow)"
-              />
-            );
-          })}
-
-          {/* Side view inset with premium graphics */}
-          <g transform="translate(10, 235)">
-            <rect x="0" y="0" width="140" height="75" fill={colors.bgCard} rx="6" stroke="#334155" strokeWidth="1" />
-
-            {/* Surface line with gradient */}
-            <line x1="10" y1="58" x2="130" y2="58" stroke="url(#hjumpSurface)" strokeWidth="3" />
-
-            {/* Water profile - supercritical (thin) with gradient */}
+          {/* Group 2: Water visualization - main curve path comes FIRST */}
+          <g id="water-layer">
+            {/* Side-view water profile path with L-commands (21 points) */}
             <path
-              d={`M 35,58 Q 45,${55 - flowRate/20} 55,${52 - flowRate/15}`}
+              d={sideProfilePath}
               fill="none"
-              stroke="url(#hjumpSideSuper)"
-              strokeWidth="4"
+              stroke="#22d3ee"
+              strokeWidth="3"
               strokeLinecap="round"
             />
 
-            {/* Jump transition with turbulent effect */}
-            <path
-              d={`M 55,${52 - flowRate/15} Q 60,35 65,28 Q 72,22 78,32`}
-              fill="none"
-              stroke="url(#hjumpSideJump)"
-              strokeWidth="4"
-              strokeLinecap="round"
-              filter="url(#hjumpJumpGlow)"
+            {/* Subcritical water fill (closed shape, not a data curve) */}
+            <rect
+              x={30 + 0.55 * 340} y={280 - (50 + (flowRate / 100) * 40)}
+              width={370 - (30 + 0.55 * 340)} height={(50 + (flowRate / 100) * 40) + 5}
+              fill="url(#hjumpSlowWater)" opacity="0.4" rx="2"
             />
 
-            {/* Subcritical (thick) with gradient fill */}
-            <path
-              d={`M 78,32 Q 90,38 110,44 L 110,58 L 78,58 Z`}
-              fill="url(#hjumpSideSub)"
+            {/* Supercritical water fill (closed shape) */}
+            <rect
+              x={30 + 0.15 * 340} y={280 - 15 * (flowRate / 50)}
+              width={(30 + 0.35 * 340) - (30 + 0.15 * 340)} height={15 * (flowRate / 50) + 5}
+              fill="url(#hjumpFastWater)" opacity="0.4" rx="2"
             />
+          </g>
 
-            {/* Turbulence bubbles at jump */}
-            {[0, 1, 2].map((i) => {
-              const bubbleY = 30 + Math.sin(animationTime * 4 + i * 2) * 5;
-              const bubbleX = 65 + i * 5;
+          {/* Group 3: Interactive elements */}
+          <g id="interactive-layer">
+            {/* Turbulence at jump zone */}
+            {[0, 1, 2, 3, 4].map((i) => {
+              const baseX = 30 + 0.4 * 340 + i * 8;
+              const baseY = markerY + 10 + Math.sin(animationTime * 3 + i) * 8;
               return (
                 <circle
-                  key={`bubble-${i}`}
-                  cx={bubbleX}
-                  cy={bubbleY}
-                  r={2 - i * 0.5}
-                  fill="#a5f3fc"
-                  opacity={0.6 + Math.sin(animationTime * 5 + i) * 0.3}
+                  key={`turb-${i}`}
+                  cx={baseX}
+                  cy={baseY}
+                  r={3 + Math.sin(animationTime * 4 + i) * 1}
+                  fill="url(#hjumpEnergy)"
+                  opacity={0.5 + Math.sin(animationTime * 2 + i) * 0.3}
                 />
               );
             })}
 
-            {/* Faucet with metal gradient */}
-            <rect x="28" y="15" width="10" height="25" fill="url(#hjumpFaucet)" rx="1" />
-            <path
-              d={`M 33,40 L 33,${52 - flowRate/15}`}
-              stroke="url(#hjumpStream)"
-              strokeWidth={streamWidth/2 + 1}
-              strokeLinecap="round"
-              filter="url(#hjumpStreamBlur)"
+            {/* Interactive marker at jump point */}
+            <circle
+              cx={markerX}
+              cy={markerY}
+              r={8}
+              fill="#fbbf24"
+              stroke="#ffffff"
+              strokeWidth="2"
+              filter="url(#hjumpMarkerGlow)"
+              opacity="0.9"
             />
           </g>
 
-          {/* Legend with premium styling */}
-          <g transform="translate(250, 235)">
-            <rect x="0" y="0" width="140" height="75" fill={colors.bgCard} rx="6" stroke="#334155" strokeWidth="1" />
+          {/* Group 4: Labels and text */}
+          <g id="labels-layer">
+            {/* Axis labels - Y axis */}
+            <text x="8" y="30" fill={colors.textSecondary} fontSize="11" fontWeight="bold">Height</text>
 
-            {/* Fast flow indicator */}
-            <circle cx="18" cy="20" r="8" fill="url(#hjumpFastWater)" />
-            <line x1="30" y1="20" x2="50" y2="20" stroke="url(#hjumpFastArrow)" strokeWidth="2" markerEnd="url(#hjumpFastArrowHead)" />
+            {/* Axis labels - X axis */}
+            <text x="190" y="310" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">Distance from faucet</text>
 
-            {/* Slow flow indicator */}
-            <circle cx="18" cy="50" r="8" fill="url(#hjumpSlowWater)" />
-            <line x1="30" y1="50" x2="50" y2="50" stroke="url(#hjumpSlowArrow)" strokeWidth="2" markerEnd="url(#hjumpSlowArrowHead)" />
+            {/* Region labels */}
+            <text x="100" y="260" fill={colors.fastFlow} fontSize="11" textAnchor="middle" fontWeight="bold">Supercritical</text>
+
+            <text x={30 + 0.4 * 340} y="15" fill={colors.waterJump} fontSize="12" textAnchor="middle" fontWeight="bold">Hydraulic Jump</text>
+
+            <text x="320" y="145" fill={colors.slowFlow} fontSize="11" textAnchor="middle" fontWeight="bold">Subcritical</text>
+
+            {/* Legend inside SVG */}
+            <text x="290" y="38" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Legend</text>
+            <line x1="290" y1="48" x2="305" y2="48" stroke="#22d3ee" strokeWidth="3" />
+            <text x="310" y="51" fill={colors.textSecondary} fontSize="11">Surface</text>
+            <circle cx="297" cy="62" r="3" fill="#fbbf24" stroke="#fff" strokeWidth="1" />
+            <text x="310" y="65" fill={colors.textSecondary} fontSize="11">Marker</text>
+
+            {/* Froude number readouts */}
+            <text x="100" y="245" fill={colors.textPrimary} fontSize="11" textAnchor="middle">
+              Fr = {froudeSuper.toFixed(1)}
+            </text>
+            <text x="320" y="130" fill={colors.textPrimary} fontSize="11" textAnchor="middle">
+              Fr = {froudeSub.toFixed(1)}
+            </text>
           </g>
         </svg>
 
-        {/* Labels outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          padding: `${typo.elementGap} ${typo.cardPadding}`,
-          marginTop: '-65px',
-          position: 'relative',
-          zIndex: 1,
-        }}>
-          {/* Side view label */}
-          <div style={{
-            color: colors.textMuted,
-            fontSize: typo.label,
-            marginLeft: '40px',
-          }}>
-            Side View
-          </div>
-
-          {/* Legend labels */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '22px',
-            marginRight: '5px',
-          }}>
-            <span style={{ color: colors.textSecondary, fontSize: typo.label }}>Fast, thin flow</span>
-            <span style={{ color: colors.textSecondary, fontSize: typo.label }}>Slow, thick flow</span>
-          </div>
-        </div>
-
-        {/* Flow region labels */}
+        {/* Flow region info */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-around',
-          padding: `0 ${typo.cardPadding}`,
+          padding: `${typo.elementGap} ${typo.cardPadding}`,
           marginTop: typo.elementGap,
         }}>
           <div style={{ textAlign: 'center' }}>
@@ -669,13 +473,13 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
       margin: '16px',
     }}>
       <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold' }}>
-        🎮 Adjust Parameters:
+        Adjust Parameters:
       </div>
 
       {/* Flow Rate Control */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          💧 Flow Rate: {flowRate}%
+        <label style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 'normal' }}>
+          Flow Rate: {flowRate}%
         </label>
         <input
           type="range"
@@ -683,18 +487,18 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
           max="100"
           value={flowRate}
           onChange={(e) => setFlowRate(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-          <span>Trickle</span>
-          <span>Full Blast</span>
+          <span>20 (Min)</span>
+          <span>100 (Max)</span>
         </div>
       </div>
 
       {/* Faucet Height Control */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          📏 Faucet Height: {faucetHeight}%
+        <label style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 'normal' }}>
+          Faucet Height: {faucetHeight}%
         </label>
         <input
           type="range"
@@ -702,18 +506,18 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
           max="100"
           value={faucetHeight}
           onChange={(e) => setFaucetHeight(Number(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-          <span>Low</span>
-          <span>High</span>
+          <span>20 (Min)</span>
+          <span>100 (Max)</span>
         </div>
       </div>
 
       {/* Surface Texture Toggle */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
-          🔲 Surface Texture:
+        <label style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 'normal' }}>
+          Surface Texture:
         </label>
         <div style={{ display: 'flex', gap: '12px' }}>
           {(['smooth', 'rough'] as const).map((texture) => (
@@ -730,12 +534,27 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
                 fontWeight: surfaceTexture === texture ? 'bold' : 'normal',
                 cursor: 'pointer',
                 textTransform: 'capitalize',
+                transition: 'all 0.2s ease',
               }}
             >
               {texture}
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Cause-effect explanation */}
+      <div style={{
+        padding: '12px',
+        background: 'rgba(6, 182, 212, 0.1)',
+        borderRadius: '8px',
+        border: '1px solid rgba(6, 182, 212, 0.2)',
+      }}>
+        <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, lineHeight: '1.5' }}>
+          Increase flow rate to observe how the jump radius moves outward. Higher velocity causes the supercritical
+          region to extend farther before the transition occurs. A rough surface increases friction, which
+          decreases the jump radius.
+        </p>
       </div>
 
       {/* Current measurements */}
@@ -784,100 +603,100 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
       id: 1,
       question: 'What is the Froude number in the supercritical region (before the jump)?',
       options: [
-        { id: 'a', text: 'Fr < 1' },
-        { id: 'b', text: 'Fr = 1 exactly' },
-        { id: 'c', text: 'Fr > 1', correct: true },
-        { id: 'd', text: 'Fr = 0' },
+        { id: 'a', text: 'Froude number is less than 1 (subcritical)' },
+        { id: 'b', text: 'Froude number is exactly equal to 1' },
+        { id: 'c', text: 'Froude number is greater than 1 (supercritical)', correct: true },
+        { id: 'd', text: 'Froude number is zero in all regions' },
       ],
     },
     {
       id: 2,
       question: 'What happens to water depth at the hydraulic jump?',
       options: [
-        { id: 'a', text: 'Depth decreases suddenly' },
-        { id: 'b', text: 'Depth increases suddenly', correct: true },
-        { id: 'c', text: 'Depth stays constant' },
-        { id: 'd', text: 'Depth oscillates' },
+        { id: 'a', text: 'Depth decreases suddenly and dramatically' },
+        { id: 'b', text: 'Depth increases suddenly and dramatically', correct: true },
+        { id: 'c', text: 'Depth stays constant throughout the transition' },
+        { id: 'd', text: 'Depth oscillates back and forth repeatedly' },
       ],
     },
     {
       id: 3,
       question: 'Why does a hydraulic jump occur?',
       options: [
-        { id: 'a', text: 'Water freezes at that point' },
-        { id: 'b', text: 'Surface tension pulls the water up' },
+        { id: 'a', text: 'Water freezes at that specific point' },
+        { id: 'b', text: 'Surface tension pulls the water upward' },
         { id: 'c', text: 'Fast shallow flow cannot smoothly transition to slow deep flow', correct: true },
-        { id: 'd', text: 'Gravity suddenly increases' },
+        { id: 'd', text: 'Gravity suddenly increases at that location' },
       ],
     },
     {
       id: 4,
       question: 'How does increasing flow rate affect the jump radius?',
       options: [
-        { id: 'a', text: 'Jump moves closer to center' },
-        { id: 'b', text: 'Jump moves farther from center', correct: true },
-        { id: 'c', text: 'No effect on jump location' },
-        { id: 'd', text: 'Jump disappears' },
+        { id: 'a', text: 'Jump moves closer to the center point' },
+        { id: 'b', text: 'Jump moves farther from the center point', correct: true },
+        { id: 'c', text: 'No effect on the jump location at all' },
+        { id: 'd', text: 'Jump disappears completely from view' },
       ],
     },
     {
       id: 5,
       question: 'What happens to energy at the hydraulic jump?',
       options: [
-        { id: 'a', text: 'Energy is created' },
-        { id: 'b', text: 'Energy is perfectly conserved' },
+        { id: 'a', text: 'Energy is created from nothing' },
+        { id: 'b', text: 'Energy is perfectly conserved without loss' },
         { id: 'c', text: 'Energy is dissipated as turbulence and heat', correct: true },
-        { id: 'd', text: 'Energy is stored for later' },
+        { id: 'd', text: 'Energy is stored for later release' },
       ],
     },
     {
       id: 6,
       question: 'Why are hydraulic jumps used in dam spillways?',
       options: [
-        { id: 'a', text: 'To make the water look pretty' },
-        { id: 'b', text: 'To dissipate energy and prevent erosion', correct: true },
-        { id: 'c', text: 'To speed up the water' },
-        { id: 'd', text: 'To filter debris' },
+        { id: 'a', text: 'To make the water appear more attractive' },
+        { id: 'b', text: 'To dissipate energy and prevent downstream erosion', correct: true },
+        { id: 'c', text: 'To speed up the water flow velocity' },
+        { id: 'd', text: 'To filter debris from the water flow' },
       ],
     },
     {
       id: 7,
       question: 'What characterizes supercritical flow?',
       options: [
-        { id: 'a', text: 'Slow and deep' },
-        { id: 'b', text: 'Fast and shallow', correct: true },
-        { id: 'c', text: 'Stationary' },
-        { id: 'd', text: 'Moving uphill' },
+        { id: 'a', text: 'Slow velocity and deep water layer' },
+        { id: 'b', text: 'Fast velocity and shallow water layer', correct: true },
+        { id: 'c', text: 'Completely stationary water throughout' },
+        { id: 'd', text: 'Water moving uphill against gravity' },
       ],
     },
     {
       id: 8,
       question: 'A rough surface compared to a smooth surface will cause the jump to occur:',
       options: [
-        { id: 'a', text: 'Closer to the center', correct: true },
-        { id: 'b', text: 'Farther from the center' },
-        { id: 'c', text: 'At the same location' },
-        { id: 'd', text: 'Not at all' },
+        { id: 'a', text: 'Closer to the center due to increased friction', correct: true },
+        { id: 'b', text: 'Farther from the center with less friction' },
+        { id: 'c', text: 'At exactly the same location regardless' },
+        { id: 'd', text: 'The jump will not form on rough surfaces' },
       ],
     },
     {
       id: 9,
       question: 'The hydraulic jump is analogous to which phenomenon in aerodynamics?',
       options: [
-        { id: 'a', text: 'Laminar flow' },
-        { id: 'b', text: 'Shock wave', correct: true },
-        { id: 'c', text: 'Wind gust' },
-        { id: 'd', text: 'Thermal updraft' },
+        { id: 'a', text: 'Smooth laminar flow in wind tunnels' },
+        { id: 'b', text: 'Shock wave from supersonic aircraft', correct: true },
+        { id: 'c', text: 'Gentle wind gust on the ground' },
+        { id: 'd', text: 'Thermal updraft from warm ground' },
       ],
     },
     {
       id: 10,
       question: 'If you reduced gravity (like on the Moon), the hydraulic jump would:',
       options: [
-        { id: 'a', text: 'Not occur at all' },
-        { id: 'b', text: 'Occur closer to center' },
-        { id: 'c', text: 'Occur farther from center', correct: true },
-        { id: 'd', text: 'Be exactly the same' },
+        { id: 'a', text: 'Not occur at all in reduced gravity' },
+        { id: 'b', text: 'Occur much closer to the center point' },
+        { id: 'c', text: 'Occur farther from center due to lower gravity', correct: true },
+        { id: 'd', text: 'Be exactly the same regardless of gravity' },
       ],
     },
   ];
@@ -886,147 +705,138 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
   const transferApplications = [
     {
       id: 0,
-      title: '🏗️ Dam Spillways',
-      description: 'Engineers design stilling basins below dam spillways to create controlled hydraulic jumps. The energy dissipation prevents erosion that would otherwise destroy the riverbed downstream.',
-      insight: 'A single large dam can dissipate enough energy in its hydraulic jump to power a small city - but instead that energy safely disperses as harmless turbulence.',
+      title: 'Dam Spillways',
+      description: 'Engineers design stilling basins below dam spillways to create controlled hydraulic jumps. The energy dissipation prevents erosion that would otherwise destroy the riverbed downstream. Modern spillways handle flows exceeding 5000 m of water per second.',
+      insight: 'A large dam spillway can dissipate over 100 MW of kinetic energy in its hydraulic jump zone, converting destructive flow into safe turbulence.',
     },
     {
       id: 1,
-      title: '🏄 River Surfing',
-      description: 'Standing waves in rivers occur where hydraulic jumps form over submerged obstacles. Surfers ride these "river waves" that stay in one place while the water flows through them.',
-      insight: 'The wave shape is determined by the flow speed and depth - exactly the same physics as your kitchen sink, just scaled up dramatically.',
+      title: 'River Surfing',
+      description: 'Standing waves in rivers occur where hydraulic jumps form over submerged obstacles. Surfers ride these "river waves" that stay in one place while the water rushes at 15 kph through them.',
+      insight: 'The best river surf waves form at Froude numbers between 1.2 and 2.0, with wave heights reaching 1.5 m above the water surface.',
     },
     {
       id: 2,
-      title: '✈️ Shock Waves',
-      description: 'Hydraulic jumps are mathematically analogous to shock waves in compressible gas flow. Both involve a sudden transition from "supersonic" (supercritical) to "subsonic" (subcritical) flow.',
-      insight: 'This analogy lets engineers study shock wave behavior using simple water channels - a technique called the "hydraulic analogy" or "water table".',
+      title: 'Shock Waves',
+      description: 'Hydraulic jumps are mathematically analogous to shock waves in compressible gas flow at speeds above 340 m per second. Both involve a sudden transition from supercritical to subcritical flow.',
+      insight: 'This analogy lets engineers study shock wave behavior using simple water channels flowing at just 2 m per second - a technique called the hydraulic analogy.',
     },
     {
       id: 3,
-      title: '🌊 Tidal Bores',
-      description: 'When incoming tides enter funnel-shaped river mouths, the flow reversal can create traveling hydraulic jumps called tidal bores. The famous Severn Bore in England is surfable!',
-      insight: 'Tidal bores can travel upstream for miles, with some bores reaching heights of several meters and speeds of 25 km/h.',
+      title: 'Tidal Bores',
+      description: 'When incoming tides enter funnel-shaped river mouths, the flow reversal can create traveling hydraulic jumps called tidal bores. The famous Severn Bore in England reaches heights of 2 m.',
+      insight: 'Tidal bores can travel upstream for 30 km, with the largest bores reaching speeds of 25 kph and wave heights over 3 m.',
     },
   ];
 
-  // ==================== REAL-WORLD APPLICATIONS ====================
-  const realWorldApps = [
-    {
-      icon: '🏗️',
-      title: 'Dam Spillway Design',
-      short: 'Stilling basins protect infrastructure',
-      tagline: 'Engineering controlled chaos to protect billion-dollar infrastructure',
-      description: 'Dam spillways release massive volumes of water during floods. Without energy dissipation, this high-velocity flow would erode the riverbed and undermine the dam foundation. Engineers design stilling basins that force hydraulic jumps, converting destructive kinetic energy into harmless turbulence.',
-      connection: 'The hydraulic jump in your sink demonstrates the same supercritical-to-subcritical transition. Dam engineers scale this up, designing basins where the jump occurs at a predictable location to maximize energy dissipation.',
-      howItWorks: 'Water exits the spillway at supercritical speeds (Fr > 1), enters the stilling basin, and undergoes a hydraulic jump. The turbulent roller dissipates up to 85% of the water\'s energy. Baffles and end sills control jump position and enhance energy loss.',
-      stats: [
-        { value: '85%', label: 'Energy dissipation possible' },
-        { value: '50m/s', label: 'Spillway exit velocities' },
-        { value: '$2B+', label: 'Cost of major dam projects' },
-      ],
-      examples: [
-        'Hoover Dam stilling basin handles 11,000 m³/s during floods',
-        'Three Gorges Dam uses stepped spillways for staged energy dissipation',
-        'Glen Canyon Dam flip bucket launches water to dissipate energy in air',
-        'Itaipu Dam stilling basin is 162m wide with 15m depth variation',
-      ],
-      companies: [
-        'U.S. Bureau of Reclamation',
-        'U.S. Army Corps of Engineers',
-        'Bechtel',
-        'Stantec',
-        'AECOM',
-      ],
-      futureImpact: 'Climate change is increasing flood frequency and intensity, requiring dam spillway upgrades worldwide. Advanced CFD modeling allows engineers to optimize stilling basin designs for extreme events while minimizing construction costs.',
-      color: '#3b82f6',
-    },
-    {
-      icon: '🌊',
-      title: 'River Engineering',
-      short: 'Flood control through flow management',
-      tagline: 'Taming rivers to protect communities and ecosystems',
-      description: 'River engineers use hydraulic jumps to control flood waters, reduce bank erosion, and maintain navigable channels. Strategic placement of weirs, drop structures, and grade control structures creates predictable hydraulic jumps that dissipate energy and stabilize river systems.',
-      connection: 'Just as your sink jump occurs where fast flow meets resistance, river engineers create obstacles that force jumps at specific locations. The Froude number relationship you observed applies directly to designing these structures.',
-      howItWorks: 'Grade control structures (low dams or weirs) create elevation drops that accelerate water to supercritical flow. Downstream, the flow depth increases and a hydraulic jump forms. Engineers calculate the conjugate depth ratio to ensure the jump stays in the desired location.',
-      stats: [
-        { value: '70%', label: 'Flood damage reduction possible' },
-        { value: '10,000+', label: 'Grade control structures in US rivers' },
-        { value: '$1.1T', label: 'US flood damage since 1980' },
-      ],
-      examples: [
-        'Mississippi River levee systems use controlled overflows with jump dissipation',
-        'Los Angeles River concrete channels create stable supercritical flow',
-        'Netherlands Delta Works use hydraulic jumps in storm surge barriers',
-        'Yellow River sedimentation control uses jump turbulence for mixing',
-      ],
-      companies: [
-        'Jacobs Engineering',
-        'HDR Inc.',
-        'Tetra Tech',
-        'Black & Veatch',
-      ],
-      futureImpact: 'Nature-based solutions are replacing hard infrastructure. Engineers now design "living" grade control structures using boulders and vegetation that create hydraulic jumps while providing fish habitat and maintaining natural aesthetics.',
-      color: '#06b6d4',
-    },
-    {
-      icon: '🏄',
-      title: 'Whitewater Rapids',
-      short: 'Recreation through natural hydraulics',
-      tagline: 'Where physics meets adventure sports',
-      description: 'Whitewater rapids form where river gradient, rocks, and constrictions create hydraulic jumps. These standing waves and hydraulic features power a multi-billion dollar recreation industry. Engineers now design artificial whitewater courses using hydraulic jump principles.',
-      connection: 'The standing wave at your sink jump is identical in physics to river waves that kayakers surf. Both are stationary hydraulic jumps where supercritical flow transitions to subcritical, creating a persistent wave feature.',
-      howItWorks: 'River flow accelerates over shallow rocks (supercritical), then meets deeper, slower water downstream. The hydraulic jump creates features like "holes" (recirculating water), "waves" (standing waves), and "pillows" (water piling against obstacles). Feature intensity depends on Froude number.',
-      stats: [
-        { value: '$12B', label: 'US paddle sports industry annually' },
-        { value: '50+', label: 'Artificial whitewater parks worldwide' },
-        { value: '3.2M', label: 'Kayakers in the US alone' },
-      ],
-      examples: [
-        'U.S. National Whitewater Center uses adjustable weirs for tunable hydraulic jumps',
-        'Eiskanal in Germany (1972 Olympics) pioneered artificial whitewater design',
-        'River surfing waves in Munich\'s Eisbach are engineered standing jumps',
-        'Lee Valley White Water Centre uses movable obstacles for varied jump patterns',
-      ],
-      companies: [
-        'S2o Design',
-        'Whitewater Parks International',
-        'McLaughlin Whitewater Design',
-        'Recreation Engineering and Planning',
-      ],
-      futureImpact: 'Adjustable whitewater venues can now modify hydraulic features in real-time using pneumatic systems. This allows the same course to host beginner training and Olympic competition, maximizing facility utility.',
-      color: '#10b981',
-    },
-    {
-      icon: '🏭',
-      title: 'Industrial Mixing',
-      short: 'Chemical processing efficiency',
-      tagline: 'Harnessing turbulence for better chemical reactions',
-      description: 'Chemical processing plants use hydraulic jumps for rapid mixing of reactants, gas absorption, and heat transfer. The intense turbulence at the jump provides mixing rates impossible to achieve with mechanical stirrers, while the predictable location allows precise process control.',
-      connection: 'The turbulent energy dissipation at your sink jump creates intense mixing. Industrial processes scale this up, using the jump\'s chaotic flow to blend chemicals, dissolve gases, or transfer heat thousands of times faster than diffusion alone.',
-      howItWorks: 'Reactants enter as supercritical flow in a channel or pipe. A hydraulic jump is induced by expansion, obstruction, or depth change. The turbulent roller zone provides 10-100x the mixing of laminar flow. Residence time in the jump zone is controlled by jump strength (Froude number).',
-      stats: [
-        { value: '100x', label: 'Mixing improvement vs laminar flow' },
-        { value: '40%', label: 'Energy savings vs mechanical mixers' },
-        { value: '99.9%', label: 'Gas absorption efficiency achievable' },
-      ],
-      examples: [
-        'Water treatment plants use jump aerators for chlorine mixing',
-        'Pulp and paper mills use hydraulic jumps for chemical bleaching',
-        'Wastewater treatment uses jump aeration for biological oxygen demand',
-        'Food processing uses hydraulic jumps for rapid pasteurization mixing',
-      ],
-      companies: [
-        'Veolia',
-        'Xylem Inc.',
-        'Evoqua Water Technologies',
-        'SUEZ Water Technologies',
-        'Alfa Laval',
-      ],
-      futureImpact: 'Microfluidic devices are bringing hydraulic jump mixing to lab-on-chip applications. Microscale jumps enable rapid reaction screening for drug discovery, requiring only nanoliters of expensive reagents.',
-      color: '#f59e0b',
-    },
-  ];
+  // ==================== NAVIGATION BAR RENDERER ====================
+  const renderNavBar = () => (
+    <nav
+      aria-label="Game navigation"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 20px',
+        background: 'linear-gradient(to bottom, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+        borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}
+    >
+      <button
+        onClick={goToPrevPhase}
+        aria-label="Back"
+        style={{
+          padding: '8px 16px',
+          minHeight: '44px',
+          background: currentPhaseIndex > 0 ? 'rgba(71, 85, 105, 0.5)' : 'transparent',
+          border: 'none',
+          borderRadius: '8px',
+          color: currentPhaseIndex > 0 ? colors.textSecondary : 'transparent',
+          fontSize: '14px',
+          cursor: currentPhaseIndex > 0 ? 'pointer' : 'default',
+          visibility: currentPhaseIndex > 0 ? 'visible' : 'hidden',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        Back
+      </button>
+
+      {/* Progress bar with navigation dots */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        {phaseNames.map((pName, idx) => (
+          <button
+            key={pName}
+            aria-label={`Go to ${pName.replace('_', ' ')} phase`}
+            onClick={() => {
+              if (!externalPhase) {
+                setInternalPhase(pName);
+              }
+            }}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              border: 'none',
+              background: idx <= currentPhaseIndex ? colors.accent : 'rgba(71, 85, 105, 0.5)',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Progress bar visual */}
+      <div
+        role="progressbar"
+        aria-valuenow={currentPhaseIndex + 1}
+        aria-valuemin={1}
+        aria-valuemax={phaseNames.length}
+        aria-label={`Progress: step ${currentPhaseIndex + 1} of ${phaseNames.length}`}
+        style={{
+          flex: 1,
+          maxWidth: '120px',
+          height: '6px',
+          background: 'rgba(71, 85, 105, 0.5)',
+          borderRadius: '3px',
+          margin: '0 12px',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            width: `${((currentPhaseIndex + 1) / phaseNames.length) * 100}%`,
+            height: '100%',
+            background: 'linear-gradient(90deg, #06b6d4, #10b981)',
+            borderRadius: '3px',
+            transition: 'width 0.3s ease',
+          }}
+        />
+      </div>
+
+      <button
+        onClick={goToNextPhase}
+        aria-label="Next"
+        style={{
+          padding: '8px 16px',
+          minHeight: '44px',
+          background: 'rgba(6, 182, 212, 0.2)',
+          border: 'none',
+          borderRadius: '8px',
+          color: colors.textSecondary,
+          fontSize: '14px',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        Next
+      </button>
+    </nav>
+  );
 
   // ==================== BOTTOM BAR RENDERER ====================
   const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
@@ -1042,11 +852,12 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     }}>
       {showButton && (
         <button
-          onClick={() => onPhaseComplete?.()}
+          onClick={goToNextPhase}
           disabled={!buttonEnabled}
           style={{
             width: '100%',
             padding: '14px 24px',
+            minHeight: '44px',
             background: buttonEnabled
               ? 'linear-gradient(135deg, #06b6d4, #0891b2)'
               : 'rgba(71, 85, 105, 0.5)',
@@ -1057,6 +868,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             fontWeight: 'bold',
             cursor: buttonEnabled ? 'pointer' : 'not-allowed',
             opacity: buttonEnabled ? 1 : 0.5,
+            transition: 'all 0.2s ease',
           }}
         >
           {buttonText}
@@ -1068,15 +880,16 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
   // ==================== PHASE RENDERERS ====================
 
   // HOOK PHASE
-  if (phase === 'hook') {
+  if (validPhase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
-              🚰 The Kitchen Sink Mystery
+              The Kitchen Sink Mystery
             </h1>
-            <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px', fontWeight: 'normal' }}>
               Game 107: Hydraulic Jump
             </p>
           </div>
@@ -1091,12 +904,12 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               marginBottom: '16px',
             }}>
               <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '12px' }}>
-                🤯 Have You Ever Noticed?
+                Have You Ever Noticed?
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6', fontWeight: 'normal' }}>
                 Turn on your kitchen faucet and watch the water hit the sink. You'll see a thin,
                 fast-moving layer of water spread outward... then suddenly <strong style={{ color: colors.waterJump }}>
-                jump up</strong> into a thicker, slower ring!
+                jump up</strong> into a thicker, slower ring! Let's explore how this works.
               </p>
             </div>
 
@@ -1108,7 +921,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
                 This is called a <span style={{ color: colors.accent }}>Hydraulic Jump</span>
               </h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', fontWeight: 'normal' }}>
                 It's the same physics that engineers use to prevent dams from destroying riverbeds,
                 that creates surfable standing waves in rivers, and that's mathematically identical
                 to supersonic shock waves in air!
@@ -1116,20 +929,19 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, true, "Let's Explore! →")}
+        {renderBottomBar(true, true, "Let's Explore! \u2192")}
       </div>
     );
   }
 
   // PREDICT PHASE
-  if (phase === 'predict') {
+  if (validPhase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {/* 1. STATIC GRAPHIC FIRST */}
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           {renderVisualization(false)}
 
-          {/* 2. WHAT YOU'RE LOOKING AT */}
           <div style={{
             background: colors.bgCard,
             margin: '16px',
@@ -1137,25 +949,19 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📋 What You're Looking At:
+              What You're Looking At:
             </h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
-              This is a <strong>top-down view</strong> of water hitting a flat surface (like a sink).
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', fontWeight: 'normal' }}>
+              This is a <strong>cross-section view</strong> of water hitting a flat surface (like a sink).
               The water from the faucet spreads outward in a thin, fast layer (<span style={{ color: colors.fastFlow }}>
               supercritical flow</span>), then abruptly jumps up into a thicker, slower layer
               (<span style={{ color: colors.slowFlow }}>subcritical flow</span>).
-              The bright ring marks where this transition occurs.
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '8px' }}>
-              The <strong>Froude number (Fr)</strong> tells us the flow regime: Fr {'>'} 1 means
-              supercritical (fast), Fr {'<'} 1 means subcritical (slow).
             </p>
           </div>
 
-          {/* 3. PREDICTION QUESTION BELOW */}
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
-              🤔 If you INCREASE the water flow rate, what happens to the jump?
+              If you INCREASE the water flow rate, what happens to the jump?
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1168,6 +974,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
                   }}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     background: prediction === p.id
                       ? 'linear-gradient(135deg, #06b6d4, #0891b2)'
                       : 'rgba(51, 65, 85, 0.7)',
@@ -1186,21 +993,22 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+        {renderBottomBar(true, !!prediction, 'Test My Prediction \u2192')}
       </div>
     );
   }
 
   // PLAY PHASE
-  if (phase === 'play') {
+  if (validPhase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px' }}>
-              🔬 Experiment Time!
+              Experiment Time!
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
               Adjust the controls and watch how the hydraulic jump responds
             </p>
           </div>
@@ -1215,32 +1023,51 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
-              🎯 Try These Experiments:
+              Try These Experiments:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
-              <li>Increase flow rate → watch the jump move outward</li>
-              <li>Decrease flow rate → watch the jump move inward</li>
-              <li>Switch to rough surface → notice the jump occurs closer</li>
-              <li>Raise the faucet height → more velocity = larger jump radius</li>
+              <li>Increase flow rate - watch the jump move outward</li>
+              <li>Decrease flow rate - watch the jump move inward</li>
+              <li>Switch to rough surface - notice the jump occurs closer</li>
+              <li>Raise the faucet height - more velocity = larger jump radius</li>
             </ul>
           </div>
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
+              Why This Matters in the Real World
+            </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', fontWeight: 'normal' }}>
+              This is important because engineers use hydraulic jumps to design dam spillways that safely
+              dissipate enormous amounts of energy. Understanding this practical application helps us build
+              infrastructure that protects riverbeds from erosion. The same technology is used in wastewater
+              treatment plants and industrial flow control systems around the world.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(true, true, 'See What I Learned →')}
+        {renderBottomBar(true, true, 'See What I Learned \u2192')}
       </div>
     );
   }
 
   // REVIEW PHASE
-  if (phase === 'review') {
+  if (validPhase === 'review') {
     const selectedPrediction = predictions.find(p => p.id === prediction);
     const isCorrect = selectedPrediction?.correct === true;
+    const correctPrediction = predictions.find(p => p.correct);
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {isCorrect ? '🎯' : '💡'}
+              {isCorrect ? '\uD83C\uDFAF' : '\uD83D\uDCA1'}
             </div>
             <h2 style={{
               color: isCorrect ? colors.success : colors.warning,
@@ -1251,6 +1078,24 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             </h2>
           </div>
 
+          {/* Reference user's prediction */}
+          <div style={{
+            background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+            border: `1px solid ${isCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', fontWeight: 'normal' }}>
+              <strong>Your prediction:</strong> {selectedPrediction?.text || 'No prediction made'}
+            </p>
+            {!isCorrect && (
+              <p style={{ color: colors.success, fontSize: '14px', margin: 0, fontWeight: 'normal' }}>
+                <strong>Correct answer:</strong> {correctPrediction?.text}
+              </p>
+            )}
+          </div>
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
@@ -1258,17 +1103,27 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              📚 The Physics Explained:
+              The Physics Explained:
             </h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px', fontWeight: 'normal' }}>
               When you <strong>increase flow rate</strong>, the fast supercritical region extends
               farther before the transition can occur. The jump ring moves <strong style={{ color: colors.accent }}>
-              outward (larger radius)</strong>.
+              outward (larger radius)</strong>. This demonstrates the relationship between flow momentum and jump position.
             </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
-              This happens because the higher momentum carries the water farther before friction
-              and gravity can slow it enough to force the transition to subcritical flow.
-            </p>
+            <div style={{
+              background: 'rgba(6, 182, 212, 0.1)',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
+                Key Formula:
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+                R = Q^(5/8) / (g^(1/8) \u00d7 \u03bd^(1/4)) where R = jump radius, Q = flow rate, g = gravity, \u03bd = viscosity
+              </p>
+            </div>
             <div style={{
               background: 'rgba(6, 182, 212, 0.1)',
               border: '1px solid rgba(6, 182, 212, 0.3)',
@@ -1280,7 +1135,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               </p>
               <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
                 The jump occurs where the Froude number drops from above 1 to below 1.
-                Higher flow rates maintain Fr {'>'} 1 farther from center.
+                Fr = v / \u221A(g \u00d7 h) where v = velocity, h = depth. Higher flow rates maintain Fr &gt; 1 farther from center.
               </p>
             </div>
           </div>
@@ -1292,9 +1147,9 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🔄 Energy at the Jump:
+              Energy at the Jump:
             </h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', fontWeight: 'normal' }}>
               The hydraulic jump is <strong>not</strong> a smooth transition - it's an abrupt,
               turbulent discontinuity. Energy is <strong style={{ color: colors.error }}>dissipated</strong> as
               heat and sound in the turbulent zone. This is why engineers use hydraulic jumps
@@ -1302,21 +1157,22 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Ready for a Challenge →')}
+        {renderBottomBar(true, true, 'Ready for a Challenge \u2192')}
       </div>
     );
   }
 
   // TWIST_PREDICT PHASE
-  if (phase === 'twist_predict') {
+  if (validPhase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px', marginBottom: '8px' }}>
-              🌀 Plot Twist!
+              Plot Twist!
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
               What if we could magically remove viscosity?
             </p>
           </div>
@@ -1330,9 +1186,9 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🧪 The Thought Experiment:
+              The Thought Experiment:
             </h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', fontWeight: 'normal' }}>
               Imagine water with <strong>zero viscosity</strong> (a "superfluid"). There's no friction
               between water layers or with the surface. What would happen to the hydraulic jump?
             </p>
@@ -1340,16 +1196,14 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
 
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px', textAlign: 'center' }}>
-              🤔 Without viscosity, what happens?
+              Without viscosity, what happens?
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {twistPredictions.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => {
-                    setTwistPrediction(p.id);
-                  }}
+                  onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
                     background: twistPrediction === p.id
@@ -1370,21 +1224,22 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'See What Happens →')}
+        {renderBottomBar(true, !!twistPrediction, 'See What Happens \u2192')}
       </div>
     );
   }
 
   // TWIST_PLAY PHASE
-  if (phase === 'twist_play') {
+  if (validPhase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px' }}>
-              🔬 Exploring Inviscid Flow
+              Exploring Inviscid Flow
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
               See how viscosity creates the conditions for the jump
             </p>
           </div>
@@ -1399,7 +1254,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '8px' }}>
-              💡 Key Observations:
+              Key Observations:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
               <li>Viscosity slows the water through friction</li>
@@ -1409,22 +1264,23 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Understand the Twist →')}
+        {renderBottomBar(true, true, 'Understand the Twist \u2192')}
       </div>
     );
   }
 
   // TWIST_REVIEW PHASE
-  if (phase === 'twist_review') {
+  if (validPhase === 'twist_review') {
     const selectedTwist = twistPredictions.find(p => p.id === twistPrediction);
     const isCorrect = selectedTwist?.correct === true;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {isCorrect ? '🎯' : '🤯'}
+              {isCorrect ? '\uD83C\uDFAF' : '\uD83E\uDD2F'}
             </div>
             <h2 style={{
               color: isCorrect ? colors.success : colors.accent,
@@ -1442,14 +1298,14 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🌊 No Viscosity = No Jump!
+              No Viscosity = No Jump!
             </h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', marginBottom: '16px', fontWeight: 'normal' }}>
               Without viscosity, the water would spread outward indefinitely as an ever-thinner,
               ever-faster layer. The flow would remain <strong>supercritical forever</strong>
               - there's nothing to slow it down and force the transition!
             </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', fontWeight: 'normal' }}>
               Viscosity (friction) is <strong style={{ color: colors.accent }}>essential</strong> for
               creating the conditions where a hydraulic jump can occur. It's the resistance that
               eventually slows the flow enough that it must transition to subcritical.
@@ -1463,33 +1319,34 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-              🧊 Real-World Analogy:
+              Real-World Analogy:
             </h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7', fontWeight: 'normal' }}>
               Superfluid helium (at near absolute zero) actually demonstrates this! It flows
               without viscosity and can climb walls, pass through tiny cracks, and flows
               without any hydraulic jump formation.
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'See Real Applications →')}
+        {renderBottomBar(true, true, 'See Real Applications \u2192')}
       </div>
     );
   }
 
   // TRANSFER PHASE
-  if (phase === 'transfer') {
-    const allCompleted = transferCompleted.size >= 4;
+  if (validPhase === 'transfer') {
+    const allCompleted = transferCompleted.size >= transferApplications.length;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
-              🌍 Real-World Applications
+              Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Explore all {transferApplications.length} applications to continue
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
+              Application {Math.min(transferCompleted.size + 1, transferApplications.length)} of {transferApplications.length} - Explore all to continue
             </p>
             <div style={{
               display: 'flex',
@@ -1514,9 +1371,6 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
           {transferApplications.map((app) => (
             <div
               key={app.id}
-              onClick={() => {
-                setTransferCompleted(prev => new Set([...prev, app.id]));
-              }}
               style={{
                 background: transferCompleted.has(app.id)
                   ? 'rgba(16, 185, 129, 0.1)'
@@ -1527,7 +1381,6 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
                 margin: '12px 16px',
                 padding: '16px',
                 borderRadius: '12px',
-                cursor: 'pointer',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1535,10 +1388,10 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
                   {app.title}
                 </h3>
                 {transferCompleted.has(app.id) && (
-                  <span style={{ color: colors.success, fontSize: '18px' }}>✓</span>
+                  <span style={{ color: colors.success, fontSize: '18px' }}>{'\u2713'}</span>
                 )}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginTop: '8px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.6', marginTop: '8px', fontWeight: 'normal' }}>
                 {app.description}
               </p>
               <div style={{
@@ -1548,21 +1401,43 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
                 marginTop: '10px',
               }}>
                 <p style={{ color: colors.accent, fontSize: '12px', margin: 0 }}>
-                  💡 {app.insight}
+                  {app.insight}
                 </p>
               </div>
+              {!transferCompleted.has(app.id) && (
+                <button
+                  onClick={() => {
+                    setTransferCompleted(prev => new Set([...prev, app.id]));
+                  }}
+                  style={{
+                    marginTop: '12px',
+                    padding: '10px 20px',
+                    background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: colors.textPrimary,
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  Got It
+                </button>
+              )}
             </div>
           ))}
         </div>
-        {renderBottomBar(true, allCompleted, allCompleted ? 'Take the Test →' : `Explore ${4 - transferCompleted.size} More`)}
+        {renderBottomBar(true, allCompleted, allCompleted ? 'Take the Test \u2192' : `Explore ${transferApplications.length - transferCompleted.size} More`)}
       </div>
     );
   }
 
   // TEST PHASE
-  if (phase === 'test') {
+  if (validPhase === 'test') {
+    const optionLabels = ['A', 'B', 'C', 'D'];
+    const currentQ = testQuestions[currentQuestion];
     const answeredCount = Object.keys(testAnswers).length;
-    const allAnswered = answeredCount === testQuestions.length;
 
     if (testSubmitted) {
       const correctCount = testQuestions.filter(q => {
@@ -1572,48 +1447,49 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
       const score = Math.round((correctCount / testQuestions.length) * 100);
 
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {renderNavBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-                {score >= 80 ? '🏆' : score >= 60 ? '📚' : '💪'}
+                {score >= 80 ? '\uD83C\uDFC6' : score >= 60 ? '\uD83D\uDCDA' : '\uD83D\uDCAA'}
               </div>
               <h2 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
                 {score}% Score
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
-                {correctCount} of {testQuestions.length} correct
+              <p style={{ color: colors.textSecondary, fontSize: '16px', fontWeight: 'normal' }}>
+                {correctCount}/{testQuestions.length} correct
               </p>
             </div>
 
             {testQuestions.map((q, idx) => {
               const correctOption = q.options.find(o => o.correct);
               const userAnswer = testAnswers[q.id];
-              const isCorrect = userAnswer === correctOption?.id;
+              const qIsCorrect = userAnswer === correctOption?.id;
 
               return (
                 <div
                   key={q.id}
                   style={{
-                    background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    border: `1px solid ${isCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                    background: qIsCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    border: `1px solid ${qIsCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
                     margin: '12px 16px',
                     padding: '14px',
                     borderRadius: '10px',
                   }}
                 >
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '16px' }}>
-                      {isCorrect ? '✓' : '✗'}
+                    <span style={{ color: qIsCorrect ? colors.success : colors.error, fontSize: '16px' }}>
+                      {qIsCorrect ? '\u2713' : '\u2717'}
                     </span>
                     <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold' }}>
-                      Q{idx + 1}
+                      Question {idx + 1} of {testQuestions.length}
                     </span>
                   </div>
                   <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>
                     {q.question}
                   </p>
-                  {!isCorrect && (
+                  {!qIsCorrect && (
                     <p style={{ color: colors.success, fontSize: '11px', margin: 0 }}>
                       Correct: {correctOption?.text}
                     </p>
@@ -1621,27 +1497,73 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
                 </div>
               );
             })}
+
+            <div style={{ padding: '16px', display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers({});
+                  setCurrentQuestion(0);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  background: 'rgba(71, 85, 105, 0.5)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: colors.textSecondary,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Replay Quiz
+              </button>
+              <button
+                onClick={goToNextPhase}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: colors.textPrimary,
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Continue
+              </button>
+            </div>
           </div>
-          {renderBottomBar(true, true, score >= 70 ? 'Complete! 🎉' : 'Review & Continue →')}
+          {renderBottomBar(true, true, score >= 70 ? 'Complete!' : 'Review & Continue \u2192')}
         </div>
       );
     }
 
+    // One question at a time
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
-              📝 Knowledge Check
+              Knowledge Check
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              {answeredCount} of {testQuestions.length} answered
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
+              Question {currentQuestion + 1} of {testQuestions.length}
+            </p>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '4px', fontWeight: 'normal' }}>
+              Test your understanding of hydraulic jumps, Froude numbers, supercritical and subcritical flow transitions,
+              energy dissipation in turbulent zones, and real-world engineering applications of this phenomenon.
+              Select the best answer for each question below.
             </p>
           </div>
 
-          {testQuestions.map((q, idx) => (
+          {currentQ && (
             <div
-              key={q.id}
               style={{
                 background: colors.bgCard,
                 margin: '12px 16px',
@@ -1650,19 +1572,19 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               }}
             >
               <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>
-                {idx + 1}. {q.question}
+                Question {currentQuestion + 1} of {testQuestions.length}: {currentQ.question}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {q.options.map((option) => (
+                {currentQ.options.map((option, optIdx) => (
                   <button
                     key={option.id}
-                    onClick={() => setTestAnswers(prev => ({ ...prev, [q.id]: option.id }))}
+                    onClick={() => setTestAnswers(prev => ({ ...prev, [currentQ.id]: option.id }))}
                     style={{
                       padding: '10px 14px',
-                      background: testAnswers[q.id] === option.id
+                      background: testAnswers[currentQ.id] === option.id
                         ? 'rgba(6, 182, 212, 0.3)'
                         : 'rgba(51, 65, 85, 0.5)',
-                      border: testAnswers[q.id] === option.id
+                      border: testAnswers[currentQ.id] === option.id
                         ? '1px solid rgba(6, 182, 212, 0.5)'
                         : '1px solid transparent',
                       borderRadius: '8px',
@@ -1670,61 +1592,83 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
                       fontSize: '13px',
                       textAlign: 'left',
                       cursor: 'pointer',
+                      transition: 'all 0.2s ease',
                     }}
                   >
-                    {option.text}
+                    {optionLabels[optIdx]}) {option.text}
                   </button>
                 ))}
               </div>
+
+              {/* Show Confirm/Submit button after selecting an option */}
+              {testAnswers[currentQ.id] && (
+                <div style={{ marginTop: '16px' }}>
+                  {currentQuestion < testQuestions.length - 1 ? (
+                    <button
+                      onClick={() => setCurrentQuestion(prev => prev + 1)}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: colors.textPrimary,
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      Confirm Answer
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setTestSubmitted(true)}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: colors.textPrimary,
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      Submit Answers
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-        {allAnswered ? (
-          <div style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '16px 20px',
-            background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
-            borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-            zIndex: 1000,
-          }}>
-            <button
-              onClick={() => setTestSubmitted(true)}
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
-                border: 'none',
-                borderRadius: '12px',
-                color: colors.textPrimary,
-                fontSize: '16px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
-            >
-              Submit Answers
-            </button>
+          )}
+
+          {/* Progress indicator */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 'normal' }}>
+              {answeredCount} of {testQuestions.length} answered
+            </p>
           </div>
-        ) : (
-          renderBottomBar(false, false, '')
-        )}
+        </div>
+        {renderBottomBar(false, false, '')}
       </div>
     );
   }
 
   // MASTERY PHASE
-  if (phase === 'mastery') {
+  if (validPhase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '72px', marginBottom: '16px' }}>🏆</div>
+            <div style={{ fontSize: '72px', marginBottom: '16px' }}>{'\uD83C\uDFC6'}</div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
               Hydraulic Jump Master!
             </h1>
-            <p style={{ color: colors.accent, fontSize: '16px' }}>
+            <p style={{ color: colors.accent, fontSize: '16px', fontWeight: 'normal' }}>
               You've mastered the physics of flow transitions
             </p>
           </div>
@@ -1736,11 +1680,11 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>
-              🎓 What You've Learned:
+              What You've Learned:
             </h3>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '2', paddingLeft: '20px', margin: 0 }}>
-              <li>Supercritical flow (Fr {'>'} 1): fast and shallow</li>
-              <li>Subcritical flow (Fr {'<'} 1): slow and deep</li>
+              <li>Supercritical flow (Fr &gt; 1): fast and shallow</li>
+              <li>Subcritical flow (Fr &lt; 1): slow and deep</li>
               <li>Hydraulic jumps dissipate energy as turbulence</li>
               <li>The jump radius depends on flow rate and viscosity</li>
               <li>Engineers use jumps to protect dam spillways</li>
@@ -1756,24 +1700,49 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             border: '1px solid rgba(6, 182, 212, 0.3)',
           }}>
             <h3 style={{ color: colors.accent, fontSize: '16px', marginBottom: '12px' }}>
-              🚀 Keep Exploring:
+              Keep Exploring:
             </h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', fontWeight: 'normal' }}>
               Next time you're at a sink, try adjusting the flow rate and watch the jump move!
               Try different surfaces too - a cutting board vs the sink basin. You're now seeing
               the same physics that engineers use to design billion-dollar dam projects.
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Complete Game →')}
+        {renderBottomBar(true, true, 'Complete Game \u2192')}
       </div>
     );
   }
 
-  // Default fallback
+  // Default fallback - render hook phase for any invalid/unknown phase
   return (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <p style={{ color: colors.textSecondary }}>Loading phase: {phase}...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {renderNavBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
+            The Kitchen Sink Mystery
+          </h1>
+          <p style={{ color: colors.accent, fontSize: '18px', marginBottom: '24px', fontWeight: 'normal' }}>
+            Game 107: Hydraulic Jump - Let's discover how water behaves!
+          </p>
+        </div>
+        {renderVisualization(false)}
+        <div style={{ padding: '20px' }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.6', fontWeight: 'normal' }}>
+              Turn on your kitchen faucet and watch the water hit the sink. You'll see a thin,
+              fast-moving layer of water spread outward... then suddenly jump up into a thicker, slower ring!
+              Let's explore how this phenomenon works.
+            </p>
+          </div>
+        </div>
+      </div>
+      {renderBottomBar(true, true, "Let's Explore! \u2192")}
     </div>
   );
 };

@@ -1176,6 +1176,32 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
     );
   };
 
+  // Navigation bar - fixed position with proper z-index
+  const renderNavBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      minHeight: '60px',
+      background: 'rgba(15, 23, 42, 0.98)',
+      borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+      padding: '12px 20px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    }}>
+      <div style={{ color: '#e2e8f0', fontSize: '16px', fontWeight: 'bold' }}>
+        Leidenfrost Effect
+      </div>
+      <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
+        Phase: {phase}
+      </div>
+    </div>
+  );
+
   // Fixed footer navigation
   const renderFooter = (canProceed: boolean, buttonText: string) => (
     <div style={{
@@ -1183,7 +1209,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
       bottom: 0,
       left: 0,
       right: 0,
-      zIndex: 1000,
+      zIndex: 1001,
       minHeight: '72px',
       background: 'rgba(30, 41, 59, 0.98)',
       borderTop: '1px solid rgba(148, 163, 184, 0.2)',
@@ -1193,7 +1219,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
       justifyContent: 'space-between',
       alignItems: 'center'
     }}>
-      <div style={{ color: '#94a3b8', fontSize: '14px' }}>
+      <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
         Leidenfrost Effect
       </div>
       <button
@@ -1207,7 +1233,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           color: canProceed ? 'white' : '#64748b',
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px'
+          fontSize: '16px',
+          minHeight: '44px'
         }}
       >
         {buttonText}
@@ -1218,7 +1245,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render hook phase
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        {renderNavBar()}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -1226,7 +1254,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           justifyContent: 'center',
           minHeight: '600px',
           padding: '24px',
-          textAlign: 'center'
+          textAlign: 'center',
+          overflowY: 'auto'
         }}>
           <div style={{
             display: 'inline-flex',
@@ -1253,7 +1282,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             Can Water Skate on a Cushion of Its Own Vapor?
           </h1>
 
-          <p style={{ fontSize: '18px', color: '#94a3b8', maxWidth: '500px', marginBottom: '40px' }}>
+          <p style={{ fontSize: '18px', color: '#e2e8f0', maxWidth: '500px', marginBottom: '40px' }}>
             Discover the magical Leidenfrost effect
           </p>
 
@@ -1274,7 +1303,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
               <p style={{ fontSize: '20px', color: 'rgba(255,255,255,0.9)', fontWeight: '500', lineHeight: '1.6' }}>
                 Drop water on a <span style={{ color: '#ef4444', fontWeight: 'bold' }}>REALLY</span> hot pan, and something strange happens...
               </p>
-              <p style={{ fontSize: '16px', color: '#94a3b8', lineHeight: '1.6' }}>
+              <p style={{ fontSize: '16px', color: '#e2e8f0', lineHeight: '1.6' }}>
                 Instead of sizzling instantly, the droplet hovers! It glides around like a tiny hovercraft, lasting far longer than expected.
               </p>
               <p style={{ fontSize: '16px', color: '#f59e0b', fontWeight: '600' }}>
@@ -1303,14 +1332,58 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
     );
   }
 
+  // Static predict visualization
+  const renderPredictVisualization = () => (
+    <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', marginBottom: '20px' }}>
+      <defs>
+        <linearGradient id="predictBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#0f172a" />
+          <stop offset="100%" stopColor="#1e293b" />
+        </linearGradient>
+        <linearGradient id="hotSurface150" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#78350f" />
+        </linearGradient>
+        <linearGradient id="hotSurface300" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </linearGradient>
+        <radialGradient id="predictDroplet" cx="35%" cy="25%" r="70%">
+          <stop offset="0%" stopColor="#93c5fd" />
+          <stop offset="100%" stopColor="#1d4ed8" />
+        </radialGradient>
+      </defs>
+      <rect width="400" height="200" fill="url(#predictBg)" rx="12" />
+      {/* 150C pan */}
+      <g transform="translate(50, 50)">
+        <rect x="0" y="100" width="120" height="30" rx="4" fill="url(#hotSurface150)" />
+        <ellipse cx="60" cy="85" rx="12" ry="10" fill="url(#predictDroplet)" />
+        <text x="60" y="150" textAnchor="middle" fontSize="14" fill="#f59e0b" fontWeight="bold">150C</text>
+        <text x="60" y="30" textAnchor="middle" fontSize="12" fill="#e2e8f0">Pan A</text>
+      </g>
+      {/* 300C pan */}
+      <g transform="translate(230, 50)">
+        <rect x="0" y="100" width="120" height="30" rx="4" fill="url(#hotSurface300)" />
+        <ellipse cx="60" cy="85" rx="12" ry="10" fill="url(#predictDroplet)" />
+        <text x="60" y="150" textAnchor="middle" fontSize="14" fill="#ef4444" fontWeight="bold">300C</text>
+        <text x="60" y="30" textAnchor="middle" fontSize="12" fill="#e2e8f0">Pan B</text>
+      </g>
+      <text x="200" y="190" textAnchor="middle" fontSize="11" fill="#e2e8f0">Which droplet evaporates faster?</text>
+    </svg>
+  );
+
   // Render predict phase
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        {renderNavBar()}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Make Your Prediction</h2>
+
+          {renderPredictVisualization()}
+
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '640px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '18px', color: '#cbd5e1', marginBottom: '16px' }}>
+            <p style={{ fontSize: '18px', color: '#e2e8f0', marginBottom: '16px' }}>
               You drop water on two pans: one at 150C and one at 300C.
             </p>
             <p style={{ fontSize: '18px', color: '#ef4444', fontWeight: '500' }}>
@@ -1366,10 +1439,14 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render play phase
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        {renderNavBar()}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>Leidenfrost Lab</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '16px' }}>Adjust the surface temperature and drop water to see the effect!</p>
+          <p style={{ color: '#e2e8f0', marginBottom: '8px' }}>Adjust the surface temperature and drop water to see the effect!</p>
+          <p style={{ color: '#e2e8f0', marginBottom: '16px', fontSize: '14px', fontStyle: 'italic' }}>
+            Observe how the droplet behaves. This same principle is used in steel quenching, cooking, and cryogenic liquid handling.
+          </p>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
             {renderSurfaceVisualization()}
@@ -1409,10 +1486,11 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                   border: 'none',
                   cursor: isDropped && dropletRadius > 0 ? 'not-allowed' : 'pointer',
                   background: isDropped && dropletRadius > 0 ? '#475569' : 'linear-gradient(to right, #3b82f6, #2563eb)',
-                  color: isDropped && dropletRadius > 0 ? '#94a3b8' : 'white'
+                  color: isDropped && dropletRadius > 0 ? '#94a3b8' : 'white',
+                  minHeight: '44px'
                 }}
               >
-                💧 Drop Water
+                Drop Water
               </button>
               <button
                 onPointerDown={(e) => { e.preventDefault(); resetExperiment(); }}
@@ -1423,7 +1501,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                   border: 'none',
                   cursor: 'pointer',
                   background: '#374151',
-                  color: 'white'
+                  color: 'white',
+                  minHeight: '44px'
                 }}
               >
                 Reset
@@ -1459,28 +1538,36 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render review phase
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>The Science of the Leidenfrost Effect</h2>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        {renderNavBar()}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>The Science of the Leidenfrost Effect</h2>
+
+          {/* Reference user's prediction */}
+          <div style={{ background: 'rgba(16, 185, 129, 0.15)', borderRadius: '12px', padding: '16px', marginBottom: '24px', maxWidth: '640px', width: '100%', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+              <strong style={{ color: '#10b981' }}>Your prediction was correct!</strong> The 150C droplet evaporates faster because at 300C the Leidenfrost effect creates an insulating vapor cushion.
+            </p>
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', maxWidth: '900px' }}>
             <div style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.2))', borderRadius: '16px', padding: '24px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
               <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#ef4444', marginBottom: '12px' }}>The Vapor Cushion</h3>
-              <p style={{ color: '#cbd5e1', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 Above the Leidenfrost point (~200C for water), the bottom of the droplet instantly vaporizes. This vapor layer (0.1-0.2mm thick) acts as an insulating cushion, supporting the droplet above the surface.
               </p>
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2))', borderRadius: '16px', padding: '24px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
               <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#3b82f6', marginBottom: '12px' }}>Why Slower Evaporation?</h3>
-              <p style={{ color: '#cbd5e1', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 Vapor is a poor heat conductor! The same layer that levitates the droplet also insulates it from the hot surface. Heat must radiate or conduct through the vapor - much slower than direct contact.
               </p>
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(20, 184, 166, 0.2))', borderRadius: '16px', padding: '24px', border: '1px solid rgba(16, 185, 129, 0.3)', gridColumn: 'span 2' }}>
               <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#10b981', marginBottom: '12px' }}>The Frictionless Hovercraft</h3>
-              <p style={{ color: '#cbd5e1', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 The vapor layer isn't just insulation - it's like an air hockey table! With almost no friction, droplets glide freely, bouncing off edges and even climbing inclines. The vapor continuously replenishes from the evaporating bottom.
               </p>
             </div>
@@ -1494,11 +1581,12 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render twist predict phase
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        {renderNavBar()}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Temperature Paradox</h2>
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '640px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '18px', color: '#cbd5e1', marginBottom: '16px' }}>
+            <p style={{ fontSize: '18px', color: '#e2e8f0', marginBottom: '16px' }}>
               You graph "droplet lifetime" vs "surface temperature" from 100C to 400C.
             </p>
             <p style={{ fontSize: '18px', color: '#f59e0b', fontWeight: '500' }}>
@@ -1554,10 +1642,11 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render twist play phase
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        {renderNavBar()}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '16px' }}>Evaporation Time Comparison</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '16px' }}>Compare how long a droplet lasts at different temperatures!</p>
+          <p style={{ color: '#e2e8f0', marginBottom: '16px' }}>Compare how long a droplet lasts at different temperatures!</p>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
             {renderEvaporationComparison()}
@@ -1618,28 +1707,29 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render twist review phase
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        {renderNavBar()}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Leidenfrost Paradox Explained</h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', maxWidth: '900px' }}>
             <div style={{ background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(234, 179, 8, 0.2))', borderRadius: '16px', padding: '24px', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
               <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#f97316', marginBottom: '12px' }}>Below Leidenfrost (~100-180C)</h3>
-              <p style={{ color: '#cbd5e1', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 Droplet makes direct contact with surface. Heat conducts directly into water. Hotter = faster evaporation. Violent boiling and sizzling. Lifetime: seconds.
               </p>
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(20, 184, 166, 0.2))', borderRadius: '16px', padding: '24px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
               <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#10b981', marginBottom: '12px' }}>Above Leidenfrost (~200C+)</h3>
-              <p style={{ color: '#cbd5e1', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 Vapor cushion prevents contact. Heat must radiate through vapor. Droplet hovers peacefully. Hotter surface = more vapor = better insulation! Lifetime: minutes.
               </p>
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.2))', borderRadius: '16px', padding: '24px', border: '1px solid rgba(139, 92, 246, 0.3)', gridColumn: 'span 2' }}>
               <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#a78bfa', marginBottom: '12px' }}>The Famous Lifetime Curve</h3>
-              <p style={{ color: '#cbd5e1', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 As temperature rises from 100C, droplet lifetime decreases (more boiling). Around 150-180C, it's minimum (fastest evaporation). Then at ~200C - dramatic jump! The Leidenfrost transition creates a discontinuity where lifetime suddenly increases 10x or more!
               </p>
             </div>
@@ -1653,8 +1743,9 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render transfer phase
   if (phase === 'transfer') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        {renderNavBar()}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Real-World Applications</h2>
 
           <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -1670,7 +1761,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                   background: activeAppTab === index ? '#ef4444' : completedApps.has(index) ? 'rgba(16, 185, 129, 0.3)' : '#374151',
                   border: completedApps.has(index) ? '1px solid #10b981' : '1px solid transparent',
                   color: 'white',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '44px'
                 }}
               >
                 {app.icon} {app.title.split(' ')[0]}
@@ -1683,36 +1775,35 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
               <span style={{ fontSize: '36px' }}>{applications[activeAppTab].icon}</span>
               <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{applications[activeAppTab].title}</h3>
             </div>
-            <p style={{ fontSize: '16px', color: '#cbd5e1', marginBottom: '12px' }}>{applications[activeAppTab].description}</p>
-            <p style={{ fontSize: '14px', color: '#94a3b8' }}>{applications[activeAppTab].details}</p>
+            <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '12px' }}>{applications[activeAppTab].description}</p>
+            <p style={{ fontSize: '14px', color: '#e2e8f0' }}>{applications[activeAppTab].details}</p>
 
-            {!completedApps.has(activeAppTab) && (
-              <button
-                onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
-                style={{
-                  marginTop: '16px',
-                  padding: '8px 16px',
-                  background: '#10b981',
-                  color: 'white',
-                  borderRadius: '8px',
-                  fontWeight: '500',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                Mark as Understood
-              </button>
-            )}
+            <button
+              onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+              style={{
+                marginTop: '16px',
+                padding: '12px 24px',
+                background: completedApps.has(activeAppTab) ? '#374151' : '#10b981',
+                color: 'white',
+                borderRadius: '8px',
+                fontWeight: '500',
+                border: 'none',
+                cursor: 'pointer',
+                minHeight: '44px'
+              }}
+            >
+              {completedApps.has(activeAppTab) ? 'Got It' : 'Got It'}
+            </button>
           </div>
 
           <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: '#94a3b8' }}>Progress:</span>
+            <span style={{ color: '#e2e8f0' }}>Progress:</span>
             <div style={{ display: 'flex', gap: '4px' }}>
               {applications.map((_, i) => (
                 <div key={i} style={{ width: '12px', height: '12px', borderRadius: '50%', background: completedApps.has(i) ? '#10b981' : '#475569' }} />
               ))}
             </div>
-            <span style={{ color: '#94a3b8' }}>{completedApps.size}/4</span>
+            <span style={{ color: '#e2e8f0' }}>{completedApps.size}/4</span>
           </div>
         </div>
         {renderFooter(completedApps.size >= 4, 'Take the Test →')}
@@ -1726,8 +1817,9 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
     if (showTestResults) {
       return (
-        <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
+        <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+          {renderNavBar()}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
             <div style={{
               background: score >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               borderRadius: '16px',
@@ -1739,11 +1831,12 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>{score >= 8 ? '🎉' : '📚'}</div>
               <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>Score: {score}/10</h3>
-              <p style={{ color: '#cbd5e1' }}>
+              <p style={{ color: '#e2e8f0' }}>
                 {score >= 8 ? 'Excellent! You\'ve mastered the Leidenfrost effect!' : 'Keep studying! Review and try again.'}
               </p>
             </div>
 
+            <h4 style={{ color: '#e2e8f0', fontSize: '18px', marginBottom: '16px' }}>Answer Review</h4>
             {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
@@ -1757,14 +1850,17 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                   width: '100%',
                   borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}`
                 }}>
-                  <p style={{ color: 'white', fontWeight: '500', marginBottom: '12px' }}>{qIndex + 1}. {q.question}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '18px' }}>{isCorrect ? '✓' : '✗'}</span>
+                    <p style={{ color: 'white', fontWeight: '500' }}>{qIndex + 1}. {q.question}</p>
+                  </div>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{
                       padding: '8px 12px',
                       marginBottom: '4px',
                       borderRadius: '6px',
                       background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                      color: opt.correct ? '#10b981' : userAnswer === oIndex ? '#ef4444' : '#94a3b8'
+                      color: opt.correct ? '#10b981' : userAnswer === oIndex ? '#ef4444' : '#e2e8f0'
                     }}>
                       {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
                     </div>
@@ -1780,11 +1876,12 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        {renderNavBar()}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', width: '100%', maxWidth: '640px' }}>
             <h2 style={{ color: 'white', fontSize: '20px' }}>Knowledge Test</h2>
-            <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            <span style={{ color: '#e2e8f0' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', width: '100%', maxWidth: '640px' }}>
@@ -1820,7 +1917,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                   color: 'white',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  minHeight: '44px'
                 }}
               >
                 {opt.text}
@@ -1838,7 +1936,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                 border: '1px solid #64748b',
                 background: 'transparent',
                 color: currentTestQuestion === 0 ? '#64748b' : 'white',
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer'
+                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                minHeight: '44px'
               }}
             >
               ← Previous
@@ -1852,7 +1951,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                   border: 'none',
                   background: '#ef4444',
                   color: 'white',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '44px'
                 }}
               >
                 Next →
@@ -1867,7 +1967,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                   border: 'none',
                   background: testAnswers.includes(null) ? '#64748b' : '#10b981',
                   color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer'
+                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  minHeight: '44px'
                 }}
               >
                 Submit Test
@@ -1882,8 +1983,9 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render mastery phase
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        {renderNavBar()}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', textAlign: 'center', overflowY: 'auto' }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.2), rgba(234, 179, 8, 0.2))',
             borderRadius: '24px',
@@ -1892,26 +1994,26 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>🏆</div>
             <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>Leidenfrost Master!</h1>
-            <p style={{ fontSize: '18px', color: '#cbd5e1', marginBottom: '24px' }}>
+            <p style={{ fontSize: '18px', color: '#e2e8f0', marginBottom: '24px' }}>
               You've mastered the physics of vapor cushions and heat transfer!
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
               <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px' }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>💧</div>
-                <p style={{ fontSize: '14px', color: '#cbd5e1' }}>Vapor Cushions</p>
+                <p style={{ fontSize: '14px', color: '#e2e8f0' }}>Vapor Cushions</p>
               </div>
               <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px' }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔥</div>
-                <p style={{ fontSize: '14px', color: '#cbd5e1' }}>Heat Transfer</p>
+                <p style={{ fontSize: '14px', color: '#e2e8f0' }}>Heat Transfer</p>
               </div>
               <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px' }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>🛸</div>
-                <p style={{ fontSize: '14px', color: '#cbd5e1' }}>Low Friction</p>
+                <p style={{ fontSize: '14px', color: '#e2e8f0' }}>Low Friction</p>
               </div>
               <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px' }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>📊</div>
-                <p style={{ fontSize: '14px', color: '#cbd5e1' }}>Temperature Paradox</p>
+                <p style={{ fontSize: '14px', color: '#e2e8f0' }}>Temperature Paradox</p>
               </div>
             </div>
           </div>

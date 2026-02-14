@@ -452,12 +452,12 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'New Scenario',
-    twist_play: 'Steam Burns',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Experiment',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
-    mastery: 'Mastery'
+    mastery: 'Mastery Complete'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -507,12 +507,20 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
     };
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}>
         <defs>
           <linearGradient id="curveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.ice} />
             <stop offset="30%" stopColor={colors.water} />
             <stop offset="100%" stopColor={colors.steam} />
+          </linearGradient>
+          <radialGradient id="markerGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={colors.success} stopOpacity="1" />
+            <stop offset="100%" stopColor={colors.success} stopOpacity="0.3" />
+          </radialGradient>
+          <linearGradient id="iceZone" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.ice} stopOpacity="0.2" />
+            <stop offset="100%" stopColor={colors.ice} stopOpacity="0" />
           </linearGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -521,16 +529,38 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="dropShadow">
+            <feDropShadow dx="1" dy="1" stdDeviation="1" floodOpacity="0.3" />
+          </filter>
         </defs>
+
+        {/* Background zones */}
+        <g opacity="0.3">
+          <rect x="40" y="50" width="100" height="230" fill={colors.ice} opacity="0.1" />
+          <rect x="140" y="50" width="80" height="230" fill={colors.water} opacity="0.1" />
+          <rect x="220" y="50" width="140" height="230" fill={colors.steam} opacity="0.1" />
+        </g>
 
         {/* Title */}
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Heating Curve: Temperature vs Heat Added
         </text>
 
+        {/* Grid lines */}
+        <g opacity="0.2" stroke={colors.border}>
+          <line x1="40" y1="220" x2={width - 20} y2="220" strokeWidth="1" strokeDasharray="4,4" />
+          <line x1="40" y1="100" x2={width - 20} y2="100" strokeWidth="1" strokeDasharray="4,4" />
+          <line x1="140" y1="50" x2="140" y2="280" strokeWidth="1" strokeDasharray="4,4" />
+          <line x1="220" y1="50" x2="220" y2="280" strokeWidth="1" strokeDasharray="4,4" />
+        </g>
+
         {/* Axes */}
         <line x1="40" y1="280" x2={width - 20} y2="280" stroke={colors.textMuted} strokeWidth="2" />
         <line x1="40" y1="50" x2="40" y2="280" stroke={colors.textMuted} strokeWidth="2" />
+
+        {/* Axis arrow heads */}
+        <polygon points={`${width - 20},275 ${width - 10},280 ${width - 20},285`} fill={colors.textMuted} />
+        <polygon points="35,50 40,40 45,50" fill={colors.textMuted} />
 
         {/* Axis labels */}
         <text x={width/2} y="300" textAnchor="middle" fill={colors.textMuted} fontSize="11">
@@ -572,7 +602,17 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         </g>
 
         {/* Current position marker */}
-        {isSimulating && (
+        <g>
+          {/* Marker glow effect */}
+          <ellipse
+            cx={getCurrentX()}
+            cy={getCurrentY()}
+            rx="16"
+            ry="16"
+            fill="url(#markerGlow)"
+            opacity={isSimulating ? 0.6 : 0}
+          />
+          {/* Main marker */}
           <circle
             cx={getCurrentX()}
             cy={getCurrentY()}
@@ -582,22 +622,46 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             strokeWidth="2"
             filter="url(#glow)"
           >
-            <animate attributeName="r" values="8;10;8" dur="0.5s" repeatCount="indefinite" />
+            {isSimulating && (
+              <animate attributeName="r" values="8;10;8" dur="0.5s" repeatCount="indefinite" />
+            )}
           </circle>
-        )}
+          {/* Cross hairs */}
+          <line
+            x1={getCurrentX() - 14}
+            y1={getCurrentY()}
+            x2={getCurrentX() - 8}
+            y2={getCurrentY()}
+            stroke={colors.success}
+            strokeWidth="1"
+            opacity="0.6"
+          />
+          <line
+            x1={getCurrentX() + 8}
+            y1={getCurrentY()}
+            x2={getCurrentX() + 14}
+            y2={getCurrentY()}
+            stroke={colors.success}
+            strokeWidth="1"
+            opacity="0.6"
+          />
+        </g>
 
         {/* Stats box */}
         <g transform={`translate(${width - 130}, 45)`}>
-          <rect x="0" y="0" width="115" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <text x="57" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Current State</text>
-          <text x="57" y="38" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700">
+          <rect x="0" y="0" width="115" height="95" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+          <text x="57" y="16" textAnchor="middle" fill={colors.textMuted} fontSize="10">Current State</text>
+          <text x="57" y="34" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700">
             {temperature.toFixed(1)}C
           </text>
-          <text x="57" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+          <text x="57" y="50" textAnchor="middle" fill={colors.textMuted} fontSize="9">
             Phase: {materialPhase}
           </text>
-          <text x="57" y="70" textAnchor="middle" fill={colors.success} fontSize="10">
+          <text x="57" y="65" textAnchor="middle" fill={colors.success} fontSize="10">
             Q: {heatAdded.toFixed(1)} kJ
+          </text>
+          <text x="57" y="85" textAnchor="middle" fill={colors.warning} fontSize="9">
+            Power: {heatingPower}W
           </text>
         </g>
       </svg>
@@ -610,7 +674,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
     const height = isMobile ? 200 : 240;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}>
         <defs>
           <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#F59E0B" />
@@ -623,29 +687,34 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
           </radialGradient>
         </defs>
 
-        {/* Burner flame */}
-        {isSimulating && (
-          <g>
-            {[0, 1, 2].map(i => (
-              <ellipse
-                key={i}
-                cx={width/2 - 30 + i * 30}
-                cy={height - 20}
-                rx={12}
-                ry={20}
-                fill="url(#flameGrad)"
-                opacity={0.8}
-              >
+        {/* Burner flame - size based on heating power */}
+        <g>
+          {[0, 1, 2].map(i => (
+            <ellipse
+              key={i}
+              cx={width/2 - 30 + i * 30}
+              cy={height - 20}
+              rx={8 + heatingPower * 0.08}
+              ry={15 + heatingPower * 0.25}
+              fill="url(#flameGrad)"
+              opacity={0.7 + heatingPower * 0.003}
+            >
+              {isSimulating && (
                 <animate
                   attributeName="ry"
-                  values="20;30;20"
+                  values={`${15 + heatingPower * 0.25};${20 + heatingPower * 0.35};${15 + heatingPower * 0.25}`}
                   dur={`${0.3 + i * 0.1}s`}
                   repeatCount="indefinite"
                 />
-              </ellipse>
-            ))}
-          </g>
-        )}
+              )}
+            </ellipse>
+          ))}
+        </g>
+
+        {/* Power indicator */}
+        <text x={width/2} y={height - 2} textAnchor="middle" fill={colors.accent} fontSize="10" fontWeight="600">
+          {heatingPower}W
+        </text>
 
         {/* Beaker */}
         <rect
@@ -804,7 +873,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
     const height = isMobile ? 220 : 260;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}>
         <defs>
           <linearGradient id="steamBarGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#FEE2E2" />
@@ -978,11 +1047,59 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflow: 'auto',
       }}>
         {renderProgressBar()}
+
+        {/* Top navigation bar */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '700px',
+          marginTop: '60px',
+          marginBottom: '24px',
+        }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: '#9CA3AF',
+              cursor: 'pointer',
+              fontSize: '14px',
+              visibility: 'hidden', // Hidden on first phase but keeps layout
+            }}
+          >
+            ← Back
+          </button>
+          <span style={{ ...typo.small, color: '#6B7280' }}>Step 1 of 10</span>
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: '#9CA3AF',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            Next →
+          </button>
+        </div>
 
         <div style={{
           fontSize: '64px',
@@ -999,7 +1116,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
 
         <p style={{
           ...typo.body,
-          color: colors.textSecondary,
+          color: 'rgba(156, 163, 175, 0.8)',
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
@@ -1014,10 +1131,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
           maxWidth: '500px',
           border: `1px solid ${colors.border}`,
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+          <p style={{ ...typo.small, color: '#9CA3AF', fontStyle: 'italic' }}>
             "Where does all that energy go? The answer reveals one of nature's most useful tricks - heat that transforms matter itself without changing its temperature."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: '#6B7280', marginTop: '8px' }}>
             - The Mystery of Phase Change
           </p>
         </div>
@@ -1042,15 +1159,68 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       { id: 'c', text: 'Temperature rises faster and faster (exponential curve)' },
     ];
 
+    const predWidth = isMobile ? 320 : 440;
+    const predHeight = isMobile ? 200 : 240;
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        {/* Navigation bar with Back and Next buttons */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          maxWidth: '700px',
+          margin: '60px auto 0',
+          width: '100%',
+        }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: '#9CA3AF',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            ← Back
+          </button>
+          <span style={{ ...typo.small, color: '#6B7280' }}>Step 2 of 10</span>
+          <button
+            onClick={() => { if (prediction) { playSound('success'); nextPhase(); } }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: prediction ? '#9CA3AF' : '#6B7280',
+              cursor: prediction ? 'pointer' : 'not-allowed',
+              fontSize: '14px',
+              opacity: prediction ? 1 : 0.5,
+            }}
+          >
+            Next →
+          </button>
+        </div>
+
+        <div style={{ maxWidth: '700px', margin: '24px auto 0', flex: 1, overflowY: 'auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -1067,7 +1237,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             We're going to heat ice from -20C continuously. What will the temperature graph look like?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram showing the heating scenario */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1075,18 +1245,45 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>❄</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Ice at -20C</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+ Heat</div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>&#x2192;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Temperature vs Time?</p>
-              </div>
-            </div>
+            <svg viewBox={`0 0 ${predWidth} ${predHeight}`} width="100%" style={{ display: 'block', margin: '0 auto', maxWidth: predWidth }}>
+              <defs>
+                <linearGradient id="iceGradPred" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#DBEAFE" />
+                  <stop offset="100%" stopColor="#60A5FA" />
+                </linearGradient>
+                <linearGradient id="flameGradPred" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#F59E0B" />
+                  <stop offset="50%" stopColor="#EF4444" />
+                  <stop offset="100%" stopColor="#FCD34D" />
+                </linearGradient>
+              </defs>
+              <rect width="100%" height="100%" fill={colors.bgCard} rx="8" />
+              {/* Title */}
+              <text x={predWidth / 2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+                Heating Ice from -20C
+              </text>
+              {/* Beaker */}
+              <rect x={predWidth / 2 - 50} y="50" width="100" height="100" rx="4" fill={colors.bgSecondary} stroke={colors.textMuted} strokeWidth="2" />
+              {/* Ice cubes */}
+              <rect x={predWidth / 2 - 40} y="65" width="30" height="25" rx="3" fill="url(#iceGradPred)" stroke="#93C5FD" strokeWidth="1" />
+              <rect x={predWidth / 2 + 5} y="70" width="28" height="22" rx="3" fill="url(#iceGradPred)" stroke="#93C5FD" strokeWidth="1" />
+              <rect x={predWidth / 2 - 25} y="95" width="26" height="20" rx="3" fill="url(#iceGradPred)" stroke="#93C5FD" strokeWidth="1" />
+              {/* Flames under beaker */}
+              <ellipse cx={predWidth / 2 - 25} cy="165" rx="10" ry="18" fill="url(#flameGradPred)" opacity="0.9" />
+              <ellipse cx={predWidth / 2} cy="168" rx="12" ry="20" fill="url(#flameGradPred)" opacity="0.9" />
+              <ellipse cx={predWidth / 2 + 25} cy="165" rx="10" ry="18" fill="url(#flameGradPred)" opacity="0.9" />
+              {/* Temperature label */}
+              <text x={predWidth / 2 - 70} y="100" fill={colors.ice} fontSize="12" fontWeight="600">-20C</text>
+              {/* Arrow to question mark */}
+              <line x1={predWidth / 2 + 60} y1="100" x2={predWidth / 2 + 100} y2="100" stroke={colors.textMuted} strokeWidth="2" markerEnd="url(#arrowhead)" />
+              <polygon points={`${predWidth / 2 + 100},95 ${predWidth / 2 + 115},100 ${predWidth / 2 + 100},105`} fill={colors.textMuted} />
+              {/* Question mark box */}
+              <rect x={predWidth / 2 + 120} y="60" width="80" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" strokeDasharray="5,3" />
+              <text x={predWidth / 2 + 160} y="110" textAnchor="middle" fill={colors.warning} fontSize="32" fontWeight="bold">?</text>
+              <text x={predWidth / 2 + 160} y="130" textAnchor="middle" fill={colors.textMuted} fontSize="10">T vs Time</text>
+              {/* Heat label */}
+              <text x={predWidth / 2} y={predHeight - 10} textAnchor="middle" fill={colors.accent} fontSize="12">+ Continuous Heat</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -1148,14 +1345,63 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        {/* Navigation bar with Back and Next buttons */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          maxWidth: '800px',
+          margin: '60px auto 0',
+          width: '100%',
+        }}>
+          <button
+            onClick={() => goToPhase('predict')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: '#9CA3AF',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            ← Back
+          </button>
+          <span style={{ ...typo.small, color: '#6B7280' }}>Step 3 of 10</span>
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: '#9CA3AF',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            Next →
+          </button>
+        </div>
+
+        <div style={{ maxWidth: '800px', margin: '24px auto 0', flex: 1, overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Heat the Ice
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: '#D1D5DB', textAlign: 'center', marginBottom: '24px' }}>
             Watch the temperature as heat is continuously added
           </p>
 
@@ -1278,6 +1524,42 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             </div>
           </div>
 
+          {/* Educational Explanation Panel */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${colors.accent}`,
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              What the Visualization Shows
+            </h3>
+            <p style={{ ...typo.body, color: '#D1D5DB', marginBottom: '12px' }}>
+              The <strong style={{ color: colors.textPrimary }}>heating curve</strong> displays how temperature changes as heat is continuously added to ice.
+              Notice the <strong style={{ color: colors.accent }}>flat plateaus</strong> where temperature stays constant - this is where
+              <strong style={{ color: colors.textPrimary }}> latent heat</strong> is being absorbed to change the phase.
+            </p>
+            <p style={{ ...typo.body, color: '#D1D5DB', marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Cause and Effect:</strong> When you increase the heating power, the simulation runs faster,
+              but the plateaus remain at the same temperatures (0C for melting, 100C for boiling). Higher power causes faster phase transitions, but the total energy required stays constant.
+            </p>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginTop: '12px',
+            }}>
+              <p style={{ ...typo.small, color: '#D1D5DB', marginBottom: '8px' }}>
+                <strong style={{ color: colors.accent }}>Key Formula:</strong> Latent heat is defined as Q = m * L, where Q is the heat energy, m is the mass, and L is the latent heat constant.
+              </p>
+              <p style={{ ...typo.small, color: '#D1D5DB', margin: 0 }}>
+                <strong style={{ color: colors.success }}>Real-World Relevance:</strong> This is why refrigeration technology is so important for everyday applications.
+                Understanding latent heat is crucial for engineering HVAC systems, power plants, and weather pattern analysis.
+              </p>
+            </div>
+          </div>
+
           {/* Discovery prompts */}
           {(materialPhase === 'melting' || materialPhase === 'boiling') && (
             <div style={{
@@ -1294,14 +1576,13 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             </div>
           )}
 
-          {materialPhase === 'gas' && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Understand the Physics
-            </button>
-          )}
+          {/* Continue button (always visible in play phase) */}
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            {materialPhase === 'gas' ? 'Understand the Physics' : 'Continue to Review'}
+          </button>
         </div>
 
         {renderNavDots()}
@@ -1334,8 +1615,8 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
           }}>
             <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
               {prediction === 'b'
-                ? "Your prediction was correct! Temperature plateaus during phase changes."
-                : "The answer was B - temperature pauses at phase changes!"}
+                ? "Your prediction was correct! As you observed in the experiment, temperature plateaus during phase changes."
+                : "The correct answer was B - as you saw, the temperature pauses at phase changes!"}
             </p>
           </div>
 
@@ -1416,15 +1697,50 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       { id: 'c', text: 'Steam covers more skin area than water droplets' },
     ];
 
+    const twistWidth = isMobile ? 320 : 400;
+    const twistHeight = isMobile ? 180 : 220;
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        {/* Navigation bar with Back button */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          maxWidth: '700px',
+          margin: '60px auto 0',
+          width: '100%',
+        }}>
+          <button
+            onClick={() => goToPhase('review')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            ← Back
+          </button>
+          <span style={{ ...typo.small, color: colors.textMuted }}>Step 5 of 10</span>
+        </div>
+
+        <div style={{ maxWidth: '700px', margin: '24px auto 0', flex: 1, overflowY: 'auto' }}>
           <div style={{
             background: `${colors.steam}22`,
             borderRadius: '12px',
@@ -1433,7 +1749,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             border: `1px solid ${colors.steam}44`,
           }}>
             <p style={{ ...typo.small, color: colors.steam, margin: 0 }}>
-              The Burn Paradox
+              Make Your Prediction - The Burn Paradox
             </p>
           </div>
 
@@ -1441,6 +1757,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             A paramedic warns: "Steam burns at 100C are far more dangerous than boiling water burns at 100C."
           </h2>
 
+          {/* SVG diagram showing steam vs water burn comparison */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1448,7 +1765,40 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
+            <svg viewBox={`0 0 ${twistWidth} ${twistHeight}`} width="100%" style={{ display: 'block', margin: '0 auto', maxWidth: twistWidth }}>
+              <rect width="100%" height="100%" fill={colors.bgCard} rx="8" />
+              <text x={twistWidth / 2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+                Steam vs Water at 100C
+              </text>
+              {/* Steam side */}
+              <g transform="translate(40, 35)">
+                <text x="50" y="10" textAnchor="middle" fill={colors.steam} fontSize="12" fontWeight="600">Steam</text>
+                <rect x="10" y="20" width="80" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.steam} strokeWidth="2" />
+                {/* Steam clouds */}
+                <ellipse cx="30" cy="55" rx="15" ry="10" fill="white" opacity="0.6" />
+                <ellipse cx="55" cy="50" rx="18" ry="12" fill="white" opacity="0.5" />
+                <ellipse cx="70" cy="65" rx="12" ry="8" fill="white" opacity="0.5" />
+                <text x="50" y="115" textAnchor="middle" fill={colors.steam} fontSize="11">100C</text>
+              </g>
+              {/* Water side */}
+              <g transform={`translate(${twistWidth - 140}, 35)`}>
+                <text x="50" y="10" textAnchor="middle" fill={colors.water} fontSize="12" fontWeight="600">Water</text>
+                <rect x="10" y="20" width="80" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.water} strokeWidth="2" />
+                {/* Water */}
+                <rect x="15" y="50" width="70" height="45" fill={colors.water} opacity="0.7" rx="3" />
+                {/* Bubbles */}
+                <circle cx="35" cy="70" r="4" fill="white" opacity="0.5" />
+                <circle cx="55" cy="65" r="3" fill="white" opacity="0.4" />
+                <circle cx="70" cy="75" r="5" fill="white" opacity="0.5" />
+                <text x="50" y="115" textAnchor="middle" fill={colors.water} fontSize="11">100C</text>
+              </g>
+              {/* Question mark */}
+              <text x={twistWidth / 2} y="95" textAnchor="middle" fill={colors.warning} fontSize="28" fontWeight="bold">?</text>
+              <text x={twistWidth / 2} y="115" textAnchor="middle" fill="#9CA3AF" fontSize="10">Which causes worse burns?</text>
+              {/* Bottom label */}
+              <text x={twistWidth / 2} y={twistHeight - 10} textAnchor="middle" fill="#6B7280" fontSize="10">Both at exactly the same temperature</text>
+            </svg>
+            <p style={{ ...typo.body, color: '#9CA3AF', marginTop: '16px' }}>
               Both steam and water are at exactly 100C.
               <br />
               <span style={{ color: colors.steam, fontWeight: 600 }}>Why would steam cause worse burns?</span>
@@ -1475,7 +1825,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
                   height: '28px',
                   borderRadius: '50%',
                   background: twistPrediction === opt.id ? colors.steam : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  color: twistPrediction === opt.id ? 'white' : '#9CA3AF',
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -1686,17 +2036,19 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
   // TRANSFER PHASE
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
-    const allAppsCompleted = completedApps.every(c => c);
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1779,10 +2131,24 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                Latent Heat Connection:
+                How This Connects to Your Experiment:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: '#9CA3AF', margin: 0 }}>
                 {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: '#9CA3AF', margin: 0 }}>
+                {app.howItWorks}
               </p>
             </div>
 
@@ -1790,6 +2156,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1800,20 +2167,54 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
                   <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  <div style={{ ...typo.small, color: '#6B7280' }}>{stat.label}</div>
                 </div>
               ))}
             </div>
+
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '8px', fontWeight: 600 }}>
+                Industry Leaders:
+              </h4>
+              <p style={{ ...typo.small, color: '#9CA3AF', margin: 0 }}>
+                {app.companies.join(', ')}
+              </p>
+            </div>
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          {/* Next Application / Continue to Test button */}
+          <div style={{ marginBottom: '12px' }}>
+            {selectedApp < realWorldApps.length - 1 ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const nextIdx = selectedApp + 1;
+                  setSelectedApp(nextIdx);
+                  const newCompleted = [...completedApps];
+                  newCompleted[nextIdx] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Got It - Next Application
+              </button>
+            ) : (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Continue to Test
+              </button>
+            )}
+          </div>
+
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
         </div>
 
         {renderNavDots()}

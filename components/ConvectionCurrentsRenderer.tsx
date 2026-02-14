@@ -128,6 +128,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
   // Play phase - convection simulation
   const [particles, setParticles] = useState<Particle[]>([]);
   const [heatSource, setHeatSource] = useState<'bottom' | 'left' | 'right' | 'off'>('bottom');
+  const [heatIntensity, setHeatIntensity] = useState(100);
   const [isSimulating, setIsSimulating] = useState(false);
   const animationRef = useRef<number | null>(null);
 
@@ -533,6 +534,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
   ) {
     const baseStyle: React.CSSProperties = {
       padding: isMobile ? '14px 24px' : '16px 32px',
+      minHeight: '52px',
       borderRadius: premiumDesign.radius.lg,
       border: 'none',
       fontSize: isMobile ? '15px' : '16px',
@@ -551,7 +553,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
       },
       secondary: {
         background: premiumDesign.colors.background.tertiary,
-        color: premiumDesign.colors.text.primary,
+        color: '#e2e8f0',
         border: `1px solid rgba(255,255,255,0.1)`,
       },
       success: {
@@ -585,7 +587,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
           justifyContent: 'space-between',
           marginBottom: premiumDesign.spacing.xs,
           fontSize: '12px',
-          color: premiumDesign.colors.text.muted,
+          color: '#e2e8f0',
         }}>
           <span>Phase {currentIndex + 1} of {phaseOrder.length}</span>
           <span>{phaseLabels[phase]}</span>
@@ -614,12 +616,19 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
   ) {
     return (
       <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: premiumDesign.spacing.xl,
-        paddingTop: premiumDesign.spacing.lg,
+        padding: `${premiumDesign.spacing.md}px ${premiumDesign.spacing.lg}px`,
+        background: 'rgba(15, 15, 26, 0.95)',
+        backdropFilter: 'blur(12px)',
         borderTop: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+        zIndex: 1000,
       }}>
         {leftButton ? renderButton(leftButton.text, leftButton.onClick, 'secondary') : <div />}
         {rightButton && renderButton(rightButton.text, rightButton.onClick, rightButton.variant || 'primary', rightButton.disabled)}
@@ -726,39 +735,39 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
   // Phase Renderers
   function renderHookPhase() {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '600px', padding: '48px 24px', textAlign: 'center' }}>
         {/* Premium badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-8">
-          <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-          <span className="text-sm font-medium text-orange-400 tracking-wide">PHYSICS EXPLORATION</span>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', borderRadius: '9999px', marginBottom: '32px' }}>
+          <span style={{ width: '8px', height: '8px', background: '#fb923c', borderRadius: '50%' }} />
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#fb923c', letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
         </div>
 
         {/* Main title with gradient */}
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-red-200 bg-clip-text text-transparent">
+        <h1 style={{ fontSize: isMobile ? '36px' : '48px', fontWeight: 700, marginBottom: '16px', background: 'linear-gradient(to right, #ffffff, #fed7aa, #fecaca)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Convection Currents
         </h1>
 
-        <p className="text-lg text-slate-400 max-w-md mb-10">
+        <p style={{ fontSize: '18px', color: '#e2e8f0', maxWidth: '28rem', marginBottom: '40px' }}>
           Discover how temperature differences create flowing currents in fluids
         </p>
 
         {/* Premium card with content */}
-        <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        <div style={{ position: 'relative', background: 'linear-gradient(to bottom right, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8))', borderRadius: '24px', padding: '32px', maxWidth: '36rem', width: '100%', border: '1px solid rgba(51, 65, 85, 0.5)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           {/* Subtle glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-red-500/5 rounded-3xl" />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, rgba(249, 115, 22, 0.05), transparent, rgba(239, 68, 68, 0.05))', borderRadius: '24px' }} />
 
-          <div className="relative">
-            <div className="text-6xl mb-6">🔥</div>
+          <div style={{ position: 'relative' }}>
+            <div style={{ fontSize: '64px', marginBottom: '24px' }}>🔥</div>
 
-            <div className="space-y-4">
-              <p className="text-xl text-white/90 font-medium leading-relaxed">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <p style={{ fontSize: '20px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500, lineHeight: 1.6 }}>
                 Have you ever watched smoke rise from a campfire?
               </p>
-              <p className="text-lg text-slate-400 leading-relaxed">
+              <p style={{ fontSize: '18px', color: '#e2e8f0', lineHeight: 1.6 }}>
                 It rises in a graceful, billowing column. But why does hot smoke know to go UP?
               </p>
-              <div className="pt-2">
-                <p className="text-base text-orange-400 font-semibold">
+              <div style={{ paddingTop: '8px' }}>
+                <p style={{ fontSize: '16px', color: '#fb923c', fontWeight: 600 }}>
                   Uncover the force that drives ocean currents and creates weather patterns!
                 </p>
               </div>
@@ -769,28 +778,40 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
         {/* Premium CTA button */}
         <button
           onClick={() => goToPhase('predict')}
-          className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            marginTop: '40px',
+            padding: '20px 40px',
+            background: 'linear-gradient(to right, #f97316, #dc2626)',
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: 600,
+            borderRadius: '16px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.25)',
+          }}
         >
-          <span className="relative z-10 flex items-center gap-3">
+          <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             Explore Convection
-            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </span>
         </button>
 
         {/* Feature hints */}
-        <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-          <div className="flex items-center gap-2">
-            <span className="text-orange-400">✦</span>
+        <div style={{ marginTop: '48px', display: 'flex', alignItems: 'center', gap: '32px', fontSize: '14px', color: '#e2e8f0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#fb923c' }}>✦</span>
             Interactive Lab
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-orange-400">✦</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#fb923c' }}>✦</span>
             Real-World Examples
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-orange-400">✦</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#fb923c' }}>✦</span>
             Knowledge Test
           </div>
         </div>
@@ -807,24 +828,72 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
     ];
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', paddingBottom: '100px' }}>
         {renderProgressBar()}
 
         <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
           <h2 style={{
             fontSize: isMobile ? '22px' : '28px',
             fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
+            color: '#ffffff',
             marginBottom: premiumDesign.spacing.md,
           }}>
-            🤔 Make Your Prediction
+            Make Your Prediction
           </h2>
           <p style={{
-            color: premiumDesign.colors.text.secondary,
+            color: '#e2e8f0',
             fontSize: '16px',
           }}>
             When you heat water at the bottom of a container, what do you think happens to the warm water?
           </p>
+          <p style={{
+            color: '#e2e8f0',
+            fontSize: '14px',
+            marginTop: premiumDesign.spacing.sm,
+          }}>
+            Step 1 of 2: Select your prediction below
+          </p>
+        </div>
+
+        {/* Static Preview SVG */}
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.lg,
+          border: '1px solid rgba(255,255,255,0.1)',
+          maxWidth: 400,
+          margin: `0 auto ${premiumDesign.spacing.lg}px`,
+        }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 200 }}>
+            <defs>
+              <linearGradient id="predictTempGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#3b82f6" />
+              </linearGradient>
+            </defs>
+            {/* Background */}
+            <rect x="0" y="0" width="300" height="200" fill="#0a0f1a" />
+            {/* Container */}
+            <rect x="50" y="30" width="200" height="140" fill="rgba(100,116,139,0.2)" stroke="#94a3b8" strokeWidth="2" rx="4" />
+            {/* Heat source indicator */}
+            <rect x="60" y="155" width="180" height="12" fill="#ef4444" rx="4" opacity="0.8" />
+            {/* Static particles - cold at top, warm at bottom */}
+            <circle cx="100" cy="60" r="8" fill="#3b82f6" opacity="0.8" />
+            <circle cx="150" cy="55" r="8" fill="#3b82f6" opacity="0.8" />
+            <circle cx="200" cy="65" r="8" fill="#3b82f6" opacity="0.8" />
+            <circle cx="120" cy="100" r="8" fill="#8b5cf6" opacity="0.8" />
+            <circle cx="180" cy="95" r="8" fill="#8b5cf6" opacity="0.8" />
+            <circle cx="90" cy="140" r="8" fill="#ef4444" opacity="0.8" />
+            <circle cx="150" cy="135" r="8" fill="#f97316" opacity="0.8" />
+            <circle cx="210" cy="140" r="8" fill="#ef4444" opacity="0.8" />
+            {/* Labels */}
+            <text x="150" y="20" fill="#e2e8f0" fontSize="12" textAnchor="middle" fontWeight="600">Container with Water</text>
+            <text x="150" y="185" fill="#fbbf24" fontSize="11" textAnchor="middle">Heat Source (Bottom)</text>
+            <text x="260" y="60" fill="#3b82f6" fontSize="10" textAnchor="start">Cold</text>
+            <text x="260" y="140" fill="#ef4444" fontSize="10" textAnchor="start">Hot</text>
+            {/* Question mark */}
+            <text x="150" y="105" fill="#fbbf24" fontSize="24" textAnchor="middle" fontWeight="700">?</text>
+          </svg>
         </div>
 
         <div style={{
@@ -840,6 +909,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
               key={p.id}
               style={{
                 padding: premiumDesign.spacing.lg,
+                minHeight: '52px',
                 borderRadius: premiumDesign.radius.lg,
                 border: prediction === p.id
                   ? `2px solid ${premiumDesign.colors.primary}`
@@ -847,7 +917,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
                 background: prediction === p.id
                   ? 'rgba(99, 102, 241, 0.2)'
                   : premiumDesign.colors.background.tertiary,
-                color: premiumDesign.colors.text.primary,
+                color: '#e2e8f0',
                 fontSize: '16px',
                 cursor: 'pointer',
                 textAlign: 'left',
@@ -874,20 +944,33 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
 
   function renderPlayPhase() {
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', paddingBottom: '100px' }}>
         {renderProgressBar()}
 
         <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
           <h2 style={{
             fontSize: isMobile ? '20px' : '26px',
             fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
+            color: '#ffffff',
             marginBottom: premiumDesign.spacing.sm,
           }}>
             Convection Current Simulator
           </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
-            Add heat and watch how temperature differences create fluid flow
+          <p style={{ color: '#e2e8f0' }}>
+            Adjust the heat source position and observe how temperature differences create fluid flow
+          </p>
+        </div>
+
+        {/* What to Watch guidance box */}
+        <div style={{
+          background: 'rgba(99, 102, 241, 0.15)',
+          borderRadius: premiumDesign.radius.lg,
+          padding: premiumDesign.spacing.md,
+          marginBottom: premiumDesign.spacing.lg,
+          border: '1px solid rgba(99, 102, 241, 0.3)',
+        }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px', margin: 0, fontWeight: 600 }}>
+            What to Watch: Notice how hot particles (red) rise upward while cool particles (blue) sink downward, creating a circular convection current.
           </p>
         </div>
 
@@ -1073,6 +1156,12 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
               <g transform="translate(268, 50)">
                 <rect x="0" y="10" width="18" height="90" fill="url(#convTempLegend)" rx="4" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
               </g>
+
+              {/* SVG Labels for accessibility and educational clarity */}
+              <text x="150" y="15" fill="#e2e8f0" fontSize="11" textAnchor="middle" fontWeight="600">Fluid Container</text>
+              <text x="150" y="290" fill="#fbbf24" fontSize="10" textAnchor="middle">{heatSource !== 'off' ? 'Heat Source Active' : 'Heat Source Off'}</text>
+              <text x="20" y="150" fill="#3b82f6" fontSize="9" textAnchor="middle" transform="rotate(-90, 20, 150)">Cold Zone</text>
+              <text x="150" y="55" fill="#60a5fa" fontSize="9" textAnchor="middle">Cooling Region</text>
             </svg>
 
             {/* Labels outside SVG using typo system */}
@@ -1122,7 +1211,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.md }}>
+              <h4 style={{ color: '#e2e8f0', marginBottom: premiumDesign.spacing.md }}>
                 Heat Source Position
               </h4>
               {['bottom', 'left', 'right', 'off'].map((pos) => (
@@ -1132,19 +1221,59 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
                     display: 'block',
                     width: '100%',
                     padding: premiumDesign.spacing.sm,
+                    minHeight: '44px',
                     marginBottom: premiumDesign.spacing.xs,
                     borderRadius: premiumDesign.radius.md,
                     border: heatSource === pos ? `2px solid ${premiumDesign.colors.primary}` : '1px solid rgba(255,255,255,0.1)',
                     background: heatSource === pos ? 'rgba(99,102,241,0.2)' : 'transparent',
-                    color: premiumDesign.colors.text.primary,
+                    color: '#e2e8f0',
                     cursor: 'pointer',
                     textTransform: 'capitalize',
                   }}
                   onClick={() => setHeatSource(pos as 'bottom' | 'left' | 'right' | 'off')}
                 >
-                  {pos === 'off' ? '❄️ Off' : `🔥 ${pos}`}
+                  {pos === 'off' ? 'Off' : `${pos}`}
                 </button>
               ))}
+            </div>
+
+            {/* Temperature Control Slider */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <h4 style={{ color: '#e2e8f0', marginBottom: premiumDesign.spacing.sm }}>
+                Heat Intensity: {heatIntensity}%
+              </h4>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={heatIntensity}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setHeatIntensity(val);
+                  if (val < 10) {
+                    setHeatSource('off');
+                  } else if (heatSource === 'off') {
+                    setHeatSource('bottom');
+                  }
+                }}
+                aria-label="Heat Intensity Control"
+                style={{ width: '100%', accentColor: premiumDesign.colors.primary }}
+              />
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '11px',
+                color: '#e2e8f0',
+                marginTop: premiumDesign.spacing.xs,
+              }}>
+                <span>Off</span>
+                <span>Max</span>
+              </div>
             </div>
 
             <div style={{
@@ -1154,7 +1283,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
               {renderButton(
-                isSimulating ? '⏸ Pause' : '▶️ Start Simulation',
+                isSimulating ? 'Pause' : 'Start Simulation',
                 () => setIsSimulating(!isSimulating),
                 isSimulating ? 'secondary' : 'primary'
               )}
@@ -1163,16 +1292,17 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
                   display: 'block',
                   width: '100%',
                   padding: premiumDesign.spacing.sm,
+                  minHeight: '44px',
                   marginTop: premiumDesign.spacing.sm,
                   borderRadius: premiumDesign.radius.md,
                   border: '1px solid rgba(255,255,255,0.1)',
                   background: 'transparent',
-                  color: premiumDesign.colors.text.secondary,
+                  color: '#e2e8f0',
                   cursor: 'pointer',
                 }}
                 onClick={() => initParticles()}
               >
-                🔄 Reset Particles
+                Reset Particles
               </button>
             </div>
 
@@ -1182,8 +1312,24 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
               padding: premiumDesign.spacing.md,
               border: '1px solid rgba(99, 102, 241, 0.3)',
             }}>
-              <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', margin: 0 }}>
-                💡 Watch how hot particles (red) rise and cool particles (blue) sink, creating circular convection currents!
+              <p style={{ color: '#e2e8f0', fontSize: '14px', margin: 0 }}>
+                Tip: Watch how hot particles (red) rise and cool particles (blue) sink, creating circular convection currents!
+              </p>
+            </div>
+
+            {/* Real-world relevance */}
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.md,
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              marginTop: premiumDesign.spacing.md,
+            }}>
+              <p style={{ color: '#fbbf24', fontWeight: 600, marginBottom: premiumDesign.spacing.xs, margin: 0 }}>
+                Real-World Connection
+              </p>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', margin: `${premiumDesign.spacing.xs}px 0 0 0` }}>
+                This same convection process drives ocean currents, weather patterns, and even the movement of tectonic plates in Earth's mantle!
               </p>
             </div>
           </div>
@@ -1201,20 +1347,20 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
     const reviewContent = [
       {
         title: "Why Hot Fluid Rises",
-        content: "When fluid is heated, its molecules gain energy and move faster, spreading apart. This makes the fluid expand and become less dense than the cooler fluid around it. Due to buoyancy, the less dense hot fluid is pushed upward by the denser cold fluid.",
-        formula: "Density decreases: ρ_hot < ρ_cold",
+        content: "As you observed in the simulation, when fluid is heated, its molecules gain energy and move faster, spreading apart. This makes the fluid expand and become less dense than the cooler fluid around it. Due to buoyancy, the less dense hot fluid is pushed upward by the denser cold fluid.",
+        formula: "Density relationship: ρ = m ÷ V  |  ρ_hot < ρ_cold",
       },
       {
         title: "The Convection Cycle",
-        content: "As hot fluid rises, cooler fluid moves in to take its place near the heat source. The risen hot fluid then cools at the top, becomes denser, and sinks back down. This creates a continuous circular current!",
-        formula: "Convection Cell = Heat → Rise → Cool → Sink → Repeat",
+        content: "You saw how hot fluid rises, cooler fluid moves in to take its place near the heat source. The risen hot fluid then cools at the top, becomes denser, and sinks back down. This creates a continuous circular current!",
+        formula: "Buoyancy Force: F = (ρ_cold − ρ_hot) × g × V",
       },
       {
         title: "Your Prediction",
         content: prediction === 'rises'
-          ? "You predicted correctly! Hot fluid does rise because it expands and becomes less dense (lighter per unit volume). This is the fundamental principle of convection."
-          : "The correct answer is that hot fluid rises because it expands and becomes less dense. Density differences create buoyancy forces that drive convection currents.",
-        formula: "Buoyancy Force ∝ (ρ_cold - ρ_hot) × g × V",
+          ? "You predicted correctly! As you noticed, hot fluid does rise because it expands and becomes less dense (lighter per unit volume). This is the fundamental principle of convection."
+          : "You observed that hot fluid rises because it expands and becomes less dense. Density differences create buoyancy forces that drive convection currents.",
+        formula: "Convection Rate ∝ ΔT × √(g × β)",
       },
     ];
 
@@ -1339,6 +1485,30 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
           </p>
         </div>
 
+        {/* Preview SVG showing pot setup */}
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.lg,
+          border: '1px solid rgba(255,255,255,0.1)',
+          maxWidth: 350,
+          margin: `0 auto ${premiumDesign.spacing.lg}px`,
+        }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 180 }}>
+            <rect x="0" y="0" width="300" height="200" fill="#0a0f1a" />
+            {/* Pot outline */}
+            <path d="M60 50 L60 150 Q60 170 80 170 L220 170 Q240 170 240 150 L240 50" fill="none" stroke="#9ca3af" strokeWidth="4" />
+            {/* Water */}
+            <rect x="65" y="55" width="170" height="110" fill="rgba(59, 130, 246, 0.3)" />
+            {/* Burner */}
+            <rect x="80" y="180" width="140" height="12" fill="#ef4444" rx="6" />
+            {/* Question mark */}
+            <text x="150" y="115" fill="#fbbf24" fontSize="40" textAnchor="middle" fontWeight="700">?</text>
+            <text x="150" y="25" fill="#e2e8f0" fontSize="12" textAnchor="middle">Pot of Water</text>
+            <text x="150" y="198" fill="#fbbf24" fontSize="10" textAnchor="middle">Heat Source</text>
+          </svg>
+        </div>
+
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -1352,7 +1522,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
               key={p.id}
               style={{
                 padding: premiumDesign.spacing.lg,
-                borderRadius: premiumDesign.radius.lg,
+                borderRadius: `${premiumDesign.radius.lg}px`,
                 border: twistPrediction === p.id
                   ? `2px solid ${premiumDesign.colors.secondary}`
                   : '2px solid rgba(255,255,255,0.1)',
@@ -1943,6 +2113,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
               key={index}
               style={{
                 padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px`,
+                minHeight: '44px',
                 borderRadius: premiumDesign.radius.full,
                 border: activeApp === index
                   ? `2px solid ${premiumDesign.colors.primary}`
@@ -2003,7 +2174,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
             </p>
           </div>
 
-          {/* Mark as read button */}
+          {/* Got It / Mark as read button */}
           {!completedApps.has(activeApp) && (
             <button
               style={{
@@ -2011,6 +2182,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
                 width: '100%',
                 marginTop: premiumDesign.spacing.lg,
                 padding: premiumDesign.spacing.md,
+                minHeight: '44px',
                 borderRadius: premiumDesign.radius.md,
                 border: 'none',
                 background: premiumDesign.colors.gradient.primary,
@@ -2029,7 +2201,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
                 }
               }}
             >
-              ✓ Mark as Read
+              Got It
             </button>
           )}
         </div>
@@ -2084,8 +2256,16 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
               color: premiumDesign.colors.text.primary,
               marginBottom: premiumDesign.spacing.md,
             }}>
-              {passed ? 'Excellent Work!' : 'Keep Learning!'}
+              {passed ? 'Excellent Work!' : 'Good Job Trying!'}
             </h2>
+
+            <p style={{
+              color: premiumDesign.colors.text.secondary,
+              fontSize: '16px',
+              marginBottom: premiumDesign.spacing.sm,
+            }}>
+              You scored:
+            </p>
 
             <div style={{
               fontSize: '48px',
@@ -2128,7 +2308,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
     }
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', paddingBottom: '100px' }}>
         {renderProgressBar()}
 
         <div style={{
@@ -2137,8 +2317,8 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
           alignItems: 'center',
           marginBottom: premiumDesign.spacing.lg,
         }}>
-          <span style={{ color: premiumDesign.colors.text.muted }}>
-            Question {currentQuestion + 1} of {testQuestions.length}
+          <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '16px' }}>
+            Question {currentQuestion + 1} of 10
           </span>
           <span style={{ color: premiumDesign.colors.primary, fontWeight: 600 }}>
             Score: {testScore}
@@ -2152,9 +2332,22 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
           border: '1px solid rgba(255,255,255,0.1)',
           flex: 1,
         }}>
+          {/* Scenario context */}
+          <div style={{
+            background: 'rgba(99, 102, 241, 0.1)',
+            borderRadius: premiumDesign.radius.md,
+            padding: premiumDesign.spacing.md,
+            marginBottom: premiumDesign.spacing.lg,
+            border: '1px solid rgba(99, 102, 241, 0.2)',
+          }}>
+            <p style={{ color: '#e2e8f0', fontSize: '15px', margin: 0, lineHeight: 1.6 }}>
+              {question.scenario}
+            </p>
+          </div>
+
           <h3 style={{
             fontSize: isMobile ? '18px' : '22px',
-            color: premiumDesign.colors.text.primary,
+            color: '#ffffff',
             marginBottom: premiumDesign.spacing.xl,
             lineHeight: 1.5,
           }}>
@@ -2169,10 +2362,11 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
             {question.options.map((option, index) => {
               let buttonStyle: React.CSSProperties = {
                 padding: premiumDesign.spacing.lg,
+                minHeight: '52px',
                 borderRadius: premiumDesign.radius.lg,
                 border: '2px solid rgba(255,255,255,0.1)',
                 background: premiumDesign.colors.background.tertiary,
-                color: premiumDesign.colors.text.primary,
+                color: '#e2e8f0',
                 fontSize: '16px',
                 cursor: showExplanation ? 'default' : 'pointer',
                 textAlign: 'left',
@@ -2203,7 +2397,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
                   }}
                   disabled={showExplanation}
                 >
-                  {option.text}
+                  {option.id.toUpperCase()}) {option.label}
                 </button>
               );
             })}
@@ -2220,7 +2414,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
               <p style={{ color: premiumDesign.colors.primary, fontWeight: 600, marginBottom: premiumDesign.spacing.sm }}>
                 Explanation:
               </p>
-              <p style={{ color: premiumDesign.colors.text.secondary, margin: 0 }}>
+              <p style={{ color: '#e2e8f0', margin: 0 }}>
                 {question.explanation}
               </p>
             </div>
@@ -2333,7 +2527,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
 
   // Main render
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden' }}>
       {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
@@ -2341,31 +2535,38 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-yellow-500/3 rounded-full blur-3xl" />
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Convection Currents</span>
-          <div className="flex items-center gap-1.5">
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(51, 65, 85, 0.5)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', maxWidth: '896px', margin: '0 auto' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.8)', letterSpacing: '0.05em' }}>Convection Currents</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {phaseOrder.map((p) => (
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
+                style={{
+                  height: '8px',
+                  width: phase === p ? '24px' : '8px',
+                  borderRadius: '9999px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  background: phase === p
+                    ? '#fb923c'
                     : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
+                      ? '#10B981'
+                      : '#334155',
+                  boxShadow: phase === p ? '0 4px 6px -1px rgba(251, 146, 60, 0.3)' : 'none',
+                }}
                 title={phaseLabels[p]}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-orange-400">{phaseLabels[phase]}</span>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#fb923c' }}>{phaseLabels[phase]}</span>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12 max-w-4xl mx-auto px-4">
+      <div style={{ position: 'relative', paddingTop: '64px', paddingBottom: '48px', maxWidth: '896px', margin: '0 auto', padding: '64px 16px 48px', overflowY: 'auto' }}>
         {phase === 'hook' && renderHookPhase()}
         {phase === 'predict' && renderPredictPhase()}
         {phase === 'play' && renderPlayPhase()}

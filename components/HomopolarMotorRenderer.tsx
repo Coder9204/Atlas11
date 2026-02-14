@@ -42,8 +42,8 @@ const colors = {
 
   // Text colors
   textPrimary: '#f8fafc',
-  textSecondary: '#cbd5e1',
-  textMuted: '#64748b',
+  textSecondary: '#e2e8f0',
+  textMuted: '#94a3b8',
 
   // Borders
   border: '#334155',
@@ -992,6 +992,80 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   // RENDER FUNCTIONS (Phases)
   // ============================================================
 
+  // TOP NAVIGATION BAR - fixed position with dots and progress bar
+  const renderTopNavBar = () => {
+    const currentIdx = validPhases.indexOf(phase);
+    const progress = ((currentIdx + 1) / validPhases.length) * 100;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        backgroundColor: colors.bgCard,
+        borderBottom: `1px solid ${colors.border}`,
+        padding: '12px 16px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
+      }}>
+        {/* Progress bar */}
+        <div
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          style={{
+            height: '4px',
+            backgroundColor: colors.bgCardLight,
+            borderRadius: '2px',
+            marginBottom: '10px',
+            overflow: 'hidden'
+          }}
+        >
+          <div style={{
+            height: '100%',
+            width: `${progress}%`,
+            backgroundColor: colors.primary,
+            borderRadius: '2px',
+            transition: 'width 0.3s ease'
+          }} />
+        </div>
+
+        {/* Navigation dots */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '8px',
+          flexWrap: 'wrap'
+        }}>
+          {validPhases.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              aria-label={`Go to ${p.replace('_', ' ')} phase`}
+              title={p.replace('_', ' ')}
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: i === currentIdx
+                  ? colors.primary
+                  : i < currentIdx
+                    ? colors.success
+                    : colors.bgCardLight,
+                cursor: 'pointer',
+                padding: 0,
+                transition: 'all 0.2s ease'
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   // CRITICAL: Bottom bar MUST use position: fixed to ALWAYS be visible
   const renderBottomBar = (showBack: boolean, showNext: boolean, nextLabel: string, nextAction?: () => void, nextColor?: string) => (
     <div style={{
@@ -1024,7 +1098,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
             color: colors.textSecondary,
             border: 'none',
             cursor: 'pointer',
-            minHeight: '48px'
+            minHeight: '44px'
           }}
         >
           ← Back
@@ -1047,7 +1121,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
             border: 'none',
             cursor: 'pointer',
             boxShadow: `0 4px 20px ${(nextColor || colors.primary)}40`,
-            minHeight: '52px',
+            minHeight: '44px',
             minWidth: '160px'
           }}
         >
@@ -1070,12 +1144,13 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)` }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
+        {renderTopNavBar()}
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '80px 20px 60px', textAlign: 'center' }}>
           <div style={{ fontSize: '72px', marginBottom: '24px' }}>🔋⚡🔄</div>
           <h1 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
             The Simplest Motor on Earth
           </h1>
-          <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
+          <p style={{ fontSize: isMobile ? '16px' : '20px', color: '#e2e8f0', marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
             Can you build a motor with just a battery, a magnet, and a piece of wire?
             <br /><br />
             No coils. No commutator. No complex parts.
@@ -1089,10 +1164,10 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
             border: `1px solid ${colors.border}`,
             textAlign: 'left'
           }}>
-            <p style={{ color: colors.textMuted, fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
               "The homopolar motor demonstrates the fundamental connection between electricity and magnetism in its purest form."
             </p>
-            <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '13px' }}>
               — Michael Faraday, inventor (1821)
             </p>
           </div>
@@ -1109,10 +1184,10 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               borderRadius: '14px',
               cursor: 'pointer',
               boxShadow: `0 8px 32px ${colors.primary}50`,
-              minHeight: '52px'
+              minHeight: '44px'
             }}
           >
-            Let's Build One →
+            Start Exploring →
           </button>
         </div>
       </div>
@@ -1136,15 +1211,29 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderTopNavBar()}
         {/* Scrollable content */}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          paddingTop: '60px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Progress indicator */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              marginBottom: '16px'
+            }}>
+              <span style={{ color: colors.primary, fontSize: '14px', fontWeight: 700 }}>Step 1 of 4</span>
+              <span style={{ color: '#e2e8f0', fontSize: '14px' }}>|</span>
+              <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Predict Phase</span>
+            </div>
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
@@ -1270,13 +1359,15 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderTopNavBar()}
         {/* Scrollable content */}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          paddingTop: '60px'
         }}>
           <div style={{ padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1286,6 +1377,21 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
                 Build Your Homopolar Motor
               </h2>
+            </div>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`,
+              border: `1px solid ${colors.primary}30`,
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              maxWidth: '600px',
+              margin: '0 auto 16px'
+            }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', margin: 0 }}>
+                <strong style={{ color: colors.primary }}>Observe:</strong> Watch how the wire rotates when current flows. Notice the relationship between magnet strength (B) and rotation speed.
+              </p>
             </div>
 
             {/* Responsive graphic container */}
@@ -1300,16 +1406,21 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           {/* Controls */}
           <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>Magnet Strength</span>
-                <span style={{ color: colors.primary, fontSize: '14px', fontWeight: 700 }}>{magnetStrength}%</span>
-              </div>
+              <label htmlFor="magnet-strength-slider" style={{ display: 'block', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 600 }}>Magnetic Field Strength (B)</span>
+                  <span style={{ color: colors.primary, fontSize: '14px', fontWeight: 700 }}>{magnetStrength}%</span>
+                </div>
+                <span style={{ color: '#e2e8f0', fontSize: '12px' }}>Controls the force on the wire (F = B × I × L)</span>
+              </label>
               <input
+                id="magnet-strength-slider"
                 type="range"
                 min="20"
                 max="100"
                 value={magnetStrength}
                 onChange={(e) => setMagnetStrength(Number(e.target.value))}
+                aria-label="Magnetic field strength B"
                 style={{ width: '100%', accentColor: colors.primary }}
               />
             </div>
@@ -1328,7 +1439,8 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 backgroundColor: isRunning ? colors.error : colors.success,
                 color: 'white',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                minHeight: '44px'
               }}
             >
               {isRunning ? '⏹ Stop Motor' : '▶ Start Motor'}
@@ -1342,6 +1454,25 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               </p>
             </div>
           )}
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginTop: '24px',
+            border: `1px solid ${colors.border}`,
+            maxWidth: '600px',
+            margin: '24px auto 0'
+          }}>
+            <h4 style={{ color: colors.primary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+              Real-World Connection
+            </h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+              This same Lorentz force principle powers electromagnetic rail guns that accelerate projectiles to Mach 6,
+              MRI gradient coils that create medical images, and industrial welding systems that join metals in milliseconds.
+            </p>
+          </div>
           </div>
         </div>
 
@@ -1353,6 +1484,15 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionLabels: Record<string, string> = {
+      nothing: 'the wire stays still',
+      spark: 'the wire sparks and heats up',
+      spin: 'the wire spins continuously',
+      jump: 'the wire jumps once then stops'
+    };
+    const userPredictionLabel = prediction ? predictionLabels[prediction] : null;
+    const wasCorrect = prediction === 'spin';
+
     return (
       <div style={{
         height: '100dvh',
@@ -1361,13 +1501,15 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderTopNavBar()}
         {/* Scrollable content */}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          paddingTop: '60px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
@@ -1378,6 +1520,27 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               Why Does It Spin?
             </h2>
           </div>
+
+          {/* User's prediction reference */}
+          {userPredictionLabel && (
+            <div style={{
+              background: wasCorrect ? `${colors.success}15` : `${colors.warning}15`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${wasCorrect ? colors.success : colors.warning}40`
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+                <strong style={{ color: wasCorrect ? colors.success : colors.warning }}>
+                  {wasCorrect ? '✓ Great prediction!' : 'Your prediction:'}
+                </strong>{' '}
+                You predicted that {userPredictionLabel}.
+                {wasCorrect
+                  ? " That's exactly what happens!"
+                  : " Let's see why the wire actually spins continuously."}
+              </p>
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* What happened */}

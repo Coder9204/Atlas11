@@ -300,7 +300,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
     return () => clearInterval(timer);
   }, []);
 
-  // Premium design colors
+  // Premium design colors - using high contrast text colors (brightness >= 180)
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -311,8 +311,8 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#D1D5DB', // Muted but bright gray (brightness ~210) - test requires >= 180
+    textMuted: '#e2e8f0', // Bright gray for labels (brightness >= 180 for accessibility)
     border: '#2a2a3a',
     aggressor: '#F97316', // Orange for aggressor signal
     victim: '#8B5CF6', // Purple for victim signal
@@ -409,7 +409,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   const signalQuality = getSignalQuality();
 
   // Crosstalk Visualization Component
-  const CrosstalkVisualization = ({ showCrosstalk = true, interactive = false }) => {
+  const CrosstalkVisualization = ({ showCrosstalk = true, interactive = false }: { showCrosstalk?: boolean; interactive?: boolean }) => {
     const width = isMobile ? 320 : 500;
     const height = isMobile ? 280 : 350;
     const padding = { top: 30, right: 20, bottom: 40, left: 20 };
@@ -442,7 +442,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
     const noiseAmplitude = showCrosstalk ? crosstalk.totalCoupling * 0.3 : 0;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         {/* PCB background pattern */}
         <defs>
           <pattern id="pcbPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -615,7 +615,85 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
     );
   };
 
-  // Progress bar component
+  // Navigation bar component with fixed positioning
+  const renderNavigationBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: colors.bgPrimary,
+        borderBottom: `1px solid ${colors.border}`,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+      }}>
+        {/* Progress bar */}
+        <div style={{
+          height: '4px',
+          background: colors.bgSecondary,
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${((currentIndex + 1) / phaseOrder.length) * 100}%`,
+            background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+            transition: 'width 0.3s ease',
+          }} />
+        </div>
+        {/* Navigation buttons */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '8px 16px',
+        }}>
+          <button
+            onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+            disabled={!canGoBack}
+            style={{
+              background: canGoBack ? colors.bgCard : 'transparent',
+              color: canGoBack ? colors.textSecondary : colors.border,
+              border: `1px solid ${canGoBack ? colors.border : 'transparent'}`,
+              padding: '8px 16px',
+              borderRadius: '8px',
+              cursor: canGoBack ? 'pointer' : 'default',
+              fontSize: '14px',
+              fontWeight: 500,
+              minHeight: '44px',
+            }}
+          >
+            ← Back
+          </button>
+          <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            {phaseLabels[phase]} ({currentIndex + 1}/{phaseOrder.length})
+          </span>
+          <button
+            onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+            disabled={!canGoNext}
+            style={{
+              background: canGoNext ? colors.bgCard : 'transparent',
+              color: canGoNext ? colors.textSecondary : colors.border,
+              border: `1px solid ${canGoNext ? colors.border : 'transparent'}`,
+              padding: '8px 16px',
+              borderRadius: '8px',
+              cursor: canGoNext ? 'pointer' : 'default',
+              fontSize: '14px',
+              fontWeight: 500,
+              minHeight: '44px',
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      </nav>
+    );
+  };
+
+  // Progress bar component (deprecated - using renderNavigationBar instead)
   const renderProgressBar = () => (
     <div style={{
       position: 'fixed',
@@ -674,6 +752,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '48px',
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -691,9 +770,11 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavigationBar()}
 
         <div style={{
           fontSize: '64px',
@@ -737,13 +818,52 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          See the Hidden Signals →
+          Start Learning →
         </button>
 
         {renderNavDots()}
       </div>
     );
   }
+
+  // Static SVG for predict phase (no interactivity)
+  const StaticCrosstalkDiagram = () => {
+    const width = isMobile ? 320 : 500;
+    const height = isMobile ? 200 : 250;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+        {/* PCB background */}
+        <rect x="20" y="20" width={width - 40} height={height - 40} fill={colors.bgSecondary} rx="8" />
+
+        {/* Aggressor trace */}
+        <rect x="40" y="60" width={width - 80} height="20" fill={colors.aggressor} opacity="0.3" rx="4" />
+        <line x1="40" y1="70" x2={width - 40} y2="70" stroke={colors.aggressor} strokeWidth="3" />
+        <text x="50" y="55" fill={colors.textSecondary} fontSize="12" fontWeight="600">Aggressor Trace (Active Signal)</text>
+
+        {/* Coupling indicator */}
+        <text x={width / 2} y="105" fill={colors.crosstalk} fontSize="11" textAnchor="middle">⚡ Electromagnetic Coupling ⚡</text>
+
+        {/* Victim trace */}
+        <rect x="40" y="120" width={width - 80} height="20" fill={colors.victim} opacity="0.3" rx="4" />
+        <line x1="40" y1="130" x2={width - 40} y2="130" stroke={colors.victim} strokeWidth="3" />
+        <text x="50" y="160" fill={colors.textSecondary} fontSize="12" fontWeight="600">Victim Trace (Quiet - or is it?)</text>
+
+        {/* Question marks */}
+        <text x={width - 60} y="130" fill={colors.warning} fontSize="24">?</text>
+
+        {/* Spacing indicator */}
+        <line x1={width - 60} y1="70" x2={width - 60} y2="130" stroke={colors.textMuted} strokeWidth="1" strokeDasharray="3,3" />
+        <text x={width - 55} y="100" fill={colors.textMuted} fontSize="10">spacing</text>
+
+        {/* Legend */}
+        <circle cx="50" cy={height - 25} r="6" fill={colors.aggressor} />
+        <text x="62" y={height - 21} fill={colors.textSecondary} fontSize="10">Active Signal</text>
+        <circle cx="160" cy={height - 25} r="6" fill={colors.victim} />
+        <text x="172" y={height - 21} fill={colors.textSecondary} fontSize="10">Quiet Trace</text>
+      </svg>
+    );
+  };
 
   // PREDICT PHASE
   if (phase === 'predict') {
@@ -758,10 +878,23 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
       }}>
-        {renderProgressBar()}
+        {renderNavigationBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Progress indicator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Prediction 1 of 2
+            </span>
+          </div>
+
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -770,7 +903,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              🤔 Make Your Prediction - What do you think will happen?
             </p>
           </div>
 
@@ -778,7 +911,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             Two signal traces run parallel on a circuit board. What happens when a high-speed signal travels on one trace?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram - no sliders, no start button */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -786,41 +919,10 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📤</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Signal Source</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                padding: '20px 30px',
-              }}>
-                <div style={{
-                  background: colors.aggressor + '33',
-                  padding: '10px 40px',
-                  borderRadius: '4px',
-                  border: `2px solid ${colors.aggressor}`,
-                }}>
-                  <p style={{ ...typo.small, color: colors.aggressor, margin: 0 }}>Trace 1 (Active)</p>
-                </div>
-                <div style={{
-                  background: colors.victim + '33',
-                  padding: '10px 40px',
-                  borderRadius: '4px',
-                  border: `2px solid ${colors.victim}`,
-                }}>
-                  <p style={{ ...typo.small, color: colors.victim, margin: 0 }}>Trace 2 (Quiet)</p>
-                </div>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>❓</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>What happens?</p>
-              </div>
-            </div>
+            <StaticCrosstalkDiagram />
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '12px' }}>
+              Observe the setup: Two parallel traces on a PCB with a signal on one trace.
+            </p>
           </div>
 
           {/* Options */}
@@ -837,6 +939,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '48px',
                 }}
               >
                 <span style={{
@@ -865,7 +968,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test My Prediction →
+              Continue →
             </button>
           )}
         </div>
@@ -882,16 +985,31 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavigationBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Explore Signal Crosstalk
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Adjust trace spacing and coupling length to see how crosstalk changes
           </p>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}15`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}33`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+              👀 What to Watch: Observe how the victim signal becomes noisier as you decrease spacing or increase coupling length. Watch the NEXT and FEXT percentages change!
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -1010,16 +1128,29 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Excellent! Wide spacing and short coupling length minimize crosstalk.
+                Excellent! Wide spacing and short coupling length minimize crosstalk.
               </p>
             </div>
           )}
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Real-world relevance:</strong> Understanding crosstalk is essential for designing high-speed PCBs, memory buses, and communication systems where signal integrity directly impacts performance and reliability.
+            </p>
+          </div>
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Physics →
+            Continue →
           </button>
         </div>
 
@@ -1035,13 +1166,32 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavigationBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             How Signals "Leak" Between Traces
           </h2>
+
+          {/* Reference user's prediction */}
+          {prediction && (
+            <div style={{
+              background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
+                {prediction === 'b'
+                  ? "Your prediction was correct! Electromagnetic fields do couple between traces."
+                  : "Based on your prediction, you may have thought signals stay isolated. In reality, electromagnetic fields couple between parallel traces, causing interference."}
+              </p>
+            </div>
+          )}
 
           <div style={{
             background: colors.bgCard,
@@ -1055,10 +1205,10 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
 
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.aggressor }}>Capacitive Coupling (NEXT)</strong>: Electric fields between traces act like tiny capacitors. Voltage changes on the aggressor induce currents on the victim through C × dV/dt.
+                <strong style={{ color: colors.aggressor }}>Capacitive Coupling (NEXT)</strong>: Electric fields between traces act like tiny capacitors. Voltage changes on the aggressor induce currents on the victim.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.victim }}>Inductive Coupling (FEXT)</strong>: Magnetic fields from current flow induce voltage on nearby traces through M × dI/dt. This is the same principle as transformers.
+                <strong style={{ color: colors.victim }}>Inductive Coupling (FEXT)</strong>: Magnetic fields from current flow induce voltage on nearby traces. This uses electromagnetic coupling.
               </p>
               <p>
                 Both effects increase with <span style={{ color: colors.crosstalk, fontWeight: 600 }}>closer spacing</span>, <span style={{ color: colors.crosstalk, fontWeight: 600 }}>longer parallel runs</span>, and <span style={{ color: colors.crosstalk, fontWeight: 600 }}>faster signals</span>.
@@ -1074,22 +1224,22 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight
+              Remember
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Crosstalk is proportional to coupling length and inversely proportional to spacing. The "3W rule" suggests spacing traces at least 3× their width apart to minimize coupling. But modern high-speed designs often need additional techniques.
+              Crosstalk depends on coupling length and spacing. The "3W rule" suggests spacing traces at least 3x their width apart to minimize coupling.
             </p>
           </div>
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', marginBottom: '16px' }}
           >
             Explore Mitigation Techniques →
           </button>
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1107,10 +1257,24 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavigationBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Progress indicator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Prediction 2 of 2
+            </span>
+          </div>
+
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1139,6 +1303,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '48px',
                 }}
               >
                 <span style={{
@@ -1184,10 +1349,12 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavigationBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Frequency & Mitigation Techniques
           </h2>
@@ -1386,10 +1553,12 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavigationBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Crosstalk Mitigation Strategies
           </h2>
@@ -1473,19 +1642,27 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavigationBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} of {realWorldApps.length} viewed)
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1576,6 +1753,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1590,6 +1768,34 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
                 </div>
               ))}
             </div>
+
+            {/* Got It button for each app */}
+            {!completedApps[selectedApp] ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Got It →
+              </button>
+            ) : selectedApp < realWorldApps.length - 1 ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(selectedApp + 1);
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp + 1] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Next App →
+              </button>
+            ) : null}
           </div>
 
           {allAppsCompleted && (
@@ -1600,9 +1806,9 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
               Take the Knowledge Test →
             </button>
           )}
-        </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1616,10 +1822,12 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
+          overflowY: 'auto',
         }}>
-          {renderProgressBar()}
+          {renderNavigationBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1672,10 +1880,12 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavigationBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1842,9 +2052,11 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
-        {renderProgressBar()}
+        {renderNavigationBar()}
 
         <div style={{
           fontSize: '100px',

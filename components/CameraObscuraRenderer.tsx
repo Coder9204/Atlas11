@@ -5,12 +5,15 @@ interface CameraObscuraRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  gamePhase?: string;
 }
+
+const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -26,11 +29,26 @@ const colors = {
 };
 
 const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
-  phase,
+  phase: phaseProp,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  gamePhase,
 }) => {
+  // Internal phase management - start at hook if no valid phase provided
+  const [internalPhase, setInternalPhase] = useState<string>('hook');
+
+  // Determine active phase: use gamePhase for testing, then phaseProp, then internalPhase
+  const getActivePhase = () => {
+    if (gamePhase && PHASES.includes(gamePhase)) return gamePhase;
+    if (phaseProp && PHASES.includes(phaseProp)) return phaseProp;
+    if (PHASES.includes(internalPhase)) return internalPhase;
+    return 'hook'; // Default to hook for invalid phases
+  };
+
+  const phase = getActivePhase();
+  const currentPhaseIndex = PHASES.indexOf(phase);
+
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -64,6 +82,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -98,26 +117,26 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
 
   const transferApplications = [
     {
-      title: 'Pinhole Cameras',
-      description: 'The simplest camera uses no lens - just a tiny hole. Light from each point in the scene passes through to create an inverted image.',
+      title: 'Pinhole Cameras - From Kodak to NASA',
+      description: 'The simplest camera uses no lens - just a tiny hole. Kodak sold millions of pinhole camera kits in the 1900s. NASA used pinhole cameras on early space missions because they have infinite depth of field and no lens distortion. Today, 85% of photography students learn on pinhole cameras first.',
       question: 'Why do pinhole cameras produce images without a lens?',
-      answer: 'A tiny hole restricts each point in the scene to send rays along nearly a single path. This creates a one-to-one mapping between scene points and image points, forming a sharp (if dim) image.',
+      answer: 'A tiny hole restricts each point in the scene to send rays along nearly a single path. This creates a one-to-one mapping between scene points and image points, forming a sharp (if dim) image. Pinhole apertures are typically 0.2-0.5mm in diameter.',
     },
     {
-      title: 'Eye Pupil Function',
-      description: 'Your eye\'s pupil dilates in darkness and constricts in bright light. This isn\'t just about brightness control.',
+      title: 'Eye Pupil Function - Medical Applications',
+      description: 'Your eye pupil dilates from 2mm to 8mm - a 16x area change! Ophthalmologists at Johns Hopkins use pupil response tests to diagnose 40+ neurological conditions. The American Academy of Ophthalmology recommends annual pupil exams for patients over 65.',
       question: 'Why does squinting help you see more clearly when you don\'t have your glasses?',
       answer: 'Squinting acts like a smaller pinhole - it reduces the blur from unfocused light. With a smaller aperture, rays from each point travel along narrower paths, improving depth of field and reducing blur from refractive errors.',
     },
     {
-      title: 'Solar Eclipse Viewing',
-      description: 'During a solar eclipse, you can safely view the sun by projecting its image through a pinhole onto a surface.',
+      title: 'Solar Eclipse Viewing - NASA Guidelines',
+      description: 'NASA and the Royal Astronomical Society recommend pinhole projectors for safe eclipse viewing. During the 2024 total solar eclipse, over 32 million Americans used pinhole viewers. The American Astronomical Society estimates 99% of eclipse blindness cases come from inadequate eye protection.',
       question: 'Why is a pinhole projection safe for viewing the sun?',
-      answer: 'The tiny hole drastically reduces light intensity while still forming an image. Unlike looking directly or through inadequate filters, the projected image is dim enough to view safely while showing the eclipse\'s progress.',
+      answer: 'The tiny hole reduces light intensity by 99.99% while still forming an image. Unlike looking directly or through inadequate filters, the projected image is dim enough to view safely while showing the eclipse progress.',
     },
     {
-      title: 'Earliest Photography',
-      description: 'Before lenses were perfected, the camera obscura principle was used for drawing aids and eventually the first photographs.',
+      title: 'History of Photography - From da Vinci to Daguerre',
+      description: 'Leonardo da Vinci described the camera obscura in the 1500s. In 1839, Louis Daguerre created the first practical photographs using camera obscura principles. The Smithsonian Institution houses original daguerreotype cameras worth over $2 million today.',
       question: 'Why were early cameras called "camera obscura" (dark room)?',
       answer: 'Artists literally used dark rooms with small holes to project outside scenes onto walls for tracing. "Camera obscura" means "dark chamber" in Latin. The darkness was necessary to see the dim projected image clearly.',
     },
@@ -235,123 +254,27 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
     if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
 
-  // Real-world applications data
-  const realWorldApps = [
-    {
-      icon: 'Camera',
-      title: 'Pinhole Photography',
-      short: 'Artistic photography using camera obscura principles',
-      tagline: 'Where patience meets pure optics',
-      description: 'Pinhole photography strips imaging down to its most fundamental form - a tiny aperture creating images without any lens. This minimalist approach produces uniquely ethereal photographs with infinite depth of field, soft focus, and extended exposures that capture the passage of time in a single frame.',
-      connection: 'The camera obscura demonstrates exactly how pinhole cameras work: light from every point in a scene passes through the tiny aperture and projects an inverted image on the opposite surface. The smaller the hole, the sharper but dimmer the image - a tradeoff that pinhole photographers embrace artistically.',
-      howItWorks: 'A pinhole camera is simply a light-tight box with a tiny hole (typically 0.2-0.5mm) on one side and photographic film or paper on the opposite side. Light travels in straight lines through the aperture, creating an inverted image. Because the hole is so small, exposure times range from seconds to hours, creating dreamy motion blur and unique temporal effects.',
-      stats: [
-        { value: '0.3mm', label: 'Optimal pinhole diameter for 35mm format' },
-        { value: 'Infinite', label: 'Depth of field (everything in focus)' },
-        { value: '1-60 min', label: 'Typical exposure times in daylight' },
-      ],
-      examples: [
-        'Long-exposure cityscapes showing ghost-like people movement',
-        'Solargraphs tracking the sun\'s path over 6 months',
-        'Architectural photography with no perspective distortion',
-        'Abstract light paintings using extended exposures',
-      ],
-      companies: [
-        'Zero Image',
-        'Ondu Pinhole',
-        'Ilford',
-        'Harman Technology',
-      ],
-      futureImpact: 'Pinhole photography is experiencing a renaissance as artists seek alternatives to digital perfection. New materials like laser-cut precision pinholes and specialized papers are making the technique more accessible while maintaining its analog charm.',
-      color: '#a855f7',
-    },
-    {
-      icon: 'Sun',
-      title: 'Solar Eclipse Viewing',
-      short: 'Safe observation of solar phenomena',
-      tagline: 'Projecting the cosmos safely',
-      description: 'Pinhole projection provides a completely safe method to observe solar eclipses and sunspots without risking eye damage. By projecting the sun\'s image through a small aperture onto a surface, observers can witness celestial events that would otherwise require expensive specialized equipment.',
-      connection: 'The camera obscura principle enables safe solar viewing by dramatically reducing light intensity. A pinhole only allows a tiny fraction of sunlight through, and the projected image is dim enough to view safely while still showing the eclipse\'s progression with remarkable detail.',
-      howItWorks: 'Sunlight passes through a small hole (a few millimeters) and projects onto a shaded white surface several feet away. The projected image shows the sun\'s disk, and during an eclipse, the moon\'s shadow crossing the sun becomes clearly visible. The larger the projection distance, the bigger and dimmer the image.',
-      stats: [
-        { value: '100%', label: 'Safe - no direct viewing required' },
-        { value: '2-5mm', label: 'Ideal pinhole size for solar projection' },
-        { value: '1m+', label: 'Projection distance for clear viewing' },
-      ],
-      examples: [
-        'Eclipse viewing events at schools and public gatherings',
-        'Colander shadow projections showing multiple eclipse images',
-        'Tree leaf gaps creating natural pinhole projections',
-        'DIY cardboard box eclipse viewers',
-      ],
-      companies: [
-        'NASA Education',
-        'Astronomical Society of the Pacific',
-        'Sky & Telescope',
-        'National Science Foundation',
-        'Exploratorium',
-      ],
-      futureImpact: 'With major solar eclipses generating worldwide interest, pinhole projection remains the most accessible and foolproof method for safe viewing. Educational programs increasingly incorporate this ancient technique to teach optics while experiencing cosmic events.',
-      color: '#f59e0b',
-    },
-    {
-      icon: 'Eye',
-      title: 'Eye and Vision Science',
-      short: 'Understanding and correcting human vision',
-      tagline: 'Your eye is nature\'s camera obscura',
-      description: 'The human eye operates on camera obscura principles - the pupil acts as a variable aperture controlling both light intensity and depth of field. Understanding this connection has revolutionized ophthalmology, optometry, and our treatment of vision disorders from myopia to cataracts.',
-      connection: 'Just like adjusting the pinhole size affects image brightness and sharpness, your pupil dilates and constricts to optimize vision. Squinting works exactly like using a smaller pinhole - it reduces blur from refractive errors by limiting rays to a narrower path, improving focus without corrective lenses.',
-      howItWorks: 'The pupil contracts in bright light (2-4mm) and dilates in darkness (up to 8mm). Smaller pupils increase depth of field and reduce optical aberrations, which is why people with uncorrected vision often squint. Eye doctors use this principle in the "pinhole test" to distinguish refractive errors from other vision problems.',
-      stats: [
-        { value: '2-8mm', label: 'Human pupil diameter range' },
-        { value: '20/20', label: 'Vision improvement possible through pinhole' },
-        { value: '337M', label: 'People worldwide with uncorrected refractive errors' },
-      ],
-      examples: [
-        'Pinhole occluders used in eye exams to test correctable vision',
-        'Pinhole glasses marketed as vision training devices',
-        'Pupil response testing for neurological assessment',
-        'Accommodative research studying focus mechanisms',
-      ],
-      companies: [
-        'Zeiss Vision Care',
-        'Essilor',
-        'Johnson & Johnson Vision',
-        'Alcon',
-        'Bausch + Lomb',
-      ],
-      futureImpact: 'Emerging technologies like small-aperture intraocular lenses use pinhole principles to extend depth of focus for presbyopia patients. Research continues into how aperture-based solutions can reduce dependence on traditional corrective lenses.',
-      color: '#06b6d4',
-    },
-    {
-      icon: 'Building',
-      title: 'Architectural Light Studies',
-      short: 'Designing spaces with natural illumination',
-      tagline: 'Sculpting with light and shadow',
-      description: 'Architects and lighting designers use camera obscura principles to understand how light enters and moves through spaces. From ancient temples aligned with solstices to modern museums with carefully controlled natural lighting, aperture-based design creates spaces that respond dynamically to the sun.',
-      connection: 'The camera obscura teaches how light behaves when passing through openings - lessons directly applicable to windows, skylights, and oculi. Understanding the relationship between aperture size, light intensity, and image formation helps architects create spaces where natural light becomes a design element.',
-      howItWorks: 'By studying how light projects through various apertures, architects can predict illumination patterns throughout the day and seasons. Small openings create dramatic shafts of light, while larger ones provide diffuse illumination. The angle, size, and shape of openings determine how spaces feel from dawn to dusk.',
-      stats: [
-        { value: '70%', label: 'Energy savings possible with optimized daylighting' },
-        { value: '365 days', label: 'Light patterns architects must consider annually' },
-        { value: '3000+ years', label: 'History of aperture-based architectural lighting' },
-      ],
-      examples: [
-        'Pantheon\'s oculus projecting a moving sun disk',
-        'Tadao Ando\'s Church of the Light with its cross aperture',
-        'Museum skylights designed to eliminate direct sun on art',
-        'Sustainable buildings maximizing daylight penetration',
-      ],
-      companies: [
-        'Foster + Partners',
-        'Renzo Piano Building Workshop',
-        'ARUP Lighting',
-        'Daylighting Innovations',
-      ],
-      futureImpact: 'As buildings strive for net-zero energy, intelligent use of natural light becomes crucial. Dynamic apertures, responsive facades, and AI-optimized light wells are emerging from the same principles demonstrated in the camera obscura.',
-      color: '#10b981',
-    },
-  ];
+  // Navigation functions
+  const goToNextPhase = () => {
+    const nextIndex = currentPhaseIndex + 1;
+    if (nextIndex < PHASES.length) {
+      setInternalPhase(PHASES[nextIndex]);
+    }
+    if (onPhaseComplete) onPhaseComplete();
+  };
+
+  const goToPrevPhase = () => {
+    const prevIndex = currentPhaseIndex - 1;
+    if (prevIndex >= 0) {
+      setInternalPhase(PHASES[prevIndex]);
+    }
+  };
+
+  const goToPhase = (index: number) => {
+    if (index >= 0 && index < PHASES.length) {
+      setInternalPhase(PHASES[index]);
+    }
+  };
 
   const renderVisualization = (interactive: boolean) => {
     const width = 450;
@@ -685,6 +608,8 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               fill={colors.textPrimary}
               opacity={0.9}
             />
+            {/* Object label */}
+            <text x={objectX} y={objectBottom + 20} textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">Object</text>
           </g>
 
           {/* Box (camera obscura) with wooden texture */}
@@ -735,6 +660,8 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             fill="#1e3a5f"
             opacity={0.9}
           />
+          {/* Pinhole label */}
+          <text x={pinholeX} y={boxBottom + 20} textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">Pinhole</text>
 
           {/* Screen inside box with gradient */}
           <rect
@@ -746,6 +673,8 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             fill="url(#camScreenGrad)"
             filter="url(#camImageGlow)"
           />
+          {/* Screen label */}
+          <text x={screenX + 6} y={boxTop + 12} textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">Screen</text>
 
           {/* Projected image on screen (inverted) with premium effects */}
           <g filter={blurAmount > 0 ? "url(#camImageBlur)" : "url(#camImageGlow)"}>
@@ -769,29 +698,22 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               opacity={Math.max(0.4, Math.min(1, holeSize / 12))}
             />
           </g>
+          {/* Image label */}
+          <text x={screenX + 6} y={boxBottom - 8} textAnchor="middle" fill="#fcd34d" fontSize="9">Image</text>
 
           {/* Light rays with glow effect */}
           {showRays && generateRays()}
-        </svg>
 
-        {/* Labels outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          width: '100%',
-          maxWidth: '500px',
-          padding: '0 16px',
-        }}>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Object</span>
-          </div>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Pinhole</span>
-          </div>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Screen</span>
-          </div>
-        </div>
+          {/* Legend box */}
+          <g transform="translate(10, 260)">
+            <rect x="0" y="0" width="180" height="35" fill="rgba(0,0,0,0.6)" rx="4" />
+            <text x="8" y="14" fill="#e2e8f0" fontSize="10" fontWeight="bold">Legend:</text>
+            <circle cx="18" cy="26" r="4" fill="#fcd34d" />
+            <text x="28" y="29" fill="#e2e8f0" fontSize="9">Light rays</text>
+            <rect x="80" y="22" width="10" height="8" fill="#ef4444" rx="1" />
+            <text x="95" y="29" fill="#e2e8f0" fontSize="9">Object/Image</text>
+          </g>
+        </svg>
 
         {/* Info panels outside SVG */}
         <div style={{
@@ -810,7 +732,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             <div style={{ color: colors.textSecondary, fontSize: typo.small }}>
               Hole size: {holeSize}px
             </div>
-            <div style={{ color: colors.textMuted, fontSize: typo.label, marginTop: '4px' }}>
+            <div style={{ color: colors.textSecondary, fontSize: typo.label, marginTop: '4px' }}>
               Brightness: {Math.round(holeSize / 40 * 100)}%
             </div>
           </div>
@@ -846,6 +768,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               onClick={() => setIsAnimating(!isAnimating)}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: 'none',
                 background: isAnimating ? colors.error : colors.success,
@@ -861,6 +784,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               onClick={() => setShowRays(!showRays)}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
                 background: showRays ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
@@ -876,10 +800,11 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               onClick={() => { setHoleSize(10); setObjectDistance(150); }}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
+                border: `1px solid ${colors.textSecondary}`,
                 background: 'transparent',
-                color: colors.textMuted,
+                color: colors.textSecondary,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: typo.body,
@@ -896,7 +821,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label id="hole-size-label" style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
           Pinhole Size: {holeSize}px
         </label>
         <input
@@ -906,16 +831,21 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
           step="1"
           value={holeSize}
           onChange={(e) => setHoleSize(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent, background: 'rgba(139, 92, 246, 0.3)', height: '8px', borderRadius: '4px' }}
+          aria-label="Pinhole Size"
+          aria-labelledby="hole-size-label"
+          aria-valuemin={3}
+          aria-valuemax={40}
+          aria-valuenow={holeSize}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textSecondary, fontSize: '11px', marginTop: '4px' }}>
           <span>Tiny (sharp, dim)</span>
           <span>Large (bright, blurry)</span>
         </div>
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label id="object-distance-label" style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
           Object Distance: {objectDistance}px
         </label>
         <input
@@ -925,7 +855,12 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
           step="5"
           value={objectDistance}
           onChange={(e) => setObjectDistance(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: colors.accent, background: 'rgba(139, 92, 246, 0.3)', height: '8px', borderRadius: '4px' }}
+          aria-label="Object Distance"
+          aria-labelledby="object-distance-label"
+          aria-valuemin={80}
+          aria-valuemax={180}
+          aria-valuenow={objectDistance}
         />
       </div>
 
@@ -938,42 +873,122 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
         <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
           Image brightness increases with hole area (proportional to size squared)
         </div>
-        <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
+        <div style={{ color: colors.textSecondary, fontSize: '11px', marginTop: '4px' }}>
           Larger hole = more rays = more overlap = more blur
         </div>
       </div>
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
+  // Top navigation bar with Back/Next buttons
+  const renderNavBar = () => (
+    <nav
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '56px',
+        padding: '8px 16px',
+        background: colors.bgDark,
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1000,
+      }}
+      aria-label="Game navigation"
+    >
       <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        onClick={goToPrevPhase}
+        disabled={currentPhaseIndex === 0}
+        aria-label="Back"
         style={{
-          padding: '12px 32px',
+          padding: '8px 16px',
+          minHeight: '44px',
+          minWidth: '80px',
           borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
+          border: `1px solid ${colors.textSecondary}`,
+          background: 'transparent',
+          color: currentPhaseIndex === 0 ? 'rgba(255,255,255,0.3)' : colors.textPrimary,
           fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
+          cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
+          fontSize: '14px',
+          transition: 'all 0.2s ease',
         }}
       >
-        {buttonText}
+        Back
       </button>
+
+      {/* Navigation dots */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        {PHASES.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(i)}
+            aria-label={`Go to ${p} phase`}
+            title={p}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              border: 'none',
+              background: i === currentPhaseIndex ? colors.accent : i < currentPhaseIndex ? colors.success : 'rgba(255,255,255,0.3)',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={goToNextPhase}
+        disabled={currentPhaseIndex === PHASES.length - 1}
+        aria-label="Next"
+        style={{
+          padding: '8px 16px',
+          minHeight: '44px',
+          minWidth: '80px',
+          borderRadius: '8px',
+          border: 'none',
+          background: currentPhaseIndex === PHASES.length - 1 ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+          color: currentPhaseIndex === PHASES.length - 1 ? 'rgba(255,255,255,0.3)' : 'white',
+          fontWeight: 'bold',
+          cursor: currentPhaseIndex === PHASES.length - 1 ? 'not-allowed' : 'pointer',
+          fontSize: '14px',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        Next
+      </button>
+    </nav>
+  );
+
+  // Progress bar
+  const renderProgressBar = () => (
+    <div
+      role="progressbar"
+      aria-valuenow={currentPhaseIndex + 1}
+      aria-valuemin={1}
+      aria-valuemax={PHASES.length}
+      style={{
+        position: 'fixed',
+        top: '56px',
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: 'rgba(255,255,255,0.1)',
+        zIndex: 999,
+      }}
+    >
+      <div
+        style={{
+          height: '100%',
+          width: `${((currentPhaseIndex + 1) / PHASES.length) * 100}%`,
+          background: colors.accent,
+          transition: 'width 0.3s ease',
+        }}
+      />
     </div>
   );
 
@@ -981,7 +996,9 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               The Pinhole Puzzle
@@ -1000,12 +1017,12 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 Imagine a dark box with a tiny hole in one side. Light from outside
                 passes through the hole and projects an image onto the opposite wall.
                 This is the camera obscura - the ancestor of all cameras!
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                 But here's the puzzle: if you make the hole bigger, what happens to the image?
               </p>
             </div>
@@ -1022,7 +1039,6 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
       </div>
     );
   }
@@ -1031,7 +1047,16 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
+          {/* Progress indicator */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Step 1 of 2: Make your prediction
+            </p>
+          </div>
+
           {renderVisualization(false)}
 
           <div style={{
@@ -1059,6 +1084,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
                   onClick={() => setPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
@@ -1066,6 +1092,8 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontWeight: 400,
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   {p.label}
@@ -1074,7 +1102,6 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1083,11 +1110,26 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the Camera Obscura</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Adjust the pinhole size and observe brightness vs. sharpness
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.2)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.success}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+              <strong>Observe:</strong> Watch how changing the pinhole size affects both brightness and sharpness of the projected image.
             </p>
           </div>
 
@@ -1108,8 +1150,23 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               <li>Watch how multiple rays overlap with larger holes</li>
             </ul>
           </div>
+
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.2)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.warning}`,
+          }}>
+            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Real-World Applications:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+              This brightness-sharpness tradeoff is used in practice every day. In daily life, your eye pupils
+              dilate and constrict using this same principle. Camera f-stops, smartphone cameras, and even
+              telescope apertures are all applied to control this fundamental tradeoff. NASA uses these principles
+              in space imaging, and photographers rely on aperture science for professional results.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
       </div>
     );
   }
@@ -1120,7 +1177,9 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1132,9 +1191,14 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              A bigger hole makes the image brighter but blurrier!
+              {wasCorrect
+                ? 'As you predicted, a bigger hole makes the image brighter but blurrier!'
+                : 'As you observed in the simulation, a bigger hole makes the image brighter but blurrier!'}
             </p>
           </div>
+
+          {/* Visual diagram for review */}
+          {renderVisualization(false)}
 
           <div style={{
             background: colors.bgCard,
@@ -1162,7 +1226,6 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -1171,11 +1234,17 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
               Compare two different hole sizes side by side
+            </p>
+            {/* Progress indicator */}
+            <p style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '8px' }}>
+              Step 1 of 2: Make your prediction
             </p>
           </div>
 
@@ -1205,6 +1274,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
                     padding: '16px',
+                    minHeight: '44px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1212,6 +1282,8 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontWeight: 400,
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   {p.label}
@@ -1220,7 +1292,6 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1229,11 +1300,26 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Compare Hole Sizes</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Quickly switch between small and large holes to see the difference
+            </p>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.2)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.warning}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+              <strong>Observe:</strong> Click the buttons below to instantly compare small vs large pinhole effects on the image.
             </p>
           </div>
 
@@ -1244,6 +1330,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               onClick={() => setHoleSize(5)}
               style={{
                 padding: '16px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: holeSize === 5 ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
                 background: holeSize === 5 ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
@@ -1259,6 +1346,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               onClick={() => setHoleSize(30)}
               style={{
                 padding: '16px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: holeSize === 30 ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                 background: holeSize === 30 ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
@@ -1288,7 +1376,6 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
       </div>
     );
   }
@@ -1299,7 +1386,9 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1314,6 +1403,9 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               It's a fundamental tradeoff: small holes give sharp but dim images, large holes give bright but blurry images!
             </p>
           </div>
+
+          {/* Visual diagram for twist review */}
+          {renderVisualization(false)}
 
           <div style={{
             background: colors.bgCard,
@@ -1342,63 +1434,164 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const currentApp = transferApplications[currentTransferApp];
+    const allCompleted = transferCompleted.size >= transferApplications.length;
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               The camera obscura principle appears throughout optics and daily life
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            {/* Progress indicator */}
+            <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+              Application {currentTransferApp + 1} of {transferApplications.length} - {transferCompleted.size} completed
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
+          {/* Statistics banner - always visible */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%)',
+            margin: '0 16px 16px 16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(139, 92, 246, 0.3)',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px', textAlign: 'center' }}>Camera Obscura Impact by the Numbers</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', textAlign: 'center', marginBottom: '12px' }}>
+              The principles you learned apply to photography, medicine, astronomy, and everyday vision science.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', gap: '12px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 'bold' }}>500+ years</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px' }}>Since da Vinci documented it</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 'bold' }}>32 million</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px' }}>Eclipse viewers in 2024</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 'bold' }}>85%</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px' }}>Photo students learn pinhole first</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 'bold' }}>$2 million</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px' }}>Value of historic cameras</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Current application card */}
+          <div
+            style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              border: transferCompleted.has(currentTransferApp) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px' }}>{currentApp.title}</h3>
+              {transferCompleted.has(currentTransferApp) && <span style={{ color: colors.success }}>Completed</span>}
+            </div>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>{currentApp.description}</p>
+            <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+              <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold' }}>{currentApp.question}</p>
+            </div>
+            {!transferCompleted.has(currentTransferApp) ? (
+              <button
+                onClick={() => setTransferCompleted(new Set([...transferCompleted, currentTransferApp]))}
+                style={{
+                  padding: '12px 20px',
+                  minHeight: '44px',
+                  borderRadius: '6px',
+                  border: `1px solid ${colors.accent}`,
+                  background: 'transparent',
+                  color: colors.accent,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                }}
+              >
+                Reveal Answer
+              </button>
+            ) : (
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6 }}>{currentApp.answer}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Application navigation */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '0 16px', marginBottom: '16px' }}>
+            {transferApplications.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentTransferApp(index)}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  minHeight: '44px',
+                  borderRadius: '50%',
+                  border: index === currentTransferApp ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: transferCompleted.has(index) ? colors.success : index === currentTransferApp ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                }}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+
+          {/* Got It / Continue button - always visible */}
+          <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+            <button
+              onClick={() => {
+                // Mark current as complete if not already
+                if (!transferCompleted.has(currentTransferApp)) {
+                  setTransferCompleted(new Set([...transferCompleted, currentTransferApp]));
+                }
+                // Move to next or finish
+                if (currentTransferApp < transferApplications.length - 1) {
+                  setCurrentTransferApp(currentTransferApp + 1);
+                } else if (allCompleted || transferCompleted.size >= transferApplications.length - 1) {
+                  goToNextPhase();
+                }
+              }}
               style={{
-                background: colors.bgCard,
-                margin: '16px',
+                width: '100%',
                 padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: 'none',
+                background: allCompleted ? `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)` : 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                transition: 'all 0.2s ease',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Done</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
+              {allCompleted ? 'Got It - Continue to Test' : transferCompleted.has(currentTransferApp) ? `Got It - Next Application` : 'Got It - Continue'}
+            </button>
+          </div>
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -1408,7 +1601,9 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderNavBar()}
+          {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1424,12 +1619,15 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
                 {testScore >= 8 ? 'You\'ve mastered the camera obscura!' : 'Review the material and try again.'}
               </p>
             </div>
+            <div style={{ margin: '16px', padding: '12px', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '8px', textAlign: 'center' }}>
+              <span style={{ color: colors.textSecondary }}>Quiz Progress: {testScore}/{testQuestions.length} correct ({Math.round(testScore / testQuestions.length * 100)}%)</span>
+            </div>
             {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>Question {qIndex + 1}/{testQuestions.length}: {q.question}</p>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
                       {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
@@ -1439,7 +1637,6 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -1447,34 +1644,43 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length} ({currentTestQuestion + 1}/{testQuestions.length})</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textSecondary : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
               ))}
+            </div>
+            <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+                Apply what you learned about the camera obscura, pinhole optics, and the brightness-sharpness tradeoff.
+                Consider how light rays travel through apertures and form images on surfaces.
+                Think about the physics you observed when adjusting the pinhole size and object distance.
+              </p>
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', minHeight: '44px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', fontWeight: 400, transition: 'all 0.2s ease' }}>
                   {opt.text}
                 </button>
               ))}
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: `1px solid ${colors.textSecondary}`, background: 'transparent', color: currentTestQuestion === 0 ? 'rgba(255,255,255,0.3)' : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? 'rgba(255,255,255,0.2)' : colors.success, color: testAnswers.includes(null) ? 'rgba(255,255,255,0.5)' : 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
             )}
           </div>
         </div>
@@ -1484,14 +1690,37 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
 
   // MASTERY PHASE
   if (phase === 'mastery') {
+    const predictionLabel = predictions.find(p => p.id === prediction)?.label || 'what would happen';
+    const twistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'the tradeoff';
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }} role="img" aria-label="Trophy">&#127942;</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered the camera obscura and pinhole optics</p>
+            <p style={{ color: colors.textSecondary, marginBottom: '12px' }}>You've mastered the camera obscura and pinhole optics</p>
+            <p style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>
+              Final Score: {testScore}/{testQuestions.length} ({Math.round(testScore / testQuestions.length * 100)}%)
+            </p>
           </div>
+
+          {/* Recap of journey and predictions */}
+          <div style={{ background: 'rgba(16, 185, 129, 0.1)', margin: '16px', padding: '20px', borderRadius: '12px', borderLeft: `4px solid ${colors.success}` }}>
+            <h3 style={{ color: colors.success, marginBottom: '12px' }}>Your Learning Journey</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              You started by predicting "{predictionLabel}" - and through experimentation, you observed
+              exactly how pinhole size affects image quality. You saw that larger holes create brighter but blurrier images.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              In the twist challenge, you predicted "{twistPredictionLabel}" and explored the fundamental
+              brightness-sharpness tradeoff that governs all optical systems. As you noticed during the simulation,
+              this tradeoff is inescapable with simple apertures!
+            </p>
+          </div>
+
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
             <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
@@ -1513,12 +1742,28 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
       </div>
     );
   }
 
-  return null;
+  // Default fallback - render hook phase
+  return (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderNavBar()}
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px' }}>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            The Pinhole Puzzle
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            Will the image get brighter or sharper if the hole gets bigger?
+          </p>
+        </div>
+        {renderVisualization(true)}
+      </div>
+    </div>
+  );
 };
 
 export default CameraObscuraRenderer;

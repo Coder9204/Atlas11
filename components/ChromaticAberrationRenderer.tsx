@@ -113,113 +113,113 @@ interface Question {
 const questions: Question[] = [
   {
     id: 1,
-    question: 'What causes chromatic aberration in lenses?',
+    question: 'A photographer notices purple and green fringes along the edges of tree branches against a bright sky. The camera uses a simple single-element lens. What is the primary cause of these colored fringes appearing in the image?',
     options: [
-      { text: 'Lens manufacturing defects', correct: false },
+      { text: 'Lens manufacturing defects causing irregular surfaces', correct: false },
       { text: 'Different wavelengths refract by different amounts (dispersion)', correct: true },
-      { text: 'Light absorption in glass', correct: false },
-      { text: 'Reflection inside the lens', correct: false },
+      { text: 'Light absorption in the glass creating color casts', correct: false },
+      { text: 'Internal reflections between lens surfaces', correct: false },
     ],
-    explanation: 'Glass has a wavelength-dependent refractive index. Blue light bends more than red, so different colors focus at different distances from the lens.',
+    explanation: 'Glass has a wavelength-dependent refractive index. Blue light bends more than red, so different colors focus at different distances from the lens. This dispersion creates the visible color fringes.',
   },
   {
     id: 2,
-    question: 'Which color of light is bent the MOST by a glass lens?',
+    question: 'An optical engineer is designing a lens and needs to determine which wavelengths will focus closest to the lens surface. The lens uses standard crown glass (n=1.52 for green). Based on the physics of dispersion, which color of visible light will bend the most?',
     options: [
-      { text: 'Red (longest wavelength)', correct: false },
-      { text: 'Yellow (middle wavelength)', correct: false },
-      { text: 'Blue/Violet (shortest wavelength)', correct: true },
-      { text: 'All colors bend equally', correct: false },
+      { text: 'Red light (700nm wavelength) bends most', correct: false },
+      { text: 'Yellow light (580nm wavelength) bends most', correct: false },
+      { text: 'Blue/Violet light (400-450nm wavelength) bends most', correct: true },
+      { text: 'All colors bend equally through any glass material', correct: false },
     ],
-    explanation: 'Shorter wavelengths have higher refractive indices in glass (normal dispersion). Blue/violet light bends more and focuses closer to the lens than red light.',
+    explanation: 'Shorter wavelengths have higher refractive indices in glass (normal dispersion). Blue/violet light bends more and focuses closer to the lens than red light, with indices ranging from n=1.51 (red) to n=1.53 (violet).',
   },
   {
     id: 3,
-    question: 'Where does chromatic aberration appear most noticeably in photos?',
+    question: 'A wildlife photographer reviewing their 600mm telephoto lens images notices the chromatic aberration is much worse at the edges of the frame than in the center. The subject, a white egret against dark vegetation, shows severe color fringing. Where and why does CA appear most noticeably?',
     options: [
-      { text: 'In the center of the image', correct: false },
+      { text: 'In the center of the image where focus is sharpest', correct: false },
       { text: 'At high-contrast edges, especially toward frame edges', correct: true },
-      { text: 'In out-of-focus areas', correct: false },
-      { text: 'Only in black and white images', correct: false },
+      { text: 'Only in out-of-focus background areas', correct: false },
+      { text: 'Uniformly across the entire image field', correct: false },
     ],
-    explanation: 'Chromatic aberration shows as color fringes along high-contrast edges. It\'s worse toward frame edges where rays hit the lens at steeper angles.',
+    explanation: 'Chromatic aberration shows as color fringes along high-contrast edges. It is worse toward frame edges where rays hit the lens at steeper angles, causing more separation between wavelengths.',
   },
   {
     id: 4,
-    question: 'What is an achromatic doublet?',
+    question: 'A telescope manufacturer advertises their refractor uses an "achromatic doublet" objective lens. This design combines a convex crown glass element (Abbe 60) with a concave flint glass element (Abbe 30). What does this achromatic doublet actually accomplish?',
     options: [
-      { text: 'Two identical lenses glued together', correct: false },
-      { text: 'A crown glass + flint glass lens pair designed to focus two wavelengths to the same point', correct: true },
-      { text: 'A lens with anti-reflective coating', correct: false },
-      { text: 'Two cameras used together', correct: false },
+      { text: 'Two identical lenses glued together for strength', correct: false },
+      { text: 'A crown + flint glass pair designed to focus two wavelengths to the same point', correct: true },
+      { text: 'A lens with anti-reflective coating on both surfaces', correct: false },
+      { text: 'Two separate cameras used in stereo configuration', correct: false },
     ],
-    explanation: 'An achromatic doublet combines a converging crown glass lens with a diverging flint glass lens. Flint glass has higher dispersion, allowing the pair to cancel chromatic aberration.',
+    explanation: 'An achromatic doublet combines a converging crown glass lens with a diverging flint glass lens. Flint glass has higher dispersion, allowing the pair to cancel most chromatic aberration for two wavelengths.',
   },
   {
     id: 5,
-    question: 'How does flint glass differ from crown glass?',
+    question: 'An optician is explaining lens materials to a customer. Crown glass has an Abbe number around 60, while flint glass (containing lead oxide) has an Abbe number around 30. What is the key optical difference that makes flint glass useful in achromatic designs?',
     options: [
-      { text: 'Flint glass is harder', correct: false },
+      { text: 'Flint glass is mechanically harder and more scratch-resistant', correct: false },
       { text: 'Flint glass has higher dispersion (more separation of colors)', correct: true },
-      { text: 'Flint glass is clearer', correct: false },
-      { text: 'Flint glass is cheaper', correct: false },
+      { text: 'Flint glass transmits more light with higher clarity', correct: false },
+      { text: 'Flint glass is less expensive to manufacture', correct: false },
     ],
-    explanation: 'Flint glass contains lead oxide, giving it higher refractive index AND higher dispersion than crown glass. This makes it useful for correcting chromatic aberration.',
+    explanation: 'Flint glass contains lead oxide, giving it higher refractive index AND higher dispersion than crown glass. This property makes it essential for correcting chromatic aberration when paired with crown glass.',
   },
   {
     id: 6,
-    question: 'An apochromatic lens corrects chromatic aberration for:',
+    question: 'A professional astrophotographer is comparing telescope specifications. An apochromatic (APO) refractor costs $6,000 while an achromatic refractor costs $600. The APO uses exotic fluorite glass elements. How many wavelengths does an apochromatic lens correct for compared to standard achromats?',
     options: [
-      { text: 'One wavelength only', correct: false },
-      { text: 'Two wavelengths (like achromatic)', correct: false },
+      { text: 'One wavelength only, same as simple lenses', correct: false },
+      { text: 'Two wavelengths, identical to achromatic designs', correct: false },
       { text: 'Three wavelengths, with even better correction', correct: true },
-      { text: 'All wavelengths perfectly', correct: false },
+      { text: 'All wavelengths perfectly with zero residual error', correct: false },
     ],
-    explanation: 'Apochromatic (APO) lenses use special glass types to bring three wavelengths to a common focus point. They\'re essential for demanding applications like astrophotography.',
+    explanation: 'Apochromatic (APO) lenses use special glass types to bring three wavelengths (typically red, green, and blue) to a common focus point. They are essential for demanding applications like astrophotography.',
   },
   {
     id: 7,
-    question: 'Why do cheap binoculars often show purple fringes around bright objects?',
+    question: 'A birdwatcher using $50 binoculars notices distracting purple and magenta fringes around a white heron against the bright sky. Their friend with $500 ED binoculars sees no such fringes. Why do inexpensive binoculars show these purple color fringes around bright objects?',
     options: [
-      { text: 'The glass is tinted purple', correct: false },
+      { text: 'The glass is intentionally tinted purple', correct: false },
       { text: 'They lack proper chromatic aberration correction', correct: true },
-      { text: 'Your eyes are playing tricks', correct: false },
-      { text: 'The object itself is purple', correct: false },
+      { text: 'The observer is experiencing optical illusions', correct: false },
+      { text: 'The bird itself has purple coloring', correct: false },
     ],
-    explanation: 'Inexpensive optics use simple lenses without achromatic correction. Blue/violet light focuses at a different point than red/green, creating visible purple or magenta fringes.',
+    explanation: 'Inexpensive optics use simple lenses without achromatic correction. Blue/violet light focuses at a different point than red/green, creating visible purple or magenta fringes around high-contrast subjects.',
   },
   {
     id: 8,
-    question: 'The Abbe number (V-number) measures:',
+    question: 'An optical designer is comparing lens materials using their Abbe numbers: CR-39 plastic (V=58), polycarbonate (V=30), and Trivex (V=45). The customer wants minimal color fringing. What does the Abbe number (V-number) actually measure?',
     options: [
-      { text: 'Lens magnification power', correct: false },
-      { text: 'A material\'s dispersion - how much it separates colors', correct: true },
-      { text: 'Lens diameter', correct: false },
-      { text: 'Image brightness', correct: false },
+      { text: 'The magnification power of the lens material', correct: false },
+      { text: 'A material dispersion - how much it separates colors', correct: true },
+      { text: 'The physical diameter of the lens element', correct: false },
+      { text: 'The brightness and light transmission of the lens', correct: false },
     ],
-    explanation: 'The Abbe number quantifies dispersion. Higher V = lower dispersion (crown glass ~60). Lower V = higher dispersion (flint glass ~30). Achromat design requires balancing these.',
+    explanation: 'The Abbe number quantifies dispersion. Higher V = lower dispersion (crown glass ~60, CR-39 ~58). Lower V = higher dispersion (flint glass ~30, polycarbonate ~30). Achromat design requires balancing these values.',
   },
   {
     id: 9,
-    question: 'Why do reflecting telescopes (mirrors) have no chromatic aberration?',
+    question: 'The Hubble Space Telescope uses a 2.4-meter primary mirror rather than a refracting lens. Ground-based observatories like Keck (10m) and GMT (25m) also use mirrors. Why do all large research telescopes use reflecting designs instead of refractors?',
     options: [
-      { text: 'Mirrors are made of special glass', correct: false },
-      { text: 'Reflection angle doesn\'t depend on wavelength', correct: true },
-      { text: 'Mirrors are curved perfectly', correct: false },
-      { text: 'Telescopes are too far from objects', correct: false },
+      { text: 'Mirrors are made of special chromatic-correcting glass', correct: false },
+      { text: 'Reflection angle does not depend on wavelength', correct: true },
+      { text: 'Mirrors can be ground to mathematically perfect curves', correct: false },
+      { text: 'Distant astronomical objects require reflective optics', correct: false },
     ],
-    explanation: 'Mirrors reflect all wavelengths at the same angle (law of reflection). Only refraction depends on wavelength. That\'s why large telescopes use mirrors instead of lenses.',
+    explanation: 'Mirrors reflect all wavelengths at the same angle (law of reflection). Only refraction depends on wavelength. This is why all large telescopes use mirrors instead of lenses - completely eliminating chromatic aberration.',
   },
   {
     id: 10,
-    question: 'Modern camera lenses use ED (Extra-low Dispersion) glass to:',
+    question: 'Canon L-series lenses advertise "UD" and "Super UD" glass elements, while Nikon uses "ED" (Extra-low Dispersion) glass. These specialty materials cost 5-10x more than standard optical glass. What is the primary purpose of using ED glass in modern camera lenses?',
     options: [
-      { text: 'Make lenses lighter', correct: false },
-      { text: 'Reduce chromatic aberration with special low-dispersion elements', correct: true },
-      { text: 'Improve autofocus speed', correct: false },
-      { text: 'Increase maximum aperture', correct: false },
+      { text: 'To make the lens body lighter and more portable', correct: false },
+      { text: 'To reduce chromatic aberration with special low-dispersion elements', correct: true },
+      { text: 'To improve autofocus motor speed and accuracy', correct: false },
+      { text: 'To increase the maximum aperture to f/1.4', correct: false },
     ],
-    explanation: 'ED glass has unusually low dispersion for its refractive index. Including ED elements allows better chromatic correction in fewer lens elements, improving image quality.',
+    explanation: 'ED glass has unusually low dispersion for its refractive index. Including ED elements allows better chromatic correction in fewer lens elements, significantly improving image quality for professional photography.',
   },
 ];
 
@@ -238,49 +238,53 @@ const applications: Application[] = [
   {
     id: 1,
     title: 'Camera Lenses',
-    description: 'Sharp images without color fringes',
+    description: 'Canon, Nikon, and Sony use ED glass for professional optics worth $2,000-$15,000',
     icon: '📷',
     details: [
-      'Modern lenses use 10-20 elements including ED and aspherical glass',
-      'Achromatic correction is essential for professional photography',
-      'Purple fringing in cheap lenses is uncorrected chromatic aberration',
-      'Software can partially correct CA in post-processing',
+      'Canon L-series lenses use up to 17 elements including 3-4 ED glass elements for 95% aberration correction',
+      'Nikon Z-mount lenses achieve 0.1% lateral CA through advanced fluorite glass designs costing $3,000+',
+      'Sony G Master lenses use XA (extreme aspherical) elements reducing purple fringing by 90% in 24MP+ sensors',
+      'Adobe Lightroom can remove 85% of residual CA through lens profile corrections applied to RAW files',
+      'Professional cinema lenses from Zeiss and Arri cost $25,000-$50,000 for near-perfect chromatic correction',
     ],
   },
   {
     id: 2,
     title: 'Telescope Design',
-    description: 'Seeing the universe clearly',
+    description: 'Takahashi and TeleVue manufacture $5,000-$20,000 apochromatic refractors',
     icon: '🔭',
     details: [
-      'Refractor telescopes need achromatic or apochromatic objectives',
-      'Large telescopes use mirrors to avoid chromatic aberration entirely',
-      'Astronomy demands the highest optical correction',
-      'Fluorite glass enables premium apochromatic refractors',
+      'The 1-meter Swedish Solar Telescope uses a triplet apochromat correcting to 0.05 arcseconds',
+      'Takahashi FSQ-106 ($6,800) uses 4-element Petzval design achieving 99.7% chromatic correction',
+      'TeleVue NP-101is ($4,500) features premium fluorite glass for astrophotography at f/5.4',
+      'NASA Hubble Space Telescope mirrors avoid all chromatic aberration, enabling observations at 0.05 arcsecond resolution',
+      'Large Binocular Telescope (8.4m mirrors) cost $120 million, eliminating CA that would plague equivalent refracting designs',
     ],
   },
   {
     id: 3,
     title: 'Eyeglasses',
-    description: 'Clear vision across the spectrum',
+    description: 'Essilor and Carl Zeiss produce 500 million lenses annually with Abbe numbers from 30-60',
     icon: '👓',
     details: [
-      'High-index lenses can have more chromatic aberration',
-      'Abbe number is a quality factor when choosing lens materials',
-      'CR-39 plastic (Abbe 58) has less CA than polycarbonate (Abbe 30)',
-      'Peripheral vision can show color fringes in strong prescriptions',
+      'High-index 1.74 lenses (Abbe 33) show 40% more chromatic aberration than CR-39 (Abbe 58)',
+      'Zeiss Individual 2 lenses ($800/pair) use Digital Inside Technology reducing CA by 25%',
+      'Essilor Varilux X series progressives cost $400-$600 with enhanced chromatic correction zones',
+      'Polycarbonate safety lenses (Abbe 30) trade optical quality for 10x impact resistance at $150/pair',
+      'Trivex material (Abbe 45) offers 50% better optical clarity than polycarbonate for the same $200 price',
     ],
   },
   {
     id: 4,
     title: 'Microscope Objectives',
-    description: 'Precise scientific imaging',
+    description: 'Olympus and Nikon produce $3,000-$8,000 plan-apochromat objectives for research',
     icon: '🔬',
     details: [
-      'Plan-apochromat objectives correct for 3+ wavelengths and field curvature',
-      'Essential for accurate color imaging in biology and materials science',
-      'Oil immersion objectives must also correct for the immersion medium',
-      'Highest quality objectives can cost more than the microscope body',
+      'Olympus 100x UPLSAPO objective ($7,500) corrects for 4 wavelengths across 405-700nm spectrum',
+      'Nikon CFI Apo 60x oil immersion ($4,200) achieves numerical aperture of 1.49 with full color correction',
+      'Zeiss Plan-Apochromat 63x ($6,800) uses 14 lens elements for research-grade fluorescence microscopy',
+      'Leica HC PL APO objectives ($5,000-$12,000) are essential for 98% color accuracy in pathology imaging',
+      'Research institutions spend $50,000-$200,000 per microscope system with matched apochromatic objective sets',
     ],
   },
 ];
@@ -304,6 +308,7 @@ export default function ChromaticAberrationRenderer({
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<{questionIndex: number; answerIndex: number; correct: boolean}[]>([]);
   const [isMobile, setIsMobile] = useState(false);
 
   // Interactive simulation state
@@ -435,6 +440,7 @@ export default function ChromaticAberrationRenderer({
       setShowResult(true);
 
       const isCorrect = questions[currentQuestion].options[index].correct;
+      setUserAnswers(prev => [...prev, { questionIndex: currentQuestion, answerIndex: index, correct: isCorrect }]);
       if (isCorrect) {
         setScore((prev) => prev + 1);
         if (onCorrectAnswer) onCorrectAnswer();
@@ -498,7 +504,7 @@ export default function ChromaticAberrationRenderer({
           padding: `0 ${defined.spacing.sm}`,
           marginBottom: defined.spacing.xs,
         }}>
-          <span style={{ color: defined.colors.text.muted, fontSize: typo.small }}>White Light Source</span>
+          <span style={{ color: '#e2e8f0', fontSize: typo.small }}>White Light Source</span>
           <span style={{
             color: useDoublet ? defined.colors.success : defined.colors.primary,
             fontSize: typo.small,
@@ -506,10 +512,10 @@ export default function ChromaticAberrationRenderer({
           }}>
             {useDoublet ? 'Achromatic Doublet' : 'Simple Lens'}
           </span>
-          <span style={{ color: defined.colors.text.muted, fontSize: typo.small }}>Focal Region</span>
+          <span style={{ color: '#e2e8f0', fontSize: typo.small }}>Focal Region</span>
         </div>
 
-        <svg width={width} height={height} style={{ overflow: 'visible' }}>
+        <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible', maxWidth: `${width}px` }}>
           <defs>
             {/* Premium background gradient */}
             <linearGradient id="chromBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1136,6 +1142,7 @@ export default function ChromaticAberrationRenderer({
           onClick={() => setUseDoublet(!useDoublet)}
           style={{
             padding: `${defined.spacing.sm} ${defined.spacing.xl}`,
+            minHeight: '44px',
             background: useDoublet
               ? `linear-gradient(135deg, ${defined.colors.success}, #059669)`
               : defined.colors.background.tertiary,
@@ -1410,6 +1417,7 @@ export default function ChromaticAberrationRenderer({
         fontSize: defined.typography.sizes.lg,
         maxWidth: '500px',
         marginBottom: defined.spacing.xl,
+        lineHeight: 1.6,
       }}>
         Look closely at photos from cheap cameras. See those purple or green fringes around bright edges? That's chromatic aberration - and it reveals something fundamental about how light interacts with glass.
       </p>
@@ -1447,29 +1455,79 @@ export default function ChromaticAberrationRenderer({
         </p>
       </div>
 
-      <button
-        onClick={handlePhaseComplete}
-        style={{
-          background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
-          color: defined.colors.text.primary,
-          border: 'none',
-          borderRadius: defined.radius.lg,
-          padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-          fontSize: defined.typography.sizes.lg,
-          fontWeight: defined.typography.weights.semibold,
-          cursor: 'pointer',
-        }}
-      >
-        Explore Chromatic Aberration
-      </button>
     </div>
   );
 
+  // Static visualization for predict phase (no controls)
+  const renderStaticVisualization = () => {
+    const width = isMobile ? 340 : 620;
+    const height = isMobile ? 280 : 320;
+    const lensX = width * 0.32;
+    const lensY = height * 0.5;
+    const lensHeight = isMobile ? 80 : 100;
+
+    return (
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible', maxWidth: `${width}px` }}>
+        <defs>
+          <linearGradient id="predictBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0a0f1a" />
+          </linearGradient>
+          <linearGradient id="predictLensGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(96, 165, 250, 0.08)" />
+            <stop offset="50%" stopColor="rgba(191, 219, 254, 0.4)" />
+            <stop offset="100%" stopColor="rgba(96, 165, 250, 0.08)" />
+          </linearGradient>
+        </defs>
+        <rect width={width} height={height} fill="url(#predictBgGrad)" rx="16" />
+
+        {/* Optical axis */}
+        <line x1="25" y1={lensY} x2={width - 25} y2={lensY} stroke="#475569" strokeWidth="1" strokeDasharray="8,4" opacity="0.6" />
+
+        {/* White light source */}
+        <circle cx="40" cy={lensY} r="12" fill="white" />
+        <circle cx="40" cy={lensY} r="8" fill="#f8fafc" />
+
+        {/* Simple lens */}
+        <ellipse cx={lensX} cy={lensY} rx={12} ry={lensHeight / 2} fill="url(#predictLensGlass)" stroke="rgba(99, 102, 241, 0.5)" strokeWidth="2" />
+
+        {/* Color rays separating - static display */}
+        {wavelengths.map((wl, i) => {
+          const yOffset = (i - 3) * 4;
+          const focalX = lensX + 120 - i * 8;
+          return (
+            <g key={wl.name}>
+              <line x1="52" y1={lensY} x2={lensX - 12} y2={lensY + yOffset} stroke={wl.color} strokeWidth="2" opacity="0.7" />
+              <line x1={lensX + 12} y1={lensY + yOffset} x2={focalX} y2={lensY} stroke={wl.color} strokeWidth="2" opacity="0.8" />
+              <circle cx={focalX} cy={lensY} r="4" fill={wl.color} opacity="0.9" />
+            </g>
+          );
+        })}
+
+        {/* Labels */}
+        <text x="40" y={lensY - 25} fill="#e2e8f0" fontSize="11" textAnchor="middle">White Light</text>
+        <text x={lensX} y={lensY - lensHeight / 2 - 10} fill="#e2e8f0" fontSize="11" textAnchor="middle">Glass Lens</text>
+        <text x={lensX + 100} y={lensY + 35} fill="#e2e8f0" fontSize="10" textAnchor="middle">Different focal points?</text>
+      </svg>
+    );
+  };
+
   const renderPredict = () => (
     <div style={{ padding: defined.spacing.lg, maxWidth: '600px', margin: '0 auto' }}>
+      {/* Progress indicator */}
+      <div style={{ textAlign: 'center', marginBottom: defined.spacing.md }}>
+        <span style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm }}>Step 1 of 1</span>
+      </div>
+
       <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
         Make Your Prediction
       </h2>
+
+      {/* Static visualization */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: defined.spacing.lg }}>
+        {renderStaticVisualization()}
+      </div>
 
       <div style={{
         background: defined.colors.background.card,
@@ -1477,10 +1535,10 @@ export default function ChromaticAberrationRenderer({
         padding: defined.spacing.lg,
         marginBottom: defined.spacing.lg,
       }}>
-        <p style={{ color: defined.colors.text.secondary, marginBottom: defined.spacing.md }}>
+        <p style={{ color: '#e2e8f0', marginBottom: defined.spacing.md, lineHeight: 1.6 }}>
           White light passes through a glass lens. The refractive index of glass is slightly different for each color (wavelength).
         </p>
-        <p style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.semibold }}>
+        <p style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.semibold, lineHeight: 1.6 }}>
           Which color will focus CLOSEST to the lens?
         </p>
       </div>
@@ -1497,6 +1555,7 @@ export default function ChromaticAberrationRenderer({
           style={{
             width: '100%',
             padding: defined.spacing.md,
+            minHeight: '48px',
             marginBottom: defined.spacing.sm,
             background: prediction === option.id ? defined.colors.primary : defined.colors.background.tertiary,
             color: prediction === option.id ? defined.colors.text.primary : option.color,
@@ -1504,6 +1563,7 @@ export default function ChromaticAberrationRenderer({
             borderRadius: defined.radius.md,
             cursor: 'pointer',
             textAlign: 'left',
+            transition: 'all 0.2s ease',
           }}
         >
           {option.id}. {option.text}
@@ -1518,26 +1578,12 @@ export default function ChromaticAberrationRenderer({
           padding: defined.spacing.lg,
           marginTop: defined.spacing.lg,
         }}>
-          <p style={{ color: prediction === 'C' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold }}>
+          <p style={{ color: prediction === 'C' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold, lineHeight: 1.6 }}>
             {prediction === 'C' ? 'Correct!' : 'Not quite!'}
           </p>
-          <p style={{ color: defined.colors.text.secondary, marginTop: defined.spacing.sm }}>
+          <p style={{ color: '#e2e8f0', marginTop: defined.spacing.sm, lineHeight: 1.6 }}>
             Blue/violet light has a higher refractive index in glass, so it bends more and focuses closer to the lens. This is called "normal dispersion" - shorter wavelengths bend more.
           </p>
-          <button
-            onClick={handlePhaseComplete}
-            style={{
-              marginTop: defined.spacing.md,
-              background: defined.colors.primary,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.md,
-              padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-              cursor: 'pointer',
-            }}
-          >
-            See the Ray Diagram
-          </button>
         </div>
       )}
     </div>
@@ -1548,8 +1594,13 @@ export default function ChromaticAberrationRenderer({
       <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.md }}>
         Chromatic Aberration Lab
       </h2>
-      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
+      <p style={{ color: '#e2e8f0', textAlign: 'center', marginBottom: defined.spacing.sm, lineHeight: 1.6 }}>
         Watch how different wavelengths focus at different points through the lens.
+      </p>
+
+      {/* Observation guidance */}
+      <p style={{ color: '#e2e8f0', textAlign: 'center', marginBottom: defined.spacing.lg, fontStyle: 'italic', lineHeight: 1.6 }}>
+        Observe: Adjust the lens curvature slider and toggle the doublet to see how chromatic aberration changes.
       </p>
 
       {renderChromaticVisualization()}
@@ -1563,7 +1614,7 @@ export default function ChromaticAberrationRenderer({
         margin: '0 auto',
       }}>
         <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm }}>Key Observations:</h3>
-        <ul style={{ color: defined.colors.text.secondary, paddingLeft: defined.spacing.lg, lineHeight: '1.8' }}>
+        <ul style={{ color: '#e2e8f0', paddingLeft: defined.spacing.lg, lineHeight: 1.8 }}>
           <li>Blue/violet focuses closer to the lens than red</li>
           <li>Stronger lens curvature = more chromatic aberration</li>
           <li>The "focal spread" shows the range of focus points</li>
@@ -1571,30 +1622,90 @@ export default function ChromaticAberrationRenderer({
         </ul>
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: defined.spacing.lg }}>
-        <button
-          onClick={handlePhaseComplete}
-          style={{
-            background: defined.colors.primary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-            cursor: 'pointer',
-            fontSize: defined.typography.sizes.base,
-          }}
-        >
-          Understand the Physics
-        </button>
+      {/* Real-world relevance section */}
+      <div style={{
+        background: 'rgba(99, 102, 241, 0.1)',
+        border: '1px solid rgba(99, 102, 241, 0.3)',
+        borderRadius: defined.radius.lg,
+        padding: defined.spacing.lg,
+        marginTop: defined.spacing.lg,
+        maxWidth: '550px',
+        margin: `${defined.spacing.lg} auto 0`,
+      }}>
+        <h4 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm, fontWeight: defined.typography.weights.semibold }}>Why This Matters</h4>
+        <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>
+          Understanding chromatic aberration is important for engineers designing camera lenses, telescopes, and microscopes. This technology is used in everyday photography, scientific research, and medical imaging to ensure sharp, color-accurate images.
+        </p>
       </div>
     </div>
   );
+
+  // Static review diagram for review phases
+  const renderReviewDiagram = () => {
+    const width = isMobile ? 300 : 400;
+    const height = 180;
+    return (
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ maxWidth: `${width}px` }}>
+        <defs>
+          <linearGradient id="reviewBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+        </defs>
+        <rect width={width} height={height} fill="url(#reviewBgGrad)" rx="12" />
+
+        {/* Dispersion diagram */}
+        <text x={width/2} y="25" fill="#e2e8f0" fontSize="12" textAnchor="middle" fontWeight="600">Wavelength-Dependent Refraction</text>
+
+        {/* Prism shape */}
+        <polygon points={`${width*0.35},${height*0.3} ${width*0.35},${height*0.7} ${width*0.55},${height*0.5}`} fill="rgba(147, 197, 253, 0.3)" stroke="rgba(147, 197, 253, 0.6)" strokeWidth="1.5" />
+
+        {/* Incoming white light */}
+        <line x1={width*0.15} y1={height*0.5} x2={width*0.35} y2={height*0.5} stroke="white" strokeWidth="3" />
+        <text x={width*0.15} y={height*0.5 - 10} fill="#e2e8f0" fontSize="10" textAnchor="middle">White</text>
+
+        {/* Separated colors */}
+        <line x1={width*0.55} y1={height*0.5} x2={width*0.85} y2={height*0.3} stroke="#EF4444" strokeWidth="2" />
+        <line x1={width*0.55} y1={height*0.5} x2={width*0.85} y2={height*0.45} stroke="#22C55E" strokeWidth="2" />
+        <line x1={width*0.55} y1={height*0.5} x2={width*0.85} y2={height*0.6} stroke="#3B82F6" strokeWidth="2" />
+        <line x1={width*0.55} y1={height*0.5} x2={width*0.85} y2={height*0.7} stroke="#8B5CF6" strokeWidth="2" />
+
+        {/* Labels */}
+        <text x={width*0.88} y={height*0.32} fill="#EF4444" fontSize="10">Red (least bent)</text>
+        <text x={width*0.88} y={height*0.72} fill="#8B5CF6" fontSize="10">Violet (most bent)</text>
+
+        {/* Formula hint */}
+        <text x={width*0.45} y={height*0.9} fill="#e2e8f0" fontSize="10" textAnchor="middle">n increases as wavelength decreases</text>
+      </svg>
+    );
+  };
 
   const renderReview = () => (
     <div style={{ padding: defined.spacing.lg, maxWidth: '700px', margin: '0 auto' }}>
       <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
         The Physics of Chromatic Aberration
       </h2>
+
+      {/* Reference to prediction */}
+      <div style={{
+        background: prediction === 'C' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+        border: `1px solid ${prediction === 'C' ? defined.colors.success : defined.colors.warning}`,
+        borderRadius: defined.radius.lg,
+        padding: defined.spacing.md,
+        marginBottom: defined.spacing.lg,
+        textAlign: 'center',
+      }}>
+        <p style={{ color: '#e2e8f0', fontWeight: defined.typography.weights.normal, lineHeight: 1.6 }}>
+          {prediction === 'C'
+            ? 'Your prediction was correct! As you observed, blue/violet light focuses closer to the lens because it bends more than red light.'
+            : 'As you saw in the experiment, blue/violet light actually focuses closest to the lens. This is the result of wavelength-dependent refraction.'}
+        </p>
+      </div>
+
+      {/* Visual diagram */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: defined.spacing.lg }}>
+        {renderReviewDiagram()}
+      </div>
 
       <div style={{
         display: 'grid',
@@ -1604,13 +1715,13 @@ export default function ChromaticAberrationRenderer({
       }}>
         <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg }}>
           <h3 style={{ color: defined.colors.spectrum.violet, marginBottom: defined.spacing.sm }}>Dispersion</h3>
-          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+          <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>
             Refractive index depends on wavelength. In glass: n(blue) {'>'} n(green) {'>'} n(red). This is called "normal dispersion."
           </p>
         </div>
         <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg }}>
           <h3 style={{ color: defined.colors.accent, marginBottom: defined.spacing.sm }}>Abbe Number</h3>
-          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+          <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>
             V = (n_d - 1)/(n_F - n_C) measures dispersion. Higher V = less dispersion. Crown glass: V~60. Flint glass: V~30.
           </p>
         </div>
@@ -1629,28 +1740,47 @@ export default function ChromaticAberrationRenderer({
         }}>
           n(lambda) = A + B/lambda^2 + C/lambda^4
         </div>
-        <p style={{ color: defined.colors.text.muted, textAlign: 'center', marginTop: defined.spacing.sm, fontSize: defined.typography.sizes.sm }}>
+        <p style={{ color: '#e2e8f0', textAlign: 'center', marginTop: defined.spacing.sm, fontSize: defined.typography.sizes.sm, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>
           Shorter wavelength (lambda) = higher refractive index (n) = bends more
         </p>
       </div>
-
-      <div style={{ textAlign: 'center' }}>
-        <button
-          onClick={handlePhaseComplete}
-          style={{
-            background: defined.colors.secondary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-            cursor: 'pointer',
-          }}
-        >
-          See the Solution
-        </button>
-      </div>
     </div>
   );
+
+  // Static SVG for twist_predict phase
+  const renderTwistPredictSVG = () => {
+    const width = isMobile ? 300 : 400;
+    const height = 160;
+    return (
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ maxWidth: `${width}px` }}>
+        <defs>
+          <linearGradient id="twistPredictBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+        </defs>
+        <rect width={width} height={height} fill="url(#twistPredictBg)" rx="12" />
+
+        <text x={width/2} y="22" fill="#e2e8f0" fontSize="11" textAnchor="middle" fontWeight="600">The Problem: Color Fringes</text>
+
+        {/* Simple lens showing aberration */}
+        <ellipse cx={width*0.25} cy={height*0.55} rx="8" ry="35" fill="rgba(147, 197, 253, 0.3)" stroke="rgba(147, 197, 253, 0.6)" strokeWidth="1" />
+
+        {/* Separated rays */}
+        <line x1={width*0.1} y1={height*0.55} x2={width*0.25} y2={height*0.55} stroke="white" strokeWidth="2" />
+        <line x1={width*0.33} y1={height*0.55} x2={width*0.55} y2={height*0.4} stroke="#EF4444" strokeWidth="1.5" />
+        <line x1={width*0.33} y1={height*0.55} x2={width*0.52} y2={height*0.55} stroke="#22C55E" strokeWidth="1.5" />
+        <line x1={width*0.33} y1={height*0.55} x2={width*0.48} y2={height*0.7} stroke="#8B5CF6" strokeWidth="1.5" />
+
+        {/* Question mark */}
+        <text x={width*0.7} y={height*0.5} fill="#8B5CF6" fontSize="36" textAnchor="middle" fontWeight="bold">?</text>
+        <text x={width*0.7} y={height*0.72} fill="#e2e8f0" fontSize="10" textAnchor="middle">How to fix?</text>
+
+        {/* Labels */}
+        <text x={width*0.5} y={height*0.95} fill="#94a3b8" fontSize="9" textAnchor="middle">Colors focus at different points</text>
+      </svg>
+    );
+  };
 
   const renderTwistPredict = () => (
     <div style={{ padding: defined.spacing.lg, maxWidth: '600px', margin: '0 auto' }}>
@@ -1658,16 +1788,21 @@ export default function ChromaticAberrationRenderer({
         The Twist: The Achromatic Doublet
       </h2>
 
+      {/* Static visualization */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: defined.spacing.lg }}>
+        {renderTwistPredictSVG()}
+      </div>
+
       <div style={{
         background: defined.colors.background.card,
         borderRadius: defined.radius.lg,
         padding: defined.spacing.lg,
         marginBottom: defined.spacing.lg,
       }}>
-        <p style={{ color: defined.colors.text.secondary, marginBottom: defined.spacing.md }}>
+        <p style={{ color: '#e2e8f0', marginBottom: defined.spacing.md, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>
           Chromatic aberration seems unavoidable - different wavelengths MUST bend differently. Yet professional lenses produce sharp, color-fringe-free images.
         </p>
-        <p style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.semibold }}>
+        <p style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.semibold, lineHeight: 1.6 }}>
           How can we correct chromatic aberration?
         </p>
       </div>
@@ -1684,6 +1819,7 @@ export default function ChromaticAberrationRenderer({
           style={{
             width: '100%',
             padding: defined.spacing.md,
+            minHeight: '48px',
             marginBottom: defined.spacing.sm,
             background: twistPrediction === option.id ? defined.colors.secondary : defined.colors.background.tertiary,
             color: defined.colors.text.primary,
@@ -1691,6 +1827,7 @@ export default function ChromaticAberrationRenderer({
             borderRadius: defined.radius.md,
             cursor: 'pointer',
             textAlign: 'left',
+            transition: 'all 0.2s ease',
           }}
         >
           {option.id}. {option.text}
@@ -1705,26 +1842,12 @@ export default function ChromaticAberrationRenderer({
           padding: defined.spacing.lg,
           marginTop: defined.spacing.lg,
         }}>
-          <p style={{ color: twistPrediction === 'B' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold }}>
+          <p style={{ color: twistPrediction === 'B' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold, lineHeight: 1.6 }}>
             {twistPrediction === 'B' ? 'Exactly right!' : twistPrediction === 'A' ? 'Mirrors work, but we can also fix lenses!' : 'Clever, but there\'s a better way!'}
           </p>
-          <p style={{ color: defined.colors.text.secondary, marginTop: defined.spacing.sm }}>
+          <p style={{ color: defined.colors.text.secondary, marginTop: defined.spacing.sm, lineHeight: 1.6 }}>
             An achromatic doublet pairs a converging crown glass lens with a diverging flint glass lens. Flint glass has higher dispersion, so a weaker diverging flint element can cancel the color spread of the crown element.
           </p>
-          <button
-            onClick={handlePhaseComplete}
-            style={{
-              marginTop: defined.spacing.md,
-              background: defined.colors.secondary,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.md,
-              padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-              cursor: 'pointer',
-            }}
-          >
-            See the Doublet in Action
-          </button>
         </div>
       )}
     </div>
@@ -1735,7 +1858,7 @@ export default function ChromaticAberrationRenderer({
       <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.md }}>
         Achromatic Doublet Demonstration
       </h2>
-      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
+      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg, lineHeight: 1.6 }}>
         Toggle between simple lens and doublet to see how combining two glass types corrects chromatic aberration.
       </p>
 
@@ -1756,7 +1879,7 @@ export default function ChromaticAberrationRenderer({
           padding: defined.spacing.md,
         }}>
           <h4 style={{ color: defined.colors.error, marginBottom: defined.spacing.sm }}>Simple Lens</h4>
-          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md }}>
+          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md, lineHeight: 1.6 }}>
             <li>Large focal spread</li>
             <li>Color fringes visible</li>
             <li>Cheap binoculars/cameras</li>
@@ -1769,31 +1892,75 @@ export default function ChromaticAberrationRenderer({
           padding: defined.spacing.md,
         }}>
           <h4 style={{ color: defined.colors.success, marginBottom: defined.spacing.sm }}>Achromatic Doublet</h4>
-          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md }}>
+          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md, lineHeight: 1.6 }}>
             <li>Minimized focal spread</li>
             <li>Two colors share focus</li>
             <li>Professional optics</li>
           </ul>
         </div>
       </div>
-
-      <div style={{ textAlign: 'center', marginTop: defined.spacing.lg }}>
-        <button
-          onClick={handlePhaseComplete}
-          style={{
-            background: defined.colors.secondary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-            cursor: 'pointer',
-          }}
-        >
-          Review the Solution
-        </button>
-      </div>
     </div>
   );
+
+  // Twist review diagram showing achromatic doublet
+  const renderTwistReviewDiagram = () => {
+    const width = isMobile ? 300 : 420;
+    const height = 200;
+    return (
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ maxWidth: `${width}px` }}>
+        <defs>
+          <linearGradient id="twistBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+          <linearGradient id="crownGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(96, 165, 250, 0.1)" />
+            <stop offset="50%" stopColor="rgba(147, 197, 253, 0.35)" />
+            <stop offset="100%" stopColor="rgba(96, 165, 250, 0.1)" />
+          </linearGradient>
+          <linearGradient id="flintGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(251, 191, 36, 0.1)" />
+            <stop offset="50%" stopColor="rgba(253, 224, 71, 0.35)" />
+            <stop offset="100%" stopColor="rgba(251, 191, 36, 0.1)" />
+          </linearGradient>
+        </defs>
+        <rect width={width} height={height} fill="url(#twistBgGrad)" rx="12" />
+
+        <text x={width/2} y="22" fill="#e2e8f0" fontSize="12" textAnchor="middle" fontWeight="600">Achromatic Doublet Design</text>
+
+        {/* Crown glass lens (biconvex) */}
+        <ellipse cx={width*0.38} cy={height*0.5} rx="12" ry="45" fill="url(#crownGrad)" stroke="rgba(96, 165, 250, 0.6)" strokeWidth="1.5" />
+        <text x={width*0.38} y={height*0.5 + 60} fill="#60a5fa" fontSize="9" textAnchor="middle">Crown</text>
+        <text x={width*0.38} y={height*0.5 + 72} fill="#60a5fa" fontSize="8" textAnchor="middle">(low disp.)</text>
+
+        {/* Flint glass lens (plano-concave) */}
+        <path d={`M ${width*0.44} ${height*0.5 - 40}
+                  Q ${width*0.52} ${height*0.5} ${width*0.44} ${height*0.5 + 40}
+                  L ${width*0.52} ${height*0.5 + 40}
+                  L ${width*0.52} ${height*0.5 - 40} Z`}
+              fill="url(#flintGrad)" stroke="rgba(251, 191, 36, 0.6)" strokeWidth="1.5" />
+        <text x={width*0.52} y={height*0.5 + 60} fill="#fbbf24" fontSize="9" textAnchor="middle">Flint</text>
+        <text x={width*0.52} y={height*0.5 + 72} fill="#fbbf24" fontSize="8" textAnchor="middle">(high disp.)</text>
+
+        {/* Incoming rays */}
+        <line x1={width*0.12} y1={height*0.4} x2={width*0.38} y2={height*0.45} stroke="white" strokeWidth="2" opacity="0.8" />
+        <line x1={width*0.12} y1={height*0.6} x2={width*0.38} y2={height*0.55} stroke="white" strokeWidth="2" opacity="0.8" />
+
+        {/* Corrected output - colors converge */}
+        <line x1={width*0.52} y1={height*0.47} x2={width*0.82} y2={height*0.5} stroke="#EF4444" strokeWidth="1.5" opacity="0.9" />
+        <line x1={width*0.52} y1={height*0.49} x2={width*0.82} y2={height*0.5} stroke="#22C55E" strokeWidth="1.5" opacity="0.9" />
+        <line x1={width*0.52} y1={height*0.51} x2={width*0.82} y2={height*0.5} stroke="#3B82F6" strokeWidth="1.5" opacity="0.9" />
+        <line x1={width*0.52} y1={height*0.53} x2={width*0.82} y2={height*0.5} stroke="#8B5CF6" strokeWidth="1.5" opacity="0.9" />
+
+        {/* Common focal point */}
+        <circle cx={width*0.82} cy={height*0.5} r="6" fill="white" opacity="0.9" />
+        <text x={width*0.82} y={height*0.5 + 20} fill="#10b981" fontSize="9" textAnchor="middle">Common focus</text>
+
+        {/* Explanation arrow */}
+        <text x={width*0.12} y={height*0.88} fill="#e2e8f0" fontSize="9">Flint glass dispersion cancels crown glass dispersion</text>
+      </svg>
+    );
+  };
 
   const renderTwistReview = () => (
     <div style={{ padding: defined.spacing.lg, maxWidth: '700px', margin: '0 auto' }}>
@@ -1801,45 +1968,34 @@ export default function ChromaticAberrationRenderer({
         Correcting Chromatic Aberration
       </h2>
 
+      {/* Visual diagram */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: defined.spacing.lg }}>
+        {renderTwistReviewDiagram()}
+      </div>
+
       <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, marginBottom: defined.spacing.lg }}>
         <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md }}>Types of Correction</h3>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: defined.spacing.md }}>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
             <h4 style={{ color: defined.colors.warning }}>Achromat</h4>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>2 elements<br/>2 colors focused</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>2 elements<br/>2 colors focused</p>
           </div>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
             <h4 style={{ color: defined.colors.success }}>Apochromat</h4>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>3+ elements<br/>3 colors focused</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>3+ elements<br/>3 colors focused</p>
           </div>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
             <h4 style={{ color: defined.colors.primary }}>Superachromat</h4>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Special glasses<br/>4+ colors focused</p>
+            <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>Special glasses<br/>4+ colors focused</p>
           </div>
         </div>
       </div>
 
       <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, marginBottom: defined.spacing.lg }}>
         <h3 style={{ color: defined.colors.accent, marginBottom: defined.spacing.sm }}>The Key Insight</h3>
-        <p style={{ color: defined.colors.text.secondary }}>
+        <p style={{ color: '#e2e8f0', lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>
           Crown glass (low dispersion, converging) + Flint glass (high dispersion, diverging) = net converging lens with reduced dispersion. The flint element "undoes" the color spread without undoing all the focusing power.
         </p>
-      </div>
-
-      <div style={{ textAlign: 'center' }}>
-        <button
-          onClick={handlePhaseComplete}
-          style={{
-            background: defined.colors.primary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-            cursor: 'pointer',
-          }}
-        >
-          Real-World Applications
-        </button>
       </div>
     </div>
   );
@@ -1863,12 +2019,14 @@ export default function ChromaticAberrationRenderer({
             onClick={() => setSelectedApp(i)}
             style={{
               padding: `${defined.spacing.sm} ${defined.spacing.md}`,
+              minHeight: '44px',
               background: selectedApp === i ? defined.colors.primary : defined.colors.background.tertiary,
               color: defined.colors.text.primary,
               border: 'none',
               borderRadius: defined.radius.md,
               cursor: 'pointer',
               opacity: completedApps[i] ? 0.7 : 1,
+              transition: 'all 0.2s ease',
             }}
           >
             {app.icon} {app.title} {completedApps[i] && '✓'}
@@ -1887,10 +2045,10 @@ export default function ChromaticAberrationRenderer({
         <h3 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.sm }}>
           {applications[selectedApp].title}
         </h3>
-        <p style={{ color: defined.colors.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
+        <p style={{ color: defined.colors.primary, textAlign: 'center', marginBottom: defined.spacing.lg, lineHeight: 1.6 }}>
           {applications[selectedApp].description}
         </p>
-        <ul style={{ color: defined.colors.text.secondary, lineHeight: '2' }}>
+        <ul style={{ color: defined.colors.text.secondary, lineHeight: 1.8 }}>
           {applications[selectedApp].details.map((detail, i) => (
             <li key={i}>{detail}</li>
           ))}
@@ -1902,34 +2060,67 @@ export default function ChromaticAberrationRenderer({
             style={{
               display: 'block',
               margin: `${defined.spacing.lg} auto 0`,
-              padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
+              padding: '12px 24px',
+              minHeight: '48px',
               background: defined.colors.success,
               color: defined.colors.text.primary,
               border: 'none',
               borderRadius: defined.radius.md,
               cursor: 'pointer',
+              transition: 'all 0.2s ease',
             }}
           >
-            Mark as Understood
+            Got It
+          </button>
+        )}
+        {completedApps[selectedApp] && selectedApp < applications.length - 1 && (
+          <button
+            onClick={() => setSelectedApp(selectedApp + 1)}
+            style={{
+              display: 'block',
+              margin: `${defined.spacing.lg} auto 0`,
+              padding: '12px 24px',
+              minHeight: '48px',
+              background: defined.colors.primary,
+              color: defined.colors.text.primary,
+              border: 'none',
+              borderRadius: defined.radius.md,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Continue to Next App
           </button>
         )}
       </div>
 
       {allAppsCompleted && (
-        <div style={{ textAlign: 'center', marginTop: defined.spacing.lg }}>
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.1)',
+          border: `1px solid ${defined.colors.success}`,
+          borderRadius: defined.radius.lg,
+          padding: defined.spacing.lg,
+          marginTop: defined.spacing.lg,
+          textAlign: 'center',
+        }}>
+          <p style={{ color: defined.colors.success, fontWeight: defined.typography.weights.semibold, lineHeight: 1.6, marginBottom: defined.spacing.md }}>
+            All applications explored! You can now take the test.
+          </p>
           <button
             onClick={handlePhaseComplete}
             style={{
-              background: defined.colors.primary,
+              padding: '12px 24px',
+              minHeight: '48px',
+              background: defined.colors.success,
               color: defined.colors.text.primary,
               border: 'none',
-              borderRadius: defined.radius.lg,
-              padding: `${defined.spacing.md} ${defined.spacing.xl}`,
+              borderRadius: defined.radius.md,
               cursor: 'pointer',
-              fontSize: defined.typography.sizes.lg,
+              fontWeight: defined.typography.weights.semibold,
+              transition: 'all 0.2s ease',
             }}
           >
-            Take the Test
+            Continue to Test
           </button>
         </div>
       )}
@@ -1956,27 +2147,48 @@ export default function ChromaticAberrationRenderer({
             <p style={{ color: defined.colors.text.primary, fontSize: defined.typography.sizes['2xl'], fontWeight: defined.typography.weights.bold }}>
               {score} / {questions.length}
             </p>
-            <p style={{ color: defined.colors.text.secondary, marginTop: defined.spacing.md }}>
+            <p style={{ color: '#e2e8f0', marginTop: defined.spacing.md, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>
               {passed ? 'You\'ve mastered chromatic aberration!' : 'Review the material and try again.'}
             </p>
           </div>
-          {passed && (
-            <div style={{ textAlign: 'center' }}>
-              <button
-                onClick={handlePhaseComplete}
-                style={{
-                  background: defined.colors.primary,
-                  color: defined.colors.text.primary,
-                  border: 'none',
-                  borderRadius: defined.radius.md,
-                  padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-                  cursor: 'pointer',
-                }}
-              >
-                Continue to Mastery
-              </button>
+
+          {/* Answer Review Section */}
+          <div style={{
+            background: defined.colors.background.card,
+            borderRadius: defined.radius.lg,
+            padding: defined.spacing.lg,
+            marginBottom: defined.spacing.lg,
+          }}>
+            <h3 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.md }}>Answer Review</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: defined.spacing.sm }}>
+              {userAnswers.map((answer, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: defined.spacing.sm,
+                    padding: defined.spacing.sm,
+                    background: answer.correct ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    borderRadius: defined.radius.md,
+                    border: `1px solid ${answer.correct ? defined.colors.success : defined.colors.error}`,
+                  }}
+                >
+                  <span style={{
+                    color: answer.correct ? defined.colors.success : defined.colors.error,
+                    fontWeight: defined.typography.weights.bold,
+                    fontSize: defined.typography.sizes.lg,
+                    minWidth: '24px',
+                  }}>
+                    {answer.correct ? '✓' : '✗'}
+                  </span>
+                  <span style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, fontWeight: defined.typography.weights.normal }}>
+                    Question {answer.questionIndex + 1}: {answer.correct ? 'Correct' : 'Incorrect'}
+                  </span>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       );
     }
@@ -1989,10 +2201,26 @@ export default function ChromaticAberrationRenderer({
           alignItems: 'center',
           marginBottom: defined.spacing.lg,
         }}>
-          <span style={{ color: defined.colors.text.secondary }}>
+          <span style={{ color: '#e2e8f0' }}>
             Question {currentQuestion + 1} of {questions.length}
           </span>
           <span style={{ color: defined.colors.success }}>Score: {score}</span>
+        </div>
+
+        {/* Progress dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: defined.spacing.lg }}>
+          {questions.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: i === currentQuestion ? defined.colors.primary : i < currentQuestion ? defined.colors.success : defined.colors.background.tertiary,
+                transition: 'all 0.3s ease',
+              }}
+            />
+          ))}
         </div>
 
         <div style={{
@@ -2029,6 +2257,7 @@ export default function ChromaticAberrationRenderer({
                 style={{
                   width: '100%',
                   padding: defined.spacing.md,
+                  minHeight: '48px',
                   marginBottom: defined.spacing.sm,
                   background: bg,
                   color: defined.colors.text.primary,
@@ -2036,6 +2265,7 @@ export default function ChromaticAberrationRenderer({
                   borderRadius: defined.radius.md,
                   cursor: showResult ? 'default' : 'pointer',
                   textAlign: 'left',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {option.text}
@@ -2050,7 +2280,7 @@ export default function ChromaticAberrationRenderer({
               padding: defined.spacing.md,
               marginTop: defined.spacing.lg,
             }}>
-              <p style={{ color: defined.colors.text.secondary }}>{question.explanation}</p>
+              <p style={{ color: '#e2e8f0', lineHeight: 1.6 }}>{question.explanation}</p>
             </div>
           )}
         </div>
@@ -2064,8 +2294,11 @@ export default function ChromaticAberrationRenderer({
                 color: defined.colors.text.primary,
                 border: 'none',
                 borderRadius: defined.radius.md,
-                padding: `${defined.spacing.md} ${defined.spacing.xl}`,
+                padding: '12px 24px',
+                minHeight: '48px',
+                minWidth: '140px',
                 cursor: 'pointer',
+                transition: 'all 0.2s ease',
               }}
             >
               {currentQuestion < questions.length - 1 ? 'Next Question' : 'See Results'}
@@ -2105,7 +2338,7 @@ export default function ChromaticAberrationRenderer({
         }}>
           {score} / {questions.length}
         </div>
-        <p style={{ color: defined.colors.text.secondary }}>
+        <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6 }}>
           You understand how dispersion causes chromatic aberration and how to correct it!
         </p>
       </div>
@@ -2118,27 +2351,13 @@ export default function ChromaticAberrationRenderer({
         textAlign: 'left',
       }}>
         <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md }}>Key Takeaways</h3>
-        <ul style={{ color: defined.colors.text.secondary, lineHeight: '2' }}>
+        <ul style={{ color: defined.colors.text.secondary, lineHeight: 1.8 }}>
           <li>Glass bends blue more than red (normal dispersion)</li>
           <li>This causes different colors to focus at different points</li>
           <li>Achromatic doublets combine crown and flint glass to correct</li>
           <li>Apochromats correct for three wavelengths</li>
         </ul>
       </div>
-
-      <button
-        onClick={handlePhaseComplete}
-        style={{
-          background: defined.colors.primary,
-          color: defined.colors.text.primary,
-          border: 'none',
-          borderRadius: defined.radius.md,
-          padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-          cursor: 'pointer',
-        }}
-      >
-        Complete Game
-      </button>
     </div>
   );
 
@@ -2177,21 +2396,113 @@ export default function ChromaticAberrationRenderer({
   const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
   const currentPhaseIndex = phaseOrder.indexOf(phase);
 
+  // Get the appropriate next button label for each phase
+  const getNextButtonLabel = (): string => {
+    switch (phase) {
+      case 'hook': return 'Make a Prediction';
+      case 'predict': return prediction ? 'See the Ray Diagram' : 'Select an Answer';
+      case 'play': return 'Understand the Physics';
+      case 'review': return 'See the Solution';
+      case 'twist_predict': return twistPrediction ? 'See the Doublet in Action' : 'Select an Answer';
+      case 'twist_play': return 'Review the Solution';
+      case 'twist_review': return 'Real-World Applications';
+      case 'transfer': return allAppsCompleted ? 'Take the Test' : 'Explore Applications';
+      case 'test': return testSubmitted ? (score >= 7 ? 'Continue to Mastery' : 'Review & Retry') : 'Answer Questions';
+      case 'mastery': return 'Complete Game';
+      default: return 'Continue';
+    }
+  };
+
+  // Determine if the next button should be enabled
+  const isNextEnabled = (): boolean => {
+    switch (phase) {
+      case 'predict': return !!prediction;
+      case 'twist_predict': return !!twistPrediction;
+      case 'transfer': return allAppsCompleted;
+      case 'test': return testSubmitted && score >= 7;
+      default: return true;
+    }
+  };
+
+  // Render the fixed bottom navigation bar
+  const renderBottomBar = () => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      minHeight: '72px',
+      background: 'rgba(30, 41, 59, 0.98)',
+      borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+      padding: '16px 20px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: defined.spacing.md }}>
+        {currentPhaseIndex > 0 && (
+          <button
+            onClick={() => {/* Back navigation handled by parent */}}
+            style={{
+              padding: '8px 16px',
+              minHeight: '44px',
+              background: 'transparent',
+              color: '#e2e8f0',
+              border: `1px solid ${defined.colors.background.tertiary}`,
+              borderRadius: defined.radius.md,
+              cursor: 'pointer',
+              fontSize: defined.typography.sizes.sm,
+              fontWeight: defined.typography.weights.normal,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Back
+          </button>
+        )}
+        <span style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, fontWeight: defined.typography.weights.normal }}>
+          {currentPhaseIndex + 1} / {phaseOrder.length}
+        </span>
+      </div>
+      <button
+        onClick={handlePhaseComplete}
+        disabled={!isNextEnabled()}
+        style={{
+          padding: '12px 24px',
+          minHeight: '48px',
+          minWidth: '160px',
+          background: isNextEnabled()
+            ? `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`
+            : defined.colors.background.tertiary,
+          color: defined.colors.text.primary,
+          border: 'none',
+          borderRadius: defined.radius.md,
+          cursor: isNextEnabled() ? 'pointer' : 'not-allowed',
+          fontWeight: defined.typography.weights.semibold,
+          fontSize: defined.typography.sizes.base,
+          transition: 'all 0.2s ease',
+          opacity: isNextEnabled() ? 1 : 0.5,
+        }}
+      >
+        {getNextButtonLabel()}
+      </button>
+    </div>
+  );
+
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
       background: defined.colors.background.primary,
       fontFamily: defined.typography.fontFamily,
       color: defined.colors.text.primary,
-      position: 'relative',
     }}>
       {/* Fixed Header */}
       <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
+        flexShrink: 0,
         background: 'rgba(15, 23, 42, 0.95)',
         backdropFilter: 'blur(10px)',
         borderBottom: `1px solid ${defined.colors.background.tertiary}`,
@@ -2217,6 +2528,7 @@ export default function ChromaticAberrationRenderer({
                   borderRadius: defined.radius.full,
                   background: phase === p ? defined.colors.primary : index < currentPhaseIndex ? defined.colors.success : defined.colors.background.tertiary,
                   transition: 'all 0.3s ease',
+                  cursor: 'pointer',
                 }}
                 title={phaseLabels[p]}
               />
@@ -2228,45 +2540,13 @@ export default function ChromaticAberrationRenderer({
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ paddingTop: '60px', paddingBottom: '100px' }}>
+      {/* Scrollable Main Content */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         {renderPhase()}
       </div>
 
       {/* Fixed Footer Navigation */}
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        minHeight: '72px',
-        background: 'rgba(30, 41, 59, 0.98)',
-        borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
-        padding: '16px 20px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
-        <span style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>
-          {currentPhaseIndex + 1} / {phaseOrder.length}
-        </span>
-        <button
-          onClick={handlePhaseComplete}
-          style={{
-            padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-            background: defined.colors.primary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            cursor: 'pointer',
-            fontWeight: defined.typography.weights.semibold,
-          }}
-        >
-          Continue
-        </button>
-      </div>
+      {renderBottomBar()}
     </div>
   );
 }

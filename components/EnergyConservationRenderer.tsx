@@ -977,7 +977,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
               Energy Conservation Lab
             </h2>
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-              Watch energy transform between potential (PE) and kinetic (KE) forms
+              Watch energy transform between potential (PE) and kinetic (KE) forms. This is important for understanding how roller coasters, pendulums, and real-world engineering applications work.
             </p>
 
             {/* Main visualization */}
@@ -1081,6 +1081,21 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
               </div>
             </div>
 
+            {/* Physics explanation */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0, marginBottom: '8px' }}>
+                <strong style={{ color: colors.textPrimary }}>Potential Energy (PE)</strong> is defined as the energy stored due to height: PE = mgh. When you increase the release height, the marble gains more potential energy, which causes higher maximum speed at the bottom.
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.textPrimary }}>Kinetic Energy (KE)</strong> is the measure of energy from motion: KE = 1/2mv². As the marble descends, PE decreases and KE increases by the same amount.
+              </p>
+            </div>
+
             {/* Key observation */}
             <div style={{
               background: `${colors.accent}11`,
@@ -1119,6 +1134,18 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               Conservation of Mechanical Energy
             </h2>
+
+            <div style={{
+              background: `${colors.success}11`,
+              border: `1px solid ${colors.success}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                As you observed in the experiment, the marble returned to exactly the same height on the frictionless track. Your prediction about energy conservation was correct - the result demonstrates that total mechanical energy remains constant.
+              </p>
+            </div>
 
             <div style={{
               background: colors.bgCard,

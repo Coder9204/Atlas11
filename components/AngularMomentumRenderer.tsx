@@ -793,6 +793,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
         flexDirection: 'column',
         overflow: 'hidden',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        zIndex: 1,
       }}>
         {renderProgressBar()}
         <div style={{
@@ -1030,8 +1031,11 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Spinning Chair Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Change arm position and watch angular velocity respond to keep L constant
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
+            This visualization shows how angular momentum conservation works in practice. Observe how the figure spins faster or slower as you adjust the controls.
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+            When you increase arm extension, the moment of inertia increases, which causes the rotation to slow down. This principle is useful in practical applications from figure skating to spacecraft attitude control.
           </p>
 
           {/* Main visualization */}
@@ -1192,6 +1196,18 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Conservation of Angular Momentum
           </h2>
+
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+              As you observed in the experiment, pulling arms inward causes faster spinning. Your prediction about angular momentum conservation was tested - this is exactly what the physics predicts!
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,

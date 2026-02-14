@@ -310,7 +310,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
     return () => clearInterval(timer);
   }, []);
 
-  // Premium design colors
+  // Premium design colors - using high contrast text colors (brightness >= 180)
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -321,8 +321,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#e2e8f0', // High contrast (brightness >= 180)
+    textMuted: '#cbd5e1', // High contrast (brightness >= 180)
     border: '#2a2a3a',
   };
 
@@ -364,23 +364,32 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
     }
   }, [phase, goToPhase]);
 
-  // Fan Visualization Component
-  const FanVisualization = ({ size = 180, speed = fanSpeed, showAirflow = true }) => {
+  // Fan Visualization Component - viewBox 200+ for adequate coordinate space
+  const FanVisualization = ({ size = 200, speed = fanSpeed, showAirflow = true, showLabels = false }) => {
     const bladeRotation = (animationFrame * speed / 50 * 3) % 360;
 
     return (
-      <svg width={size} height={size} viewBox="0 0 180 180">
+      <svg width={size} height={size} viewBox="0 0 200 200">
         {/* Housing */}
-        <circle cx="90" cy="90" r="85" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="3" />
-        <circle cx="90" cy="90" r="75" fill="none" stroke={colors.accent}  strokeWidth="1" strokeDasharray="4,4" />
+        <circle cx="100" cy="100" r="90" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="3" />
+        <circle cx="100" cy="100" r="80" fill="none" stroke={colors.accent} strokeWidth="1" strokeDasharray="4,4" />
+
+        {/* Labels for legend */}
+        {showLabels && (
+          <>
+            <text x="100" y="20" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Fan Housing</text>
+            <text x="100" y="100" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Hub</text>
+            <text x="155" y="60" fill={colors.accent} fontSize="10" textAnchor="start">Blade</text>
+          </>
+        )}
 
         {/* Airflow arrows */}
         {showAirflow && speed > 0 && [0, 120, 240].map((angle, i) => {
           const arrowOffset = (animationFrame * speed / 100 * 2 + i * 20) % 40;
           return (
-            <g key={angle} transform={`rotate(${angle}, 90, 90)`}>
+            <g key={angle} transform={`rotate(${angle}, 100, 100)`}>
               <path
-                d={`M 90 ${10 + arrowOffset} L 95 ${20 + arrowOffset} L 85 ${20 + arrowOffset} Z`}
+                d={`M 100 ${15 + arrowOffset} L 105 ${25 + arrowOffset} L 95 ${25 + arrowOffset} Z`}
                 fill={colors.accent}
                 opacity={0.5 + speed / 200}
               />
@@ -389,21 +398,21 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         })}
 
         {/* Fan blades */}
-        <g transform={`rotate(${bladeRotation}, 90, 90)`}>
+        <g transform={`rotate(${bladeRotation}, 100, 100)`}>
           {[0, 72, 144, 216, 288].map(angle => (
             <path
               key={angle}
-              d={`M 90 90 Q ${90 + 40 * Math.cos((angle - 30) * Math.PI / 180)} ${90 + 40 * Math.sin((angle - 30) * Math.PI / 180)} ${90 + 60 * Math.cos(angle * Math.PI / 180)} ${90 + 60 * Math.sin(angle * Math.PI / 180)} Q ${90 + 40 * Math.cos((angle + 30) * Math.PI / 180)} ${90 + 40 * Math.sin((angle + 30) * Math.PI / 180)} 90 90`}
+              d={`M 100 100 Q ${100 + 45 * Math.cos((angle - 30) * Math.PI / 180)} ${100 + 45 * Math.sin((angle - 30) * Math.PI / 180)} ${100 + 65 * Math.cos(angle * Math.PI / 180)} ${100 + 65 * Math.sin(angle * Math.PI / 180)} Q ${100 + 45 * Math.cos((angle + 30) * Math.PI / 180)} ${100 + 45 * Math.sin((angle + 30) * Math.PI / 180)} 100 100`}
               fill={colors.accent}
               opacity={0.8}
             />
           ))}
           {/* Hub */}
-          <circle cx="90" cy="90" r="15" fill={colors.bgCard} stroke={colors.accent} strokeWidth="2" />
+          <circle cx="100" cy="100" r="18" fill={colors.bgCard} stroke={colors.accent} strokeWidth="2" />
         </g>
 
         {/* Speed indicator */}
-        <text x="90" y="175" fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+        <text x="100" y="190" fill={colors.textSecondary} fontSize="12" textAnchor="middle">
           {speed}% speed
         </text>
       </svg>
@@ -457,7 +466,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
     </div>
   );
 
-  // Primary button style
+  // Primary button style - minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
     color: 'white',
@@ -469,6 +478,72 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Fixed navigation bar component
+  const renderNavBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '56px',
+        background: colors.bgSecondary,
+        borderBottom: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1000,
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: canGoBack ? colors.textSecondary : colors.border,
+            cursor: canGoBack ? 'pointer' : 'default',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            minHeight: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          ← Back
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '24px' }}>🌀</span>
+          <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Fan Laws</span>
+        </div>
+        <button
+          onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+          disabled={!canGoNext}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: canGoNext ? colors.textSecondary : colors.border,
+            cursor: canGoNext ? 'pointer' : 'default',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            minHeight: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          Next →
+        </button>
+      </nav>
+    );
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -486,8 +561,11 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflow: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -553,10 +631,23 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflow: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Progress indicator */}
+          <div style={{
+            ...typo.small,
+            color: colors.textSecondary,
+            textAlign: 'center',
+            marginBottom: '16px',
+          }}>
+            Step 1 of 1 - Make your prediction
+          </div>
+
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -610,6 +701,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -655,15 +747,20 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflow: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             The Three Fan Laws
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust fan speed and watch how airflow, pressure, and power change
+
+          {/* Observation guidance */}
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            Observe how the fan speed affects airflow, pressure, and power consumption
           </p>
 
           {/* Main visualization */}
@@ -674,7 +771,32 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <FanVisualization size={isMobile ? 150 : 200} speed={fanSpeed} />
+              <FanVisualization size={isMobile ? 150 : 200} speed={fanSpeed} showLabels={true} />
+            </div>
+
+            {/* Legend panel */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '24px',
+              flexWrap: 'wrap',
+            }} data-testid="legend-panel">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: colors.accent }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Fan Blade</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: colors.border }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Housing</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '12px', height: '3px', background: colors.accent, opacity: 0.6 }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Airflow</span>
+              </div>
             </div>
 
             {/* Speed slider */}
@@ -804,10 +926,13 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflow: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why the Cube Law?
           </h2>
@@ -904,10 +1029,23 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflow: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Progress indicator */}
+          <div style={{
+            ...typo.small,
+            color: colors.textSecondary,
+            textAlign: 'center',
+            marginBottom: '16px',
+          }}>
+            Step 1 of 1 - Predict multiple fan behavior
+          </div>
+
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -961,6 +1099,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
                   padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1006,15 +1145,19 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflow: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Multiple Fans vs Single Fan
           </h2>
+          {/* Observation guidance */}
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Compare power consumption for the same total airflow
+            Observe how multiple fans at lower speeds compare to a single fan at high speed
           </p>
 
           <div style={{
@@ -1148,10 +1291,13 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflow: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Power of Running Slow
           </h2>
@@ -1223,19 +1369,33 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflow: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <div style={{
+            ...typo.small,
+            color: colors.textSecondary,
+            textAlign: 'center',
+            marginBottom: '24px',
+          }}>
+            App {selectedApp + 1} of {realWorldApps.length} - {completedCount}/{realWorldApps.length} completed
+          </div>
 
           {/* App selector */}
           <div style={{
@@ -1262,6 +1422,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
                   cursor: 'pointer',
                   textAlign: 'center',
                   position: 'relative',
+                  minHeight: '44px',
                 }}
               >
                 {completedApps[i] && (
@@ -1326,6 +1487,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1340,15 +1502,49 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
                 </div>
               ))}
             </div>
+
+            {/* Got It button for each app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Move to next uncompleted app, or stay if all done
+                const nextUncompleted = completedApps.findIndex((c, i) => !c && i !== selectedApp);
+                if (nextUncompleted >= 0) {
+                  setSelectedApp(nextUncompleted);
+                  newCompleted[nextUncompleted] = true;
+                  setCompletedApps(newCompleted);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                border: `1px solid ${app.color}`,
+                background: `${app.color}22`,
+                color: app.color,
+                cursor: 'pointer',
+                fontWeight: 600,
+                minHeight: '44px',
+              }}
+            >
+              Got It - {completedApps[selectedApp] ? 'Reviewed' : 'Continue'}
+            </button>
           </div>
 
-          {allAppsCompleted && (
+          {allAppsCompleted ? (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
               Take the Knowledge Test →
             </button>
+          ) : (
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+              Review all {realWorldApps.length} applications to continue
+            </p>
           )}
         </div>
 
@@ -1366,10 +1562,13 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          paddingTop: '80px',
+          overflow: 'auto',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🎉' : '📚'}
             </div>
@@ -1414,10 +1613,13 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '80px',
+        overflow: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -1425,7 +1627,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
             marginBottom: '24px',
           }}>
             <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
+              Q{currentQuestion + 1}: Question {currentQuestion + 1} of 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
@@ -1472,6 +1674,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span style={{
@@ -1506,6 +1709,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 ← Previous
@@ -1524,6 +1728,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Next →
@@ -1549,6 +1754,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '44px',
                 }}
               >
                 Submit Test
@@ -1573,8 +1779,11 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
         textAlign: 'center',
+        overflow: 'auto',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
@@ -1626,6 +1835,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
               background: 'transparent',
               color: colors.textSecondary,
               cursor: 'pointer',
+              minHeight: '44px',
             }}
           >
             Play Again
