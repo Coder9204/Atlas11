@@ -337,29 +337,27 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
   const getStaticGPUState = useCallback((pl: number, tl: number, tr: number) => {
     const maxBoostClock = 2400;
     const baseClock = 1800;
-    const maxPower = 300;
-    // Power-limited clock: higher PL allows higher clock
-    let targetClock = maxBoostClock;
-    let effectivePower = maxPower;
-    if (effectivePower > pl) {
-      targetClock = maxBoostClock * Math.pow(pl / maxPower, 1 / 1.2);
-      effectivePower = pl;
-    }
-    // Steady-state temp uses actual power after PL constraint
-    const steadyStateTemp = ambientTemp + effectivePower * tr;
-    // Thermal throttle only if steady-state temp exceeds thermal limit
-    if (steadyStateTemp > tl - 5) {
-      const thermalHeadroom = Math.max(0, tl - steadyStateTemp) / 10;
-      const thermalFactor = Math.min(1, thermalHeadroom + 0.7);
-      const thermalClock = maxBoostClock * thermalFactor;
-      targetClock = Math.min(targetClock, thermalClock);
-    }
-    targetClock = Math.max(baseClock, Math.min(maxBoostClock, targetClock));
+    // Direct mapping: power limit linearly maps to clock speed range
+    // PL 150 -> ~1850 MHz, PL 250 -> ~2100 MHz, PL 350 -> ~2400 MHz
+    const plMin = 150;
+    const plMax = 350;
+    const plFrac = Math.max(0, Math.min(1, (pl - plMin) / (plMax - plMin)));
+    let targetClock = baseClock + (maxBoostClock - baseClock) * plFrac;
+    // Apply thermal limit modulation: lower TL reduces clock
+    // tl ranges 70-95, default 83. Higher tl = more headroom = higher clocks
+    const tlMin = 70;
+    const tlMax = 95;
+    const tlFrac = Math.max(0, Math.min(1, (tl - tlMin) / (tlMax - tlMin)));
+    const thermalMod = 0.85 + 0.15 * tlFrac; // 0.85 to 1.0
+    // Thermal resistance also affects: lower tr = better cooling = higher clocks
+    const trMod = Math.max(0.9, Math.min(1.0, 1.0 - (tr - 0.125) * 0.4));
+    targetClock = targetClock * thermalMod * trMod;
+    targetClock = Math.max(baseClock, Math.min(maxBoostClock, Math.round(targetClock)));
     const clockRatio = targetClock / maxBoostClock;
-    effectivePower = Math.round(maxPower * Math.pow(clockRatio, 1.2));
+    const effectivePower = Math.round(pl * Math.pow(clockRatio, 1.2));
     const finalTemp = Math.round((ambientTemp + effectivePower * tr) * 10) / 10;
     return {
-      clock: Math.round(targetClock),
+      clock: targetClock,
       temperature: Math.min(tl + 2, finalTemp),
       power: effectivePower,
     };
@@ -482,8 +480,8 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     background: `linear-gradient(90deg, ${colors.accent}44, ${colors.accent})`,
   };
 
-  // Main interactive SVG for play phase - reacts to powerLimit & thermalLimit
-  const DVFSInteractiveSVG = ({ pl, tl, effectiveTR }: { pl: number; tl: number; effectiveTR: number }) => {
+  // Render the interactive V-F curve SVG inline (not as a separate component to avoid remounting)
+  const renderDVFSSVG = (pl: number, tl: number, effectiveTR: number) => {
     const width = isMobile ? 340 : 450;
     const height = 260;
     const state = getStaticGPUState(pl, tl, effectiveTR);
@@ -495,7 +493,6 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     const vfPoints: { x: number; y: number }[] = [];
     for (let i = 0; i <= 20; i++) {
       const frac = i / 20;
-      const freq = 1800 + frac * 600;
       const voltage = 0.8 + frac * 0.4 * Math.pow(frac, 0.3);
       const x = 40 + frac * (width - 80);
       const y = height - 50 - (voltage - 0.7) * (height - 100) / 0.6;
@@ -505,6 +502,11 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     const markerIdx = Math.round(clockPercent * 20);
     const markerX = vfPoints[Math.min(markerIdx, 20)]?.x || 40;
     const markerY = vfPoints[Math.min(markerIdx, 20)]?.y || height / 2;
+
+    const plFrac = Math.min(1, (pl - 150) / 200);
+    const plX = 40 + plFrac * (width - 80);
+    const tlFrac = Math.min(1, (tl - 70) / 25);
+    const tlY = height - 50 - tlFrac * (height - 100);
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
@@ -540,7 +542,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
 
         {/* Title */}
         <text x={width / 2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
-          V-F Curve: P = C × V² × f
+          V-F Curve: P = C x V^2 x f
         </text>
 
         {/* Grid lines */}
@@ -573,34 +575,18 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
         <circle cx={markerX} cy={markerY} r="4" fill="white" />
 
         {/* Power limit line */}
-        {(() => {
-          const plFrac = Math.min(1, (pl - 150) / 200);
-          const plX = 40 + plFrac * (width - 80);
-          return (
-            <g>
-              <line x1={plX} y1="30" x2={plX} y2={height - 50}
-                stroke={colors.power} strokeWidth="2" strokeDasharray="6,3" opacity="0.7" />
-              <text x={plX} y={height - 38} textAnchor="middle" fill={colors.power} fontSize="11">
-                PL: {pl}W
-              </text>
-            </g>
-          );
-        })()}
+        <line x1={plX} y1="30" x2={plX} y2={height - 50}
+          stroke={colors.power} strokeWidth="2" strokeDasharray="6,3" opacity="0.7" />
+        <text x={plX} y={height - 38} textAnchor="middle" fill={colors.power} fontSize="11">
+          PL: {pl}W
+        </text>
 
         {/* Thermal limit line */}
-        {(() => {
-          const tlFrac = Math.min(1, (tl - 70) / 25);
-          const tlY = height - 50 - tlFrac * (height - 100);
-          return (
-            <g>
-              <line x1="40" y1={tlY} x2={width - 40} y2={tlY}
-                stroke={colors.temp} strokeWidth="2" strokeDasharray="6,3" opacity="0.7" />
-              <text x={width - 38} y={tlY - 4} textAnchor="start" fill={colors.temp} fontSize="11">
-                TL: {tl}C
-              </text>
-            </g>
-          );
-        })()}
+        <line x1="40" y1={tlY} x2={width - 40} y2={tlY}
+          stroke={colors.temp} strokeWidth="2" strokeDasharray="6,3" opacity="0.7" />
+        <text x={width - 38} y={tlY - 4} textAnchor="start" fill={colors.temp} fontSize="11">
+          TL: {tl}C
+        </text>
 
         {/* Axis labels */}
         <text x={width / 2} y={height - 22} textAnchor="middle" fill={colors.textMuted} fontSize="12">
@@ -804,19 +790,15 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     );
   };
 
-  // Scroll container wrapper
-  const ScrollContainer = ({ children }: { children: React.ReactNode }) => (
-    <div style={{
-      flex: 1,
-      overflowY: 'auto',
-      paddingTop: '48px',
-      paddingBottom: '100px',
-      paddingLeft: '24px',
-      paddingRight: '24px',
-    }}>
-      {children}
-    </div>
-  );
+  // Scroll container style (inlined to avoid inner component remounting)
+  const scrollContainerStyle: React.CSSProperties = {
+    flex: 1,
+    overflowY: 'auto',
+    paddingTop: '48px',
+    paddingBottom: '100px',
+    paddingLeft: '24px',
+    paddingRight: '24px',
+  };
 
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
@@ -833,7 +815,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       }}>
         {renderProgressBar()}
 
-        <ScrollContainer>
+        <div style={scrollContainerStyle}>
           <div style={{ maxWidth: '700px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '24px' }}>
               <span role="img" aria-label="GPU">{'\u{1F5A5}'}</span><span role="img" aria-label="thermometer">{'\u{1F321}'}</span>
@@ -864,7 +846,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
                 "Boost clocks are a promise of potential, not a guarantee. Physics determines what you actually get."
               </p>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              <p style={{ ...typo.small, color: 'rgba(156,163,175, 0.7)', marginTop: '8px' }}>
                 — DVFS Engineering Principle
               </p>
             </div>
@@ -876,7 +858,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               Explore DVFS Physics
             </button>
           </div>
-        </ScrollContainer>
+        </div>
 
         {renderBottomNav()}
         {renderNavDots()}
@@ -901,7 +883,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       }}>
         {renderProgressBar()}
 
-        <ScrollContainer>
+        <div style={scrollContainerStyle}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               ...typo.small,
@@ -1002,7 +984,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               </button>
             )}
           </div>
-        </ScrollContainer>
+        </div>
 
         {renderBottomNav()}
         {renderNavDots()}
@@ -1012,10 +994,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
 
   // PLAY PHASE - Thermal RC Simulation
   if (phase === 'play') {
-    const handleSliderChange = (setter: (v: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setter(parseInt(e.target.value));
-      resetSimulation();
-    };
+    const gpuState = getStaticGPUState(powerLimit, thermalLimit, thermalResistance);
 
     return (
       <div style={{
@@ -1026,7 +1005,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       }}>
         {renderProgressBar()}
 
-        <ScrollContainer>
+        <div style={scrollContainerStyle}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               GPU Thermal Throttling Simulator
@@ -1046,7 +1025,21 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                <DVFSInteractiveSVG pl={powerLimit} tl={thermalLimit} effectiveTR={thermalResistance} />
+                {renderDVFSSVG(powerLimit, thermalLimit, thermalResistance)}
+              </div>
+
+              {/* Current vs reference comparison */}
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '2px' }}>Reference (baseline)</div>
+                  <div style={{ ...typo.body, color: colors.clock, fontWeight: 600 }}>2400 MHz at 300W</div>
+                </div>
+                <div style={{ flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '2px' }}>Current output</div>
+                  <div style={{ ...typo.body, color: gpuState.clock < 2200 ? colors.warning : colors.success, fontWeight: 600 }}>
+                    {gpuState.clock} MHz at {gpuState.power}W
+                  </div>
+                </div>
               </div>
 
               {/* Control sliders */}
@@ -1060,8 +1053,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
                   min="150"
                   max="350"
                   value={powerLimit}
-                  onChange={handleSliderChange(setPowerLimit)}
-                  onInput={handleSliderChange(setPowerLimit)}
+                  onChange={(e) => setPowerLimit(Number(e.target.value))}
                   style={sliderStyle}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
@@ -1080,8 +1072,8 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
                   min="70"
                   max="95"
                   value={thermalLimit}
-                  onChange={handleSliderChange(setThermalLimit)}
-                  onInput={handleSliderChange(setThermalLimit)}
+                  onChange={(e) => { setThermalLimit(Number(e.target.value)); resetSimulation(); }}
+                  onInput={(e) => { setThermalLimit(Number((e.target as HTMLInputElement).value)); resetSimulation(); }}
                   style={sliderStyle}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
@@ -1147,7 +1139,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               Understand the Physics
             </button>
           </div>
-        </ScrollContainer>
+        </div>
 
         {renderBottomNav()}
         {renderNavDots()}
@@ -1166,7 +1158,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       }}>
         {renderProgressBar()}
 
-        <ScrollContainer>
+        <div style={scrollContainerStyle}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               The Physics of GPU Throttling
@@ -1285,7 +1277,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               Can We Improve This?
             </button>
           </div>
-        </ScrollContainer>
+        </div>
 
         {renderBottomNav()}
         {renderNavDots()}
@@ -1310,7 +1302,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       }}>
         {renderProgressBar()}
 
-        <ScrollContainer>
+        <div style={scrollContainerStyle}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.success}22`,
@@ -1413,7 +1405,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               </button>
             )}
           </div>
-        </ScrollContainer>
+        </div>
 
         {renderBottomNav()}
         {renderNavDots()}
@@ -1439,7 +1431,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       }}>
         {renderProgressBar()}
 
-        <ScrollContainer>
+        <div style={scrollContainerStyle}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Cooling Impact on Performance
@@ -1455,7 +1447,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                <DVFSInteractiveSVG pl={powerLimit} tl={thermalLimit} effectiveTR={effectiveTR} />
+                {renderDVFSSVG(powerLimit, thermalLimit, effectiveTR)}
               </div>
 
               {/* Fan speed slider */}
@@ -1538,7 +1530,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               Understand the Connection
             </button>
           </div>
-        </ScrollContainer>
+        </div>
 
         {renderBottomNav()}
         {renderNavDots()}
@@ -1557,7 +1549,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       }}>
         {renderProgressBar()}
 
-        <ScrollContainer>
+        <div style={scrollContainerStyle}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               The Thermal-Performance Connection
@@ -1639,7 +1631,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               See Real-World Applications
             </button>
           </div>
-        </ScrollContainer>
+        </div>
 
         {renderBottomNav()}
         {renderNavDots()}
@@ -1661,7 +1653,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       }}>
         {renderProgressBar()}
 
-        <ScrollContainer>
+        <div style={scrollContainerStyle}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1814,7 +1806,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               </button>
             )}
           </div>
-        </ScrollContainer>
+        </div>
 
         {renderBottomNav()}
         {renderNavDots()}
@@ -1835,7 +1827,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
         }}>
           {renderProgressBar()}
 
-          <ScrollContainer>
+          <div style={scrollContainerStyle}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>
                 {passed ? '\u{1F389}' : '\u{1F4DA}'}
@@ -1934,7 +1926,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
                 </a>
               </div>
             </div>
-          </ScrollContainer>
+          </div>
 
           {renderBottomNav()}
           {renderNavDots()}
@@ -1953,7 +1945,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       }}>
         {renderProgressBar()}
 
-        <ScrollContainer>
+        <div style={scrollContainerStyle}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             {/* Progress */}
             <div style={{
@@ -2104,7 +2096,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               )}
             </div>
           </div>
-        </ScrollContainer>
+        </div>
 
         {renderBottomNav()}
         {renderNavDots()}
@@ -2123,7 +2115,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
       }}>
         {renderProgressBar()}
 
-        <ScrollContainer>
+        <div style={scrollContainerStyle}>
           <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{ fontSize: '100px', marginBottom: '24px' }}>
               {'\u{1F3C6}'}
@@ -2195,7 +2187,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               </a>
             </div>
           </div>
-        </ScrollContainer>
+        </div>
 
         {renderBottomNav()}
         {renderNavDots()}

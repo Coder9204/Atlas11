@@ -730,7 +730,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
       options: [
         { id: 'a', text: 'They have no effect' },
         { id: 'b', text: 'They smooth out over time' },
-        { id: 'c', text: 'They interlock and resist sliding until they break', correct: true },
+        { id: 'c', text: 'They grip together and resist movement until they snap apart', correct: true },
         { id: 'd', text: 'They cause the earth to heat up' },
       ],
     },
@@ -1455,101 +1455,142 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
       );
     }
 
+    const optionLabels = ['A', 'B', 'C', 'D'];
+    const currentQ = testQuestions[testQuestion];
+    const selectedAnswer = currentQ ? testAnswers[currentQ.id] : undefined;
+    const hasSelected = selectedAnswer !== undefined;
+
     return (
       <div style={outerStyle}>
         {renderProgressBar()}
         <div style={scrollStyle}>
           {renderNavDots()}
-          <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3' }}>
-              Knowledge Check
+          <div style={{ padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px', fontWeight: 'bold', lineHeight: '1.3', textAlign: 'center' }}>
+              Stick-Slip Earthquake Knowledge Check
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.5' }}>
-              Question {Math.min(answeredCount + 1, testQuestions.length)} of {testQuestions.length} - {answeredCount} answered
+            <p style={{ fontSize: '14px', color: colors.textSecondary, marginBottom: '20px', textAlign: 'center', lineHeight: 1.5 }}>
+              Test your understanding of stick-slip friction, earthquake mechanics, elastic energy storage, static vs kinetic friction transitions, and how these principles apply to real-world seismic phenomena and engineering applications.
             </p>
-          </div>
 
-          {testQuestions.map((q, idx) => (
-            <div
-              key={q.id}
-              style={{
-                background: colors.bgCard,
-                margin: '12px 16px',
-                padding: '16px',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                border: '1px solid rgba(148, 163, 184, 0.1)',
-                maxWidth: '800px',
-              }}
-            >
-              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', lineHeight: '1.5' }}>
-                Question {idx + 1} of {testQuestions.length}: {q.question}
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {q.options.map((option) => (
+            {/* Question counter */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 500, color: colors.textSecondary }}>Question</span>
+                <span style={{ fontSize: '28px', fontWeight: 800, color: colors.accent }}>{testQuestion + 1}</span>
+                <span style={{ fontSize: '16px', fontWeight: 600, color: colors.textPrimary }}>of {testQuestions.length}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === testQuestion ? colors.accent : testAnswers[testQuestions[i].id] !== undefined ? colors.success : '#334155',
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Question text */}
+            <h3 style={{ fontSize: '18px', fontWeight: 700, lineHeight: 1.4, color: colors.textPrimary, marginBottom: '20px' }}>
+              {currentQ.question}
+            </h3>
+
+            {/* Answer options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {currentQ.options.map((option, i) => {
+                const isSelected = selectedAnswer === option.id;
+                let borderColor = 'rgba(148, 163, 184, 0.2)';
+                let bgColor = 'rgba(51, 65, 85, 0.5)';
+                if (showExplanation) {
+                  if (option.correct) { borderColor = colors.success; bgColor = 'rgba(16, 185, 129, 0.15)'; }
+                  else if (isSelected && !option.correct) { borderColor = colors.error; bgColor = 'rgba(239, 68, 68, 0.15)'; }
+                } else if (isSelected) {
+                  borderColor = colors.accent; bgColor = 'rgba(239, 68, 68, 0.15)';
+                }
+                return (
                   <button
                     key={option.id}
-                    onClick={() => setTestAnswers(prev => ({ ...prev, [q.id]: option.id }))}
+                    onClick={() => {
+                      if (!showExplanation) {
+                        setTestAnswers(prev => ({ ...prev, [currentQ.id]: option.id }));
+                      }
+                    }}
+                    disabled={showExplanation}
                     style={{
-                      padding: '10px 14px',
-                      background: testAnswers[q.id] === option.id
-                        ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(220, 38, 38, 0.3))'
-                        : 'rgba(51, 65, 85, 0.5)',
-                      border: testAnswers[q.id] === option.id
-                        ? '1px solid rgba(239, 68, 68, 0.5)'
-                        : '1px solid transparent',
-                      borderRadius: '8px',
-                      color: colors.textSecondary,
-                      fontSize: '13px',
+                      padding: '14px 16px',
+                      background: bgColor,
+                      border: `2px solid ${borderColor}`,
+                      borderRadius: '10px',
+                      color: colors.textPrimary,
+                      fontSize: '14px',
                       textAlign: 'left',
-                      cursor: 'pointer',
+                      cursor: showExplanation ? 'default' : 'pointer',
                       transition: 'all 0.2s ease',
                       lineHeight: '1.5',
                     }}
                   >
-                    {option.text}
+                    {optionLabels[i]}) {option.text}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: '12px 20px',
-          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
-          borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-          zIndex: 1000,
-          minHeight: '72px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-          <button
-            onClick={() => setTestSubmitted(true)}
-            style={{
-              padding: '14px 28px',
-              background: answeredCount > 0
-                ? 'linear-gradient(135deg, #ef4444, #dc2626)'
-                : 'rgba(71, 85, 105, 0.5)',
-              border: 'none',
-              borderRadius: '12px',
-              color: colors.textPrimary,
-              fontSize: '16px',
-              fontWeight: 'bold',
-              cursor: answeredCount > 0 ? 'pointer' : 'not-allowed',
-              opacity: answeredCount > 0 ? 1 : 0.5,
-              minHeight: '52px',
-              minWidth: '160px',
-              boxShadow: answeredCount > 0 ? '0 4px 15px rgba(239, 68, 68, 0.3)' : 'none',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            Submit Answers
-          </button>
+
+            {/* Explanation after confirming */}
+            {showExplanation && (
+              <div style={{
+                background: selectedAnswer === currentQ.options.find(o => o.correct)?.id ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                border: `1px solid ${selectedAnswer === currentQ.options.find(o => o.correct)?.id ? colors.success : colors.error}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+              }}>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: selectedAnswer === currentQ.options.find(o => o.correct)?.id ? colors.success : colors.error, margin: 0 }}>
+                  {selectedAnswer === currentQ.options.find(o => o.correct)?.id ? 'Correct!' : `Incorrect - the answer is: ${currentQ.options.find(o => o.correct)?.text}`}
+                </p>
+              </div>
+            )}
+
+            {/* Navigation button */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  if (!showExplanation && hasSelected) {
+                    setShowExplanation(true);
+                  } else if (showExplanation && testQuestion < testQuestions.length - 1) {
+                    setTestQuestion(testQuestion + 1);
+                    setShowExplanation(false);
+                  } else if (showExplanation && testQuestion === testQuestions.length - 1) {
+                    setTestSubmitted(true);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: showExplanation && testQuestion === testQuestions.length - 1
+                    ? 'linear-gradient(135deg, #10b981, #0d9488)'
+                    : (hasSelected || showExplanation)
+                      ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                      : 'rgba(71, 85, 105, 0.5)',
+                  color: colors.textPrimary,
+                  cursor: (hasSelected || showExplanation) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  opacity: (hasSelected || showExplanation) ? 1 : 0.5,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {showExplanation
+                  ? testQuestion === testQuestions.length - 1
+                    ? 'Submit Test'
+                    : 'Next Question'
+                  : 'Confirm Answer'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );

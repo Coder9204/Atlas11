@@ -149,7 +149,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
   const [isAnimating, setIsAnimating] = useState(true);
 
   // Interactive controls
-  const [asymmetry, setAsymmetry] = useState(50); // 0-100 (shape asymmetry)
+  const [asymmetry, setAsymmetry] = useState(35); // 0-100 (shape asymmetry)
   const [initialSpin, setInitialSpin] = useState(50); // 0-100 (initial angular velocity)
   const [spinDirection, setSpinDirection] = useState<'preferred' | 'reverse'>('preferred');
 
@@ -532,9 +532,9 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             <text x="200" y="120" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="normal">
               Side Profile
             </text>
-            <line x1={130} y1={145} x2={270 + asymmetryOffset * 0.5} y2={145} stroke={colors.surface} strokeWidth="1" opacity="0.5" />
+            <line x1={130} y1={160} x2={270 + asymmetryOffset * 0.5} y2={160} stroke={colors.surface} strokeWidth="1" opacity="0.5" />
             <path
-              d={`M 140 145 Q ${200 + asymmetryOffset * 0.3} ${125 - asymmetry * 0.15} ${260 + asymmetryOffset * 0.5} 145`}
+              d={`M 130 160 Q ${200 + asymmetryOffset * 0.3} ${50 - asymmetry * 0.3} ${270 + asymmetryOffset * 0.5} 160`}
               fill="none"
               stroke={colors.stoneTop}
               strokeWidth="3"
@@ -542,7 +542,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
           </g>
 
           {/* Divider */}
-          <line x1={40} y1={165} x2={360} y2={165} stroke={colors.surface} strokeWidth="0.5" opacity="0.3" />
+          <line x1={40} y1={170} x2={360} y2={170} stroke={colors.surface} strokeWidth="0.5" opacity="0.3" />
 
           {/* Graph Group */}
           <g>
@@ -561,7 +561,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             </text>
 
             {/* X-axis label */}
-            <text x="200" y="355" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            <text x="200" y="358" textAnchor="middle" fill={colors.textMuted} fontSize="11">
               Asymmetry (%)
             </text>
 
@@ -936,7 +936,10 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
   ];
 
   // ==================== PAGE LAYOUT WRAPPER ====================
-  const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  // Defined as a render function (not a React component) so React does NOT
+  // unmount / remount the entire subtree on every state change.  This keeps
+  // DOM element references stable across re-renders.
+  const wrapPage = (children: React.ReactNode) => (
     <div style={{
       minHeight: '100vh',
       display: 'flex',
@@ -963,7 +966,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <PageWrapper>
+      wrapPage(<>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
             The Defiant Spinner
@@ -1007,7 +1010,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             </p>
           </div>
         </div>
-      </PageWrapper>
+      </>)
     );
   }
 
@@ -1016,7 +1019,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
     const predictionCount = prediction ? 1 : 0;
 
     return (
-      <PageWrapper>
+      wrapPage(<>
         {/* Progress indicator */}
         <div style={{
           padding: '12px 20px',
@@ -1089,14 +1092,14 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             ))}
           </div>
         </div>
-      </PageWrapper>
+      </>)
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <PageWrapper>
+      wrapPage(<>
         <div style={{ padding: '16px', textAlign: 'center' }}>
           <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px' }}>
             Spin the Rattleback!
@@ -1143,7 +1146,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             <li>Zero asymmetry - no reversal either way</li>
           </ul>
         </div>
-      </PageWrapper>
+      </>)
     );
   }
 
@@ -1153,7 +1156,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
     const isCorrect = selectedPrediction?.correct === true;
 
     return (
-      <PageWrapper>
+      wrapPage(<>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <div style={{ fontSize: '48px', marginBottom: '12px' }}>
             {isCorrect ? '\u{1F3AF}' : '\u{1F4A1}'}
@@ -1209,7 +1212,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             </p>
           </div>
         </div>
-      </PageWrapper>
+      </>)
     );
   }
 
@@ -1218,7 +1221,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
     const twistPredictionCount = twistPrediction ? 1 : 0;
 
     return (
-      <PageWrapper>
+      wrapPage(<>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h2 style={{ color: colors.warning, fontSize: '22px', marginBottom: '8px' }}>
             Plot Twist!
@@ -1291,14 +1294,14 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             ))}
           </div>
         </div>
-      </PageWrapper>
+      </>)
     );
   }
 
   // TWIST_PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <PageWrapper>
+      wrapPage(<>
         <div style={{ padding: '16px', textAlign: 'center' }}>
           <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px' }}>
             Coupled Oscillations
@@ -1331,7 +1334,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             <li>Higher asymmetry = stronger coupling</li>
           </ul>
         </div>
-      </PageWrapper>
+      </>)
     );
   }
 
@@ -1341,7 +1344,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
     const isCorrect = selectedTwist?.correct === true;
 
     return (
-      <PageWrapper>
+      wrapPage(<>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <div style={{ fontSize: '48px', marginBottom: '12px' }}>
             {isCorrect ? '\u{1F3AF}' : '\u{1F92F}'}
@@ -1377,7 +1380,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             preferred direction, the coupling terms cancel out, so no energy transfers to wobble.
           </p>
         </div>
-      </PageWrapper>
+      </>)
     );
   }
 
@@ -1387,7 +1390,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
     const completedCount = transferCompleted.size;
 
     return (
-      <PageWrapper>
+      wrapPage(<>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
             Real-World Applications
@@ -1506,7 +1509,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             </button>
           </div>
         )}
-      </PageWrapper>
+      </>)
     );
   }
 
@@ -1525,7 +1528,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
       const score = Math.round((correctCount / testQuestions.length) * 100);
 
       return (
-        <PageWrapper>
+        wrapPage(<>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>{score >= 80 ? '\u{1F3C6}' : '\u{1F4DA}'}</div>
             <h2 style={{ color: colors.textPrimary, fontSize: '28px' }}>You Scored</h2>
@@ -1602,14 +1605,14 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
               Continue {'\u2192'}
             </button>
           </div>
-        </PageWrapper>
+        </>)
       );
     }
 
     // Quiz confirmation dialog
     if (showQuizConfirm) {
       return (
-        <PageWrapper>
+        wrapPage(<>
           <div style={{ padding: '40px 20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
               Submit Quiz?
@@ -1656,14 +1659,14 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
               </button>
             </div>
           </div>
-        </PageWrapper>
+        </>)
       );
     }
 
     const selectedForThisQ = currentAnswer || testAnswers[currentQuestion.id] || null;
 
     return (
-      <PageWrapper>
+      wrapPage(<>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h2 style={{ color: colors.textPrimary, fontSize: '22px' }}>Knowledge Check</h2>
           <p style={{ color: colors.accent, fontSize: '16px', marginTop: '8px' }}>
@@ -1851,14 +1854,14 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             </button>
           )}
         </div>
-      </PageWrapper>
+      </>)
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <PageWrapper>
+      wrapPage(<>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <div style={{ fontSize: '72px', marginBottom: '16px' }}>{'\u{1F3C6}'}</div>
           <h1 style={{ color: colors.textPrimary, fontSize: '28px' }}>Rattleback Master!</h1>
@@ -1873,17 +1876,15 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
             <li>Ancient artifacts showed this phenomenon</li>
           </ul>
         </div>
-      </PageWrapper>
+      </>)
     );
   }
 
   // Fallback for unknown phase - default to hook
-  return (
-    <PageWrapper>
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <p style={{ color: colors.textSecondary }}>Loading...</p>
-      </div>
-    </PageWrapper>
+  return wrapPage(
+    <div style={{ padding: '20px', textAlign: 'center' }}>
+      <p style={{ color: colors.textSecondary }}>Loading...</p>
+    </div>
   );
 };
 

@@ -153,7 +153,7 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
   const fiberLoss = fiber.attenuation * fiberLength;
   const connectorLoss = numConnectors * 0.5; // 0.5 dB per connector
   const spliceLoss = numSplices * 0.1; // 0.1 dB per splice
-  const bendLoss = bendRadius < 15 ? 3.0 : bendRadius < 25 ? 0.5 : 0;
+  const bendLoss = bendRadius < 15 ? 3.0 : bendRadius < 30 ? (30 - bendRadius) * 0.1 : 0;
   const totalLoss = fiberLoss + connectorLoss + spliceLoss + bendLoss;
   const outputPower = inputPower - totalLoss;
   const signalStrength = Math.max(0, Math.min(1, (outputPower + 30) / 30)); // Normalize to 0-1
@@ -423,13 +423,13 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
 
   const renderVisualization = (interactive: boolean) => {
     const width = 600;
-    const height = 400;
+    const height = 460;
     const pulsePosition = (animationFrame / 100) * 340;
     const pulseIntensity = Math.max(0.2, 1 - (pulsePosition / 340) * (totalLoss / 20));
 
     // Calculate fiber path based on bend radius using Q curves for the straight case
     let fiberPath: string;
-    if (bendRadius < 25) {
+    if (bendRadius < 30) {
       // Wavy fiber path with L commands for bend visualization
       const fiberPoints: string[] = [];
       const steps = 14;
@@ -448,9 +448,9 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
 
     // Attenuation graph path with 12+ L-commands
     const graphX0 = 50;
-    const graphY0 = 280;
+    const graphY0 = 430;
     const graphW = 260;
-    const graphH = 80;
+    const graphH = 200;
     const attenuationPathPoints: string[] = [];
     const graphSteps = 14;
     for (let i = 0; i <= graphSteps; i++) {
@@ -743,7 +743,7 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
           <text x={378} y={graphY0 - graphH + 42} fill={colors.warning} fontSize="11">-{totalLoss.toFixed(1)} dB</text>
 
           {/* Compare / reference text */}
-          <text x={250} y={230} textAnchor="middle" fill={colors.textMuted} fontSize="11">Reference: 1550nm standard = 0.2 dB/km</text>
+          <text x={250} y={graphY0 + 30} textAnchor="middle" fill={colors.textMuted} fontSize="11">Reference: 1550nm standard = 0.2 dB/km</text>
         </svg>
 
         {/* Loss breakdown labels outside SVG */}

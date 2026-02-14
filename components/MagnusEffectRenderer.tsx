@@ -744,7 +744,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "The Magnus effect is behind every banana kick, every knuckleball, every golf drive that seems to float on air. It's the secret physics that makes sports beautiful."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: 'rgba(148, 163, 184, 0.8)', marginTop: '8px' }}>
             - Sports Aerodynamics
           </p>
         </div>

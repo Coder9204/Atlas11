@@ -615,9 +615,11 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         </defs>
 
         {/* Axis labels */}
-        <text x={15} y={height / 2} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600" transform={`rotate(-90, 15, ${height / 2})`}>
-          Temperature (°C)
-        </text>
+        <g transform={`translate(15, ${height / 2}) rotate(-90)`}>
+          <text x={0} y={0} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
+            Temperature (°C)
+          </text>
+        </g>
         <text x={(chartLeft + chartRight) / 2} y={height - 8} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
           Distance along bar
         </text>

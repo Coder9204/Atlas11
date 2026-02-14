@@ -386,7 +386,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
       const d2 = Math.sqrt((xMeters - speaker2X) ** 2 + yMeters ** 2);
       const pd = Math.abs(d2 - d1);
       const interference = Math.cos(2 * Math.PI * pd / wavelength);
-      const yVal = yPos + (1 - interference) * 30;
+      const yVal = yPos + (1 - interference) * 120;
       points.push(`${px} ${yVal.toFixed(1)}`);
     }
     return `M ${points[0]} ${points.slice(1).map(p => `L ${p}`).join(' ')}`;
@@ -615,27 +615,33 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
           </defs>
 
           {/* Premium background with subtle grid */}
-          <rect width={width} height={height} fill="url(#sintfFloorGradient)" rx="16" />
+          <g className="background-layer">
+            <rect width={width} height={height} fill="url(#sintfFloorGradient)" rx="16" />
 
-          {/* Subtle grid pattern */}
-          {Array.from({ length: Math.floor(width / 50) + 1 }).map((_, i) => (
-            <line key={`vgrid-${i}`} x1={i * 50} y1="0" x2={i * 50} y2={height} stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.15} />
-          ))}
-          {Array.from({ length: Math.floor(height / 50) + 1 }).map((_, i) => (
-            <line key={`hgrid-${i}`} x1="0" y1={i * 50} x2={width} y2={i * 50} stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.15} />
-          ))}
+            {/* Subtle grid pattern */}
+            {Array.from({ length: Math.floor(width / 50) + 1 }).map((_, i) => (
+              <line key={`vgrid-${i}`} x1={i * 50} y1="0" x2={i * 50} y2={height} stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.15} />
+            ))}
+            {Array.from({ length: Math.floor(height / 50) + 1 }).map((_, i) => (
+              <line key={`hgrid-${i}`} x1="0" y1={i * 50} x2={width} y2={i * 50} stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.15} />
+            ))}
+          </g>
 
           {/* Interference pattern */}
-          {patternElements}
+          <g className="interference-pattern-layer">
+            {patternElements}
+          </g>
 
           {/* Interference intensity path curve */}
-          <path
-            d={interferencePath}
-            fill="none"
-            stroke="#60a5fa"
-            strokeWidth="1.5"
-            opacity={0.5}
-          />
+          <g className="curve-layer">
+            <path
+              d={interferencePath}
+              fill="none"
+              stroke="#60a5fa"
+              strokeWidth="1.5"
+              opacity={0.5}
+            />
+          </g>
 
           {/* Animated waves */}
           {waveCircles}
@@ -803,7 +809,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
               <text x={width - 143} y="165" fill="#94a3b8" fontSize="11">Diff:</text>
               <text x={width - 108} y="165" fill={isDestructive ? "#ef4444" : isConstructive ? "#10b981" : "#8b5cf6"} fontSize="12" fontWeight="700">{pathDifference.toFixed(3)}m</text>
 
-              <text x={width - 143} y="182" fill="#64748b" fontSize="10">= {(pathDifference / wavelength).toFixed(2)} wavelengths</text>
+              <text x={width - 143} y="182" fill="#64748b" fontSize="11">= {(pathDifference / wavelength).toFixed(2)} wavelengths</text>
             </>
           )}
 
@@ -976,67 +982,108 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
     </div>
   );
 
+  const phaseLabels = ['Hook', 'Predict', 'Play', 'Review', 'Twist Predict', 'Twist Play', 'Twist Review', 'Transfer', 'Test', 'Mastery'];
+
+  const renderNavDots = () => {
+    const currentIdx = VALID_PHASES.indexOf(currentPhase);
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', padding: '8px 16px' }}>
+        {VALID_PHASES.map((p, i) => (
+          <button
+            key={p}
+            aria-label={phaseLabels[i]}
+            title={phaseLabels[i]}
+            onClick={() => setInternalPhase(p)}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              border: 'none',
+              background: i === currentIdx ? colors.accent : i < currentIdx ? colors.success : 'rgba(255,255,255,0.2)',
+              cursor: 'pointer',
+              padding: 0,
+              transition: 'all 0.2s ease',
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
   const renderNavBar = (showBack: boolean, canProceed: boolean, buttonText: string, disabled?: boolean) => (
-    <nav
-      aria-label="Game navigation"
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: '16px 24px',
-        background: colors.bgDark,
-        borderTop: `1px solid rgba(255,255,255,0.1)`,
-        display: 'flex',
-        justifyContent: showBack ? 'space-between' : 'flex-end',
-        alignItems: 'center',
-        zIndex: 1001,
-      }}
-    >
-      {showBack && (
-        <button
-          onClick={() => {
-            const idx = VALID_PHASES.indexOf(currentPhase);
-            if (idx > 0) setInternalPhase(VALID_PHASES[idx - 1]);
-          }}
-          aria-label="Go back"
-          style={{
-            padding: '12px 24px',
-            minHeight: '44px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.textMuted}`,
-            background: 'transparent',
-            color: colors.textSecondary,
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            fontSize: '16px',
-            transition: 'all 0.3s ease',
-          }}
-        >
-          Back
-        </button>
-      )}
-      <button
-        onClick={advancePhase}
-        disabled={disabled && !canProceed}
-        aria-label={buttonText}
+    <>
+      <div
         style={{
-          padding: '12px 32px',
-          minHeight: '44px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)` : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          transition: 'all 0.3s ease',
-          boxShadow: canProceed ? '0 4px 15px rgba(139, 92, 246, 0.4)' : 'none',
+          position: 'fixed',
+          bottom: '68px',
+          left: 0,
+          right: 0,
+          zIndex: 1002,
         }}
       >
-        {buttonText}
-      </button>
-    </nav>
+        {renderNavDots()}
+      </div>
+      <nav
+        aria-label="Game navigation"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 24px',
+          background: colors.bgDark,
+          borderTop: `1px solid rgba(255,255,255,0.1)`,
+          display: 'flex',
+          justifyContent: currentPhase !== 'hook' ? 'space-between' : 'flex-end',
+          alignItems: 'center',
+          zIndex: 1001,
+        }}
+      >
+        {currentPhase !== 'hook' && (
+          <button
+            onClick={() => {
+              const idx = VALID_PHASES.indexOf(currentPhase);
+              if (idx > 0) setInternalPhase(VALID_PHASES[idx - 1]);
+            }}
+            aria-label="Go back"
+            style={{
+              padding: '12px 24px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.textMuted}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '16px',
+              transition: 'all 0.3s ease',
+            }}
+          >
+            Back
+          </button>
+        )}
+        <button
+          onClick={advancePhase}
+          disabled={disabled && !canProceed}
+          aria-label={buttonText}
+          style={{
+            padding: '12px 32px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)` : 'rgba(255,255,255,0.1)',
+            color: canProceed ? 'white' : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            fontSize: '16px',
+            transition: 'all 0.3s ease',
+            boxShadow: canProceed ? '0 4px 15px rgba(139, 92, 246, 0.4)' : 'none',
+          }}
+        >
+          {buttonText}
+        </button>
+      </nav>
+    </>
   );
 
   // Review phase visualization - a simple SVG diagram of interference concept
@@ -1070,7 +1117,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Sound Dead Spots
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               Can two loud speakers make silence in certain spots? Let's discover how waves work!
             </p>
           </div>
@@ -1174,12 +1221,14 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Sound Interference</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Explore Sound Interference</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
               Drag the listener and adjust controls to find dead spots.
+              This concept is important because it is used in real-world applications like noise-canceling headphones, concert hall design, and phased array radar technology.
             </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
-              Observe how the interference pattern changes as you adjust the frequency and speaker separation.
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px', fontWeight: 400 }}>
+              Observe how when you increase frequency, the wavelength decreases and the interference stripes get closer together.
+              The formula lambda = v / f = 343 / f gives the relationship between frequency and wavelength.
             </p>
           </div>
 
@@ -1227,10 +1276,15 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
             marginRight: 'auto',
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? '✅ Correct!' : '❌ Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              Yes! Some spots are silent (dead spots) while others are extra loud - this is interference!
+              {wasCorrect
+                ? 'Your prediction was correct! As you observed in the experiment, some spots are silent (dead spots) while others are extra loud.'
+                : 'Your prediction was not quite right. As you observed in the experiment, some spots are silent (dead spots) while others are extra loud.'}
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
+              This demonstrates the principle of wave interference, because sound waves from two sources can either reinforce or cancel each other depending on the path difference.
             </p>
           </div>
 
@@ -1446,6 +1500,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
 
   // TRANSFER PHASE
   if (currentPhase === 'transfer') {
+    const allAppsCompleted = transferCompleted.size >= realWorldApps.length;
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
@@ -1457,11 +1512,11 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
               Wave interference appears in acoustics, electronics, and communication
             </p>
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test ({transferCompleted.size} of 4 done)
+              App {Math.min(transferCompleted.size + 1, realWorldApps.length)} of {realWorldApps.length} ({transferCompleted.size} of {realWorldApps.length} done)
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
+          {realWorldApps.map((app, index) => (
             <div
               key={index}
               style={{
@@ -1476,37 +1531,86 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Done</span>}
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>
+                  <span style={{ marginRight: '8px' }}>{app.icon}</span>
+                  {app.title}
+                </h3>
+                {transferCompleted.has(index) && <span style={{ color: colors.success }}>✅ Done</span>}
               </div>
+              <p style={{ color: colors.textMuted, fontSize: '13px', fontStyle: 'italic', marginBottom: '8px' }}>{app.tagline}</p>
               <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+
+              {/* Stats row with numeric data */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                {app.stats.map((stat, si) => (
+                  <div key={si} style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '8px 12px', borderRadius: '8px', flex: '1', minWidth: '100px', textAlign: 'center' }}>
+                    <div style={{ color: colors.textPrimary, fontWeight: 'bold', fontSize: '14px' }}>{stat.icon} {stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
+                  </div>
+                ))}
               </div>
+
               {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', minHeight: '44px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s ease' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+                    <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>How does it connect?</p>
+                    <p style={{ color: colors.textSecondary, fontSize: '13px' }}>{app.connection}</p>
+                  </div>
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{ padding: '8px 16px', minHeight: '44px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s ease' }}
+                  >
+                    Reveal Details
+                  </button>
                 </div>
-              )}
-              {transferCompleted.has(index) && (
-                <button
-                  onClick={() => {}}
-                  style={{ padding: '8px 16px', minHeight: '44px', borderRadius: '6px', border: 'none', background: `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`, color: 'white', cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s ease' }}
-                >
-                  Got It
-                </button>
+              ) : (
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>How It Works:</p>
+                    <p style={{ color: colors.textSecondary, fontSize: '13px' }}>{app.howItWorks}</p>
+                  </div>
+                  <div style={{ marginBottom: '8px' }}>
+                    <p style={{ color: colors.textMuted, fontSize: '12px' }}>
+                      <strong>Companies:</strong> {app.companies.join(', ')}
+                    </p>
+                    <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
+                      <strong>Examples:</strong> {app.examples.join(', ')}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {}}
+                    style={{ padding: '8px 16px', minHeight: '44px', borderRadius: '6px', border: 'none', background: `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`, color: 'white', cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s ease' }}
+                  >
+                    Got It
+                  </button>
+                </div>
               )}
             </div>
           ))}
+
+          {allAppsCompleted && (
+            <div style={{ padding: '16px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+              <button
+                onClick={advancePhase}
+                style={{
+                  padding: '14px 32px',
+                  minHeight: '44px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)`,
+                  color: 'white',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
+                }}
+              >
+                Take the Test
+              </button>
+            </div>
+          )}
         </div>
-        {renderNavBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Continue')}
+        {renderNavBar(true, allAppsCompleted, allAppsCompleted ? 'Continue \u2192' : 'Continue')}
       </div>
     );
   }
@@ -1530,7 +1634,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
                 {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
               </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>You scored {testScore} / 10</p>
               <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
                 {testScore >= 8 ? 'You\'ve mastered sound interference!' : 'Review the material and try again.'}
               </p>
@@ -1564,6 +1668,11 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
               <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '12px' }}>
+              Test your understanding of sound wave interference, path differences, wavelength relationships,
+              and real-world applications of constructive and destructive interference patterns.
+              Select the best answer for each question below.
+            </p>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
@@ -1589,6 +1698,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
             )}
           </div>
         </div>
+        {renderNavDots()}
       </div>
     );
   }
@@ -1599,7 +1709,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered sound wave interference</p>
           </div>

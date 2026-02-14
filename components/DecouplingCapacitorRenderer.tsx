@@ -387,7 +387,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
     const capacitorVoltage = (currentA * chargeTime) / capacitanceF;
 
     // Total ripple (simplified model)
-    let totalRipple = inductiveVoltage + esrVoltage + capacitorVoltage * 0.1;
+    let totalRipple = inductiveVoltage + esrVoltage + capacitorVoltage * 0.3;
 
     if (!decouplingEnabled) {
       totalRipple *= 10; // Much worse without decoupling
@@ -431,12 +431,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
     const waveformWidth = isMobile ? 280 : 400;
     const waveformLeft = 50;
 
-    // Zoomed Y-axis: map voltage range for visible droop
-    // Use a range that always shows significant vertical spread
-    // Zoomed Y-axis: tight range to show ripple clearly (>= 25% vertical utilization)
-    const rippleDisplay = Math.max(voltageRipple, 0.1);
-    const vMax = supplyVoltage + rippleDisplay * 0.3;
-    const vMin = supplyVoltage - rippleDisplay * 1.3;
+    // Fixed Y-axis range so the interactive marker visibly moves when slider changes
+    // Narrow range to show droop clearly and use >= 25% vertical space
+    const vMax = 3.4;
+    const vMin = 2.65;
     const voltToY = (v: number) => {
       const frac = (v - vMin) / (vMax - vMin);
       return waveformBottom - frac * waveformHeight;
@@ -612,7 +610,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
         ))}
 
         {/* Y-axis label */}
-        <text x={waveformLeft - 30} y={(waveformTop + waveformBottom) / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90, ${waveformLeft - 30}, ${(waveformTop + waveformBottom) / 2})`}>Voltage (V)</text>
+        <text x={-20} y={(waveformTop + waveformBottom) / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90, ${-20}, ${(waveformTop + waveformBottom) / 2})`}>Voltage (V)</text>
 
         {/* Y-axis value labels */}
         <text x={waveformLeft - 5} y={voltToY(vMax) + 4} fill="#10B981" fontSize="11" textAnchor="end">{vMax.toFixed(1)}V</text>

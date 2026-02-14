@@ -310,7 +310,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#e2e8f0',
-    textMuted: '#94a3b8',
+    textMuted: 'rgba(148, 163, 184, 0.7)',
     border: '#2a2a3a',
   };
 
@@ -330,7 +330,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Multi-Head Lab',
+    twist_play: 'Twist Experiment',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -450,6 +450,9 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
   // Bottom navigation bar
   const renderBottomNav = () => {
     const currentIndex = phaseOrder.indexOf(phase);
+    const isTestActive = phase === 'test' && !testSubmitted;
+    const isLastPhase = currentIndex === phaseOrder.length - 1;
+    const nextDisabled = isLastPhase || isTestActive;
     return (
       <div style={{
         display: 'flex',
@@ -478,16 +481,16 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
           ← Back
         </button>
         <button
-          onClick={nextPhase}
-          disabled={currentIndex === phaseOrder.length - 1}
+          onClick={nextDisabled ? undefined : nextPhase}
+          disabled={nextDisabled}
           style={{
             padding: '12px 24px',
             borderRadius: '10px',
             border: 'none',
-            background: currentIndex === phaseOrder.length - 1 ? colors.border : colors.accent,
+            background: nextDisabled ? colors.border : colors.accent,
             color: 'white',
-            cursor: currentIndex === phaseOrder.length - 1 ? 'not-allowed' : 'pointer',
-            opacity: currentIndex === phaseOrder.length - 1 ? 0.4 : 1,
+            cursor: nextDisabled ? 'not-allowed' : 'pointer',
+            opacity: nextDisabled ? 0.4 : 1,
             fontWeight: 600,
             minHeight: '44px',
             transition: 'all 0.2s ease',
@@ -514,8 +517,8 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     minHeight: '44px',
   };
 
-  // Memory Growth Chart - used in play phase
-  const MemoryGrowthChart = ({ chartWidth, chartHeight }: { chartWidth?: number; chartHeight?: number }) => {
+  // Memory Growth Chart - used in play phase (render function, not component)
+  const renderMemoryGrowthChart = (chartWidth?: number, chartHeight?: number) => {
     const width = chartWidth || (isMobile ? 350 : 500);
     const height = chartHeight || 280;
     const padding = { top: 30, right: 30, bottom: 50, left: 70 };
@@ -605,12 +608,14 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
         ))}
 
         {/* Axes */}
-        <line x1={padding.left} y1={padding.top + plotHeight} x2={padding.left + plotWidth} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
-        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
+        <g>
+          <line x1={padding.left} y1={padding.top + plotHeight} x2={padding.left + plotWidth} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
+          <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
+        </g>
 
         {/* Axis labels */}
         <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Sequence Length (tokens)</text>
-        <text x={15} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${padding.top + plotHeight / 2})`}>Memory (log scale)</text>
+        <text x={15} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${padding.top + plotHeight / 2})`}>Memory Intensity (log scale)</text>
 
         {/* Fill area under quadratic curve */}
         <path
@@ -658,12 +663,12 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
           {sequenceLength} tokens
         </text>
 
-        {/* Legend - positioned explicitly */}
+        {/* Legend - positioned at bottom-right to avoid overlaps */}
         <g>
-          <rect x={padding.left + 10} y={padding.top + 8} width="14" height="4" fill={colors.error} rx="2" />
-          <text x={padding.left + 30} y={padding.top + 14} fill={colors.textSecondary} fontSize="11">O(n²) Attention</text>
-          <rect x={padding.left + 10} y={padding.top + 24} width="14" height="4" fill={colors.success} rx="2" />
-          <text x={padding.left + 30} y={padding.top + 30} fill={colors.textSecondary} fontSize="11">O(n) Linear</text>
+          <rect x={padding.left + plotWidth - 130} y={padding.top + plotHeight - 30} width="14" height="4" fill={colors.error} rx="2" />
+          <text x={padding.left + plotWidth - 110} y={padding.top + plotHeight - 25} fill={colors.textSecondary} fontSize="11">O(n²) Attention</text>
+          <rect x={padding.left + plotWidth - 130} y={padding.top + plotHeight - 14} width="14" height="4" fill={colors.success} rx="2" />
+          <text x={padding.left + plotWidth - 110} y={padding.top + plotHeight - 9} fill={colors.textSecondary} fontSize="11">O(n) Linear</text>
         </g>
 
         {/* Tick labels */}
@@ -673,8 +678,8 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     );
   };
 
-  // Multi-head chart for twist_play/twist_predict
-  const MultiHeadChart = () => {
+  // Multi-head chart for twist_play/twist_predict (render function, not component)
+  const renderMultiHeadChart = () => {
     const width = isMobile ? 350 : 500;
     const height = 280;
     const padding = { top: 30, right: 30, bottom: 50, left: 70 };
@@ -777,8 +782,8 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     );
   };
 
-  // Scroll wrapper for content-heavy phases
-  const ScrollWrapper = ({ children }: { children: React.ReactNode }) => (
+  // Scroll wrapper - memoized to prevent remounting children on re-render
+  const ScrollWrapper = useCallback(({ children }: { children: React.ReactNode }) => (
     <div style={{
       minHeight: '100vh',
       background: colors.bgPrimary,
@@ -799,7 +804,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
         {renderBottomNav()}
       </div>
     </div>
-  );
+  ), [phase, testSubmitted]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
@@ -817,6 +822,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -993,13 +999,13 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MemoryGrowthChart />
+              {renderMemoryGrowthChart()}
             </div>
 
             {/* Sequence length slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length (tokens)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length — controls memory density and power</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sequenceLength.toLocaleString()} tokens</span>
               </div>
               <input
@@ -1294,7 +1300,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
           }}>
             {/* Multi-head chart */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MultiHeadChart />
+              {renderMultiHeadChart()}
             </div>
 
             {/* Sliders */}

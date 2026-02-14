@@ -179,8 +179,8 @@ const realWorldApps = [
     howItWorks: 'Marine engineers attach zinc or aluminum sacrificial anodes to steel hulls. These anodes are more electrochemically active than the hull steel, so they corrode preferentially, sacrificing themselves to protect the ship. The anodes must be replaced periodically as they are consumed.',
     stats: [
       { value: '$80 billion', label: 'Annual corrosion cost globally', icon: '💰' },
-      { value: '25 yrs', label: 'Ship hull design life', icon: '🚢' },
-      { value: '850 mV', label: 'Protection potential', icon: '🔄' }
+      { value: '25%', label: 'Hull thickness lost without protection', icon: '🚢' },
+      { value: '850 V', label: 'Protection potential target', icon: '🔄' }
     ],
     examples: ['Zinc anodes welded to steel ship hulls', 'Bronze propellers isolated from steel shafts', 'ICCP systems on aircraft carriers', 'Aluminum anode bars in ballast tanks'],
     companies: ['Cathelco', 'Jotun Marine Coatings', 'DNV Maritime', 'CORROSION Service'],
@@ -272,12 +272,13 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
   const animationRef = useRef<number>();
 
   // Twist phase state
-  const [areaRatio, setAreaRatio] = useState(50); // Anode:Cathode ratio
+  const [areaRatio, setAreaRatio] = useState(70); // Anode:Cathode ratio
   const [hasCoating, setHasCoating] = useState(false);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [confirmedAnswers, setConfirmedAnswers] = useState<boolean[]>(Array(10).fill(false));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
@@ -554,7 +555,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
       const eStr = t * 100;
       const rate = voltage * (eStr / 100) * 0.5;
       const px = plotX0 + t * plotW;
-      const py = plotY0 + plotH - (rate / 1.2) * plotH;
+      const py = Math.max(plotY0, plotY0 + plotH - (rate / 0.65) * plotH);
       curvePoints.push(`${i === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)}`);
     }
     const curvePath = curvePoints.join(' ');
@@ -563,7 +564,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
     const markerT = (markerValue ?? electrolyteStrength) / 100;
     const markerPx = plotX0 + markerT * plotW;
     const markerRate = voltage * markerT * 0.5;
-    const markerPy = plotY0 + plotH - (markerRate / 1.2) * plotH;
+    const markerPy = Math.max(plotY0, plotY0 + plotH - (markerRate / 0.65) * plotH);
 
     return (
       <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxWidth: width, background: colors.bgCard, borderRadius: '12px' }}>
@@ -667,19 +668,16 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
 
         {/* Wire connection */}
         <g>
-          <path
-            d={`M ${anodeX} ${height * 0.32} L ${anodeX} ${height * 0.12} L ${cathodeX} ${height * 0.12} L ${cathodeX} ${height * 0.32}`}
-            fill="none"
-            stroke={colors.electrons}
-            strokeWidth="3"
-          />
+          <line x1={anodeX} y1={height * 0.35} x2={anodeX} y2={height * 0.05} stroke={colors.electrons} strokeWidth="3" />
+          <line x1={anodeX} y1={height * 0.05} x2={cathodeX} y2={height * 0.05} stroke={colors.electrons} strokeWidth="3" />
+          <line x1={cathodeX} y1={height * 0.05} x2={cathodeX} y2={height * 0.35} stroke={colors.electrons} strokeWidth="3" />
 
           {/* Electron flow animation */}
           {isRunning && (
             <>
-              <circle cx={anodeX + (cathodeX - anodeX) * (electronFlow / 100)} cy={height * 0.12} r="5" fill={colors.electrons} filter="url(#glow)" />
-              <circle cx={anodeX + (cathodeX - anodeX) * ((electronFlow + 33) % 100 / 100)} cy={height * 0.12} r="5" fill={colors.electrons} filter="url(#glow)" />
-              <circle cx={anodeX + (cathodeX - anodeX) * ((electronFlow + 66) % 100 / 100)} cy={height * 0.12} r="5" fill={colors.electrons} filter="url(#glow)" />
+              <circle cx={anodeX + (cathodeX - anodeX) * (electronFlow / 100)} cy={height * 0.05} r="5" fill={colors.electrons} filter="url(#glow)" />
+              <circle cx={anodeX + (cathodeX - anodeX) * ((electronFlow + 33) % 100 / 100)} cy={height * 0.05} r="5" fill={colors.electrons} filter="url(#glow)" />
+              <circle cx={anodeX + (cathodeX - anodeX) * ((electronFlow + 66) % 100 / 100)} cy={height * 0.05} r="5" fill={colors.electrons} filter="url(#glow)" />
             </>
           )}
         </g>
@@ -704,7 +702,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
 
         {/* Labels */}
         <g>
-          <text x={width / 2} y={height * 0.08} textAnchor="middle" fill={colors.electrons} fontSize="11">
+          <text x={width / 2} y={height * 0.04} textAnchor="middle" fill={colors.electrons} fontSize="11">
             e⁻ flow →
           </text>
         </g>
@@ -814,7 +812,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
               &quot;Galvanic corrosion occurs when two dissimilar metals are electrically connected in an electrolyte. The more active metal becomes the anode and corrodes, while the noble metal is protected as the cathode.&quot;
             </p>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            <p style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.7)', marginTop: '8px' }}>
               — Corrosion Engineering
             </p>
           </div>
@@ -1760,6 +1758,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                 onClick={() => {
                   setTestSubmitted(false);
                   setTestAnswers(Array(10).fill(null));
+                  setConfirmedAnswers(Array(10).fill(false));
                   setCurrentQuestion(0);
                   setTestScore(0);
                   goToPhase('hook');
@@ -1790,6 +1789,12 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
 
     return wrapPage(
         <div style={{ maxWidth: '700px', margin: '20px auto 0', padding: '0 24px' }}>
+          <h2 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Galvanic Corrosion Knowledge Test
+          </h2>
+          <p style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.7)', textAlign: 'center', marginBottom: '16px' }}>
+            Apply your understanding of electrochemical corrosion, galvanic series, and protection strategies to real-world engineering scenarios.
+          </p>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1836,69 +1841,91 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
 
           {/* Options */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
+            {question.options.map(opt => {
+              const isConfirmed = confirmedAnswers[currentQuestion];
+              const correctId = question.options.find(o => o.correct)?.id;
+              const isCorrect = opt.id === correctId;
+              const isSelected = testAnswers[currentQuestion] === opt.id;
+              let optBg = colors.bgCard;
+              let optBorder = colors.border;
+              if (isConfirmed) {
+                if (isCorrect) { optBg = `${colors.success}22`; optBorder = colors.success; }
+                else if (isSelected) { optBg = `${colors.error}22`; optBorder = colors.error; }
+              } else if (isSelected) {
+                optBg = `${colors.accent}22`; optBorder = colors.accent;
+              }
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    if (isConfirmed) return;
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: optBg,
+                    border: `2px solid ${optBorder}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: isConfirmed ? 'default' : 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: isSelected ? colors.accent : colors.bgSecondary,
+                    color: isSelected ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Navigation */}
+          {/* Feedback after confirming */}
+          {confirmedAnswers[currentQuestion] && (
+            <div style={{
+              background: testAnswers[currentQuestion] === question.options.find(o => o.correct)?.id ? `${colors.success}22` : `${colors.error}22`,
+              border: `1px solid ${testAnswers[currentQuestion] === question.options.find(o => o.correct)?.id ? colors.success : colors.error}`,
+              borderRadius: '10px',
+              padding: '14px 16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: testAnswers[currentQuestion] === question.options.find(o => o.correct)?.id ? colors.success : colors.error, margin: 0, fontWeight: 600, marginBottom: '4px' }}>
+                {testAnswers[currentQuestion] === question.options.find(o => o.correct)?.id ? '✓ Correct!' : '✗ Incorrect'}
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.explanation}
+              </p>
+            </div>
+          )}
+
+          {/* Confirm / Next Question / Submit */}
           <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
+            {!confirmedAnswers[currentQuestion] ? (
               <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                onClick={() => {
+                  if (!testAnswers[currentQuestion]) return;
+                  playSound('click');
+                  const newConfirmed = [...confirmedAnswers];
+                  newConfirmed[currentQuestion] = true;
+                  setConfirmedAnswers(newConfirmed);
                 }}
-              >
-                ← Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
                 disabled={!testAnswers[currentQuestion]}
                 style={{
                   flex: 1,
@@ -1912,7 +1939,24 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   transition: 'all 0.2s ease',
                 }}
               >
-                Next →
+                Confirm Answer
+              </button>
+            ) : currentQuestion < 9 ? (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion + 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: colors.accent,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Next Question
               </button>
             ) : (
               <button
@@ -1925,15 +1969,14 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                   setTestSubmitted(true);
                   playSound(score >= 7 ? 'complete' : 'failure');
                 }}
-                disabled={testAnswers.some(a => a === null)}
                 style={{
                   flex: 1,
                   padding: '14px',
                   borderRadius: '10px',
                   border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  background: colors.success,
                   color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  cursor: 'pointer',
                   fontWeight: 600,
                   transition: 'all 0.2s ease',
                 }}

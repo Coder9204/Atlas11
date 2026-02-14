@@ -1527,6 +1527,9 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
             </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: '8px 0' }}>
+              You scored
+            </p>
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>

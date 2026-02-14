@@ -852,14 +852,15 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   </g>
                )}
 
-               {/* Phase label */}
-               <text x="110" y="15" textAnchor="middle" fontSize="11" fontWeight="600" fill="#e2e8f0">
-                  {matterPhase === 'solid' ? 'SOLID (Ice)' :
-                   matterPhase === 'melting' ? 'MELTING' :
-                   matterPhase === 'liquid' ? 'LIQUID (Water)' :
-                   matterPhase === 'boiling' ? 'BOILING' : 'GAS (Steam)'}
-               </text>
             </g>
+
+            {/* Phase label - absolute coords to avoid raw-attribute overlap with Rate display */}
+            <text x="160" y="45" textAnchor="middle" fontSize="11" fontWeight="600" fill="#e2e8f0">
+               {matterPhase === 'solid' ? 'SOLID (Ice)' :
+                matterPhase === 'melting' ? 'MELTING' :
+                matterPhase === 'liquid' ? 'LIQUID (Water)' :
+                matterPhase === 'boiling' ? 'BOILING' : 'GAS (Steam)'}
+            </text>
 
             {/* === PREMIUM HEAT SOURCE === */}
             {isHeating && (
@@ -1101,7 +1102,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
             <text x="215" y="200" textAnchor="middle" fontSize="11" fontWeight="600" fill="#cbd5e1">
                Energy Added (J/g)
             </text>
-            <text x="12" y="50" textAnchor="middle" fontSize="11" fontWeight="600" fill="#cbd5e1" transform="rotate(-90, 12, 50)">
+            <text x="-8" y="105" textAnchor="middle" fontSize="11" fontWeight="600" fill="#cbd5e1" transform="rotate(-90, -8, 105)">
                Temp (°C)
             </text>
 

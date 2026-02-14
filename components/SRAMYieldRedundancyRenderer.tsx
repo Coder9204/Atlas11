@@ -547,11 +547,13 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
 
   const renderVisualization = (interactive: boolean, showECC: boolean = false) => {
     const width = 500;
-    const height = 450;
+    const height = 550;
     const yieldData = calculateYield();
 
-    // Calculate cell size for array display
-    const cellSize = Math.min(8, Math.floor(280 / Math.max(arrayRows, arrayCols)));
+    // Calculate cell size for array display (capped at 32x32 visual grid)
+    const displayRowCount = Math.min(arrayRows, 32);
+    const displayColCount = Math.min(arrayCols, 32);
+    const cellSize = Math.min(8, Math.floor(280 / Math.max(displayRowCount, displayColCount)));
     const gridStartX = 50;
     const gridStartY = 60;
 
@@ -733,8 +735,8 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           <rect
             x={gridStartX - 6}
             y={gridStartY - 56}
-            width={arrayCols * cellSize + 12}
-            height={arrayRows * cellSize + 12}
+            width={displayColCount * cellSize + 12}
+            height={displayRowCount * cellSize + 12}
             fill="url(#sramySubstrate)"
             stroke="#475569"
             strokeWidth={2}
@@ -742,14 +744,14 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           />
 
           {/* Spare row highlight bands */}
-          {Array.from({ length: spareRows }).map((_, i) => {
-            const rowIndex = arrayRows - spareRows + i;
+          {Array.from({ length: Math.min(spareRows, displayRowCount) }).map((_, i) => {
+            const rowIndex = displayRowCount - Math.min(spareRows, displayRowCount) + i;
             return (
               <rect
                 key={`spare-row-${i}`}
                 x={gridStartX - 4}
                 y={gridStartY - 54 + rowIndex * cellSize}
-                width={arrayCols * cellSize + 8}
+                width={displayColCount * cellSize + 8}
                 height={cellSize}
                 fill="url(#sramySpareRowHighlight)"
                 rx={2}
@@ -758,15 +760,15 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           })}
 
           {/* Spare column highlight bands */}
-          {Array.from({ length: spareCols }).map((_, i) => {
-            const colIndex = arrayCols - spareCols + i;
+          {Array.from({ length: Math.min(spareCols, displayColCount) }).map((_, i) => {
+            const colIndex = displayColCount - Math.min(spareCols, displayColCount) + i;
             return (
               <rect
                 key={`spare-col-${i}`}
                 x={gridStartX + colIndex * cellSize}
                 y={gridStartY - 56}
                 width={cellSize}
-                height={arrayRows * cellSize + 8}
+                height={displayRowCount * cellSize + 8}
                 fill="url(#sramySpareColHighlight)"
                 rx={2}
               />
@@ -774,11 +776,20 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           })}
 
           {/* Draw cells with premium gradients */}
-          {Array.from({ length: arrayRows }).map((_, row) =>
-            Array.from({ length: arrayCols }).map((_, col) => {
-              const isDefect = yieldData.defects.some(d => d.row === row && d.col === col);
-              const isRepairedByRow = showRowRepair && yieldData.repairedRows.includes(row);
-              const isRepairedByCol = showColRepair && yieldData.repairedCols.includes(col) && !isRepairedByRow;
+          {(() => {
+            const defectSet = new Set(yieldData.defects.map(d => `${d.row},${d.col}`));
+            const repairedRowSet = new Set(yieldData.repairedRows);
+            const repairedColSet = new Set(yieldData.repairedCols);
+            // Limit visual rendering to max 32x32 for performance; use sampling for larger arrays
+            const rowStep = arrayRows / displayRowCount;
+            const colStep = arrayCols / displayColCount;
+            return Array.from({ length: displayRowCount }).map((_, ri) => {
+            const row = Math.floor(ri * rowStep);
+            return Array.from({ length: displayColCount }).map((_, ci) => {
+              const col = Math.floor(ci * colStep);
+              const isDefect = defectSet.has(`${row},${col}`);
+              const isRepairedByRow = showRowRepair && repairedRowSet.has(row);
+              const isRepairedByCol = showColRepair && repairedColSet.has(col) && !isRepairedByRow;
               const isSpareRow = row >= arrayRows - spareRows;
               const isSpareCol = col >= arrayCols - spareCols;
 
@@ -803,9 +814,9 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
 
               return (
                 <rect
-                  key={`${row}-${col}`}
-                  x={gridStartX + col * cellSize}
-                  y={gridStartY - 54 + row * cellSize}
+                  key={`${ri}-${ci}`}
+                  x={gridStartX + ci * cellSize}
+                  y={gridStartY - 54 + ri * cellSize}
                   width={cellSize - 1}
                   height={cellSize - 1}
                   fill={cellFill}
@@ -813,13 +824,14 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
                   rx={1}
                 />
               );
-            })
-          )}
+            });
+          });
+          })()}
 
           {/* Statistics panel with premium gradient */}
           <rect
             x={10}
-            y={gridStartY + arrayRows * cellSize - 30}
+            y={gridStartY + displayRowCount * cellSize - 30}
             width={220}
             height={120}
             fill="url(#sramyPanelBg)"
@@ -831,7 +843,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           {/* Yield gauge panel */}
           <rect
             x={250}
-            y={gridStartY + arrayRows * cellSize - 30}
+            y={gridStartY + displayRowCount * cellSize - 30}
             width={240}
             height={120}
             fill="url(#sramyPanelBg)"
@@ -843,39 +855,40 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           {/* Repair status indicator */}
           <circle
             cx={460}
-            cy={gridStartY + arrayRows * cellSize - 15}
-            r={8}
+            cy={gridStartY + displayRowCount * cellSize - 15}
+            r={5}
             fill={yieldData.remainingDefects === 0 ? colors.success : colors.error}
-            filter="url(#sramyStatusGlow)"
-          />
+          >
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
+          </circle>
 
           {/* SVG labels for educational context */}
           <g>
-            <text x={20} y={gridStartY + arrayRows * cellSize - 12} fill={colors.accent} fontSize="12" fontWeight="bold">Repair Analysis</text>
-            <text x={20} y={gridStartY + arrayRows * cellSize + 5} fill={colors.textSecondary} fontSize="11">Defects: {yieldData.defects.length}</text>
-            <text x={20} y={gridStartY + arrayRows * cellSize + 20} fill={colors.textSecondary} fontSize="11">Repaired: {yieldData.repairedDefects}</text>
-            <text x={20} y={gridStartY + arrayRows * cellSize + 35} fill={yieldData.remainingDefects === 0 ? colors.success : colors.error} fontSize="11">Remaining: {yieldData.remainingDefects}</text>
-            <text x={20} y={gridStartY + arrayRows * cellSize + 50} fill={colors.repaired} fontSize="11">Spare Rows: {spareRows} | Spare Cols: {spareCols}</text>
+            <text x={20} y={gridStartY + displayRowCount * cellSize - 12} fill={colors.accent} fontSize="12" fontWeight="bold">Repair Analysis</text>
+            <text x={20} y={gridStartY + displayRowCount * cellSize + 5} fill={colors.textSecondary} fontSize="11">Defects: {yieldData.defects.length}</text>
+            <text x={20} y={gridStartY + displayRowCount * cellSize + 20} fill={colors.textSecondary} fontSize="11">Repaired: {yieldData.repairedDefects}</text>
+            <text x={20} y={gridStartY + displayRowCount * cellSize + 35} fill={yieldData.remainingDefects === 0 ? colors.success : colors.error} fontSize="11">Remaining: {yieldData.remainingDefects}</text>
+            <text x={20} y={gridStartY + displayRowCount * cellSize + 50} fill={colors.repaired} fontSize="11">Spare Rows: {spareRows} | Spare Cols: {spareCols}</text>
           </g>
 
           <g>
-            <text x={260} y={gridStartY + arrayRows * cellSize - 12} fill={yieldData.remainingDefects === 0 ? colors.success : colors.warning} fontSize="12" fontWeight="bold">Yield Status</text>
-            <text x={260} y={gridStartY + arrayRows * cellSize + 5} fill={colors.textSecondary} fontSize="11">Raw Yield: {yieldData.rawYield.toFixed(1)}%</text>
-            <text x={260} y={gridStartY + arrayRows * cellSize + 20} fill={colors.textSecondary} fontSize="11">After Repair: {yieldData.repairedYield.toFixed(1)}%</text>
-            <text x={260} y={gridStartY + arrayRows * cellSize + 35} fill={yieldData.remainingDefects === 0 ? colors.success : colors.error} fontSize="12" fontWeight="bold">
+            <text x={260} y={gridStartY + displayRowCount * cellSize - 12} fill={yieldData.remainingDefects === 0 ? colors.success : colors.warning} fontSize="12" fontWeight="bold">Yield Status</text>
+            <text x={260} y={gridStartY + displayRowCount * cellSize + 5} fill={colors.textSecondary} fontSize="11">Raw Yield: {yieldData.rawYield.toFixed(1)}%</text>
+            <text x={260} y={gridStartY + displayRowCount * cellSize + 20} fill={colors.textSecondary} fontSize="11">After Repair: {yieldData.repairedYield.toFixed(1)}%</text>
+            <text x={260} y={gridStartY + displayRowCount * cellSize + 35} fill={yieldData.remainingDefects === 0 ? colors.success : colors.error} fontSize="12" fontWeight="bold">
               {yieldData.remainingDefects === 0 ? 'PASS' : 'FAIL'}
             </text>
           </g>
 
           {/* Array dimension labels */}
-          <text x={gridStartX} y={gridStartY - 62} fill={colors.textMuted} fontSize="11">Memory Array ({arrayRows}x{arrayCols})</text>
+          <text x={gridStartX} y={12} fill={colors.textMuted} fontSize="11">Memory Array ({arrayRows}x{arrayCols})</text>
 
           {/* Raw yield bar background */}
-          <rect x={330} y={gridStartY + arrayRows * cellSize + 8} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
+          <rect x={330} y={gridStartY + displayRowCount * cellSize + 8} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
           {/* Raw yield bar fill */}
           <rect
             x={330}
-            y={gridStartY + arrayRows * cellSize + 8}
+            y={gridStartY + displayRowCount * cellSize + 8}
             width={yieldData.rawYield}
             height={14}
             fill="url(#sramyYieldError)"
@@ -883,11 +896,11 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           />
 
           {/* Repaired yield bar background */}
-          <rect x={330} y={gridStartY + arrayRows * cellSize + 30} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
+          <rect x={330} y={gridStartY + displayRowCount * cellSize + 30} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
           {/* Repaired yield bar fill */}
           <rect
             x={330}
-            y={gridStartY + arrayRows * cellSize + 30}
+            y={gridStartY + displayRowCount * cellSize + 30}
             width={yieldData.repairedYield}
             height={14}
             fill={yieldData.repairedYield > 80 ? 'url(#sramyYieldSuccess)' : 'url(#sramyYieldWarning)'}
@@ -895,8 +908,79 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           />
 
           {/* Yield bar labels */}
-          <text x={435} y={gridStartY + arrayRows * cellSize + 19} fill={colors.textMuted} fontSize="11">Raw</text>
-          <text x={435} y={gridStartY + arrayRows * cellSize + 41} fill={colors.textMuted} fontSize="11">Repaired</text>
+          <text x={435} y={gridStartY + displayRowCount * cellSize + 19} fill={colors.textMuted} fontSize="11">Raw</text>
+          <text x={435} y={gridStartY + displayRowCount * cellSize + 41} fill={colors.textMuted} fontSize="11">Repaired</text>
+
+          {/* Axis labels for educational clarity */}
+          <text x={gridStartX + displayColCount * cellSize / 2} y={gridStartY + displayRowCount * cellSize + 115} fill={colors.textMuted} fontSize="11" textAnchor="middle">Density (defects/1000 bits)</text>
+
+          {/* Grid reference lines with opacity for visual reference */}
+          <line x1={gridStartX} y1={gridStartY - 54} x2={gridStartX + displayColCount * cellSize} y2={gridStartY - 54} stroke={colors.textMuted} strokeDasharray="4 4" opacity="0.3" />
+          <line x1={gridStartX} y1={gridStartY - 54 + displayRowCount * cellSize / 2} x2={gridStartX + displayColCount * cellSize} y2={gridStartY - 54 + displayRowCount * cellSize / 2} stroke={colors.textMuted} strokeDasharray="4 4" opacity="0.3" />
+          <line x1={gridStartX} y1={gridStartY - 54 + displayRowCount * cellSize} x2={gridStartX + displayColCount * cellSize} y2={gridStartY - 54 + displayRowCount * cellSize} stroke={colors.textMuted} strokeDasharray="4 4" opacity="0.3" />
+          <line x1={gridStartX + displayColCount * cellSize / 2} y1={gridStartY - 54} x2={gridStartX + displayColCount * cellSize / 2} y2={gridStartY - 54 + displayRowCount * cellSize} stroke={colors.textMuted} strokeDasharray="4 4" opacity="0.3" />
+
+          {/* Yield curve path showing defect density vs yield relationship */}
+          {(() => {
+            const curveBaseY = gridStartY + displayRowCount * cellSize + 95;
+            const curveH = 140;
+            const curveW = Math.max(displayColCount * cellSize, 200);
+            return (
+              <g>
+                <path
+                  d={`M ${gridStartX} ${curveBaseY} ` +
+                    Array.from({ length: 20 }, (_, i) => {
+                      const x = gridStartX + (i / 19) * curveW;
+                      const densityVal = (i / 19) * 3;
+                      const yieldVal = Math.exp(-densityVal * arrayRows * arrayCols / 1000);
+                      const y = curveBaseY - yieldVal * curveH;
+                      return `L ${x} ${y}`;
+                    }).join(' ')}
+                  fill="none"
+                  stroke={colors.accent}
+                  strokeWidth={2}
+                />
+                {/* Reference yield path without redundancy */}
+                <path
+                  d={`M ${gridStartX} ${curveBaseY} ` +
+                    Array.from({ length: 20 }, (_, i) => {
+                      const x = gridStartX + (i / 19) * curveW;
+                      const densityVal = (i / 19) * 3;
+                      const yieldVal = Math.exp(-densityVal * arrayRows * arrayCols / 500);
+                      const y = curveBaseY - yieldVal * curveH;
+                      return `L ${x} ${y}`;
+                    }).join(' ')}
+                  fill="none"
+                  stroke={colors.error}
+                  strokeWidth={1.5}
+                  strokeDasharray="6 3"
+                />
+                {/* Decorative area fill under curve */}
+                <path
+                  d={`M ${gridStartX} ${curveBaseY} ` +
+                    Array.from({ length: 20 }, (_, i) => {
+                      const x = gridStartX + (i / 19) * curveW;
+                      const densityVal = (i / 19) * 3;
+                      const yieldVal = Math.exp(-densityVal * arrayRows * arrayCols / 1000);
+                      const y = curveBaseY - yieldVal * curveH;
+                      return `L ${x} ${y}`;
+                    }).join(' ') + ` L ${gridStartX + curveW} ${curveBaseY} Z`}
+                  fill={colors.accent}
+                  fillOpacity={0.1}
+                />
+                {/* Interactive marker showing current defect density position */}
+                <circle
+                  cx={gridStartX + (defectDensity / 3) * curveW}
+                  cy={curveBaseY - Math.exp(-defectDensity * arrayRows * arrayCols / 1000) * curveH}
+                  r={8}
+                  fill={colors.accent}
+                  stroke="#ffffff"
+                  strokeWidth={2}
+                  filter="url(#sramyDefectGlow)"
+                />
+              </g>
+            );
+          })()}
         </svg>
 
         {/* Legend moved outside SVG */}
@@ -1065,6 +1149,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
                 fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
                 boxShadow: `0 4px 14px rgba(139, 92, 246, 0.4)`,
+                transition: 'all 0.3s ease',
               }}
             >
               Animate Repair
@@ -1082,6 +1167,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
                 fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
                 boxShadow: `0 4px 14px rgba(239, 68, 68, 0.4)`,
+                transition: 'all 0.3s ease',
               }}
             >
               New Defects
@@ -1098,6 +1184,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
                 cursor: 'pointer',
                 fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.3s ease',
               }}
             >
               Reset
@@ -1111,37 +1198,45 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   const renderControls = (showECCControls: boolean = false) => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
           Array Size: {arrayRows} x {arrayCols} = {arrayRows * arrayCols} bits
         </label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, fontWeight: 400, marginBottom: '2px' }}>
+          <span>16</span>
+          <span>64</span>
+        </div>
         <input
           type="range"
           min="16"
           max="64"
           step="8"
           value={arrayRows}
-          onChange={(e) => { setArrayRows(parseInt(e.target.value)); setArrayCols(parseInt(e.target.value)); }}
+          onChange={(e) => { const v = Math.max(16, Math.min(64, parseInt(e.target.value) || 16)); setArrayRows(v); setArrayCols(v); }}
           style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
           Defect Density: {defectDensity} per 1000 bits
         </label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, fontWeight: 400, marginBottom: '2px' }}>
+          <span>0.1</span>
+          <span>3</span>
+        </div>
         <input
           type="range"
           min="0.1"
           max="3"
           step="0.1"
           value={defectDensity}
-          onChange={(e) => setDefectDensity(parseFloat(e.target.value))}
+          onChange={(e) => setDefectDensity(Math.max(0.1, Math.min(3, parseFloat(e.target.value) || 0.1)))}
           style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
           Spare Rows: {spareRows}
         </label>
         <input
@@ -1150,13 +1245,13 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           max="8"
           step="1"
           value={spareRows}
-          onChange={(e) => setSpareRows(parseInt(e.target.value))}
+          onChange={(e) => setSpareRows(Math.max(0, Math.min(8, parseInt(e.target.value) || 0)))}
           style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
           Spare Columns: {spareCols}
         </label>
         <input
@@ -1165,7 +1260,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           max="8"
           step="1"
           value={spareCols}
-          onChange={(e) => setSpareCols(parseInt(e.target.value))}
+          onChange={(e) => setSpareCols(Math.max(0, Math.min(8, parseInt(e.target.value) || 0)))}
           style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
         />
       </div>
@@ -1252,6 +1347,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           cursor: canGoBack ? 'pointer' : 'not-allowed',
           fontSize: '14px',
           opacity: canGoBack ? 1 : 0.5,
+          transition: 'all 0.3s ease',
         }}
       >
         Back
@@ -1270,6 +1366,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
           WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.3s ease',
         }}
       >
         {nextLabel}
@@ -1287,7 +1384,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               SRAM Yield & Redundancy
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               Why is memory often the yield limiter?
             </p>
           </div>
@@ -1396,6 +1493,38 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           </div>
 
           {renderVisualization(true)}
+
+          {/* Real-time calculated values */}
+          {(() => {
+            const yieldInfo = calculateYield();
+            const repairRatio = yieldInfo.defects.length > 0 ? (yieldInfo.repairedDefects / yieldInfo.defects.length * 100).toFixed(1) : '100.0';
+            return (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'row',
+                gap: '12px',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                padding: '0 16px',
+                marginBottom: '8px',
+                transition: 'all 0.3s ease',
+              }}>
+                <div style={{ background: colors.bgCard, padding: '10px 14px', borderRadius: '8px', textAlign: 'center', flex: '1 1 100px', transition: 'background 0.3s ease' }}>
+                  <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>Defect Rate</div>
+                  <div style={{ color: colors.defect, fontSize: '16px', fontWeight: 'bold' }}>{defectDensity.toFixed(1)}/1000</div>
+                </div>
+                <div style={{ background: colors.bgCard, padding: '10px 14px', borderRadius: '8px', textAlign: 'center', flex: '1 1 100px', transition: 'background 0.3s ease' }}>
+                  <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>Repair Ratio</div>
+                  <div style={{ color: colors.repaired, fontSize: '16px', fontWeight: 'bold' }}>{repairRatio}%</div>
+                </div>
+                <div style={{ background: colors.bgCard, padding: '10px 14px', borderRadius: '8px', textAlign: 'center', flex: '1 1 100px', transition: 'background 0.3s ease' }}>
+                  <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>Yield Factor</div>
+                  <div style={{ color: yieldInfo.remainingDefects === 0 ? colors.success : colors.warning, fontSize: '16px', fontWeight: 'bold' }}>{yieldInfo.repairedYield.toFixed(1)}%</div>
+                </div>
+              </div>
+            );
+          })()}
+
           {renderControls()}
 
           <div style={{
@@ -1768,7 +1897,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary, fontWeight: 'bold', fontSize: typo.body }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '16px' }}>
               Test your understanding of SRAM yield, redundancy repair, and error correction.

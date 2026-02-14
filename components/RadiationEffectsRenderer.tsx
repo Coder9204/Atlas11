@@ -501,7 +501,7 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
         {/* Axis labels */}
         <text x={svgW / 2} y={plotBottom + 35} textAnchor="middle" fill="#cbd5e1" fontSize="11" fontFamily="system-ui, sans-serif">Altitude (km)</text>
-        <text x="8" y={(plotTop + plotBottom) / 2} textAnchor="middle" fill="#cbd5e1" fontSize="11" fontFamily="system-ui, sans-serif" transform={`rotate(-90, 8, ${(plotTop + plotBottom) / 2})`}>Flux</text>
+        <text x="14" y="14" textAnchor="start" fill="#cbd5e1" fontSize="11" fontFamily="system-ui, sans-serif">Intensity</text>
 
         {/* Belt region shading */}
         <rect x={plotLeft + (1000 / 40000) * plotW} y={plotTop} width={(5000 / 40000) * plotW} height={plotH} fill="#ef4444" opacity={0.08} />
@@ -689,8 +689,8 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
         }}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-        <span style={{ fontSize: '11px', color: '#64748b' }}>{min.toLocaleString()}{unit}</span>
-        <span style={{ fontSize: '11px', color: '#64748b' }}>{max.toLocaleString()}{unit}</span>
+        <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{min.toLocaleString()}{unit}</span>
+        <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{max.toLocaleString()}{unit}</span>
       </div>
     </div>
   );
@@ -827,7 +827,7 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ef4444', marginBottom: '8px', lineHeight: '1.3' }}>Radiation Environment Simulator</h2>
 
-        <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px', textAlign: 'center', maxWidth: '500px', lineHeight: '1.5' }}>
+        <p style={{ fontSize: '14px', color: '#cbd5e1', marginBottom: '16px', textAlign: 'center', maxWidth: '500px', lineHeight: '1.5' }}>
           This visualization shows the radiation flux factor across different orbital altitudes. Notice how the curve peaks at the Van Allen belts where trapped particles create intense radiation zones. Try adjusting altitude and observe how SEU rate, TID dose, and latchup risk change in real time.
         </p>
 
