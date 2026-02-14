@@ -435,7 +435,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   const speedRatio = currentOmega / initialOmega;
 
   // Spinning Figure SVG Component
-  const SpinningFigureVisualization = () => {
+  const renderSpinningFigure = () => {
     const width = isMobile ? 340 : 420;
     const height = isMobile ? 340 : 400;
     const centerX = width / 2;
@@ -487,6 +487,9 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           <rect width="20" height="20" fill="none" stroke={colors.border} strokeWidth="0.3" strokeOpacity="0.4" />
         </pattern>
         <rect width={width} height={height} fill={`url(#grid)`} />
+
+        {/* Interactive point tracking arm extension */}
+        <circle cx={50 + armExtension * (width - 100)} cy={height - 50 - (1 - armExtension) * (height - 100)} r={8} fill={colors.accent} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
 
         {/* Platform/base */}
         <ellipse cx={centerX} cy={centerY + 100} rx="70" ry="18" fill="#1e293b" stroke="#475569" strokeWidth="1" />
@@ -564,12 +567,17 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           <rect x="0" y="0" width="110" height="80" fill={colors.bgSecondary} rx="6" opacity="0.9" />
           <text x="10" y="18" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Legend</text>
           <circle cx="18" cy="35" r="6" fill={colors.accent} />
-          <text x="30" y="39" fill={colors.textSecondary} fontSize="10">Angular Momentum L</text>
+          <text x="30" y="39" fill={colors.textSecondary} fontSize="11">Angular Momentum L</text>
           <circle cx="18" cy="55" r="6" fill={colors.pink} />
-          <text x="30" y="59" fill={colors.textSecondary} fontSize="10">Weights (mass)</text>
+          <text x="30" y="59" fill={colors.textSecondary} fontSize="11">Weights (mass)</text>
           <line x1="12" y1="70" x2="24" y2="70" stroke={colors.success} strokeWidth="2" />
-          <text x="30" y="74" fill={colors.textSecondary} fontSize="10">Rotation axis</text>
+          <text x="30" y="74" fill={colors.textSecondary} fontSize="11">Rotation axis</text>
         </g>
+
+        {/* Grid lines for visual reference */}
+        <line x1="50" y1="30" x2={width - 50} y2="30" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="50" y1={height - 30} x2={width - 50} y2={height - 30} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="50" y1={height / 2} x2={width - 50} y2={height / 2} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
 
         {/* Direct labels on objects */}
         <text x={centerX + 80} y={centerY + 105} fill={colors.textSecondary} fontSize="11">Spinning Platform</text>
@@ -577,6 +585,9 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
         {hasWeights && (
           <text x={centerX} y={centerY + 60} textAnchor="middle" fill={colors.pink} fontSize="11">Mass = {weightMass} kg</text>
         )}
+
+        {/* Formula */}
+        <text x={15} y={height - 12} fill={colors.accent} fontSize="12" fontWeight="bold">L = I × ω</text>
       </svg>
     );
   };
@@ -722,7 +733,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   };
 
   // Stats display component
-  const StatsDisplay = () => (
+  const renderStatsDisplay = () => (
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
@@ -761,7 +772,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   );
 
   // Angular momentum display
-  const AngularMomentumDisplay = () => (
+  const renderAngularMomentumDisplay = () => (
     <div style={{
       background: `${colors.accent}11`,
       border: `1px solid ${colors.accent}33`,
@@ -1013,8 +1024,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   if (phase === 'play') {
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1024,10 +1034,10 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '24px',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Spinning Chair Lab
           </h2>
@@ -1046,11 +1056,11 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <SpinningFigureVisualization />
+              {renderSpinningFigure()}
             </div>
 
-            <StatsDisplay />
-            <AngularMomentumDisplay />
+            {renderStatsDisplay()}
+            {renderAngularMomentumDisplay()}
           </div>
 
           {/* Controls */}
@@ -1063,9 +1073,9 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             {/* Arm position slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Position</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Distance (radius)</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                  {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
+                  {armExtension.toFixed(2)} — {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
                 </span>
               </div>
               <input
@@ -1077,7 +1087,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
                 onChange={(e) => setArmExtension(parseFloat(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '24px',
+                  touchAction: 'pan-y',
+                  height: '20px',
                   borderRadius: '4px',
                   accentColor: colors.accent,
                   cursor: 'pointer',
@@ -1350,7 +1361,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
                 <circle cx="-45" cy="0" r="12" fill="url(#twistWeightGrad)" />
                 <circle cx="45" cy="0" r="12" fill="url(#twistWeightGrad)" />
                 <text x="0" y="55" textAnchor="middle" fill={colors.pink} fontSize="11" fontWeight="bold">Heavy Weights</text>
-                <text x="0" y="70" textAnchor="middle" fill={colors.textMuted} fontSize="10">Large mass at radius</text>
+                <text x="0" y="70" textAnchor="middle" fill={colors.textMuted} fontSize="11">Large mass at radius</text>
               </g>
 
               {/* vs text */}
@@ -1365,7 +1376,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
                 <circle cx="-40" cy="0" r="5" fill="#64748b" />
                 <circle cx="40" cy="0" r="5" fill="#64748b" />
                 <text x="0" y="55" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">Arms Only</text>
-                <text x="0" y="70" textAnchor="middle" fill={colors.textMuted} fontSize="10">Small mass at radius</text>
+                <text x="0" y="70" textAnchor="middle" fill={colors.textMuted} fontSize="11">Small mass at radius</text>
               </g>
 
               <text x="200" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Mass Distribution Comparison</text>
@@ -1492,15 +1503,15 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <SpinningFigureVisualization />
+              {renderSpinningFigure()}
             </div>
 
             {/* Arm slider */}
             <div style={{ marginBottom: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Position</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Distance (radius)</span>
                 <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
-                  {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
+                  {armExtension.toFixed(2)} — {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
                 </span>
               </div>
               <input
@@ -1512,7 +1523,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
                 onChange={(e) => setArmExtension(parseFloat(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '24px',
+                  touchAction: 'pan-y',
+                  height: '20px',
                   borderRadius: '4px',
                   accentColor: colors.accent,
                   cursor: 'pointer',
@@ -1520,8 +1532,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
               />
             </div>
 
-            <StatsDisplay />
-            <AngularMomentumDisplay />
+            {renderStatsDisplay()}
+            {renderAngularMomentumDisplay()}
 
             {/* Spin button */}
             <button
