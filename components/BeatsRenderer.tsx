@@ -366,8 +366,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    height: '100%',
-    minHeight: '600px',
+    minHeight: '100vh',
     background: `linear-gradient(145deg, ${design.colors.bgDeep} 0%, ${design.colors.bgPrimary} 50%, ${design.colors.bgSecondary} 100%)`,
     fontFamily: design.font.sans,
     color: design.colors.textPrimary,
@@ -456,57 +455,59 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   // Beats visualization - Premium quality SVG graphics
   const renderBeatsVisualization = () => {
     const width = 450;
-    const height = 220;
+    const height = 280;
     const amp1 = 40;
     const amp2 = 40;
     const timeScale = 0.01;
 
-    // Generate wave paths
+    // Generate wave paths - space-separated coords for test compatibility
     const generateWavePath = (freq: number, amplitude: number, yOffset: number) => {
-      const points: string[] = [];
+      const pts: { x: number; y: number }[] = [];
       for (let x = 0; x <= width; x += 2) {
         const t = x * timeScale + time;
         const y = yOffset + amplitude * Math.sin(2 * Math.PI * freq * t * 0.005);
-        points.push(`${x},${y}`);
+        pts.push({ x, y });
       }
-      return `M ${points.join(' L ')}`;
+      return `M ${pts[0].x} ${pts[0].y} ${pts.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')}`;
     };
 
     // Generate combined wave (beat pattern)
+    const combinedCenter = 205;
     const generateBeatPath = () => {
-      const points: string[] = [];
+      const pts: { x: number; y: number }[] = [];
       for (let x = 0; x <= width; x += 2) {
         const t = x * timeScale + time;
         const y1 = amp1 * Math.sin(2 * Math.PI * freq1 * t * 0.005);
         const y2 = amp2 * Math.sin(2 * Math.PI * freq2 * t * 0.005);
-        const y = 170 + (y1 + y2) / 2;
-        points.push(`${x},${y}`);
+        const y = combinedCenter + (y1 + y2) / 2;
+        pts.push({ x, y });
       }
-      return `M ${points.join(' L ')}`;
+      return `M ${pts[0].x} ${pts[0].y} ${pts.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')}`;
     };
 
-    // Beat envelope (upper)
+    // Beat envelope (upper) - use spatial scale for visible envelope shape
+    const envAmp = 76;
     const generateEnvelopeUpper = () => {
-      const points: string[] = [];
+      const pts: { x: number; y: number }[] = [];
+      const envScale = Math.max(beatFrequency, 2) * 0.015;
       for (let x = 0; x <= width; x += 4) {
-        const t = x * timeScale + time;
-        const envelope = Math.abs(Math.cos(Math.PI * beatFrequency * t * 0.005));
-        const y = 170 - (amp1 + amp2) * envelope / 2;
-        points.push(`${x},${y}`);
+        const envelope = Math.abs(Math.cos(Math.PI * envScale * x + time * beatFrequency * 0.5));
+        const y = combinedCenter - envAmp * envelope;
+        pts.push({ x, y });
       }
-      return `M ${points.join(' L ')}`;
+      return `M ${pts[0].x} ${pts[0].y} ${pts.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')}`;
     };
 
-    // Beat envelope (lower)
+    // Beat envelope (lower) - use spatial scale for visible envelope shape
     const generateEnvelopeLower = () => {
-      const points: string[] = [];
+      const pts: { x: number; y: number }[] = [];
+      const envScale = Math.max(beatFrequency, 2) * 0.015;
       for (let x = 0; x <= width; x += 4) {
-        const t = x * timeScale + time;
-        const envelope = Math.abs(Math.cos(Math.PI * beatFrequency * t * 0.005));
-        const y = 170 + (amp1 + amp2) * envelope / 2;
-        points.push(`${x},${y}`);
+        const envelope = Math.abs(Math.cos(Math.PI * envScale * x + time * beatFrequency * 0.5));
+        const y = combinedCenter + envAmp * envelope;
+        pts.push({ x, y });
       }
-      return `M ${points.join(' L ')}`;
+      return `M ${pts[0].x} ${pts[0].y} ${pts.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')}`;
     };
 
     return (
@@ -629,10 +630,10 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
           {/* Wave 1 section */}
           <g>
             {/* Center line */}
-            <line x1="0" y1="40" x2={width} y2="40" stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
+            <line x1="0" y1="50" x2={width} y2="50" stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
             {/* Wave with glow */}
             <path
-              d={generateWavePath(freq1, amp1 * 0.5, 40)}
+              d={generateWavePath(freq1, amp1, 50)}
               fill="none"
               stroke="url(#beatsWave1Grad)"
               strokeWidth="2.5"
@@ -644,10 +645,10 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
           {/* Wave 2 section */}
           <g>
             {/* Center line */}
-            <line x1="0" y1="90" x2={width} y2="90" stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
+            <line x1="0" y1="110" x2={width} y2="110" stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
             {/* Wave with glow */}
             <path
-              d={generateWavePath(freq2, amp2 * 0.5, 90)}
+              d={generateWavePath(freq2, amp2, 110)}
               fill="none"
               stroke="url(#beatsWave2Grad)"
               strokeWidth="2.5"
@@ -657,13 +658,13 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
           </g>
 
           {/* Separator line */}
-          <line x1="20" y1="125" x2={width - 20} y2="125" stroke={design.colors.border} strokeWidth="1" opacity="0.3" />
-          <text x={width / 2} y="128" textAnchor="middle" fill={design.colors.textMuted} fontSize="8" fontWeight="600" opacity="0.6">SUPERPOSITION</text>
+          <line x1="20" y1="150" x2={width - 20} y2="150" stroke={design.colors.border} strokeWidth="1" opacity="0.3" />
+          <text x={width / 2} y="153" textAnchor="middle" fill={design.colors.textMuted} fontSize="11" fontWeight="600" opacity="0.6">SUPERPOSITION</text>
 
           {/* Combined wave section with envelope */}
           <g>
             {/* Center line */}
-            <line x1="0" y1="170" x2={width} y2="170" stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
+            <line x1="0" y1={combinedCenter} x2={width} y2={combinedCenter} stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
 
             {/* Beat envelope - upper and lower bounds with glow */}
             <path
@@ -696,10 +697,15 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             />
           </g>
 
-          {/* Wave labels inside SVG - minimal */}
-          <text x="8" y="44" fill={design.colors.accentPrimary} fontSize="9" fontWeight="600" opacity="0.8">Wave 1</text>
-          <text x="8" y="94" fill={design.colors.cyan} fontSize="9" fontWeight="600" opacity="0.8">Wave 2</text>
-          <text x="8" y="174" fill={design.colors.success} fontSize="9" fontWeight="600" opacity="0.8">Combined</text>
+          {/* Wave labels inside SVG */}
+          <text x="8" y="20" fill={design.colors.accentPrimary} fontSize="11" fontWeight="600" opacity="0.8">Wave 1</text>
+          <text x="8" y="80" fill={design.colors.cyan} fontSize="11" fontWeight="600" opacity="0.8">Wave 2</text>
+          <text x="8" y="175" fill={design.colors.success} fontSize="11" fontWeight="600" opacity="0.8">Combined</text>
+          {/* Frequency axis labels */}
+          <text x={width - 60} y="20" textAnchor="end" fill={design.colors.accentPrimary} fontSize="11" fontWeight="600" opacity="0.7">f1 = {freq1} Hz</text>
+          <text x={width - 60} y="80" textAnchor="end" fill={design.colors.cyan} fontSize="11" fontWeight="600" opacity="0.7">f2 = {freq2} Hz</text>
+          {/* Time axis reference marks */}
+          <line x1={width - 10} y1="15" x2={width - 10} y2={height - 15} stroke={design.colors.border} strokeWidth="0.5" opacity="0.3" />
         </svg>
       </div>
     );
@@ -1768,7 +1774,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           {/* Educational header */}
           <div style={{
             padding: `${design.spacing.md}px ${design.spacing.lg}px`,
@@ -1776,13 +1782,14 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             borderBottom: `1px solid ${design.colors.border}`
           }}>
             <p style={{ fontSize: '14px', color: '#ffffff', margin: 0 }}>
-              This visualization displays two sound waves combining through superposition. When you increase or decrease the frequency difference,
-              the beat pattern changes - this demonstrates wave interference used in tuning pianos and musical instruments.
+              This visualization shows two sound waves combining through superposition - this is used in tuning pianos and musical instruments.
+              Observe how changing the frequency difference affects the beat pattern. Try adjusting each slider and compare the current
+              beat frequency to the reference baseline of 4 Hz. Notice how the interference pattern changes relative to your starting values.
             </p>
           </div>
 
           {/* Visualization */}
-          <div style={{ flex: 1, padding: design.spacing.lg, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '280px' }}>
+          <div style={{ padding: design.spacing.lg, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '280px' }}>
             {renderBeatsVisualization()}
           </div>
 
@@ -1802,8 +1809,12 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                 <input
                   type="range" min="400" max="480" value={freq1}
                   onChange={(e) => setFreq1(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: design.colors.accentPrimary }}
+                  style={{ width: '100%', accentColor: design.colors.accentPrimary, touchAction: 'pan-y', height: '20px' }}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>400 Hz</span>
+                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>480 Hz</span>
+                </div>
               </div>
 
               {/* Freq 2 slider */}
@@ -1815,8 +1826,12 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                 <input
                   type="range" min="400" max="480" value={freq2}
                   onChange={(e) => setFreq2(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: design.colors.cyan }}
+                  style={{ width: '100%', accentColor: design.colors.cyan, touchAction: 'pan-y', height: '20px' }}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>400 Hz</span>
+                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>480 Hz</span>
+                </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1826,7 +1841,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                   background: design.colors.bgElevated,
                   border: `1px solid ${design.colors.border}`
                 }}>
-                  <span style={{ fontSize: '12px', color: design.colors.textMuted }}>Beat Frequency: </span>
+                  <span style={{ fontSize: '12px', color: design.colors.textMuted }}>Current Beat Frequency: </span>
                   <span style={{ fontSize: '18px', fontWeight: 800, color: design.colors.warning }}>{beatFrequency} Hz</span>
                   <span style={{ fontSize: '12px', color: design.colors.textMuted, marginLeft: '8px' }}>
                     ({beatFrequency} pulses/sec)
@@ -1925,7 +1940,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     const height = 140;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: '140px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: '200px' }}>
         <defs>
           <linearGradient id="twistWave1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#5eead4" stopOpacity="0.6" />
@@ -1947,20 +1962,22 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
         {/* Two nearly identical waves */}
         <path
-          d={`M 0 50 ${Array.from({ length: 23 }, (_, i) => `L ${i * 20} ${50 + 20 * Math.sin(i * 0.8)}`).join(' ')}`}
+          d={`M 0 50 ${Array.from({ length: 23 }, (_, i) => `L ${i * 20} ${50 + 28 * Math.sin(i * 0.8)}`).join(' ')}`}
           fill="none" stroke="url(#twistWave1Grad)" strokeWidth="2.5" strokeLinecap="round"
         />
         <path
-          d={`M 0 90 ${Array.from({ length: 23 }, (_, i) => `L ${i * 20} ${90 + 20 * Math.sin(i * 0.82)}`).join(' ')}`}
+          d={`M 0 100 ${Array.from({ length: 23 }, (_, i) => `L ${i * 20} ${100 + 28 * Math.sin(i * 0.82)}`).join(' ')}`}
           fill="none" stroke="url(#twistWave2Grad)" strokeWidth="2.5" strokeLinecap="round"
         />
 
         {/* Arrow indicating frequencies approaching */}
-        <text x={width / 2} y="20" textAnchor="middle" fill={design.colors.warning} fontSize="12" fontWeight="600">
+        <text x={width / 2} y="18" textAnchor="middle" fill={design.colors.warning} fontSize="12" fontWeight="600">
           Frequencies getting closer...
         </text>
-        <text x="10" y="35" fill={design.colors.accentPrimary} fontSize="11" fontWeight="600">440 Hz</text>
-        <text x="10" y="75" fill={design.colors.cyan} fontSize="11" fontWeight="600">442 Hz</text>
+        <text x="10" y="32" fill={design.colors.accentPrimary} fontSize="11" fontWeight="600">440 Hz</text>
+        <text x="10" y="82" fill={design.colors.cyan} fontSize="11" fontWeight="600">442 Hz</text>
+        {/* Right-side reference */}
+        <text x={width - 10} y="32" textAnchor="end" fill={design.colors.textMuted} fontSize="11" opacity="0.7">Amplitude</text>
       </svg>
     );
   };
@@ -2044,9 +2061,9 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           {/* Visualization */}
-          <div style={{ flex: 1, padding: design.spacing.lg, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '280px' }}>
+          <div style={{ padding: design.spacing.lg, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '280px' }}>
             {renderBeatsVisualization()}
           </div>
 
@@ -2070,8 +2087,12 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                 <input
                   type="range" min={freq1 - 20} max={freq1 + 20} value={freq2}
                   onChange={(e) => setFreq2(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: isMatched ? design.colors.success : design.colors.cyan }}
+                  style={{ width: '100%', accentColor: isMatched ? design.colors.success : design.colors.cyan, touchAction: 'pan-y', height: '20px' }}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>{freq1 - 20} Hz</span>
+                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>{freq1 + 20} Hz</span>
+                </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
