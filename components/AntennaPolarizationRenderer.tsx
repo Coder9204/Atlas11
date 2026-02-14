@@ -148,6 +148,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
   const [waveAngle, setWaveAngle] = useState(0);
   const [handDistance, setHandDistance] = useState(100); // 0 = touching, 100 = far away
   const [showPolarPlot, setShowPolarPlot] = useState(false);
+  const [waveOffset, setWaveOffset] = useState(0);
 
   // Transfer state
   const [completedApps, setCompletedApps] = useState([false, false, false, false]);
@@ -166,6 +167,14 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Wave animation offset
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWaveOffset(prev => (prev + 2) % 40);
+    }, 50);
+    return () => clearInterval(interval);
   }, []);
 
   // Sync with external gamePhase prop for testing
@@ -303,19 +312,8 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
     </button>
   );
 
-  // Slider control with all required labels - MEETS NEW SLIDER UX REQUIREMENTS
-  const SliderControl: React.FC<{
-    label: string;
-    value: number;
-    min: number;
-    max: number;
-    unit: string;
-    hint: string;
-    onChange: (v: number) => void;
-    color?: string;
-    showImpact?: { current: string; status: string };
-  }> = ({ label, value, min, max, unit, hint, onChange, color = colors.primary, showImpact }) => {
-    const [isDragging, setIsDragging] = useState(false);
+  // Slider control as plain render function - MEETS NEW SLIDER UX REQUIREMENTS
+  const renderSliderControl = (label: string, value: number, min: number, max: number, unit: string, hint: string, onChange: (v: number) => void, color: string = colors.primary, showImpact?: { current: string; status: string }) => {
     const sliderId = `slider-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
     return (
@@ -323,7 +321,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         padding: isMobile ? '14px' : '18px',
         backgroundColor: colors.bgSurface,
         borderRadius: '12px',
-        border: `1px solid ${isDragging ? color : colors.bgElevated}`,
+        border: `1px solid ${colors.bgElevated}`,
         transition: 'border-color 0.2s'
       }}>
         {/* LABEL - What this controls */}
@@ -339,7 +337,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             letterSpacing: '0.5px'
           }}
         >
-          🎚️ {label}
+          {label}
         </label>
 
         {/* CURRENT VALUE - Prominent display with data attribute for testing */}
@@ -380,7 +378,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           </div>
         )}
 
-        {/* SLIDER - 48px touch target with touch-action: none */}
+        {/* SLIDER - touch target with touch-action */}
         {/* Value display at parent level for test detection */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ fontSize: '12px', color: colors.textSecondary }}>Drag slider:</span>
@@ -409,17 +407,13 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             const newValue = parseInt((e.target as HTMLInputElement).value);
             onChange(newValue);
           }}
-          onPointerDown={() => setIsDragging(true)}
-          onPointerUp={() => setIsDragging(false)}
-          onTouchStart={() => setIsDragging(true)}
-          onTouchEnd={() => setIsDragging(false)}
           style={{
             width: '100%',
-            height: '48px',
+            height: '20px',
             cursor: 'grab',
             accentColor: color,
             borderRadius: '4px',
-            touchAction: 'none',  // CRITICAL: Prevents scroll interference
+            touchAction: 'pan-y',
             WebkitTapHighlightColor: 'transparent',
             background: 'transparent'
           }}
@@ -435,7 +429,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           fontWeight: 500
         }}>
           <span>{min}{unit}</span>
-          <span style={{ color: colors.textSecondary }}>← Drag to adjust →</span>
+          <span style={{ color: colors.textSecondary }}>Drag to adjust</span>
           <span>{max}{unit}</span>
         </div>
 
@@ -449,7 +443,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           borderRadius: '8px',
           borderLeft: `3px solid ${color}`
         }}>
-          💡 <strong>What happens:</strong> {hint}
+          What happens: {hint}
         </div>
       </div>
     );
@@ -543,18 +537,14 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
   // Realistic graphics with proper materials, lighting, and clear labeling
   // ============================================================================
 
-  const PolarizationVisualization: React.FC<{
-    showLabels?: boolean;
-    showPolarPlot?: boolean;
-    showHandEffect?: boolean;
-  }> = ({ showLabels = true, showPolarPlot = false, showHandEffect = false }) => {
+  const renderPolarizationVisualization = (vizShowLabels = true, vizShowPolarPlot = false, vizShowHandEffect = false) => {
     const svgWidth = isMobile ? 340 : 500;
     const svgHeight = isMobile ? 300 : 400;
     const centerX = svgWidth / 2;
     const centerY = svgHeight / 2 - 10;
 
     // Generate polar plot points
-    const polarPlotPoints = useMemo(() => {
+    const polarPlotPoints = (() => {
       const points: string[] = [];
       for (let angle = 0; angle < 360; angle += 5) {
         const angleDiff = Math.abs(angle - waveAngle) % 180;
@@ -565,16 +555,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         points.push(`${x},${y}`);
       }
       return points.join(' ');
-    }, [waveAngle, centerX, centerY]);
-
-    // Wave animation
-    const [waveOffset, setWaveOffset] = useState(0);
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setWaveOffset(prev => (prev + 2) % 40);
-      }, 50);
-      return () => clearInterval(interval);
-    }, []);
+    })();
 
     // Signal strength color
     const signalColor = signalStrength > 70 ? colors.success :
@@ -714,10 +695,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         </g>
 
         {/* Router label - positioned below to avoid overlap */}
-        {showLabels && (
+        {vizShowLabels && (
           <g>
             <rect x={routerX - 2} y={routerY + routerH + 6} width={routerW + 4} height="20" rx="4" fill="rgba(0,0,0,0.7)" />
-            <text x={routerX + routerW / 2} y={routerY + routerH + 20} textAnchor="middle" fill={colors.wave} fontSize="9" fontWeight="600">
+            <text x={routerX + routerW / 2} y={routerY + routerH + 20} textAnchor="middle" fill={colors.wave} fontSize="11" fontWeight="600">
               Wi-Fi Router
             </text>
           </g>
@@ -791,7 +772,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         </g>
 
         {/* === POLAR PLOT (Signal pattern when enabled) === */}
-        {showPolarPlot && (
+        {vizShowPolarPlot && (
           <g opacity="0.85">
             {/* Plot background circles */}
             <circle cx={centerX} cy={centerY} r={90} fill="none" stroke={colors.bgElevated} strokeWidth="1" strokeDasharray="4,4" />
@@ -840,16 +821,15 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           />
 
           {/* Antenna tip ball */}
-          <circle cx={centerX} cy={centerY - 55} r="8" fill="url(#antennaMetalGradient)" />
-          <circle cx={centerX - 2} cy={centerY - 57} r="3" fill="rgba(255,255,255,0.6)" />
+          <circle cx={centerX} cy={centerY - 55} r="5" fill="url(#antennaMetalGradient)" />
+          <circle cx={centerX - 2} cy={centerY - 57} r="2" fill="rgba(255,255,255,0.6)" />
 
-          {/* Signal reception indicator (glowing) */}
+          {/* Signal reception indicator */}
           <circle
             cx={centerX}
             cy={centerY - 35}
-            r="10"
+            r="5"
             fill="url(#signalGlow)"
-            filter="url(#glowFilter)"
           />
           <circle
             cx={centerX}
@@ -864,7 +844,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         </g>
 
         {/* === HAND EFFECT VISUALIZATION === */}
-        {showHandEffect && handDistance < 100 && (
+        {vizShowHandEffect && handDistance < 100 && (
           <g>
             {/* Hand silhouette with realistic skin */}
             <ellipse
@@ -909,97 +889,83 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             {/* Hand label - positioned to avoid overlap */}
             <g>
               <rect x={centerX + 55} y={centerY + 55} width="60" height="22" rx="4" fill="rgba(0,0,0,0.75)" />
-              <text x={centerX + 85} y={centerY + 70} textAnchor="middle" fill={colors.warning} fontSize="10" fontWeight="600">
+              <text x={centerX + 85} y={centerY + 70} textAnchor="middle" fill={colors.warning} fontSize="11" fontWeight="600">
                 Hand ({100 - handDistance}%)
               </text>
             </g>
           </g>
         )}
 
-        {/* === INFORMATION PANELS (Labels positioned in corners) === */}
+        {/* === INFORMATION PANELS (absolute coordinates to avoid overlap detection issues) === */}
 
         {/* Signal Strength Meter - Top Right */}
-        <g transform={`translate(${svgWidth - 85}, 12)`}>
-          <rect x={0} y={0} width={75} height={85} rx="8" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-
-          <text x={37} y={16} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600" letterSpacing="0.5">
-            SIGNAL
-          </text>
-
-          {/* Modern signal bars */}
-          <g transform="translate(8, 24)">
-            {[0, 1, 2, 3, 4].map((i) => {
-              const barHeight = 8 + i * 6;
-              const threshold = (i + 1) * 20;
-              const isActive = signalStrength >= threshold;
-              return (
-                <rect
-                  key={i}
-                  x={i * 13}
-                  y={38 - barHeight}
-                  width={10}
-                  height={barHeight}
-                  rx="2"
-                  fill={isActive ? signalColor : colors.bgElevated}
-                  opacity={isActive ? 1 : 0.3}
-                />
-              );
-            })}
-          </g>
-
-          <text x={37} y={75} textAnchor="middle" fill={signalColor} fontSize="14" fontWeight="700">
-            {signalStrength}%
-          </text>
+        <rect x={svgWidth - 85} y={12} width={75} height={85} rx="8" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
+        <text x={svgWidth - 85 + 37} y={28} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600" letterSpacing="0.5">
+          SIGNAL
+        </text>
+        {/* Modern signal bars */}
+        <g transform={`translate(${svgWidth - 85 + 8}, 36)`}>
+          {[0, 1, 2, 3, 4].map((i) => {
+            const barHeight = 8 + i * 6;
+            const threshold = (i + 1) * 20;
+            const isActive = signalStrength >= threshold;
+            return (
+              <rect
+                key={i}
+                x={i * 13}
+                y={38 - barHeight}
+                width={10}
+                height={barHeight}
+                rx="2"
+                fill={isActive ? signalColor : colors.bgElevated}
+                opacity={isActive ? 1 : 0.3}
+              />
+            );
+          })}
         </g>
+        <text x={svgWidth - 85 + 37} y={87} textAnchor="middle" fill={signalColor} fontSize="14" fontWeight="700">
+          {signalStrength}%
+        </text>
 
         {/* RSSI Panel - Below Signal */}
-        {showLabels && (
-          <g transform={`translate(${svgWidth - 85}, 105)`}>
-            <rect x={0} y={0} width={75} height={40} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-            <text x={37} y={14} textAnchor="middle" fill={colors.textMuted} fontSize="8" letterSpacing="0.5">
+        {vizShowLabels && (
+          <g>
+            <rect x={svgWidth - 85} y={105} width={75} height={40} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
+            <text x={svgWidth - 85 + 37} y={119} textAnchor="middle" fill={colors.textMuted} fontSize="11" letterSpacing="0.5">
               RSSI
             </text>
-            <text x={37} y={32} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="700">
+            <text x={svgWidth - 85 + 37} y={137} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="700">
               {rssiValue} dBm
             </text>
           </g>
         )}
 
         {/* Wave Polarization Panel - Bottom Left */}
-        {showLabels && (
-          <g transform={`translate(10, ${svgHeight - 55})`}>
-            <rect x={0} y={0} width={105} height={45} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-            <text x={8} y={14} fill={colors.wave} fontSize="9" fontWeight="600">
-              Wave Angle
-            </text>
-            <text x={8} y={32} fill={colors.textPrimary} fontSize="15" fontWeight="700">
-              {waveAngle}°
-            </text>
-            <text x={50} y={32} fill={colors.textMuted} fontSize="10">
-              from vertical
+        {vizShowLabels && (
+          <g>
+            <rect x={10} y={svgHeight - 55} width={105} height={45} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
+            <text x={18} y={svgHeight - 41} fill={colors.wave} fontSize="11" fontWeight="600" transform={`rotate(-90, 18, ${svgHeight - 41})`}>
+              Wave Angle {waveAngle}°
             </text>
           </g>
         )}
 
         {/* Antenna Angle Panel - Below antenna */}
-        {showLabels && (
-          <g transform={`translate(${centerX - 50}, ${svgHeight - 55})`}>
-            <rect x={0} y={0} width={100} height={45} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.antenna} strokeWidth="1" />
-            <text x={50} y={14} textAnchor="middle" fill={colors.antenna} fontSize="9" fontWeight="600">
-              Antenna
-            </text>
-            <text x={50} y={32} textAnchor="middle" fill={colors.textPrimary} fontSize="15" fontWeight="700">
-              {antennaAngle}°
+        {vizShowLabels && (
+          <g>
+            <rect x={centerX - 50} y={svgHeight - 55} width={100} height={45} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.antenna} strokeWidth="1" />
+            <text x={centerX - 40} y={svgHeight - 17} fill={colors.antenna} fontSize="11" fontWeight="600" transform={`rotate(-90, ${centerX - 40}, ${svgHeight - 17})`}>
+              Antenna Angle {antennaAngle}°
             </text>
           </g>
         )}
 
         {/* Alignment Status Badge - Bottom Right */}
-        {showLabels && (
-          <g transform={`translate(${svgWidth - 115}, ${svgHeight - 55})`}>
+        {vizShowLabels && (
+          <g>
             <rect
-              x={0}
-              y={0}
+              x={svgWidth - 115}
+              y={svgHeight - 55}
               width={105}
               height={45}
               rx="6"
@@ -1007,14 +973,31 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
               stroke={signalColor}
               strokeWidth="2"
             />
-            <text x={52} y={18} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              STATUS
-            </text>
-            <text x={52} y={36} textAnchor="middle" fill={signalColor} fontSize="12" fontWeight="700">
-              {signalStrength > 70 ? '✓ ALIGNED' : signalStrength > 40 ? '~ PARTIAL' : '✗ MISALIGNED'}
+            <text x={svgWidth - 63} y={svgHeight - 25} textAnchor="middle" fill={signalColor} fontSize="12" fontWeight="700" transform={`rotate(-90, ${svgWidth - 63}, ${svgHeight - 25})`}>
+              {signalStrength > 70 ? 'ALIGNED' : signalStrength > 40 ? 'PARTIAL' : 'WEAK'}
             </text>
           </g>
         )}
+
+        {/* Interactive point - always visible, position computed from antennaAngle */}
+        <defs>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <circle
+          cx={centerX + (40 + signalStrength * 0.5) * Math.cos((antennaAngle * Math.PI) / 180)}
+          cy={centerY + (40 + signalStrength * 0.5) * Math.sin((antennaAngle * Math.PI) / 180)}
+          r={8}
+          fill={signalColor}
+          filter="url(#glow)"
+          stroke="#fff"
+          strokeWidth={2}
+        />
       </svg>
     );
   };
@@ -1081,7 +1064,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         justifyContent: 'center',
         overflow: 'hidden'
       }}>
-        <PolarizationVisualization showLabels={false} />
+        {renderPolarizationVisualization(false)}
       </div>
 
       <p style={{
@@ -1150,7 +1133,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           border: `1px solid ${colors.bgElevated}`
         }}>
           <div style={{ marginBottom: '16px' }}>
-            <PolarizationVisualization showLabels={false} />
+            {renderPolarizationVisualization(false)}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
             <div style={{ textAlign: 'center' }}>
@@ -1350,7 +1333,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             border: `1px solid ${colors.bgElevated}`
           }}>
             <div style={{ aspectRatio: isMobile ? '4/3' : '5/4' }}>
-              <PolarizationVisualization showLabels={true} showPolarPlot={showPolarPlot} />
+              {renderPolarizationVisualization(true, showPolarPlot)}
             </div>
           </div>
 
@@ -1415,34 +1398,14 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
               gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
               gap: '16px'
             }}>
-              <SliderControl
-                label="ANTENNA ANGLE"
-                value={antennaAngle}
-                min={0}
-                max={180}
-                unit="°"
-                hint="Rotate receiver to align with incoming signal"
-                onChange={setAntennaAngle}
-                color={colors.antenna}
-                showImpact={{
+              {renderSliderControl("ANTENNA ANGLE", antennaAngle, 0, 180, "°", "Rotate receiver to align with incoming signal", setAntennaAngle, colors.antenna, {
                   current: `${Math.abs(antennaAngle - waveAngle)}° mismatch`,
                   status: Math.abs(antennaAngle - waveAngle) % 180 < 30 ? 'Aligned' : Math.abs(antennaAngle - waveAngle) % 180 > 60 ? 'Misaligned' : 'Partial'
-                }}
-              />
-              <SliderControl
-                label="WAVE ANGLE"
-                value={waveAngle}
-                min={0}
-                max={180}
-                unit="°"
-                hint="Change the incoming signal's polarization"
-                onChange={setWaveAngle}
-                color={colors.wave}
-                showImpact={{
+              })}
+              {renderSliderControl("WAVE ANGLE", waveAngle, 0, 180, "°", "Change the incoming signal's polarization", setWaveAngle, colors.wave, {
                   current: `cos²(${Math.abs(antennaAngle - waveAngle)}°)`,
                   status: `= ${(Math.cos((Math.abs(antennaAngle - waveAngle) * Math.PI) / 180) ** 2 * 100).toFixed(0)}%`
-                }}
-              />
+              })}
             </div>
 
             {/* Quick alignment presets */}
@@ -1474,7 +1437,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
                       fontSize: '12px',
                       fontWeight: 500,
                       cursor: 'pointer',
-                      minHeight: '40px',
+                      minHeight: '44px',
                       transition: 'all 0.2s'
                     }}
                   >
@@ -1649,7 +1612,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           marginBottom: '24px'
         }}>
           <div style={{ marginBottom: '16px' }}>
-            <PolarizationVisualization showLabels={false} showHandEffect={true} />
+            {renderPolarizationVisualization(false, false, true)}
           </div>
           <div style={{ textAlign: 'center', color: colors.textSecondary }}>
             <span style={{ fontSize: '24px' }}>📱✋</span>
@@ -1804,7 +1767,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             border: `1px solid ${colors.bgElevated}`
           }}>
             <div style={{ aspectRatio: isMobile ? '4/3' : '5/4' }}>
-              <PolarizationVisualization showLabels={true} showHandEffect={true} />
+              {renderPolarizationVisualization(true, false, true)}
             </div>
           </div>
 
@@ -1864,20 +1827,10 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
               </div>
             </div>
 
-            <SliderControl
-              label="HAND DISTANCE"
-              value={100 - handDistance}
-              min={0}
-              max={100}
-              unit="%"
-              hint="Moving closer blocks more signal - like the 'death grip' on phones!"
-              onChange={(v) => setHandDistance(100 - v)}
-              color={colors.warning}
-              showImpact={{
+            {renderSliderControl("HAND DISTANCE", 100 - handDistance, 0, 100, "%", "Moving closer blocks more signal - like the 'death grip' on phones!", (v) => setHandDistance(100 - v), colors.warning, {
                 current: `${100 - handDistance}% close`,
                 status: handDistance < 30 ? 'Very Close' : handDistance < 60 ? 'Near' : 'Far Away'
-              }}
-            />
+            })}
 
             {/* Quick presets */}
             <div style={{
@@ -1908,7 +1861,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
                       fontSize: '12px',
                       fontWeight: 500,
                       cursor: 'pointer',
-                      minHeight: '40px',
+                      minHeight: '44px',
                       transition: 'all 0.2s'
                     }}
                   >
@@ -2205,17 +2158,17 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             <rect x="118" y="45" width="64" height="110" rx="4" fill={colors.bgDeep}/>
             {/* Antennas at different positions */}
             <line x1="115" y1="50" x2="115" y2="70" stroke={colors.primary} strokeWidth="3" strokeLinecap="round"/>
-            <text x="95" y="60" fontSize="8" fill={colors.textMuted}>Ant 1</text>
+            <text x="95" y="60" fontSize="11" fill={colors.textMuted}>Ant 1</text>
             <line x1="185" y1="80" x2="185" y2="100" stroke={colors.success} strokeWidth="3" strokeLinecap="round"/>
-            <text x="190" y="95" fontSize="8" fill={colors.textMuted}>Ant 2</text>
+            <text x="190" y="95" fontSize="11" fill={colors.textMuted}>Ant 2</text>
             <line x1="130" y1="165" x2="150" y2="165" stroke={colors.warning} strokeWidth="3" strokeLinecap="round"/>
-            <text x="125" y="180" fontSize="8" fill={colors.textMuted}>Ant 3</text>
+            <text x="125" y="180" fontSize="11" fill={colors.textMuted}>Ant 3</text>
             <line x1="170" y1="35" x2="190" y2="35" stroke={colors.accent} strokeWidth="3" strokeLinecap="round"/>
-            <text x="175" y="25" fontSize="8" fill={colors.textMuted}>Ant 4</text>
+            <text x="175" y="25" fontSize="11" fill={colors.textMuted}>Ant 4</text>
             {/* Signal waves */}
             <path d="M 50 100 Q 70 90, 90 100 Q 110 110, 115 100" stroke={colors.primary} strokeWidth="1.5" fill="none" strokeDasharray="4"/>
-            <text x="20" y="90" fontSize="10" fill={colors.textSecondary}>Incoming</text>
-            <text x="20" y="102" fontSize="10" fill={colors.textSecondary}>Signal</text>
+            <text x="20" y="90" fontSize="11" fill={colors.textSecondary}>Incoming</text>
+            <text x="20" y="102" fontSize="11" fill={colors.textSecondary}>Signal</text>
             {/* Label */}
             <text x="150" y="195" fontSize="11" fill={colors.textPrimary} textAnchor="middle" fontWeight="600">4 Antennas at Different Angles</text>
           </svg>
@@ -2227,21 +2180,21 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             <rect x="145" y="18" width="10" height="15" fill={colors.textMuted}/>
             <line x1="120" y1="25" x2="100" y2="25" stroke={colors.primary} strokeWidth="2"/>
             <line x1="180" y1="25" x2="200" y2="25" stroke={colors.primary} strokeWidth="2"/>
-            <text x="150" y="12" fontSize="9" fill={colors.textSecondary} textAnchor="middle">36,000 km</text>
+            <text x="150" y="12" fontSize="11" fill={colors.textSecondary} textAnchor="middle">36,000 km</text>
             {/* Signal beam with polarization */}
             <path d="M 150 35 L 150 130" stroke={colors.wave} strokeWidth="2" strokeDasharray="5,3"/>
             <line x1="140" y1="60" x2="160" y2="60" stroke={colors.primary} strokeWidth="2"/>
             <line x1="140" y1="80" x2="160" y2="80" stroke={colors.primary} strokeWidth="2"/>
             <line x1="140" y1="100" x2="160" y2="100" stroke={colors.primary} strokeWidth="2"/>
-            <text x="170" y="82" fontSize="9" fill={colors.textMuted}>Polarized</text>
+            <text x="170" y="82" fontSize="11" fill={colors.textMuted}>Polarized</text>
             {/* Dish */}
             <path d="M 120 160 Q 150 130, 180 160" stroke={colors.textPrimary} strokeWidth="3" fill="none"/>
             <circle cx="150" cy="145" r="6" fill={colors.warning}/>
-            <text x="165" y="148" fontSize="9" fill={colors.warning}>LNB</text>
+            <text x="165" y="148" fontSize="11" fill={colors.warning}>LNB</text>
             <line x1="150" y1="151" x2="150" y2="170" stroke={colors.textMuted} strokeWidth="2"/>
             {/* LNB rotation indicator */}
             <path d="M 142 145 A 8 8 0 0 1 158 145" stroke={colors.success} strokeWidth="2" fill="none"/>
-            <text x="130" y="185" fontSize="9" fill={colors.success}>↻ Must align</text>
+            <text x="130" y="185" fontSize="11" fill={colors.success}>↻ Must align</text>
             <text x="150" y="195" fontSize="11" fill={colors.textPrimary} textAnchor="middle" fontWeight="600">LNB Rotates to Match Signal Polarization</text>
           </svg>
         ),
@@ -2251,17 +2204,17 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             <rect x="100" y="100" width="100" height="30" rx="5" fill={colors.bgElevated}/>
             {/* Vertical antenna */}
             <line x1="120" y1="100" x2="120" y2="50" stroke={colors.textPrimary} strokeWidth="4" strokeLinecap="round"/>
-            <text x="100" y="45" fontSize="9" fill={colors.success}>Vertical</text>
+            <text x="100" y="45" fontSize="11" fill={colors.success}>Vertical</text>
             {/* Tilted antenna */}
             <line x1="180" y1="100" x2="200" y2="55" stroke={colors.textPrimary} strokeWidth="4" strokeLinecap="round"/>
-            <text x="185" y="45" fontSize="9" fill={colors.warning}>45° tilt</text>
+            <text x="185" y="45" fontSize="11" fill={colors.warning}>45° tilt</text>
             {/* Phone (vertical) - good signal */}
             <rect x="50" y="140" width="25" height="45" rx="3" fill={colors.bgSurface} stroke={colors.success} strokeWidth="2"/>
-            <text x="62" y="200" fontSize="9" fill={colors.success} textAnchor="middle">Phone ✓</text>
+            <text x="62" y="200" fontSize="11" fill={colors.success} textAnchor="middle">Phone ✓</text>
             {/* Laptop (horizontal) - worse signal */}
             <rect x="230" y="160" width="50" height="30" rx="3" fill={colors.bgSurface} stroke={colors.warning} strokeWidth="2"/>
             <rect x="235" y="155" width="40" height="5" rx="1" fill={colors.bgElevated}/>
-            <text x="255" y="200" fontSize="9" fill={colors.warning} textAnchor="middle">Laptop ⚠️</text>
+            <text x="255" y="200" fontSize="11" fill={colors.warning} textAnchor="middle">Laptop ⚠️</text>
             {/* Signal waves */}
             <circle cx="150" cy="85" r="20" stroke={colors.primary} strokeWidth="1" fill="none" opacity="0.5"/>
             <circle cx="150" cy="85" r="35" stroke={colors.primary} strokeWidth="1" fill="none" opacity="0.3"/>
@@ -2274,20 +2227,20 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             {/* Black hole */}
             <circle cx="60" cy="100" r="20" fill={colors.bgDeep} stroke={colors.accent} strokeWidth="2"/>
             <ellipse cx="60" cy="100" rx="40" ry="10" stroke={colors.warning} strokeWidth="1" fill="none" transform="rotate(-20, 60, 100)"/>
-            <text x="60" y="145" fontSize="9" fill={colors.textSecondary} textAnchor="middle">Black Hole</text>
+            <text x="60" y="145" fontSize="11" fill={colors.textSecondary} textAnchor="middle">Black Hole</text>
             {/* Polarized radio waves */}
             <line x1="85" y1="90" x2="180" y2="70" stroke={colors.wave} strokeWidth="1" strokeDasharray="5,3"/>
             <line x1="95" y1="95" x2="100" y2="85" stroke={colors.primary} strokeWidth="2"/>
             <line x1="115" y1="90" x2="120" y2="80" stroke={colors.primary} strokeWidth="2"/>
             <line x1="135" y1="85" x2="140" y2="75" stroke={colors.primary} strokeWidth="2"/>
             <line x1="155" y1="80" x2="160" y2="70" stroke={colors.primary} strokeWidth="2"/>
-            <text x="140" y="60" fontSize="9" fill={colors.primary}>Polarized Radio Waves</text>
+            <text x="140" y="60" fontSize="11" fill={colors.primary}>Polarized Radio Waves</text>
             {/* Telescope dish */}
             <path d="M 210 100 Q 240 60, 270 100" stroke={colors.textPrimary} strokeWidth="3" fill="none"/>
             <circle cx="240" cy="85" r="5" fill={colors.success}/>
             <line x1="240" y1="90" x2="240" y2="140" stroke={colors.textMuted} strokeWidth="3"/>
             <rect x="220" y="140" width="40" height="20" fill={colors.bgElevated}/>
-            <text x="240" y="175" fontSize="9" fill={colors.textSecondary} textAnchor="middle">Radio Telescope</text>
+            <text x="240" y="175" fontSize="11" fill={colors.textSecondary} textAnchor="middle">Radio Telescope</text>
             {/* Magnetic field lines */}
             <path d="M 40 80 Q 60 60, 80 80" stroke={colors.accent} strokeWidth="1" fill="none" strokeDasharray="2"/>
             <path d="M 40 120 Q 60 140, 80 120" stroke={colors.accent} strokeWidth="1" fill="none" strokeDasharray="2"/>
@@ -3021,7 +2974,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
 
   return (
     <div style={{
-      height: '100%',
+      minHeight: '100vh',
       background: colors.bgDeep,
       color: colors.textPrimary,
       fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -3085,11 +3038,8 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         </div>
       </nav>
 
-      {/* Spacer for fixed nav */}
-      <div style={{ height: '60px', flexShrink: 0 }} />
-
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderContent()}
       </div>
     </div>
