@@ -553,11 +553,13 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
 
   // Cat SVG component
   const renderCat = (rotation: number, frontExt: boolean, backExt: boolean, size: number = 200, showLabels: boolean = false) => {
-    const centerX = size / 2;
-    const centerY = size / 2;
+    const vbW = Math.max(size, 300);
+    const vbH = Math.max(size, 200);
+    const centerX = vbW / 2;
+    const centerY = vbH / 2;
 
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${vbW} ${vbH}`} style={{ overflow: 'visible' }}>
         <defs>
           <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#0369a1" />
@@ -588,7 +590,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
         </defs>
 
         <g>
-        <rect x="0" y="0" width={size} height={size} fill="url(#skyGrad)" rx="10" />
+        <rect x="0" y="0" width={vbW} height={vbH} fill="url(#skyGrad)" rx="10" />
 
         {showLabels && (
           <>
@@ -624,7 +626,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
             </>
           )}
 
-          <path d="M42,0 Q55,-8 62,4 Q70,16 62,20" fill="none" stroke="#ea580c" strokeWidth="5" strokeLinecap="round" />
+          <path d="M42 0Q55-8 62 4Q70 16 62 20" fill="none" stroke="#ea580c" strokeWidth="5" strokeLinecap="round" />
 
           <ellipse cx="-18" cy="0" rx="22" ry="16" fill="url(#catBodyGrad)" />
           <circle cx="-40" cy="0" r="16" fill="url(#catHeadGrad)" />
@@ -661,17 +663,19 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
 
         </g>
         <g>
-          <rect x="0" y={size - 12} width={size} height="12" fill="url(#groundGrad)" />
-          <text x={size / 2} y={size - 2} textAnchor="middle" fill="rgba(255,255,255,0.9)" fontSize="8">Ground</text>
+          <rect x="0" y={vbH - 12} width={vbW} height="12" fill="url(#groundGrad)" />
+          <text x={vbW / 2} y={vbH - 2} textAnchor="middle" fill="rgba(255,255,255,0.9)" fontSize="12">Ground</text>
         </g>
         <g filter="url(#catGlow)">
-          <circle cx={size - 20} cy={20} r="8" fill="rgba(249,115,22,0.4)" />
+          <circle cx={vbW - 20} cy={20} r="8" fill="rgba(249,115,22,0.4)" />
         </g>
 
         {/* Educational labels */}
-        <text x={12} y={16} fill="rgba(255,255,255,0.9)" fontSize="9" fontWeight="bold">Angular Momentum</text>
-        <text x={12} y={28} fill="rgba(191,219,254,0.95)" fontSize="8">L = I x omega</text>
-        <text x={size - 12} y={size - 18} textAnchor="end" fill="rgba(110,231,183,0.95)" fontSize="8">Moment of Inertia</text>
+        {/* Angular momentum conservation curve showing L over time */}
+        <path d={`M 10 ${vbH * 0.15} L ${vbW * 0.25} ${vbH * 0.7} L ${vbW * 0.5} ${vbH * 0.2} L ${vbW * 0.75} ${vbH * 0.65} L ${vbW * 0.95} ${vbH * 0.15}`} fill="none" stroke="rgba(249,115,22,0.25)" strokeWidth="2" strokeDasharray="6 3" />
+        <text x={12} y={18} fill="rgba(255,255,255,0.9)" fontSize="12" fontWeight="bold">Angular Momentum</text>
+        <text x={12} y={34} fill="rgba(191,219,254,0.95)" fontSize="11">L = I × ω</text>
+        <text x={vbW - 12} y={vbH - 20} textAnchor="end" fill="rgba(110,231,183,0.95)" fontSize="11">I₁ω₁ = I₂ω₂</text>
       </svg>
     );
   };
@@ -1048,7 +1052,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
               max="180"
               value={manualRotation}
               onChange={(e) => setManualRotation(Number(e.target.value))}
-              style={{ width: '100%', accentColor: colors.accent, background: colors.bgSecondary }}
+              style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: colors.accent, background: colors.bgSecondary }}
               aria-label="Cat rotation angle"
             />
             <p style={{ ...typo.label, color: colors.textSecondary, textAlign: 'center' }}>
@@ -1276,7 +1280,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
           Can they rotate to face a different direction without grabbing anything?
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-          <svg width="200" height="120">
+          <svg width="300" height="200" viewBox="0 0 300 200">
             <defs>
               <radialGradient id="stationGrad" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#334155" />
@@ -1284,13 +1288,14 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
               </radialGradient>
             </defs>
             <g>
-              <rect x="20" y="30" width="160" height="60" rx="10" fill="url(#stationGrad)" stroke="#475569" strokeWidth="1" />
-              <circle cx="100" cy="60" r="12" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
-              <text x="100" y="64" textAnchor="middle" fill="#334155" fontSize="10">?</text>
-              <path d="M75,55 Q65,40 55,55" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4" />
-              <path d="M125,55 Q135,40 145,55" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4" />
+              <rect x="40" y="40" width="220" height="100" rx="12" fill="url(#stationGrad)" stroke="#475569" strokeWidth="1" />
+              <circle cx="150" cy="90" r="16" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
+              <text x="150" y="95" textAnchor="middle" fill="#334155" fontSize="12">?</text>
+              <path d="M 110 80 Q 80 20 50 80" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4" />
+              <path d="M 190 80 Q 220 20 250 80" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4" />
+              <path d="M 30 30 L 100 160 L 200 40 L 270 170" fill="none" stroke="rgba(139,92,246,0.2)" strokeWidth="1.5" strokeDasharray="6 3" />
             </g>
-            <text x="100" y="110" textAnchor="middle" fill="#cbd5e1" fontSize="10">Astronaut in space station</text>
+            <text x="150" y="180" textAnchor="middle" fill="#cbd5e1" fontSize="12">Astronaut in space station</text>
           </svg>
         </div>
       </div>
@@ -1409,7 +1414,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
             <circle cx="115" cy="50" r="10" fill={colors.accent} />
             <polygon points="107,43 105,34 113,42" fill={colors.accent} />
             <polygon points="123,43 125,34 117,42" fill={colors.accent} />
-            <path d="M30,50 Q20,42 18,50 Q16,58 24,55" fill="none" stroke={colors.accent} strokeWidth="4" strokeLinecap="round" />
+            <path d="M30 50Q20 42 18 50" fill="none" stroke={colors.accent} strokeWidth="4" strokeLinecap="round" /><path d="M18 50Q16 58 24 55" fill="none" stroke={colors.accent} strokeWidth="4" strokeLinecap="round" />
             <path d="M50,30 A20,20 0 0 1 50,70" fill="none" stroke={colors.success} strokeWidth="2" />
             <path d="M90,70 A20,20 0 0 1 90,30" fill="none" stroke={colors.error} strokeWidth="2" />
           </svg>
@@ -2169,7 +2174,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
 
   return (
     <div style={{
-      height: '100vh',
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       backgroundColor: colors.bgPrimary,
@@ -2193,8 +2198,8 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
         overflowY: 'auto',
         position: 'relative',
         zIndex: 10,
-        paddingTop: '70px',
-        paddingBottom: '80px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderPhase()}
       </div>
