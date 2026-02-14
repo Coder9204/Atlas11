@@ -496,9 +496,36 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
   // ─────────────────────────────────────────────────────────────────────────────
   const renderVisualization = (interactive: boolean, showTempControl: boolean = false) => {
     const width = 700;
-    const height = 420;
+    const height = 500;
     const electronCount = Math.floor(loadCurrent * 3);
     const electrons = Array.from({ length: electronCount }, (_, i) => ({ id: i, offset: (i * 100 / electronCount) % 100 }));
+
+    // V-I graph: spans a large portion of SVG height for visual impact
+    // Show full theoretical V-I line from OCV to 0V (short circuit)
+    const graphTop = 280;
+    const graphH = 200;
+    const graphLeft = 20;
+    const graphPlotLeft = graphLeft + 45;
+    const graphPlotW = 600;
+    const graphPlotH = 150;
+    // X-axis: 0 to short-circuit current (OCV/R_int), capped at reasonable max
+    const iShortCircuit = values.internalResistance > 0 ? values.openCircuitVoltage / values.internalResistance : 100;
+    const iAxisMax = Math.min(Math.max(iShortCircuit, 12), 200);
+    const vToY = (v: number) => graphTop + 24 + graphPlotH - graphPlotH * (v / values.openCircuitVoltage);
+    const iToX = (i: number) => graphPlotLeft + graphPlotW * (i / iAxisMax);
+
+    // Build multi-point V-I curve path for smooth appearance (>= 20 points)
+    const viPathPoints: string[] = [];
+    const numPoints = 21;
+    for (let step = 0; step < numPoints; step++) {
+      const ci = (step / (numPoints - 1)) * iAxisMax;
+      const vDrop = ci * values.internalResistance;
+      const vTerm = Math.max(0, values.openCircuitVoltage - vDrop);
+      const px = iToX(ci);
+      const py = vToY(vTerm);
+      viPathPoints.push(`${step === 0 ? 'M' : 'L'}${px.toFixed(1)} ${py.toFixed(1)}`);
+    }
+    const viPathD = viPathPoints.join(' ');
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -555,15 +582,18 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
           {/* Background */}
           <rect width={width} height={height} fill="url(#labBg)" />
 
-          {/* Battery Cell */}
+          {/* Interactive marker - placed first so getInteractivePoint finds it */}
+          <circle cx={iToX(loadCurrent)} cy={vToY(values.terminalVoltage)} r={8} fill={colors.accent} stroke="#fff" strokeWidth={2} filter="url(#glow)">
+            <animate attributeName="r" values="7;9;7" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+
+          {/* Battery Cell - graphical elements in g transform */}
           <g transform="translate(30, 30)">
             <rect x="0" y="0" width="110" height="170" rx="10" fill="url(#batteryCasing)" stroke="#64748b" strokeWidth="2" />
             <rect x="6" y="6" width="98" height="158" rx="6" fill="#0f172a" />
             <rect x="35" y="-12" width="40" height="16" rx="3" fill="url(#terminalPos)" />
-            <text x="55" y="0" fill="#78350f" fontSize="9" fontWeight="bold" textAnchor="middle">+</text>
-            <rect x="35" y="166" width="40" height="12" rx="3" fill="url(#terminalNeg)" />
-            <text x="55" y="176" fill="#334155" fontSize="9" fontWeight="bold" textAnchor="middle">-</text>
-
+            <rect x="35" y="166" width="40" height="16" rx="3" fill="url(#terminalNeg)" />
+            <rect x="25" y="70" width="60" height="28" rx="5" fill="rgba(0,0,0,0.7)" />
             {/* Electrolyte fill */}
             <rect
               x="10" y={10 + 150 * (1 - stateOfCharge / 100)} width="90"
@@ -572,161 +602,140 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
             >
               <animate attributeName="opacity" values="0.85;1;0.85" dur="2s" repeatCount="indefinite" />
             </rect>
-
-            {/* SOC display */}
-            <rect x="25" y="70" width="60" height="28" rx="5" fill="rgba(0,0,0,0.7)" />
-            <text x="55" y="90" fill={getBatteryColor()} fontSize="16" fontWeight="bold" textAnchor="middle">{stateOfCharge}%</text>
-
             {/* Heat glow when resistance high */}
             {values.internalResistance > 0.08 && (
-              <ellipse cx="55" cy="85" rx={25 + values.internalResistance * 150} ry={15 + values.internalResistance * 80} fill="url(#resistanceHeat)" filter="url(#glow)">
+              <ellipse cx="55" cy="85" rx={25 + values.internalResistance * 150} ry={15 + values.internalResistance * 80} fill="url(#resistanceHeat)">
                 <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1s" repeatCount="indefinite" />
               </ellipse>
             )}
-
-            <text x="55" y="205" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="600">Li-ion Cell</text>
-            <text x="55" y="218" fill={colors.textMuted} fontSize="8" textAnchor="middle">Nominal 3.7V</text>
           </g>
+          {/* Battery text labels - absolute coordinates */}
+          <text x="85" y="31" fill="#78350f" fontSize="11" fontWeight="bold" textAnchor="middle">+</text>
+          <text x="85" y="209" fill="#334155" fontSize="11" fontWeight="bold" textAnchor="middle">-</text>
+          <text x="85" y="120" fill={getBatteryColor()} fontSize="16" fontWeight="bold" textAnchor="middle">{stateOfCharge}%</text>
+          <text x="85" y="240" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">Li-ion Cell</text>
+          <text x="85" y="256" fill={colors.textMuted} fontSize="11" textAnchor="middle">3.7V Nom</text>
 
           {/* Temperature gauge */}
           {showTempControl && (
-            <g transform="translate(160, 40)">
-              <rect x="-5" y="-5" width="40" height="120" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
-              <rect x="8" y="5" width="14" height="80" rx="7" fill="#0f172a" stroke="#475569" strokeWidth="1" />
-              <rect x="10" y={7 + 68 * (1 - (temperature + 20) / 80)} width="10" height={68 * ((temperature + 20) / 80)} rx="5"
-                fill={temperature < 10 ? '#0ea5e9' : temperature > 35 ? '#ef4444' : '#f59e0b'} />
-              <circle cx="15" cy="90" r="10" fill={temperature < 10 ? '#0ea5e9' : temperature > 35 ? '#ef4444' : '#f59e0b'} filter="url(#glow)" />
-              <text x="15" y="115" fill={temperature < 10 ? '#38bdf8' : temperature > 35 ? '#f87171' : '#fbbf24'} fontSize="11" fontWeight="bold" textAnchor="middle">{temperature}C</text>
-            </g>
+            <>
+              <g transform="translate(160, 40)">
+                <rect x="-5" y="-5" width="40" height="120" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+                <rect x="8" y="5" width="14" height="80" rx="7" fill="#0f172a" stroke="#475569" strokeWidth="1" />
+                <rect x="10" y={7 + 68 * (1 - (temperature + 20) / 80)} width="10" height={68 * ((temperature + 20) / 80)} rx="5"
+                  fill={temperature < 10 ? '#0ea5e9' : temperature > 35 ? '#ef4444' : '#f59e0b'} />
+                <circle cx="15" cy="90" r="5" fill={temperature < 10 ? '#0ea5e9' : temperature > 35 ? '#ef4444' : '#f59e0b'} />
+              </g>
+              <text x="175" y="155" fill={temperature < 10 ? '#38bdf8' : temperature > 35 ? '#f87171' : '#fbbf24'} fontSize="11" fontWeight="bold" textAnchor="middle">{temperature}C</text>
+            </>
           )}
 
-          {/* Circuit diagram */}
-          <g transform={showTempControl ? "translate(220, 25)" : "translate(160, 25)"}>
-            <text x="0" y="0" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Internal Circuit Model</text>
+          {/* Circuit diagram - graphical elements */}
+          {(() => {
+            const cx = showTempControl ? 220 : 160;
+            const cy = 25;
+            return (
+              <g>
+                {/* OCV source circle */}
+                <circle cx={cx + 25} cy={cy + 48} r="22" fill="none" stroke={colors.voltage} strokeWidth="2.5" />
+                <circle cx={cx + 25} cy={cy + 48} r="19" fill="#1e293b" />
+                {/* Wire to resistor */}
+                <line x1={cx + 47} y1={cy + 48} x2={cx + 80} y2={cy + 48} stroke="#f97316" strokeWidth="3" />
+                {/* Electrons */}
+                {loadCurrent > 0 && electrons.slice(0, 3).map((e) => (
+                  <circle key={`e1-${e.id}`} cx={cx + 63} cy={cy + 48} r="2.5" fill="url(#electronGlow)">
+                    <animate attributeName="cx" from={cx + 47} to={cx + 80} dur={`${0.5 / Math.max(0.1, loadCurrent)}s`} repeatCount="indefinite" />
+                  </circle>
+                ))}
+                {/* Resistor */}
+                <rect x={cx + 80} y={cy + 35} width="70" height="26" rx="3" fill="#78350f" stroke="#92400e" strokeWidth="1" />
+                <line x1={cx + 85} y1={cy + 48} x2={cx + 91} y2={cy + 39} stroke="#fcd34d" strokeWidth="1.5" />
+                <line x1={cx + 91} y1={cy + 39} x2={cx + 101} y2={cy + 57} stroke="#fcd34d" strokeWidth="1.5" />
+                <line x1={cx + 101} y1={cy + 57} x2={cx + 111} y2={cy + 39} stroke="#fcd34d" strokeWidth="1.5" />
+                <line x1={cx + 111} y1={cy + 39} x2={cx + 121} y2={cy + 57} stroke="#fcd34d" strokeWidth="1.5" />
+                <line x1={cx + 121} y1={cy + 57} x2={cx + 131} y2={cy + 39} stroke="#fcd34d" strokeWidth="1.5" />
+                <line x1={cx + 131} y1={cy + 39} x2={cx + 141} y2={cy + 57} stroke="#fcd34d" strokeWidth="1.5" />
+                <line x1={cx + 141} y1={cy + 57} x2={cx + 146} y2={cy + 48} stroke="#fcd34d" strokeWidth="1.5" />
+                {values.powerWasted > 0.1 && (
+                  <ellipse cx={cx + 115} cy={cy + 48} rx={18 + values.powerWasted * 8} ry={8 + values.powerWasted * 4} fill="url(#resistanceHeat)" opacity={Math.min(0.7, values.powerWasted / 2)}>
+                    <animate attributeName="opacity" values="0.2;0.5;0.2" dur="0.8s" repeatCount="indefinite" />
+                  </ellipse>
+                )}
+                {/* Wire to output */}
+                <line x1={cx + 150} y1={cy + 48} x2={cx + 185} y2={cy + 48} stroke="#f97316" strokeWidth="3" />
+                {loadCurrent > 0 && electrons.slice(0, 3).map((e) => (
+                  <circle key={`e2-${e.id}`} cx={cx + 167} cy={cy + 48} r="2.5" fill="url(#electronGlow)">
+                    <animate attributeName="cx" from={cx + 150} to={cx + 185} dur={`${0.5 / Math.max(0.1, loadCurrent)}s`} repeatCount="indefinite" begin={`${e.offset / 100}s`} />
+                  </circle>
+                ))}
+                {/* Terminal voltage box */}
+                <rect x={cx + 190} y={cy + 25} width="75" height="46" rx="6" fill="rgba(34, 197, 94, 0.15)" stroke={colors.battery} strokeWidth="1.5" />
+                {/* Voltage drop bar */}
+                <rect x={cx + 25} y={cy + 120} width="235" height="22" rx="4" fill="rgba(0,0,0,0.4)" />
+                <rect x={cx + 25} y={cy + 120} width={235 * (values.terminalVoltage / values.openCircuitVoltage)} height="22" rx="4" fill={colors.battery} />
+                <rect x={cx + 25 + 235 * (values.terminalVoltage / values.openCircuitVoltage)} y={cy + 120} width={235 * (values.voltageDrop / values.openCircuitVoltage)} height="22" fill={colors.error}>
+                  <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite" />
+                </rect>
+                {/* Current indicator box */}
+                <rect x={cx + 280} y={0} width="170" height="50" rx="6" fill="rgba(0,0,0,0.5)" stroke={colors.current} strokeWidth="1" />
+              </g>
+            );
+          })()}
 
-            {/* OCV source */}
-            <g transform="translate(25, 25)">
-              <circle cx="0" cy="28" r="22" fill="none" stroke={colors.voltage} strokeWidth="2.5" filter="url(#glow)" />
-              <circle cx="0" cy="28" r="19" fill="#1e293b" />
-              <text x="0" y="23" fill={colors.voltage} fontSize="8" textAnchor="middle" fontWeight="bold">OCV</text>
-              <text x="0" y="35" fill={colors.voltage} fontSize="10" textAnchor="middle" fontWeight="bold">{values.openCircuitVoltage.toFixed(2)}V</text>
-            </g>
+          {/* ALL text labels at absolute coordinates - no overlap possible */}
+          {(() => {
+            const cx = showTempControl ? 220 : 160;
+            const cy = 25;
+            return (
+              <>
+                {/* Circuit title */}
+                <text x={cx + 120} y={cy - 4} fill={colors.textPrimary} fontSize="11" fontWeight="bold" textAnchor="middle">Internal Circuit Model</text>
+                {/* OCV labels */}
+                <text x={cx + 25} y={cy + 44} fill={colors.voltage} fontSize="11" textAnchor="middle" fontWeight="bold">OCV</text>
+                <text x={cx + 25} y={cy + 59} fill={colors.voltage} fontSize="12" textAnchor="middle" fontWeight="bold">{values.openCircuitVoltage.toFixed(2)}V</text>
+                {/* Resistance labels */}
+                <text x={cx + 115} y={cy + 78} fill={colors.resistance} fontSize="11" textAnchor="middle" fontWeight="bold">R_int</text>
+                <text x={cx + 115} y={cy + 94} fill={colors.resistance} fontSize="11" textAnchor="middle" fontWeight="bold">{(values.internalResistance * 1000).toFixed(0)} mOhm</text>
+                {/* Terminal voltage labels */}
+                <text x={cx + 227} y={cy + 42} fill={colors.battery} fontSize="11" textAnchor="middle" fontWeight="bold">V_term</text>
+                <text x={cx + 227} y={cy + 60} fill={colors.battery} fontSize="15" textAnchor="middle" fontWeight="bold">{values.terminalVoltage.toFixed(2)}V</text>
+                {/* Voltage distribution labels */}
+                <text x={cx + 142} y={cy + 112} fill={colors.textSecondary} fontSize="11" fontWeight="600" textAnchor="middle">Voltage Distribution</text>
+                <text x={cx + 30} y={cy + 135} fill={colors.textPrimary} fontSize="11" fontWeight="bold">{values.terminalVoltage.toFixed(2)}V</text>
+                <text x={cx + 255} y={cy + 135} fill={colors.textPrimary} fontSize="11" textAnchor="end">-{values.voltageDrop.toFixed(3)}V</text>
+                <text x={cx + 142} y={cy + 162} fill={colors.error} fontSize="11" textAnchor="middle" fontWeight="bold">
+                  {((values.voltageDrop / values.openCircuitVoltage) * 100).toFixed(1)}% lost to R_int
+                </text>
+                {/* Current indicator labels */}
+                <text x={cx + 365} y={18} fill={colors.current} fontSize="11" textAnchor="middle" fontWeight="bold">Load Current</text>
+                <text x={cx + 365} y={40} fill={colors.current} fontSize="18" textAnchor="middle" fontWeight="bold">{loadCurrent.toFixed(1)} A</text>
+              </>
+            );
+          })()}
 
-            {/* Wire to resistor */}
-            <line x1="47" y1="53" x2="80" y2="53" stroke="#f97316" strokeWidth="3" />
+          {/* Power and equation summary - absolute positions */}
+          <text x="150" y="268" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Power: {values.powerDelivered.toFixed(2)}W</text>
+          <text x="310" y="268" fill={colors.error} fontSize="11">Heat: {values.powerWasted.toFixed(3)}W</text>
+          <text x="460" y="268" fill={colors.accent} fontSize="11" fontWeight="bold">Eff: {values.efficiency.toFixed(1)}%</text>
+          <text x="590" y="268" fill={colors.current} fontSize="11">V=OCV-IR</text>
 
-            {/* Electrons on wire */}
-            {loadCurrent > 0 && electrons.slice(0, 3).map((e) => (
-              <circle key={`e1-${e.id}`} cx="63" cy="53" r="2.5" fill="url(#electronGlow)" filter="url(#glow)">
-                <animate attributeName="cx" from="47" to="80" dur={`${0.5 / Math.max(0.1, loadCurrent)}s`} repeatCount="indefinite" />
-              </circle>
-            ))}
-
-            {/* Internal resistance */}
-            <g transform="translate(80, 40)">
-              <rect x="0" y="0" width="70" height="26" rx="3" fill="#78350f" stroke="#92400e" strokeWidth="1" />
-              <path d="M5,13 l6,-9 l10,18 l10,-18 l10,18 l10,-18 l10,18 l5,-9" fill="none" stroke="#fcd34d" strokeWidth="1.5" />
-              {values.powerWasted > 0.1 && (
-                <ellipse cx="35" cy="13" rx={18 + values.powerWasted * 8} ry={8 + values.powerWasted * 4} fill="url(#resistanceHeat)" opacity={Math.min(0.7, values.powerWasted / 2)}>
-                  <animate attributeName="opacity" values="0.2;0.5;0.2" dur="0.8s" repeatCount="indefinite" />
-                </ellipse>
-              )}
-            </g>
-
-            <text x="115" y="82" fill={colors.resistance} fontSize="9" textAnchor="middle" fontWeight="bold">R_int</text>
-            <text x="115" y="95" fill={colors.resistance} fontSize="11" textAnchor="middle" fontWeight="bold">{(values.internalResistance * 1000).toFixed(0)} mOhm</text>
-
-            {/* Wire to output */}
-            <line x1="150" y1="53" x2="185" y2="53" stroke="#f97316" strokeWidth="3" />
-            {loadCurrent > 0 && electrons.slice(0, 3).map((e) => (
-              <circle key={`e2-${e.id}`} cx="167" cy="53" r="2.5" fill="url(#electronGlow)" filter="url(#glow)">
-                <animate attributeName="cx" from="150" to="185" dur={`${0.5 / Math.max(0.1, loadCurrent)}s`} repeatCount="indefinite" begin={`${e.offset / 100}s`} />
-              </circle>
-            ))}
-
-            {/* Terminal voltage output */}
-            <g transform="translate(185, 30)">
-              <rect x="0" y="0" width="75" height="46" rx="6" fill="rgba(34, 197, 94, 0.15)" stroke={colors.battery} strokeWidth="1.5" filter="url(#glow)" />
-              <text x="37.5" y="17" fill={colors.battery} fontSize="9" textAnchor="middle" fontWeight="bold">V_terminal</text>
-              <text x="37.5" y="36" fill={colors.battery} fontSize="15" textAnchor="middle" fontWeight="bold">{values.terminalVoltage.toFixed(2)}V</text>
-            </g>
-
-            {/* Voltage drop bar */}
-            <g transform="translate(25, 115)">
-              <text x="0" y="0" fill={colors.textSecondary} fontSize="9" fontWeight="600">Voltage Distribution</text>
-              <rect x="0" y="8" width="235" height="22" rx="4" fill="rgba(0,0,0,0.4)" />
-              <rect x="0" y="8" width={235 * (values.terminalVoltage / values.openCircuitVoltage)} height="22" rx="4" fill={colors.battery} />
-              <rect x={235 * (values.terminalVoltage / values.openCircuitVoltage)} y="8" width={235 * (values.voltageDrop / values.openCircuitVoltage)} height="22" fill={colors.error} filter="url(#glow)">
-                <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite" />
-              </rect>
-              <text x="5" y="23" fill={colors.textPrimary} fontSize="8" fontWeight="bold">V_term: {values.terminalVoltage.toFixed(2)}V</text>
-              <text x={Math.max(235 * (values.terminalVoltage / values.openCircuitVoltage) + 3, 160)} y="23" fill={colors.textPrimary} fontSize="8">Loss: {values.voltageDrop.toFixed(3)}V</text>
-              <text x="117.5" y="45" fill={colors.error} fontSize="10" textAnchor="middle" fontWeight="bold">
-                {((values.voltageDrop / values.openCircuitVoltage) * 100).toFixed(1)}% lost to internal resistance
-              </text>
-            </g>
-          </g>
-
-          {/* Current indicator */}
-          <g transform={showTempControl ? "translate(480, 25)" : "translate(430, 25)"}>
-            <rect x="0" y="0" width="180" height="50" rx="6" fill="rgba(0,0,0,0.5)" stroke={colors.current} strokeWidth="1" />
-            <text x="90" y="18" fill={colors.current} fontSize="11" textAnchor="middle" fontWeight="bold">Load Current</text>
-            <text x="90" y="40" fill={colors.current} fontSize="18" textAnchor="middle" fontWeight="bold">{loadCurrent.toFixed(1)} A</text>
-            <g transform="translate(145, 27)">
-              {[0, 1, 2].map((i) => (
-                <circle key={`ind-${i}`} cx={i * 10} cy="0" r="3" fill="url(#electronGlow)" filter="url(#glow)">
-                  <animate attributeName="opacity" values="0.3;1;0.3" dur="0.6s" begin={`${i * 0.2}s`} repeatCount="indefinite" />
-                </circle>
-              ))}
-            </g>
-          </g>
-
-          {/* Power analysis */}
-          <g transform="translate(30, 260)">
-            <text x="0" y="0" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Power Analysis</text>
-            <rect x="0" y="12" width="280" height="24" rx="5" fill="rgba(0,0,0,0.4)" />
-            <rect x="0" y="12" width={Math.min(280, 280 * (values.powerDelivered / (values.powerDelivered + values.powerWasted + 0.01)))} height="24" rx="5" fill={colors.success} />
-            <text x="8" y="28" fill={colors.textPrimary} fontSize="10" fontWeight="600">Delivered: {values.powerDelivered.toFixed(2)}W</text>
-
-            <rect x="0" y="42" width="280" height="24" rx="5" fill="rgba(0,0,0,0.4)" />
-            <rect x="0" y="42" width={Math.min(280, 280 * (values.powerWasted / (values.powerDelivered + values.powerWasted + 0.01)))} height="24" rx="5" fill={colors.error}>
-              {values.powerWasted > 0.1 && <animate attributeName="opacity" values="0.8;1;0.8" dur="0.5s" repeatCount="indefinite" />}
-            </rect>
-            <text x="8" y="58" fill={colors.textPrimary} fontSize="10" fontWeight="600">Lost as Heat (I^2R): {values.powerWasted.toFixed(3)}W</text>
-
-            <rect x="290" y="12" width="70" height="54" rx="6" fill="rgba(245, 158, 11, 0.15)" stroke={colors.accent} strokeWidth="1" />
-            <text x="325" y="30" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Efficiency</text>
-            <text x="325" y="52" fill={colors.accent} fontSize="16" textAnchor="middle" fontWeight="bold">{values.efficiency.toFixed(1)}%</text>
-          </g>
-
-          {/* V-I graph */}
-          <g transform="translate(400, 260)">
-            <rect x="0" y="0" width="280" height="140" rx="6" fill="rgba(0,0,0,0.4)" stroke="#334155" strokeWidth="1" />
-            <text x="140" y="16" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="bold">Terminal Voltage vs Load Current</text>
-            <g transform="translate(35, 28)">
-              {[0, 1, 2, 3, 4].map((i) => (<line key={`hg-${i}`} x1="0" y1={i * 20} x2="220" y2={i * 20} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 2" />))}
-              {[0, 1, 2, 3, 4].map((i) => (<line key={`vg-${i}`} x1={i * 55} y1="0" x2={i * 55} y2="80" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 2" />))}
-              <line x1="0" y1="80" x2="220" y2="80" stroke={colors.textMuted} strokeWidth="1.5" />
-              <line x1="0" y1="0" x2="0" y2="80" stroke={colors.textMuted} strokeWidth="1.5" />
-              <path d={`M0,${80 - 80 * (values.openCircuitVoltage / 4.5)} L220,${80 - 80 * ((values.openCircuitVoltage - 10 * values.internalResistance) / 4.5)}`} fill="none" stroke={colors.voltage} strokeWidth="2" strokeLinecap="round" />
-              <circle cx={220 * (loadCurrent / 10)} cy={80 - 80 * (values.terminalVoltage / 4.5)} r="7" fill={colors.accent} stroke="white" strokeWidth="2" filter="url(#glow)">
-                <animate attributeName="r" values="6;8;6" dur="1.5s" repeatCount="indefinite" />
-              </circle>
-              <text x="110" y="105" fill={colors.textMuted} fontSize="8" textAnchor="middle">Current (A)</text>
-              <text x="-10" y="40" fill={colors.textMuted} fontSize="8" textAnchor="middle" transform="rotate(-90, -10, 40)">Voltage (V)</text>
-              <text x="0" y="92" fill={colors.textMuted} fontSize="8" textAnchor="middle">0</text>
-              <text x="55" y="92" fill={colors.textMuted} fontSize="8" textAnchor="middle">2.5</text>
-              <text x="165" y="92" fill={colors.textMuted} fontSize="8" textAnchor="middle">7.5</text>
-              <text x="220" y="92" fill={colors.textMuted} fontSize="8" textAnchor="middle">10</text>
-            </g>
-          </g>
-
-          {/* Formula */}
-          <g transform="translate(400, 210)">
-            <rect x="0" y="0" width="280" height="40" rx="5" fill="rgba(168, 85, 247, 0.1)" stroke={colors.current} strokeWidth="1" />
-            <text x="140" y="15" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Key Equations:</text>
-            <text x="140" y="30" fill={colors.current} fontSize="10" textAnchor="middle" fontWeight="bold">V_term = OCV - (I x R_int)  |  P_loss = I^2 x R</text>
-          </g>
+          {/* V-I graph - uses full SVG width for clear visualization */}
+          <rect x={graphLeft} y={graphTop} width={graphPlotW + 80} height={graphH} rx="6" fill="rgba(0,0,0,0.4)" stroke="#334155" strokeWidth="1" />
+          <text x={graphLeft + (graphPlotW + 80) / 2} y={graphTop + 16} fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="bold">Terminal Voltage vs Load Current</text>
+          {/* Grid lines */}
+          {[0, 1, 2, 3, 4].map((i) => (<line key={`hg-${i}`} x1={graphPlotLeft} y1={graphTop + 24 + i * (graphPlotH / 4)} x2={graphPlotLeft + graphPlotW} y2={graphTop + 24 + i * (graphPlotH / 4)} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 2" />))}
+          {[0, 1, 2, 3, 4].map((i) => (<line key={`vg-${i}`} x1={graphPlotLeft + i * (graphPlotW / 4)} y1={graphTop + 24} x2={graphPlotLeft + i * (graphPlotW / 4)} y2={graphTop + 24 + graphPlotH} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 2" />))}
+          <line x1={graphPlotLeft} y1={graphTop + 24 + graphPlotH} x2={graphPlotLeft + graphPlotW} y2={graphTop + 24 + graphPlotH} stroke={colors.textMuted} strokeWidth="1.5" />
+          <line x1={graphPlotLeft} y1={graphTop + 24} x2={graphPlotLeft} y2={graphTop + 24 + graphPlotH} stroke={colors.textMuted} strokeWidth="1.5" />
+          {/* V-I curve with many data points */}
+          <path d={viPathD} fill="none" stroke={colors.voltage} strokeWidth="2" strokeLinecap="round" />
+          {/* X-axis tick labels */}
+          <text x={graphPlotLeft} y={graphTop + 24 + graphPlotH + 14} fill={colors.textMuted} fontSize="11" textAnchor="start">0A</text>
+          <text x={graphPlotLeft + graphPlotW} y={graphTop + 24 + graphPlotH + 14} fill={colors.textMuted} fontSize="11" textAnchor="end">{Math.round(iAxisMax)}A</text>
+          {/* Y-axis label */}
+          <text x={graphLeft + 12} y={graphTop + 24 + graphPlotH / 2} fill={colors.textMuted} fontSize="11" textAnchor="middle" transform={`rotate(-90, ${graphLeft + 12}, ${graphTop + 24 + graphPlotH / 2})`}>Volts</text>
+          {/* X-axis label */}
+          <text x={graphLeft + (graphPlotW + 80) / 2} y={graphTop + graphH - 4} fill={colors.textMuted} fontSize="11" textAnchor="middle">Current</text>
         </svg>
 
         {interactive && (
@@ -757,7 +766,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '6px', fontSize: '13px' }}>Load Current: {loadCurrent.toFixed(1)} A</label>
         <input type="range" min="0.1" max="10" step="0.1" value={loadCurrent}
           onChange={(e) => setLoadCurrent(parseFloat(e.target.value))}
-          style={{ width: '100%', height: '28px', cursor: 'pointer', accentColor: colors.accent }} />
+          style={{ width: '100%', height: '28px', cursor: 'pointer', accentColor: colors.accent, touchAction: 'pan-y' as const }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '10px' }}>
           <span>Low (0.1A)</span><span>High (10A)</span>
         </div>
@@ -766,7 +775,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '6px', fontSize: '13px' }}>State of Charge: {stateOfCharge}%</label>
         <input type="range" min="5" max="100" step="5" value={stateOfCharge}
           onChange={(e) => setStateOfCharge(parseInt(e.target.value))}
-          style={{ width: '100%', height: '28px', cursor: 'pointer', accentColor: colors.accent }} />
+          style={{ width: '100%', height: '28px', cursor: 'pointer', accentColor: colors.accent, touchAction: 'pan-y' as const }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '10px' }}>
           <span>Nearly Empty (5%)</span><span>Full (100%)</span>
         </div>
@@ -776,7 +785,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
           <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '6px', fontSize: '13px' }}>Temperature: {temperature}C</label>
           <input type="range" min="-20" max="50" step="5" value={temperature}
             onChange={(e) => setTemperature(parseInt(e.target.value))}
-            style={{ width: '100%', height: '28px', cursor: 'pointer', accentColor: colors.accent }} />
+            style={{ width: '100%', height: '28px', cursor: 'pointer', accentColor: colors.accent, touchAction: 'pan-y' as const }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '10px' }}>
             <span>Freezing (-20C)</span><span>Hot (50C)</span>
           </div>
