@@ -620,7 +620,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
 
         {/* Fixed mounting point */}
         <rect x="25" y="100" width="30" height="40" fill="#475569" rx="4" />
-        <text x="40" y="155" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Mount</text>
+        <text x="40" y="155" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Mount</text>
 
         {/* Bimetallic strip - two layers */}
         <g transform="translate(55, 120)">
@@ -632,7 +632,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             strokeWidth="10"
             strokeLinecap="round"
           />
-          <text x={stripLength + 10} y={bendFactor * -20 - 5} fill={pair.metal1.color} fontSize="10" fontWeight="bold">
+          <text x={stripLength + 10} y={bendFactor * -20 - 5} fill={pair.metal1.color} fontSize="11" fontWeight="bold">
             {pair.metal1.name}
           </text>
 
@@ -644,7 +644,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             strokeWidth="10"
             strokeLinecap="round"
           />
-          <text x={stripLength + 10} y={10 + bendFactor * -20 + 15} fill={pair.metal2.color} fontSize="10" fontWeight="bold">
+          <text x={stripLength + 10} y={10 + bendFactor * -20 + 15} fill={pair.metal2.color} fontSize="11" fontWeight="bold">
             {pair.metal2.name}
           </text>
 
@@ -671,7 +671,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             stroke="white"
             strokeWidth="2"
           />
-          <text x={55 + stripLength + 5} y={85} textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+          <text x={55 + stripLength + 5} y={85} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
             Contact
           </text>
         </g>
@@ -689,6 +689,11 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             <text x="265" y="55" fill={colors.success} fontSize="12" fontWeight="bold">ON</text>
           </g>
         )}
+
+        {/* Grid reference lines */}
+        <line x1="55" y1="60" x2="55" y2="190" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="130" y1="60" x2="130" y2="190" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="205" y1="60" x2="205" y2="190" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
 
         {/* Temperature bar */}
         <rect x="20" y="200" width="260" height="60" fill="rgba(0,0,0,0.3)" rx="8" />
@@ -866,9 +871,9 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             <svg viewBox="0 0 200 80" style={{ width: '100%', height: '80px' }}>
               <rect x="20" y="30" width="160" height="8" fill={colors.brass} rx="2" />
               <rect x="20" y="38" width="160" height="8" fill={colors.steel} rx="2" />
-              <text x="100" y="20" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Bimetallic Strip (flat at 20C)</text>
-              <text x="190" y="35" fill={colors.brass} fontSize="9">Brass</text>
-              <text x="190" y="45" fill={colors.steel} fontSize="9">Steel</text>
+              <text x="100" y="20" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Bimetallic Strip (flat at 20C)</text>
+              <text x="190" y="35" fill={colors.brass} fontSize="11">Brass</text>
+              <text x="190" y="45" fill={colors.steel} fontSize="11">Steel</text>
             </svg>
           </div>
 
@@ -991,7 +996,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
                 setIsHeating(newTemp > temperature);
                 setTemperature(newTemp);
               }}
-              style={{ width: '100%', height: '8px', accentColor: colors.accent, cursor: 'pointer' }}
+              style={{ width: '100%', height: '20px', accentColor: colors.accent, cursor: 'pointer', touchAction: 'pan-y' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: colors.textMuted, marginTop: '4px' }}>
               <span>0C</span>
@@ -1190,13 +1195,13 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
               <rect x="0" y="0" width="280" height="120" fill="#1e293b" rx="8" />
               <line x1="40" y1="90" x2="240" y2="90" stroke="#475569" strokeWidth="2" />
               <line x1="40" y1="30" x2="40" y2="90" stroke="#475569" strokeWidth="2" />
-              <text x="140" y="110" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Temperature</text>
+              <text x="140" y="110" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Temperature</text>
               <path d="M60,70 L120,70 L120,40 L200,40" fill="none" stroke={colors.success} strokeWidth="3" />
               <path d="M200,40 L160,40 L160,70 L60,70" fill="none" stroke={colors.error} strokeWidth="3" strokeDasharray="6 3" />
-              <text x="90" y="85" fill={colors.textMuted} fontSize="10">OFF</text>
-              <text x="180" y="35" fill={colors.success} fontSize="10">ON</text>
-              <text x="120" y="105" textAnchor="middle" fill={colors.error} fontSize="9">T_on</text>
-              <text x="160" y="105" textAnchor="middle" fill={colors.success} fontSize="9">T_off</text>
+              <text x="90" y="85" fill={colors.textMuted} fontSize="11">OFF</text>
+              <text x="180" y="35" fill={colors.success} fontSize="11">ON</text>
+              <text x="120" y="105" textAnchor="middle" fill={colors.error} fontSize="11">T_on</text>
+              <text x="160" y="105" textAnchor="middle" fill={colors.success} fontSize="11">T_off</text>
             </svg>
           </div>
 
@@ -1357,7 +1362,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
                 setIsHeating(newTemp > temperature);
                 setTemperature(newTemp);
               }}
-              style={{ width: '100%', height: '8px', accentColor: colors.accent, cursor: 'pointer' }}
+              style={{ width: '100%', height: '20px', accentColor: colors.accent, cursor: 'pointer', touchAction: 'pan-y' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '4px' }}>
               {showHysteresis ? (
