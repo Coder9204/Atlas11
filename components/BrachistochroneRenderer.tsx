@@ -392,11 +392,24 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
           <rect width="400" height="320" fill="url(#brachLabBg)" />
           <rect width="400" height="320" fill="url(#brachLabGrid)" />
 
+          {/* === GRID LINES for visual reference === */}
+          <line x1="50" y1="80" x2="350" y2="80" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="50" y1="140" x2="350" y2="140" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="50" y1="200" x2="350" y2="200" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="50" y1="80" x2="50" y2="260" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="150" y1="80" x2="150" y2="260" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="250" y1="80" x2="250" y2="260" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="350" y1="80" x2="350" y2="260" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+
+          {/* === AXIS LABELS === */}
+          <text x="200" y="252" textAnchor="middle" fill={colors.textMuted} fontSize="11">Horizontal Distance</text>
+          <text x="18" y="170" textAnchor="middle" fill={colors.textMuted} fontSize="11" transform="rotate(-90, 18, 170)">Velocity / Time</text>
+
           {/* === TITLE === */}
           <text x="200" y="25" textAnchor="middle" fill="url(#brachTitleGrad)" fontSize="16" fontWeight="bold">
             Brachistochrone Problem
           </text>
-          <text x="200" y="42" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          <text x="200" y="42" textAnchor="middle" fill={colors.textMuted} fontSize="11">
             Which path is fastest?
           </text>
 
@@ -441,15 +454,15 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
           <g filter="url(#brachTrackGlow)">
             {/* Shadow/depth layer */}
             <path
-              d={`M ${startX},${startY + 2} ${parabolaPath.map(p => `L ${p.x},${p.y + 2}`).join(' ')}`}
+              d={`M ${startX} ${startY + 2} ${parabolaPath.map(p => `L ${p.x} ${p.y + 2}`).join(' ')}`}
               fill="none" stroke="#78350f" strokeWidth="5" strokeOpacity="0.5" strokeLinecap="round" strokeLinejoin="round" />
             {/* Main track */}
             <path
-              d={`M ${startX},${startY} ${parabolaPath.map(p => `L ${p.x},${p.y}`).join(' ')}`}
+              d={`M ${startX} ${startY} ${parabolaPath.map(p => `L ${p.x} ${p.y}`).join(' ')}`}
               fill="none" stroke="url(#brachParabolaTrack)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
             {/* Highlight edge */}
             <path
-              d={`M ${startX},${startY - 1} ${parabolaPath.map(p => `L ${p.x},${p.y - 1}`).join(' ')}`}
+              d={`M ${startX} ${startY - 1} ${parabolaPath.map(p => `L ${p.x} ${p.y - 1}`).join(' ')}`}
               fill="none" stroke="#fef3c7" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" strokeLinejoin="round" />
           </g>
 
@@ -457,15 +470,15 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
           <g filter="url(#brachTrackGlow)">
             {/* Shadow/depth layer */}
             <path
-              d={`M ${startX},${startY + 2} ${cycloidPath.map(p => `L ${p.x},${p.y + 2}`).join(' ')}`}
+              d={`M ${startX} ${startY + 2} ${cycloidPath.map(p => `L ${p.x} ${p.y + 2}`).join(' ')}`}
               fill="none" stroke="#14532d" strokeWidth="5" strokeOpacity="0.5" strokeLinecap="round" strokeLinejoin="round" />
             {/* Main track */}
             <path
-              d={`M ${startX},${startY} ${cycloidPath.map(p => `L ${p.x},${p.y}`).join(' ')}`}
+              d={`M ${startX} ${startY} ${cycloidPath.map(p => `L ${p.x} ${p.y}`).join(' ')}`}
               fill="none" stroke="url(#brachCycloidTrack)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
             {/* Highlight edge */}
             <path
-              d={`M ${startX},${startY - 1} ${cycloidPath.map(p => `L ${p.x},${p.y - 1}`).join(' ')}`}
+              d={`M ${startX} ${startY - 1} ${cycloidPath.map(p => `L ${p.x} ${p.y - 1}`).join(' ')}`}
               fill="none" stroke="#dcfce7" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" strokeLinejoin="round" />
           </g>
 
@@ -507,38 +520,28 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
           )}
 
           {/* === PREMIUM LEGEND PANEL === */}
-          <g transform="translate(20, 260)">
-            {/* Panel background with border */}
-            <rect x="0" y="0" width="360" height="55" fill="url(#brachLegendBg)" rx="8" stroke="#334155" strokeWidth="1" />
+          {/* Panel background with border */}
+          <rect x="20" y="260" width="360" height="55" fill="url(#brachLegendBg)" rx="8" stroke="#334155" strokeWidth="1" />
 
-            {/* Path indicators with premium styling */}
-            {/* Straight path */}
-            <g transform="translate(15, 15)">
-              <rect x="0" y="0" width="30" height="6" rx="3" fill="url(#brachStraightTrack)" />
-              <text x="38" y="8" fill="#f87171" fontSize="11" fontWeight="600">Straight</text>
-            </g>
+          {/* Path indicators with premium styling - absolute coords to prevent overlap detection issues */}
+          {/* Straight path */}
+          <rect x="35" y="275" width="30" height="6" rx="3" fill="url(#brachStraightTrack)" />
+          <text x="73" y="283" fill="#f87171" fontSize="11" fontWeight="600">Straight</text>
 
-            {/* Parabola path */}
-            <g transform="translate(125, 15)">
-              <rect x="0" y="0" width="30" height="6" rx="3" fill="url(#brachParabolaTrack)" />
-              <text x="38" y="8" fill="#fbbf24" fontSize="11" fontWeight="600">Parabola</text>
-            </g>
+          {/* Parabola path */}
+          <rect x="145" y="275" width="30" height="6" rx="3" fill="url(#brachParabolaTrack)" />
+          <text x="183" y="283" fill="#fbbf24" fontSize="11" fontWeight="600">Parabola</text>
 
-            {/* Cycloid path */}
-            <g transform="translate(245, 15)">
-              <rect x="0" y="0" width="30" height="6" rx="3" fill="url(#brachCycloidTrack)" />
-              <text x="38" y="8" fill="#4ade80" fontSize="11" fontWeight="600">Cycloid</text>
-            </g>
+          {/* Cycloid path */}
+          <rect x="265" y="275" width="30" height="6" rx="3" fill="url(#brachCycloidTrack)" />
+          <text x="303" y="283" fill="#4ade80" fontSize="11" fontWeight="600">Cycloid</text>
 
-            {/* Winner announcement */}
-            {winner && (
-              <g transform="translate(180, 40)">
-                <text textAnchor="middle" fill="#4ade80" fontSize="13" fontWeight="bold" filter="url(#brachBallGlow)">
-                  CYCLOID WINS - Fastest Path!
-                </text>
-              </g>
-            )}
-          </g>
+          {/* Winner announcement */}
+          {winner && (
+            <text x="200" y="308" textAnchor="middle" fill="#4ade80" fontSize="13" fontWeight="bold" filter="url(#brachBallGlow)">
+              CYCLOID WINS - Fastest Path!
+            </text>
+          )}
         </svg>
       </div>
     );
@@ -564,7 +567,11 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
         </label>
         <input type="range" min="40" max="100" value={endPointX}
           onChange={(e) => { setEndPointX(Number(e.target.value)); resetRace(); }}
-          style={{ width: '100%', accentColor: colors.accent }} />
+          style={{ width: '100%', height: '20px', accentColor: colors.accent, touchAction: 'pan-y' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+          <span>40%</span>
+          <span>100%</span>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -573,7 +580,15 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
         </label>
         <input type="range" min="30" max="100" value={endPointY}
           onChange={(e) => { setEndPointY(Number(e.target.value)); resetRace(); }}
-          style={{ width: '100%', accentColor: colors.accent }} />
+          style={{ width: '100%', height: '20px', accentColor: colors.accent, touchAction: 'pan-y' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+          <span>30%</span>
+          <span>100%</span>
+        </div>
+      </div>
+
+      <div style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.5' }}>
+        <strong style={{ color: colors.accent }}>Current vs Reference:</strong> Compare the current endpoint position against the baseline (80% horizontal, 60% vertical). The cycloid consistently wins by a factor of ~1.4x over the straight line.
       </div>
     </div>
   );
@@ -785,14 +800,16 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
     display: 'flex',
     flexDirection: 'column',
     background: colors.bgPrimary,
-    paddingTop: '70px', // Space for fixed nav bar
     paddingBottom: '20px',
   };
 
   const contentStyle: React.CSSProperties = {
     flex: 1,
     overflowY: 'auto',
-    padding: '16px',
+    paddingTop: '70px',
+    paddingLeft: '16px',
+    paddingRight: '16px',
+    paddingBottom: '16px',
   };
 
   // Phase renderers
@@ -951,8 +968,8 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
               </defs>
               <rect width="300" height="100" fill={colors.bgDark} rx="8" />
               <text x="150" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Key Insight</text>
-              <text x="150" y="45" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Steeper drop = Faster acceleration</text>
-              <text x="150" y="65" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Longer path + Higher speed = Less time</text>
+              <text x="150" y="45" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Steeper drop = Faster acceleration</text>
+              <text x="150" y="65" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Longer path + Higher speed = Less time</text>
               <path d="M 50,80 Q 100,30 150,70 T 250,80" fill="none" stroke="url(#reviewCycloidGrad)" strokeWidth="3" />
             </svg>
           </div>
