@@ -112,6 +112,10 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   const [bulletVelocity, setBulletVelocity] = useState(300); // m/s
   const [pendulumMass, setPendulumMass] = useState(2000); // grams
 
+  // Twist play controls (separate from main so each slider independently updates display)
+  const [twistBulletMass, setTwistBulletMass] = useState(10);
+  const [twistPendulumMass, setTwistPendulumMass] = useState(2000);
+
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
   const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -485,7 +489,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
           <line x1={pendulumX - 23} y1={pendulumY - 20} x2={pendulumX - 23} y2={pendulumY + 18}
             stroke="#c9a066" strokeWidth="0.8" strokeOpacity="0.4" />
           {/* Block label */}
-          <text x={pendulumX} y={pendulumY + 5} textAnchor="middle" fill="#e2e8f0" fontSize="8" fontWeight="bold"
+          <text x={pendulumX} y={pendulumY + 5} textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold"
             fillOpacity="0.7">{(pendulumMass / 1000).toFixed(1)}kg</text>
 
           {/* Embedded bullet in block */}
@@ -516,7 +520,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
           <rect x="64" y="203" width="3" height="4" fill="#475569" />
           <rect x="30" y="198" width="4" height="3" fill="#475569" />
           {/* Gun label */}
-          <text x="41" y="214" textAnchor="middle" fill="#e2e8f0" fontSize="8" fontWeight="bold">GUN</text>
+          <text x="41" y="196" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">GUN</text>
 
           {/* Bullet in gun (before firing) */}
           {!bulletFired && (
@@ -543,7 +547,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
               {/* Bullet highlight */}
               <ellipse cx={50 + bulletPos + 3} cy="208" rx="3" ry="1.5" fill="#fef3c7" fillOpacity="0.7" />
               {/* Velocity indicator */}
-              <text x={50 + bulletPos} y="225" textAnchor="middle" fill="#fbbf24" fontSize="8" fontWeight="bold">
+              <text x={50 + bulletPos} y="228" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">
                 {bulletVelocity} m/s
               </text>
             </g>
@@ -578,68 +582,64 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
               <rect x="360" y={(pivotY + stringLength + pendulumY) / 2 - 8} width="38" height="16" rx="3"
                 fill="#022c22" fillOpacity="0.8" />
               <text x="379" y={(pivotY + stringLength + pendulumY) / 2 + 4} textAnchor="middle"
-                fill={colors.energy} fontSize="10" fontWeight="bold">
+                fill={colors.energy} fontSize="11" fontWeight="bold">
                 h={h.toFixed(3)}m
               </text>
             </g>
           )}
 
           {/* ========== PREMIUM INFO PANEL ========== */}
-          <g transform="translate(10, 248)">
+          <g>
             {/* Panel background with gradient */}
-            <rect x="0" y="0" width="380" height="65" fill="url(#bpenInfoPanel)" rx="8"
+            <rect x="10" y="240" width="380" height="72" fill="url(#bpenInfoPanel)" rx="8"
               stroke="#334155" strokeWidth="1" />
-            {/* Panel inner glow */}
-            <rect x="2" y="2" width="376" height="61" rx="6" fill="none"
+            <rect x="12" y="242" width="376" height="68" rx="6" fill="none"
               stroke="#475569" strokeWidth="0.5" strokeOpacity="0.3" />
+          </g>
 
-            {/* Left column - Input parameters */}
-            <g>
-              <text x="12" y="16" fill="#e2e8f0" fontSize="8" fontWeight="bold">INPUT</text>
-              <circle cx="18" cy="28" r="4" fill="url(#bpenBulletGlow)" />
-              <text x="26" y="31" fill={colors.textSecondary} fontSize="9">
-                Bullet: {bulletMass}g @ {bulletVelocity}m/s
-              </text>
-              <rect x="14" y="38" width="8" height="6" rx="1" fill="url(#bpenWoodBlock)" />
-              <text x="26" y="46" fill={colors.textSecondary} fontSize="9">
-                Block: {pendulumMass}g ({(pendulumMass/1000).toFixed(1)}kg)
-              </text>
-            </g>
-
-            {/* Divider */}
-            <line x1="140" y1="8" x2="140" y2="57" stroke="#334155" strokeWidth="1" />
-
-            {/* Middle column - Results */}
-            <g>
-              <text x="150" y="16" fill="#e2e8f0" fontSize="8" fontWeight="bold">RESULT</text>
-              <circle cx="156" cy="28" r="3" fill="url(#bpenEnergyGlow)" />
-              <text x="164" y="31" fill={colors.energy} fontSize="9" fontWeight="bold">
-                V = {V.toFixed(2)} m/s
-              </text>
-              <text x="150" y="46" fill={colors.energy} fontSize="9">
-                h = {(h * 100).toFixed(2)} cm
-              </text>
-            </g>
-
-            {/* Divider */}
-            <line x1="255" y1="8" x2="255" y2="57" stroke="#334155" strokeWidth="1" />
-
-            {/* Right column - Conservation */}
-            <g>
-              <text x="265" y="16" fill="#e2e8f0" fontSize="8" fontWeight="bold">MOMENTUM</text>
-              <text x="265" y="31" fill={colors.momentum} fontSize="9">
-                p = {(bulletMass * bulletVelocity / 1000).toFixed(2)} kg·m/s
-              </text>
-              <text x="265" y="46" fill="#22c55e" fontSize="8">
-                Conserved
-              </text>
-            </g>
-
-            {/* Bottom equation */}
-            <text x="190" y="60" textAnchor="middle" fill="#e2e8f0" fontSize="8">
-              mv = (m+M)V → KE → PE = (m+M)gh
+          {/* Left column - Input parameters */}
+          <g>
+            <text x="22" y="256" fill="#e2e8f0" fontSize="11" fontWeight="bold">INPUT</text>
+            <text x="22" y="272" fill={colors.textSecondary} fontSize="11">
+              {bulletMass}g @ {bulletVelocity}m/s
+            </text>
+            <text x="22" y="288" fill={colors.textSecondary} fontSize="11">
+              Block: {(pendulumMass/1000).toFixed(1)}kg
             </text>
           </g>
+
+          {/* Divider */}
+          <line x1="155" y1="246" x2="155" y2="305" stroke="#334155" strokeWidth="1" />
+
+          {/* Middle column - Results */}
+          <g>
+            <text x="165" y="256" fill="#e2e8f0" fontSize="11" fontWeight="bold">RESULT</text>
+            <text x="165" y="272" fill={colors.energy} fontSize="11" fontWeight="bold">
+              V = {V.toFixed(2)} m/s
+            </text>
+            <text x="165" y="288" fill={colors.energy} fontSize="11">
+              h = {(h * 100).toFixed(2)} cm
+            </text>
+          </g>
+
+          {/* Divider */}
+          <line x1="275" y1="246" x2="275" y2="305" stroke="#334155" strokeWidth="1" />
+
+          {/* Right column - Conservation */}
+          <g>
+            <text x="285" y="256" fill="#e2e8f0" fontSize="11" fontWeight="bold">MOMENTUM</text>
+            <text x="285" y="272" fill={colors.momentum} fontSize="11">
+              p = {(bulletMass * bulletVelocity / 1000).toFixed(2)}
+            </text>
+            <text x="285" y="288" fill="#22c55e" fontSize="11">
+              Conserved
+            </text>
+          </g>
+
+          {/* Bottom equation */}
+          <text x="200" y="305" textAnchor="middle" fill="#e2e8f0" fontSize="11">
+            mv = (m+M)V
+          </text>
 
           {/* ========== FLOOR/TABLE ========== */}
           <rect x="0" y="312" width="400" height="8" fill="#1e293b" />
@@ -659,19 +659,22 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div>
         <label style={{ color: colors.textSecondary, fontSize: '13px' }}>Bullet Mass: {bulletMass}g</label>
         <input type="range" min="5" max="50" value={bulletMass} onChange={(e) => { setBulletMass(Number(e.target.value)); reset(); }}
-          style={{ width: '100%', accentColor: colors.accent }} />
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, accentColor: colors.accent }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: colors.textMuted, fontSize: '11px' }}>5g</span><span style={{ color: colors.textMuted, fontSize: '11px' }}>50g</span></div>
       </div>
 
       <div>
         <label style={{ color: colors.textSecondary, fontSize: '13px' }}>Bullet Velocity: {bulletVelocity} m/s</label>
         <input type="range" min="100" max="500" value={bulletVelocity} onChange={(e) => { setBulletVelocity(Number(e.target.value)); reset(); }}
-          style={{ width: '100%', accentColor: colors.accent }} />
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, accentColor: colors.accent }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: colors.textMuted, fontSize: '11px' }}>100 m/s</span><span style={{ color: colors.textMuted, fontSize: '11px' }}>500 m/s</span></div>
       </div>
 
       <div>
         <label style={{ color: colors.textSecondary, fontSize: '13px' }}>Pendulum Mass: {pendulumMass}g</label>
         <input type="range" min="500" max="5000" value={pendulumMass} onChange={(e) => { setPendulumMass(Number(e.target.value)); reset(); }}
-          style={{ width: '100%', accentColor: colors.accent }} />
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, accentColor: colors.accent }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: colors.textMuted, fontSize: '11px' }}>500g</span><span style={{ color: colors.textMuted, fontSize: '11px' }}>5000g</span></div>
       </div>
     </div>
   );
@@ -1040,6 +1043,10 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
             </p>
           </div>
           {renderVisualization()}
+          {/* Comparison display */}
+          <div style={{ margin: '0 16px 8px', padding: '10px 16px', background: 'rgba(30, 41, 59, 0.8)', borderRadius: '8px', fontSize: '13px', color: colors.textSecondary }}>
+            <span>Current: {bulletMass}g @ {bulletVelocity} m/s | Reference baseline: 10g @ 300 m/s</span>
+          </div>
           {renderControls()}
         </div>
         {renderBottomBar(true, true, 'See What I Learned →')}
@@ -1084,7 +1091,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
     );
   }
 
-  if (phase === 'twist_predict' || phase === 'twist_play' || phase === 'twist_review') {
+  if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
@@ -1094,48 +1101,134 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
             <h2 style={{ color: colors.warning, fontSize: '22px' }}>🌀 Energy Mystery!</h2>
           </div>
           {renderVisualization()}
-          {phase === 'twist_predict' && (
-            <div style={{ padding: '16px' }}>
-              {/* Progress indicator */}
-              <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                <span style={{ color: colors.textMuted, fontSize: '14px' }}>Prediction 2 of 2: Energy Transfer</span>
-              </div>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '16px' }}>
-                How much of the bullet's KE ends up as the pendulum's PE?
-              </h3>
-              {twistPredictions.map((p) => (
-                <button key={p.id} onClick={() => setTwistPrediction(p.id)}
-                  style={{ display: 'block', width: '100%', minHeight: '52px', padding: '14px', marginBottom: '10px', background: twistPrediction === p.id ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'rgba(51, 65, 85, 0.7)', border: 'none', borderRadius: '10px', color: colors.textPrimary, cursor: 'pointer' }}>
-                  {p.text}
-                </button>
-              ))}
+          <div style={{ padding: '16px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <span style={{ color: colors.textMuted, fontSize: '14px' }}>Prediction 2 of 2: Energy Transfer</span>
             </div>
-          )}
-          {phase === 'twist_play' && (
-            <>
-              {/* Observation guidance */}
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: `1px solid ${colors.accent}`, margin: '0 16px 16px', padding: '12px 16px', borderRadius: '10px' }}>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
-                  👁️ <strong>Observe:</strong> Compare the bullet's initial energy to the pendulum's maximum height. Where does the missing energy go?
-                </p>
-              </div>
-              {renderControls()}
-            </>
-          )}
-          {phase === 'twist_review' && (
-            <>
-              {renderControls()}
-              <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-                <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                  With a 10g bullet and 2kg block, over <strong style={{ color: colors.error }}>99.5%</strong> of the
-                  kinetic energy is lost as heat! Only a tiny fraction remains to swing the pendulum.
-                </p>
-              </div>
-            </>
-          )}
+            <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '16px' }}>
+              How much of the bullet's KE ends up as the pendulum's PE?
+            </h3>
+            {twistPredictions.map((p) => (
+              <button key={p.id} onClick={() => setTwistPrediction(p.id)}
+                style={{ display: 'block', width: '100%', minHeight: '52px', padding: '14px', marginBottom: '10px', background: twistPrediction === p.id ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'rgba(51, 65, 85, 0.7)', border: 'none', borderRadius: '10px', color: colors.textPrimary, cursor: 'pointer' }}>
+                {p.text}
+              </button>
+            ))}
+          </div>
         </div>
-        {renderBottomBar(true, phase === 'twist_predict' ? !!twistPrediction : true,
-          phase === 'twist_predict' ? 'See The Answer →' : phase === 'twist_play' ? 'Learn More →' : 'See Applications →')}
+        {renderBottomBar(true, !!twistPrediction, 'See The Answer →')}
+      </div>
+    );
+  }
+
+  if (phase === 'twist_play') {
+    const twistM = twistBulletMass / 1000;
+    const twistMBlock = twistPendulumMass / 1000;
+    const twistV = 300; // fixed velocity for energy comparison
+    const twistVAfter = (twistM * twistV) / (twistM + twistMBlock);
+    const twistKEBefore = 0.5 * twistM * twistV * twistV;
+    const twistKEAfter = 0.5 * (twistM + twistMBlock) * twistVAfter * twistVAfter;
+    const twistH = (twistVAfter * twistVAfter) / (2 * 9.81);
+    const twistEnergyLost = ((twistKEBefore - twistKEAfter) / twistKEBefore * 100);
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.warning, fontSize: '22px' }}>🌀 Energy Mystery!</h2>
+          </div>
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: `1px solid ${colors.accent}`, margin: '0 16px 16px', padding: '12px 16px', borderRadius: '10px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              👁️ <strong>Observe:</strong> Compare the bullet's initial energy to the pendulum's maximum height. Where does the missing energy go?
+            </p>
+          </div>
+          {/* Energy comparison SVG */}
+          <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+            <svg viewBox="0 0 400 280" style={{ width: '100%', height: 'auto', background: 'linear-gradient(135deg, #0a0f1a 0%, #030712 50%, #0a0f1a 100%)', borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="twistLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#030712" />
+                  <stop offset="50%" stopColor="#0a0f1a" />
+                  <stop offset="100%" stopColor="#030712" />
+                </linearGradient>
+              </defs>
+              <rect width="400" height="280" fill="url(#twistLabBg)" />
+              <text x="200" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Energy Transfer Analysis</text>
+
+              {/* KE Before bar */}
+              <text x="30" y="60" fill={colors.textSecondary} fontSize="11">KE Before</text>
+              <rect x="120" y="46" width={Math.min(240, twistKEBefore / 2)} height="20" rx="3" fill={colors.momentum} />
+              <text x={130 + Math.min(240, twistKEBefore / 2)} y="60" fill={colors.textPrimary} fontSize="11">{twistKEBefore.toFixed(1)} J</text>
+
+              {/* KE After bar */}
+              <text x="30" y="95" fill={colors.textSecondary} fontSize="11">KE After</text>
+              <rect x="120" y="81" width={Math.max(2, Math.min(240, twistKEAfter / 2))} height="20" rx="3" fill={colors.energy} />
+              <text x={130 + Math.max(2, Math.min(240, twistKEAfter / 2))} y="95" fill={colors.textPrimary} fontSize="11">{twistKEAfter.toFixed(2)} J</text>
+
+              {/* Energy lost label */}
+              <text x="200" y="130" textAnchor="middle" fill={colors.error} fontSize="13" fontWeight="bold">
+                {twistEnergyLost.toFixed(1)}% energy lost as heat
+              </text>
+
+              {/* Swing height */}
+              <text x="30" y="165" fill={colors.textSecondary} fontSize="11">Swing height</text>
+              <text x="200" y="165" fill={colors.energy} fontSize="13" fontWeight="bold">h = {(twistH * 100).toFixed(2)} cm</text>
+
+              {/* Parameters display */}
+              <text x="30" y="200" fill={colors.textSecondary} fontSize="11">Bullet: {twistBulletMass}g</text>
+              <text x="220" y="200" fill={colors.textSecondary} fontSize="11">Block: {twistPendulumMass}g</text>
+
+              {/* Reference baseline */}
+              <text x="200" y="235" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+                Reference: 10g bullet, 2000g block
+              </text>
+              <text x="200" y="260" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+                Current factor: {(twistBulletMass / (twistBulletMass + twistPendulumMass) * 100).toFixed(2)}% mass ratio
+              </text>
+            </svg>
+          </div>
+          {/* Twist play dedicated sliders */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px', margin: '16px' }}>
+            <div>
+              <label style={{ color: colors.textSecondary, fontSize: '13px' }}>Bullet Mass: {twistBulletMass}g</label>
+              <input type="range" min="5" max="50" value={twistBulletMass} onChange={(e) => setTwistBulletMass(Number(e.target.value))}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, accentColor: colors.accent }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: colors.textMuted, fontSize: '11px' }}>5g</span><span style={{ color: colors.textMuted, fontSize: '11px' }}>50g</span></div>
+            </div>
+            <div>
+              <label style={{ color: colors.textSecondary, fontSize: '13px' }}>Pendulum Mass: {twistPendulumMass}g</label>
+              <input type="range" min="500" max="5000" value={twistPendulumMass} onChange={(e) => setTwistPendulumMass(Number(e.target.value))}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, accentColor: colors.accent }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: colors.textMuted, fontSize: '11px' }}>500g</span><span style={{ color: colors.textMuted, fontSize: '11px' }}>5000g</span></div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(true, true, 'Learn More →')}
+      </div>
+    );
+  }
+
+  if (phase === 'twist_review') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.warning, fontSize: '22px' }}>🌀 Energy Mystery!</h2>
+          </div>
+          {renderVisualization()}
+          {renderControls()}
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              With a 10g bullet and 2kg block, over <strong style={{ color: colors.error }}>99.5%</strong> of the
+              kinetic energy is lost as heat! Only a tiny fraction remains to swing the pendulum.
+            </p>
+          </div>
+        </div>
+        {renderBottomBar(true, true, 'See Applications →')}
       </div>
     );
   }
