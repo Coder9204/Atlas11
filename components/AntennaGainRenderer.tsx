@@ -372,8 +372,8 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
   const patternAtPointing = calculatePattern(pointingAngle);
   const effectiveGain_dBi = gain_dBi + 10 * Math.log10(patternAtPointing);
 
-  // Radiation Pattern Polar Plot Component
-  const RadiationPatternVisualization = ({ showBeamwidth = true, interactive = false }) => {
+  // Radiation Pattern Polar Plot - plain render function (not a component)
+  const renderRadiationPattern = (showBeamwidth = true, interactive = false) => {
     const size = isMobile ? 280 : 360;
     const centerX = size / 2;
     const centerY = size / 2;
@@ -399,10 +399,20 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
       `${i === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`
     ).join(' ') + ' Z';
 
-    // Pointing direction indicator
+    // Interactive point: positioned on the main beam tip. The main beam radius
+    // scales with gain (gain_dBi normalized to plot). As diameter increases, the
+    // pattern concentrates more energy in the main beam, extending the tip further.
+    // Map gain_dBi (range ~5 to ~45) to a radius fraction (0.3 to 1.0 of maxRadius)
+    const gainFrac = Math.max(0.1, Math.min(1.0, (gain_dBi - 5) / 40));
+    const interactiveRadius = gainFrac * maxRadius;
+    // Place the point at the main beam direction (top = 0 degrees boresight)
+    const interactivePointX = centerX + interactiveRadius * Math.sin(pointingAngle * Math.PI / 180);
+    const interactivePointY = centerY - interactiveRadius * Math.cos(pointingAngle * Math.PI / 180);
+
+    // Arrow direction indicator
     const pointingRad = (pointingAngle - 90) * Math.PI / 180;
-    const pointingX = centerX + maxRadius * 1.1 * Math.cos(pointingRad);
-    const pointingY = centerY + maxRadius * 1.1 * Math.sin(pointingRad);
+    const arrowX = centerX + maxRadius * 1.1 * Math.cos(pointingRad);
+    const arrowY = centerY + maxRadius * 1.1 * Math.sin(pointingRad);
 
     // Beamwidth arc
     const halfBW = beamwidth / 2;
@@ -443,7 +453,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
 
         {/* Background layer group */}
         <g id="background-layer">
-          <circle cx={centerX} cy={centerY} r={maxRadius * 0.3} fill={colors.accent} opacity="0.1" filter="url(#glow)" />
+          <circle cx={centerX} cy={centerY} r={maxRadius * 0.3} fill={colors.accent} opacity="0.1" />
         </g>
 
         {/* Grid layer group */}
@@ -476,15 +486,20 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
           })}
         </g>
 
-        {/* Labels layer group */}
+        {/* Labels layer group - axis labels with physics terms */}
         <g id="labels-layer">
-          <text x={centerX + maxRadius + 5} y={centerY - 5} fill="#e2e8f0" fontSize="9">0 dB</text>
-          <text x={centerX + maxRadius * 0.67 + 5} y={centerY - 5} fill="#e2e8f0" fontSize="9">-10</text>
-          <text x={centerX + maxRadius * 0.33 + 5} y={centerY - 5} fill="#e2e8f0" fontSize="9">-20</text>
-          <text x={centerX} y={18} fill="#e2e8f0" fontSize="11" textAnchor="middle">0 deg</text>
-          <text x={size - 12} y={centerY + 4} fill="#e2e8f0" fontSize="11" textAnchor="end">90</text>
-          <text x={centerX} y={size - 8} fill="#e2e8f0" fontSize="11" textAnchor="middle">180</text>
-          <text x={12} y={centerY + 4} fill="#e2e8f0" fontSize="11" textAnchor="start">-90</text>
+          <text x={centerX} y={14} fill="#e2e8f0" fontSize="12" textAnchor="middle">Angle (degrees)</text>
+          <g transform={`translate(${size - 6},${centerY}) rotate(-90)`}>
+            <text x={0} y={0} fill="#e2e8f0" fontSize="12" textAnchor="middle">Gain Intensity (dB)</text>
+          </g>
+          <text x={10} y={centerY - 14} fill="#e2e8f0" fontSize="11" textAnchor="start">-90</text>
+          <text x={size - 10} y={centerY - 14} fill="#e2e8f0" fontSize="11" textAnchor="end">90</text>
+          <text x={centerX} y={size - 6} fill="#e2e8f0" fontSize="11" textAnchor="middle">180</text>
+          {/* Axis tick marks at edges for spatial reference */}
+          <circle cx={10} cy={centerY} r={2} fill={colors.border} />
+          <circle cx={size - 10} cy={centerY} r={2} fill={colors.border} />
+          <circle cx={centerX} cy={10} r={2} fill={colors.border} />
+          <circle cx={centerX} cy={size - 10} r={2} fill={colors.border} />
         </g>
 
         {/* Pattern layer group */}
@@ -510,23 +525,27 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
         {/* Interactive layer group */}
         <g id="interactive-layer">
           {interactive && (
-            <line
-              x1={centerX}
-              y1={centerY}
-              x2={pointingX}
-              y2={pointingY}
-              stroke={colors.warning}
-              strokeWidth="2"
-              markerEnd="url(#arrowhead)"
-              filter="url(#glow)"
-            />
+            <>
+              <line
+                x1={centerX}
+                y1={centerY}
+                x2={arrowX}
+                y2={arrowY}
+                stroke={colors.warning}
+                strokeWidth="2"
+                markerEnd="url(#arrowhead)"
+                filter="url(#glow)"
+              />
+              {/* Interactive point - moves with antennaDiameter via beamwidth edge */}
+              <circle cx={interactivePointX} cy={interactivePointY} r={8} fill={colors.warning} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+            </>
           )}
         </g>
 
         {/* Center marker layer group */}
         <g id="center-layer">
-          <circle cx={centerX} cy={centerY} r="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" filter="url(#shadow)" />
-          <circle cx={centerX} cy={centerY} r="4" fill={colors.accent} />
+          <circle cx={centerX} cy={centerY} r="5" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+          <circle cx={centerX} cy={centerY} r="3" fill={colors.accent} />
         </g>
       </svg>
     );
@@ -716,8 +735,8 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
     );
   }
 
-  // Static SVG for predict phase
-  const StaticRadiationPatternSVG = () => {
+  // Static SVG for predict phase - plain render function (not a component)
+  const renderStaticRadiationPattern = () => {
     const size = isMobile ? 260 : 320;
     const centerX = size / 2;
     const centerY = size / 2;
@@ -774,11 +793,10 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
         </g>
         {/* Labels group */}
         <g id="static-labels">
-          <text x={centerX + maxRadius + 5} y={centerY - 5} fill="#e2e8f0" fontSize="9">0 dB</text>
-          <text x={centerX + maxRadius * 0.33 + 5} y={centerY - 5} fill="#e2e8f0" fontSize="9">-20</text>
-          <text x={centerX} y={18} fill="#e2e8f0" fontSize="11" textAnchor="middle">Main Beam (0 deg)</text>
-          <text x={size - 12} y={centerY + 4} fill="#e2e8f0" fontSize="11" textAnchor="end">90</text>
-          <text x={12} y={centerY + 4} fill="#e2e8f0" fontSize="11" textAnchor="start">-90</text>
+          <text x={centerX} y={14} fill="#e2e8f0" fontSize="12" textAnchor="middle">Angle (degrees)</text>
+          <text x={centerX} y={size - 6} fill="#e2e8f0" fontSize="11" textAnchor="middle">Main Beam (0 deg)</text>
+          <text x={size - 10} y={centerY - 14} fill="#e2e8f0" fontSize="11" textAnchor="end">90</text>
+          <text x={10} y={centerY - 14} fill="#e2e8f0" fontSize="11" textAnchor="start">-90</text>
         </g>
         {/* Pattern group */}
         <g id="static-pattern">
@@ -839,7 +857,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
               Observe this radiation pattern - notice how energy is distributed
             </p>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <StaticRadiationPatternSVG />
+              {renderStaticRadiationPattern()}
             </div>
             <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
               The blue shape shows signal strength in each direction
@@ -905,10 +923,19 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '80px 24px 100px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+      }}>
 
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '8px', textAlign: 'center' }}>
@@ -939,7 +966,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <RadiationPatternVisualization showBeamwidth={true} interactive={true} />
+              {renderRadiationPattern(true, true)}
             </div>
 
             {/* Antenna diameter slider */}
@@ -958,10 +985,13 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 aria-label="Antenna Diameter"
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${(antennaDiameter / 3) * 100}%, ${colors.border} ${(antennaDiameter / 3) * 100}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
             </div>
@@ -982,9 +1012,12 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 aria-label="Look Direction"
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
             </div>
@@ -1107,6 +1140,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
 
         {renderNavDots()}
       </div>
+      </div>
     );
   }
 
@@ -1151,7 +1185,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <RadiationPatternVisualization showBeamwidth={true} />
+              {renderRadiationPattern(true, false)}
             </div>
 
             <div style={{ ...typo.body, color: '#e2e8f0' }}>
@@ -1244,7 +1278,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
               Current pattern at 10 GHz - What will happen at 20 GHz?
             </p>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <StaticRadiationPatternSVG />
+              {renderStaticRadiationPattern()}
             </div>
           </div>
 
@@ -1338,7 +1372,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <RadiationPatternVisualization showBeamwidth={true} />
+              {renderRadiationPattern(true, false)}
             </div>
 
             {/* Frequency slider */}
@@ -1362,9 +1396,12 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 aria-label="Frequency"
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1389,9 +1426,12 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
                 aria-label="Antenna Diameter"
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
