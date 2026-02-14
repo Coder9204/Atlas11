@@ -501,10 +501,17 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
           {/* Sun */}
-          <circle cx={80} cy={50} r={30} fill={colors.warning} filter="url(#sunGlow)" />
+          <circle cx={80} cy={50} r={30} fill={colors.warning} />
           <circle cx={80} cy={50} r={20} fill="#fef3c7" />
 
           {/* Ground surface */}
@@ -592,17 +599,17 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
               height={panelHeight / 2}
               fill="#60a5fa"
             />
-            {/* Label */}
-            <text
-              x={panelCenterX}
-              y={panelCenterY - 15}
-              fill={colors.textPrimary}
-              fontSize={10}
-              textAnchor="middle"
-            >
-              Bifacial Panel
-            </text>
           </g>
+          {/* Panel label - absolute coords outside rotated group */}
+          <text
+            x={panelCenterX}
+            y={panelCenterY - 25}
+            fill={colors.textPrimary}
+            fontSize={11}
+            textAnchor="middle"
+          >
+            Bifacial Panel
+          </text>
 
           {/* Panel mounting pole */}
           <line
@@ -617,65 +624,73 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
             x={panelCenterX + 15}
             y={(panelCenterY + groundY) / 2}
             fill={colors.textMuted}
-            fontSize={10}
+            fontSize={11}
           >
             {panelHeight.toFixed(1)}m
           </text>
 
-          {/* Data panel - Albedo info */}
-          <g transform="translate(10, 10)">
-            <rect x={0} y={0} width={150} height={100} fill="rgba(0,0,0,0.6)" rx={8} />
-            <text x={10} y={20} fill={colors.accent} fontSize={11} fontWeight="bold">Albedo Values</text>
+          {/* Data panel - Albedo info (absolute coords) */}
+          <rect x={10} y={10} width={150} height={110} fill="rgba(0,0,0,0.6)" rx={8} />
+          <text x={20} y={30} fill={colors.accent} fontSize={11} fontWeight="bold">Albedo Values</text>
 
-            <circle cx={20} cy={38} r={6} fill={colors.snow} />
-            <text x={32} y={42} fill={colors.textSecondary} fontSize={10}>Snow: 80%</text>
+          <circle cx={30} cy={48} r={5} fill={colors.snow} />
+          <text x={42} y={52} fill={colors.textSecondary} fontSize={11}>Snow: 80%</text>
 
-            <circle cx={20} cy={55} r={6} fill={colors.sand} />
-            <text x={32} y={59} fill={colors.textSecondary} fontSize={10}>Sand: 40%</text>
+          <circle cx={30} cy={68} r={5} fill={colors.sand} />
+          <text x={42} y={72} fill={colors.textSecondary} fontSize={11}>Sand: 40%</text>
 
-            <circle cx={20} cy={72} r={6} fill={colors.grass} />
-            <text x={32} y={76} fill={colors.textSecondary} fontSize={10}>Grass: 25%</text>
+          <circle cx={30} cy={88} r={5} fill={colors.grass} />
+          <text x={42} y={92} fill={colors.textSecondary} fontSize={11}>Grass: 25%</text>
 
-            <circle cx={20} cy={89} r={6} fill={colors.asphalt} />
-            <text x={32} y={93} fill={colors.textSecondary} fontSize={10}>Asphalt: 10%</text>
-          </g>
+          <circle cx={30} cy={108} r={5} fill={colors.asphalt} />
+          <text x={42} y={112} fill={colors.textSecondary} fontSize={11}>Asphalt: 10%</text>
 
-          {/* Performance metrics */}
-          <g transform="translate(340, 10)">
-            <rect x={0} y={0} width={150} height={130} fill="rgba(0,0,0,0.6)" rx={8} />
-            <text x={10} y={20} fill={colors.accent} fontSize={11} fontWeight="bold">Bifacial Performance</text>
+          {/* Performance metrics (absolute coords) */}
+          <rect x={340} y={10} width={150} height={145} fill="rgba(0,0,0,0.6)" rx={8} />
+          <text x={350} y={30} fill={colors.accent} fontSize={11} fontWeight="bold">Bifacial Performance</text>
 
-            <text x={10} y={42} fill={colors.textSecondary} fontSize={10}>Ground Irradiance:</text>
-            <text x={10} y={55} fill={colors.textPrimary} fontSize={11}>{output.groundIrradiance.toFixed(0)} W/m2</text>
+          <text x={350} y={50} fill={colors.textSecondary} fontSize={11}>Ground Intensity:</text>
+          <text x={350} y={66} fill={colors.textPrimary} fontSize={12}>{output.groundIrradiance.toFixed(0)} W/m2</text>
 
-            <text x={10} y={75} fill={colors.textSecondary} fontSize={10}>Bifacial Gain:</text>
-            <text x={10} y={88} fill={colors.success} fontSize={14} fontWeight="bold">+{output.bifacialGain.toFixed(1)}%</text>
+          <text x={350} y={86} fill={colors.textSecondary} fontSize={11}>Energy Coefficient:</text>
+          <text x={350} y={104} fill={colors.success} fontSize={14} fontWeight="bold">+{output.bifacialGain.toFixed(1)}%</text>
 
-            <text x={10} y={108} fill={colors.textSecondary} fontSize={10}>Annual Boost:</text>
-            <text x={10} y={121} fill={colors.textPrimary} fontSize={11}>+{output.annualRearYield.toFixed(0)} kWh/kWp</text>
-          </g>
+          <text x={350} y={126} fill={colors.textSecondary} fontSize={11}>Annual Energy Boost:</text>
+          <text x={350} y={145} fill={colors.textPrimary} fontSize={12}>+{output.annualRearYield.toFixed(0)} kWh/kWp</text>
 
-          {/* Comparison chart if enabled */}
+          {/* Comparison chart if enabled (absolute coords) */}
           {showComparison && (
-            <g transform="translate(10, 220)">
-              <rect x={0} y={0} width={180} height={90} fill="rgba(0,0,0,0.5)" rx={8} />
-              <text x={10} y={18} fill={colors.accent} fontSize={11} fontWeight="bold">Annual Yield by Surface</text>
+            <>
+              <rect x={10} y={220} width={180} height={100} fill="rgba(0,0,0,0.5)" rx={8} />
+              <text x={20} y={238} fill={colors.accent} fontSize={11} fontWeight="bold">Annual Yield by Surface</text>
 
               {(['snow', 'sand', 'grass', 'asphalt'] as const).map((type, i) => {
                 const typeAlbedo = albedoPresets[type];
                 const gain = (typeAlbedo / 100) * 15;
                 const barWidth = gain * 5;
+                const barY = 250 + i * 18;
                 return (
-                  <g key={type} transform={`translate(10, ${30 + i * 15})`}>
-                    <rect x={0} y={0} width={barWidth} height={10} fill={getGroundColor(type)} rx={2} />
-                    <text x={barWidth + 5} y={9} fill={colors.textSecondary} fontSize={9}>
+                  <React.Fragment key={type}>
+                    <rect x={20} y={barY} width={barWidth} height={10} fill={getGroundColor(type)} rx={2} />
+                    <text x={20 + barWidth + 5} y={barY + 9} fill={colors.textSecondary} fontSize={11}>
                       {type}: +{gain.toFixed(0)}%
                     </text>
-                  </g>
+                  </React.Fragment>
                 );
               })}
-            </g>
+            </>
           )}
+
+          {/* Interactive point - tracks current albedo/gain on the visualization */}
+          <circle
+            cx={100 + (albedo / 90) * 300}
+            cy={groundY - 20 - (output.bifacialGain / 30) * 200}
+            r={8}
+            fill={colors.accent}
+            filter="url(#glow)"
+            stroke="#fff"
+            strokeWidth={2}
+          />
         </svg>
 
         {interactive && (
@@ -770,7 +785,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
           step="5"
           value={albedo}
           onChange={(e) => setAlbedo(parseInt(e.target.value))}
-          style={{ width: '100%', minHeight: '44px', accentColor: colors.accent }}
+          style={{ width: '100%', minHeight: '44px', height: '20px', accentColor: colors.accent, touchAction: 'pan-y' as const }}
         />
       </div>
 
@@ -791,7 +806,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
           step="0.1"
           value={panelHeight}
           onChange={(e) => setPanelHeight(parseFloat(e.target.value))}
-          style={{ width: '100%', minHeight: '44px', accentColor: colors.accent }}
+          style={{ width: '100%', minHeight: '44px', height: '20px', accentColor: colors.accent, touchAction: 'pan-y' as const }}
         />
       </div>
 
@@ -812,7 +827,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
           step="5"
           value={tiltAngle}
           onChange={(e) => setTiltAngle(parseInt(e.target.value))}
-          style={{ width: '100%', minHeight: '44px', accentColor: colors.accent }}
+          style={{ width: '100%', minHeight: '44px', height: '20px', accentColor: colors.accent, touchAction: 'pan-y' as const }}
         />
       </div>
 
