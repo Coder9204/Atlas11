@@ -418,8 +418,8 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
   // VISUALIZATION COMPONENTS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // Main circular motion visualization
-  const CircularMotionSVG = ({ showVec = true, size = 280 }: { showVec?: boolean; size?: number }) => {
+  // Main circular motion visualization (render function, not component)
+  const renderCircularMotionSVG = ({ showVec = true, size = 280 }: { showVec?: boolean; size?: number }) => {
     const centerX = size / 2;
     const centerY = size / 2;
     const displayRadius = Math.min(radius, size / 2 - 40);
@@ -467,6 +467,34 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
           </marker>
         </defs>
 
+        {/* Grid lines for visual reference */}
+        <g id="grid-layer">
+          <line x1={30} y1={centerY} x2={size - 30} y2={centerY} strokeDasharray="4 4" opacity="0.3" stroke={colors.textMuted} strokeWidth="1" />
+          <line x1={centerX} y1={30} x2={centerX} y2={size - 30} strokeDasharray="4 4" opacity="0.3" stroke={colors.textMuted} strokeWidth="1" />
+        </g>
+
+        {/* Interactive force indicator point */}
+        {(() => {
+          const maxForce = 12;
+          const clampedForce = Math.min(centripetalForce, maxForce);
+          const indicatorY = size - 40 - (clampedForce / maxForce) * (size - 80);
+          return (
+            <g id="force-indicator">
+              <line x1={size - 25} y1={size - 40} x2={size - 25} y2={40} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <text x={size - 25} y={35} fill={colors.force} fontSize="11" textAnchor="middle" fontWeight="bold">Fc</text>
+              <circle
+                cx={size - 25}
+                cy={indicatorY}
+                r={8}
+                fill={colors.force}
+                filter="url(#glow)"
+                stroke="#fff"
+                strokeWidth={2}
+              />
+            </g>
+          );
+        })()}
+
         {/* Background group */}
         <g id="background-layer">
           {/* Track background */}
@@ -478,7 +506,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
         <g id="track-layer">
           {/* Track path */}
           <circle cx={centerX} cy={centerY} r={displayRadius} fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="10 5" />
-          <text x={centerX} y={size - 8} fill="#fbbf24" fontSize="10" textAnchor="middle" fontWeight="bold">Circular Track</text>
+          <text x={centerX} y={size - 8} fill="#fbbf24" fontSize="11" textAnchor="middle" fontWeight="bold">Circular Track</text>
         </g>
 
         {/* Motion trail group */}
@@ -502,8 +530,8 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
         </g>
 
         {/* Labels on car */}
-        <text x={carX + 20} y={carY - 20} fill={colors.textPrimary} fontSize="11" fontWeight="bold">Car</text>
-        <text x={carX + 20} y={carY - 8} fill={colors.textSecondary} fontSize="10">m = {mass.toFixed(1)} kg</text>
+        <text x={carX + 20} y={carY - 22} fill={colors.textPrimary} fontSize="11" fontWeight="bold">Car</text>
+        <text x={carX + 20} y={carY - 6} fill={colors.textSecondary} fontSize="11">m = {mass.toFixed(1)} kg</text>
 
         {/* Vectors group */}
         {showVec && (
@@ -531,7 +559,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               filter="url(#glow)"
             />
             {/* Center point */}
-            <circle cx={centerX} cy={centerY} r="6" fill="#fbbf24" filter="url(#glow)" />
+            <circle cx={centerX} cy={centerY} r="6" fill="#fbbf24" />
             <text x={centerX + 10} y={centerY + 4} fill="#fbbf24" fontSize="11" fontWeight="bold">Center</text>
           </g>
         )}
@@ -547,7 +575,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
         {/* Radius indicator group */}
         <g id="radius-layer">
           <line x1={centerX} y1={centerY} x2={centerX + displayRadius * 0.7} y2={centerY} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4 2" />
-          <text x={centerX + displayRadius * 0.35} y={centerY + 18} fill={colors.textSecondary} fontSize="10" textAnchor="middle">r = {(radius/10).toFixed(1)} m</text>
+          <text x={centerX + displayRadius * 0.35} y={centerY + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle">r = {(radius/10).toFixed(1)} m</text>
         </g>
 
         {/* Sliding warning */}
@@ -558,8 +586,8 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     );
   };
 
-  // String release simulation
-  const StringReleaseSVG = ({ size = 280 }: { size?: number }) => {
+  // String release simulation (render function, not component)
+  const renderStringReleaseSVG = ({ size = 280 }: { size?: number }) => {
     const centerX = size / 2;
     const centerY = size / 2;
     const simRadius = 80;
@@ -590,20 +618,20 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
         <g id="bg-group">
           {/* Circular path indicator */}
           <circle cx={centerX} cy={centerY} r={simRadius} fill="none" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5 3" />
-          <text x={centerX} y={centerY - simRadius - 10} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Circular Path</text>
+          <text x={centerX} y={centerY - simRadius - 10} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Circular Path</text>
         </g>
 
         {/* Center pivot group */}
         <g id="pivot-group">
           <circle cx={centerX} cy={centerY} r="8" fill="#fbbf24" filter="url(#ballGlow)" />
-          <text x={centerX} y={centerY + 24} fill="#fbbf24" fontSize="10" textAnchor="middle" fontWeight="bold">Pivot</text>
+          <text x={centerX} y={centerY + 24} fill="#fbbf24" fontSize="11" textAnchor="middle" fontWeight="bold">Pivot</text>
         </g>
 
         {!stringBroken ? (
           <g id="attached-state">
             {/* String */}
             <line x1={centerX} y1={centerY} x2={ballX} y2={ballY} stroke={colors.textSecondary} strokeWidth="3" />
-            <text x={(centerX + ballX) / 2 - 15} y={(centerY + ballY) / 2 - 5} fill={colors.textSecondary} fontSize="10">String</text>
+            <text x={(centerX + ballX) / 2 - 15} y={(centerY + ballY) / 2 - 5} fill={colors.textSecondary} fontSize="11">String</text>
 
             {/* Ball */}
             <circle cx={ballX} cy={ballY} r="14" fill="url(#ballGrad)" filter="url(#ballGlow)" />
@@ -633,7 +661,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             {/* Broken string pieces */}
             <line x1={centerX} y1={centerY} x2={centerX + 12} y2={centerY + 8} stroke={colors.error} strokeWidth="3" />
             <line x1={centerX} y1={centerY} x2={centerX - 10} y2={centerY + 6} stroke={colors.error} strokeWidth="3" />
-            <text x={centerX - 35} y={centerY + 20} fill={colors.error} fontSize="10">Broken!</text>
+            <text x={centerX - 35} y={centerY + 20} fill={colors.error} fontSize="11">Broken!</text>
 
             {/* Trail of released ball */}
             <g id="trail-group">
@@ -669,11 +697,11 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               strokeWidth="2"
               strokeDasharray="6 3"
             />
-            <text x={ballX + Math.cos(releaseAngle) * 60} y={ballY + Math.sin(releaseAngle) * 60 - 8} fill={colors.success} fontSize="10" fontWeight="bold">Straight Line Path</text>
+            <text x={ballX + Math.cos(releaseAngle) * 60} y={ballY + Math.sin(releaseAngle) * 60 - 8} fill={colors.success} fontSize="11" fontWeight="bold">Straight Line Path</text>
 
             {/* Release point marker */}
             <circle cx={ballX} cy={ballY} r="5" fill={colors.success} opacity="0.5" />
-            <text x={ballX - 30} y={ballY + 20} fill={colors.success} fontSize="10">Release Point</text>
+            <text x={ballX - 30} y={ballY + 20} fill={colors.success} fontSize="11">Release Point</text>
           </g>
         )}
 
@@ -724,7 +752,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             marginBottom: '32px',
             border: `1px solid ${colors.border}`,
           }}>
-            <CircularMotionSVG showVec={true} size={isMobile ? 260 : 300} />
+            {renderCircularMotionSVG({ showVec: true, size: isMobile ? 260 : 300 })}
             <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '16px', fontStyle: 'italic' }}>
               "Every object moving in a circle requires a force pointing toward the center. Without it, objects would travel in straight lines forever."
             </p>
@@ -772,7 +800,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             display: 'flex',
             justifyContent: 'center',
           }}>
-            <CircularMotionSVG showVec={false} size={isMobile ? 220 : 260} />
+            {renderCircularMotionSVG({ showVec: false, size: isMobile ? 220 : 260 })}
           </div>
 
           {/* Options */}
@@ -839,7 +867,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             border: `1px solid ${colors.border}`,
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CircularMotionSVG showVec={showVectors} size={isMobile ? 280 : 320} />
+              {renderCircularMotionSVG({ showVec: showVectors, size: isMobile ? 280 : 320 })}
             </div>
 
             {/* Legend panel */}
@@ -877,7 +905,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 step="0.1"
                 value={mass}
                 onChange={(e) => setMass(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: colors.accent, touchAction: 'pan-y' }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -894,7 +922,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 step="0.5"
                 value={speed}
                 onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: colors.velocity, touchAction: 'pan-y' }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -910,7 +938,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 max="100"
                 value={radius}
                 onChange={(e) => setRadius(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: colors.warning, touchAction: 'pan-y' }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1167,13 +1195,13 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               {/* Center pivot */}
               <g id="pivot-layer">
                 <circle cx="150" cy="150" r="8" fill="#fbbf24" filter="url(#glowPredict)" />
-                <text x="150" y="175" fill="#fbbf24" fontSize="10" textAnchor="middle" fontWeight="bold">Pivot</text>
+                <text x="150" y="175" fill="#fbbf24" fontSize="11" textAnchor="middle" fontWeight="bold">Pivot</text>
               </g>
 
               {/* String */}
               <g id="string-layer">
                 <line x1="150" y1="150" x2="230" y2="150" stroke={colors.textSecondary} strokeWidth="3" />
-                <text x="190" y="140" fill={colors.textSecondary} fontSize="10">String</text>
+                <text x="190" y="140" fill={colors.textSecondary} fontSize="11">String</text>
               </g>
 
               {/* Ball */}
@@ -1185,7 +1213,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               {/* Velocity arrow */}
               <g id="velocity-layer">
                 <line x1="230" y1="150" x2="230" y2="100" stroke={colors.velocity} strokeWidth="3" markerEnd="url(#arrowVel)" />
-                <text x="245" y="105" fill={colors.velocity} fontSize="10" fontWeight="bold">v</text>
+                <text x="245" y="105" fill={colors.velocity} fontSize="11" fontWeight="bold">v</text>
               </g>
 
               {/* Explanation text */}
@@ -1250,7 +1278,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             border: `1px solid ${colors.border}`,
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <StringReleaseSVG size={isMobile ? 280 : 320} />
+              {renderStringReleaseSVG({ size: isMobile ? 280 : 320 })}
             </div>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>

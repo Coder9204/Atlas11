@@ -763,11 +763,11 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
           <g>
             <line x1={bottleX - 15} y1={bottleY + 30} x2={bottleX - 15} y2={bottleY + bottleHeight - 20} stroke="#475569" strokeWidth={1} />
             <line x1={bottleX - 20} y1={bottleY + 30} x2={bottleX - 10} y2={bottleY + 30} stroke="#475569" strokeWidth={1} />
-            <text x={bottleX - 25} y={bottleY + 35} textAnchor="end" fill="#94a3b8" fontSize="8">0m</text>
+            <text x={bottleX - 25} y={bottleY + 35} textAnchor="end" fill="#94a3b8" fontSize="11">0m</text>
             <line x1={bottleX - 20} y1={bottleY + bottleHeight / 2} x2={bottleX - 10} y2={bottleY + bottleHeight / 2} stroke="#475569" strokeWidth={1} />
-            <text x={bottleX - 25} y={bottleY + bottleHeight / 2 + 3} textAnchor="end" fill="#94a3b8" fontSize="8">5m</text>
+            <text x={bottleX - 25} y={bottleY + bottleHeight / 2 + 3} textAnchor="end" fill="#94a3b8" fontSize="11">5m</text>
             <line x1={bottleX - 20} y1={bottleY + bottleHeight - 20} x2={bottleX - 10} y2={bottleY + bottleHeight - 20} stroke="#475569" strokeWidth={1} />
-            <text x={bottleX - 25} y={bottleY + bottleHeight - 17} textAnchor="end" fill="#94a3b8" fontSize="8">10m</text>
+            <text x={bottleX - 25} y={bottleY + bottleHeight - 17} textAnchor="end" fill="#94a3b8" fontSize="11">10m</text>
           </g>
 
           {/* Diver */}
@@ -805,13 +805,13 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
           )}
 
           {/* Educational labels */}
-          <text x={bottleX - 10} y={bottleY + 30} textAnchor="end" fill="#e2e8f0" fontSize="11" fontWeight="500">Sealed Bottle</text>
-          <text x={bottleX + bottleWidth + 10} y={bottleY + 60} textAnchor="start" fill="#38bdf8" fontSize="11" fontWeight="500">Water (incompressible)</text>
-          <text x={bottleX + bottleWidth + 10} y={bottleY + 80} textAnchor="start" fill="#67e8f9" fontSize="10">High pressure at depth</text>
-          <text x={diverX + 40} y={diverY - 25} textAnchor="start" fill="#f87171" fontSize="11" fontWeight="500">Cartesian Diver</text>
-          <text x={diverX + 40} y={diverY - 10} textAnchor="start" fill="#7dd3fc" fontSize="10">Air Bubble (compressible)</text>
-          <text x={diverX + 40} y={diverY + 5} textAnchor="start" fill="#a5f3fc" fontSize="9">Boyle's Law: PV = constant</text>
-          <text x={simWidth / 2} y={simHeight - 10} textAnchor="middle" fill="#e2e8f0" fontSize="10">
+          <text x={bottleX - 10} y={bottleY + 20} textAnchor="end" fill="#e2e8f0" fontSize="11" fontWeight="500">Sealed Bottle</text>
+          <text x={bottleX - 10} y={bottleY + 55} textAnchor="end" fill="#38bdf8" fontSize="11" fontWeight="500">Water</text>
+          <text x={bottleX - 10} y={bottleY + 70} textAnchor="end" fill="#67e8f9" fontSize="11">High pressure</text>
+          <text x={bottleX + bottleWidth + 10} y={bottleY + 60} textAnchor="start" fill="#f87171" fontSize="11" fontWeight="500">Cartesian Diver</text>
+          <text x={bottleX + bottleWidth + 10} y={bottleY + 78} textAnchor="start" fill="#7dd3fc" fontSize="11">Air Bubble</text>
+          <text x={bottleX + bottleWidth + 10} y={bottleY + 96} textAnchor="start" fill="#a5f3fc" fontSize="11">PV = constant</text>
+          <text x={simWidth / 2} y={simHeight - 10} textAnchor="middle" fill="#e2e8f0" fontSize="11">
             Squeeze the bottle to increase pressure and observe buoyancy changes
           </text>
         </svg>
@@ -935,6 +935,21 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             <ellipse cx={0} cy={-25} rx={8} ry={6} fill="#ef4444" />
             <ellipse cx={0} cy={-2} rx={4 + bubble3Size * 6} ry={6 + bubble3Size * 8} fill="url(#cartTwistBubble)" />
           </g>
+
+          {/* Depth scale */}
+          <line x1={bottleX - 15} y1={bottleY + 10} x2={bottleX - 15} y2={bottleY + bottleHeight - 10} stroke="#475569" strokeWidth={1} />
+          <line x1={bottleX - 20} y1={bottleY + 10} x2={bottleX - 10} y2={bottleY + 10} stroke="#475569" strokeWidth={1} />
+          <text x={bottleX - 25} y={bottleY + 15} textAnchor="end" fill="#94a3b8" fontSize="11">0m</text>
+          <line x1={bottleX - 20} y1={bottleY + bottleHeight / 2} x2={bottleX - 10} y2={bottleY + bottleHeight / 2} stroke="#475569" strokeWidth={1} />
+          <text x={bottleX - 25} y={bottleY + bottleHeight / 2 + 4} textAnchor="end" fill="#94a3b8" fontSize="11">5m</text>
+          <line x1={bottleX - 20} y1={bottleY + bottleHeight - 10} x2={bottleX - 10} y2={bottleY + bottleHeight - 10} stroke="#475569" strokeWidth={1} />
+          <text x={bottleX - 25} y={bottleY + bottleHeight - 6} textAnchor="end" fill="#94a3b8" fontSize="11">10m</text>
+
+          {/* Diver labels */}
+          <text x={bottleX + 35} y={bottleY + bottleHeight + 15} textAnchor="middle" fill="#22c55e" fontSize="11">Large</text>
+          <text x={bottleX + 75} y={bottleY + bottleHeight + 15} textAnchor="middle" fill="#3b82f6" fontSize="11">Medium</text>
+          <text x={bottleX + 115} y={bottleY + bottleHeight + 15} textAnchor="middle" fill="#ef4444" fontSize="11">Small</text>
+          <text x={simWidth / 2} y={simHeight - 10} textAnchor="middle" fill="#e2e8f0" fontSize="11">Compare divers with different bubble sizes</text>
 
           {/* Pressure arrows */}
           {isTwistSqueezing && (
@@ -1123,10 +1138,10 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
               }}
               style={{
                 width: '100%',
-                height: '8px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                accentColor: colors.accent,
+                height: '20px',
+                touchAction: 'pan-y',
+                WebkitAppearance: 'none',
+                accentColor: '#3b82f6',
               }}
             />
           </div>
@@ -1246,27 +1261,29 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                 <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.9" />
               </linearGradient>
             </defs>
+            {/* Title */}
+            <text x={150} y={14} textAnchor="middle" fill="#fbbf24" fontSize="12" fontWeight="600">Bubble Size Comparison</text>
             {/* Bottle */}
             <rect x={75} y={20} width={150} height={110} rx={10} fill="url(#twistPredictWater)" stroke="#67e8f9" strokeWidth={2} />
             {/* Diver 1 - Large bubble (green) */}
             <g transform="translate(105, 60)">
               <rect x={-5} y={-15} width={10} height={30} rx={2} fill="#e5e7eb" stroke="#22c55e" strokeWidth={2} />
               <ellipse cx={0} cy={0} rx={6} ry={10} fill="#7dd3fc" opacity={0.8} />
-              <text x={0} y={35} textAnchor="middle" fill="#22c55e" fontSize="9">Large</text>
             </g>
+            <text x={105} y={108} textAnchor="middle" fill="#22c55e" fontSize="11">Large</text>
             {/* Diver 2 - Medium bubble (blue) */}
             <g transform="translate(150, 65)">
               <rect x={-5} y={-15} width={10} height={30} rx={2} fill="#e5e7eb" stroke="#3b82f6" strokeWidth={2} />
               <ellipse cx={0} cy={0} rx={4} ry={7} fill="#7dd3fc" opacity={0.8} />
-              <text x={0} y={35} textAnchor="middle" fill="#3b82f6" fontSize="9">Medium</text>
             </g>
+            <text x={150} y={113} textAnchor="middle" fill="#3b82f6" fontSize="11">Medium</text>
             {/* Diver 3 - Small bubble (red) */}
             <g transform="translate(195, 70)">
               <rect x={-5} y={-15} width={10} height={30} rx={2} fill="#e5e7eb" stroke="#ef4444" strokeWidth={2} />
               <ellipse cx={0} cy={0} rx={3} ry={5} fill="#7dd3fc" opacity={0.8} />
-              <text x={0} y={30} textAnchor="middle" fill="#ef4444" fontSize="9">Small</text>
             </g>
-            <text x={150} y={145} textAnchor="middle" fill="#e2e8f0" fontSize="10">Three divers with different bubble sizes</text>
+            <text x={195} y={118} textAnchor="middle" fill="#ef4444" fontSize="11">Small</text>
+            <text x={150} y={140} textAnchor="middle" fill="#e2e8f0" fontSize="11">Three divers with different bubble sizes</text>
           </svg>
         </div>
 
@@ -1346,10 +1363,10 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
               onChange={(e) => setTwistPressure(parseInt(e.target.value) / 100)}
               style={{
                 width: '100%',
-                height: '8px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                accentColor: '#fbbf24',
+                height: '20px',
+                touchAction: 'pan-y',
+                WebkitAppearance: 'none',
+                accentColor: '#3b82f6',
               }}
             />
           </div>

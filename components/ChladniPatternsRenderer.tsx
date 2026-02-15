@@ -683,7 +683,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                       x={plateX + (plateSize * (i + 0.5)) / modeM + 8}
                       y={plateY + 20}
                       fill={colors.nodal}
-                      fontSize="10"
+                      fontSize="11"
                     >
                       Nodal Line
                     </text>
@@ -755,20 +755,49 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                 y={plateY + plateSize + 55}
                 textAnchor="middle"
                 fill={colors.accent}
-                fontSize="10"
+                fontSize="11"
               >
                 Speaker ({frequency} Hz)
               </text>
             </g>
           )}
 
+          {/* Axis labels for educational clarity */}
+          <text
+            x={plateX + plateSize / 2}
+            y={plateY + plateSize + 18}
+            textAnchor="middle"
+            fill={colors.textSecondary}
+            fontSize="11"
+          >
+            Frequency: {frequency} Hz
+          </text>
+          <text
+            x={plateX - 8}
+            y={plateY + plateSize / 2}
+            textAnchor="middle"
+            fill={colors.textSecondary}
+            fontSize="11"
+            transform={`rotate(-90, ${plateX - 8}, ${plateY + plateSize / 2})`}
+          >
+            Amplitude
+          </text>
+
+          {/* Grid lines for visual reference */}
+          <line x1={plateX} y1={plateY + plateSize / 4} x2={plateX + plateSize} y2={plateY + plateSize / 4} stroke={colors.textSecondary} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={plateX} y1={plateY + plateSize / 2} x2={plateX + plateSize} y2={plateY + plateSize / 2} stroke={colors.textSecondary} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={plateX} y1={plateY + 3 * plateSize / 4} x2={plateX + plateSize} y2={plateY + 3 * plateSize / 4} stroke={colors.textSecondary} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={plateX + plateSize / 4} y1={plateY} x2={plateX + plateSize / 4} y2={plateY + plateSize} stroke={colors.textSecondary} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={plateX + plateSize / 2} y1={plateY} x2={plateX + plateSize / 2} y2={plateY + plateSize} stroke={colors.textSecondary} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={plateX + 3 * plateSize / 4} y1={plateY} x2={plateX + 3 * plateSize / 4} y2={plateY + plateSize} stroke={colors.textSecondary} strokeDasharray="4 4" opacity={0.3} />
+
           {/* Legend inside SVG */}
           <g transform={`translate(${width - 110}, 15)`}>
             <rect x="0" y="0" width="100" height="50" fill="rgba(0,0,0,0.5)" rx="4" />
             <circle cx="12" cy="15" r="5" fill="url(#chladSandGrain)" />
-            <text x="22" y="18" fill={colors.textSecondary} fontSize="10">Sand</text>
+            <text x="22" y="18" fill={colors.textSecondary} fontSize="11">Sand</text>
             <line x1="7" y1="35" x2="25" y2="35" stroke={colors.nodal} strokeWidth="2" strokeDasharray="4,2" />
-            <text x="30" y="38" fill={colors.textSecondary} fontSize="10">Node</text>
+            <text x="30" y="38" fill={colors.textSecondary} fontSize="11">Node</text>
           </g>
         </svg>
 
@@ -864,7 +893,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
           step="50"
           value={frequency}
           onChange={(e) => setFrequency(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent, background: 'rgba(20, 184, 166, 0.2)' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6' }}
           aria-label="Frequency slider"
         />
       </div>

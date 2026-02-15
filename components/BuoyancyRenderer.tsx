@@ -442,20 +442,8 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
     }
   };
 
-  // Water tank visualization component
-  const WaterTankVisualization = ({
-    objDensity,
-    flDensity,
-    showObject = true,
-    dropped = false,
-    progress = 100
-  }: {
-    objDensity: number;
-    flDensity: number;
-    showObject?: boolean;
-    dropped?: boolean;
-    progress?: number;
-  }) => {
+  // Water tank visualization (plain render function to avoid React remounting)
+  const renderWaterTankVisualization = (objDensity: number, flDensity: number, showObject = true, dropped = false, progress = 100) => {
     const width = isMobile ? 320 : 440;
     const height = isMobile ? 280 : 340;
 
@@ -512,9 +500,9 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
         <line x1="43" y1={waterTop} x2={width - 43} y2={waterTop} stroke="#7dd3fc" strokeWidth="3" />
 
         {/* Depth markers */}
-        <text x="30" y={waterTop + waterHeight * 0.25} fill={colors.textMuted} fontSize="10" textAnchor="end">25%</text>
-        <text x="30" y={waterTop + waterHeight * 0.5} fill={colors.textMuted} fontSize="10" textAnchor="end">50%</text>
-        <text x="30" y={waterTop + waterHeight * 0.75} fill={colors.textMuted} fontSize="10" textAnchor="end">75%</text>
+        <text x="30" y={waterTop + waterHeight * 0.25} fill={colors.textMuted} fontSize="11" textAnchor="end">25%</text>
+        <text x="30" y={waterTop + waterHeight * 0.5} fill={colors.textMuted} fontSize="11" textAnchor="end">50%</text>
+        <text x="30" y={waterTop + waterHeight * 0.75} fill={colors.textMuted} fontSize="11" textAnchor="end">75%</text>
 
         {/* Object */}
         {showObject && (
@@ -560,14 +548,14 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             <g transform={`translate(${objectX + objectSize + 15}, ${currentY + objectSize/2})`}>
               <line x1="0" y1="0" x2="0" y2="30" stroke={colors.error} strokeWidth="3" />
               <polygon points="-6,24 6,24 0,34" fill={colors.error} />
-              <text x="10" y="20" fill={colors.error} fontSize="10">W</text>
+              <text x="10" y="20" fill={colors.error} fontSize="11">W</text>
             </g>
             {/* Buoyancy arrow (up) - only when in water */}
             {currentSubmersion > 0 && (
               <g transform={`translate(${objectX - 15}, ${currentY + objectSize/2})`}>
                 <line x1="0" y1={30 * currentSubmersion/100} x2="0" y2="0" stroke={colors.accent} strokeWidth="3" />
                 <polygon points="-6,6 6,6 0,-4" fill={colors.accent} />
-                <text x="-15" y="20" fill={colors.accent} fontSize="10">Fb</text>
+                <text x="-15" y="20" fill={colors.accent} fontSize="11">Fb</text>
               </g>
             )}
           </>
@@ -581,8 +569,8 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           <animate attributeName="cy" values={`${waterTop + 12};${waterTop + 6};${waterTop + 12}`} dur="2.5s" repeatCount="indefinite" />
         </circle>
         <circle cx={width * 0.8} cy={waterTop + 6} r="2" fill="rgba(125,211,252,0.25)" />
-        <path d={`M43,${waterTop - 2} Q${width * 0.25},${waterTop - 5} ${width * 0.5},${waterTop - 2} T${width - 43},${waterTop - 2}`} fill="none" stroke="rgba(125,211,252,0.3)" strokeWidth="1" />
-        <path d={`M43,${waterTop + waterHeight} Q${width * 0.3},${waterTop + waterHeight - 8} ${width * 0.6},${waterTop + waterHeight} T${width - 43},${waterTop + waterHeight}`} fill="none" stroke="rgba(7,89,133,0.4)" strokeWidth="1" />
+        <line x1="43" y1={waterTop - 2} x2={width - 43} y2={waterTop - 2} stroke="rgba(125,211,252,0.3)" strokeWidth="1" />
+        <line x1="43" y1={waterTop + waterHeight} x2={width - 43} y2={waterTop + waterHeight} stroke="rgba(7,89,133,0.4)" strokeWidth="1" />
       </svg>
     );
   };
@@ -737,7 +725,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
         textAlign: 'center',
       }}>
         {renderProgressBar()}
@@ -812,7 +803,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
       }}>
         {renderProgressBar()}
 
@@ -870,21 +864,21 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
               {/* Wood - floats at surface */}
               <g filter="url(#predictGlow)">
                 <rect x="195" y="125" width="50" height="30" rx="4" fill="url(#woodGrad)" />
-                <text x="220" y="144" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">Wood</text>
+                <text x="220" y="144" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">Wood</text>
               </g>
               <text x="220" y="115" textAnchor="middle" fill={colors.success} fontSize="11">Floats</text>
               {/* Ship - floats (hollow hull) */}
               <g filter="url(#predictGlow)">
                 <path d="M320,130 L370,130 L380,155 L310,155 Z" fill="url(#shipGrad)" />
                 <rect x="335" y="115" width="15" height="15" fill={colors.accent} rx="2" />
-                <text x="345" y="170" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">Ship</text>
+                <text x="345" y="170" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">Ship</text>
               </g>
               <text x="345" y="185" textAnchor="middle" fill={colors.success} fontSize="11">Floats!</text>
               {/* Labels */}
               <text x="220" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">What determines floating vs sinking?</text>
-              <text x="80" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="10">Dense & Heavy</text>
-              <text x="220" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="10">Light & Porous</text>
-              <text x="345" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="10">Heavy but Hollow</text>
+              <text x="80" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="11">Dense & Heavy</text>
+              <text x="220" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="11">Light & Porous</text>
+              <text x="345" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="11">Heavy but Hollow</text>
               {/* Arrows */}
               <path d="M80,65 L80,90" stroke={colors.error} strokeWidth="2" markerEnd="url(#arrowDown)" />
               <path d="M220,65 L220,90" stroke={colors.success} strokeWidth="2" />
@@ -960,7 +954,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
       }}>
         {renderProgressBar()}
 
@@ -975,6 +972,135 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             Density is defined as mass divided by volume (calculated as ρ = m/V). The ratio of object density to fluid density determines whether an object floats or sinks.
           </p>
 
+          {/* Formula */}
+          <p style={{ ...typo.body, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontFamily: 'monospace' }}>
+            F_b = ρ × V × g
+          </p>
+
+          {/* Force comparison chart */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg viewBox="0 0 440 280" width="100%" style={{ maxWidth: '440px', background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="forceGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#10B981" stopOpacity="0.05" />
+                </linearGradient>
+                <linearGradient id="weightGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#EF4444" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#EF4444" stopOpacity="0.05" />
+                </linearGradient>
+                <filter id="forceGlow">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <filter id="forceDropShadow">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.3" />
+                </filter>
+              </defs>
+
+              {/* Grid lines */}
+              <g>
+                <line x1="60" y1="40" x2="420" y2="40" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                <line x1="60" y1="80" x2="420" y2="80" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                <line x1="60" y1="120" x2="420" y2="120" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                <line x1="60" y1="160" x2="420" y2="160" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                <line x1="60" y1="200" x2="420" y2="200" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                <line x1="60" y1="240" x2="420" y2="240" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+              </g>
+
+              {/* Vertical grid lines */}
+              <g>
+                <line x1="140" y1="25" x2="140" y2="250" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                <line x1="220" y1="25" x2="220" y2="250" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                <line x1="300" y1="25" x2="300" y2="250" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                <line x1="380" y1="25" x2="380" y2="250" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+              </g>
+
+              {/* Axes */}
+              <g>
+                <line x1="60" y1="20" x2="60" y2="250" stroke={colors.textMuted} strokeWidth="2" />
+                <line x1="60" y1="250" x2="420" y2="250" stroke={colors.textMuted} strokeWidth="2" />
+              </g>
+
+              {/* Axis labels */}
+              <text x="15" y="140" fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform="rotate(-90, 15, 140)">Force (N)</text>
+              <text x="240" y="275" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Density (kg/L)</text>
+
+              {/* X-axis tick labels */}
+              <g>
+                <text x="80" y="262" fill={colors.textMuted} fontSize="11" textAnchor="middle">0.3</text>
+                <text x="160" y="262" fill={colors.textMuted} fontSize="11" textAnchor="middle">0.8</text>
+                <text x="320" y="262" fill={colors.textMuted} fontSize="11" textAnchor="middle">1.8</text>
+                <text x="400" y="262" fill={colors.textMuted} fontSize="11" textAnchor="middle">2.5</text>
+              </g>
+
+              {/* Y-axis tick labels */}
+              <g>
+                <text x="52" y="44" fill={colors.textMuted} fontSize="11" textAnchor="end">{(buoyancyValues.weight * 1.2).toFixed(0)}</text>
+                <text x="52" y="120" fill={colors.textMuted} fontSize="11" textAnchor="end">{(buoyancyValues.weight * 0.7).toFixed(0)}</text>
+                <text x="52" y="200" fill={colors.textMuted} fontSize="11" textAnchor="end">{(buoyancyValues.weight * 0.3).toFixed(0)}</text>
+                <text x="52" y="253" fill={colors.textMuted} fontSize="11" textAnchor="end">0</text>
+              </g>
+
+              {/* Force curves */}
+              {(() => {
+                const chartTop = 30;
+                const chartBottom = 245;
+                const chartH = chartBottom - chartTop;
+                const maxForce = Math.max(buoyancyValues.weight, buoyancyValues.maxBuoyancy) * 1.3 || 100;
+                const weightY = chartBottom - (buoyancyValues.weight / maxForce) * chartH;
+                const buoyY = chartBottom - (buoyancyValues.maxBuoyancy / maxForce) * chartH;
+                const densityNorm = (objectDensity - 0.3) / (2.5 - 0.3);
+                const markerX = 80 + densityNorm * 320;
+
+                // Generate buoyancy force curve with 12 data points
+                // Buoyancy = min(objDensity, fluidDensity) * V * g (in kg/L units)
+                const volumeM3 = objectVolume / 1000;
+                const g = 10;
+                const buoyPoints: string[] = [];
+                for (let i = 0; i <= 11; i++) {
+                  const x = 80 + (i / 11) * 320;
+                  const density = 0.3 + (i / 11) * 2.2;
+                  // If density < fluid, object floats: buoyancy = weight = density*V*g*1000
+                  // If density >= fluid, object sinks: buoyancy = fluid*V*g*1000 (max)
+                  const buoyForce = Math.min(density, fluidDensity) * 1000 * volumeM3 * g;
+                  const y = chartBottom - (buoyForce / maxForce) * chartH;
+                  buoyPoints.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+                }
+                const buoyCurve = buoyPoints.join(' ');
+
+                return (
+                  <g>
+                    {/* Weight line (red) - constant horizontal */}
+                    <g filter="url(#forceDropShadow)">
+                      <line x1="80" y1={weightY} x2="400" y2={weightY} stroke="#EF4444" strokeWidth="2.5" />
+                    </g>
+                    <text x="410" y={weightY - 8} fill="#EF4444" fontSize="11" fontWeight="bold">Weight</text>
+
+                    {/* Buoyancy curve (green) */}
+                    <g filter="url(#forceDropShadow)">
+                      <path d={buoyCurve} fill="none" stroke="#10B981" strokeWidth="2.5" />
+                    </g>
+                    <text x="410" y={chartTop + 8} fill="#10B981" fontSize="11" fontWeight="bold">Buoyancy</text>
+
+                    {/* Float/Sink zone indicator */}
+                    <rect x="60" y={chartTop} width={Math.max(0, markerX - 60)} height={chartH} fill={buoyancyValues.floats ? 'rgba(16,185,129,0.05)' : 'rgba(239,68,68,0.05)'} />
+
+                    {/* Current position markers */}
+                    <circle cx={markerX} cy={weightY} r="8" fill="#EF4444" stroke="#ffffff" strokeWidth="2" filter="url(#forceGlow)" />
+                    <circle cx={markerX} cy={buoyY} r="8" fill="#10B981" stroke="#ffffff" strokeWidth="2" filter="url(#forceGlow)" />
+
+                    {/* Connecting line between markers */}
+                    <line x1={markerX} y1={weightY} x2={markerX} y2={buoyY} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
+                  </g>
+                );
+              })()}
+
+              {/* Title */}
+              <text x="240" y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Force Comparison</text>
+            </svg>
+          </div>
+
           {/* Main visualization */}
           <div style={{
             background: colors.bgCard,
@@ -983,12 +1109,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <WaterTankVisualization
-                objDensity={objectDensity}
-                flDensity={fluidDensity}
-                dropped={hasDropped}
-                progress={animationProgress}
-              />
+              {renderWaterTankVisualization(objectDensity, fluidDensity, true, hasDropped, animationProgress)}
             </div>
 
             {/* Object Density slider */}
@@ -1010,7 +1131,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
                   setHasDropped(false);
                   setAnimationProgress(0);
                 }}
-                style={{ width: '100%', cursor: 'pointer', accentColor: colors.accent }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>Cork (0.3)</span>
@@ -1037,7 +1158,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
                   setHasDropped(false);
                   setAnimationProgress(0);
                 }}
-                style={{ width: '100%', cursor: 'pointer', accentColor: colors.accent }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>Oil (0.8)</span>
@@ -1063,7 +1184,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
                   setHasDropped(false);
                   setAnimationProgress(0);
                 }}
-                style={{ width: '100%', cursor: 'pointer', accentColor: colors.accent }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1188,7 +1309,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
       }}>
         {renderProgressBar()}
 
@@ -1298,7 +1422,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
       }}>
         {renderProgressBar()}
 
@@ -1344,9 +1471,9 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
               {/* Ice in water - 90% submerged */}
               <g filter="url(#twistGlow)">
                 <rect x="85" y="72" width="50" height="50" rx="6" fill="#a5f3fc" stroke="#22d3ee" strokeWidth="1.5" />
-                <text x="110" y="100" textAnchor="middle" fill="#0e7490" fontSize="10" fontWeight="bold">ICE</text>
+                <text x="110" y="100" textAnchor="middle" fill="#0e7490" fontSize="11" fontWeight="bold">ICE</text>
               </g>
-              <text x="110" y="150" textAnchor="middle" fill="white" fontSize="10">90% submerged</text>
+              <text x="110" y="150" textAnchor="middle" fill="white" fontSize="11">90% submerged</text>
               {/* Oil tank */}
               <rect x="240" y="30" width="180" height="180" fill="none" stroke={colors.border} strokeWidth="2" rx="6" />
               <rect x="242" y="80" width="176" height="128" fill="url(#twistOil)" rx="4" />
@@ -1355,13 +1482,13 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
               {/* Ice in oil - unknown */}
               <g filter="url(#twistGlow)">
                 <rect x="305" y="68" width="50" height="50" rx="6" fill="#a5f3fc" stroke="#22d3ee" strokeWidth="1.5" />
-                <text x="330" y="96" textAnchor="middle" fill="#0e7490" fontSize="10" fontWeight="bold">ICE</text>
+                <text x="330" y="96" textAnchor="middle" fill="#0e7490" fontSize="11" fontWeight="bold">ICE</text>
               </g>
               <text x="330" y="150" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">???</text>
               {/* Arrow between */}
               <path d="M205,120 L235,120" stroke={colors.textMuted} strokeWidth="2" />
               <polygon points="232,115 240,120 232,125" fill={colors.textMuted} />
-              <text x="220" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="9">vs</text>
+              <text x="220" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="11">vs</text>
             </svg>
           </div>
 
@@ -1433,7 +1560,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
       }}>
         {renderProgressBar()}
 
@@ -1452,12 +1582,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <WaterTankVisualization
-                objDensity={currentObjectDensity}
-                flDensity={currentFluidDensity}
-                dropped={twistHasDropped}
-                progress={100}
-              />
+              {renderWaterTankVisualization(currentObjectDensity, currentFluidDensity, true, twistHasDropped, 100)}
             </div>
 
             {/* Fluid selector */}
@@ -1642,7 +1767,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
       }}>
         {renderProgressBar()}
 
@@ -1735,7 +1863,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
       }}>
         {renderProgressBar()}
 
@@ -1962,7 +2093,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '24px',
+          paddingTop: '48px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          paddingBottom: '24px',
         }}>
           {renderProgressBar()}
 
@@ -2029,7 +2163,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
       }}>
         {renderProgressBar()}
 
@@ -2276,7 +2413,10 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
         textAlign: 'center',
       }}>
         {renderProgressBar()}

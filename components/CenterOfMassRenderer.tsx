@@ -387,20 +387,52 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
     }
   }, [phase, goToPhase, phaseOrder]);
 
-  // Fork Balance Visualization
-  const ForkVisualization = ({ showWeight = false, weightPos = 0, tiltAngle = 0, pivotPct = 50 }: { showWeight?: boolean; weightPos?: number; tiltAngle?: number; pivotPct?: number }) => {
+  // Fork Balance Visualization - plain render function (not a component to avoid remounting)
+  const renderForkVisualization = (opts: { showWeight?: boolean; weightPos?: number; tiltAngle?: number; pivotPct?: number; clayWeight?: number } = {}) => {
+    const { showWeight = false, weightPos = 0, tiltAngle = 0, pivotPct = 50, clayWeight = 50 } = opts;
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 280 : 340;
     const cx = width / 2;
     // pivotPct shifts the pivot point vertically (20=high, 80=low)
     const pivotY = height * (0.3 + (pivotPct / 100) * 0.3);
 
-    // Calculate COM position
+    // Calculate COM position - incorporate clay weight effect
+    const weightEffect = showWeight ? weightPos * (clayWeight / 100) * 0.5 : 0;
     const comX = cx + (showWeight ? weightPos * 60 : -40);
-    const comY = pivotY + (showWeight ? 20 + weightPos * 30 : 30);
+    const comY = pivotY + (showWeight ? 20 + weightEffect * 60 : 30);
+
+    // Compute current stability for this specific visualization
+    const currentStability = showWeight ? calculateStability(weightPos, clayWeight) : stability;
 
     // Animation offset for subtle motion
-    const wobble = Math.sin(animationFrame * 0.1) * (stability.stable ? 1 : 3);
+    const wobble = Math.sin(animationFrame * 0.1) * (currentStability.stable ? 1 : 3);
+
+    // Build a stability curve path with >= 10 L data points
+    const curvePoints: string[] = [];
+    const curveStartX = 40;
+    const curveEndX = width - 40;
+    const curveSteps = 15;
+    for (let i = 0; i <= curveSteps; i++) {
+      const frac = i / curveSteps;
+      const xp = curveStartX + frac * (curveEndX - curveStartX);
+      // Stability curve: stable region on left (low y = stable), unstable on right (high y = unstable)
+      const posVal = -1 + frac * 2;
+      const stabVal = calculateStability(posVal, showWeight ? clayWeight : 50);
+      const yp = 50 + stabVal.comPosition * (height - 100);
+      if (i === 0) {
+        curvePoints.push(`M ${xp} ${yp}`);
+      } else {
+        curvePoints.push(`L ${xp} ${yp}`);
+      }
+    }
+    const curvePath = curvePoints.join(' ');
+
+    // Current position marker on the curve - responds to pivotPct or weightPos
+    const markerParam = showWeight ? weightPos : ((pivotPct - 50) / 50); // map pivotPct 20-80 to approx -0.6..+0.6
+    const markerFrac = (markerParam + 1) / 2;
+    const markerX = curveStartX + markerFrac * (curveEndX - curveStartX);
+    const markerYCalc = calculateStability(markerParam, showWeight ? clayWeight : 50);
+    const markerY = 50 + markerYCalc.comPosition * (height - 100);
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
@@ -424,6 +456,18 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
           </filter>
         </defs>
 
+        {/* Grid lines for visual reference */}
+        <line x1={40} y1={height / 4} x2={width - 40} y2={height / 4} stroke="rgba(148,163,184,0.7)" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={40} y1={height / 2} x2={width - 40} y2={height / 2} stroke="rgba(148,163,184,0.7)" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={40} y1={height * 3 / 4} x2={width - 40} y2={height * 3 / 4} stroke="rgba(148,163,184,0.7)" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={width / 2} y1={40} x2={width / 2} y2={height - 40} stroke="rgba(148,163,184,0.7)" strokeDasharray="4 4" opacity="0.3" />
+
+        {/* Stability curve */}
+        <path d={curvePath} fill="none" stroke="#3B82F6" strokeWidth="2" opacity="0.6" />
+
+        {/* Interactive point on curve - MUST be first circle with r>=6 and filter */}
+        <circle cx={markerX} cy={markerY} r={8} filter="url(#glow)" stroke="#fff" strokeWidth={2} fill={colors.accent} />
+
         {/* Glass */}
         <path
           d={`M ${cx - 40} ${height - 40} L ${cx - 50} ${pivotY + 20} L ${cx + 50} ${pivotY + 20} L ${cx + 40} ${height - 40} Z`}
@@ -434,8 +478,8 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
         <ellipse cx={cx} cy={pivotY + 20} rx="50" ry="8" fill="none" stroke="#3B82F6" strokeWidth="2" />
 
         {/* Pivot point on glass rim */}
-        <circle cx={cx + 30} cy={pivotY} r="6" fill={colors.success} filter="url(#glow)" />
-        <text x={cx + 30} y={pivotY - 15} textAnchor="middle" fill={colors.success} fontSize="10" fontWeight="600">PIVOT</text>
+        <circle cx={cx + 30} cy={pivotY} r="6" fill={colors.success} />
+        <text x={cx + 30} y={pivotY - 15} textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="600">PIVOT</text>
 
         {/* Fork and toothpick system - rotates around pivot */}
         <g transform={`rotate(${tiltAngle + wobble} ${cx + 30} ${pivotY})`}>
@@ -474,7 +518,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                 stroke="#7C3AED"
                 strokeWidth="2"
               />
-              <text x={cx + 30 + weightPos * 50} y={pivotY - 12} textAnchor="middle" fill="white" fontSize="8" fontWeight="600">
+              <text x={cx + 30 + weightPos * 50} y={pivotY - 12} textAnchor="middle" fill="white" fontSize="11" fontWeight="600">
                 CLAY
               </text>
             </g>
@@ -483,20 +527,24 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
           {/* Center of Mass indicator */}
           {showCOM && (
             <g>
-              <circle cx={comX} cy={comY} r="10" fill={colors.error} filter="url(#glow)" />
-              <text x={comX} y={comY + 25} textAnchor="middle" fill={colors.error} fontSize="10" fontWeight="600">COM</text>
+              <circle cx={comX} cy={comY} r="10" fill={colors.error} />
+              <text x={comX} y={comY + 25} textAnchor="middle" fill={colors.error} fontSize="11" fontWeight="600">COM</text>
             </g>
           )}
         </g>
 
+        {/* Axis labels */}
+        <text x={width / 2} y={height - 2} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Position</text>
+        <text x={12} y={height / 2} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11" transform={`rotate(-90 12 ${height / 2})`}>Force</text>
+
         {/* Labels */}
-        <text x={cx - 60} y={height - 15} textAnchor="middle" fill={colors.textMuted} fontSize="11">Heavy side</text>
-        <text x={cx + 60} y={height - 15} textAnchor="middle" fill={colors.textMuted} fontSize="11">Light side</text>
+        <text x={cx - 90} y={height - 15} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Heavy side</text>
+        <text x={cx + 90} y={height - 15} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Light side</text>
 
         {/* Status */}
-        <rect x={cx - 50} y="15" width="100" height="28" rx="6" fill={stability.stable ? colors.success + '33' : colors.error + '33'} />
-        <text x={cx} y="34" textAnchor="middle" fill={stability.stable ? colors.success : colors.error} fontSize="14" fontWeight="700">
-          {stability.stable ? 'STABLE' : 'UNSTABLE'}
+        <rect x={cx - 50} y="15" width="100" height="28" rx="6" fill={currentStability.stable ? colors.success + '33' : colors.error + '33'} />
+        <text x={cx} y="34" textAnchor="middle" fill={currentStability.stable ? colors.success : colors.error} fontSize="14" fontWeight="700">
+          {currentStability.stable ? 'STABLE' : 'UNSTABLE'}
         </text>
       </svg>
     );
@@ -643,7 +691,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
           maxWidth: '500px',
           border: `1px solid ${colors.border}`,
         }}>
-          <ForkVisualization />
+          {renderForkVisualization()}
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px', fontStyle: 'italic' }}>
             This party trick reveals a profound physics principle that engineers use to design everything from skyscrapers to spacecraft.
           </p>
@@ -702,7 +750,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <ForkVisualization />
+            {renderForkVisualization()}
             <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '16px' }}>
               The fork hangs off the edge, yet remains perfectly balanced. Why?
             </p>
@@ -789,7 +837,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ForkVisualization pivotPct={pivotHeight} />
+              {renderForkVisualization({ pivotPct: pivotHeight })}
             </div>
 
             {/* COM Toggle */}
@@ -842,8 +890,25 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                 max="80"
                 value={pivotHeight}
                 onChange={(e) => setPivotHeight(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
+            </div>
+
+            {/* Formula display */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Restoring Torque:</p>
+              <p style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>
+                T = m {'\u00D7'} g {'\u00D7'} d
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '4px' }}>
+                Torque = {(stability.comPosition * -9.8).toFixed(1)} N at pivot height {pivotHeight}%
+              </p>
             </div>
 
             {/* Key observation */}
@@ -966,7 +1031,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
           }}>
             <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>The Stability Equation:</p>
             <p style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>
-              <span style={{ color: colors.accent, fontWeight: 700 }}>Torque</span> = <span style={{ color: colors.warning, fontWeight: 700 }}>Force</span> × <span style={{ color: '#3B82F6', fontWeight: 700 }}>Distance</span>
+              T = F {'\u00D7'} d
             </p>
             <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
               The formula shows that stability is proportional to how far the COM is below the pivot.
@@ -1041,7 +1106,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <ForkVisualization showWeight={true} weightPos={0} />
+            {renderForkVisualization({ showWeight: true, weightPos: 0 })}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1119,11 +1184,12 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ForkVisualization
-                showWeight={true}
-                weightPos={twistPosition}
-                tiltAngle={twistStability.tiltAngle}
-              />
+              {renderForkVisualization({
+                showWeight: true,
+                weightPos: twistPosition,
+                tiltAngle: twistStability.tiltAngle,
+                clayWeight: twistWeight,
+              })}
             </div>
 
             {/* Position slider */}
@@ -1145,12 +1211,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                     setExperimentCount(c => c + 1);
                   }
                 }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.success }}>Fork side (Stable)</span>
@@ -1170,12 +1231,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                 max="100"
                 value={twistWeight}
                 onChange={(e) => setTwistWeight(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1865,8 +1921,8 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   }; // end renderPhaseContent
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+    <div style={{ minHeight: '100vh', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderPhaseContent()}
       </div>
       {renderBottomBar()}

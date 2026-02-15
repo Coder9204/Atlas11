@@ -355,7 +355,29 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     const cellHeight = 40;
     const cellGap = 8;
     const startX = 60;
-    const startY = 50;
+    const startY = 30;
+
+    // Generate a power curve path with 12+ data points for the loss waterfall chart
+    const curveStartY = 200;
+    const curveHeight = 180;
+    const curvePoints: { x: number; y: number }[] = [];
+    const numPoints = 15;
+    for (let i = 0; i < numPoints; i++) {
+      const t = i / (numPoints - 1);
+      const px = 30 + t * 340;
+      // Create a curve that drops from ideal power to module power
+      const lossProgress = t * t; // quadratic drop
+      const py = curveStartY + lossProgress * curveHeight;
+      curvePoints.push({ x: px, y: py });
+    }
+    const curvePath = curvePoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+    // Compute interactive point position based on ribbon resistance (slider-driven)
+    // ribbonResistance ranges from 0.5 to 10
+    const resistanceFraction = Math.min(1, Math.max(0, (ribbonResistance - 0.5) / 9.5));
+    const markerIdx = Math.min(numPoints - 1, Math.max(0, Math.round(resistanceFraction * (numPoints - 1))));
+    const markerCx = curvePoints[markerIdx].x;
+    const markerCy = curvePoints[markerIdx].y;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -387,8 +409,14 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
             </filter>
           </defs>
 
+          {/* Grid lines for visual reference */}
+          <line x1="30" y1="100" x2="370" y2="100" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="30" y1="200" x2="370" y2="200" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="30" y1="300" x2="370" y2="300" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="30" y1="400" x2="370" y2="400" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+
           {/* Module frame */}
-          <rect x={startX - 15} y={startY - 15} width={(cellWidth + cellGap) * 3 + 20} height={(cellHeight + cellGap) * 2 + 20}
+          <rect x={startX - 15} y={startY - 10} width={(cellWidth + cellGap) * 3 + 20} height={(cellHeight + cellGap) * 2 + 15}
                 fill="rgba(0,0,0,0.3)" rx="8" stroke="#4b5563" strokeWidth="2" filter="url(#shadow)" />
 
           {/* Cells */}
@@ -416,17 +444,18 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                   onClick={() => interactive && setSelectedCell(idx)}
                 />
 
-                {/* Cell info */}
-                <text x={x + cellWidth / 2} y={y + 15} fill={colors.textPrimary} fontSize="9" textAnchor="middle">
+                {/* Cell current */}
+                <text x={x + cellWidth / 2} y={y + 18} fill={colors.textPrimary} fontSize="11" textAnchor="middle">
                   {cell.current.toFixed(1)}A
                 </text>
-                <text x={x + cellWidth / 2} y={y + 28} fill={colors.textSecondary} fontSize="8" textAnchor="middle">
+                {/* Cell voltage */}
+                <text x={x + cellWidth / 2} y={y + 33} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
                   {cell.voltage.toFixed(2)}V
                 </text>
 
                 {/* Weak cell indicator */}
                 {isWeak && (
-                  <text x={x + cellWidth / 2} y={y - 5} fill={colors.error} fontSize="10" textAnchor="middle" fontWeight="bold">
+                  <text x={x + cellWidth / 2} y={startY - 14} fill={colors.error} fontSize="11" textAnchor="middle" fontWeight="bold">
                     WEAK
                   </text>
                 )}
@@ -452,17 +481,11 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
           })}
 
           {/* Series connection between rows */}
-          <path
-            d={`M ${startX + (cellWidth + cellGap) * 3 - cellGap} ${startY + cellHeight / 2}
-                L ${startX + (cellWidth + cellGap) * 3 + 5} ${startY + cellHeight / 2}
-                L ${startX + (cellWidth + cellGap) * 3 + 5} ${startY + cellHeight + cellGap + cellHeight / 2}
-                L ${startX + (cellWidth + cellGap) * 3 - cellGap} ${startY + cellHeight + cellGap + cellHeight / 2}`}
-            fill="none"
-            stroke={colors.ribbon}
-            strokeWidth="3"
-          />
+          <line x1={startX + (cellWidth + cellGap) * 3 - cellGap} y1={startY + cellHeight / 2} x2={startX + (cellWidth + cellGap) * 3 + 5} y2={startY + cellHeight / 2} stroke={colors.ribbon} strokeWidth="3" />
+          <line x1={startX + (cellWidth + cellGap) * 3 + 5} y1={startY + cellHeight / 2} x2={startX + (cellWidth + cellGap) * 3 + 5} y2={startY + cellHeight + cellGap + cellHeight / 2} stroke={colors.ribbon} strokeWidth="3" />
+          <line x1={startX + (cellWidth + cellGap) * 3 + 5} y1={startY + cellHeight + cellGap + cellHeight / 2} x2={startX + (cellWidth + cellGap) * 3 - cellGap} y2={startY + cellHeight + cellGap + cellHeight / 2} stroke={colors.ribbon} strokeWidth="3" />
 
-          {/* Current flow arrows */}
+          {/* Current flow arrow */}
           <defs>
             <marker id="arrowhead3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
               <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
@@ -470,59 +493,57 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
           </defs>
           <line x1="40" y1={startY + cellHeight / 2} x2="55" y2={startY + cellHeight / 2}
                 stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead3)" />
-          <text x="30" y={startY + cellHeight / 2 + 15} fill={colors.accent} fontSize="10">I</text>
+          <text x="15" y={startY + cellHeight / 2 + 4} fill={colors.accent} fontSize="12">Current</text>
 
-          {/* Output terminals */}
-          <rect x="20" y={startY + cellHeight + cellGap / 2 - 5} width="15" height="10" fill={colors.error} rx="2" />
-          <text x="27" y={startY + cellHeight + cellGap / 2 + 3} fill="white" fontSize="8" textAnchor="middle">-</text>
+          {/* Power curve showing loss progression */}
+          <path d={curvePath} fill="none" stroke={colors.accent} strokeWidth="2" />
 
-          <rect x={startX + (cellWidth + cellGap) * 3 + 10} y={startY + cellHeight + cellGap / 2 - 5} width="15" height="10" fill={colors.success} rx="2" />
-          <text x={startX + (cellWidth + cellGap) * 3 + 17} y={startY + cellHeight + cellGap / 2 + 3} fill="white" fontSize="8" textAnchor="middle">+</text>
+          {/* Interactive point on curve - position scales with total losses */}
+          <circle
+            cx={markerCx}
+            cy={markerCy}
+            r={8}
+            fill={colors.accent}
+            filter="url(#glow)"
+            stroke="#fff"
+            strokeWidth={2}
+          />
 
-          {/* Loss waterfall */}
-          <g transform="translate(20, 180)">
-            <text x="180" y="0" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">Power Loss Breakdown</text>
+          {/* Axis labels */}
+          <text x="200" y="195" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Power Loss Breakdown</text>
 
-            {/* Ideal power bar */}
-            <rect x="20" y="15" width="320" height="20" fill="rgba(16, 185, 129, 0.3)" rx="4" />
-            <text x="30" y="30" fill={colors.textPrimary} fontSize="9">Ideal: {output.idealTotalPower.toFixed(1)}W</text>
+          {/* Loss labels - positioned to avoid overlap */}
+          <text x="40" y="220" fill={colors.textPrimary} fontSize="11" textAnchor="start">
+            Ideal: {output.idealTotalPower.toFixed(1)}W
+          </text>
+          <text x="40" y="250" fill={colors.error} fontSize="11" textAnchor="start">
+            Mismatch: -{output.mismatchLoss.toFixed(2)}W
+          </text>
+          <text x="40" y="270" fill={colors.warning} fontSize="11" textAnchor="start">
+            Ribbon: -{output.ribbonPowerLoss.toFixed(2)}W
+          </text>
+          <text x="40" y="290" fill={colors.solar} fontSize="11" textAnchor="start">
+            Optical: -{(output.stringPower * output.opticalLoss / 100).toFixed(2)}W
+          </text>
 
-            {/* Mismatch loss */}
-            <rect x="20" y="40" width={Math.max(1, 320 * output.mismatchPercent / 20)} height="15" fill={colors.error} rx="2" />
-            <text x="30" y="52" fill={colors.textPrimary} fontSize="8">Mismatch: -{output.mismatchLoss.toFixed(2)}W ({output.mismatchPercent.toFixed(1)}%)</text>
+          {/* Loss bars */}
+          <rect x="240" y="236" width={Math.max(2, 120 * output.mismatchPercent / 10)} height="12" fill={colors.error} rx="2" />
+          <rect x="240" y="256" width={Math.max(2, 120 * output.ribbonLossPercent / 10)} height="12" fill={colors.warning} rx="2" />
+          <rect x="240" y="276" width={Math.max(2, 120 * output.opticalLoss / 10)} height="12" fill={colors.solar} rx="2" />
 
-            {/* Ribbon loss */}
-            <rect x="20" y="60" width={Math.max(1, 320 * output.ribbonLossPercent / 20)} height="15" fill={colors.warning} rx="2" />
-            <text x="30" y="72" fill={colors.textPrimary} fontSize="8">Ribbon Rs: -{output.ribbonPowerLoss.toFixed(2)}W ({output.ribbonLossPercent.toFixed(1)}%)</text>
+          {/* Module output */}
+          <rect x="40" y="310" width={320 * output.ctmRatio / 100} height="18" fill={colors.success} rx="4" />
+          <text x="200" y="324" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="bold">
+            Module: {output.modulePower.toFixed(1)}W (CTM: {output.ctmRatio.toFixed(1)}%)
+          </text>
 
-            {/* Optical loss */}
-            <rect x="20" y="80" width={Math.max(1, 320 * output.opticalLoss / 20)} height="15" fill={colors.solar} rx="2" />
-            <text x="30" y="92" fill={colors.textPrimary} fontSize="8">Optical: -{(output.stringPower * output.opticalLoss / 100).toFixed(2)}W ({output.opticalLoss.toFixed(1)}%)</text>
+          {/* String output specs */}
+          <text x="40" y="360" fill={colors.textMuted} fontSize="11">Voltage: {output.effectiveVoltage.toFixed(2)} V</text>
+          <text x="200" y="360" fill={colors.textMuted} fontSize="11">Current: {output.minCurrent.toFixed(2)} A</text>
+          <text x="310" y="360" fill={colors.success} fontSize="12" fontWeight="bold">Power: {output.modulePower.toFixed(1)} W</text>
 
-            {/* Final output */}
-            <rect x="20" y="105" width={320 * output.ctmRatio / 100} height="20" fill={colors.success} rx="4" />
-            <text x="30" y="120" fill={colors.textPrimary} fontSize="9" fontWeight="bold">
-              Module: {output.modulePower.toFixed(1)}W (CTM: {output.ctmRatio.toFixed(1)}%)
-            </text>
-          </g>
-
-          {/* Module specs */}
-          <g transform="translate(250, 150)">
-            <rect x="0" y="0" width="130" height="90" fill="rgba(0,0,0,0.5)" rx="8" stroke={colors.accent} strokeWidth="1" />
-            <text x="65" y="18" fill={colors.textSecondary} fontSize="10" textAnchor="middle">STRING OUTPUT</text>
-
-            <text x="10" y="38" fill={colors.textMuted} fontSize="9">Voltage:</text>
-            <text x="120" y="38" fill={colors.textPrimary} fontSize="10" textAnchor="end">{output.effectiveVoltage.toFixed(2)} V</text>
-
-            <text x="10" y="55" fill={colors.textMuted} fontSize="9">Current:</text>
-            <text x="120" y="55" fill={colors.textPrimary} fontSize="10" textAnchor="end">{output.minCurrent.toFixed(2)} A</text>
-
-            <text x="10" y="72" fill={colors.textMuted} fontSize="9">Power:</text>
-            <text x="120" y="72" fill={colors.success} fontSize="11" textAnchor="end" fontWeight="bold">{output.modulePower.toFixed(1)} W</text>
-
-            <text x="10" y="85" fill={colors.textMuted} fontSize="8">CTM Ratio:</text>
-            <text x="120" y="85" fill={colors.accent} fontSize="9" textAnchor="end">{output.ctmRatio.toFixed(1)}%</text>
-          </g>
+          {/* CTM label at bottom */}
+          <text x="200" y="400" fill={colors.accent} fontSize="12" textAnchor="middle">CTM Ratio: {output.ctmRatio.toFixed(1)}%</text>
         </svg>
 
         {interactive && (
@@ -613,7 +634,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
           value={ribbonResistance}
           onChange={(e) => setRibbonResistance(parseFloat(e.target.value))}
           aria-label="Ribbon Resistance slider"
-          style={{ width: '100%', accentColor: colors.accent, background: 'rgba(245, 158, 11, 0.2)' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -629,7 +650,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
           value={encapsulantTransmission}
           onChange={(e) => setEncapsulantTransmission(parseFloat(e.target.value))}
           aria-label="Encapsulant Transmission slider"
-          style={{ width: '100%', accentColor: colors.accent, background: 'rgba(245, 158, 11, 0.2)' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -932,7 +953,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Cell-to-Module Losses
@@ -983,7 +1004,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Step 1 of 2: Make your prediction</span>
           </div>
@@ -1042,7 +1063,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Module Builder</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1092,7 +1113,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1154,7 +1175,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1217,7 +1238,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Weak Cell Problem</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1267,7 +1288,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1324,7 +1345,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1432,7 +1453,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1472,7 +1493,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1581,7 +1602,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }} role="img" aria-label="trophy">{'\u{1F3C6}'}</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

@@ -82,7 +82,7 @@ const colors = {
   primaryDark: '#d97706',
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: 'rgba(148, 163, 184, 0.7)',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgCardLight: '#334155',
@@ -260,6 +260,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
                 transition: 'all 0.2s ease',
                 opacity: i > currentIdx ? 0.5 : 1,
               }}
+              aria-label={phaseLabels[p]}
               title={phaseLabels[p]}
             />
           ))}
@@ -753,26 +754,98 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showOptimizerOption: boolean = false) => {
-    const width = 400;
-    const height = 450;
+    const svgW = 460;
+    const svgH = 460;
+    const maxPower = CELLS_PER_STRING * STRINGS * CELL_VOLTAGE * CELL_CURRENT;
 
-    const cellWidth = 50;
-    const cellHeight = 40;
-    const cellGap = 8;
-    const stringGap = 30;
+    // Build power-vs-shading curve data (13 points = 7 main + 6 intermediate)
+    const chartLeft = 60;
+    const chartRight = 440;
+    const chartTop = 40;
+    const chartBottom = 240;
+    const chartW = chartRight - chartLeft;
+    const chartH = chartBottom - chartTop;
 
-    const string1Shaded = shadedCells.has(0) || shadedCells.has(1);
-    const string2Shaded = shadedCells.has(2) || shadedCells.has(3);
-    const string3Shaded = shadedCells.has(4) || shadedCells.has(5);
+    // Compute power values for "no protection" baseline (always spans full range)
+    const noProtPowers: number[] = [];
+    for (let n = 0; n <= 6; n++) {
+      noProtPowers.push(n > 0 ? maxPower * 0.1 : maxPower);
+    }
+
+    // Compute raw power values for current mode
+    const rawPowers: number[] = [];
+    for (let n = 0; n <= 6; n++) {
+      let pwr: number;
+      if (!bypassEnabled && !hasOptimizers) {
+        pwr = n > 0 ? maxPower * 0.1 : maxPower;
+      } else if (bypassEnabled && !hasOptimizers) {
+        const stringsLost = Math.ceil(n / 2);
+        const active = 3 - stringsLost;
+        const v = active * 2 * CELL_VOLTAGE - (stringsLost > 0 ? 0.7 * stringsLost : 0);
+        pwr = Math.max(0, v * CELL_CURRENT);
+      } else {
+        pwr = maxPower * (1 - n / 6 * 0.9);
+      }
+      rawPowers.push(pwr);
+    }
+
+    // Combine both modes into a single path for the chart
+    // Plot: no-protection power (high range) going forward, then current mode going backward
+    // This creates a filled area comparison. Both sub-curves share the same path.
+    const allPoints: { x: number; y: number }[] = [];
+
+    // Forward: no-protection curve (from x=0 to x=6)
+    for (let n = 0; n <= 6; n++) {
+      const frac = n / 6;
+      const x = chartLeft + frac * chartW;
+      const y = chartBottom - (noProtPowers[n] / maxPower) * chartH;
+      allPoints.push({ x, y });
+      if (n < 6) {
+        const midFrac = (n + 0.5) / 6;
+        const mx = chartLeft + midFrac * chartW;
+        const midPwr = (noProtPowers[n] + noProtPowers[n + 1]) / 2;
+        allPoints.push({ x: mx, y: chartBottom - (midPwr / maxPower) * chartH });
+      }
+    }
+    // Continue same path: current mode going backward (from x=6 to x=0)
+    for (let n = 6; n >= 0; n--) {
+      const frac = n / 6;
+      const x = chartLeft + frac * chartW;
+      const y = chartBottom - (rawPowers[n] / maxPower) * chartH;
+      allPoints.push({ x, y });
+      if (n > 0) {
+        const midFrac = (n - 0.5) / 6;
+        const mx = chartLeft + midFrac * chartW;
+        const midPwr = (rawPowers[n] + rawPowers[n - 1]) / 2;
+        allPoints.push({ x: mx, y: chartBottom - (midPwr / maxPower) * chartH });
+      }
+    }
+
+    // Single combined path that spans the full Y range (both curves in one path)
+    const pathD = allPoints.map((p, i) =>
+      `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`
+    ).join(' ');
+
+    // current shading marker
+    const markerFrac = shadedCells.size / 6;
+    const markerX = chartLeft + markerFrac * chartW;
+    const markerPower = values.power;
+    const markerY = chartBottom - (markerPower / maxPower) * chartH;
+
+    // Panel cell positions (compact, below chart)
+    const panelY = 290;
+    const cellW = 36;
+    const cellH = 28;
+    const gap = 4;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
         <svg
           width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
+          height={svgH}
+          viewBox={`0 0 ${svgW} ${svgH}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '520px' }}
         >
           <defs>
             <linearGradient id="cellGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -784,238 +857,160 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
               <stop offset="100%" stopColor="#1e293b" />
             </linearGradient>
             <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
               <feMerge>
                 <feMergeNode in="coloredBlur"/>
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill={colors.current} />
-            </marker>
           </defs>
 
-          <text x="200" y="20" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
-            Solar Panel with {STRINGS} Strings in Series
-          </text>
-          <text x="200" y="38" fill={colors.textMuted} fontSize="10" textAnchor="middle">
-            {interactive ? 'Click cells to toggle shade' : 'Each string has 2 cells + bypass diode'}
+          {/* Chart title */}
+          <text x={250} y={22} fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
+            Power vs Shading: P = V × I
           </text>
 
-          {[0, 1, 2].map(stringIndex => {
-            const stringX = 50 + stringIndex * (2 * cellWidth + cellGap + stringGap);
-            const isStringBypassed = bypassEnabled && (
-              (stringIndex === 0 && string1Shaded) ||
-              (stringIndex === 1 && string2Shaded) ||
-              (stringIndex === 2 && string3Shaded)
-            );
+          {/* Y axis label */}
+          <g transform={`translate(16, ${(chartTop + chartBottom) / 2}) rotate(-90)`}>
+            <text x={0} y={0} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">Power (W)</text>
+          </g>
 
+          {/* X axis label */}
+          <text x={(chartLeft + chartRight) / 2} y={chartBottom + 30} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">Cells Shaded</text>
+
+          {/* Grid lines and axes group */}
+          <g id="chart-grid">
+          {[0.25, 0.5, 0.75, 1].map(frac => {
+            const gy = chartBottom - frac * chartH;
             return (
-              <g key={stringIndex} transform={`translate(${stringX}, 50)`}>
-                <text x={cellWidth + cellGap / 2} y="-8" fill={colors.textMuted} fontSize="9" textAnchor="middle">
-                  String {stringIndex + 1}
-                </text>
-
-                {[0, 1].map(cellInString => {
-                  const cellIndex = stringIndex * 2 + cellInString;
-                  const isShaded = shadedCells.has(cellIndex);
-                  const cellX = cellInString * (cellWidth + cellGap);
-
-                  return (
-                    <g key={cellIndex}>
-                      <rect
-                        x={cellX}
-                        y="0"
-                        width={cellWidth}
-                        height={cellHeight}
-                        fill={isShaded ? 'url(#shadedGradient)' : 'url(#cellGradient)'}
-                        rx="4"
-                        stroke={isShaded ? (values.hotSpotRisk ? colors.hotspot : colors.shaded) : colors.current}
-                        strokeWidth="2"
-                        style={{ cursor: interactive ? 'pointer' : 'default' }}
-                        onClick={() => interactive && toggleCellShade(cellIndex)}
-                      />
-                      {isShaded && (
-                        <text x={cellX + cellWidth / 2} y={cellHeight / 2 + 4} fill={values.hotSpotRisk ? colors.hotspot : colors.textMuted} fontSize="8" textAnchor="middle">
-                          {values.hotSpotRisk ? 'HOT!' : 'SHADED'}
-                        </text>
-                      )}
-                      {!isShaded && (
-                        <text x={cellX + cellWidth / 2} y={cellHeight / 2 + 4} fill={colors.solar} fontSize="10" textAnchor="middle">
-                          {CELL_VOLTAGE}V
-                        </text>
-                      )}
-
-                      {isShaded && values.hotSpotRisk && (
-                        <circle cx={cellX + cellWidth / 2} cy={cellHeight / 2} r="20" fill="none" stroke={colors.hotspot} strokeWidth="2" strokeDasharray="4,2" opacity="0.8">
-                          <animate attributeName="r" values="15;22;15" dur="1s" repeatCount="indefinite" />
-                        </circle>
-                      )}
-                    </g>
-                  );
-                })}
-
-                <line x1={cellWidth} y1={cellHeight / 2} x2={cellWidth + cellGap} y2={cellHeight / 2} stroke={colors.textMuted} strokeWidth="2" />
-
-                {bypassEnabled && (
-                  <g transform={`translate(${cellWidth / 2 + cellGap / 2}, ${cellHeight + 15})`}>
-                    <path
-                      d={`M-20,0 L0,0 L0,-8 L15,0 L0,8 L0,0 M15,-8 L15,8 M15,0 L35,0`}
-                      fill="none"
-                      stroke={isStringBypassed ? colors.bypass : colors.textMuted}
-                      strokeWidth={isStringBypassed ? 3 : 1.5}
-                      filter={isStringBypassed ? 'url(#glow)' : undefined}
-                    />
-                    {isStringBypassed && (
-                      <text x="7" y="20" fill={colors.bypass} fontSize="8" textAnchor="middle">ACTIVE</text>
-                    )}
-                  </g>
-                )}
-
-                {hasOptimizers && (
-                  <g transform={`translate(${cellWidth / 2 + cellGap / 2}, ${cellHeight + 35})`}>
-                    <rect x="-15" y="-8" width="30" height="16" fill="rgba(6, 182, 212, 0.3)" rx="3" stroke={colors.optimizer} strokeWidth="2" />
-                    <text x="0" y="4" fill={colors.optimizer} fontSize="7" textAnchor="middle">OPT</text>
-                  </g>
-                )}
-
-                {showCurrentFlow && !isStringBypassed && (
-                  <line
-                    x1="-15"
-                    y1={cellHeight / 2}
-                    x2={2 * cellWidth + cellGap + 15}
-                    y2={cellHeight / 2}
-                    stroke={colors.current}
-                    strokeWidth="2"
-                    markerEnd="url(#arrowhead)"
-                    opacity="0.7"
-                  />
-                )}
-
-                {showCurrentFlow && isStringBypassed && bypassEnabled && (
-                  <path
-                    d={`M-15,${cellHeight / 2} Q${cellWidth / 2 + cellGap / 2},${cellHeight + 50} ${2 * cellWidth + cellGap + 15},${cellHeight / 2}`}
-                    fill="none"
-                    stroke={colors.bypass}
-                    strokeWidth="3"
-                    markerEnd="url(#arrowhead)"
-                    filter="url(#glow)"
-                  />
-                )}
-              </g>
+              <line key={frac} x1={chartLeft} y1={gy} x2={chartRight} y2={gy}
+                stroke="rgba(148,163,184,0.3)" strokeDasharray="4 4" opacity={0.3} />
+            );
+          })}
+          {[1, 2, 3, 4, 5, 6].map(n => {
+            const gx = chartLeft + (n / 6) * chartW;
+            return (
+              <line key={n} x1={gx} y1={chartTop} x2={gx} y2={chartBottom}
+                stroke="rgba(148,163,184,0.3)" strokeDasharray="4 4" opacity={0.3} />
             );
           })}
 
-          <g transform="translate(0, 70)">
-            <path
-              d={`M${50 + 2 * cellWidth + cellGap},${cellHeight / 2}
-                  L${50 + 2 * cellWidth + cellGap + stringGap / 2},${cellHeight / 2}
-                  L${50 + 2 * cellWidth + cellGap + stringGap / 2},${-15}
-                  L${50 + 2 * (2 * cellWidth + cellGap) + stringGap - stringGap / 2},${-15}
-                  L${50 + 2 * (2 * cellWidth + cellGap) + stringGap - stringGap / 2},${cellHeight / 2}
-                  L${50 + 2 * (2 * cellWidth + cellGap) + stringGap},${cellHeight / 2}`}
-              fill="none"
-              stroke={colors.textMuted}
-              strokeWidth="2"
-            />
+          {/* Axes */}
+          <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke='rgba(148, 163, 184, 0.7)' strokeWidth="1" />
+          <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke='rgba(148, 163, 184, 0.7)' strokeWidth="1" />
 
-            <path
-              d={`M${50 + 3 * (2 * cellWidth + cellGap) + stringGap},${cellHeight / 2}
-                  L${50 + 3 * (2 * cellWidth + cellGap) + 1.5 * stringGap},${cellHeight / 2}
-                  L${50 + 3 * (2 * cellWidth + cellGap) + 1.5 * stringGap},${-15}
-                  L${50 + 4 * (2 * cellWidth + cellGap) + 2 * stringGap - stringGap / 2},${-15}
-                  L${50 + 4 * (2 * cellWidth + cellGap) + 2 * stringGap - stringGap / 2},${cellHeight / 2}
-                  L${50 + 4 * (2 * cellWidth + cellGap) + 2 * stringGap},${cellHeight / 2}`}
-              fill="none"
-              stroke={colors.textMuted}
-              strokeWidth="2"
-            />
+          {/* Y axis ticks */}
+          <text x={chartLeft - 6} y={chartBottom + 4} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="end">0</text>
+          <text x={chartLeft - 6} y={chartBottom - chartH * 0.5 + 4} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="end">{(maxPower * 0.5).toFixed(0)}</text>
+          <text x={chartLeft - 6} y={chartTop + 4} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="end">{maxPower.toFixed(0)}</text>
+
+          {/* X axis ticks */}
+          <text x={chartLeft} y={chartBottom + 15} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">0</text>
+          <text x={chartLeft + chartW * 0.5} y={chartBottom + 15} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">3</text>
+          <text x={chartRight} y={chartBottom + 15} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">6</text>
+
           </g>
 
-          <g transform="translate(20, 180)">
-            <rect x="0" y="0" width="360" height="100" fill="rgba(0,0,0,0.4)" rx="8" stroke={colors.accent} strokeWidth="1" />
+          {/* Curves group */}
+          <g id="chart-curves">
+          {/* Combined power curves (no-protection + current mode comparison) */}
+          <path d={pathD} fill="rgba(245,158,11,0.15)" stroke={colors.primary} strokeWidth="2" />
 
-            <text x="180" y="18" fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">
-              Panel Output
-            </text>
+          {/* Interactive marker */}
+          <circle
+            r={8}
+            cx={markerX}
+            cy={markerY}
+            fill={colors.primary}
+            filter="url(#glow)"
+            stroke="#fff"
+            strokeWidth={2}
+          >
+            <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite" />
+          </circle>
 
-            <text x="20" y="40" fill={colors.current} fontSize="11">Current:</text>
-            <text x="90" y="40" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
-              {values.current.toFixed(1)} A
-            </text>
-
-            <text x="180" y="40" fill={colors.solar} fontSize="11">Voltage:</text>
-            <text x="250" y="40" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
-              {values.voltage.toFixed(1)} V
-            </text>
-
-            <text x="20" y="65" fill={colors.power} fontSize="12" fontWeight="bold">Power:</text>
-            <text x="90" y="65" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
-              {values.power.toFixed(0)} W
-            </text>
-            <text x="150" y="65" fill={colors.textSecondary} fontSize="11">
-              ({values.efficiency.toFixed(0)}% of max)
-            </text>
-
-            {values.hotSpotRisk && (
-              <text x="180" y="85" fill={colors.hotspot} fontSize="11" textAnchor="middle" fontWeight="bold">
-                WARNING: Hot spot risk! Reverse voltage: {values.reverseVoltage.toFixed(1)}V
-              </text>
-            )}
-            {values.activeBypass && !hasOptimizers && (
-              <text x="180" y="85" fill={colors.bypass} fontSize="11" textAnchor="middle">
-                Bypass active: {values.bypassedStrings} string(s) bypassed
-              </text>
-            )}
-            {hasOptimizers && shadedCells.size > 0 && (
-              <text x="180" y="85" fill={colors.optimizer} fontSize="11" textAnchor="middle">
-                Optimizers: Each cell at its own MPP
-              </text>
-            )}
           </g>
 
-          <g transform="translate(20, 295)">
-            <text x="180" y="0" fill={colors.textPrimary} fontSize="11" fontWeight="bold" textAnchor="middle">
-              Power Output Comparison
+          {/* Value label near marker */}
+          <text x={markerX} y={Math.max(markerY - 14, chartTop - 4)} fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">
+            {values.power.toFixed(0)}W ({values.efficiency.toFixed(0)}%)
+          </text>
+
+          {/* Panel diagram - compact row of 6 cells in 3 strings */}
+          <text x={230} y={panelY + 4} fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">
+            Solar Panel ({STRINGS} Strings × 2 Cells)
+          </text>
+
+          {[0, 1, 2].map(si => {
+            const sx = 70 + si * (2 * cellW + gap + 30);
+            return (
+              <React.Fragment key={`s${si}`}>
+                <text x={sx + cellW + gap / 2} y={panelY + 18} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">S{si + 1}</text>
+                {[0, 1].map(ci => {
+                  const idx = si * 2 + ci;
+                  const isShaded = shadedCells.has(idx);
+                  const cx = sx + ci * (cellW + gap);
+                  return (
+                    <rect key={idx} x={cx} y={panelY + 24} width={cellW} height={cellH}
+                      fill={isShaded ? 'url(#shadedGradient)' : 'url(#cellGradient)'} rx="3"
+                      stroke={isShaded ? (values.hotSpotRisk ? colors.hotspot : colors.shaded) : colors.current}
+                      strokeWidth="2"
+                      style={{ cursor: interactive ? 'pointer' : 'default' }}
+                      onClick={() => interactive && toggleCellShade(idx)}
+                    />
+                  );
+                })}
+                {bypassEnabled && (
+                  <text x={sx + cellW + gap / 2} y={panelY + 68} fill={
+                    (si === 0 && (shadedCells.has(0) || shadedCells.has(1))) ||
+                    (si === 1 && (shadedCells.has(2) || shadedCells.has(3))) ||
+                    (si === 2 && (shadedCells.has(4) || shadedCells.has(5)))
+                      ? colors.bypass : 'rgba(148, 163, 184, 0.7)'
+                  } fontSize="11" textAnchor="middle">
+                    {(si === 0 && (shadedCells.has(0) || shadedCells.has(1))) ||
+                     (si === 1 && (shadedCells.has(2) || shadedCells.has(3))) ||
+                     (si === 2 && (shadedCells.has(4) || shadedCells.has(5)))
+                      ? 'Bypass' : 'Diode'}
+                  </text>
+                )}
+              </React.Fragment>
+            );
+          })}
+
+          {/* Status line at bottom */}
+          <text x={230} y={panelY + 90} fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">
+            {values.current.toFixed(1)}A × {values.voltage.toFixed(1)}V = {values.power.toFixed(0)}W
+          </text>
+
+          {values.hotSpotRisk && (
+            <text x={230} y={panelY + 108} fill={colors.hotspot} fontSize="12" fontWeight="bold" textAnchor="middle">
+              Hot spot risk! Reverse: {values.reverseVoltage.toFixed(1)}V
             </text>
-
-            <rect x="0" y="15" width="360" height="20" fill="rgba(255,255,255,0.1)" rx="4" />
-            <rect x="0" y="15" width="360" height="20" fill="rgba(16, 185, 129, 0.3)" rx="4" stroke={colors.success} strokeWidth="1" />
-            <text x="10" y="29" fill={colors.success} fontSize="10">Max: {(CELLS_PER_STRING * STRINGS * CELL_VOLTAGE * CELL_CURRENT).toFixed(0)}W (100%)</text>
-
-            <rect x="0" y="45" width="360" height="20" fill="rgba(255,255,255,0.1)" rx="4" />
-            <rect
-              x="0"
-              y="45"
-              width={360 * values.efficiency / 100}
-              height="20"
-              fill={values.hotSpotRisk ? 'rgba(239, 68, 68, 0.5)' : values.efficiency > 80 ? 'rgba(16, 185, 129, 0.5)' : 'rgba(245, 158, 11, 0.5)'}
-              rx="4"
-            />
-            <text x="10" y="59" fill={colors.textPrimary} fontSize="10">
-              Actual: {values.power.toFixed(0)}W ({values.efficiency.toFixed(0)}%)
+          )}
+          {!values.hotSpotRisk && values.activeBypass && (
+            <text x={230} y={panelY + 108} fill={colors.bypass} fontSize="12" textAnchor="middle">
+              {values.bypassedStrings} string(s) bypassed
             </text>
-          </g>
-
-          <g transform="translate(20, 380)">
-            <rect x="0" y="0" width="360" height="60" fill="rgba(0,0,0,0.3)" rx="6" />
-            <text x="10" y="18" fill={colors.textPrimary} fontSize="10" fontWeight="bold">Configuration:</text>
-
-            <circle cx="25" cy="35" r="6" fill={bypassEnabled ? colors.bypass : colors.textMuted} />
-            <text x="40" y="39" fill={colors.textSecondary} fontSize="10">Bypass: {bypassEnabled ? 'ON' : 'OFF'}</text>
-
-            <circle cx="160" cy="35" r="6" fill={hasOptimizers ? colors.optimizer : colors.textMuted} />
-            <text x="175" y="39" fill={colors.textSecondary} fontSize="10">Optimizers: {hasOptimizers ? 'ON' : 'OFF'}</text>
-
-            <circle cx="290" cy="35" r="6" fill={shadedCells.size > 0 ? colors.shaded : colors.solar} />
-            <text x="305" y="39" fill={colors.textSecondary} fontSize="10">Shaded: {shadedCells.size}</text>
-
-            <text x="180" y="55" fill={colors.textMuted} fontSize="9" textAnchor="middle">
-              {!bypassEnabled && !hasOptimizers && 'No protection - risk of hot spots and severe power loss'}
-              {bypassEnabled && !hasOptimizers && 'Bypass diodes protect against hot spots, but lose whole strings'}
-              {hasOptimizers && 'Optimizers allow each cell to operate independently'}
+          )}
+          {!values.hotSpotRisk && !values.activeBypass && hasOptimizers && shadedCells.size > 0 && (
+            <text x={230} y={panelY + 108} fill={colors.optimizer} fontSize="12" textAnchor="middle">
+              Optimizers: each cell at own MPP
             </text>
-          </g>
+          )}
+          {!values.hotSpotRisk && !values.activeBypass && !(hasOptimizers && shadedCells.size > 0) && (
+            <text x={230} y={panelY + 108} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">
+              {interactive ? 'Click cells to shade them' : 'No shading active'}
+            </text>
+          )}
+
+          {/* Config status */}
+          <rect x={40} y={panelY + 120} width={380} height={28} fill="rgba(0,0,0,0.3)" rx="4" />
+          <text x={130} y={panelY + 139} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+            Bypass: {bypassEnabled ? 'ON' : 'OFF'}
+          </text>
+          <text x={330} y={panelY + 139} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+            Shaded: {shadedCells.size} / 6
+          </text>
         </svg>
 
         {interactive && (
@@ -1026,7 +1021,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
                 padding: '10px 16px',
                 borderRadius: '8px',
                 border: 'none',
-                background: bypassEnabled ? colors.bypass : colors.textMuted,
+                background: bypassEnabled ? colors.bypass : 'rgba(148, 163, 184, 0.7)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
@@ -1042,7 +1037,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
                   padding: '10px 16px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: hasOptimizers ? colors.optimizer : colors.textMuted,
+                  background: hasOptimizers ? colors.optimizer : 'rgba(148, 163, 184, 0.7)',
                   color: 'white',
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -1127,7 +1122,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   // ────────────────────────────────────────────────────────────────────────────
 
   const renderHook = () => (
-    <div style={{ padding: '24px', paddingTop: '70px', textAlign: 'center' }}>
+    <div style={{ padding: '24px', textAlign: 'center' }}>
       <div style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -1172,12 +1167,11 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   );
 
   const renderStaticVisualization = () => {
-    const width = 400;
+    const width = 420;
     const height = 300;
-    const cellWidth = 50;
-    const cellHeight = 40;
-    const cellGap = 8;
-    const stringGap = 30;
+    const cellW = 38;
+    const cellH = 30;
+    const gapX = 6;
 
     return (
       <svg
@@ -1194,72 +1188,65 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
           </linearGradient>
         </defs>
 
-        <text x="200" y="25" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
-          Solar Panel with 3 Strings in Series
+        <text x={210} y={24} fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
+          Solar Panel: 3 Strings in Series
         </text>
-        <text x="200" y="45" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+        <text x={210} y={44} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
           Each string has 2 cells + bypass diode
         </text>
 
-        {[0, 1, 2].map(stringIndex => {
-          const stringX = 50 + stringIndex * (2 * cellWidth + cellGap + stringGap);
+        {[0, 1, 2].map(si => {
+          const sx = 60 + si * (2 * cellW + gapX + 36);
+          const labelY = 62;
+          const cellY = 74;
           return (
-            <g key={stringIndex} transform={`translate(${stringX}, 70)`}>
-              <text x={cellWidth + cellGap / 2} y="-10" fill={colors.textSecondary} fontSize="10" textAnchor="middle">
-                String {stringIndex + 1}
+            <React.Fragment key={si}>
+              <text x={sx + cellW + gapX / 2} y={labelY} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+                String {si + 1}
               </text>
-              {[0, 1].map(cellInString => {
-                const cellX = cellInString * (cellWidth + cellGap);
+              {[0, 1].map(ci => {
+                const cx = sx + ci * (cellW + gapX);
                 return (
-                  <g key={cellInString}>
-                    <rect
-                      x={cellX}
-                      y="0"
-                      width={cellWidth}
-                      height={cellHeight}
-                      fill="url(#cellGradientStatic)"
-                      rx="4"
-                      stroke={colors.current}
-                      strokeWidth="2"
-                    />
-                    <text x={cellX + cellWidth / 2} y={cellHeight / 2 + 4} fill={colors.solar} fontSize="10" textAnchor="middle">
+                  <React.Fragment key={ci}>
+                    <rect x={cx} y={cellY} width={cellW} height={cellH}
+                      fill="url(#cellGradientStatic)" rx="4"
+                      stroke={colors.current} strokeWidth="2" />
+                    <text x={cx + cellW / 2} y={cellY + cellH / 2 + 4} fill={colors.solar} fontSize="11" textAnchor="middle">
                       {CELL_VOLTAGE}V
                     </text>
-                  </g>
+                  </React.Fragment>
                 );
               })}
-              <line x1={cellWidth} y1={cellHeight / 2} x2={cellWidth + cellGap} y2={cellHeight / 2} stroke={colors.textMuted} strokeWidth="2" />
-              {/* Bypass diode symbol */}
-              <g transform={`translate(${cellWidth / 2 + cellGap / 2}, ${cellHeight + 15})`}>
-                <path
-                  d="M-20,0 L0,0 L0,-8 L15,0 L0,8 L0,0 M15,-8 L15,8 M15,0 L35,0"
-                  fill="none"
-                  stroke={colors.textMuted}
-                  strokeWidth="1.5"
-                />
-              </g>
-            </g>
+              <text x={sx + cellW + gapX / 2} y={cellY + cellH + 18} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">
+                Diode
+              </text>
+            </React.Fragment>
           );
         })}
 
-        <g transform="translate(20, 180)">
-          <rect x="0" y="0" width="360" height="80" fill="rgba(0,0,0,0.4)" rx="8" stroke={colors.accent} strokeWidth="1" />
-          <text x="180" y="25" fill={colors.textPrimary} fontSize="13" fontWeight="bold" textAnchor="middle">
-            What happens when you shade one cell?
-          </text>
-          <text x="180" y="50" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
-            Make your prediction below
-          </text>
-          <text x="180" y="70" fill={colors.textMuted} fontSize="10" textAnchor="middle">
-            Max power: {(CELLS_PER_STRING * STRINGS * CELL_VOLTAGE * CELL_CURRENT).toFixed(0)}W
-          </text>
-        </g>
+        <rect x={30} y={155} width={360} height={80} fill="rgba(0,0,0,0.4)" rx="8" stroke={colors.accent} strokeWidth="1" />
+        <text x={210} y={178} fill={colors.textPrimary} fontSize="13" fontWeight="bold" textAnchor="middle">
+          What happens when you shade one cell?
+        </text>
+        <text x={210} y={200} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+          Make your prediction below
+        </text>
+        <text x={210} y={222} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">
+          Max power: {(CELLS_PER_STRING * STRINGS * CELL_VOLTAGE * CELL_CURRENT).toFixed(0)}W
+        </text>
+
+        <text x={210} y={260} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+          P = V × I (series: same current through all cells)
+        </text>
+        <text x={210} y={282} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">
+          If one cell limits current, the entire string suffers
+        </text>
       </svg>
     );
   };
 
   const renderPredict = () => (
-    <div style={{ padding: '24px', paddingTop: '70px' }}>
+    <div style={{ padding: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.textPrimary }}>
           Make Your Prediction
@@ -1327,7 +1314,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   );
 
   const renderPlay = () => (
-    <div style={{ padding: '24px', paddingTop: '70px' }}>
+    <div style={{ padding: '24px' }}>
       <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.textPrimary, marginBottom: '8px' }}>
         Explore Shading Effects
       </h2>
@@ -1356,7 +1343,16 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
               setShadedCells(newSet);
               setHasExperimented(true);
             }}
-            style={{ width: '100%', cursor: 'pointer', accentColor: colors.primary }}
+            onInput={(e) => {
+              const newCount = parseInt((e.target as HTMLInputElement).value);
+              const newSet = new Set<number>();
+              for (let i = 0; i < newCount; i++) {
+                newSet.add(i);
+              }
+              setShadedCells(newSet);
+              setHasExperimented(true);
+            }}
+            style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
           />
           <span style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>{shadedCells.size} cells shaded - Power output affected</span>
         </div>
@@ -1430,8 +1426,8 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   );
 
   const renderReviewDiagram = () => {
-    const width = 400;
-    const height = 200;
+    const width = 420;
+    const height = 220;
 
     return (
       <svg
@@ -1441,43 +1437,35 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
         preserveAspectRatio="xMidYMid meet"
         style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px', marginBottom: '16px', transition: 'all 0.3s ease' }}
       >
-        <text x="200" y="25" fill={colors.textPrimary} fontSize="13" fontWeight="bold" textAnchor="middle">
+        <text x={210} y={20} fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
           Series Circuit Current Flow
         </text>
 
-        {/* Normal current flow */}
-        <g transform="translate(30, 50)">
-          <text x="80" y="-5" fill={colors.success} fontSize="10" textAnchor="middle">Normal: Full Current</text>
-          <rect x="0" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.success} strokeWidth="2" />
-          <rect x="50" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.success} strokeWidth="2" />
-          <rect x="100" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.success} strokeWidth="2" />
-          <line x1="40" y1="15" x2="50" y2="15" stroke={colors.success} strokeWidth="2" />
-          <line x1="90" y1="15" x2="100" y2="15" stroke={colors.success} strokeWidth="2" />
-          <line x1="140" y1="15" x2="160" y2="15" stroke={colors.success} strokeWidth="2" markerEnd="url(#arrowhead)" />
-          <text x="80" y="50" fill={colors.textSecondary} fontSize="9" textAnchor="middle">10A through all</text>
-        </g>
+        {/* Normal current flow - row 1 */}
+        <text x={100} y={42} fill={colors.success} fontSize="11" textAnchor="middle">Normal: Full Current</text>
+        <rect x={20} y={50} width={40} height={26} fill="#1e40af" rx="4" stroke={colors.success} strokeWidth="2" />
+        <rect x={70} y={50} width={40} height={26} fill="#1e40af" rx="4" stroke={colors.success} strokeWidth="2" />
+        <rect x={120} y={50} width={40} height={26} fill="#1e40af" rx="4" stroke={colors.success} strokeWidth="2" />
+        <text x={100} y={94} fill={colors.textSecondary} fontSize="11" textAnchor="middle">10A through all cells</text>
 
-        {/* Shaded cell - limited current */}
-        <g transform="translate(210, 50)">
-          <text x="80" y="-5" fill={colors.error} fontSize="10" textAnchor="middle">Shaded: Limited Current</text>
-          <rect x="0" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.textMuted} strokeWidth="2" />
-          <rect x="50" y="0" width="40" height="30" fill={colors.shaded} rx="4" stroke={colors.error} strokeWidth="2" />
-          <rect x="100" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.textMuted} strokeWidth="2" />
-          <text x="70" y="20" fill={colors.error} fontSize="7">SHADED</text>
-          <line x1="40" y1="15" x2="50" y2="15" stroke={colors.error} strokeWidth="1" strokeDasharray="3,2" />
-          <line x1="90" y1="15" x2="100" y2="15" stroke={colors.error} strokeWidth="1" strokeDasharray="3,2" />
-          <text x="80" y="50" fill={colors.error} fontSize="9" textAnchor="middle">Only 1A possible!</text>
-        </g>
+        {/* Shaded - row 1 right side */}
+        <text x={310} y={42} fill={colors.error} fontSize="11" textAnchor="middle">Shaded: Limited</text>
+        <rect x={230} y={50} width={40} height={26} fill="#1e40af" rx="4" stroke='rgba(148, 163, 184, 0.7)' strokeWidth="2" />
+        <rect x={280} y={50} width={40} height={26} fill={colors.shaded} rx="4" stroke={colors.error} strokeWidth="2" />
+        <rect x={330} y={50} width={40} height={26} fill="#1e40af" rx="4" stroke='rgba(148, 163, 184, 0.7)' strokeWidth="2" />
+        <text x={310} y={94} fill={colors.error} fontSize="11" textAnchor="middle">Only 1A possible</text>
 
-        {/* With bypass */}
-        <g transform="translate(120, 120)">
-          <text x="80" y="-5" fill={colors.bypass} fontSize="10" textAnchor="middle">Bypass: Current Rerouted</text>
-          <rect x="0" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.bypass} strokeWidth="2" />
-          <rect x="50" y="0" width="40" height="30" fill={colors.shaded} rx="4" stroke={colors.textMuted} strokeWidth="2" />
-          <rect x="100" y="0" width="40" height="30" fill="#1e40af" rx="4" stroke={colors.bypass} strokeWidth="2" />
-          <path d="M40,15 Q70,50 100,15" fill="none" stroke={colors.bypass} strokeWidth="2" />
-          <text x="80" y="55" fill={colors.bypass} fontSize="9" textAnchor="middle">10A bypasses shaded cell</text>
-        </g>
+        {/* With bypass - row 2 centered */}
+        <text x={210} y={122} fill={colors.bypass} fontSize="11" textAnchor="middle">Bypass: Current Rerouted</text>
+        <rect x={120} y={130} width={40} height={26} fill="#1e40af" rx="4" stroke={colors.bypass} strokeWidth="2" />
+        <rect x={170} y={130} width={40} height={26} fill={colors.shaded} rx="4" stroke='rgba(148, 163, 184, 0.7)' strokeWidth="2" />
+        <rect x={220} y={130} width={40} height={26} fill="#1e40af" rx="4" stroke={colors.bypass} strokeWidth="2" />
+        <path d="M 160 143 Q 190 175 220 143" fill="none" stroke={colors.bypass} strokeWidth="2" />
+        <text x={210} y={182} fill={colors.bypass} fontSize="11" textAnchor="middle">10A bypasses shaded cell</text>
+
+        <text x={210} y={206} fill='rgba(148, 163, 184, 0.7)' fontSize="11" textAnchor="middle">
+          Bypass diodes prevent hot spots and save remaining strings
+        </text>
       </svg>
     );
   };
@@ -1490,7 +1478,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
       : 'no effect on power';
 
     return (
-      <div style={{ padding: '24px', paddingTop: '70px' }}>
+      <div style={{ padding: '24px' }}>
         <div style={{
           background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
           padding: '20px',
@@ -1542,7 +1530,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   };
 
   const renderTwistPredict = () => (
-    <div style={{ padding: '24px', paddingTop: '70px' }}>
+    <div style={{ padding: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.warning }}>
           The Twist: Can Technology Help?
@@ -1611,7 +1599,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   );
 
   const renderTwistPlay = () => (
-    <div style={{ padding: '24px', paddingTop: '70px' }}>
+    <div style={{ padding: '24px' }}>
       <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.warning, marginBottom: '8px' }}>
         Compare Technologies
       </h2>
@@ -1639,7 +1627,16 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
               setShadedCells(newSet);
               setHasTwistExperimented(true);
             }}
-            style={{ width: '100%', cursor: 'pointer', accentColor: colors.primary }}
+            onInput={(e) => {
+              const newCount = parseInt((e.target as HTMLInputElement).value);
+              const newSet = new Set<number>();
+              for (let i = 0; i < newCount; i++) {
+                newSet.add(i);
+              }
+              setShadedCells(newSet);
+              setHasTwistExperimented(true);
+            }}
+            style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
           />
           <span style={{ color: colors.textSecondary, fontSize: '12px' }}>{shadedCells.size} cells shaded</span>
         </div>
@@ -1678,8 +1675,8 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   );
 
   const renderTwistReviewDiagram = () => {
-    const width = 400;
-    const height = 180;
+    const width = 420;
+    const height = 200;
 
     return (
       <svg
@@ -1689,52 +1686,39 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
         preserveAspectRatio="xMidYMid meet"
         style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px', marginBottom: '16px', transition: 'all 0.3s ease' }}
       >
-        <text x="200" y="20" fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">
+        <text x={210} y={22} fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
           Technology Comparison
         </text>
 
         {/* Bypass only */}
-        <g transform="translate(20, 40)">
-          <text x="80" y="0" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Bypass Diodes Only</text>
-          <rect x="20" y="10" width="120" height="50" fill="rgba(30,41,59,0.8)" rx="6" stroke={colors.bypass} strokeWidth="1" />
-          <rect x="30" y="20" width="30" height="25" fill="#1e40af" rx="3" stroke={colors.bypass} strokeWidth="1" />
-          <rect x="70" y="20" width="30" height="25" fill={colors.shaded} rx="3" stroke={colors.textMuted} strokeWidth="1" />
-          <text x="85" y="36" fill={colors.textMuted} fontSize="6">SHADED</text>
-          <rect x="110" y="20" width="25" height="25" fill="#1e40af" rx="3" stroke={colors.bypass} strokeWidth="1" />
-          <text x="80" y="75" fill={colors.warning} fontSize="9" textAnchor="middle">Loses whole string!</text>
-        </g>
+        <text x={100} y={44} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Bypass Diodes Only</text>
+        <rect x={30} y={52} width={140} height={36} fill="rgba(30,41,59,0.8)" rx="6" stroke={colors.bypass} strokeWidth="1" />
+        <rect x={38} y={58} width={34} height={24} fill="#1e40af" rx="3" stroke={colors.bypass} strokeWidth="1" />
+        <rect x={82} y={58} width={34} height={24} fill={colors.shaded} rx="3" stroke='rgba(148, 163, 184, 0.7)' strokeWidth="1" />
+        <rect x={126} y={58} width={34} height={24} fill="#1e40af" rx="3" stroke={colors.bypass} strokeWidth="1" />
+        <text x={100} y={106} fill={colors.warning} fontSize="11" textAnchor="middle">Loses whole string!</text>
 
         {/* With optimizers */}
-        <g transform="translate(200, 40)">
-          <text x="90" y="0" fill={colors.textSecondary} fontSize="10" textAnchor="middle">With Power Optimizers</text>
-          <rect x="20" y="10" width="140" height="50" fill="rgba(30,41,59,0.8)" rx="6" stroke={colors.optimizer} strokeWidth="1" />
-          <rect x="30" y="20" width="30" height="25" fill="#1e40af" rx="3" stroke={colors.optimizer} strokeWidth="2" />
-          <rect x="35" y="47" width="20" height="10" fill="rgba(6,182,212,0.3)" rx="2" stroke={colors.optimizer} strokeWidth="1" />
-          <text x="45" y="54" fill={colors.optimizer} fontSize="5">OPT</text>
-          <rect x="75" y="20" width="30" height="25" fill={colors.shaded} rx="3" stroke={colors.textMuted} strokeWidth="1" />
-          <rect x="80" y="47" width="20" height="10" fill="rgba(6,182,212,0.3)" rx="2" stroke={colors.optimizer} strokeWidth="1" />
-          <text x="90" y="54" fill={colors.optimizer} fontSize="5">OPT</text>
-          <rect x="120" y="20" width="30" height="25" fill="#1e40af" rx="3" stroke={colors.optimizer} strokeWidth="2" />
-          <rect x="125" y="47" width="20" height="10" fill="rgba(6,182,212,0.3)" rx="2" stroke={colors.optimizer} strokeWidth="1" />
-          <text x="135" y="54" fill={colors.optimizer} fontSize="5">OPT</text>
-          <text x="90" y="75" fill={colors.success} fontSize="9" textAnchor="middle">Only shaded cell affected!</text>
-        </g>
+        <text x={320} y={44} fill={colors.textSecondary} fontSize="11" textAnchor="middle">With Optimizers</text>
+        <rect x={240} y={52} width={160} height={36} fill="rgba(30,41,59,0.8)" rx="6" stroke={colors.optimizer} strokeWidth="1" />
+        <rect x={248} y={58} width={34} height={24} fill="#1e40af" rx="3" stroke={colors.optimizer} strokeWidth="2" />
+        <rect x={296} y={58} width={34} height={24} fill={colors.shaded} rx="3" stroke='rgba(148, 163, 184, 0.7)' strokeWidth="1" />
+        <rect x={344} y={58} width={34} height={24} fill="#1e40af" rx="3" stroke={colors.optimizer} strokeWidth="2" />
+        <text x={320} y={106} fill={colors.success} fontSize="11" textAnchor="middle">Only shaded cell affected</text>
 
-        {/* Power comparison bar */}
-        <g transform="translate(20, 100)">
-          <text x="10" y="12" fill={colors.textSecondary} fontSize="9">Bypass:</text>
-          <rect x="60" y="3" width="120" height="14" fill="rgba(255,255,255,0.1)" rx="3" />
-          <rect x="60" y="3" width="40" height="14" fill="rgba(245,158,11,0.5)" rx="3" />
-          <text x="185" y="14" fill={colors.warning} fontSize="9">33%</text>
+        {/* Power comparison bars */}
+        <text x={60} y={132} fill={colors.textSecondary} fontSize="11" textAnchor="end">Bypass:</text>
+        <rect x={70} y={120} width={140} height={16} fill="rgba(255,255,255,0.1)" rx="3" />
+        <rect x={70} y={120} width={47} height={16} fill="rgba(245,158,11,0.5)" rx="3" />
+        <text x={220} y={133} fill={colors.warning} fontSize="11">33%</text>
 
-          <text x="200" y="12" fill={colors.textSecondary} fontSize="9">Optimizer:</text>
-          <rect x="260" y="3" width="120" height="14" fill="rgba(255,255,255,0.1)" rx="3" />
-          <rect x="260" y="3" width="100" height="14" fill="rgba(6,182,212,0.5)" rx="3" />
-          <text x="385" y="14" fill={colors.optimizer} fontSize="9">83%</text>
-        </g>
+        <text x={60} y={158} fill={colors.textSecondary} fontSize="11" textAnchor="end">Optimizer:</text>
+        <rect x={70} y={146} width={140} height={16} fill="rgba(255,255,255,0.1)" rx="3" />
+        <rect x={70} y={146} width={116} height={16} fill="rgba(6,182,212,0.5)" rx="3" />
+        <text x={220} y={159} fill={colors.optimizer} fontSize="11">83%</text>
 
-        <text x="200" y="145" fill={colors.textPrimary} fontSize="10" fontWeight="bold" textAnchor="middle">
-          Optimizers: Each panel at its own maximum power point
+        <text x={210} y={186} fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">
+          Optimizers: each panel at its own maximum power point
         </text>
       </svg>
     );
@@ -1744,7 +1728,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
     const wasCorrect = twistPrediction === 'optimizers_help';
 
     return (
-      <div style={{ padding: '24px', paddingTop: '70px' }}>
+      <div style={{ padding: '24px' }}>
         <div style={{
           background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
           padding: '20px',
@@ -1795,7 +1779,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   const [currentTransferApp, setCurrentTransferApp] = useState(0);
 
   const renderTransfer = () => (
-    <div style={{ padding: '24px', paddingTop: '70px' }}>
+    <div style={{ padding: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: colors.textPrimary }}>
           Real-World Applications
@@ -1898,7 +1882,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
 
     if (testSubmitted) {
       return (
-        <div style={{ padding: '24px', paddingTop: '70px', maxHeight: '100%', overflowY: 'auto' }}>
+        <div style={{ padding: '24px', maxHeight: '100%', overflowY: 'auto' }}>
           <div style={{
             background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             padding: '24px',
@@ -1998,7 +1982,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ padding: '24px', paddingTop: '70px' }}>
+      <div style={{ padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
           <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
@@ -2035,7 +2019,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   };
 
   const renderMastery = () => (
-    <div style={{ padding: '24px', paddingTop: '70px', textAlign: 'center' }}>
+    <div style={{ padding: '24px', textAlign: 'center' }}>
       <div style={{
         width: '100px',
         height: '100px',
@@ -2133,8 +2117,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
 
   return (
     <div style={{
-      position: 'absolute',
-      inset: 0,
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e1b4b 50%, ${colors.bgPrimary} 100%)`,
@@ -2149,6 +2132,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
+        paddingTop: '48px',
       }}>
         {renderContent()}
       </div>

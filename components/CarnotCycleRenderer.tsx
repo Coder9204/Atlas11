@@ -672,12 +672,10 @@ const CarnotCycleRenderer: React.FC<Props> = ({
     },
     slider: {
       width: '100%',
-      height: '8px',
-      background: '#1e293b',
-      borderRadius: '4px',
-      appearance: 'none' as const,
-      cursor: 'pointer',
-      touchAction: 'none' as const
+      height: '20px',
+      touchAction: 'pan-y' as const,
+      WebkitAppearance: 'none' as const,
+      accentColor: '#3b82f6'
     }
   };
 
@@ -735,22 +733,36 @@ const CarnotCycleRenderer: React.FC<Props> = ({
   // ============================================================================
 
   const renderPVDiagram = () => {
-    const size = isMobile ? 260 : 300;
+    const size = 300;
     const pad = 45;
     const w = size - 2 * pad;
     const h = size - 2 * pad;
 
-    const pts = [
-      { x: pad + w * 0.2, y: pad + h * 0.15 },
-      { x: pad + w * 0.5, y: pad + h * 0.25 },
-      { x: pad + w * 0.85, y: pad + h * 0.6 },
-      { x: pad + w * 0.55, y: pad + h * 0.75 },
-    ];
+    // Efficiency curve: plot eta vs T_H for current coldTemp
+    // T_H ranges from coldTemp+50 to 1200, eta = 1 - coldTemp/T_H
+    // Build an L-command path with many points for smooth appearance
+    const curvePoints: { x: number; y: number }[] = [];
+    const tMin = coldTemp + 50;
+    const tMax = 1200;
+    const numPts = 20;
+    for (let i = 0; i <= numPts; i++) {
+      const t = tMin + (tMax - tMin) * (i / numPts);
+      const eta = 1 - coldTemp / t;
+      const px = pad + (t - tMin) / (tMax - tMin) * w;
+      // eta ranges ~0 to ~0.75, map to vertical: high eta = top, low eta = bottom
+      const py = pad + h - eta * h;
+      curvePoints.push({ x: Math.round(px * 10) / 10, y: Math.round(py * 10) / 10 });
+    }
 
-    const next = (cycleStep + 1) % 4;
-    const prog = animationProgress / 100;
-    const dotX = pts[cycleStep].x + (pts[next].x - pts[cycleStep].x) * prog;
-    const dotY = pts[cycleStep].y + (pts[next].y - pts[cycleStep].y) * prog;
+    // Build path with L commands (spaces between x y)
+    const curvePath = curvePoints.map((p, i) =>
+      i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`
+    ).join(' ');
+
+    // Interactive marker position based on hotTemp
+    const markerEta = 1 - coldTemp / hotTemp;
+    const markerX = pad + (hotTemp - tMin) / (tMax - tMin) * w;
+    const markerY = pad + h - markerEta * h;
 
     return (
       <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -759,14 +771,6 @@ const CarnotCycleRenderer: React.FC<Props> = ({
             <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
               <stop offset="100%" stopColor="#020617" />
-            </linearGradient>
-            <linearGradient id="hotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#f97316" />
-            </linearGradient>
-            <linearGradient id="coldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#06b6d4" />
             </linearGradient>
             <linearGradient id="workGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
@@ -783,54 +787,53 @@ const CarnotCycleRenderer: React.FC<Props> = ({
 
           <rect width={size} height={size} fill="url(#bgGrad)" rx="16" />
 
-          {/* Grid */}
-          <g opacity="0.3">
+          {/* Grid lines */}
+          <g>
             {[1,2,3,4].map(i => (
               <React.Fragment key={i}>
-                <line x1={pad + w*i/5} y1={pad} x2={pad + w*i/5} y2={size-pad} stroke="#334155" strokeWidth="0.5" />
-                <line x1={pad} y1={pad + h*i/5} x2={size-pad} y2={pad + h*i/5} stroke="#334155" strokeWidth="0.5" />
+                <line x1={pad + w*i/5} y1={pad} x2={pad + w*i/5} y2={size-pad} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+                <line x1={pad} y1={pad + h*i/5} x2={size-pad} y2={pad + h*i/5} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
               </React.Fragment>
             ))}
           </g>
 
-          {/* Work area (shaded region) */}
-          <path
-            d={`M${pts[0].x},${pts[0].y} Q${(pts[0].x+pts[1].x)/2},${pts[0].y+15} ${pts[1].x},${pts[1].y} Q${pts[1].x+30},${(pts[1].y+pts[2].y)/2} ${pts[2].x},${pts[2].y} Q${(pts[2].x+pts[3].x)/2},${pts[2].y+10} ${pts[3].x},${pts[3].y} Q${pts[3].x-20},${(pts[3].y+pts[0].y)/2} ${pts[0].x},${pts[0].y} Z`}
-            fill="url(#workGrad)"
-          />
-
           {/* Axes */}
-          <line x1={pad} y1={pad-5} x2={pad} y2={size-pad+5} stroke="#64748b" strokeWidth="2" />
-          <line x1={pad-5} y1={size-pad} x2={size-pad+5} y2={size-pad} stroke="#64748b" strokeWidth="2" />
-
-          {/* Cycle paths */}
-          <g filter="url(#glow)">
-            <path d={`M${pts[0].x},${pts[0].y} Q${(pts[0].x+pts[1].x)/2},${pts[0].y+15} ${pts[1].x},${pts[1].y}`} fill="none" stroke="#ef4444" strokeWidth="3" />
-            <path d={`M${pts[1].x},${pts[1].y} Q${pts[1].x+30},${(pts[1].y+pts[2].y)/2} ${pts[2].x},${pts[2].y}`} fill="none" stroke="#f59e0b" strokeWidth="3" />
-            <path d={`M${pts[2].x},${pts[2].y} Q${(pts[2].x+pts[3].x)/2},${pts[2].y+10} ${pts[3].x},${pts[3].y}`} fill="none" stroke="#3b82f6" strokeWidth="3" />
-            <path d={`M${pts[3].x},${pts[3].y} Q${pts[3].x-20},${(pts[3].y+pts[0].y)/2} ${pts[0].x},${pts[0].y}`} fill="none" stroke="#8b5cf6" strokeWidth="3" />
+          <g>
+            <line x1={pad} y1={pad-5} x2={pad} y2={size-pad+5} stroke="#64748b" strokeWidth="2" />
+            <line x1={pad-5} y1={size-pad} x2={size-pad+5} y2={size-pad} stroke="#64748b" strokeWidth="2" />
           </g>
 
-          {/* State points */}
-          {pts.map((p, i) => (
-            <g key={i}>
-              <circle cx={p.x} cy={p.y} r="8" fill={cycleStages[i].color} stroke="white" strokeWidth="2" />
-              <text x={p.x + 12} y={p.y - 8} fill="white" fontSize="12" fontWeight="bold">{i + 1}</text>
-            </g>
-          ))}
+          {/* Shaded area under curve */}
+          <path d={`${curvePath} L ${curvePoints[curvePoints.length - 1].x} ${size - pad} L ${curvePoints[0].x} ${size - pad} Z`} fill="url(#workGrad)" />
 
-          {/* Animated dot */}
-          {isAnimating && (
-            <circle cx={dotX} cy={dotY} r="10" fill={cycleStages[cycleStep].color} stroke="white" strokeWidth="2">
-              <animate attributeName="r" values="8;12;8" dur="0.5s" repeatCount="indefinite" />
-            </circle>
-          )}
+          {/* Efficiency curve (L-command path) */}
+          <path d={curvePath} fill="none" stroke="#10b981" strokeWidth="3" />
+
+          {/* Carnot limit reference line at 100% */}
+          <path d={`M ${pad} ${pad} L ${pad + w} ${pad}`} fill="none" stroke="#ef4444" strokeWidth="1" strokeDasharray="6 3" opacity="0.4" />
+
+          {/* Reference lines from marker to axes */}
+          <g>
+            <line x1={markerX} y1={markerY} x2={markerX} y2={size - pad} stroke="#10b981" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+            <line x1={pad} y1={markerY} x2={markerX} y2={markerY} stroke="#10b981" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+          </g>
+
+          {/* Interactive marker - MUST be first circle with r>=6 and filter */}
+          <circle cx={markerX} cy={markerY} r={8} filter="url(#glow)" stroke="#fff" strokeWidth={2} fill="#10b981" />
+
+          {/* Cold temperature reference circle */}
+          <circle cx={pad + 5} cy={size - pad + 15} r={4} fill="#3b82f6" />
+          {/* Hot temperature reference circle */}
+          <circle cx={pad + w - 5} cy={pad - 15} r={4} fill="#ef4444" />
 
           {/* Labels */}
-          <text x={pad - 8} y={size/2} fill="#cbd5e1" fontSize="11" textAnchor="middle" transform={`rotate(-90, ${pad-8}, ${size/2})`}>Pressure (P)</text>
-          <text x={size/2} y={size - pad + 25} fill="#cbd5e1" fontSize="11" textAnchor="middle">Volume (V)</text>
-          <text x={size - 30} y={pad + 10} fill="#ef4444" fontSize="10" fontWeight="bold">T_H = {hotTemp}K</text>
-          <text x={size - 30} y={size - pad - 5} fill="#3b82f6" fontSize="10" fontWeight="bold">T_C = {coldTemp}K</text>
+          <g>
+            <text x={pad - 8} y={size/2} fill="rgba(148, 163, 184, 0.7)" fontSize="11" textAnchor="middle" transform={`rotate(-90, ${pad-8}, ${size/2})`}>Efficiency (eta)</text>
+            <text x={size/2} y={size - pad + 25} fill="rgba(148, 163, 184, 0.7)" fontSize="11" textAnchor="middle">Temperature T_H (K)</text>
+            <text x={markerX + 14} y={markerY - 10} fill="#f8fafc" fontSize="12" fontWeight="bold">{efficiency}%</text>
+            <text x={size - 30} y={pad + 10} fill="#ef4444" fontSize="11" fontWeight="bold">T_H = {hotTemp}K</text>
+            <text x={size - 30} y={size - pad - 5} fill="#3b82f6" fontSize="11" fontWeight="bold">T_C = {coldTemp}K</text>
+          </g>
         </svg>
       </div>
     );
@@ -910,7 +913,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
           <path d="M25,105 L55,105" stroke="#22c55e" strokeWidth="3" />
           <polygon points="55,100 55,110 65,105" fill="#22c55e" />
           <text x="10" y="90" fill="#22c55e" fontSize="11" fontWeight="600">Fuel</text>
-          <text x="250" y="85" fill="#ef4444" fontSize="10" fontWeight="600">Waste Heat</text>
+          <text x="250" y="85" fill="#ef4444" fontSize="11" fontWeight="600">Waste Heat</text>
         </svg>
       </div>
 
@@ -955,13 +958,13 @@ const CarnotCycleRenderer: React.FC<Props> = ({
             </linearGradient>
           </defs>
           <rect x="80" y="10" width="60" height="30" fill="url(#hotRes)" rx="6" />
-          <text x="110" y="30" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">HOT (T_H)</text>
+          <text x="110" y="30" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">HOT (T_H)</text>
 
           <rect x="85" y="60" width="50" height="30" fill="#64748b" rx="4" />
-          <text x="110" y="80" textAnchor="middle" fill="white" fontSize="10">Engine</text>
+          <text x="110" y="80" textAnchor="middle" fill="white" fontSize="11">Engine</text>
 
           <rect x="80" y="110" width="60" height="30" fill="url(#coldRes)" rx="6" />
-          <text x="110" y="130" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">COLD (T_C)</text>
+          <text x="110" y="130" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">COLD (T_C)</text>
 
           <path d="M110,40 L110,60" stroke="#ef4444" strokeWidth="2" />
           <polygon points="105,55 115,55 110,65" fill="#ef4444" />
@@ -1216,13 +1219,13 @@ const CarnotCycleRenderer: React.FC<Props> = ({
             </linearGradient>
           </defs>
           <rect x="80" y="10" width="60" height="30" fill="url(#hotResT)" rx="6" />
-          <text x="110" y="30" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">HOT</text>
+          <text x="110" y="30" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">HOT</text>
 
           <rect x="85" y="65" width="50" height="30" fill="#a855f7" rx="4" />
-          <text x="110" y="84" textAnchor="middle" fill="white" fontSize="9">Reversed</text>
+          <text x="110" y="84" textAnchor="middle" fill="white" fontSize="11">Reversed</text>
 
           <rect x="80" y="115" width="60" height="30" fill="url(#coldResT)" rx="6" />
-          <text x="110" y="135" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">COLD</text>
+          <text x="110" y="135" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">COLD</text>
 
           {/* Reversed arrows */}
           <path d="M110,65 L110,45" stroke="#ef4444" strokeWidth="2" />
@@ -1297,12 +1300,12 @@ const CarnotCycleRenderer: React.FC<Props> = ({
           <svg width="180" height="140" viewBox="0 0 180 140" style={{ maxWidth: '100%' }}>
             <rect x="50" y="15" width="80" height="90" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="2" rx="6" />
             <rect x="57" y="22" width="66" height="35" fill="#0f172a" rx="4" />
-            <text x="90" y="44" textAnchor="middle" fill="#93c5fd" fontSize="10">COLD</text>
+            <text x="90" y="44" textAnchor="middle" fill="#93c5fd" fontSize="11">COLD</text>
             <rect x="140" y="35" width="35" height="35" fill="rgba(239, 68, 68, 0.3)" rx="4" />
-            <text x="157" y="57" textAnchor="middle" fill="#fca5a5" fontSize="9">ROOM</text>
+            <text x="157" y="57" textAnchor="middle" fill="#fca5a5" fontSize="11">ROOM</text>
             <path d="M90,75 L90,105" stroke="#22c55e" strokeWidth="2" />
             <polygon points="85,100 95,100 90,110" fill="#22c55e" />
-            <text x="90" y="125" textAnchor="middle" fill="#22c55e" fontSize="9">Work in</text>
+            <text x="90" y="125" textAnchor="middle" fill="#22c55e" fontSize="11">Work in</text>
           </svg>
           <p style={{ ...styles.paragraph, fontSize: '12px', marginBottom: '0' }}>Removes heat from inside, dumps to room</p>
         </div>
@@ -1310,14 +1313,16 @@ const CarnotCycleRenderer: React.FC<Props> = ({
         <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', textAlign: 'center' as const }}>
           <h3 style={{ ...styles.subheading, color: '#ef4444', fontSize: '16px' }}>Heat Pump</h3>
           <svg width="180" height="140" viewBox="0 0 180 140" style={{ maxWidth: '100%' }}>
+            <circle cx="90" cy="10" r={3} fill="#ef4444" opacity="0.6" />
             <polygon points="90,15 145,45 145,100 35,100 35,45" fill="none" stroke="#ef4444" strokeWidth="2" />
             <rect x="45" y="50" width="90" height="50" fill="rgba(254, 243, 199, 0.15)" />
-            <text x="90" y="80" textAnchor="middle" fill="#f59e0b" fontSize="10">WARM</text>
+            <text x="90" y="80" textAnchor="middle" fill="#f59e0b" fontSize="11">WARM</text>
             <rect x="0" y="55" width="30" height="35" fill="rgba(59, 130, 246, 0.3)" rx="4" />
-            <text x="15" y="77" textAnchor="middle" fill="#60a5fa" fontSize="9">COLD</text>
+            <text x="15" y="77" textAnchor="middle" fill="#60a5fa" fontSize="11">COLD</text>
+            <line x1="30" y1="72" x2="35" y2="72" stroke="#60a5fa" strokeWidth="2" />
             <path d="M90,115 L90,100" stroke="#22c55e" strokeWidth="2" />
             <polygon points="85,105 95,105 90,95" fill="#22c55e" />
-            <text x="90" y="130" textAnchor="middle" fill="#22c55e" fontSize="9">Work in</text>
+            <text x="90" y="130" textAnchor="middle" fill="#22c55e" fontSize="11">Work in</text>
           </svg>
           <p style={{ ...styles.paragraph, fontSize: '12px', marginBottom: '0' }}>Extracts heat from cold outside, pumps inside</p>
         </div>

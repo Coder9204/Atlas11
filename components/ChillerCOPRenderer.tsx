@@ -263,7 +263,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [condenserTemp, setCondenserTemp] = useState(35); // °C
+  const [condenserTemp, setCondenserTemp] = useState(38); // °C
   const [evaporatorTemp, setEvaporatorTemp] = useState(7); // °C
   const [loadPercentage, setLoadPercentage] = useState(80); // %
   const [animationFrame, setAnimationFrame] = useState(0);
@@ -326,12 +326,12 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Intro',
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'Partial Load',
-    twist_play: 'Load Lab',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -375,16 +375,39 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   const coolingCapacity = loadPercentage * 10; // kW (baseline 1000 kW at 100%)
   const compressorPower = coolingCapacity / currentCOP;
 
-  // Chiller Cycle Visualization Component
-  const ChillerCycleVisualization = ({ showFlow = true }) => {
-    const width = isMobile ? 320 : 450;
-    const height = isMobile ? 280 : 350;
+  // COP vs Temperature chart render function for play phase
+  const renderCOPChart = () => {
+    // Generate COP curve data for different condenser temps (>= 10 points for smooth curve)
+    const chartTemps = [25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 50];
+    const chartCOPs = chartTemps.map(t => calculateCOP(t, evaporatorTemp, loadPercentage));
+    const chartW = 450;
+    const chartH = 300;
+    const padL = 60;
+    const padR = 20;
+    const padT = 30;
+    const padB = 50;
+    const plotW = chartW - padL - padR;
+    const plotH = chartH - padT - padB;
+    const minCOP = 2;
+    const maxCOP = 8;
 
-    // Animation for refrigerant flow
-    const flowOffset = (animationFrame * 2) % 40;
+    const toX = (temp: number) => padL + ((temp - 25) / 25) * plotW;
+    const toY = (cop: number) => padT + plotH - ((cop - minCOP) / (maxCOP - minCOP)) * plotH;
+
+    const pathD = chartTemps.map((t, i) => {
+      const x = toX(t);
+      const y = toY(chartCOPs[i]);
+      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    }).join(' ');
+
+    // Area fill under curve
+    const areaD = pathD + ` L ${toX(chartTemps[chartTemps.length - 1]).toFixed(1)} ${(padT + plotH).toFixed(1)} L ${toX(chartTemps[0]).toFixed(1)} ${(padT + plotH).toFixed(1)} Z`;
+
+    const curX = toX(condenserTemp);
+    const curY = toY(currentCOP);
 
     return (
-      <svg width={width} height={height} viewBox="0 0 450 350" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={chartW} height={chartH} viewBox={`0 0 ${chartW} ${chartH}`} style={{ maxWidth: '100%', display: 'block', margin: '0 auto' }}>
         <defs>
           <linearGradient id="coldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={colors.cold} stopOpacity="0.8" />
@@ -394,9 +417,9 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
             <stop offset="0%" stopColor={colors.hot} stopOpacity="0.8" />
             <stop offset="100%" stopColor={colors.hot} stopOpacity="0.3" />
           </linearGradient>
-          <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.8" />
-            <stop offset="100%" stopColor={colors.accent} stopOpacity="0.3" />
+          <linearGradient id="areaFill" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="0.05" />
           </linearGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
@@ -405,75 +428,55 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
-          <filter id="shadow">
-            <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/>
-          </filter>
         </defs>
-        {/* Background */}
-        <rect x="0" y="0" width="450" height="350" fill={colors.bgCard} rx="12" />
 
-        {/* Evaporator (left side - cold) */}
-        <rect x="30" y="120" width="100" height="110" rx="8" fill={`${colors.cold}22`} stroke={colors.cold} strokeWidth="2" />
-        <text x="80" y="145" fill={colors.cold} fontSize="12" fontWeight="600" textAnchor="middle">EVAPORATOR</text>
-        <text x="80" y="165" fill={colors.textSecondary} fontSize="11" textAnchor="middle">{evaporatorTemp}°C</text>
-        {/* Cooling coils */}
-        <path d="M 45 180 Q 55 185 65 180 Q 75 175 85 180 Q 95 185 105 180 Q 115 175 115 180" fill="none" stroke={colors.cold} strokeWidth="2" />
-        <path d="M 45 200 Q 55 205 65 200 Q 75 195 85 200 Q 95 205 105 200 Q 115 195 115 200" fill="none" stroke={colors.cold} strokeWidth="2" />
-        <text x="80" y="220" fill={colors.textMuted} fontSize="10" textAnchor="middle">Absorbs heat</text>
+        {/* Interactive point - first in DOM */}
+        <circle cx={curX} cy={curY} r={8} filter="url(#glow)" stroke="#fff" strokeWidth={2} fill={colors.accent} />
 
-        {/* Condenser (right side - hot) */}
-        <rect x="320" y="120" width="100" height="110" rx="8" fill={`${colors.hot}22`} stroke={colors.hot} strokeWidth="2" />
-        <text x="370" y="145" fill={colors.hot} fontSize="12" fontWeight="600" textAnchor="middle">CONDENSER</text>
-        <text x="370" y="165" fill={colors.textSecondary} fontSize="11" textAnchor="middle">{condenserTemp}°C</text>
-        {/* Heat rejection fins */}
-        <path d="M 335 180 Q 345 185 355 180 Q 365 175 375 180 Q 385 185 395 180 Q 405 175 405 180" fill="none" stroke={colors.hot} strokeWidth="2" />
-        <path d="M 335 200 Q 345 205 355 200 Q 365 195 375 200 Q 385 205 395 200 Q 405 195 405 200" fill="none" stroke={colors.hot} strokeWidth="2" />
-        <text x="370" y="220" fill={colors.textMuted} fontSize="10" textAnchor="middle">Rejects heat</text>
-
-        {/* Compressor (top) */}
-        <circle cx="225" cy="60" r="35" fill={`${colors.warning}22`} stroke={colors.warning} strokeWidth="2" />
-        <text x="225" y="55" fill={colors.warning} fontSize="12" fontWeight="600" textAnchor="middle">COMPRESSOR</text>
-        <text x="225" y="72" fill={colors.textSecondary} fontSize="10" textAnchor="middle">{compressorPower.toFixed(0)} kW</text>
-
-        {/* Expansion valve (bottom) */}
-        <rect x="200" y="280" width="50" height="30" rx="4" fill={`${colors.accent}22`} stroke={colors.accent} strokeWidth="2" />
-        <text x="225" y="300" fill={colors.accent} fontSize="10" fontWeight="600" textAnchor="middle">EXP VALVE</text>
-
-        {/* Refrigerant flow lines */}
-        {/* Evaporator to Compressor (low pressure gas - blue) */}
-        <path d="M 130 150 L 190 95" fill="none" stroke={colors.cold} strokeWidth="3" strokeDasharray={showFlow ? "8,4" : "0"} strokeDashoffset={showFlow ? -flowOffset : 0} />
-        <polygon points="185,100 195,90 190,105" fill={colors.cold} />
-
-        {/* Compressor to Condenser (high pressure gas - red) */}
-        <path d="M 260 95 L 320 150" fill="none" stroke={colors.hot} strokeWidth="3" strokeDasharray={showFlow ? "8,4" : "0"} strokeDashoffset={showFlow ? -flowOffset : 0} />
-        <polygon points="315,145 325,155 310,155" fill={colors.hot} />
-
-        {/* Condenser to Expansion Valve (high pressure liquid) */}
-        <path d="M 370 230 L 370 260 L 250 295" fill="none" stroke={colors.warning} strokeWidth="3" strokeDasharray={showFlow ? "8,4" : "0"} strokeDashoffset={showFlow ? -flowOffset : 0} />
-        <polygon points="255,290 245,300 255,300" fill={colors.warning} />
-
-        {/* Expansion Valve to Evaporator (low pressure liquid - cyan) */}
-        <path d="M 200 295 L 80 295 L 80 230" fill="none" stroke={colors.accent} strokeWidth="3" strokeDasharray={showFlow ? "8,4" : "0"} strokeDashoffset={showFlow ? -flowOffset : 0} />
-        <polygon points="75,235 85,235 80,225" fill={colors.accent} />
-
-        {/* Temperature lift indicator */}
-        <line x1="225" y1="130" x2="225" y2="180" stroke={colors.textSecondary} strokeWidth="1" strokeDasharray="4,4" />
-        <text x="225" y="160" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Lift: {temperatureLift}°C</text>
-
-        {/* COP display */}
-        <rect x="175" y="200" width="100" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" />
-        <text x="225" y="220" fill={colors.textSecondary} fontSize="10" textAnchor="middle">COP</text>
-        <text x="225" y="240" fill={colors.success} fontSize="18" fontWeight="700" textAnchor="middle">{currentCOP.toFixed(2)}</text>
-
-        {/* Heat flow arrows */}
-        <g transform="translate(10, 175)">
-          <text x="0" y="0" fill={colors.cold} fontSize="18">❄️</text>
-          <text x="0" y="15" fill={colors.textMuted} fontSize="9">Q_cold</text>
+        {/* Grid lines group */}
+        <g className="grid-lines">
+          {[25, 30, 35, 40, 45, 50].map(t => (
+            <line key={`gv${t}`} x1={toX(t)} y1={padT} x2={toX(t)} y2={padT + plotH} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+          ))}
+          {[2, 3, 4, 5, 6, 7, 8].map(c => (
+            <line key={`gh${c}`} x1={padL} y1={toY(c)} x2={padL + plotW} y2={toY(c)} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+          ))}
         </g>
-        <g transform="translate(425, 175)">
-          <text x="0" y="0" fill={colors.hot} fontSize="18">🔥</text>
-          <text x="0" y="15" fill={colors.textMuted} fontSize="9">Q_hot</text>
+
+        {/* Axes group */}
+        <g className="axes">
+          <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.textSecondary} strokeWidth="2" />
+          <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.textSecondary} strokeWidth="2" />
         </g>
+
+        {/* Labels group */}
+        <g className="labels">
+          <text x={padL + plotW / 2} y={chartH - 5} fill={colors.textSecondary} fontSize="13" textAnchor="middle">Condenser Temperature (°C)</text>
+          <text x="15" y={padT + plotH / 2} fill={colors.textSecondary} fontSize="13" textAnchor="middle" transform={`rotate(-90, 15, ${padT + plotH / 2})`}>Coefficient (COP)</text>
+
+          {/* Tick labels */}
+          {[25, 30, 35, 40, 45, 50].map(t => (
+            <text key={`tl${t}`} x={toX(t)} y={padT + plotH + 18} fill={'rgba(148, 163, 184, 0.7)'} fontSize="11" textAnchor="middle">{t}</text>
+          ))}
+          {[2, 4, 6, 8].map(c => (
+            <text key={`cl${c}`} x={padL - 10} y={toY(c) + 4} fill={'rgba(148, 163, 184, 0.7)'} fontSize="11" textAnchor="end">{c}</text>
+          ))}
+        </g>
+
+        {/* Area fill under curve */}
+        <path d={areaD} fill="url(#areaFill)" />
+
+        {/* COP curve */}
+        <path d={pathD} fill="none" stroke={colors.accent} strokeWidth="3" />
+
+        {/* Reference line at COP=5 */}
+        <path d={`M ${padL} ${toY(5).toFixed(1)} L ${(padL + plotW).toFixed(1)} ${toY(5).toFixed(1)}`} fill="none" stroke={colors.success} strokeWidth="1" strokeDasharray="8 4" opacity="0.4" />
+
+        {/* Current operating line */}
+        <line x1={curX} y1={padT} x2={curX} y2={padT + plotH} stroke={colors.warning} strokeWidth="1" strokeDasharray="5 5" opacity="0.5" />
+
+        {/* Value label */}
+        <text x={curX + 5} y={Math.max(curY - 14, padT + 14)} fill={colors.success} fontSize="13" fontWeight="700" textAnchor="start">COP = {currentCOP.toFixed(2)}</text>
       </svg>
     );
   };
@@ -608,8 +611,8 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
     minHeight: '44px',
   };
 
-  // Chiller Cycle Visualization (static version for predict phase)
-  const ChillerCycleVisualizationStatic = () => {
+  // Chiller Cycle Visualization (static version for predict phase) - render function
+  const renderChillerCycleVisualizationStatic = () => {
     const width = isMobile ? 320 : 450;
     const height = isMobile ? 280 : 350;
     const staticCondenserTemp = 35;
@@ -645,7 +648,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
         {/* Cooling coils */}
         <path d="M 45 180 Q 55 185 65 180 Q 75 175 85 180 Q 95 185 105 180 Q 115 175 115 180" fill="none" stroke={colors.cold} strokeWidth="2" />
         <path d="M 45 200 Q 55 205 65 200 Q 75 195 85 200 Q 95 205 105 200 Q 115 195 115 200" fill="none" stroke={colors.cold} strokeWidth="2" />
-        <text x="80" y="220" fill={colors.textMuted} fontSize="10" textAnchor="middle">Absorbs heat</text>
+        <text x="80" y="220" fill={colors.textMuted} fontSize="11" textAnchor="middle">Absorbs heat</text>
 
         {/* Condenser (right side - hot) */}
         <rect x="320" y="120" width="100" height="110" rx="8" fill={`${colors.hot}22`} stroke={colors.hot} strokeWidth="2" />
@@ -654,16 +657,16 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
         {/* Heat rejection fins */}
         <path d="M 335 180 Q 345 185 355 180 Q 365 175 375 180 Q 385 185 395 180 Q 405 175 405 180" fill="none" stroke={colors.hot} strokeWidth="2" />
         <path d="M 335 200 Q 345 205 355 200 Q 365 195 375 200 Q 385 205 395 200 Q 405 195 405 200" fill="none" stroke={colors.hot} strokeWidth="2" />
-        <text x="370" y="220" fill={colors.textMuted} fontSize="10" textAnchor="middle">Rejects heat</text>
+        <text x="370" y="220" fill={colors.textMuted} fontSize="11" textAnchor="middle">Rejects heat</text>
 
         {/* Compressor (top) */}
         <circle cx="225" cy="60" r="35" fill={`${colors.warning}22`} stroke={colors.warning} strokeWidth="2" />
         <text x="225" y="55" fill={colors.warning} fontSize="12" fontWeight="600" textAnchor="middle">COMPRESSOR</text>
-        <text x="225" y="72" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Work Input</text>
+        <text x="225" y="72" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Work Input</text>
 
         {/* Expansion valve (bottom) */}
         <rect x="200" y="280" width="50" height="30" rx="4" fill={`${colors.accent}22`} stroke={colors.accent} strokeWidth="2" />
-        <text x="225" y="300" fill={colors.accent} fontSize="10" fontWeight="600" textAnchor="middle">EXP VALVE</text>
+        <text x="225" y="300" fill={colors.accent} fontSize="11" fontWeight="600" textAnchor="middle">EXP VALVE</text>
 
         {/* Refrigerant flow lines */}
         <path d="M 130 150 L 190 95" fill="none" stroke={colors.cold} strokeWidth="3" />
@@ -677,11 +680,11 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
 
         {/* Temperature lift indicator */}
         <line x1="225" y1="130" x2="225" y2="180" stroke={colors.textSecondary} strokeWidth="1" strokeDasharray="4,4" />
-        <text x="225" y="160" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Lift: {staticCondenserTemp - staticEvaporatorTemp}°C</text>
+        <text x="225" y="160" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Lift: {staticCondenserTemp - staticEvaporatorTemp}°C</text>
 
         {/* COP display */}
         <rect x="175" y="200" width="100" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" />
-        <text x="225" y="220" fill={colors.textSecondary} fontSize="10" textAnchor="middle">COP</text>
+        <text x="225" y="218" fill={colors.textSecondary} fontSize="11" textAnchor="middle">COP</text>
         <text x="225" y="240" fill={colors.success} fontSize="18" fontWeight="700" textAnchor="middle">{staticCOP.toFixed(1)}</text>
       </svg>
     );
@@ -814,7 +817,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               justifyContent: 'center',
               marginBottom: '24px',
             }}>
-              <ChillerCycleVisualizationStatic />
+              {renderChillerCycleVisualizationStatic()}
             </div>
 
             <p style={{ ...typo.body, color: '#e2e8f0', marginBottom: '20px', textAlign: 'center' }}>
@@ -898,8 +901,11 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               The Refrigeration Cycle
             </h2>
-            <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '8px' }}>
               Adjust temperatures and observe how COP changes. When you increase the condenser temperature, the temperature lift increases and COP decreases because more compressor work is needed. Temperature lift is defined as the difference between condenser and evaporator temperatures. This is why engineers in data centers and commercial buildings carefully optimize these settings to reduce energy costs.
+            </p>
+            <p style={{ ...typo.body, color: colors.accent, textAlign: 'center', marginBottom: '16px', fontWeight: 600 }}>
+              COP = Q_cooling / W_compressor = T_evap / (T_cond - T_evap) {'\u00d7'} efficiency
             </p>
 
             {/* Main visualization */}
@@ -909,14 +915,14 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <ChillerCycleVisualization showFlow={true} />
+              <div style={{ marginBottom: '24px' }}>
+                {renderCOPChart()}
               </div>
 
               {/* Condenser temperature slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: '#e2e8f0' }}>🔥 Condenser Temperature</span>
+                  <span style={{ ...typo.small, color: '#e2e8f0' }}>Condenser Temperature</span>
                   <span style={{
                     ...typo.small,
                     color: condenserTemp > 40 ? colors.error : condenserTemp > 32 ? colors.warning : colors.success,
@@ -934,11 +940,10 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                   aria-label="Condenser Temperature"
                   style={{
                     width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
+                    height: '20px',
                     touchAction: 'pan-y',
-                    accentColor: colors.hot,
+                    WebkitAppearance: 'none' as const,
+                    accentColor: '#3b82f6',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -950,7 +955,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               {/* Evaporator temperature slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: '#e2e8f0' }}>❄️ Evaporator Temperature</span>
+                  <span style={{ ...typo.small, color: '#e2e8f0' }}>Evaporator Temperature</span>
                   <span style={{ ...typo.small, color: colors.cold, fontWeight: 600 }}>{evaporatorTemp}°C</span>
                 </div>
                 <input
@@ -962,11 +967,10 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                   aria-label="Evaporator Temperature"
                   style={{
                     width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
+                    height: '20px',
                     touchAction: 'pan-y',
-                    accentColor: colors.cold,
+                    WebkitAppearance: 'none' as const,
+                    accentColor: '#3b82f6',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1316,61 +1320,98 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           }}>
             {/* Part-load curve visualization */}
             <div style={{ marginBottom: '24px' }}>
-              <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px', margin: '0 auto', display: 'block' }}>
-                {/* Grid */}
-                {[0, 25, 50, 75, 100].map(x => (
-                  <line key={`v${x}`} x1={50 + x * 3} y1="20" x2={50 + x * 3} y2="170" stroke={colors.border} strokeDasharray="3,3" />
-                ))}
-                {[0, 25, 50, 75, 100].map((_, i) => (
-                  <line key={`h${i}`} x1="50" y1={20 + i * 37.5} x2="350" y2={20 + i * 37.5} stroke={colors.border} strokeDasharray="3,3" />
-                ))}
+              {(() => {
+                const svgW = 400;
+                const svgH = 300;
+                const pL = 60;
+                const pR = 20;
+                const pT = 25;
+                const pB = 50;
+                const plotW2 = svgW - pL - pR;
+                const plotH2 = svgH - pT - pB;
+                const copMin = Math.max(2, Math.min(...copValues) - 0.5);
+                const copMax = Math.min(8, Math.max(...copValues) + 0.5);
+                const copRange = Math.max(1, copMax - copMin);
+                const xScale = (load: number) => pL + ((load - 20) / 80) * plotW2;
+                const yScale = (cop: number) => pT + plotH2 - ((cop - copMin) / copRange) * plotH2;
 
-                {/* Axes */}
-                <line x1="50" y1="170" x2="350" y2="170" stroke={colors.textSecondary} strokeWidth="2" />
-                <line x1="50" y1="20" x2="50" y2="170" stroke={colors.textSecondary} strokeWidth="2" />
+                const curLoadX = xScale(loadPercentage);
+                const curLoadY = yScale(currentCOP);
 
-                {/* Axis labels */}
-                <text x="200" y="195" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Load (%)</text>
-                <text x="15" y="100" fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform="rotate(-90, 15, 100)">COP</text>
+                return (
+                  <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+                    {/* Interactive point - first in DOM */}
+                    <circle cx={curLoadX} cy={curLoadY} r={8} filter="url(#glowTwist)" stroke="#fff" strokeWidth={2} fill={colors.warning} />
 
-                {/* COP curve */}
-                <path
-                  d={loadPoints.map((load, i) => {
-                    const x = 50 + (load - 20) * (300 / 80);
-                    const y = 170 - ((copValues[i] - 2) / 6) * 150;
-                    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-                  }).join(' ')}
-                  fill="none"
-                  stroke={colors.accent}
-                  strokeWidth="3"
-                />
+                    <defs>
+                      <filter id="glowTwist">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
 
-                {/* Data points */}
-                {loadPoints.map((load, i) => {
-                  const x = 50 + (load - 20) * (300 / 80);
-                  const y = 170 - ((copValues[i] - 2) / 6) * 150;
-                  return (
-                    <circle
-                      key={load}
-                      cx={x}
-                      cy={y}
-                      r={load === loadPercentage ? 8 : 4}
-                      fill={load === optimalLoad ? colors.success : load === loadPercentage ? colors.warning : colors.accent}
+                    {/* Grid lines */}
+                    {[20, 40, 60, 80, 100].map(load => (
+                      <line key={`gv${load}`} x1={xScale(load)} y1={pT} x2={xScale(load)} y2={pT + plotH2} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                    ))}
+                    {Array.from({ length: 5 }, (_, i) => copMin + (copRange * i) / 4).map((cop, i) => (
+                      <line key={`gh${i}`} x1={pL} y1={yScale(cop)} x2={pL + plotW2} y2={yScale(cop)} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                    ))}
+
+                    {/* Axes */}
+                    <line x1={pL} y1={pT + plotH2} x2={pL + plotW2} y2={pT + plotH2} stroke={colors.textSecondary} strokeWidth="2" />
+                    <line x1={pL} y1={pT} x2={pL} y2={pT + plotH2} stroke={colors.textSecondary} strokeWidth="2" />
+
+                    {/* Axis labels */}
+                    <text x={pL + plotW2 / 2} y={svgH - 5} fill={colors.textSecondary} fontSize="13" textAnchor="middle">Load (%)</text>
+                    <text x="15" y={pT + plotH2 / 2} fill={colors.textSecondary} fontSize="13" textAnchor="middle" transform={`rotate(-90, 15, ${pT + plotH2 / 2})`}>Coefficient (COP)</text>
+
+                    {/* Tick labels */}
+                    {[20, 40, 60, 80, 100].map(load => (
+                      <text key={`tl${load}`} x={xScale(load)} y={pT + plotH2 + 20} fill={'rgba(148, 163, 184, 0.7)'} fontSize="11" textAnchor="middle">{load}</text>
+                    ))}
+                    {Array.from({ length: 5 }, (_, i) => copMin + (copRange * i) / 4).map((cop, i) => (
+                      <text key={`cl${i}`} x={pL - 8} y={yScale(cop) + 4} fill={'rgba(148, 163, 184, 0.7)'} fontSize="11" textAnchor="end">{cop.toFixed(1)}</text>
+                    ))}
+
+                    {/* COP curve */}
+                    <path
+                      d={loadPoints.map((load, i) => {
+                        const x = xScale(load);
+                        const y = yScale(copValues[i]);
+                        return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+                      }).join(' ')}
+                      fill="none"
+                      stroke={colors.accent}
+                      strokeWidth="3"
                     />
-                  );
-                })}
 
-                {/* Current operating point */}
-                <line
-                  x1={50 + (loadPercentage - 20) * (300 / 80)}
-                  y1="20"
-                  x2={50 + (loadPercentage - 20) * (300 / 80)}
-                  y2="170"
-                  stroke={colors.warning}
-                  strokeWidth="2"
-                  strokeDasharray="5,5"
-                />
-              </svg>
+                    {/* Data points */}
+                    {loadPoints.map((load, i) => {
+                      const x = xScale(load);
+                      const y = yScale(copValues[i]);
+                      return (
+                        <circle
+                          key={load}
+                          cx={x}
+                          cy={y}
+                          r={4}
+                          fill={load === optimalLoad ? colors.success : colors.accent}
+                        />
+                      );
+                    })}
+
+                    {/* Current operating line */}
+                    <line x1={curLoadX} y1={pT} x2={curLoadX} y2={pT + plotH2} stroke={colors.warning} strokeWidth="1" strokeDasharray="5 5" opacity="0.5" />
+
+                    {/* Value label */}
+                    <text x={curLoadX} y={curLoadY - 14} fill={colors.success} fontSize="13" fontWeight="700" textAnchor="middle">COP = {currentCOP.toFixed(2)}</text>
+                  </svg>
+                );
+              })()}
             </div>
 
             {/* Load slider */}
@@ -1388,11 +1429,10 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                 aria-label="Cooling Load"
                 style={{
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
+                  height: '20px',
                   touchAction: 'pan-y',
-                  accentColor: colors.accent,
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>

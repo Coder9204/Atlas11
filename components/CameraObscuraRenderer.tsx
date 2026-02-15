@@ -663,6 +663,10 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
           {/* Pinhole label */}
           <text x={pinholeX} y={boxBottom + 20} textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">Pinhole</text>
 
+          {/* Axis labels for educational clarity */}
+          <text x={width / 2} y={height - 2} textAnchor="middle" fill="#94a3b8" fontSize="11">Distance</text>
+          <text x={6} y={height / 2} textAnchor="middle" fill="#94a3b8" fontSize="11" transform={`rotate(-90, 6, ${height / 2})`}>Intensity</text>
+
           {/* Screen inside box with gradient */}
           <rect
             x={screenX}
@@ -674,7 +678,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             filter="url(#camImageGlow)"
           />
           {/* Screen label */}
-          <text x={screenX + 6} y={boxTop + 12} textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">Screen</text>
+          <text x={screenX + 6} y={boxTop + 12} textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">Screen</text>
 
           {/* Projected image on screen (inverted) with premium effects */}
           <g filter={blurAmount > 0 ? "url(#camImageBlur)" : "url(#camImageGlow)"}>
@@ -699,7 +703,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
             />
           </g>
           {/* Image label */}
-          <text x={screenX + 6} y={boxBottom - 8} textAnchor="middle" fill="#fcd34d" fontSize="9">Image</text>
+          <text x={screenX + 6} y={boxBottom - 8} textAnchor="middle" fill="#fcd34d" fontSize="11">Image</text>
 
           {/* Light rays with glow effect */}
           {showRays && generateRays()}
@@ -707,11 +711,11 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
           {/* Legend box */}
           <g transform="translate(10, 260)">
             <rect x="0" y="0" width="180" height="35" fill="rgba(0,0,0,0.6)" rx="4" />
-            <text x="8" y="14" fill="#e2e8f0" fontSize="10" fontWeight="bold">Legend:</text>
+            <text x="8" y="14" fill="#e2e8f0" fontSize="11" fontWeight="bold">Legend:</text>
             <circle cx="18" cy="26" r="4" fill="#fcd34d" />
-            <text x="28" y="29" fill="#e2e8f0" fontSize="9">Light rays</text>
+            <text x="28" y="29" fill="#e2e8f0" fontSize="11">Light rays</text>
             <rect x="80" y="22" width="10" height="8" fill="#ef4444" rx="1" />
-            <text x="95" y="29" fill="#e2e8f0" fontSize="9">Object/Image</text>
+            <text x="95" y="29" fill="#e2e8f0" fontSize="11">Object/Image</text>
           </g>
         </svg>
 
@@ -831,7 +835,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
           step="1"
           value={holeSize}
           onChange={(e) => setHoleSize(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent, background: 'rgba(139, 92, 246, 0.3)', height: '8px', borderRadius: '4px' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
           aria-label="Pinhole Size"
           aria-labelledby="hole-size-label"
           aria-valuemin={3}
@@ -855,7 +859,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
           step="5"
           value={objectDistance}
           onChange={(e) => setObjectDistance(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent, background: 'rgba(139, 92, 246, 0.3)', height: '8px', borderRadius: '4px' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
           aria-label="Object Distance"
           aria-labelledby="object-distance-label"
           aria-valuemin={80}
