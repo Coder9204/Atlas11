@@ -334,7 +334,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Eye Diagram Lab',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -403,7 +403,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
   }, [jitterAmount, animationFrame]);
 
   // Clock Signal Visualization
-  const ClockSignalVisualization = () => {
+  const renderClockSignalVisualization = () => {
     const width = isMobile ? 320 : 500;
     const height = isMobile ? 180 : 220;
     const padding = { top: 30, right: 20, bottom: 40, left: 50 };
@@ -537,26 +537,24 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
         <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
           Time
         </text>
-        <text x={12} y={yHigh} fill={colors.textSecondary} fontSize="10" dominantBaseline="middle">
+        <text x={12} y={yHigh} fill={colors.textSecondary} fontSize="11" dominantBaseline="middle">
           HIGH
         </text>
-        <text x={12} y={yLow} fill={colors.textSecondary} fontSize="10" dominantBaseline="middle">
+        <text x={12} y={yLow} fill={colors.textSecondary} fontSize="11" dominantBaseline="middle">
           LOW
         </text>
 
         {/* Legend */}
-        <g transform={`translate(${padding.left + 10}, ${height - 32})`}>
-          <line x1="0" y1="0" x2="20" y2="0" stroke={colors.textMuted} strokeDasharray="4,4" strokeWidth="1" />
-          <text x="26" y="4" fill={colors.textMuted} fontSize="9">Ideal</text>
-          <line x1="60" y1="0" x2="80" y2="0" stroke="url(#clockGradient)" strokeWidth="2" />
-          <text x="86" y="4" fill={colors.textSecondary} fontSize="9">Actual (with jitter)</text>
-        </g>
+        <line x1={padding.left + 10} y1={height - 32} x2={padding.left + 30} y2={height - 32} stroke={colors.textMuted} strokeDasharray="4,4" strokeWidth="1" />
+        <text x={padding.left + 36} y={height - 28} fill={colors.textMuted} fontSize="11">Ideal</text>
+        <line x1={padding.left + 80} y1={height - 32} x2={padding.left + 100} y2={height - 32} stroke="url(#clockGradient)" strokeWidth="2" />
+        <text x={padding.left + 106} y={height - 28} fill={colors.textSecondary} fontSize="11">Actual</text>
       </svg>
     );
   };
 
   // Eye Diagram Visualization
-  const EyeDiagramVisualization = () => {
+  const renderEyeDiagramVisualization = () => {
     const width = isMobile ? 320 : 450;
     const height = isMobile ? 200 : 260;
     const padding = { top: 30, right: 20, bottom: 40, left: 40 };
@@ -571,12 +569,9 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
       const jitterOffset = getJitter(t * 7) * plotWidth * 0.2;
       const noiseOffset = getJitter(t * 13 + 1000) * 10;
 
-      // Random bit pattern for this trace
-      const bits = [
-        Math.random() > 0.5 ? 1 : 0,
-        Math.random() > 0.5 ? 1 : 0,
-        Math.random() > 0.5 ? 1 : 0
-      ];
+      // Deterministic bit pattern ensuring at least one transition per trace
+      const bitPatterns = [[0,1,0],[1,0,1],[0,0,1],[1,1,0],[0,1,1],[1,0,0]];
+      const bits = bitPatterns[t % bitPatterns.length];
 
       const yHigh = padding.top + 20 + noiseOffset;
       const yLow = padding.top + plotHeight - 20 + noiseOffset;
@@ -679,7 +674,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
           x={padding.left + plotWidth / 2}
           y={padding.top + plotHeight / 2 + 4}
           fill={eyeOpeningH > plotWidth * 0.2 ? colors.success : colors.error}
-          fontSize="10"
+          fontSize="11"
           textAnchor="middle"
           fontWeight="600"
         >
@@ -690,7 +685,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
   };
 
   // Static Clock Signal for Predict Phase
-  const StaticClockVisualization = () => {
+  const renderStaticClockVisualization = () => {
     const width = isMobile ? 320 : 500;
     const height = isMobile ? 180 : 220;
     const padding = { top: 30, right: 20, bottom: 40, left: 50 };
@@ -759,10 +754,10 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
         <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
           Time (1ns period)
         </text>
-        <text x={12} y={yHigh} fill={colors.textSecondary} fontSize="10" dominantBaseline="middle">
+        <text x={12} y={yHigh} fill={colors.textSecondary} fontSize="11" dominantBaseline="middle">
           HIGH
         </text>
-        <text x={12} y={yLow} fill={colors.textSecondary} fontSize="10" dominantBaseline="middle">
+        <text x={12} y={yLow} fill={colors.textSecondary} fontSize="11" dominantBaseline="middle">
           LOW
         </text>
       </svg>
@@ -1085,7 +1080,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <StaticClockVisualization />
+              {renderStaticClockVisualization()}
             </div>
 
             {/* Options */}
@@ -1190,7 +1185,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
               marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <ClockSignalVisualization />
+                {renderClockSignalVisualization()}
               </div>
 
               {/* Jitter amount slider */}
@@ -1206,11 +1201,13 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
                   step="5"
                   value={jitterAmount}
                   onChange={(e) => setJitterAmount(parseInt(e.target.value))}
+                  onInput={(e) => setJitterAmount(parseInt((e.target as HTMLInputElement).value))}
                   style={{
                     width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    background: `linear-gradient(to right, ${colors.accent} ${(jitterAmount / 200) * 100}%, ${colors.border} ${(jitterAmount / 200) * 100}%)`,
+                    height: '20px',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none' as const,
+                    accentColor: '#3b82f6',
                     cursor: 'pointer',
                   }}
                 />
@@ -1233,11 +1230,13 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
                   step="10"
                   value={clockFrequency}
                   onChange={(e) => setClockFrequency(parseInt(e.target.value))}
+                  onInput={(e) => setClockFrequency(parseInt((e.target as HTMLInputElement).value))}
                   style={{
                     width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    background: `linear-gradient(to right, ${colors.accent} ${((clockFrequency - 10) / 490) * 100}%, ${colors.border} ${((clockFrequency - 10) / 490) * 100}%)`,
+                    height: '20px',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none' as const,
+                    accentColor: '#3b82f6',
                     cursor: 'pointer',
                   }}
                 />
@@ -1324,6 +1323,30 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
                 <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                   <strong style={{ color: colors.textPrimary }}>SNR (Signal-to-Noise Ratio):</strong> Ratio of signal power to noise power, measured in dB.
                 </p>
+              </div>
+            </div>
+
+            {/* Formula */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                ADC SNR degradation from jitter:
+              </p>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                fontFamily: 'monospace',
+              }}>
+                <span style={{ color: colors.textPrimary, fontSize: '16px' }}>
+                  SNR = -20 × log10(2 × π × f_in × t_jitter)
+                </span>
               </div>
             </div>
 
@@ -1549,7 +1572,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
                 </text>
                 {/* Simple eye shape */}
                 <ellipse cx="50%" cy="50%" rx="80" ry="40" fill="none" stroke={colors.accent} strokeWidth="2" />
-                <text x="50%" y={isMobile ? 130 : 160} fill={colors.textMuted} fontSize="10" textAnchor="middle">
+                <text x="50%" y={isMobile ? 130 : 160} fill={colors.textMuted} fontSize="11" textAnchor="middle">
                   The "eye opening" shows timing margin
                 </text>
               </svg>
@@ -1654,7 +1677,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
               marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <EyeDiagramVisualization />
+                {renderEyeDiagramVisualization()}
               </div>
 
               {/* Jitter slider */}
@@ -1676,10 +1699,13 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
                   step="5"
                   value={jitterAmount}
                   onChange={(e) => setJitterAmount(parseInt(e.target.value))}
+                  onInput={(e) => setJitterAmount(parseInt((e.target as HTMLInputElement).value))}
                   style={{
                     width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
+                    height: '20px',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none' as const,
+                    accentColor: '#3b82f6',
                     cursor: 'pointer',
                   }}
                 />
@@ -1698,10 +1724,13 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
                   step="0.5"
                   value={dataRate}
                   onChange={(e) => setDataRate(parseFloat(e.target.value))}
+                  onInput={(e) => setDataRate(parseFloat((e.target as HTMLInputElement).value))}
                   style={{
                     width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
+                    height: '20px',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none' as const,
+                    accentColor: '#3b82f6',
                     cursor: 'pointer',
                   }}
                 />

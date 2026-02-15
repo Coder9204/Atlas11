@@ -1013,6 +1013,9 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
             Diffusion is defined as the net movement of particles from a region of higher concentration to a region of lower concentration.
             This is important in real-world applications from drug delivery to industrial chemical processes used in everyday life.
           </p>
+          <p style={{ color: 'rgba(148, 163, 184, 0.7)', fontSize: typo.small, marginTop: '8px', maxWidth: '500px', margin: '8px auto 0' }}>
+            J = -D × (dC/dx) where D ∝ T
+          </p>
         </div>
 
         <div style={{
@@ -1223,14 +1226,21 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                 </g>
               )}
 
+              {/* Grid lines for visual reference */}
+              <line x1="30" y1="70" x2="270" y2="70" stroke="#94a3b8" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="30" y1="125" x2="270" y2="125" stroke="#94a3b8" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="30" y1="180" x2="270" y2="180" stroke="#94a3b8" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="100" y1="30" x2="100" y2="220" stroke="#94a3b8" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="200" y1="30" x2="200" y2="220" stroke="#94a3b8" strokeDasharray="4 4" opacity="0.3" />
+
               {/* Educational labels */}
               <g id="labels-layer">
-                <text x="150" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">Diffusion Experiment</text>
-                <text x="150" y="240" textAnchor="middle" fill="#cbd5e1" fontSize="10">Water Container</text>
-                {!dyeDropped && <text x="150" y="70" textAnchor="middle" fill="#d946ef" fontSize="9">Dye Drop</text>}
-                {dyeDropped && <text x="60" y="240" textAnchor="middle" fill="#a855f7" fontSize="9">Dye Particles</text>}
+                <text x="150" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">Diffusion Experiment</text>
+                <text x="150" y="245" textAnchor="middle" fill="#cbd5e1" fontSize="11">Concentration</text>
+                {!dyeDropped && <text x="60" y="50" textAnchor="middle" fill="#d946ef" fontSize="11">Dye Drop</text>}
+                {dyeDropped && <text x="60" y="50" textAnchor="middle" fill="#a855f7" fontSize="11">Dye Particles</text>}
                 {/* Speed indicator that updates with slider */}
-                <text x="270" y="15" textAnchor="end" fill="#94a3b8" fontSize="9">Speed: {simSpeed}%</text>
+                <text x="270" y="245" textAnchor="end" fill="#94a3b8" fontSize="11">Speed: {simSpeed}%</text>
               </g>
             </svg>
 
@@ -1357,8 +1367,10 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                 onChange={(e) => setSimSpeed(Number(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
-                  accentColor: premiumDesign.colors.primary,
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                   cursor: 'pointer',
                   background: premiumDesign.colors.background.tertiary,
                   borderRadius: '4px',
@@ -2797,7 +2809,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        paddingTop: '12px',
+        paddingTop: '48px',
         paddingBottom: '100px',
         paddingLeft: isMobile ? '16px' : '24px',
         paddingRight: isMobile ? '16px' : '24px',

@@ -264,7 +264,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
 
   // Simulation state
   const [dataReusesFactor, setDataReuseFactor] = useState(1); // 1-100 reuses
-  const [memoryLevel, setMemoryLevel] = useState(3); // 0=Register, 1=L1, 2=L2, 3=L3, 4=DRAM
+  const [memoryLevel, setMemoryLevel] = useState(0); // 0=Register, 1=L1, 2=L2, 3=L3, 4=DRAM
   const [dataVolume, setDataVolume] = useState(1); // MB of data
   const [showOptimized, setShowOptimized] = useState(false);
   const [animationFrame, setAnimationFrame] = useState(0);
@@ -371,7 +371,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Optimization Lab',
+    twist_play: 'Explore Twist',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -393,31 +393,71 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     }
   }, [phase, goToPhase]);
 
-  // Memory Hierarchy Visualization Component
-  const MemoryHierarchyVisualization = ({ showDataFlow = true, highlightLevel = -1 }) => {
-    const width = isMobile ? 320 : 500;
-    const height = isMobile ? 300 : 380;
+  // Slider style - shared across all phases
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '20px',
+    touchAction: 'pan-y',
+    WebkitAppearance: 'none',
+    accentColor: '#3b82f6',
+    cursor: 'pointer',
+  };
+
+  // Memory Hierarchy Visualization - render function (not component)
+  const renderMemoryHierarchyVisualization = (showDataFlow = true, highlightLevel = -1) => {
+    const width = 500;
+    const height = 380;
     const centerX = width / 2;
-    const startY = 40;
-    const levelHeight = (height - 80) / 5;
+    const startY = 50;
+    const levelHeight = (height - 100) / 5;
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={colors.register} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.dram} stopOpacity="0.8" />
+          </linearGradient>
+          <radialGradient id="cpuGlow">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="0" />
+          </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Grid lines for visual reference */}
+        <line x1={40} y1={startY} x2={40} y2={height - 30} stroke={colors.border} strokeWidth={1} strokeDasharray="4 4" opacity="0.3" />
+        <line x1={width - 40} y1={startY} x2={width - 40} y2={height - 30} stroke={colors.border} strokeWidth={1} strokeDasharray="4 4" opacity="0.3" />
+        <line x1={40} y1={height / 2} x2={width - 40} y2={height / 2} stroke={colors.border} strokeWidth={1} strokeDasharray="4 4" opacity="0.3" />
+
         {/* CPU at top */}
+        <circle cx={centerX} cy={20} r={30} fill="url(#cpuGlow)" />
         <rect
-          x={centerX - 40}
-          y={10}
-          width={80}
-          height={25}
-          rx={4}
+          x={centerX - 45}
+          y={8}
+          width={90}
+          height={28}
+          rx={6}
           fill={colors.accent}
-          style={{ filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.5))' }}
+          filter="url(#glow)"
         />
-        <text x={centerX} y={27} fill="white" fontSize="12" fontWeight="600" textAnchor="middle">CPU</text>
+        <text x={centerX} y={27} fill="white" fontSize="13" fontWeight="700" textAnchor="middle">CPU Core</text>
+
+        {/* Energy axis label */}
+        <text x={15} y={height / 2} fill={colors.textSecondary} fontSize="11" fontWeight="600" textAnchor="middle" transform={`rotate(-90, 15, ${height / 2})`}>Energy per Access (pJ)</text>
+
+        {/* Distance axis label */}
+        <text x={centerX} y={height - 5} fill={colors.textSecondary} fontSize="11" fontWeight="600" textAnchor="middle">Distance from CPU</text>
 
         {/* Memory hierarchy layers */}
         {memoryHierarchy.map((level, i) => {
-          const layerWidth = 60 + i * 40;
+          const layerWidth = 80 + i * 50;
           const y = startY + i * levelHeight;
           const isHighlighted = highlightLevel === i || highlightLevel === -1;
 
@@ -428,20 +468,20 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
                 x={centerX - layerWidth / 2}
                 y={y}
                 width={layerWidth}
-                height={levelHeight - 10}
+                height={levelHeight - 12}
                 rx={6}
                 fill={`${level.color}22`}
                 stroke={level.color}
                 strokeWidth={highlightLevel === i ? 3 : 1}
-                style={highlightLevel === i ? { filter: `drop-shadow(0 0 10px ${level.color})` } : {}}
+                filter={highlightLevel === i ? 'url(#glow)' : undefined}
               />
 
               {/* Level name */}
               <text
                 x={centerX}
-                y={y + levelHeight / 2 - 5}
+                y={y + levelHeight / 2 - 8}
                 fill={level.color}
-                fontSize={isMobile ? "11" : "13"}
+                fontSize="13"
                 fontWeight="600"
                 textAnchor="middle"
               >
@@ -451,9 +491,9 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
               {/* Energy cost */}
               <text
                 x={centerX}
-                y={y + levelHeight / 2 + 10}
+                y={y + levelHeight / 2 + 8}
                 fill={colors.textSecondary}
-                fontSize={isMobile ? "9" : "10"}
+                fontSize="11"
                 textAnchor="middle"
               >
                 {level.energy < 1 ? `${level.energy} pJ` : level.energy >= 1000 ? `${(level.energy/1000).toFixed(0)}k pJ` : `${level.energy} pJ`}/access
@@ -461,14 +501,27 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
 
               {/* Size indicator */}
               <text
-                x={centerX + layerWidth / 2 + 8}
+                x={centerX + layerWidth / 2 + 12}
                 y={y + levelHeight / 2}
                 fill={colors.textMuted}
-                fontSize="9"
+                fontSize="11"
                 textAnchor="start"
               >
                 {level.size}
               </text>
+
+              {/* Interactive highlight point for current level */}
+              {highlightLevel === i && (
+                <circle
+                  cx={centerX - layerWidth / 2 - 15}
+                  cy={y + (levelHeight - 12) / 2}
+                  r={8}
+                  fill={level.color}
+                  filter="url(#glow)"
+                  stroke="#fff"
+                  strokeWidth={2}
+                />
+              )}
 
               {/* Data flow animation */}
               {showDataFlow && highlightLevel >= i && (
@@ -488,27 +541,27 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         })}
 
         {/* Energy scale legend */}
-        <g transform={`translate(${width - 90}, 50)`}>
-          <text x={0} y={0} fill={colors.textMuted} fontSize="9">Energy Scale</text>
-          <rect x={0} y={8} width={12} height={12} fill={colors.register} rx={2} />
-          <text x={16} y={18} fill={colors.textMuted} fontSize="8">Low</text>
-          <rect x={0} y={24} width={12} height={12} fill={colors.dram} rx={2} />
-          <text x={16} y={34} fill={colors.textMuted} fontSize="8">High</text>
+        <g transform={`translate(${width - 100}, 50)`}>
+          <text x={0} y={0} fill={colors.textSecondary} fontSize="11" fontWeight="600">Energy Scale</text>
+          <rect x={0} y={8} width={14} height={14} fill={colors.register} rx={3} />
+          <text x={20} y={20} fill={colors.textSecondary} fontSize="11">Low</text>
+          <rect x={0} y={28} width={14} height={14} fill={colors.dram} rx={3} />
+          <text x={20} y={40} fill={colors.textSecondary} fontSize="11">High</text>
         </g>
       </svg>
     );
   };
 
-  // Energy comparison bar chart
-  const EnergyComparisonChart = () => {
-    const width = isMobile ? 300 : 400;
-    const height = 180;
+  // Energy comparison bar chart - render function
+  const renderEnergyComparisonChart = () => {
+    const width = 400;
+    const height = 200;
     const barHeight = 35;
     const maxEnergy = Math.max(energyCalc.unoptimized, totalComputeEnergy);
 
-    const computeBarWidth = (totalComputeEnergy / maxEnergy) * (width - 120);
-    const moveBarWidth = (energyCalc.unoptimized / maxEnergy) * (width - 120);
-    const optimizedMoveWidth = (energyCalc.optimized / maxEnergy) * (width - 120);
+    const computeBarWidth = Math.max(10, (totalComputeEnergy / maxEnergy) * (width - 140));
+    const moveBarWidth = Math.max(10, (energyCalc.unoptimized / maxEnergy) * (width - 140));
+    const optimizedMoveWidth = Math.max(10, (energyCalc.optimized / maxEnergy) * (width - 140));
 
     const formatEnergy = (pj: number) => {
       if (pj >= 1e12) return `${(pj/1e12).toFixed(1)} J`;
@@ -519,16 +572,38 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     };
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
+        <defs>
+          <linearGradient id="computeGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={colors.success} />
+            <stop offset="100%" stopColor="#22D3EE" />
+          </linearGradient>
+          <linearGradient id="moveGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={colors.warning} />
+            <stop offset="100%" stopColor="#EF4444" />
+          </linearGradient>
+          <filter id="barGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Grid lines */}
+        <line x1={10} y1={25} x2={width - 10} y2={25} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+        <line x1={10} y1={90} x2={width - 10} y2={90} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+
         {/* Compute energy bar */}
-        <text x={10} y={20} fill={colors.textSecondary} fontSize="11">Compute Energy</text>
-        <rect x={10} y={28} width={computeBarWidth} height={barHeight} rx={4} fill={colors.success} />
-        <text x={computeBarWidth + 16} y={50} fill={colors.success} fontSize="11" fontWeight="600">
+        <text x={10} y={20} fill={colors.textSecondary} fontSize="12" fontWeight="600">Compute Energy</text>
+        <rect x={10} y={28} width={computeBarWidth} height={barHeight} rx={4} fill="url(#computeGrad)" />
+        <text x={computeBarWidth + 16} y={50} fill={colors.success} fontSize="12" fontWeight="600">
           {formatEnergy(totalComputeEnergy)}
         </text>
 
         {/* Data movement energy bar */}
-        <text x={10} y={85} fill={colors.textSecondary} fontSize="11">
+        <text x={10} y={85} fill={colors.textSecondary} fontSize="12" fontWeight="600">
           Data Movement {showOptimized ? '(Optimized)' : '(Naive)'}
         </text>
         <rect
@@ -537,21 +612,25 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
           width={showOptimized ? optimizedMoveWidth : moveBarWidth}
           height={barHeight}
           rx={4}
-          fill={showOptimized ? colors.accent : colors.warning}
+          fill={showOptimized ? colors.accent : 'url(#moveGrad)'}
+          filter="url(#barGlow)"
         />
         <text
           x={(showOptimized ? optimizedMoveWidth : moveBarWidth) + 16}
           y={115}
           fill={showOptimized ? colors.accent : colors.warning}
-          fontSize="11"
+          fontSize="12"
           fontWeight="600"
         >
           {formatEnergy(showOptimized ? energyCalc.optimized : energyCalc.unoptimized)}
         </text>
 
         {/* Ratio indicator */}
-        <text x={10} y={160} fill={colors.textMuted} fontSize="10">
-          Data movement is {((showOptimized ? energyCalc.optimized : energyCalc.unoptimized) / totalComputeEnergy).toFixed(0)}x compute energy
+        <text x={10} y={160} fill={colors.textSecondary} fontSize="12">
+          E_move = {((showOptimized ? energyCalc.optimized : energyCalc.unoptimized) / totalComputeEnergy).toFixed(0)} x E_compute
+        </text>
+        <text x={10} y={180} fill={colors.textSecondary} fontSize="11">
+          E = Capacitance x V^2 x Distance
         </text>
       </svg>
     );
@@ -619,6 +698,13 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     minHeight: '44px',
   };
 
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Navigation bar component
   const renderNavBar = () => (
     <nav style={{
@@ -645,6 +731,66 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     </nav>
   );
 
+  // Bottom navigation bar with Back and Next
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '56px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1000,
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.3)',
+      }}>
+        <button
+          onClick={prevPhase}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${colors.border}`,
+            color: isFirst ? 'rgba(148, 163, 184, 0.7)' : colors.textSecondary,
+            padding: '10px 20px',
+            borderRadius: '8px',
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            opacity: isFirst ? 0.4 : 1,
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+          disabled={isFirst}
+        >
+          Back
+        </button>
+        <button
+          onClick={nextPhase}
+          style={{
+            background: isLast ? colors.bgCard : `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+            border: 'none',
+            color: 'white',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            cursor: isLast ? 'not-allowed' : 'pointer',
+            opacity: isLast ? 0.4 : 1,
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+          disabled={isLast}
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
   // ─────────────────────────────────────────────────────────────────────────────
@@ -657,6 +803,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
@@ -668,56 +815,64 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '80px 24px 24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
           textAlign: 'center',
         }}>
-          <div style={{
-            fontSize: '64px',
-            marginBottom: '24px',
-            animation: 'pulse 2s infinite',
-          }}>
-            🔌💾
-          </div>
-          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <div style={{
+              fontSize: '64px',
+              marginBottom: '24px',
+              animation: 'pulse 2s infinite',
+            }}>
+              🔌💾
+            </div>
+            <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-            The Hidden Cost of Data Movement
-          </h1>
+            <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+              The Hidden Cost of Data Movement
+            </h1>
 
-          <p style={{
-            ...typo.body,
-            color: colors.textSecondary,
-            maxWidth: '600px',
-            marginBottom: '32px',
-          }}>
-            "What if I told you that <span style={{ color: colors.accent }}>moving a number</span> from memory to the CPU uses 1000x more energy than actually <span style={{ color: colors.success }}>computing with it</span>?"
-          </p>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
-            maxWidth: '500px',
-            border: `1px solid ${colors.border}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-              "In modern computing, we don't have a compute problem—we have a data movement problem. Every byte we move costs precious energy."
+            <p style={{
+              ...typo.body,
+              color: colors.textSecondary,
+              maxWidth: '600px',
+              marginBottom: '32px',
+              margin: '0 auto 32px',
+            }}>
+              Discover how moving a number from memory to the CPU uses 1000x more energy than actually computing with it. Let's explore why data movement dominates energy in modern computing.
             </p>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-              — The Memory Wall Problem
-            </p>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '500px',
+              margin: '0 auto 32px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+                "In modern computing, we don't have a compute problem -- we have a data movement problem. Every byte we move costs precious energy."
+              </p>
+              <p style={{ ...typo.small, color: 'rgba(148, 163, 184, 0.7)', marginTop: '8px' }}>
+                -- The Memory Wall Problem
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('click'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Start Discovery
+            </button>
+
+            {renderNavDots()}
           </div>
-
-          <button
-            onClick={() => { playSound('click'); nextPhase(); }}
-            style={primaryButtonStyle}
-          >
-            Discover the Energy Cost
-          </button>
-
-          {renderNavDots()}
         </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -736,6 +891,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
@@ -743,7 +899,10 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '80px 24px 24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -852,18 +1011,24 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
 
           {renderNavDots()}
         </div>
+        {renderBottomNav()}
       </div>
     );
   }
 
   // PLAY PHASE - Interactive Memory Hierarchy
   if (phase === 'play') {
+    const handleSliderChange = (setter: (v: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setter(parseInt(e.target.value));
+    };
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
@@ -871,17 +1036,20 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '80px 24px 24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Explore the Memory Hierarchy
             </h2>
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Adjust where data comes from and see how energy cost explodes
+              Adjust where data comes from and see how energy cost changes. When you increase the memory level, the energy per access increases because electrons must travel farther through more capacitance.
             </p>
 
-            {/* Observation guidance */}
+            {/* Observation guidance - includes cause-effect, physics terms, relevance */}
             <div style={{
               background: `${colors.accent}15`,
               border: `1px solid ${colors.accent}44`,
@@ -891,7 +1059,21 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
               textAlign: 'center',
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.accent }}>Observe:</strong> Watch how energy per access changes as you move from Register to DRAM. Notice the exponential increase in energy cost with distance from the CPU.
+                <strong style={{ color: colors.accent }}>Observe:</strong> Watch how energy per access changes as you move from Register to DRAM. This is defined as the energy cost = capacitance x voltage^2 x distance. Higher memory levels cause exponentially more energy consumption because wire distance increases, which matters for real-world technology like AI accelerators and mobile SoC design.
+              </p>
+            </div>
+
+            {/* Formula display */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              textAlign: 'center',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0, fontWeight: 600 }}>
+                E = C x V^2 x d (Energy = Capacitance x Voltage^2 x Distance)
               </p>
             </div>
 
@@ -903,7 +1085,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
                 padding: '16px',
                 flex: 1,
               }}>
-                <MemoryHierarchyVisualization showDataFlow={true} highlightLevel={memoryLevel} />
+                {renderMemoryHierarchyVisualization(true, memoryLevel)}
               </div>
 
               {/* Controls */}
@@ -931,13 +1113,9 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
                     max="4"
                     step="1"
                     value={memoryLevel}
-                    onChange={(e) => setMemoryLevel(parseInt(e.target.value))}
-                    style={{
-                      width: '100%',
-                      height: '8px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
+                    onChange={handleSliderChange(setMemoryLevel)}
+                    onInput={handleSliderChange(setMemoryLevel)}
+                    style={sliderStyle}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                     <span style={{ ...typo.small, color: colors.register }}>Register</span>
@@ -957,13 +1135,9 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
                     max="100"
                     step="1"
                     value={dataVolume}
-                    onChange={(e) => setDataVolume(parseInt(e.target.value))}
-                    style={{
-                      width: '100%',
-                      height: '8px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
+                    onChange={handleSliderChange(setDataVolume)}
+                    onInput={handleSliderChange(setDataVolume)}
+                    style={sliderStyle}
                   />
                 </div>
 
@@ -974,7 +1148,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
                   padding: '16px',
                   textAlign: 'center',
                 }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
+                  <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
                     Energy per Access
                   </div>
                   <div style={{
@@ -986,9 +1160,12 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
                       ? `${(memoryHierarchy[memoryLevel].energy/1000).toFixed(0)}k pJ`
                       : `${memoryHierarchy[memoryLevel].energy} pJ`}
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>
                     {memoryLevel === 0 ? 'Baseline' :
                       `${(memoryHierarchy[memoryLevel].energy / memoryHierarchy[0].energy).toFixed(0)}x more than register`}
+                  </div>
+                  <div style={{ ...typo.small, color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
+                    Total: {(memoryHierarchy[memoryLevel].energy * dataVolume * 8 * 1024 * 1024 / 64).toExponential(1)} pJ
                   </div>
                 </div>
               </div>
@@ -1020,6 +1197,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
 
           {renderNavDots()}
         </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1037,6 +1215,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
@@ -1044,26 +1223,29 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '80px 24px 24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Reference user's prediction */}
-          {prediction && (
-            <div style={{
-              background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
-              border: `1px solid ${wasCorrect ? colors.success : colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
-                {wasCorrect
-                  ? `You predicted correctly that ${predictionText}!`
-                  : `You predicted that ${predictionText}. The reality is even more surprising!`}
-              </p>
-            </div>
-          )}
+          <div style={{
+            background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${wasCorrect ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
+              {prediction
+                ? (wasCorrect
+                  ? `You predicted correctly that ${predictionText}! As you observed in the experiment, data movement dominates energy.`
+                  : `You predicted that ${predictionText}. Your prediction showed an interesting perspective. The experiment revealed that data movement actually dominates energy costs.`)
+                : `As you saw in the experiment, data movement dominates energy consumption. Your observation confirmed this key principle.`}
+            </p>
+          </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Does Distance Cost So Much?
@@ -1076,7 +1258,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MemoryHierarchyVisualization showDataFlow={false} highlightLevel={-1} />
+              {renderMemoryHierarchyVisualization(false, -1)}
             </div>
 
             <div style={{ ...typo.body, color: colors.textSecondary }}>
@@ -1120,6 +1302,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
           {renderNavDots()}
         </div>
         </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1138,6 +1321,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
@@ -1145,7 +1329,10 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '80px 24px 24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -1172,23 +1359,23 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg width={isMobile ? 280 : 350} height={100} viewBox={`0 0 ${isMobile ? 280 : 350} 100`}>
+              <svg width={isMobile ? 280 : 350} height={90} viewBox={`0 0 ${isMobile ? 280 : 350} 90`}>
                 {/* Data reuse scenario diagram */}
-                <rect x={10} y={20} width={60} height={60} rx={6} fill={`${colors.dram}33`} stroke={colors.dram} strokeWidth={2} />
-                <text x={40} y={45} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Data</text>
-                <text x={40} y={65} fill={colors.dram} fontSize="16" textAnchor="middle">📦</text>
+                <rect x={10} y={10} width={60} height={60} rx={6} fill={`${colors.dram}33`} stroke={colors.dram} strokeWidth={2} />
+                <text x={40} y={35} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Data</text>
+                <text x={40} y={55} fill={colors.dram} fontSize="16" textAnchor="middle">📦</text>
 
-                <text x={100} y={55} fill={colors.textMuted} fontSize="12">→</text>
+                <text x={100} y={45} fill={colors.textMuted} fontSize="12">→</text>
 
-                <rect x={120} y={20} width={80} height={60} rx={6} fill={`${colors.accent}33`} stroke={colors.accent} strokeWidth={2} />
-                <text x={160} y={45} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Use 100x</text>
-                <text x={160} y={65} fill={colors.accent} fontSize="16" textAnchor="middle">🔄</text>
+                <rect x={120} y={10} width={80} height={60} rx={6} fill={`${colors.accent}33`} stroke={colors.accent} strokeWidth={2} />
+                <text x={160} y={35} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Use 100x</text>
+                <text x={160} y={55} fill={colors.accent} fontSize="16" textAnchor="middle">🔄</text>
 
-                <text x={220} y={55} fill={colors.textMuted} fontSize="12">→</text>
+                <text x={220} y={45} fill={colors.textMuted} fontSize="12">→</text>
 
-                <rect x={240} y={20} width={70} height={60} rx={6} fill={`${colors.success}33`} stroke={colors.success} strokeWidth={2} />
-                <text x={275} y={45} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Result</text>
-                <text x={275} y={65} fill={colors.success} fontSize="16" textAnchor="middle">✓</text>
+                <rect x={240} y={10} width={70} height={60} rx={6} fill={`${colors.success}33`} stroke={colors.success} strokeWidth={2} />
+                <text x={275} y={35} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Result</text>
+                <text x={275} y={55} fill={colors.success} fontSize="16" textAnchor="middle">✓</text>
               </svg>
             </div>
 
@@ -1240,6 +1427,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
             {renderNavDots()}
           </div>
         </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1252,6 +1440,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
@@ -1259,7 +1448,10 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '80px 24px 24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1301,12 +1493,8 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
                 max="100"
                 value={dataReusesFactor}
                 onChange={(e) => setDataReuseFactor(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                onInput={(e) => setDataReuseFactor(parseInt((e.target as HTMLInputElement).value))}
+                style={sliderStyle}
               />
             </div>
 
@@ -1324,12 +1512,8 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
                 step="1"
                 value={memoryLevel}
                 onChange={(e) => setMemoryLevel(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                onInput={(e) => setMemoryLevel(parseInt((e.target as HTMLInputElement).value))}
+                style={sliderStyle}
               />
             </div>
 
@@ -1344,12 +1528,8 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
                 max="100"
                 value={dataVolume}
                 onChange={(e) => setDataVolume(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                onInput={(e) => setDataVolume(parseInt((e.target as HTMLInputElement).value))}
+                style={sliderStyle}
               />
             </div>
 
@@ -1397,7 +1577,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
 
             {/* Energy comparison chart */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <EnergyComparisonChart />
+              {renderEnergyComparisonChart()}
             </div>
           </div>
 
@@ -1430,6 +1610,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
           {renderNavDots()}
           </div>
         </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1442,6 +1623,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
@@ -1449,7 +1631,10 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '80px 24px 24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1528,6 +1713,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
           {renderNavDots()}
           </div>
         </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1544,6 +1730,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
@@ -1551,7 +1738,10 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '80px 24px 24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1694,13 +1884,14 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
                 onClick={() => { playSound('success'); nextPhase(); }}
                 style={{ ...primaryButtonStyle, width: '100%' }}
               >
-                Take the Knowledge Test
+                Take the Test
               </button>
             )}
           </div>
 
           {renderNavDots()}
         </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1713,11 +1904,22 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '48px',
+            paddingBottom: '100px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+          }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1759,6 +1961,8 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
             )}
           </div>
           {renderNavDots()}
+          </div>
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1769,11 +1973,22 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1925,6 +2140,8 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         </div>
 
         {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1937,83 +2154,99 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <div style={{
+              fontSize: '100px',
+              marginBottom: '24px',
+              animation: 'bounce 1s infinite',
+            }}>
+              🏆
+            </div>
+            <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Data Movement Master!
-        </h1>
+            <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+              Data Movement Master!
+            </h1>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand why data movement dominates computing energy costs and how architects design systems to minimize it.
-        </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+              You now understand why data movement dominates computing energy costs and how architects design systems to minimize it.
+            </p>
 
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'Memory hierarchy energy costs scale with distance',
-              'Data movement uses 100-10,000x more energy than compute',
-              'Data reuse through caching saves massive energy',
-              'Tiled algorithms exploit locality for efficiency',
-              'Near-memory and in-memory computing eliminate movement',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>+</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '400px',
+              margin: '0 auto 32px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+                You Learned:
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                {[
+                  'Memory hierarchy energy costs scale with distance',
+                  'Data movement uses 100-10,000x more energy than compute',
+                  'Data reuse through caching saves massive energy',
+                  'Tiled algorithms exploit locality for efficiency',
+                  'Near-memory and in-memory computing eliminate movement',
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ color: colors.success }}>+</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+              <button
+                onClick={() => goToPhase('hook')}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Play Again
+              </button>
+              <a
+                href="/"
+                style={{
+                  ...primaryButtonStyle,
+                  textDecoration: 'none',
+                  display: 'inline-block',
+                }}
+              >
+                Return to Dashboard
+              </a>
+            </div>
+
+            {renderNavDots()}
           </div>
         </div>
-
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

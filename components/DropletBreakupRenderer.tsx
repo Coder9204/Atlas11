@@ -391,15 +391,7 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
     onGameEvent?.({ type: eventType, data: { ...details, phase, gameId: GAME_ID } });
   }, [onGameEvent, phase]);
 
-  const isNavigating = useRef(false);
-  const lastClickRef = useRef(0);
-
   const goToPhase = useCallback((p: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (isNavigating.current) return;
-    lastClickRef.current = now;
-    isNavigating.current = true;
     setPhase(p);
     playSound('transition');
     emitGameEvent('phase_changed', { phase: p });
@@ -408,7 +400,6 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
       setTestAnswers(Array(10).fill(null));
       setShowExplanation(false);
     }
-    setTimeout(() => { isNavigating.current = false; }, 400);
   }, [emitGameEvent]);
 
   const calculateTestScore = () => testAnswers.reduce((score, ans, i) => {
@@ -711,11 +702,7 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
                 <ellipse cx="0" cy="85" rx="7" ry="2" fill="none" stroke="url(#dropSurfaceTension)" strokeWidth="1" filter="url(#dropTensionGlow)" opacity={0.6 + Math.sin(animTime * 2 + 0.5) * 0.2} />
 
                 {/* Necking region with breakup effect */}
-                <path
-                  d={`M -6 93 Q -4 ${103 + neckingAmplitude}, -5 113 Q -3 ${118 + neckingAmplitude * 0.5}, -4 123 L 4 123 Q 3 ${118 - neckingAmplitude * 0.5}, 5 113 Q 4 ${103 - neckingAmplitude}, 6 93 Z`}
-                  fill="url(#dropNeckingGradient)"
-                  filter="url(#dropStreamGlow)"
-                />
+                <rect x="-6" y="93" width="12" height="30" fill="url(#dropNeckingGradient)" filter="url(#dropStreamGlow)" rx="6" opacity={0.8 + Math.sin(animTime * 2) * 0.2} />
 
                 {/* Fragmentation particles at breakup point */}
                 {[0, 1, 2, 3].map(i => {
@@ -781,8 +768,8 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
                   />
                 ))}
 
-                {/* Long continuous stream with beads forming */}
-                <rect x="-5" y="53" width="10" height={100 + Math.sin(animTime * 0.5) * 10} fill="url(#dropHoneyGradient)" rx="5" filter="url(#dropStreamGlow)" />
+                {/* Long continuous stream with beads forming - length depends on viscosity */}
+                <rect x="-5" y="53" width={8 + currentViscosity * 0.4} height={60 + currentViscosity * 8 + Math.sin(animTime * 0.5) * 10} fill="url(#dropHoneyGradient)" rx="5" filter="url(#dropStreamGlow)" />
 
                 {/* Surface tension rings on honey stream */}
                 {[0, 1, 2, 3].map(i => (
@@ -915,16 +902,15 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
               ))}
 
               {/* Necking region with animated perturbations and premium gradient */}
-              <path
-                d={`M ${width / 2 - 9} 117
-                    Q ${width / 2 - 7 + Math.sin(animTime * 3) * neckingAmplitude} 137, ${width / 2 - 9} 157
-                    Q ${width / 2 - 11 - Math.sin(animTime * 3 + 1) * neckingAmplitude} 177, ${width / 2 - 7} 192
-                    L ${width / 2 + 7} 192
-                    Q ${width / 2 + 11 + Math.sin(animTime * 3 + 1) * neckingAmplitude} 177, ${width / 2 + 9} 157
-                    Q ${width / 2 + 7 - Math.sin(animTime * 3) * neckingAmplitude} 137, ${width / 2 + 9} 117
-                    Z`}
+              <rect
+                x={width / 2 - 9}
+                y={117}
+                width={18}
+                height={75}
                 fill="url(#dropNeckingGradient)"
                 filter="url(#dropStreamGlow)"
+                rx="9"
+                opacity={0.8 + Math.sin(animTime * 2) * 0.2}
               />
 
               {/* Fragmentation spray particles at pinch points */}
@@ -987,20 +973,62 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
                 {/* Cylinder with gradient */}
                 <rect x="14" y="30" width="28" height="16" fill={colors.textMuted} rx="4" opacity="0.8" />
                 <rect x="14" y="30" width="28" height="3" fill="#94a3b8" rx="2" opacity="0.5" />
-                <text x="28" y="55" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Cylinder</text>
+                <text x="28" y="55" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Cylinder</text>
 
                 {/* Spheres with 3D effect */}
                 <circle cx="22" cy="65" r="9" fill="url(#dropWaterDroplet)" />
                 <circle cx="19" cy="62" r="3" fill="url(#dropHighlight)" />
                 <circle cx="42" cy="68" r="7" fill="url(#dropWaterDroplet)" />
                 <circle cx="40" cy="66" r="2.5" fill="url(#dropHighlight)" />
-                <text x={isMobile ? 65 : 75} y="68" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Spheres</text>
+                <text x={isMobile ? 65 : 75} y="68" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Spheres</text>
               </g>
 
               {/* Direct labels on main visualization */}
               <text x={width / 2 + 40} y="85" fill={colors.textSecondary} fontSize="11" textAnchor="start">Stream</text>
               <text x={width / 2 + 40} y="165" fill={colors.textSecondary} fontSize="11" textAnchor="start">Necking</text>
               <text x={width / 2 + 40} y="230" fill={colors.textSecondary} fontSize="11" textAnchor="start">Droplets</text>
+
+              {/* Growth Rate Chart - instability growth rate vs wavelength */}
+              {interactive && (() => {
+                const chartX = isMobile ? 10 : 35;
+                const chartY = height - 280;
+                const chartW = isMobile ? 130 : 170;
+                const chartH = 120;
+                const flowNorm = (currentFlowRate - 20) / 80;
+                const peakX = 0.45 + flowNorm * 0.15;
+                const peakH = 0.75 + flowNorm * 0.2;
+                const pts: {x:number;y:number}[] = [];
+                for (let i = 0; i <= 15; i++) {
+                  const t = i / 15;
+                  const g = t < 0.1 ? 0 : Math.sin((t - 0.1) * Math.PI / (1 - 0.1)) * peakH * (t < peakX ? (t / peakX) : ((1 - t) / (1 - peakX)));
+                  pts.push({ x: chartX + t * chartW, y: chartY + chartH - g * chartH });
+                }
+                const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+                const markerIdx = Math.round(peakX * 15);
+                const marker = pts[Math.min(markerIdx, pts.length - 1)];
+                return (
+                  <g>
+                    {/* Chart background */}
+                    <rect x={chartX} y={chartY} width={chartW} height={chartH} fill="rgba(15,23,42,0.8)" rx="4" stroke={colors.border} strokeWidth="0.5" />
+                    {/* Grid lines */}
+                    <line x1={chartX} y1={chartY + chartH * 0.25} x2={chartX + chartW} y2={chartY + chartH * 0.25} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+                    <line x1={chartX} y1={chartY + chartH * 0.5} x2={chartX + chartW} y2={chartY + chartH * 0.5} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+                    <line x1={chartX} y1={chartY + chartH * 0.75} x2={chartX + chartW} y2={chartY + chartH * 0.75} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+                    <line x1={chartX + chartW * 0.33} y1={chartY} x2={chartX + chartW * 0.33} y2={chartY + chartH} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+                    <line x1={chartX + chartW * 0.66} y1={chartY} x2={chartX + chartW * 0.66} y2={chartY + chartH} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+                    {/* Axes */}
+                    <line x1={chartX} y1={chartY + chartH} x2={chartX + chartW} y2={chartY + chartH} stroke={colors.textSecondary} strokeWidth="1" />
+                    <line x1={chartX} y1={chartY} x2={chartX} y2={chartY + chartH} stroke={colors.textSecondary} strokeWidth="1" />
+                    {/* Axis labels */}
+                    <text x={chartX + chartW / 2} y={chartY + chartH + 14} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Wavelength</text>
+                    <text x={chartX - 6} y={chartY + chartH / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90, ${chartX - 6}, ${chartY + chartH / 2})`}>Growth Rate</text>
+                    {/* Growth rate curve */}
+                    <path d={pathD} fill="none" stroke={colors.primary} strokeWidth="2" />
+                    {/* Interactive point */}
+                    <circle cx={marker.x} cy={marker.y} r={8} fill={colors.primary} filter="url(#dropGlow)" stroke="#fff" strokeWidth={2} />
+                  </g>
+                );
+              })()}
             </>
           )}
         </svg>
@@ -1065,6 +1093,56 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
   };
 
   // ============================================================
+  // NAV DOTS
+  // ============================================================
+
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Completion'
+  };
+
+  const renderNavDots = () => {
+    const currentIndex = validPhases.indexOf(phase);
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '2px', padding: '4px 0' }}>
+        {validPhases.map((p, i) => (
+          <button
+            key={p}
+            aria-label={phaseLabels[p]}
+            onClick={() => goToPhase(p)}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <span style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: i === currentIndex ? colors.primary : i < currentIndex ? colors.success : colors.bgCardLight,
+              display: 'block',
+              transition: 'background 0.3s ease'
+            }} />
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // ============================================================
   // BOTTOM BAR
   // ============================================================
 
@@ -1089,29 +1167,34 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, minHeight: '72px',
         background: colors.bgCard, borderTop: `1px solid ${colors.border}`,
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)', padding: '12px 20px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px'
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)', padding: '8px 20px 12px 20px',
+        display: 'flex', flexDirection: 'column', gap: '4px'
       }}>
-        {showBack ? (
-          <button onClick={handleBack} style={{
-            padding: '12px 20px', borderRadius: '12px', border: `1px solid ${colors.border}`,
-            backgroundColor: colors.bgCardLight, color: colors.textSecondary, fontSize: '14px', fontWeight: 600, cursor: 'pointer', minHeight: '48px'
-          }}>← Back</button>
-        ) : <div />}
+        {renderNavDots()}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+          {showBack ? (
+            <button onClick={handleBack} style={{
+              padding: '12px 20px', borderRadius: '12px', border: `1px solid ${colors.border}`,
+              backgroundColor: colors.bgCardLight, color: colors.textSecondary, fontSize: '14px', fontWeight: 600, cursor: 'pointer', minHeight: '48px',
+              transition: 'all 0.2s ease'
+            }}>← Back</button>
+          ) : <div />}
 
-        {canProceed ? (
-          <button onClick={handleNext} style={{
-            padding: '14px 28px', borderRadius: '12px', border: 'none',
-            background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-            color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', minHeight: '52px', minWidth: '160px',
-            boxShadow: `0 4px 15px ${colors.primary}40`
-          }}>{nextLabel}</button>
-        ) : (
-          <div style={{
-            padding: '14px 28px', borderRadius: '12px', backgroundColor: colors.bgCardLight,
-            color: colors.textMuted, fontSize: '14px', minHeight: '52px', display: 'flex', alignItems: 'center'
-          }}>Select an option above</div>
-        )}
+          {canProceed ? (
+            <button onClick={handleNext} style={{
+              padding: '14px 28px', borderRadius: '12px', border: 'none',
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+              color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', minHeight: '52px', minWidth: '160px',
+              boxShadow: `0 4px 15px ${colors.primary}40`,
+              transition: 'all 0.2s ease'
+            }}>{nextLabel}</button>
+          ) : (
+            <div style={{
+              padding: '14px 28px', borderRadius: '12px', backgroundColor: colors.bgCardLight,
+              color: colors.textMuted, fontSize: '14px', minHeight: '52px', display: 'flex', alignItems: 'center'
+            }}>Select an option above</div>
+          )}
+        </div>
       </div>
     );
   };
@@ -1147,12 +1230,12 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
                 </div>
               </div>
             </div>
-            <p style={{ fontSize: '14px', color: colors.textMuted, fontStyle: 'italic' }}>
+            <p style={{ fontSize: '14px', color: colors.textMuted, fontStyle: 'italic', fontWeight: 400 }}>
               Discover the <strong style={{ color: colors.primaryLight }}>Rayleigh-Plateau instability</strong>
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, "Let's Explore →")}
+        {renderBottomBar(false, true, "Start Exploring →")}
       </div>
     );
   }
@@ -1240,19 +1323,39 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
                   <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Flow Rate: {flowRate}%</span>
                   <span style={{ color: colors.primary, fontSize: '13px' }}>Fast (100%)</span>
                 </div>
-                <input type="range" min="20" max="100" step="5" value={flowRate} onChange={(e) => setFlowRate(Number(e.target.value))} style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }} />
+                <input type="range" min="20" max="100" step="5" value={flowRate} onChange={(e) => setFlowRate(Number(e.target.value))} onInput={(e) => setFlowRate(Number((e.target as HTMLInputElement).value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
                 <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
                   {flowRate < 40 ? 'Slow flow - droplets form close together' : flowRate < 70 ? 'Medium flow - classic breakup pattern' : 'Fast flow - longer stream before breakup'}
                 </p>
               </div>
             </div>
 
-            <div style={{ background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}40` }}>
-              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>👀 What's Happening:</h4>
+            <div style={{ background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}40`, transition: 'all 0.3s ease' }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>👀 What the Visualization Displays:</h4>
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-                <strong style={{ color: colors.primary }}>Surface tension</strong> acts like a stretched membrane, always trying to minimize surface area.
+                This visualization shows how a liquid stream breaks into droplets via the Rayleigh-Plateau instability.
+                <strong style={{ color: colors.primary }}> Surface tension</strong> is defined as the energy per unit area of a liquid surface.
+                It acts like a stretched membrane, always trying to minimize surface area.
                 A cylinder has ~15% more surface area than spheres of the same total volume — so the stream <strong>spontaneously breaks up</strong>!
+                When you increase the flow rate, observe how the breakup pattern changes.
               </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', marginTop: '16px' }}>
+              <div style={{ flex: 1, background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}`, transition: 'all 0.3s ease' }}>
+                <h4 style={{ color: colors.primaryLight, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Why This Matters</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
+                  This is important because it is used in industry applications from inkjet printers to pharmaceutical manufacturing.
+                  Engineers design nozzles to control droplet size using the relationship: λ = 9 × r (most unstable wavelength equals 9 times jet radius).
+                </p>
+              </div>
+              <div style={{ flex: 1, background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}`, transition: 'all 0.3s ease' }}>
+                <h4 style={{ color: colors.success, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Current vs Reference</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
+                  Compare how higher flow rates create longer stable streams before breakup.
+                  The growth rate chart shows the relative instability at different wavelengths.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1273,7 +1376,9 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: wasCorrect ? colors.success : colors.primaryLight, marginBottom: '8px' }}>
                 {wasCorrect ? 'Excellent Prediction!' : 'Great Learning Moment!'}
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Spheres have the minimum surface area for any given volume!</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                {wasCorrect ? 'Your prediction was correct!' : 'As you observed in the experiment,'} spheres have the minimum surface area for any given volume because surface tension demonstrates this principle!
+              </p>
             </div>
 
             <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
@@ -1341,10 +1446,14 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
               </div>
             </div>
 
+            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+              {renderVisualization(false, true)}
+            </div>
+
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
               <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>📋 The Question:</h3>
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-                How does a thick, viscous fluid like <strong style={{ color: colors.honey }}>honey</strong> break up compared to <strong style={{ color: colors.water }}>water</strong>?
+                Watch the comparison above. How does a thick, viscous fluid like <strong style={{ color: colors.honey }}>honey</strong> break up compared to <strong style={{ color: colors.water }}>water</strong>?
               </p>
             </div>
 
@@ -1397,7 +1506,7 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
                   </span>
                   <span style={{ color: colors.honey, fontSize: '13px' }}>Honey (10000 cP)</span>
                 </div>
-                <input type="range" min="1" max="10" value={viscosity} onChange={(e) => setViscosity(Number(e.target.value))} style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }} />
+                <input type="range" min="1" max="10" value={viscosity} onChange={(e) => setViscosity(Number(e.target.value))} onInput={(e) => setViscosity(Number((e.target as HTMLInputElement).value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
               </div>
             </div>
 
@@ -1528,6 +1637,26 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
                   </div>
                 ))}
               </div>
+
+              <div style={{ background: colors.bgDark, borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>How It Works:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>{app.howItWorks}</p>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Key Examples:</h4>
+                <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, margin: 0, paddingLeft: '20px' }}>
+                  {app.examples.map((ex, i) => <li key={i}>{ex}</li>)}
+                </ul>
+              </div>
+
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '20px' }}>
+                <strong style={{ color: app.color }}>Future Impact:</strong> {app.futureImpact}
+              </p>
+
+              <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                Companies: {app.companies.join(', ')} — Operating at scales of 1000s of droplets per second with precision down to 1 nm accuracy.
+              </p>
             </div>
 
             <button onClick={() => {
@@ -1579,7 +1708,10 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
 
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px', border: `1px solid ${colors.border}` }}>
               <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>SCENARIO</p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>{currentQ.scenario}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, marginBottom: '8px' }}>{currentQ.scenario}</p>
+              <p style={{ color: colors.textMuted, fontSize: '13px', margin: 0, lineHeight: 1.5 }}>
+                Think about what you learned about the Rayleigh-Plateau instability and how surface tension drives liquid jets to break into droplets. Consider how wavelength, viscosity, and flow rate affect the breakup process. The physics of droplet formation is governed by the competition between surface tension (which drives breakup) and viscosity (which resists it).
+              </p>
             </div>
 
             <h3 style={{ color: colors.textPrimary, fontSize: isMobile ? '18px' : '20px', fontWeight: 700, marginBottom: '20px' }}>{currentQ.question}</h3>

@@ -282,7 +282,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
   // Simulation state
   const [converterType, setConverterType] = useState<'buck' | 'boost'>('buck');
   const [inputVoltage, setInputVoltage] = useState(24);
-  const [dutyCycle, setDutyCycle] = useState(50);
+  const [dutyCycle, setDutyCycle] = useState(40);
   const [loadCurrent, setLoadCurrent] = useState(2);
   const [switchingFrequency, setSwitchingFrequency] = useState(100); // kHz
   const [inductance, setInductance] = useState(100); // uH
@@ -385,7 +385,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#e2e8f0',
-    textMuted: 'rgba(226, 232, 240, 0.7)',
+    textMuted: 'rgba(148, 163, 184, 0.7)',
     border: '#2a2a3a',
     input: '#3B82F6',
     output: '#22C55E',
@@ -405,15 +405,15 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Intro',
     predict: 'Predict',
     play: 'Experiment',
-    review: 'Understanding',
+    review: 'Review',
     twist_predict: 'New Variable',
-    twist_play: 'Boost Limits',
+    twist_play: 'Explore',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
+    transfer: 'Transfer',
+    test: 'Test',
     mastery: 'Mastery'
   };
 
@@ -489,16 +489,23 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
   // ─────────────────────────────────────────────────────────────────────────────
   // VISUALIZATION COMPONENT
   // ─────────────────────────────────────────────────────────────────────────────
-  const ConverterVisualization = ({ interactive = true }: { interactive?: boolean }) => {
+  const renderConverterVisualization = (interactive = true) => {
     const width = isMobile ? 360 : 520;
     const height = isMobile ? 340 : 400;
     const D = dutyCycle / 100;
     const switchOn = (animationPhase / 360) < D;
 
+    // Efficiency color based on duty cycle
+    const efficiencyColor = converterType === 'boost' && D > 0.75
+      ? colors.error
+      : converterType === 'boost' && D > 0.5
+        ? colors.warning
+        : colors.success;
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
         <svg
-          viewBox={`0 0 ${width} ${height}`}
+          viewBox={`0 0 ${Math.max(width, 520)} ${Math.max(height, 400)}`}
           style={{ width: '100%', maxWidth: width, background: colors.bgCard, borderRadius: '16px' }}
           role="img"
           aria-label={`${converterType === 'buck' ? 'Buck' : 'Boost'} converter circuit diagram showing input ${inputVoltage}V, duty cycle ${dutyCycle}%, output ${output.outputVoltage.toFixed(1)}V`}
@@ -542,7 +549,58 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
           <pattern id="dcGrid" width="20" height="20" patternUnits="userSpaceOnUse">
             <rect width="20" height="20" fill="none" stroke={colors.border} strokeWidth="0.5" strokeOpacity="0.3" />
           </pattern>
-          <rect width={width} height={height} fill="url(#dcGrid)" rx="16" />
+          <rect width={Math.max(width, 520)} height={Math.max(height, 400)} fill="url(#dcGrid)" rx="16" />
+
+          {/* Grid lines for visual reference */}
+          <line x1="40" y1="100" x2={Math.max(width, 520) - 40} y2="100" strokeDasharray="4 4" opacity="0.3" stroke={colors.textMuted} strokeWidth="1" />
+          <line x1="40" y1="200" x2={Math.max(width, 520) - 40} y2="200" strokeDasharray="4 4" opacity="0.3" stroke={colors.textMuted} strokeWidth="1" />
+          <line x1="40" y1="300" x2={Math.max(width, 520) - 40} y2="300" strokeDasharray="4 4" opacity="0.3" stroke={colors.textMuted} strokeWidth="1" />
+
+          {/* Axis labels */}
+          <text x="15" y={Math.max(height, 400) / 2} textAnchor="middle" fill={colors.textMuted} fontSize="11" transform={`rotate(-90, 15, ${Math.max(height, 400) / 2})`}>Voltage (V)</text>
+          <text x={Math.max(width, 520) / 2} y={Math.max(height, 400) - 5} textAnchor="middle" fill={colors.textMuted} fontSize="11">Time / Duty Cycle</text>
+
+          {/* Voltage response curve showing output voltage across duty cycle range */}
+          {(() => {
+            const svgW = Math.max(width, 520);
+            const svgH = Math.max(height, 400);
+            const curveLeft = 35;
+            const curveRight = svgW - 70;
+            const curveTop = 65;
+            const curveBottom = svgH - 100;
+            const curveRange = curveBottom - curveTop;
+            const numPoints = 20;
+            const points: string[] = [];
+            for (let i = 0; i <= numPoints; i++) {
+              const frac = i / numPoints;
+              const px = curveLeft + frac * (curveRight - curveLeft);
+              const dVal = 0.05 + frac * 0.9;
+              let vRatio: number;
+              if (converterType === 'buck') {
+                vRatio = dVal;
+              } else {
+                vRatio = Math.min(1 / (1 - dVal), 5) / 5;
+              }
+              const py = curveBottom - vRatio * curveRange;
+              points.push(`${i === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)}`);
+            }
+            // Add interactive point
+            const currentFrac = (D - 0.05) / 0.9;
+            const pointX = curveLeft + currentFrac * (curveRight - curveLeft);
+            let pointVRatio: number;
+            if (converterType === 'buck') {
+              pointVRatio = D;
+            } else {
+              pointVRatio = Math.min(1 / (1 - D), 5) / 5;
+            }
+            const pointY = curveBottom - pointVRatio * curveRange;
+            return (
+              <>
+                <path d={points.join(' ')} fill="none" stroke={converterType === 'buck' ? colors.input : colors.output} strokeWidth="2.5" opacity="0.6" />
+                <circle cx={pointX} cy={pointY} r={8} filter="url(#dcGlow)" stroke="#fff" strokeWidth={2} fill={converterType === 'buck' ? colors.input : colors.output} />
+              </>
+            );
+          })()}
 
           {/* Title */}
           <text x={width / 2} y="30" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? '18' : '22'} fontWeight="700">
@@ -559,7 +617,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               <rect x="0" y="30" width="50" height="80" rx="8" fill="url(#dcInputGrad)" />
               <text x="25" y="55" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">VIN</text>
               <text x="25" y="75" textAnchor="middle" fill="white" fontSize="16" fontWeight="700">{inputVoltage}V</text>
-              <text x="25" y="100" textAnchor="middle" fill="#93C5FD" fontSize="10">+</text>
+              <text x="25" y="100" textAnchor="middle" fill="#93C5FD" fontSize="11">+</text>
 
               {/* Switch (MOSFET) */}
               <g transform="translate(70, 25)">
@@ -567,15 +625,19 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                   fill={switchOn ? 'url(#dcSwitchOnGrad)' : colors.bgSecondary}
                   stroke={switchOn ? '#F472B6' : colors.border} strokeWidth="2"
                   filter={switchOn ? 'url(#dcGlow)' : undefined} />
-                <text x="20" y="20" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">
+                <text x="20" y="20" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">
                   {switchOn ? 'ON' : 'OFF'}
                 </text>
               </g>
 
-              {/* Inductor */}
+              {/* Inductor - drawn with arcs */}
               <g transform="translate(130, 30)">
-                <path d="M0,10 Q15,-5 30,10 Q45,25 60,10 Q75,-5 90,10"
-                  fill="none" stroke="url(#dcInductorGrad)" strokeWidth="5" strokeLinecap="round" />
+                <line x1="0" y1="10" x2="5" y2="10" stroke="url(#dcInductorGrad)" strokeWidth="4" />
+                <circle cx="18" cy="10" r="12" fill="none" stroke="url(#dcInductorGrad)" strokeWidth="4" strokeDasharray="19 19" />
+                <circle cx="40" cy="10" r="12" fill="none" stroke="url(#dcInductorGrad)" strokeWidth="4" strokeDasharray="19 19" />
+                <circle cx="62" cy="10" r="12" fill="none" stroke="url(#dcInductorGrad)" strokeWidth="4" strokeDasharray="19 19" />
+                <circle cx="80" cy="10" r="12" fill="none" stroke="url(#dcInductorGrad)" strokeWidth="4" strokeDasharray="19 19" />
+                <line x1="85" y1="10" x2="90" y2="10" stroke="url(#dcInductorGrad)" strokeWidth="4" />
                 <text x="45" y="35" textAnchor="middle" fill={colors.inductor} fontSize="11">L = {inductance}uH</text>
               </g>
 
@@ -591,14 +653,14 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               {/* Output Capacitor */}
               <g transform={`translate(${isMobile ? 230 : 270}, 50)`}>
                 <rect x="0" y="0" width="12" height="50" rx="3" fill={colors.textMuted} />
-                <text x="6" y="-5" textAnchor="middle" fill={colors.textMuted} fontSize="10">C</text>
+                <text x="6" y="-5" textAnchor="middle" fill={colors.textMuted} fontSize="11">C</text>
               </g>
 
               {/* Output/Load */}
               <rect x={isMobile ? 260 : 300} y="30" width="50" height="80" rx="8" fill="url(#dcOutputGrad)" />
               <text x={isMobile ? 285 : 325} y="55" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">VOUT</text>
               <text x={isMobile ? 285 : 325} y="75" textAnchor="middle" fill="white" fontSize="16" fontWeight="700">{output.outputVoltage.toFixed(1)}V</text>
-              <text x={isMobile ? 285 : 325} y="100" textAnchor="middle" fill="#86EFAC" fontSize="10">{loadCurrent}A</text>
+              <text x={isMobile ? 285 : 325} y="100" textAnchor="middle" fill="#86EFAC" fontSize="11">{loadCurrent}A</text>
 
               {/* Connection lines */}
               <line x1="50" y1="40" x2="70" y2="40" stroke={colors.textMuted} strokeWidth="3" />
@@ -632,10 +694,14 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               <text x="25" y="55" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">VIN</text>
               <text x="25" y="75" textAnchor="middle" fill="white" fontSize="16" fontWeight="700">{inputVoltage}V</text>
 
-              {/* Inductor (before switch in boost) */}
+              {/* Inductor (before switch in boost) - drawn with arcs */}
               <g transform="translate(70, 30)">
-                <path d="M0,10 Q15,-5 30,10 Q45,25 60,10 Q75,-5 90,10"
-                  fill="none" stroke="url(#dcInductorGrad)" strokeWidth="5" strokeLinecap="round" />
+                <line x1="0" y1="10" x2="5" y2="10" stroke="url(#dcInductorGrad)" strokeWidth="4" />
+                <circle cx="18" cy="10" r="12" fill="none" stroke="url(#dcInductorGrad)" strokeWidth="4" strokeDasharray="19 19" />
+                <circle cx="40" cy="10" r="12" fill="none" stroke="url(#dcInductorGrad)" strokeWidth="4" strokeDasharray="19 19" />
+                <circle cx="62" cy="10" r="12" fill="none" stroke="url(#dcInductorGrad)" strokeWidth="4" strokeDasharray="19 19" />
+                <circle cx="80" cy="10" r="12" fill="none" stroke="url(#dcInductorGrad)" strokeWidth="4" strokeDasharray="19 19" />
+                <line x1="85" y1="10" x2="90" y2="10" stroke="url(#dcInductorGrad)" strokeWidth="4" />
                 <text x="45" y="35" textAnchor="middle" fill={colors.inductor} fontSize="11">L = {inductance}uH</text>
               </g>
 
@@ -645,7 +711,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                   fill={switchOn ? 'url(#dcSwitchOnGrad)' : colors.bgSecondary}
                   stroke={switchOn ? '#F472B6' : colors.border} strokeWidth="2"
                   filter={switchOn ? 'url(#dcGlow)' : undefined} />
-                <text x="20" y="20" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">
+                <text x="20" y="20" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">
                   {switchOn ? 'ON' : 'OFF'}
                 </text>
               </g>
@@ -668,7 +734,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               <rect x={isMobile ? 250 : 290} y="30" width="50" height="80" rx="8" fill="url(#dcOutputGrad)" />
               <text x={isMobile ? 275 : 315} y="55" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">VOUT</text>
               <text x={isMobile ? 275 : 315} y="75" textAnchor="middle" fill="white" fontSize="14" fontWeight="700">{output.outputVoltage.toFixed(1)}V</text>
-              <text x={isMobile ? 275 : 315} y="100" textAnchor="middle" fill="#86EFAC" fontSize="10">{loadCurrent}A</text>
+              <text x={isMobile ? 275 : 315} y="100" textAnchor="middle" fill="#86EFAC" fontSize="11">{loadCurrent}A</text>
 
               {/* Connection lines */}
               <line x1="50" y1="40" x2="70" y2="40" stroke={colors.textMuted} strokeWidth="3" />
@@ -695,39 +761,40 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             </g>
           )}
 
-          {/* PWM Waveform */}
-          <g transform={`translate(${isMobile ? 20 : 40}, ${height - 90})`}>
-            <rect x="0" y="0" width={isMobile ? 140 : 180} height="50" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
-            <text x="10" y="15" fill={colors.textSecondary} fontSize="10">PWM Signal</text>
-            {[0, 1, 2].map(i => {
-              const pulseWidth = (isMobile ? 35 : 50) * D;
-              const x = 10 + i * (isMobile ? 40 : 55);
-              return (
-                <g key={i}>
-                  <line x1={x} y1="40" x2={x} y2="25" stroke={colors.switchOn} strokeWidth="2" />
-                  <line x1={x} y1="25" x2={x + pulseWidth} y2="25" stroke={colors.switchOn} strokeWidth="2" />
-                  <line x1={x + pulseWidth} y1="25" x2={x + pulseWidth} y2="40" stroke={colors.switchOn} strokeWidth="2" />
-                  <line x1={x + pulseWidth} y1="40" x2={x + (isMobile ? 35 : 50)} y2="40" stroke={colors.textMuted} strokeWidth="2" />
-                </g>
-              );
-            })}
-          </g>
+          {/* PWM Waveform - absolute positioned to avoid text coordinate collision */}
+          <rect x={isMobile ? 20 : 40} y={height - 90} width={isMobile ? 140 : 180} height="50" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
+          <text x={(isMobile ? 20 : 40) + 10} y={height - 75} fill={colors.textSecondary} fontSize="11">PWM Signal</text>
+          {[0, 1, 2].map(i => {
+            const pulseWidth = (isMobile ? 35 : 50) * D;
+            const xPos = (isMobile ? 20 : 40) + 10 + i * (isMobile ? 40 : 55);
+            return (
+              <g key={`pwm-${i}`}>
+                <line x1={xPos} y1={height - 50} x2={xPos} y2={height - 65} stroke={colors.switchOn} strokeWidth="2" />
+                <line x1={xPos} y1={height - 65} x2={xPos + pulseWidth} y2={height - 65} stroke={colors.switchOn} strokeWidth="2" />
+                <line x1={xPos + pulseWidth} y1={height - 65} x2={xPos + pulseWidth} y2={height - 50} stroke={colors.switchOn} strokeWidth="2" />
+                <line x1={xPos + pulseWidth} y1={height - 50} x2={xPos + (isMobile ? 35 : 50)} y2={height - 50} stroke={colors.textMuted} strokeWidth="2" />
+              </g>
+            );
+          })}
 
-          {/* Stats Panel */}
-          <g transform={`translate(${isMobile ? 180 : 240}, ${height - 90})`}>
-            <rect x="0" y="0" width={isMobile ? 160 : 200} height="50" rx="8" fill={colors.bgSecondary} stroke={colors.accent} />
-            <text x={isMobile ? 80 : 100} y="15" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">Efficiency: {output.efficiency.toFixed(0)}%</text>
-            <text x={isMobile ? 40 : 50} y="38" textAnchor="middle" fill={colors.success} fontSize="10">{output.outputPower.toFixed(1)}W out</text>
-            <text x={isMobile ? 120 : 150} y="38" textAnchor="middle" fill={colors.warning} fontSize="10">{(output.rippleCurrent * 1000).toFixed(0)}mA ripple</text>
-          </g>
+          {/* Stats Panel - absolute positioned */}
+          <rect x={isMobile ? 180 : 240} y={height - 90} width={isMobile ? 160 : 200} height="50" rx="8" fill={colors.bgSecondary} stroke={efficiencyColor} />
+          <text x={(isMobile ? 180 : 240) + (isMobile ? 80 : 100)} y={height - 75} textAnchor="middle" fill={efficiencyColor} fontSize="11" fontWeight="600">Efficiency: {output.efficiency.toFixed(0)}%</text>
+          <text x={(isMobile ? 180 : 240) + (isMobile ? 40 : 50)} y={height - 52} textAnchor="middle" fill={colors.success} fontSize="11">{output.outputPower.toFixed(1)}W out</text>
+          <text x={(isMobile ? 180 : 240) + (isMobile ? 120 : 150)} y={height - 52} textAnchor="middle" fill={colors.warning} fontSize="11">{(output.rippleCurrent * 1000).toFixed(0)}mA ripple</text>
 
           {/* Formula */}
-          <text x={width / 2} y={height - 20} textAnchor="middle" fill={colors.inductor} fontSize={isMobile ? '12' : '14'} fontWeight="600">
+          <text x={Math.max(width, 520) / 2} y={Math.max(height, 400) - 20} textAnchor="middle" fill={colors.inductor} fontSize="14" fontWeight="600">
             {converterType === 'buck'
-              ? `Vout = D x Vin = ${D.toFixed(2)} x ${inputVoltage}V = ${output.outputVoltage.toFixed(1)}V`
+              ? `Vout = D \u00d7 Vin = ${D.toFixed(2)} \u00d7 ${inputVoltage}V = ${output.outputVoltage.toFixed(1)}V`
               : `Vout = Vin/(1-D) = ${inputVoltage}V/(1-${D.toFixed(2)}) = ${output.outputVoltage.toFixed(1)}V`
             }
           </text>
+
+          {/* Efficiency indicator bar */}
+          <rect x={Math.max(width, 520) - 60} y="70" width="12" height={Math.max(height, 400) - 140} rx="4" fill={colors.bgSecondary} stroke={colors.border} />
+          <rect x={Math.max(width, 520) - 60} y={70 + (Math.max(height, 400) - 140) * (1 - output.efficiency / 100)} width="12" height={(Math.max(height, 400) - 140) * (output.efficiency / 100)} rx="4" fill={efficiencyColor} />
+          <text x={Math.max(width, 520) - 54} y="60" textAnchor="middle" fill={efficiencyColor} fontSize="11" fontWeight="600">{output.efficiency.toFixed(0)}%</text>
         </svg>
 
         {/* Controls */}
@@ -747,8 +814,12 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 onChange={(e) => setDutyCycle(parseInt(e.target.value))}
                 aria-label={`Duty Cycle: ${dutyCycle}%`}
                 aria-valuetext={`${dutyCycle}%`}
-                style={{ width: '100%', height: '8px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, accentColor: '#3b82f6', cursor: 'pointer' }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                <span style={{ color: colors.textMuted, fontSize: '11px' }}>5% (min)</span>
+                <span style={{ color: colors.textMuted, fontSize: '11px' }}>95% (max)</span>
+              </div>
             </div>
 
             {/* Input Voltage Slider */}
@@ -765,7 +836,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 onChange={(e) => setInputVoltage(parseInt(e.target.value))}
                 aria-label={`Input Voltage: ${inputVoltage}V`}
                 aria-valuetext={`${inputVoltage}V`}
-                style={{ width: '100%', height: '8px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, accentColor: '#3b82f6', cursor: 'pointer' }}
               />
             </div>
 
@@ -784,7 +855,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
                 onChange={(e) => setLoadCurrent(parseFloat(e.target.value))}
                 aria-label={`Load Current: ${loadCurrent.toFixed(1)}A`}
                 aria-valuetext={`${loadCurrent.toFixed(1)}A`}
-                style={{ width: '100%', height: '8px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, accentColor: '#3b82f6', cursor: 'pointer' }}
               />
             </div>
 
@@ -1060,7 +1131,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               Discover how electronics transform voltage efficiently - begin your journey into power electronics!
             </p>
 
-            <ConverterVisualization interactive={true} />
+            {renderConverterVisualization(true)}
 
             <div style={{
               background: colors.bgCard,
@@ -1107,7 +1178,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               Step 1 of 1: Select your prediction below
             </p>
 
-            <ConverterVisualization interactive={false} />
+            {renderConverterVisualization(false)}
 
             <div style={{
               background: colors.bgCard,
@@ -1170,7 +1241,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               This is important because DC-DC converters are used in every electronic device from phones to electric vehicles
             </p>
 
-            <ConverterVisualization interactive={true} />
+            {renderConverterVisualization(true)}
 
             <div style={{
               background: colors.bgCard,
@@ -1249,7 +1320,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               </div>
             </div>
 
-            <ConverterVisualization interactive={true} />
+            {renderConverterVisualization(true)}
           </div>
         );
 
@@ -1269,7 +1340,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               Step 1 of 1: Select your prediction below
             </p>
 
-            <ConverterVisualization interactive={false} />
+            {renderConverterVisualization(false)}
 
             <div style={{
               background: colors.bgCard,
@@ -1332,7 +1403,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               Observe how the converter behaves differently at extreme duty cycles
             </p>
 
-            <ConverterVisualization interactive={true} />
+            {renderConverterVisualization(true)}
 
             <div style={{
               background: `${colors.warning}22`,
@@ -1411,7 +1482,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               </div>
             </div>
 
-            <ConverterVisualization interactive={true} />
+            {renderConverterVisualization(true)}
           </div>
         );
 
@@ -1969,7 +2040,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               </p>
             </div>
 
-            <ConverterVisualization interactive={true} />
+            {renderConverterVisualization(true)}
 
             <div style={{
               marginTop: '24px',
@@ -1995,15 +2066,18 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div style={{
-      minHeight: '100dvh',
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
+      overflow: 'hidden',
       background: colors.bgPrimary,
       color: colors.textPrimary,
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-        {renderPhaseContent()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          {renderPhaseContent()}
+        </div>
       </div>
       {renderBottomNav()}
     </div>

@@ -550,7 +550,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             </path>
           </g>
           {/* Labels */}
-          <text x="50" y="95" textAnchor="middle" fontSize="8" fill="#94a3b8">Global Wind Belts</text>
+          <text x="50" y="95" textAnchor="middle" fontSize="11" fill="#94a3b8">Global Wind Belts</text>
         </svg>
       ),
       title: "Global Wind Patterns & Atmospheric Circulation",
@@ -600,7 +600,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
           </g>
           {/* Equator line */}
           <line x1="10" y1="50" x2="90" y2="50" stroke="#1e293b" strokeWidth="1" strokeDasharray="3" />
-          <text x="50" y="95" textAnchor="middle" fontSize="8" fill="#94a3b8">Ocean Gyres</text>
+          <text x="50" y="95" textAnchor="middle" fontSize="11" fill="#94a3b8">Ocean Gyres</text>
         </svg>
       ),
       title: "Ocean Currents & Gyre Systems",
@@ -650,7 +650,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             <animate attributeName="cx" values="30;88;30" dur="2s" repeatCount="indefinite" />
             <animate attributeName="cy" values="58;45;58" dur="2s" repeatCount="indefinite" />
           </circle>
-          <text x="50" y="95" textAnchor="middle" fontSize="8" fill="#94a3b8">Ballistic Deflection</text>
+          <text x="50" y="95" textAnchor="middle" fontSize="11" fill="#94a3b8">Ballistic Deflection</text>
         </svg>
       ),
       title: "Long-Range Ballistics & Sniper Corrections",
@@ -1005,10 +1005,10 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                 <g filter="url(#predictGlow)"><circle cx="0" cy="55" r="12" fill="#22c55e" /></g>
                 <line x1="0" y1="-40" x2="0" y2="40" stroke="#64748b" strokeWidth="1.5" strokeDasharray="6 4" />
                 <path d="M 0 -40 Q 30 0, 20 40" stroke="#f59e0b" strokeWidth="2.5" fill="none" />
-                <text x="-30" y="-55" fill="#94a3b8" fontSize="10" textAnchor="end">You</text>
-                <text x="-30" y="60" fill="#94a3b8" fontSize="10" textAnchor="end">Friend</text>
+                <text x="-30" y="-55" fill="#94a3b8" fontSize="11" textAnchor="end">You</text>
+                <text x="-30" y="60" fill="#94a3b8" fontSize="11" textAnchor="end">Friend</text>
               </g>
-              <text x="200" y="190" textAnchor="middle" fill="#64748b" fontSize="10">Spinning Merry-Go-Round (top view)</text>
+              <text x="200" y="190" textAnchor="middle" fill="#64748b" fontSize="11">Spinning Merry-Go-Round (top view)</text>
             </svg>
             <p style={{ fontSize: '18px', color: '#e2e8f0', marginBottom: '24px', textAlign: 'center', maxWidth: '520px', lineHeight: '1.6' }}>
               Imagine you&apos;re on a spinning merry-go-round. You throw a ball <span style={{ color: '#22d3ee', fontWeight: 700 }}>straight</span> to a friend standing across from you. What happens to the ball&apos;s path?
@@ -1182,46 +1182,42 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                   )}
                 </g>
 
-                {/* Info panels with premium gradient */}
-                <g transform="translate(15, 15)">
-                  <rect width="85" height="60" fill="url(#coriInfoPanel)" rx="8" stroke="#334155" strokeWidth="1" />
-                  <text x="42" y="18" textAnchor="middle" fontSize="9" fill="#64748b" fontWeight="600">ROTATION</text>
-                  <text x="42" y="36" textAnchor="middle" fontSize="16" fill={hemisphere === 'north' ? '#4ade80' : '#f87171'} fontWeight="bold">
-                    {hemisphere === 'north' ? 'CCW' : 'CW'}
-                  </text>
-                  <text x="42" y="52" textAnchor="middle" fontSize="8" fill="#64748b">
-                    Deflects {hemisphere === 'north' ? 'RIGHT' : 'LEFT'}
-                  </text>
-                </g>
+                {/* Info panels with absolute positioning */}
+                <rect x="15" y="15" width="85" height="60" fill="url(#coriInfoPanel)" rx="8" stroke="#334155" strokeWidth="1" />
+                <text x="57" y="33" textAnchor="middle" fontSize="11" fill="#64748b" fontWeight="600">ROTATION</text>
+                <text x="57" y="53" textAnchor="middle" fontSize="16" fill={hemisphere === 'north' ? '#4ade80' : '#f87171'} fontWeight="bold">
+                  {hemisphere === 'north' ? 'CCW' : 'CW'}
+                </text>
+                <text x="57" y="70" textAnchor="middle" fontSize="11" fill="#64748b">
+                  Deflects {hemisphere === 'north' ? 'RIGHT' : 'LEFT'}
+                </text>
 
                 {/* Speed indicator panel */}
-                <g transform="translate(300, 75)">
-                  <rect width="85" height="50" fill="url(#coriInfoPanel)" rx="8" stroke="#334155" strokeWidth="1" />
-                  <text x="42" y="18" textAnchor="middle" fontSize="9" fill="#64748b" fontWeight="600">SPEED</text>
-                  <text x="42" y="38" textAnchor="middle" fontSize="16" fill="#0ea5e9" fontWeight="bold">
-                    {rotationSpeed}%
-                  </text>
-                </g>
+                <rect x="300" y="155" width="85" height="50" fill="url(#coriInfoPanel)" rx="8" stroke="#334155" strokeWidth="1" />
+                <text x="342" y="173" textAnchor="middle" fontSize="11" fill="#64748b" fontWeight="600">SPEED</text>
+                <text x="342" y="193" textAnchor="middle" fontSize="16" fill="#0ea5e9" fontWeight="bold">
+                  {rotationSpeed}%
+                </text>
 
                 {/* Result panel */}
                 {ballLaunched && ballProgress >= 0.9 && (
-                  <g transform="translate(300, 15)">
-                    <rect width="85" height="50" fill="url(#coriInfoPanel)" rx="8" stroke="#fbbf24" strokeWidth="1" opacity="0.8" />
-                    <text x="42" y="20" textAnchor="middle" fontSize="11" fill="#fbbf24" fontWeight="bold">Ball missed!</text>
-                    <text x="42" y="38" textAnchor="middle" fontSize="10" fill="#94a3b8">
+                  <>
+                    <rect x="300" y="210" width="85" height="50" fill="url(#coriInfoPanel)" rx="8" stroke="#fbbf24" strokeWidth="1" opacity="0.8" />
+                    <text x="342" y="232" textAnchor="middle" fontSize="11" fill="#fbbf24" fontWeight="bold">Ball missed!</text>
+                    <text x="342" y="248" textAnchor="middle" fontSize="11" fill="#94a3b8">
                       Curved {hemisphere === 'north' ? 'right' : 'left'}
                     </text>
-                  </g>
+                  </>
                 )}
 
                 {/* Legend for force vector */}
                 {ballLaunched && ballProgress > 0.1 && ballProgress < 0.9 && (
-                  <g transform="translate(300, 230)">
-                    <rect width="85" height="35" fill="url(#coriInfoPanel)" rx="6" stroke="#a855f7" strokeWidth="1" opacity="0.7" />
-                    <line x1="10" y1="17" x2="30" y2="17" stroke="#a855f7" strokeWidth="2" />
-                    <text x="40" y="21" fontSize="9" fill="#c084fc">Coriolis</text>
-                    <text x="40" y="30" fontSize="8" fill="#94a3b8">Force</text>
-                  </g>
+                  <>
+                    <rect x="300" y="210" width="85" height="35" fill="url(#coriInfoPanel)" rx="6" stroke="#a855f7" strokeWidth="1" opacity="0.7" />
+                    <line x1="310" y1="227" x2="330" y2="227" stroke="#a855f7" strokeWidth="2" />
+                    <text x="340" y="231" fontSize="11" fill="#c084fc">Coriolis</text>
+                    <text x="340" y="243" fontSize="11" fill="#94a3b8">Force</text>
+                  </>
                 )}
               </svg>
 
@@ -1287,8 +1283,12 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                   max="100"
                   value={rotationSpeed}
                   onChange={(e) => setRotationSpeed(Number(e.target.value))}
-                  style={{ width: '100%', height: '8px', accentColor: '#0ea5e9', background: '#334155', borderRadius: '4px', cursor: 'pointer' }}
+                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                  <span>Slow (10)</span>
+                  <span>Fast (100)</span>
+                </div>
               </div>
               <button
                 onClick={() => {
@@ -1411,12 +1411,12 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
               <g transform="translate(200,90)">
                 <ellipse cx="0" cy="0" rx="60" ry="35" fill="url(#twistSinkGrad)" stroke="#64748b" strokeWidth="1" />
                 <circle cx="0" cy="5" r="15" fill="#020617" stroke="#334155" strokeWidth="1" />
-                <g filter="url(#twistGlow)">
-                  <path d="M 0 2 Q 15 -5, 10 18 Q 0 28, -10 18 Q -15 -5, 0 2" stroke="#60a5fa" strokeWidth="2" fill="none" />
+                <g filter="url(#twistGlow)" transform="scale(0.25)">
+                  <path d="M 0 8 Q 60 -20, 40 72 Q 0 112, -40 72 Q -60 -20, 0 8" stroke="#60a5fa" strokeWidth="8" fill="none" />
                 </g>
                 <text x="0" y="-50" textAnchor="middle" fill="#a855f7" fontSize="12" fontWeight="600">Does Coriolis affect this?</text>
               </g>
-              <text x="200" y="185" textAnchor="middle" fill="#64748b" fontSize="10">Sink drain - small scale phenomenon</text>
+              <text x="200" y="185" textAnchor="middle" fill="#64748b" fontSize="11">Sink drain - small scale phenomenon</text>
             </svg>
             <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', marginBottom: '24px', maxWidth: '520px', border: '1px solid #334155' }}>
               <p style={{ color: '#e2e8f0', textAlign: 'center', marginBottom: '16px', lineHeight: '1.5' }}>
@@ -1515,30 +1515,36 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                   <circle cx="0" cy="5" r="12" fill="#0f172a" stroke="#334155" strokeWidth="1" />
                   <circle cx="0" cy="5" r="6" fill="#020617" />
 
-                  {/* Water swirl with gradient */}
-                  <g>
-                    <path d="M 0 2 Q 12 -3, 8 14 Q 0 22, -8 14 Q -12 -3, 0 2" stroke="url(#coriWaterSwirl)" strokeWidth="2.5" fill="none" strokeLinecap="round">
+                  {/* Water swirl with gradient - scaled up coords, scaled down transform */}
+                  <g transform="scale(0.2)">
+                    <path d="M 0 10 Q 60 -15, 40 70 Q 0 110, -40 70 Q -60 -15, 0 10" stroke="url(#coriWaterSwirl)" strokeWidth="12.5" fill="none" strokeLinecap="round">
                       <animateTransform attributeName="transform" type="rotate" values="0;360;720;360;0" dur="4s" repeatCount="indefinite" />
                     </path>
-                    <path d="M 0 4 Q 6 1, 4 10 Q 0 14, -4 10 Q -6 1, 0 4" stroke="#3b82f6" strokeWidth="1.5" fill="none" opacity="0.5">
+                    <path d="M 0 10 Q 50 -15, 35 65 Q 0 105, -35 65 Q -50 -15, 0 10" stroke="#3b82f6" strokeWidth="7.5" fill="none" opacity="0.5">
                       <animateTransform attributeName="transform" type="rotate" values="0;-360;-720;-360;0" dur="3s" repeatCount="indefinite" />
                     </path>
                   </g>
                 </g>
 
-                {/* Comparison panel with gradient */}
-                <g transform="translate(145, 195)">
-                  <rect width="110" height="55" fill="url(#coriInfoPanel)" rx="8" stroke="#475569" strokeWidth="1" />
-                  <text x="55" y="16" textAnchor="middle" fontSize="10" fill="#94a3b8" fontWeight="bold">What Dominates?</text>
-                  <text x="55" y="32" textAnchor="middle" fontSize="8" fill="#64748b">Sink: Basin shape</text>
-                  <text x="55" y="46" textAnchor="middle" fontSize="9" fill="#38bdf8" fontWeight="600">Hurricane: Coriolis!</text>
-                </g>
+                {/* Title labels with absolute coordinates */}
+                <text x="100" y="30" textAnchor="middle" fontSize="14" fill="#38bdf8" fontWeight="600">Hurricane</text>
+                <text x="100" y="48" textAnchor="middle" fontSize="11" fill="#64748b">(~500 km)</text>
+                <text x="300" y="30" textAnchor="middle" fontSize="14" fill="#94a3b8" fontWeight="600">Sink Drain</text>
+                <text x="300" y="48" textAnchor="middle" fontSize="11" fill="#64748b">(~30 cm)</text>
+
+                {/* Comparison panel with absolute coordinates */}
+                <rect x="145" y="200" width="110" height="55" fill="url(#coriInfoPanel)" rx="8" stroke="#475569" strokeWidth="1" />
+                <text x="200" y="218" textAnchor="middle" fontSize="11" fill="#94a3b8" fontWeight="bold">What Dominates?</text>
+                <text x="200" y="234" textAnchor="middle" fontSize="11" fill="#64748b">Sink: Basin shape</text>
+                <text x="200" y="250" textAnchor="middle" fontSize="11" fill="#38bdf8" fontWeight="600">Hurricane: Coriolis!</text>
+
+                {/* Scale labels at bottom */}
+                <text x="100" y="265" textAnchor="middle" fontSize="11" fill="#10b981" fontWeight="700">STRONG</text>
+                <text x="300" y="265" textAnchor="middle" fontSize="11" fill="#ef4444" fontWeight="700">NEGLIGIBLE</text>
 
                 {/* VS divider */}
-                <g transform="translate(200, 120)">
-                  <circle cx="0" cy="0" r="18" fill="url(#coriInfoPanel)" stroke="#a855f7" strokeWidth="2" />
-                  <text x="0" y="5" textAnchor="middle" fontSize="12" fill="#c084fc" fontWeight="bold">VS</text>
-                </g>
+                <circle cx="200" cy="120" r="18" fill="url(#coriInfoPanel)" stroke="#a855f7" strokeWidth="2" />
+                <text x="200" y="125" textAnchor="middle" fontSize="12" fill="#c084fc" fontWeight="bold">VS</text>
               </svg>
 
               {/* Labels outside SVG */}

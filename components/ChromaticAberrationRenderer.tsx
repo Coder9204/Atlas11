@@ -11,10 +11,12 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // =============================================================================
 
 interface ChromaticAberrationRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: string;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: Record<string, unknown>) => void;
 }
 
 // Premium Design System
@@ -293,11 +295,34 @@ const applications: Application[] = [
 // MAIN COMPONENT
 // =============================================================================
 export default function ChromaticAberrationRenderer({
-  phase,
+  phase: externalPhase,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }: ChromaticAberrationRendererProps) {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    const prop = externalPhase || gamePhase;
+    if (prop && validPhases.includes(prop as Phase)) {
+      return prop as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Sync with external phase changes
+  useEffect(() => {
+    const prop = externalPhase || gamePhase;
+    if (prop && validPhases.includes(prop as Phase)) {
+      setPhase(prop as Phase);
+    }
+  }, [externalPhase, gamePhase]);
+
   // State management
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -463,8 +488,12 @@ export default function ChromaticAberrationRenderer({
 
   const handlePhaseComplete = useCallback(() => {
     playSound('transition');
+    const currentIdx = validPhases.indexOf(phase);
+    if (currentIdx < validPhases.length - 1) {
+      setPhase(validPhases[currentIdx + 1]);
+    }
     if (onPhaseComplete) onPhaseComplete();
-  }, [playSound, onPhaseComplete]);
+  }, [playSound, onPhaseComplete, phase]);
 
   const allAppsCompleted = completedApps.every(Boolean);
 
@@ -657,6 +686,30 @@ export default function ChromaticAberrationRenderer({
             strokeWidth="1"
             strokeDasharray="8,4"
             opacity="0.6"
+          />
+
+          {/* Grid lines for reference */}
+          {[0.25, 0.5, 0.75].map((frac) => (
+            <line key={`vgrid-${frac}`} x1={width * frac} y1={30} x2={width * frac} y2={height - 60} stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+          ))}
+          {[0.25, 0.5, 0.75].map((frac) => (
+            <line key={`hgrid-${frac}`} x1={30} y1={height * frac} x2={width - 30} y2={height * frac} stroke="#475569" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+          ))}
+
+          {/* Axis labels */}
+          <text x={width / 2} y={height - 70} fill="rgba(148, 163, 184, 0.7)" fontSize="11" textAnchor="middle">Wavelength (nm)</text>
+          <text x={12} y={38} fill="rgba(148, 163, 184, 0.7)" fontSize="11" textAnchor="start">Distance</text>
+
+          {/* Interactive focal point indicator - moves with slider */}
+          <circle
+            cx={Math.min(focalPoints[3].x, width - 40)}
+            cy={lensY}
+            r={8}
+            fill={defined.colors.spectrum.green}
+            filter="url(#chromFocalGlow)"
+            stroke="#fff"
+            strokeWidth={2}
+            opacity="0.95"
           />
 
           {/* ============ WHITE LIGHT SOURCE ============ */}
@@ -933,11 +986,11 @@ export default function ChromaticAberrationRenderer({
           )}
 
           {/* ============ WAVELENGTH SPECTRUM BAR ============ */}
-          <g transform={`translate(25, ${height - 55})`}>
+          <g>
             {/* Background panel */}
             <rect
-              x="-10"
-              y="-10"
+              x="15"
+              y={height - 65}
               width={width - 30}
               height="50"
               fill="rgba(15, 23, 42, 0.85)"
@@ -948,8 +1001,8 @@ export default function ChromaticAberrationRenderer({
 
             {/* Spectrum gradient bar */}
             <rect
-              x="5"
-              y="2"
+              x="30"
+              y={height - 53}
               width={width - 60}
               height="8"
               fill="url(#chromSpectrumBar)"
@@ -958,11 +1011,11 @@ export default function ChromaticAberrationRenderer({
 
             {/* Individual wavelength markers */}
             {wavelengths.map((wl, i) => {
-              const xPos = 5 + (i / (wavelengths.length - 1)) * (width - 70);
+              const xPos = 30 + (i / (wavelengths.length - 1)) * (width - 70);
               return (
-                <g key={wl.name} transform={`translate(${xPos}, 0)`}>
-                  <circle cy="6" r="5" fill={wl.color} stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-                  <text y="26" fill={defined.colors.text.muted} fontSize="9" textAnchor="middle">
+                <g key={wl.name}>
+                  <circle cx={xPos} cy={height - 49} r="5" fill={wl.color} stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                  <text x={xPos} y={height - 29} fill={defined.colors.text.muted} fontSize="11" textAnchor="middle">
                     {wl.wavelength}nm
                   </text>
                 </g>
@@ -971,10 +1024,10 @@ export default function ChromaticAberrationRenderer({
           </g>
 
           {/* ============ CORRECTION STATUS INDICATOR ============ */}
-          <g transform={`translate(${width - 95}, 18)`}>
+          <g>
             <rect
-              x="-8"
-              y="-8"
+              x={width - 103}
+              y="10"
               width="88"
               height="28"
               fill={useDoublet ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'}
@@ -983,16 +1036,16 @@ export default function ChromaticAberrationRenderer({
               strokeWidth="1"
             />
             <circle
-              cx="6"
-              cy="6"
+              cx={width - 89}
+              cy="24"
               r="5"
               fill={useDoublet ? '#10b981' : '#ef4444'}
             />
             <text
-              x="18"
-              y="10"
+              x={width - 77}
+              y="28"
               fill={useDoublet ? '#34d399' : '#f87171'}
-              fontSize="10"
+              fontSize="11"
               fontWeight="600"
             >
               {correctionLevel}
@@ -1017,7 +1070,7 @@ export default function ChromaticAberrationRenderer({
             </div>
           )}
           {!useDoublet && (
-            <span style={{ color: defined.colors.text.muted, fontSize: typo.small }}>
+            <span style={{ color: '#e2e8f0', fontSize: typo.small }}>
               Curvature affects dispersion
             </span>
           )}
@@ -1056,7 +1109,7 @@ export default function ChromaticAberrationRenderer({
             border: '1px solid rgba(71, 85, 105, 0.3)',
           }}>
             <label style={{
-              color: defined.colors.primary,
+              color: '#e2e8f0',
               fontSize: typo.small,
               display: 'block',
               marginBottom: '6px',
@@ -1070,9 +1123,9 @@ export default function ChromaticAberrationRenderer({
               max="100"
               value={lensCurvature}
               onChange={(e) => setLensCurvature(Number(e.target.value))}
-              style={{ width: '100%', accentColor: defined.colors.primary }}
+              style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, accentColor: '#3b82f6' }}
             />
-            <div style={{ color: defined.colors.text.muted, fontSize: typo.label, marginTop: '4px' }}>
+            <div style={{ color: '#e2e8f0', fontSize: typo.label, marginTop: '4px' }}>
               Higher curvature = more dispersion
             </div>
           </div>
@@ -1419,7 +1472,7 @@ export default function ChromaticAberrationRenderer({
         marginBottom: defined.spacing.xl,
         lineHeight: 1.6,
       }}>
-        Look closely at photos from cheap cameras. See those purple or green fringes around bright edges? That's chromatic aberration - and it reveals something fundamental about how light interacts with glass.
+        Let's explore how light interacts with glass. Look closely at photos from cheap cameras. See those purple or green fringes around bright edges? Discover how chromatic aberration works and what it reveals about the physics of lenses.
       </p>
 
       <div style={{
@@ -1613,7 +1666,7 @@ export default function ChromaticAberrationRenderer({
         maxWidth: '550px',
         margin: '0 auto',
       }}>
-        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm }}>Key Observations:</h3>
+        <h3 style={{ color: '#e2e8f0', marginBottom: defined.spacing.sm }}>Key Observations:</h3>
         <ul style={{ color: '#e2e8f0', paddingLeft: defined.spacing.lg, lineHeight: 1.8 }}>
           <li>Blue/violet focuses closer to the lens than red</li>
           <li>Stronger lens curvature = more chromatic aberration</li>
@@ -1632,7 +1685,7 @@ export default function ChromaticAberrationRenderer({
         maxWidth: '550px',
         margin: `${defined.spacing.lg} auto 0`,
       }}>
-        <h4 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm, fontWeight: defined.typography.weights.semibold }}>Why This Matters</h4>
+        <h4 style={{ color: '#e2e8f0', marginBottom: defined.spacing.sm, fontWeight: defined.typography.weights.semibold }}>Why This Matters</h4>
         <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>
           Understanding chromatic aberration is important for engineers designing camera lenses, telescopes, and microscopes. This technology is used in everyday photography, scientific research, and medical imaging to ensure sharp, color-accurate images.
         </p>
@@ -2006,6 +2059,10 @@ export default function ChromaticAberrationRenderer({
         Real-World Applications
       </h2>
 
+      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg, lineHeight: 1.6 }}>
+        Chromatic aberration correction is essential across many industries. From Canon and Nikon camera lenses costing $2,000-$15,000 to Takahashi telescopes at $5,000-$20,000, the principles of achromatic doublets and apochromatic designs impact everyday photography, scientific research, medical imaging, and astronomical observation. Explore how these applications use the physics of wavelength-dependent refraction.
+      </p>
+
       <div style={{
         display: 'flex',
         gap: defined.spacing.sm,
@@ -2094,36 +2151,35 @@ export default function ChromaticAberrationRenderer({
         )}
       </div>
 
-      {allAppsCompleted && (
-        <div style={{
-          background: 'rgba(16, 185, 129, 0.1)',
-          border: `1px solid ${defined.colors.success}`,
-          borderRadius: defined.radius.lg,
-          padding: defined.spacing.lg,
-          marginTop: defined.spacing.lg,
-          textAlign: 'center',
-        }}>
-          <p style={{ color: defined.colors.success, fontWeight: defined.typography.weights.semibold, lineHeight: 1.6, marginBottom: defined.spacing.md }}>
-            All applications explored! You can now take the test.
-          </p>
-          <button
-            onClick={handlePhaseComplete}
-            style={{
-              padding: '12px 24px',
-              minHeight: '48px',
-              background: defined.colors.success,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.md,
-              cursor: 'pointer',
-              fontWeight: defined.typography.weights.semibold,
-              transition: 'all 0.2s ease',
-            }}
-          >
-            Continue to Test
-          </button>
-        </div>
-      )}
+      <div style={{
+        background: allAppsCompleted ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.05)',
+        border: `1px solid ${allAppsCompleted ? defined.colors.success : 'rgba(99, 102, 241, 0.3)'}`,
+        borderRadius: defined.radius.lg,
+        padding: defined.spacing.lg,
+        marginTop: defined.spacing.lg,
+        textAlign: 'center',
+      }}>
+        <p style={{ color: allAppsCompleted ? defined.colors.success : defined.colors.text.secondary, fontWeight: defined.typography.weights.semibold, lineHeight: 1.6, marginBottom: defined.spacing.md }}>
+          {allAppsCompleted ? 'All applications explored! You can now take the test.' : 'Explore the applications above, then proceed to the knowledge test.'}
+        </p>
+        <button
+          onClick={handlePhaseComplete}
+          aria-label="Continue to test phase"
+          style={{
+            padding: '12px 24px',
+            minHeight: '48px',
+            background: allAppsCompleted ? defined.colors.success : defined.colors.primary,
+            color: defined.colors.text.primary,
+            border: 'none',
+            borderRadius: defined.radius.md,
+            cursor: 'pointer',
+            fontWeight: defined.typography.weights.semibold,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Continue to the Knowledge Test and Demonstrate Your Understanding
+        </button>
+      </div>
     </div>
   );
 
@@ -2383,10 +2439,10 @@ export default function ChromaticAberrationRenderer({
   const phaseLabels: Record<string, string> = {
     hook: 'Hook',
     predict: 'Predict',
-    play: 'Lab',
+    play: 'Experiment',
     review: 'Review',
     twist_predict: 'Twist Predict',
-    twist_play: 'Twist Lab',
+    twist_play: 'Twist Experiment',
     twist_review: 'Twist Review',
     transfer: 'Transfer',
     test: 'Test',
@@ -2399,14 +2455,14 @@ export default function ChromaticAberrationRenderer({
   // Get the appropriate next button label for each phase
   const getNextButtonLabel = (): string => {
     switch (phase) {
-      case 'hook': return 'Make a Prediction';
-      case 'predict': return prediction ? 'See the Ray Diagram' : 'Select an Answer';
-      case 'play': return 'Understand the Physics';
-      case 'review': return 'See the Solution';
-      case 'twist_predict': return twistPrediction ? 'See the Doublet in Action' : 'Select an Answer';
-      case 'twist_play': return 'Review the Solution';
-      case 'twist_review': return 'Real-World Applications';
-      case 'transfer': return allAppsCompleted ? 'Take the Test' : 'Explore Applications';
+      case 'hook': return 'Start Exploring';
+      case 'predict': return prediction ? 'Continue to Experiment' : 'Select an Answer';
+      case 'play': return 'Continue to Review';
+      case 'review': return 'Continue to Twist';
+      case 'twist_predict': return twistPrediction ? 'Continue to Doublet' : 'Select an Answer';
+      case 'twist_play': return 'Continue to Review';
+      case 'twist_review': return 'Continue to Applications';
+      case 'transfer': return 'Advance to the Chromatic Aberration Knowledge Assessment';
       case 'test': return testSubmitted ? (score >= 7 ? 'Continue to Mastery' : 'Review & Retry') : 'Answer Questions';
       case 'mastery': return 'Complete Game';
       default: return 'Continue';
@@ -2418,7 +2474,6 @@ export default function ChromaticAberrationRenderer({
     switch (phase) {
       case 'predict': return !!prediction;
       case 'twist_predict': return !!twistPrediction;
-      case 'transfer': return allAppsCompleted;
       case 'test': return testSubmitted && score >= 7;
       default: return true;
     }
@@ -2492,10 +2547,9 @@ export default function ChromaticAberrationRenderer({
 
   return (
     <div style={{
-      height: '100dvh',
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden',
       background: defined.colors.background.primary,
       fontFamily: defined.typography.fontFamily,
       color: defined.colors.text.primary,
@@ -2541,7 +2595,7 @@ export default function ChromaticAberrationRenderer({
       </div>
 
       {/* Scrollable Main Content */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderPhase()}
       </div>
 

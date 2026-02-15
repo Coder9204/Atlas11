@@ -21,7 +21,7 @@ interface DRAMRefreshRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#e2e8f0',
+  textMuted: 'rgba(203, 213, 225, 0.85)',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgCardLight: '#1e293b',
@@ -45,7 +45,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Speed Tradeoff',
+  twist_play: 'Twist Explore',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -840,11 +840,10 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             <circle
               cx={20}
               cy={15}
-              r={6}
+              r={5}
               fill={avgCharge > 70 ? '#22d3ee' : avgCharge > 50 ? '#fbbf24' : '#ef4444'}
-              filter="url(#dramStatusGlow)"
             />
-            <text x={35} y={20} fill="#e2e8f0" fontSize="11" fontWeight="600">Charge Level</text>
+            <text x={35} y={250} fill="#e2e8f0" fontSize="11" fontWeight="600">Charge Level</text>
 
             {/* Data status */}
             <rect
@@ -861,9 +860,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             <circle
               cx={180}
               cy={15}
-              r={6}
+              r={5}
               fill={dataLost ? '#ef4444' : '#10b981'}
-              filter="url(#dramStatusGlow)"
             >
               {dataLost && (
                 <animate
@@ -874,26 +872,39 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                 />
               )}
             </circle>
-            <text x={195} y={20} fill="#e2e8f0" fontSize="11" fontWeight="600">Data Status</text>
+            <text x={195} y={250} fill="#e2e8f0" fontSize="11" fontWeight="600">Data Status</text>
           </g>
 
-          {/* Legend Panel */}
-          <g transform="translate(10, 10)">
-            <rect x={0} y={0} width={100} height={70} fill="rgba(15,23,42,0.9)" rx={6} stroke="#334155" strokeWidth={1} />
-            <text x={10} y={16} fill="#f8fafc" fontSize="10" fontWeight="700">LEGEND</text>
+          {/* Legend Panel - positioned at bottom-right corner */}
+          <g transform={`translate(${width - 120}, 10)`}>
+            <rect x={0} y={0} width={110} height={70} fill="rgba(15,23,42,0.9)" rx={6} stroke="#334155" strokeWidth={1} />
+            <text x={10} y={16} fill="#f8fafc" fontSize="11" fontWeight="700">LEGEND</text>
             <circle cx={18} cy={30} r={5} fill="#22d3ee" />
-            <text x={28} y={34} fill="#e2e8f0" fontSize="9">Full Charge</text>
-            <circle cx={18} cy={45} r={5} fill="#fbbf24" />
-            <text x={28} y={49} fill="#e2e8f0" fontSize="9">Medium</text>
-            <circle cx={18} cy={60} r={5} fill="#ef4444" />
-            <text x={28} y={64} fill="#e2e8f0" fontSize="9">Critical</text>
+            <text x={30} y={34} fill="#e2e8f0" fontSize="11">Full Charge</text>
+            <circle cx={18} cy={48} r={5} fill="#fbbf24" />
+            <text x={30} y={52} fill="#e2e8f0" fontSize="11">Medium</text>
+            <circle cx={18} cy={66} r={5} fill="#ef4444" />
+            <text x={30} y={70} fill="#e2e8f0" fontSize="11">Critical</text>
           </g>
 
-          {/* Direct labels on capacitor cells */}
-          <text x={85} y={38} fill="#f8fafc" fontSize="9" fontWeight="600">Capacitor</text>
-          <text x={165} y={38} fill="#f8fafc" fontSize="9" fontWeight="600">Capacitor</text>
-          <text x={245} y={38} fill="#f8fafc" fontSize="9" fontWeight="600">Capacitor</text>
-          <text x={325} y={38} fill="#f8fafc" fontSize="9" fontWeight="600">Capacitor</text>
+          {/* Axis labels */}
+          <text x={width / 2} y={height - 3} fill="#e2e8f0" fontSize="11" textAnchor="middle">Time →</text>
+          <text x={12} y={height / 2} fill="#e2e8f0" fontSize="11" textAnchor="middle" transform={`rotate(-90, 12, ${height / 2})`}>Charge Level</text>
+
+          {/* Grid lines */}
+          <line x1={50} y1={230} x2={width - 10} y2={230} strokeDasharray="4 4" opacity={0.3} stroke="#64748b" />
+          <line x1={50} y1={200} x2={width - 10} y2={200} strokeDasharray="4 4" opacity={0.3} stroke="#64748b" />
+
+          {/* Interactive point showing current refresh timing */}
+          <circle
+            cx={50 + ((refreshRate - 16) / (128 - 16)) * (width - 100)}
+            cy={230 - ((128 - refreshRate) / (128 - 16)) * 60}
+            r={8}
+            fill={refreshRate < 32 ? '#22d3ee' : refreshRate < 80 ? '#fbbf24' : '#ef4444'}
+            filter="url(#dramCellGlow)"
+            stroke="#fff"
+            strokeWidth={2}
+          />
         </svg>
 
         {/* Text labels outside SVG using typo system */}
@@ -1052,7 +1063,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             border: `1px solid ${colors.border}`,
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
           Back
@@ -1061,7 +1073,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
         <span style={{
           fontSize: '12px',
           color: colors.textMuted,
-          fontWeight: 600
+          fontWeight: 400
         }}>
           {phaseLabels[phase]}
         </span>
@@ -1079,7 +1091,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.4,
             boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
           {nextLabel}
@@ -1096,6 +1109,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     cursor: 'pointer',
     fontSize: '14px',
     WebkitTapHighlightColor: 'transparent' as const,
+    transition: 'all 0.2s ease',
   };
 
   // HOOK PHASE
@@ -1146,7 +1160,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Exploring')}
       </div>
     );
   }
@@ -1259,7 +1273,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                 max="128"
                 value={refreshRate}
                 onChange={(e) => setRefreshRate(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1273,7 +1287,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                 max="85"
                 value={temperature}
                 onChange={(e) => setTemperature(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1305,11 +1319,41 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
               </button>
             </div>
 
+            {/* Comparison display: reference vs current values */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '12px',
+              marginTop: '16px',
+              marginBottom: '16px',
+            }}>
+              <div style={{
+                flex: 1,
+                background: 'rgba(34, 211, 238, 0.1)',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(34, 211, 238, 0.3)',
+              }}>
+                <p style={{ color: colors.charge, fontSize: '12px', fontWeight: 700, margin: 0 }}>Reference (25C)</p>
+                <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, margin: '4px 0 0' }}>0.53%/ms</p>
+              </div>
+              <div style={{
+                flex: 1,
+                background: 'rgba(245, 158, 11, 0.1)',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+              }}>
+                <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, margin: 0 }}>Current ({temperature}C)</p>
+                <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, margin: '4px 0 0' }}>{getLeakageRate().toFixed(2)}%/ms</p>
+              </div>
+            </div>
+
             <div style={{
               background: colors.bgCard,
               padding: '16px',
               borderRadius: '8px',
-              marginTop: '16px',
+              marginTop: '8px',
             }}>
               <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Key Observations:</h4>
               <ul style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, paddingLeft: '20px' }}>
@@ -1318,6 +1362,18 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                 <li>Refresh restores all cells to 100%</li>
                 <li>Higher temperature = faster leakage</li>
               </ul>
+            </div>
+
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.1)',
+              padding: '12px',
+              borderRadius: '8px',
+              marginTop: '12px',
+              borderLeft: `3px solid ${colors.capacitor}`,
+            }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400, margin: 0 }}>
+                <strong>Why this matters:</strong> This technology is used in every computer, phone, and server. Understanding DRAM refresh is important for engineers designing real-world applications from data centers to mobile devices.
+              </p>
             </div>
           </div>
         </div>
@@ -1357,23 +1413,27 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
           {/* SVG Diagram for review */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="300" height="150" viewBox="0 0 300 150">
-              <rect width="300" height="150" fill="#0f172a" rx="8" />
-              <text x="150" y="20" fill="#f8fafc" fontSize="12" fontWeight="700" textAnchor="middle">DRAM Cell Structure</text>
+            <svg width="320" height="200" viewBox="0 0 320 200">
+              <rect width="320" height="200" fill="#0f172a" rx="8" />
+              <text x="160" y="22" fill="#f8fafc" fontSize="13" fontWeight="700" textAnchor="middle">DRAM Cell Structure</text>
               {/* Capacitor */}
-              <rect x="100" y="40" width="60" height="80" fill="#1e293b" stroke="#3b82f6" strokeWidth="2" rx="4" />
-              <rect x="110" y="90" width="40" height="20" fill="#22d3ee" opacity="0.8" />
-              <text x="130" y="105" fill="#0f172a" fontSize="10" fontWeight="600" textAnchor="middle">Charge</text>
-              <text x="130" y="135" fill="#e2e8f0" fontSize="10" textAnchor="middle">Capacitor</text>
+              <rect x="80" y="40" width="70" height="90" fill="#1e293b" stroke="#3b82f6" strokeWidth="2" rx="4" />
+              <rect x="90" y="95" width="50" height="25" fill="#22d3ee" opacity="0.8" />
+              <text x="115" y="112" fill="#0f172a" fontSize="11" fontWeight="600" textAnchor="middle">Charge</text>
+              <text x="115" y="150" fill="#e2e8f0" fontSize="11" textAnchor="middle">Capacitor</text>
               {/* Transistor */}
-              <rect x="180" y="60" width="40" height="40" fill="#f59e0b" opacity="0.8" rx="4" />
-              <text x="200" y="85" fill="#0f172a" fontSize="9" fontWeight="600" textAnchor="middle">Gate</text>
-              <text x="200" y="115" fill="#e2e8f0" fontSize="10" textAnchor="middle">Transistor</text>
+              <rect x="190" y="60" width="50" height="45" fill="#f59e0b" opacity="0.8" rx="4" />
+              <text x="215" y="88" fill="#0f172a" fontSize="11" fontWeight="600" textAnchor="middle">Gate</text>
+              <text x="215" y="125" fill="#e2e8f0" fontSize="11" textAnchor="middle">Transistor</text>
               {/* Connection line */}
-              <line x1="160" y1="80" x2="180" y2="80" stroke="#14b8a6" strokeWidth="2" />
+              <line x1="150" y1="82" x2="190" y2="82" stroke="#14b8a6" strokeWidth="2" />
               {/* Leakage arrow */}
-              <line x1="130" y1="120" x2="130" y2="145" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowhead)" />
-              <text x="145" y="145" fill="#ef4444" fontSize="8">Leakage</text>
+              <line x1="115" y1="133" x2="115" y2="165" stroke="#ef4444" strokeWidth="2" />
+              <text x="60" y="180" fill="#ef4444" fontSize="11">Leakage</text>
+              {/* Grid lines */}
+              <line x1="30" y1="170" x2="290" y2="170" strokeDasharray="4 4" opacity={0.3} stroke="#64748b" />
+              {/* Axis label */}
+              <text x="280" y="192" fill="#e2e8f0" fontSize="11" textAnchor="end">Time</text>
             </svg>
           </div>
 
@@ -1445,25 +1505,29 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
           {/* SVG Visualization for Twist Predict */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="320" height="160" viewBox="0 0 320 160">
-              <rect width="320" height="160" fill="#0f172a" rx="8" />
-              <text x="160" y="20" fill="#f8fafc" fontSize="12" fontWeight="700" textAnchor="middle">DDR4 vs DDR5 Capacitor Size</text>
+            <svg width="320" height="200" viewBox="0 0 320 200">
+              <rect width="320" height="200" fill="#0f172a" rx="8" />
+              <text x="160" y="22" fill="#f8fafc" fontSize="13" fontWeight="700" textAnchor="middle">DDR4 vs DDR5 Capacitor Size</text>
 
               {/* DDR4 capacitor - larger */}
-              <rect x="60" y="40" width="60" height="80" fill="#1e293b" stroke="#3b82f6" strokeWidth="2" rx="4" />
-              <rect x="70" y="85" width="40" height="25" fill="#22d3ee" opacity="0.8" />
-              <text x="90" y="135" fill="#e2e8f0" fontSize="10" textAnchor="middle">DDR4</text>
-              <text x="90" y="75" fill="#e2e8f0" fontSize="9" textAnchor="middle">Larger</text>
+              <rect x="55" y="45" width="70" height="90" fill="#1e293b" stroke="#3b82f6" strokeWidth="2" rx="4" />
+              <rect x="65" y="95" width="50" height="30" fill="#22d3ee" opacity="0.8" />
+              <text x="90" y="155" fill="#e2e8f0" fontSize="12" textAnchor="middle">DDR4</text>
+              <text x="90" y="78" fill="#e2e8f0" fontSize="11" textAnchor="middle">Larger</text>
 
               {/* DDR5 capacitor - smaller */}
-              <rect x="200" y="55" width="40" height="55" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" rx="4" />
-              <rect x="207" y="85" width="26" height="18" fill="#fbbf24" opacity="0.8" />
-              <text x="220" y="135" fill="#e2e8f0" fontSize="10" textAnchor="middle">DDR5</text>
-              <text x="220" y="75" fill="#e2e8f0" fontSize="9" textAnchor="middle">Smaller</text>
+              <rect x="200" y="65" width="45" height="60" fill="#1e293b" stroke="#f59e0b" strokeWidth="2" rx="4" />
+              <rect x="208" y="95" width="30" height="20" fill="#fbbf24" opacity="0.8" />
+              <text x="222" y="155" fill="#e2e8f0" fontSize="12" textAnchor="middle">DDR5</text>
+              <text x="222" y="85" fill="#e2e8f0" fontSize="11" textAnchor="middle">Smaller</text>
 
               {/* Arrow indicating comparison */}
-              <line x1="130" y1="80" x2="190" y2="80" stroke="#e2e8f0" strokeWidth="2" markerEnd="url(#arrowhead)" />
-              <text x="160" y="95" fill="#e2e8f0" fontSize="8" textAnchor="middle">3x Faster</text>
+              <line x1="135" y1="90" x2="190" y2="90" stroke="#e2e8f0" strokeWidth="2" />
+              <text x="162" y="82" fill="#e2e8f0" fontSize="12" textAnchor="middle">3x Faster</text>
+
+              {/* Grid line */}
+              <line x1="30" y1="170" x2="290" y2="170" strokeDasharray="4 4" opacity={0.3} stroke="#64748b" />
+              <text x="160" y="190" fill="#e2e8f0" fontSize="11" textAnchor="middle">Generation</text>
             </svg>
           </div>
 
@@ -1553,7 +1617,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                 step="400"
                 value={memorySpeed}
                 onChange={(e) => setMemorySpeed(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1567,7 +1631,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                 max="128"
                 value={refreshRate}
                 onChange={(e) => setRefreshRate(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1649,38 +1713,43 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
           {/* SVG Diagram for Twist Review */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="320" height="180" viewBox="0 0 320 180">
-              <rect width="320" height="180" fill="#0f172a" rx="8" />
-              <text x="160" y="20" fill="#f8fafc" fontSize="12" fontWeight="700" textAnchor="middle">Speed vs Refresh Rate Trade-off</text>
+            <svg width="340" height="220" viewBox="0 0 340 220">
+              <rect width="340" height="220" fill="#0f172a" rx="8" />
+              <text x="170" y="22" fill="#f8fafc" fontSize="13" fontWeight="700" textAnchor="middle">Speed vs Refresh Rate Trade-off</text>
 
               {/* Chart axes */}
-              <line x1="50" y1="140" x2="280" y2="140" stroke="#e2e8f0" strokeWidth="1" />
-              <line x1="50" y1="40" x2="50" y2="140" stroke="#e2e8f0" strokeWidth="1" />
+              <line x1="60" y1="170" x2="300" y2="170" stroke="#e2e8f0" strokeWidth="1" />
+              <line x1="60" y1="40" x2="60" y2="170" stroke="#e2e8f0" strokeWidth="1" />
+
+              {/* Grid lines */}
+              <line x1="60" y1="105" x2="300" y2="105" strokeDasharray="4 4" opacity={0.3} stroke="#64748b" />
+              <line x1="60" y1="70" x2="300" y2="70" strokeDasharray="4 4" opacity={0.3} stroke="#64748b" />
+              <line x1="60" y1="140" x2="300" y2="140" strokeDasharray="4 4" opacity={0.3} stroke="#64748b" />
 
               {/* X-axis label */}
-              <text x="165" y="160" fill="#e2e8f0" fontSize="10" textAnchor="middle">Memory Speed (MHz)</text>
+              <text x="180" y="198" fill="#e2e8f0" fontSize="12" textAnchor="middle">Memory Speed (MHz)</text>
 
               {/* Y-axis label */}
-              <text x="25" y="90" fill="#e2e8f0" fontSize="10" textAnchor="middle" transform="rotate(-90, 25, 90)">Refresh Rate</text>
+              <text x="25" y="105" fill="#e2e8f0" fontSize="12" textAnchor="middle" transform="rotate(-90, 25, 105)">Refresh Rate</text>
 
               {/* Data points - showing correlation */}
-              <circle cx="80" cy="120" r="6" fill="#22d3ee" />
-              <text x="80" y="135" fill="#e2e8f0" fontSize="8" textAnchor="middle">2400</text>
+              <circle cx="100" cy="150" r="6" fill="#22d3ee" />
+              <text x="100" y="168" fill="#e2e8f0" fontSize="11" textAnchor="middle">2400</text>
 
-              <circle cx="140" cy="100" r="6" fill="#fbbf24" />
-              <text x="140" y="135" fill="#e2e8f0" fontSize="8" textAnchor="middle">4000</text>
+              <circle cx="160" cy="120" r="6" fill="#fbbf24" />
+              <text x="160" y="168" fill="#e2e8f0" fontSize="11" textAnchor="middle">4000</text>
 
-              <circle cx="200" cy="75" r="6" fill="#f97316" />
-              <text x="200" y="135" fill="#e2e8f0" fontSize="8" textAnchor="middle">6000</text>
+              <circle cx="220" cy="85" r="6" fill="#f97316" />
+              <text x="220" y="168" fill="#e2e8f0" fontSize="11" textAnchor="middle">6000</text>
 
-              <circle cx="260" cy="55" r="6" fill="#ef4444" />
-              <text x="260" y="135" fill="#e2e8f0" fontSize="8" textAnchor="middle">8000</text>
+              <circle cx="280" cy="55" r="6" fill="#ef4444" />
+              <text x="280" y="168" fill="#e2e8f0" fontSize="11" textAnchor="middle">8000</text>
 
               {/* Trend line */}
-              <line x1="80" y1="120" x2="260" y2="55" stroke="#8b5cf6" strokeWidth="2" strokeDasharray="5,5" />
+              <line x1="100" y1="150" x2="280" y2="55" stroke="#8b5cf6" strokeWidth="2" strokeDasharray="5,5" />
 
-              <text x="270" y="50" fill="#ef4444" fontSize="8">High</text>
-              <text x="70" y="120" fill="#22d3ee" fontSize="8">Low</text>
+              <text x="295" y="48" fill="#ef4444" fontSize="11">High</text>
+              <text x="78" y="148" fill="#22d3ee" fontSize="11">Low</text>
             </svg>
           </div>
 
@@ -1749,6 +1818,28 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </div>
           </div>
 
+          {/* Numeric statistics summary */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '8px',
+            margin: '0 16px 16px',
+            flexWrap: 'wrap',
+          }}>
+            <div style={{ flex: 1, minWidth: '120px', background: colors.bgCard, padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+              <p style={{ color: colors.accent, fontSize: '18px', fontWeight: 700, margin: 0 }}>64ms</p>
+              <p style={{ color: colors.textMuted, fontSize: '12px', margin: '4px 0 0' }}>Typical refresh interval</p>
+            </div>
+            <div style={{ flex: 1, minWidth: '120px', background: colors.bgCard, padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+              <p style={{ color: colors.warning, fontSize: '18px', fontWeight: 700, margin: 0 }}>15-40%</p>
+              <p style={{ color: colors.textMuted, fontSize: '12px', margin: '4px 0 0' }}>DRAM power from refresh</p>
+            </div>
+            <div style={{ flex: 1, minWidth: '120px', background: colors.bgCard, padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+              <p style={{ color: colors.success, fontSize: '18px', fontWeight: 700, margin: 0 }}>2x</p>
+              <p style={{ color: colors.textMuted, fontSize: '12px', margin: '4px 0 0' }}>Leakage per 10C rise</p>
+            </div>
+          </div>
+
           {TRANSFER_APPLICATIONS.map((app, index) => (
             <div
               key={index}
@@ -1762,28 +1853,33 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                {transferCompleted.has(index) && <span style={{ color: colors.success }}>{'\u2705'}</span>}
               </div>
               <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
               <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
               </div>
               {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    ...buttonStyle,
-                    padding: '8px 16px',
-                    background: 'transparent',
-                    border: `1px solid ${colors.accent}`,
-                    color: colors.accent,
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                    minHeight: '44px',
-                  }}
-                >
-                  Reveal Answer
-                </button>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      ...buttonStyle,
+                      padding: '8px 16px',
+                      background: colors.success,
+                      border: 'none',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      WebkitTapHighlightColor: 'transparent',
+                      minHeight: '44px',
+                    }}
+                  >
+                    Got It
+                  </button>
+                </div>
               ) : (
                 <div>
                   <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
@@ -1800,6 +1896,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                       fontSize: '13px',
                       WebkitTapHighlightColor: 'transparent',
                       minHeight: '44px',
+                      opacity: 0.6,
                     }}
                   >
                     Got It
@@ -1840,7 +1937,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                   background: passed ? `${colors.success}20` : `${colors.warning}20`,
                   border: `3px solid ${passed ? colors.success : colors.warning}`
                 }}>
-                  {testScore === totalQuestions ? 'Trophy' : testScore >= 9 ? 'Star' : testScore >= 7 ? 'Check' : 'Book'}
+                  {testScore === totalQuestions ? '\uD83C\uDFC6' : testScore >= 9 ? '\u2B50' : testScore >= 7 ? '\u2705' : '\uD83D\uDCDA'}
                 </div>
                 <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '4px', color: colors.textPrimary }}>
                   {testScore}/{totalQuestions} Correct
@@ -2250,7 +2347,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>{'\uD83C\uDFC6'}</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
               You understand DRAM refresh and volatile memory physics

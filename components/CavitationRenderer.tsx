@@ -2,142 +2,54 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
-
-// String-based phases for game progression
+// Types
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review', twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
+  hook: 'Hook', predict: 'Predict', play: 'Play', review: 'Review', twist_predict: 'Twist Predict',
+  twist_play: 'Twist Play', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
 };
 
 interface CavitationRendererProps {
   currentPhase?: Phase;
-  gamePhase?: Phase;  // Alias for test compatibility
+  gamePhase?: Phase;
   onPhaseComplete?: (phase: Phase) => void;
-  onGameEvent?: (event: GameEvent) => void;
-}
-
-// Bubble type
-interface Bubble {
-  id: number;
-  x: number;
-  y: number;
-  radius: number;
-  growing: boolean;
-  collapsing: boolean;
-  collapsed: boolean;
+  onGameEvent?: (event: { type: string; data?: Record<string, unknown> }) => void;
 }
 
 const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, gamePhase, onPhaseComplete, onGameEvent }) => {
-  // Phase management - accept both currentPhase and gamePhase for compatibility
   const initialPhase = currentPhase ?? gamePhase ?? 'hook';
   const [phase, setPhase] = useState<Phase>(initialPhase);
-
-  // Hook phase
   const [hookStep, setHookStep] = useState(0);
   const [showCollapse, setShowCollapse] = useState(false);
   const [bubbleSize, setBubbleSize] = useState(30);
   const collapseAnimRef = useRef<number>();
 
-  // Predict phase
   const [prediction, setPrediction] = useState<string | null>(null);
   const [showPredictResult, setShowPredictResult] = useState(false);
 
-  // Play phase - propeller simulator
-  const [propellerSpeed, setPropellerSpeed] = useState(0);
-  const [bubbles, setBubbles] = useState<Bubble[]>([]);
-  const [damageLevel, setDamageLevel] = useState(0);
-  const [propellerAngle, setPropellerAngle] = useState(0);
-  const bubbleIdRef = useRef(0);
-  const animationRef = useRef<number>();
+  // Play phase - pressure chart
+  const [pressure, setPressure] = useState(50);
 
-  // Twist phase - mantis shrimp
+  // Twist
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistResult, setShowTwistResult] = useState(false);
   const [shrimpStrike, setShrimpStrike] = useState(false);
   const [showSecondBubble, setShowSecondBubble] = useState(false);
 
-  // Transfer phase
+  // Transfer
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set([0]));
 
-  // Test phase
+  // Test
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
   const [showTestResults, setShowTestResults] = useState(false);
   const [selectedTestAnswer, setSelectedTestAnswer] = useState<number | null>(null);
   const [showAnswerFeedback, setShowAnswerFeedback] = useState(false);
 
-  // UI state
-  const [isMobile, setIsMobile] = useState(false);
   const navigationLockRef = useRef(false);
 
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium Design System
-  const colors = {
-    primary: '#3b82f6',       // blue-500 (water)
-    primaryDark: '#2563eb',   // blue-600
-    accent: '#f97316',        // orange-500 (damage/heat)
-    secondary: '#06b6d4',     // cyan-500
-    success: '#10b981',       // emerald-500
-    danger: '#ef4444',        // red-500
-    warning: '#f59e0b',       // amber-500
-    bgDark: '#020617',        // slate-950
-    bgCard: '#0f172a',        // slate-900
-    bgCardLight: '#1e293b',   // slate-800
-    textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#e2e8f0', // slate-200 (HIGH CONTRAST for readability)
-    textMuted: '#cbd5e1',     // slate-300 (improved contrast)
-    border: '#334155',        // slate-700
-    borderLight: '#475569',   // slate-600
-    // Theme-specific
-    bubble: '#60a5fa',        // blue-400
-    collapse: '#ef4444',      // red-500
-    propeller: '#94a3b8',     // slate-400
-    text: '#f8fafc',          // slate-50 (alias)
-    card: '#0f172a',          // slate-900 (alias)
-    background: '#020617',    // slate-950 (alias)
-  };
-
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Phase sync - accept both currentPhase and gamePhase
+  // Phase sync
   useEffect(() => {
     const targetPhase = currentPhase ?? gamePhase;
     if (targetPhase !== undefined && targetPhase !== phase) {
@@ -145,123 +57,27 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
     }
   }, [currentPhase, gamePhase, phase]);
 
-  // Hook phase bubble collapse animation
+  // Hook bubble collapse
   useEffect(() => {
     if (!showCollapse) return;
-
     const collapse = () => {
       setBubbleSize(prev => {
-        if (prev <= 2) {
-          playSound('click');
-          return 0;
-        }
+        if (prev <= 2) return 0;
         return prev * 0.85;
       });
       collapseAnimRef.current = requestAnimationFrame(collapse);
     };
-
     collapseAnimRef.current = requestAnimationFrame(collapse);
-    return () => {
-      if (collapseAnimRef.current) cancelAnimationFrame(collapseAnimRef.current);
-    };
+    return () => { if (collapseAnimRef.current) cancelAnimationFrame(collapseAnimRef.current); };
   }, [showCollapse]);
 
-  // Propeller animation and cavitation
-  useEffect(() => {
-    if (propellerSpeed === 0) return;
-
-    const animate = () => {
-      // Rotate propeller
-      setPropellerAngle(prev => (prev + propellerSpeed) % 360);
-
-      // Generate cavitation bubbles at high speed
-      if (propellerSpeed > 50 && Math.random() < propellerSpeed / 200) {
-        const angle = Math.random() * 360 * Math.PI / 180;
-        const radius = 50 + Math.random() * 30;
-        const newBubble: Bubble = {
-          id: bubbleIdRef.current++,
-          x: 200 + radius * Math.cos(angle),
-          y: 120 + radius * Math.sin(angle),
-          radius: 3 + Math.random() * 5,
-          growing: true,
-          collapsing: false,
-          collapsed: false
-        };
-        setBubbles(prev => [...prev.slice(-30), newBubble]);
-      }
-
-      // Animate existing bubbles
-      setBubbles(prev => prev.map(b => {
-        if (b.collapsed) return b;
-
-        if (b.growing) {
-          const newRadius = b.radius + 0.3;
-          if (newRadius > 12) {
-            return { ...b, growing: false, collapsing: true };
-          }
-          return { ...b, radius: newRadius };
-        }
-
-        if (b.collapsing) {
-          const newRadius = b.radius * 0.8;
-          if (newRadius < 1) {
-            // Bubble collapsed - add damage
-            if (propellerSpeed > 70) {
-              setDamageLevel(d => Math.min(100, d + 0.5));
-            }
-            // Sound removed - too frequent in animation loop
-            return { ...b, radius: 0, collapsed: true };
-          }
-          return { ...b, radius: newRadius };
-        }
-
-        return b;
-      }).filter(b => !b.collapsed || Math.random() > 0.1));
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
-  }, [propellerSpeed]);
-
-  // Sound utility
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
-
-  // Phase navigation
   const goToPhase = useCallback((newPhase: Phase) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
-    playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete]);
+  }, [onPhaseComplete]);
 
   const goToNextPhase = useCallback(() => {
     const currentIndex = PHASE_ORDER.indexOf(phase);
@@ -277,180 +93,214 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
     }
   }, [phase, goToPhase]);
 
-  // Emit game events (for logging/analytics)
-  const emitEvent = useCallback(
-    (type: string, data?: Record<string, unknown>) => {
-      console.debug('Game event:', { type, data, timestamp: Date.now(), phase: phaseLabels[phase] });
-    },
-    [phase]
-  );
-
-  // Mantis shrimp strike animation
+  // Mantis shrimp strike
   const triggerShrimpStrike = () => {
     setShrimpStrike(true);
-    playSound('transition');
-
-    setTimeout(() => {
-      setShowSecondBubble(true);
-      playSound('click');
-    }, 200);
-
-    setTimeout(() => {
-      setShrimpStrike(false);
-      setShowSecondBubble(false);
-    }, 1500);
+    setTimeout(() => { setShowSecondBubble(true); }, 200);
+    setTimeout(() => { setShrimpStrike(false); setShowSecondBubble(false); }, 1500);
   };
 
   // Test questions
   const testQuestions = [
-    {
-      question: "Cavitation occurs when local pressure drops below:",
-      options: [{ text: "Atmospheric pressure", correct: false }, { text: "The liquid's vapor pressure", correct: true }, { text: "Zero pressure", correct: false }, { text: "The critical pressure", correct: false }]
-    },
-    {
-      question: "Why is cavitation damage so severe?",
-      options: [{ text: "Bubbles are toxic", correct: false }, { text: "Collapse creates extreme local temperatures and pressures", correct: true }, { text: "Air corrodes metal", correct: false }, { text: "Bubbles are radioactive", correct: false }]
-    },
-    {
-      question: "Where do cavitation bubbles typically form on a propeller?",
-      options: [{ text: "On the hub", correct: false }, { text: "On the low-pressure (suction) side of blades", correct: true }, { text: "At the tips only", correct: false }, { text: "On the shaft", correct: false }]
-    },
-    {
-      question: "The mantis shrimp's strike creates cavitation by:",
-      options: [{ text: "Heating the water", correct: false }, { text: "Moving its claw so fast it creates low pressure", correct: true }, { text: "Chemical reaction", correct: false }, { text: "Electrical discharge", correct: false }]
-    },
-    {
-      question: "At what approximate temperature can the center of a collapsing bubble reach?",
-      options: [{ text: "100°C", correct: false }, { text: "500°C", correct: false }, { text: "5,000°C or higher", correct: true }, { text: "Only room temperature", correct: false }]
-    },
-    {
-      question: "Sonoluminescence is:",
-      options: [{ text: "Sound from collapsing bubbles", correct: false }, { text: "Light emitted from collapsing bubbles", correct: true }, { text: "Ultrasound imaging", correct: false }, { text: "Laser-induced cavitation", correct: false }]
-    },
-    {
-      question: "To prevent cavitation in a pump, you should:",
-      options: [{ text: "Run it faster", correct: false }, { text: "Increase suction pressure or reduce speed", correct: true }, { text: "Use hotter liquid", correct: false }, { text: "Add air bubbles", correct: false }]
-    },
-    {
-      question: "Why do ship propellers sometimes make a 'singing' noise?",
-      options: [{ text: "Motor vibration only", correct: false }, { text: "Cavitation bubble collapse creates sound", correct: true }, { text: "Wind noise", correct: false }, { text: "Hull resonance", correct: false }]
-    },
-    {
-      question: "Ultrasonic cleaning uses cavitation to:",
-      options: [{ text: "Heat the water", correct: false }, { text: "Create bubbles that scrub surfaces", correct: true }, { text: "Dissolve dirt chemically", correct: false }, { text: "Magnetize particles", correct: false }]
-    },
-    {
-      question: "Cavitation damage appears as:",
-      options: [{ text: "Rust spots", correct: false }, { text: "Pitted, cratered surface (looks like tiny explosions)", correct: true }, { text: "Smooth wear", correct: false }, { text: "Color change only", correct: false }]
-    }
+    { question: "Cavitation occurs when local pressure drops below the liquid's vapor pressure. A ship propeller spins at high RPM, creating low-pressure zones on the suction side of each blade. What happens when pressure drops below vapor pressure?",
+      options: [{ text: "The water freezes instantly due to pressure change", correct: false }, { text: "Vapor bubbles form in the low-pressure zone", correct: true }, { text: "The propeller speeds up automatically", correct: false }, { text: "Nothing happens at normal temperatures", correct: false }] },
+    { question: "During cavitation, vapor bubbles collapse violently when they move into higher-pressure regions. The collapse creates extreme local conditions. Why is cavitation damage so severe on metal surfaces?",
+      options: [{ text: "The bubbles contain corrosive chemicals", correct: false }, { text: "Collapse creates extreme local temperatures (5,000\u00b0C) and pressures (1,000 atm) that erode metal", correct: true }, { text: "Air dissolved in water oxidizes the metal", correct: false }, { text: "Bubbles expand until the metal breaks", correct: false }] },
+    { question: "Where do cavitation bubbles typically form on a propeller blade? Consider where the pressure is lowest during operation.",
+      options: [{ text: "At the center hub where rotation is slowest", correct: false }, { text: "On the low-pressure (suction) side of blades where flow velocity is highest", correct: true }, { text: "Only at the very tips of the blades", correct: false }, { text: "On the shaft bearing surfaces", correct: false }] },
+    { question: "The mantis shrimp strikes at 23 m/s with 10,000 g acceleration. This creates a cavitation bubble between its claw and the prey. How does this biological cavitation help the shrimp?",
+      options: [{ text: "It heats the water to cook the prey", correct: false }, { text: "The collapsing bubble delivers a second strike, stunning prey even if the punch misses", correct: true }, { text: "It creates a chemical reaction that dissolves shells", correct: false }, { text: "It generates an electrical discharge", correct: false }] },
+    { question: "Scientists have measured the temperature at the center of a collapsing cavitation bubble. What approximate temperature is reached during collapse?",
+      options: [{ text: "100\u00b0C (boiling point of water)", correct: false }, { text: "500\u00b0C (typical oven temperature)", correct: false }, { text: "5,000\u00b0C or higher (comparable to the sun's surface)", correct: true }, { text: "Only ambient room temperature", correct: false }] },
+    { question: "Sonoluminescence is a phenomenon observed during cavitation bubble collapse. Light is emitted from the collapsing bubble due to extreme conditions. What is sonoluminescence?",
+      options: [{ text: "Sound waves reflecting off bubble surfaces", correct: false }, { text: "Light emitted from collapsing cavitation bubbles due to extreme compression heating", correct: true }, { text: "Ultrasound imaging of internal organs", correct: false }, { text: "Laser light focused through water", correct: false }] },
+    { question: "A pump engineer notices cavitation damage on impeller blades. Consider the relationship between pressure, speed, and cavitation threshold. What should they do to prevent cavitation?",
+      options: [{ text: "Run the pump faster to push bubbles through", correct: false }, { text: "Increase suction pressure (NPSH) or reduce pump speed to keep pressure above vapor pressure", correct: true }, { text: "Heat the liquid to increase vapor pressure", correct: false }, { text: "Add air bubbles to cushion the collapse", correct: false }] },
+    { question: "Ship propellers sometimes produce audible noise that sailors describe as 'singing' or 'crackling'. What causes this characteristic sound?",
+      options: [{ text: "Vibration of the motor bearings only", correct: false }, { text: "Cavitation bubble collapse creates acoustic shock waves", correct: true }, { text: "Wind passing over the hull surface", correct: false }, { text: "Resonance of the hull plates", correct: false }] },
+    { question: "Ultrasonic cleaning devices are used in jewelry stores and hospitals. They use high-frequency sound waves (20-400 kHz) to create cavitation in cleaning fluid. How does this clean surfaces?",
+      options: [{ text: "The sound waves heat the water to sterilization temperature", correct: false }, { text: "Cavitation bubbles implode against surfaces, scrubbing away contaminants at the microscopic level", correct: true }, { text: "The ultrasound dissolves dirt through chemical reactions", correct: false }, { text: "Magnetic particles in the fluid attract contaminants", correct: false }] },
+    { question: "After years of operation, a pump impeller is removed for inspection. The damage pattern from cavitation is distinctive. What does cavitation damage typically look like on a metal surface?",
+      options: [{ text: "Smooth, uniform rust coating", correct: false }, { text: "Pitted, cratered surface with material removal (resembling tiny explosions)", correct: true }, { text: "Clean, polished wear marks", correct: false }, { text: "Color change without material loss", correct: false }] }
   ];
 
-  // Real-world applications
+  // Transfer applications
   const applications = [
     {
-      icon: "🚢",
-      title: "Ship Propellers",
-      short: "Marine cavitation",
+      icon: "\ud83d\udea2", title: "Ship Propellers", short: "Marine cavitation",
       tagline: "The destroyer of blades",
-      description: "Ship propellers operating at high speeds create low-pressure zones that trigger cavitation, eroding blade surfaces over time.",
-      connection: "Fast-moving blades create suction that drops pressure below water's vapor pressure, forming bubbles that collapse violently against the metal.",
-      howItWorks: "Engineers design propeller shapes to minimize low-pressure peaks. Slower rotation with larger blades often prevents cavitation better than fast small propellers.",
-      stats: ["Bubble collapse: up to 150 MPa (1000x atmospheric)", "Erosion rate: 0.5 mm per year", "Efficiency loss: 10-30%", "Cost: $2 billion annually worldwide"],
-      examples: ["Container ships", "Submarines", "Speedboats", "Water jet drives"],
-      companies: ["Wärtsilä", "MAN Energy", "Rolls-Royce Marine", "Caterpillar Marine"],
-      futureImpact: "Advanced blade coatings and AI-optimized propeller shapes minimize cavitation while maximizing efficiency.",
+      description: "Ship propellers operating at high speeds create low-pressure zones that trigger cavitation, eroding blade surfaces over time. Naval engineers design blade geometries to minimize pressure drops below the cavitation threshold.",
+      connection: "Fast-moving blades create suction that drops pressure below water's vapor pressure, forming bubbles that collapse violently against the metal surface, causing progressive erosion.",
+      howItWorks: "Engineers use CFD to model pressure distributions. By optimizing blade geometry, pitch angles, and rotation speeds, they keep local pressures above the cavitation threshold.",
+      stats: [
+        { label: "Bubble Collapse Pressure", value: "Up to 1,500 MPa" },
+        { label: "Erosion Rate", value: "0.1-5 mm/year" },
+        { label: "Efficiency Loss", value: "15-30% when cavitating" }
+      ],
+      examples: ["Container ship propellers with skewed blade designs", "Submarine propellers optimized for silent operation", "High-speed ferry water jet impellers", "Tugboat propellers for high-thrust operation"],
+      companies: ["W\u00e4rtsil\u00e4", "MAN Energy Solutions", "Rolls-Royce Marine", "Kongsberg Maritime"],
+      futureImpact: "Advanced composite materials and AI-driven design optimization are enabling propellers that self-adjust pitch in real-time, virtually eliminating cavitation.",
       color: "#3B82F6"
     },
     {
-      icon: "🦐",
-      title: "Mantis Shrimp",
-      short: "Nature's weapon",
+      icon: "\ud83e\udd90", title: "Mantis Shrimp", short: "Nature's weapon",
       tagline: "Punching with physics",
-      description: "Mantis shrimp strike so fast they create cavitation bubbles. When prey survives the punch, the bubble collapse delivers a second blow!",
-      connection: "The shrimp's club accelerates at 10,000 g, fast enough to create a vacuum wake that forms a cavitation bubble.",
-      howItWorks: "The strike creates localized low pressure. Water vaporizes, then the bubble collapses with enough force to crack shells — even if the initial punch misses.",
-      stats: ["Strike speed: 23 m/s", "Acceleration: 10,000 g (100x faster than bullet)", "Bubble temp: 4700°C", "Power: 1500 W/kg"],
-      examples: ["Peacock mantis shrimp", "Spearing mantis shrimp", "Pistol shrimp (similar)", "Snapping shrimp"],
-      companies: ["DARPA research", "Biomimetics labs", "Aquarium industry"],
-      futureImpact: "Researchers study mantis shrimp to develop impact-resistant materials and underwater acoustic weapons.",
+      description: "Mantis shrimp strike so fast they create cavitation bubbles. When prey survives the punch, the bubble collapse delivers a second blow! The strike accelerates at 10,000 g.",
+      connection: "The shrimp's club accelerates at 10,000 g, fast enough to create a vacuum wake that forms a cavitation bubble between claw and prey.",
+      howItWorks: "The strike creates localized low pressure. Water vaporizes, then the bubble collapses with force sufficient to crack shells \u2014 even if the initial punch misses entirely.",
+      stats: [
+        { label: "Strike Speed", value: "23 m/s" },
+        { label: "Acceleration", value: "10,000 g" },
+        { label: "Bubble Temperature", value: "4,700\u00b0C" }
+      ],
+      examples: ["Peacock mantis shrimp (smashers)", "Spearing mantis shrimp", "Pistol shrimp (similar mechanism)", "Snapping shrimp colonies"],
+      companies: ["DARPA biomimetics", "Academic research labs", "Aquarium conservation", "Materials science institutes"],
+      futureImpact: "Researchers study mantis shrimp to develop impact-resistant materials and underwater acoustic systems.",
       color: "#10B981"
     },
     {
-      icon: "🧹",
-      title: "Ultrasonic Cleaning",
-      short: "Bubble scrubbing",
+      icon: "\ud83d\udd0a", title: "Ultrasonic Cleaning", short: "Bubble scrubbing",
       tagline: "Cleaning with cavitation",
-      description: "Ultrasonic cleaners generate millions of tiny cavitation bubbles that implode against surfaces, scrubbing away contamination.",
-      connection: "High-frequency sound waves create rapid pressure cycles that nucleate and collapse bubbles thousands of times per second.",
-      howItWorks: "Transducers vibrate at 20-40 kHz, creating alternating high and low pressure zones. Bubbles form in low-pressure zones and collapse in high-pressure zones, releasing energy.",
-      stats: ["Frequency: 20-400 kHz (ultrasound)", "Bubble size: 10-100 nm diameter", "Power: 100-500 W", "Cleans in 5 minutes"],
-      examples: ["Jewelry cleaning", "Medical instrument sterilization", "Electronics manufacturing", "Dental tools"],
-      companies: ["Branson", "Elma", "Crest Ultrasonics", "L&R"],
-      futureImpact: "Targeted cavitation could revolutionize drug delivery and non-invasive surgery.",
+      description: "Ultrasonic cleaners generate millions of tiny cavitation bubbles that implode against surfaces, scrubbing away contamination at the molecular level without damaging delicate parts.",
+      connection: "High-frequency sound waves (20-400 kHz) create rapid pressure cycles that nucleate and collapse bubbles thousands of times per second in the cleaning fluid.",
+      howItWorks: "Piezoelectric transducers vibrate at ultrasonic frequencies, creating alternating high and low pressure zones. Bubbles form in low-pressure zones and collapse in high-pressure zones.",
+      stats: [
+        { label: "Frequency Range", value: "20-400 kHz" },
+        { label: "Bubble Size", value: "10-150 \u03bcm" },
+        { label: "Cleaning Time", value: "2-15 minutes" }
+      ],
+      examples: ["Jewelry cleaning", "Medical instrument sterilization", "Semiconductor wafer cleaning", "Dental tool maintenance"],
+      companies: ["Branson Ultrasonics", "Crest Ultrasonics", "Elma Schmidbauer", "L&R Manufacturing"],
+      futureImpact: "AI-controlled frequency sweeping optimizes cavitation intensity for specific materials, enabling damage-free cleaning of nanotechnology components.",
       color: "#8B5CF6"
     },
     {
-      icon: "💊",
-      title: "Medical Applications",
-      short: "Therapeutic cavitation",
-      tagline: "Healing with bubbles",
-      description: "Controlled cavitation is used medically for lithotripsy (kidney stones), drug delivery, and tumor ablation.",
-      connection: "Focused ultrasound creates cavitation at precise locations inside the body, breaking up stones or releasing drugs from microbubbles.",
-      howItWorks: "Acoustic waves converge at a focal point, creating intense pressure oscillations. Controlled cavitation shatters kidney stones or opens cell membranes for drug delivery.",
-      stats: ["Lithotripsy: 90% success rate", "Focus precision: 1 mm accuracy", "Treatment: 30-60 minutes", "Power: 100 W ultrasound"],
-      examples: ["Kidney stone treatment", "Tumor ablation", "Blood-brain barrier opening", "Targeted drug delivery"],
-      companies: ["Boston Scientific", "Insightec", "Philips Healthcare", "SonaCare"],
-      futureImpact: "Histotripsy uses cavitation to mechanically destroy tumors without heat — a revolutionary non-invasive surgery technique.",
+      icon: "\ud83c\udfe5", title: "Medical Lithotripsy", short: "Therapeutic cavitation",
+      tagline: "Shattering stones without surgery",
+      description: "Extracorporeal Shock Wave Lithotripsy (ESWL) uses focused acoustic waves to create cavitation inside kidney stones, fragmenting them into passable pieces without surgical intervention.",
+      connection: "Shock waves focused on kidney stones create intense pressure gradients. Cavitation bubbles nucleate within the stone and collapse asymmetrically, generating microjets that fragment it.",
+      howItWorks: "An electromagnetic source generates shock waves outside the body. Acoustic lenses focus them to converge at the stone location. Repeated cavitation events progressively break the stone.",
+      stats: [
+        { label: "Success Rate", value: "70-90% for stones < 2cm" },
+        { label: "Shock Waves", value: "2,000-4,000 per session" },
+        { label: "Treatment Duration", value: "30-60 minutes" }
+      ],
+      examples: ["Calcium oxalate kidney stone fragmentation", "Ureteral stone treatment", "Gallstone lithotripsy", "Salivary gland stone treatment"],
+      companies: ["Dornier MedTech", "Boston Scientific", "Olympus Corporation", "Storz Medical"],
+      futureImpact: "Histotripsy uses precisely controlled cavitation clouds to mechanically destroy tumors with unprecedented precision, replacing many surgical procedures.",
       color: "#EF4444"
     }
   ];
 
-  // Handle test answer
+  // Handle test answer - single click advances immediately
   const handleTestAnswer = (answer: number) => {
-    // First click: select and show visual feedback immediately
-    if (selectedTestAnswer === null || selectedTestAnswer !== answer) {
-      setSelectedTestAnswer(answer);
-      setShowAnswerFeedback(true); // Show feedback immediately on selection
-      playSound('click');
-      return;
-    }
-    // Second click (confirm): lock in answer and advance
-    const currentQuestion = testAnswers.length;
-    const isCorrect = testQuestions[currentQuestion]?.options[answer]?.correct;
-    playSound(isCorrect ? 'success' : 'failure');
-
-    // Advance to next question
-    setTimeout(() => {
-      setTestAnswers(prev => [...prev, answer]);
-      setSelectedTestAnswer(null);
-      setShowAnswerFeedback(false);
-    }, 600);
+    setTestAnswers(prev => [...prev, answer]);
   };
 
-  // Calculate test score
   const calculateScore = (): number => {
     return testAnswers.reduce((score, answer, index) => {
-      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
+      return score + (testQuestions[index]?.options[answer]?.correct ? 1 : 0);
     }, 0);
   };
 
-  // Helper render functions
-  const renderProgressBar = () => {
+  // Pressure-cavitation curve data points
+  const getCurvePoints = (pressureVal: number) => {
+    const points: { x: number; y: number }[] = [];
+    const vbW = 500;
+    const vbH = 340;
+    const padL = 60;
+    const padR = 40;
+    const padT = 30;
+    const padB = 50;
+    const plotW = vbW - padL - padR;
+    const plotH = vbH - padT - padB;
+
+    // Cavitation intensity curve: below vapor pressure = high intensity
+    const vaporPressure = 2.3; // kPa
+    const maxPressure = 200; // kPa
+    const numPts = 20;
+
+    for (let i = 0; i <= numPts; i++) {
+      const frac = i / numPts;
+      const p = frac * maxPressure;
+      // Cavitation intensity: exponential rise as pressure drops below vapor pressure
+      let intensity: number;
+      if (p < vaporPressure) {
+        intensity = 100;
+      } else if (p < vaporPressure * 5) {
+        intensity = 100 * Math.exp(-0.5 * (p - vaporPressure));
+      } else {
+        intensity = 100 * Math.exp(-0.5 * (vaporPressure * 5 - vaporPressure)) * Math.exp(-0.02 * (p - vaporPressure * 5));
+      }
+      intensity = Math.max(0, Math.min(100, intensity));
+
+      const x = padL + frac * plotW;
+      const y = padT + (1 - intensity / 100) * plotH;
+      points.push({ x, y });
+    }
+    return points;
+  };
+
+  // Get current marker position based on pressure slider
+  const getMarkerPosition = (pressureVal: number) => {
+    const vbW = 500;
+    const vbH = 340;
+    const padL = 60;
+    const padR = 40;
+    const padT = 30;
+    const padB = 50;
+    const plotW = vbW - padL - padR;
+    const plotH = vbH - padT - padB;
+
+    const maxPressure = 200;
+    const vaporPressure = 2.3;
+    const frac = pressureVal / 100;
+    const p = frac * maxPressure;
+
+    let intensity: number;
+    if (p < vaporPressure) {
+      intensity = 100;
+    } else if (p < vaporPressure * 5) {
+      intensity = 100 * Math.exp(-0.5 * (p - vaporPressure));
+    } else {
+      intensity = 100 * Math.exp(-0.5 * (vaporPressure * 5 - vaporPressure)) * Math.exp(-0.02 * (p - vaporPressure * 5));
+    }
+    intensity = Math.max(0, Math.min(100, intensity));
+
+    const x = padL + frac * plotW;
+    const y = padT + (1 - intensity / 100) * plotH;
+    return { x, y, intensity, p };
+  };
+
+  // Render functions (NOT components)
+  const renderNavDots = () => {
     const currentIndex = PHASE_ORDER.indexOf(phase);
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '20px' }}>
-        {PHASE_ORDER.map((p, i) => (
-          <div
-            key={p}
-            style={{
-              height: '4px',
-              flex: 1,
-              borderRadius: '2px',
-              background: i <= currentIndex ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
-              transition: 'all 0.3s ease'
-            }}
-          />
-        ))}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(51, 65, 85, 0.5)', backdropFilter: 'blur(12px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', maxWidth: '800px', margin: '0 auto' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>Cavitation</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {PHASE_ORDER.map((p, i) => (
+              <button
+                key={p}
+                aria-label={phaseLabels[p]}
+                onClick={() => goToPhase(p)}
+                onPointerDown={() => goToPhase(p)}
+                style={{
+                  cursor: 'pointer',
+                  borderRadius: '9999px',
+                  width: phase === p ? '20px' : '8px',
+                  height: '8px',
+                  transition: 'all 0.3s ease',
+                  background: phase === p ? '#60a5fa' : currentIndex > i ? '#10b981' : '#334155',
+                  border: 'none',
+                  padding: 0,
+                }}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '13px', fontWeight: 500, color: '#60a5fa' }}>{phaseLabels[phase]}</span>
+        </div>
       </div>
     );
   };
@@ -460,540 +310,190 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
     const canGoBack = currentIndex > 0;
 
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: isMobile ? '12px' : '12px 16px',
-        borderTop: `1px solid ${colors.border}`,
-        backgroundColor: colors.bgCard,
-        gap: '12px',
-        marginTop: '16px',
-        borderRadius: '0 0 12px 12px'
-      }}>
-        {/* Back button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid #334155', backgroundColor: '#0f172a', gap: '12px', marginTop: '16px', borderRadius: '0 0 12px 12px' }}>
         <button
+          onClick={canGoBack ? goToPrevPhase : undefined}
           onPointerDown={canGoBack ? goToPrevPhase : undefined}
-          style={{
-            padding: isMobile ? '10px 16px' : '10px 20px',
-            borderRadius: '10px',
-            fontWeight: 600,
-            fontSize: isMobile ? '13px' : '14px',
-            backgroundColor: colors.bgCardLight,
-            color: colors.textSecondary,
-            border: `1px solid ${colors.border}`,
-            cursor: canGoBack ? 'pointer' : 'not-allowed',
-            opacity: canGoBack ? 1 : 0.3,
-            minHeight: '44px'
-          }}
+          style={{ padding: '10px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px', backgroundColor: '#1e293b', color: 'rgba(226, 232, 240, 1)', border: '1px solid #334155', cursor: canGoBack ? 'pointer' : 'not-allowed', opacity: canGoBack ? 1 : 0.3, minHeight: '44px' }}
         >
-          ← Back
+          \u2190 Back
         </button>
-
-        {/* Phase indicator */}
-        <span style={{
-          fontSize: '12px',
-          color: colors.textMuted,
-          fontWeight: 500
-        }}>
-          {currentIndex + 1} / {PHASE_ORDER.length}
-        </span>
-
-        {/* Next button */}
+        <span style={{ fontSize: '12px', color: '#cbd5e1', fontWeight: 500 }}>{currentIndex + 1} / {PHASE_ORDER.length}</span>
         <button
+          onClick={!disabled ? onNext : undefined}
           onPointerDown={!disabled ? onNext : undefined}
           disabled={disabled}
-          style={{
-            padding: isMobile ? '10px 16px' : '10px 20px',
-            borderRadius: '10px',
-            fontWeight: 600,
-            fontSize: isMobile ? '13px' : '14px',
-            background: disabled ? '#333' : `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-            color: disabled ? colors.textMuted : colors.textPrimary,
-            border: 'none',
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            opacity: disabled ? 0.4 : 1,
-            boxShadow: disabled ? 'none' : `0 2px 12px ${colors.primary}30`,
-            minHeight: '44px'
-          }}
+          style={{ padding: '10px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px', background: disabled ? '#333' : 'linear-gradient(135deg, #3b82f6, #06b6d4)', color: disabled ? '#cbd5e1' : '#f8fafc', border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.4 : 1, minHeight: '44px' }}
         >
-          {label} →
+          {label} \u2192
         </button>
       </div>
     );
   };
 
-  const renderKeyTakeaway = (text: string) => (
-    <div style={{
-      padding: '16px 20px',
-      background: `linear-gradient(135deg, ${colors.primary}15, ${colors.secondary}15)`,
-      borderLeft: `4px solid ${colors.primary}`,
-      borderRadius: '0 12px 12px 0',
-      marginTop: '20px'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-        <span style={{ fontSize: '20px' }}>💡</span>
-        <p style={{ margin: 0, color: colors.text, lineHeight: 1.6, fontSize: '15px' }}>{text}</p>
-      </div>
-    </div>
-  );
-
-  const renderSectionHeader = (emoji: string, title: string, subtitle?: string) => (
-    <div style={{ marginBottom: '20px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: subtitle ? '4px' : 0 }}>
-        <span style={{ fontSize: '28px' }}>{emoji}</span>
-        <h2 style={{ margin: 0, color: colors.text, fontSize: isMobile ? '22px' : '26px', fontWeight: '700' }}>{title}</h2>
-      </div>
-      {subtitle && (
-        <p style={{ margin: 0, color: colors.textSecondary, fontSize: '14px', marginLeft: '44px' }}>{subtitle}</p>
-      )}
-    </div>
-  );
-
-  // Real-world applications for Transfer phase
-  const realWorldApps = [
-    {
-      icon: "🚢",
-      title: "Ship Propeller Design",
-      short: "Marine engineering solutions",
-      tagline: "Protecting vessels from invisible destruction",
-      description: "Naval architects and marine engineers design propellers that minimize cavitation damage while maximizing thrust efficiency. Cavitation on ship propellers causes pitting, erosion, and can reduce a propeller's lifespan from decades to just years if not properly managed.",
-      connection: "When propeller blades spin rapidly, they create low-pressure zones on their surfaces. If pressure drops below water's vapor pressure, cavitation bubbles form and collapse against the metal, causing progressive erosion damage.",
-      howItWorks: "Engineers use computational fluid dynamics (CFD) to model pressure distributions across blade surfaces. By optimizing blade geometry, pitch angles, and rotation speeds, they can keep local pressures above the cavitation threshold while maintaining propulsive efficiency.",
-      stats: [
-        { label: "Bubble Collapse Pressure", value: "Up to 1,500 MPa" },
-        { label: "Erosion Rate", value: "0.1-5 mm/year" },
-        { label: "Efficiency Loss", value: "15-30% when cavitating" }
-      ],
-      examples: [
-        "Container ship propellers with skewed blade designs",
-        "Submarine propellers optimized for silent operation",
-        "High-speed ferry water jet impellers",
-        "Tugboat propellers designed for high-thrust, low-speed operation"
-      ],
-      companies: ["Wärtsilä", "MAN Energy Solutions", "Rolls-Royce Marine", "Kongsberg Maritime", "Schottel"],
-      futureImpact: "Advanced composite materials and AI-driven design optimization are enabling propellers that self-adjust pitch in real-time, virtually eliminating cavitation while maximizing fuel efficiency and reducing underwater noise pollution.",
-      color: "#3B82F6"
-    },
-    {
-      icon: "🔊",
-      title: "Ultrasonic Cleaning",
-      short: "Industrial precision cleaning",
-      tagline: "Millions of microscopic scrub brushes",
-      description: "Ultrasonic cleaners harness controlled cavitation to remove contaminants from intricate surfaces that traditional cleaning cannot reach. From surgical instruments to aerospace components, cavitation bubbles provide unparalleled cleaning at the microscopic level.",
-      connection: "High-frequency sound waves create rapid pressure oscillations in cleaning fluid. During low-pressure phases, microscopic cavitation bubbles nucleate. During high-pressure phases, these bubbles implode violently, releasing energy that dislodges contaminants.",
-      howItWorks: "Piezoelectric transducers convert electrical energy into ultrasonic vibrations (typically 20-400 kHz). These vibrations propagate through the cleaning solution, creating millions of cavitation events per second. The implosion energy scrubs surfaces at the molecular level without damaging delicate parts.",
-      stats: [
-        { label: "Frequency Range", value: "20-400 kHz" },
-        { label: "Cavitation Bubbles", value: "10-150 micrometers" },
-        { label: "Cleaning Time", value: "2-15 minutes typical" }
-      ],
-      examples: [
-        "Surgical instrument sterilization in hospitals",
-        "Semiconductor wafer cleaning in chip fabrication",
-        "Carburetor and fuel injector restoration",
-        "Jewelry and watchmaking precision cleaning"
-      ],
-      companies: ["Branson Ultrasonics", "Crest Ultrasonics", "Elma Schmidbauer", "L&R Manufacturing", "Kemet International"],
-      futureImpact: "Next-generation ultrasonic systems use AI-controlled frequency sweeping to optimize cavitation intensity for specific materials and contaminants, enabling damage-free cleaning of increasingly delicate nanotechnology components.",
-      color: "#8B5CF6"
-    },
-    {
-      icon: "🏥",
-      title: "Kidney Stone Treatment",
-      short: "Lithotripsy medical therapy",
-      tagline: "Shattering stones without surgery",
-      description: "Extracorporeal Shock Wave Lithotripsy (ESWL) uses focused acoustic waves to create cavitation bubbles inside kidney stones, fragmenting them into passable pieces. This non-invasive procedure has revolutionized urology, eliminating the need for surgery in most cases.",
-      connection: "Shock waves focused on kidney stones create intense pressure gradients. These pressure differentials nucleate cavitation bubbles within and around the stone. When bubbles collapse asymmetrically against the stone surface, they generate microjets that erode and fragment it.",
-      howItWorks: "An electromagnetic or piezoelectric source generates shock waves outside the body. These waves are focused using acoustic lenses or reflectors to converge at the kidney stone location (guided by X-ray or ultrasound imaging). Repeated cavitation events progressively break the stone into fragments small enough to pass naturally.",
-      stats: [
-        { label: "Success Rate", value: "70-90% for stones <2cm" },
-        { label: "Shock Waves", value: "2,000-4,000 per session" },
-        { label: "Treatment Duration", value: "30-60 minutes" }
-      ],
-      examples: [
-        "Calcium oxalate kidney stone fragmentation",
-        "Ureteral stone treatment for blocked urinary flow",
-        "Gallstone lithotripsy (less common application)",
-        "Salivary gland stone (sialolith) treatment"
-      ],
-      companies: ["Dornier MedTech", "Boston Scientific", "Olympus Corporation", "Richard Wolf GmbH", "Storz Medical"],
-      futureImpact: "Histotripsy, an emerging technique, uses precisely controlled cavitation clouds to mechanically destroy tumors and kidney stones with unprecedented precision, potentially replacing many surgical procedures with completely non-invasive treatments.",
-      color: "#EF4444"
-    },
-    {
-      icon: "⚙️",
-      title: "Hydraulic Pump Protection",
-      short: "Fluid power system design",
-      tagline: "Keeping industrial muscles healthy",
-      description: "Hydraulic systems power everything from excavators to aircraft. Cavitation in pumps, valves, and actuators causes noise, vibration, erosion, and catastrophic failures. Engineers design systems to prevent the pressure drops that trigger destructive cavitation.",
-      connection: "When hydraulic fluid flows through restrictions or around sharp corners, local pressure can drop below the fluid's vapor pressure. Cavitation bubbles form in these low-pressure zones and collapse downstream when pressure recovers, eroding pump components and valve seats.",
-      howItWorks: "Engineers prevent hydraulic cavitation through multiple strategies: maintaining adequate inlet pressure (NPSH), using properly sized suction lines, avoiding air ingestion, controlling fluid temperature, and selecting appropriate fluid viscosity. Pump designs incorporate anti-cavitation grooves and optimized flow passages.",
-      stats: [
-        { label: "Damage Threshold", value: "Pressure drops >25% below vapor pressure" },
-        { label: "Noise Increase", value: "10-20 dB when cavitating" },
-        { label: "Pump Life Reduction", value: "Up to 90% if uncorrected" }
-      ],
-      examples: [
-        "Excavator hydraulic system optimization",
-        "Aircraft flight control actuator protection",
-        "Industrial press hydraulic circuit design",
-        "Injection molding machine pump systems"
-      ],
-      companies: ["Parker Hannifin", "Bosch Rexroth", "Eaton Hydraulics", "Danfoss"],
-      futureImpact: "Smart hydraulic systems with embedded sensors detect early cavitation signatures and automatically adjust operating parameters, predicting and preventing failures before they occur while optimizing energy efficiency.",
-      color: "#F59E0B"
-    }
-  ];
-
-  // PHASE RENDERS
-
-  // Hook Phase
+  // HOOK PHASE
   const renderHook = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("💥", "Explosive Bubbles", "When water boils... and implodes")}
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ margin: 0, color: '#f8fafc', fontSize: '28px', fontWeight: 700 }}>Explosive Bubbles</h1>
+        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>When water boils... and implodes</p>
+      </div>
 
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '20px',
-        textAlign: 'center'
-      }}>
+      <div style={{ background: '#0f172a', borderRadius: '16px', padding: '24px', marginBottom: '20px', textAlign: 'center' }}>
         {hookStep === 0 && (
           <>
-            <p style={{ color: colors.text, fontSize: '18px', lineHeight: 1.6, marginBottom: '24px' }}>
-              A bubble forms in fast-moving water. Then it <span style={{ color: colors.collapse }}>collapses violently</span>...<br/>
-              Inside that collapse: temperatures hotter than the <span style={{ color: colors.warning }}>surface of the sun</span>.
+            <p style={{ color: '#f8fafc', fontSize: '18px', lineHeight: 1.6, marginBottom: '24px' }}>
+              A bubble forms in fast-moving water. Then it <span style={{ color: '#ef4444' }}>collapses violently</span>...
+              Inside that collapse: temperatures hotter than the <span style={{ color: '#f59e0b' }}>surface of the sun</span>. Let's discover how cavitation works!
             </p>
 
             <svg width="300" height="180" viewBox="0 0 300 180" style={{ margin: '0 auto', display: 'block' }}>
               <defs>
-                {/* Premium water gradient with depth */}
-                <linearGradient id="cavWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <linearGradient id="hookWater" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#0c4a6e" />
-                  <stop offset="30%" stopColor="#0369a1" />
-                  <stop offset="60%" stopColor="#0284c7" />
-                  <stop offset="100%" stopColor="#0c4a6e" />
+                  <stop offset="100%" stopColor="#0284c7" />
                 </linearGradient>
-
-                {/* Bubble gradient with glass effect */}
-                <radialGradient id="cavBubbleGradient" cx="30%" cy="30%" r="70%">
+                <radialGradient id="hookBubble" cx="30%" cy="30%" r="70%">
                   <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
-                  <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.6" />
-                  <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.2" />
-                </radialGradient>
-
-                {/* Bubble inner glow */}
-                <radialGradient id="cavBubbleInner" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.8" />
-                  <stop offset="60%" stopColor="#60a5fa" stopOpacity="0.5" />
                   <stop offset="100%" stopColor="#2563eb" stopOpacity="0.3" />
                 </radialGradient>
-
-                {/* Collapse flash gradient */}
-                <radialGradient id="cavCollapseFlash" cx="50%" cy="50%" r="50%">
+                <radialGradient id="hookFlash" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="#fef3c7" />
-                  <stop offset="30%" stopColor="#fbbf24" />
-                  <stop offset="60%" stopColor="#f97316" />
                   <stop offset="100%" stopColor="#ef4444" />
                 </radialGradient>
-
-                {/* Shock wave gradient */}
-                <radialGradient id="cavShockWave" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
-                  <stop offset="50%" stopColor="#f97316" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Bubble glow filter */}
-                <filter id="cavBubbleGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <filter id="hookGlow" x="-50%" y="-50%" width="200%" height="200%">
                   <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Collapse glow filter */}
-                <filter id="cavCollapseGlow" x="-100%" y="-100%" width="300%" height="300%">
-                  <feGaussianBlur stdDeviation="6" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                 </filter>
               </defs>
-
-              {/* Water background with gradient */}
-              <rect x="0" y="0" width="300" height="180" fill="url(#cavWaterGradient)" rx="10" />
-
-              {/* Subtle water caustics */}
-              <g opacity="0.15">
-                {[0, 1, 2].map(i => (
-                  <ellipse key={i} cx={80 + i * 70} cy={30 + i * 15} rx={40} ry={15} fill="#7dd3fc">
-                    <animate attributeName="opacity" values="0.1;0.3;0.1" dur={`${2 + i * 0.5}s`} repeatCount="indefinite" />
-                  </ellipse>
-                ))}
-              </g>
-
-              {/* Bubble */}
+              <rect x="0" y="0" width="300" height="180" fill="url(#hookWater)" rx="10" />
               <g transform="translate(150, 90)">
                 {bubbleSize > 0 ? (
                   <>
-                    {/* Outer glow */}
-                    <circle
-                      r={bubbleSize * 1.2}
-                      fill="url(#cavBubbleGradient)"
-                      opacity="0.3"
-                      filter="url(#cavBubbleGlow)"
-                    />
-                    {/* Main bubble with gradient */}
-                    <circle
-                      r={bubbleSize}
-                      fill="url(#cavBubbleGradient)"
-                      stroke="#93c5fd"
-                      strokeWidth="1"
-                      strokeOpacity="0.5"
-                    />
-                    {/* Inner bubble layer */}
-                    <circle
-                      r={bubbleSize * 0.7}
-                      fill="url(#cavBubbleInner)"
-                    />
-                    {/* Highlight shine */}
-                    <ellipse
-                      cx={-bubbleSize * 0.25}
-                      cy={-bubbleSize * 0.25}
-                      rx={bubbleSize * 0.25}
-                      ry={bubbleSize * 0.15}
-                      fill="#fff"
-                      opacity="0.7"
-                    />
-                    {/* Secondary shine */}
-                    <ellipse
-                      cx={bubbleSize * 0.15}
-                      cy={bubbleSize * 0.2}
-                      rx={bubbleSize * 0.1}
-                      ry={bubbleSize * 0.06}
-                      fill="#fff"
-                      opacity="0.4"
-                    />
+                    <circle r={bubbleSize} fill="url(#hookBubble)" stroke="#93c5fd" strokeWidth="1" strokeOpacity="0.5" />
+                    <ellipse cx={-bubbleSize * 0.25} cy={-bubbleSize * 0.25} rx={bubbleSize * 0.25} ry={bubbleSize * 0.15} fill="#fff" opacity="0.7" />
                   </>
                 ) : (
                   <>
-                    {/* Collapse flash with gradient */}
-                    <circle r="5" fill="url(#cavCollapseFlash)" filter="url(#cavCollapseGlow)">
+                    <circle r="5" fill="url(#hookFlash)" filter="url(#hookGlow)">
                       <animate attributeName="r" values="5;50;0" dur="0.5s" fill="freeze" />
-                      <animate attributeName="opacity" values="1;0.6;0" dur="0.5s" fill="freeze" />
                     </circle>
-                    {/* Shock waves with gradient */}
-                    {[1, 2, 3, 4].map(i => (
+                    {[1, 2, 3].map(i => (
                       <circle key={i} r={8 * i} fill="none" stroke={`rgba(251, 191, 36, ${0.6 / i})`} strokeWidth={3 - i * 0.5}>
                         <animate attributeName="r" values={`${8*i};${50+12*i}`} dur="0.4s" fill="freeze" />
-                        <animate attributeName="opacity" values={`${0.7/i};0`} dur="0.4s" fill="freeze" />
                       </circle>
                     ))}
-                    {/* Central bright flash */}
-                    <circle r="3" fill="#fef3c7">
-                      <animate attributeName="r" values="3;0" dur="0.3s" fill="freeze" />
-                    </circle>
                   </>
                 )}
               </g>
             </svg>
-            {/* Labels outside SVG */}
-            {bubbleSize > 20 && !showCollapse && (
-              <p style={{ textAlign: 'center', color: colors.textSecondary, fontSize: typo.small, margin: '8px 0 0 0' }}>
-                Vapor bubble (low pressure zone)
-              </p>
-            )}
+
             {bubbleSize === 0 && (
-              <p style={{ textAlign: 'center', color: colors.collapse, fontSize: typo.bodyLarge, fontWeight: 600, margin: '8px 0 0 0' }}>
-                5,000°C!
-              </p>
+              <p style={{ textAlign: 'center', color: '#ef4444', fontSize: '18px', fontWeight: 600, margin: '8px 0 0 0' }}>5,000\u00b0C!</p>
             )}
 
             <button
-              onPointerDown={() => {
-                setShowCollapse(true);
-              }}
+              onClick={() => setShowCollapse(true)}
+              onPointerDown={() => setShowCollapse(true)}
               disabled={showCollapse}
-              style={{
-                marginTop: '16px',
-                padding: '12px 28px',
-                fontSize: '16px',
-                background: showCollapse ? '#444' : `linear-gradient(135deg, ${colors.collapse}, ${colors.accent})`,
-                color: colors.text,
-                border: 'none',
-                borderRadius: '10px',
-                cursor: showCollapse ? 'not-allowed' : 'pointer',
-                opacity: showCollapse ? 0.7 : 1
-              }}
+              style={{ marginTop: '16px', padding: '12px 28px', fontSize: '16px', background: showCollapse ? '#444' : 'linear-gradient(135deg, #ef4444, #f97316)', color: '#f8fafc', border: 'none', borderRadius: '10px', cursor: showCollapse ? 'not-allowed' : 'pointer' }}
             >
-              💥 Collapse Bubble
+              Collapse Bubble
             </button>
-
           </>
         )}
 
         {hookStep === 1 && (
           <>
-            <p style={{ color: colors.text, fontSize: '20px', lineHeight: 1.6, marginBottom: '20px' }}>
-              This is <span style={{ color: colors.primary }}>cavitation</span> — when low pressure makes water "boil" into vapor bubbles.
+            <p style={{ color: '#f8fafc', fontSize: '20px', lineHeight: 1.6, marginBottom: '20px' }}>
+              This is <span style={{ color: '#3b82f6' }}>cavitation</span> \u2014 when low pressure makes water "boil" into vapor bubbles.
             </p>
-            <p style={{ color: colors.textSecondary, fontSize: '16px', lineHeight: 1.6, marginBottom: '20px' }}>
-              When those bubbles hit higher pressure, they collapse with <strong>devastating force</strong>.
+            <p style={{ color: '#cbd5e1', fontSize: '16px', lineHeight: 1.6, marginBottom: '20px' }}>
+              When those bubbles hit higher pressure, they collapse with devastating force. This is how cavitation works in the real world.
             </p>
-            <div style={{
-              background: colors.background,
-              padding: '16px',
-              borderRadius: '12px',
-              marginBottom: '16px'
-            }}>
-              <p style={{ color: colors.collapse, fontSize: '16px', margin: 0 }}>
-                Collapsing bubbles can erode <strong>solid steel</strong>,<br/>
-                punch through <strong>ship propellers</strong>,<br/>
-                and even emit <strong>light</strong> (sonoluminescence)!
+            <div style={{ background: '#020617', padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
+              <p style={{ color: '#ef4444', fontSize: '16px', margin: 0 }}>
+                Collapsing bubbles can erode <strong>solid steel</strong>, punch through <strong>ship propellers</strong>, and even emit <strong>light</strong> (sonoluminescence)!
               </p>
             </div>
-
-            {renderKeyTakeaway("Cavitation happens when water moves so fast that pressure drops below its boiling point — even at room temperature!")}
           </>
         )}
       </div>
 
-      {/* Always show bottom bar - with Continue button at hookStep 0, Next at hookStep 1 */}
       {hookStep === 0 ? (
         renderBottomBar(() => {
-          if (bubbleSize === 0) {
-            setHookStep(1);
-          } else {
-            setShowCollapse(true);
-          }
-        }, bubbleSize > 0 && !showCollapse, bubbleSize === 0 ? "Continue" : "Start Discovery")
+          setHookStep(1);
+        }, false, "Continue")
       ) : (
         renderBottomBar(() => goToNextPhase())
       )}
     </div>
   );
 
-  // Predict Phase
+  // PREDICT PHASE
   const renderPredict = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🔮", "Make a Prediction", "Think about what will happen during cavitation")}
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ margin: 0, color: '#f8fafc', fontSize: '28px', fontWeight: 700 }}>Make a Prediction</h1>
+        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>Think about what will happen during cavitation</p>
+      </div>
 
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '20px'
-      }}>
-        {/* Progress indicator for predict phase */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
-          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: colors.primary }} />
-          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: showPredictResult ? colors.success : '#333' }} />
-        </div>
-
-        <p style={{ color: colors.textPrimary, fontSize: '17px', lineHeight: 1.6, marginBottom: '12px' }}>
+      <div style={{ background: '#0f172a', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
+        <p style={{ color: '#f8fafc', fontSize: '17px', lineHeight: 1.6, marginBottom: '12px' }}>
           Imagine a vapor bubble forming in fast-moving water. The surrounding liquid pressure suddenly increases, causing the bubble to collapse in less than a microsecond.
         </p>
-        <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.6, marginBottom: '24px' }}>
-          Think about what happens when all that energy concentrates into a tiny point. What extreme condition would you expect to be created at the collapse center?
+        <p style={{ color: '#cbd5e1', fontSize: '15px', lineHeight: 1.6, marginBottom: '24px' }}>
+          Think about what happens when all that energy concentrates into a tiny point. What extreme condition would you expect?
         </p>
 
-        <svg width="100%" height="100" viewBox="0 0 400 100" style={{ marginBottom: '20px' }}>
+        <svg width="100%" height="120" viewBox="0 0 500 120" style={{ marginBottom: '20px' }}>
           <defs>
-            {/* Bubble gradient for collapse sequence */}
-            <radialGradient id="cavSeqBubble" cx="30%" cy="30%" r="70%">
+            <radialGradient id="predBubble" cx="30%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.6" />
               <stop offset="100%" stopColor="#2563eb" stopOpacity="0.3" />
             </radialGradient>
-            {/* Collapse gradient */}
-            <radialGradient id="cavSeqCollapse" cx="50%" cy="50%" r="50%">
+            <radialGradient id="predFlash" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#fef3c7" />
-              <stop offset="40%" stopColor="#fbbf24" />
               <stop offset="100%" stopColor="#ef4444" />
             </radialGradient>
-            {/* Collapse glow */}
-            <filter id="cavSeqGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
           </defs>
-          {/* Sequence of collapse */}
-          {[0, 1, 2, 3, 4].map((i) => {
-            const x = 50 + i * 75;
-            const size = 25 - i * 5;
+          {[0, 1, 2, 3, 4].map(i => {
+            const x = 60 + i * 100;
+            const size = 30 - i * 6;
             return (
               <g key={i} transform={`translate(${x}, 50)`}>
                 {i < 4 ? (
-                  <>
-                    {/* Bubble with gradient */}
-                    <circle r={size} fill="url(#cavSeqBubble)" />
-                    {/* Highlight */}
-                    <ellipse cx={-size * 0.2} cy={-size * 0.2} rx={size * 0.2} ry={size * 0.12} fill="#fff" opacity="0.6" />
-                  </>
+                  <circle r={size} fill="url(#predBubble)" />
                 ) : (
                   <>
-                    {/* Collapse with glow */}
-                    <circle r={3} fill="url(#cavSeqCollapse)" filter="url(#cavSeqGlow)" />
-                    {/* Shock waves */}
+                    <circle r={3} fill="url(#predFlash)" />
                     <circle r="15" fill="none" stroke="#fbbf24" strokeWidth="2" opacity="0.6" />
                     <circle r="25" fill="none" stroke="#f97316" strokeWidth="1.5" opacity="0.4" />
-                    <circle r="35" fill="none" stroke="#ef4444" strokeWidth="1" opacity="0.2" />
                   </>
                 )}
+                <text x="0" y="45" fill="#cbd5e1" fontSize="11" textAnchor="middle">t={i}</text>
               </g>
             );
           })}
-          {/* Arrow line showing progression */}
-          <line x1="40" y1="85" x2="360" y2="85" stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
+          <text x="250" y="110" fill="#cbd5e1" fontSize="12" textAnchor="middle">Time progression \u2192 Bubble collapse sequence</text>
         </svg>
-        {/* Labels outside SVG */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 30px', marginBottom: '16px' }}>
-          <span style={{ color: colors.textSecondary, fontSize: typo.small }}>t=0</span>
-          <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Time →</span>
-          <span style={{ color: colors.collapse, fontSize: typo.small, fontWeight: 600 }}>Collapse!</span>
-        </div>
 
-        <p style={{ color: colors.text, fontSize: '18px', fontWeight: '600', marginBottom: '16px', textAlign: 'center' }}>
+        <p style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 600, marginBottom: '16px', textAlign: 'center' }}>
           What extreme condition is created at the collapse center?
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {[
-            { value: 'cold', label: 'Extreme cold — rapid expansion absorbs heat', color: colors.primary },
-            { value: 'hot', label: 'Extreme heat — compression creates 5000°C+', color: colors.collapse },
-            { value: 'vacuum', label: 'Perfect vacuum — all matter expelled', color: colors.secondary },
-            { value: 'nothing', label: 'Nothing special — just water filling the void', color: colors.textSecondary }
+            { value: 'cold', label: 'Extreme cold \u2014 rapid expansion absorbs heat' },
+            { value: 'hot', label: 'Extreme heat \u2014 compression creates 5,000\u00b0C+' },
+            { value: 'vacuum', label: 'Perfect vacuum \u2014 all matter expelled' },
+            { value: 'nothing', label: 'Nothing special \u2014 just water filling the void' }
           ].map(option => (
             <button
               key={option.value}
-              onPointerDown={() => {
-                setPrediction(option.value);
-                playSound('click');
-                emitEvent('prediction', { predicted: option.value, question: 'collapse_result' });
-              }}
-              style={{
-                padding: '16px 20px',
-                fontSize: '15px',
-                background: prediction === option.value ? `${option.color}20` : colors.background,
-                color: prediction === option.value ? option.color : colors.textSecondary,
-                border: `2px solid ${prediction === option.value ? option.color : '#333'}`,
-                borderRadius: '12px',
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.2s ease'
-              }}
+              onClick={() => setPrediction(option.value)}
+              onPointerDown={() => setPrediction(option.value)}
+              style={{ padding: '16px 20px', fontSize: '15px', background: prediction === option.value ? 'rgba(59, 130, 246, 0.15)' : '#020617', color: prediction === option.value ? '#3b82f6' : '#cbd5e1', border: `2px solid ${prediction === option.value ? '#3b82f6' : '#333'}`, borderRadius: '12px', cursor: 'pointer', textAlign: 'left' }}
             >
               {option.label}
             </button>
@@ -1002,645 +502,330 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
 
         {prediction && !showPredictResult && (
           <button
-            onPointerDown={() => {
-              setShowPredictResult(true);
-              playSound(prediction === 'hot' ? 'success' : 'failure');
-            }}
-            style={{
-              marginTop: '20px',
-              padding: '14px 28px',
-              width: '100%',
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600'
-            }}
+            onClick={() => setShowPredictResult(true)}
+            onPointerDown={() => setShowPredictResult(true)}
+            style={{ marginTop: '20px', padding: '14px 28px', width: '100%', background: 'linear-gradient(135deg, #3b82f6, #06b6d4)', color: '#f8fafc', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', fontWeight: 600 }}
           >
             Lock In Prediction
           </button>
         )}
 
         {showPredictResult && (
-          <div style={{
-            marginTop: '20px',
-            padding: '20px',
-            background: prediction === 'hot' ? `${colors.success}20` : `${colors.accent}20`,
-            borderRadius: '12px',
-            border: `2px solid ${prediction === 'hot' ? colors.success : colors.accent}`
-          }}>
+          <div style={{ marginTop: '20px', padding: '20px', background: prediction === 'hot' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(249, 115, 22, 0.15)', borderRadius: '12px', border: `2px solid ${prediction === 'hot' ? '#10b981' : '#f97316'}` }}>
             {prediction === 'hot' ? (
               <>
-                <p style={{ color: colors.success, fontSize: '18px', fontWeight: '600', margin: '0 0 12px 0' }}>
-                  ✓ Exactly right!
-                </p>
-                <p style={{ color: colors.text, margin: 0, lineHeight: 1.6 }}>
-                  The collapse compresses the vapor so violently that it reaches 5,000°C and pressures up to 1,000 atmospheres — hot enough to emit light!
-                </p>
+                <p style={{ color: '#10b981', fontSize: '18px', fontWeight: 600, margin: '0 0 12px 0' }}>\u2713 Exactly right!</p>
+                <p style={{ color: '#f8fafc', margin: 0, lineHeight: 1.6 }}>The collapse compresses vapor so violently it reaches 5,000\u00b0C and pressures up to 1,000 atmospheres.</p>
               </>
             ) : (
               <>
-                <p style={{ color: colors.accent, fontSize: '18px', fontWeight: '600', margin: '0 0 12px 0' }}>
-                  Surprising answer!
-                </p>
-                <p style={{ color: colors.text, margin: 0, lineHeight: 1.6 }}>
-                  The rapid compression creates extreme heat — up to 5,000°C! This is why cavitation can erode metal: each bubble collapse is like a tiny explosion.
-                </p>
+                <p style={{ color: '#f97316', fontSize: '18px', fontWeight: 600, margin: '0 0 12px 0' }}>Surprising answer!</p>
+                <p style={{ color: '#f8fafc', margin: 0, lineHeight: 1.6 }}>The rapid compression creates extreme heat \u2014 up to 5,000\u00b0C! This is why cavitation erodes metal.</p>
               </>
             )}
           </div>
         )}
       </div>
 
-      {renderBottomBar(() => goToNextPhase(), !showPredictResult)}
+      {renderBottomBar(() => goToNextPhase(), !prediction)}
     </div>
   );
 
-  // Play Phase
-  const renderPlay = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🎮", "Propeller Cavitation", "See the damage in action")}
+  // PLAY PHASE - Pressure-Cavitation Chart
+  const renderPlay = () => {
+    const curvePoints = getCurvePoints(pressure);
+    const marker = getMarkerPosition(pressure);
+    const pathD = curvePoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
 
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '20px'
-      }}>
-        {/* Propeller visualization */}
-        <div style={{ background: 'linear-gradient(180deg, #0c4a6e 0%, #1e3a5f 100%)', borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
-          <svg width="100%" height="240" viewBox="0 0 400 240">
+    // Determine cavitation state
+    const cavitationState = marker.p < 2.3 ? 'severe' : marker.p < 11.5 ? 'moderate' : 'none';
+    const stateColor = cavitationState === 'severe' ? '#ef4444' : cavitationState === 'moderate' ? '#f59e0b' : '#10b981';
+    const stateLabel = cavitationState === 'severe' ? 'Severe Cavitation!' : cavitationState === 'moderate' ? 'Moderate Cavitation' : 'No Cavitation (Safe)';
+
+    // Reference values
+    const vaporPressureLine = 60 + (2.3 / 200) * 400;
+
+    return (
+      <div style={{ padding: '24px' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h1 style={{ margin: 0, color: '#f8fafc', fontSize: '28px', fontWeight: 700 }}>Cavitation Pressure Lab</h1>
+          <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>Observe how pressure determines cavitation intensity. Try adjusting the slider and watch how the chart demonstrates the relationship.</p>
+        </div>
+
+        <div style={{ background: '#0f172a', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
+          <svg width="100%" height="340" viewBox="0 0 500 340">
             <defs>
-              {/* Premium water gradient */}
-              <linearGradient id="cavPlayWater" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#0c4a6e" />
-                <stop offset="40%" stopColor="#0369a1" />
-                <stop offset="70%" stopColor="#0284c7" />
-                <stop offset="100%" stopColor="#0c4a6e" />
+              <linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
               </linearGradient>
-
-              {/* Metallic hub gradient */}
-              <radialGradient id="cavHubMetal" cx="30%" cy="30%" r="70%">
-                <stop offset="0%" stopColor="#94a3b8" />
-                <stop offset="40%" stopColor="#64748b" />
-                <stop offset="70%" stopColor="#475569" />
-                <stop offset="100%" stopColor="#334155" />
-              </radialGradient>
-
-              {/* Propeller blade metallic gradient */}
-              <linearGradient id="cavBladeMetal" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#cbd5e1" />
-                <stop offset="25%" stopColor="#94a3b8" />
-                <stop offset="50%" stopColor="#64748b" />
-                <stop offset="75%" stopColor="#94a3b8" />
-                <stop offset="100%" stopColor="#475569" />
+              <linearGradient id="curveStroke" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#ef4444" />
+                <stop offset="30%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#10b981" />
               </linearGradient>
-
-              {/* Low pressure zone gradient */}
-              <radialGradient id="cavLowPressure" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
-                <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
-              </radialGradient>
-
-              {/* Cavitation bubble gradient */}
-              <radialGradient id="cavPlayBubble" cx="30%" cy="30%" r="70%">
-                <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.9" />
-                <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
-              </radialGradient>
-
-              {/* Collapsing bubble gradient */}
-              <radialGradient id="cavPlayCollapse" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#fef3c7" />
-                <stop offset="40%" stopColor="#fbbf24" />
-                <stop offset="100%" stopColor="#f97316" />
-              </radialGradient>
-
-              {/* Damage bar gradient */}
-              <linearGradient id="cavDamageBar" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#fbbf24" />
-                <stop offset="50%" stopColor="#f97316" />
-                <stop offset="100%" stopColor="#ef4444" />
-              </linearGradient>
-
-              {/* Bubble glow filter */}
-              <filter id="cavPlayBubbleGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="2" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-
-              {/* Collapse glow filter */}
-              <filter id="cavPlayCollapseGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="3" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-
-              {/* Metal shine filter */}
-              <filter id="cavMetalShine" x="-10%" y="-10%" width="120%" height="120%">
-                <feGaussianBlur stdDeviation="1" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
               </filter>
             </defs>
 
-            {/* Water background */}
-            <rect x="0" y="0" width="400" height="240" fill="url(#cavPlayWater)" rx="10" />
+            {/* Background */}
+            <rect x="0" y="0" width="500" height="340" fill="#020617" rx="12" />
 
-            {/* Subtle water caustics */}
-            <g opacity="0.1">
-              {[0, 1, 2, 3].map(i => (
-                <ellipse key={i} cx={50 + i * 100} cy={30 + (i % 2) * 20} rx={35} ry={12} fill="#7dd3fc">
-                  <animate attributeName="opacity" values="0.05;0.15;0.05" dur={`${2 + i * 0.3}s`} repeatCount="indefinite" />
-                </ellipse>
-              ))}
+            {/* Grid group */}
+            <g className="grid-lines">
+              {[0, 25, 50, 75, 100].map(pct => {
+                const y = 30 + (1 - pct / 100) * 260;
+                return <line key={`gy-${pct}`} x1="60" y1={y} x2="460" y2={y} stroke="rgba(148, 163, 184, 0.15)" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />;
+              })}
+              {[0, 25, 50, 75, 100].map(pct => {
+                const x = 60 + pct / 100 * 400;
+                return <line key={`gx-${pct}`} x1={x} y1="30" x2={x} y2="290" stroke="rgba(148, 163, 184, 0.15)" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />;
+              })}
             </g>
 
-            {/* Pressure zones visualization */}
-            {propellerSpeed > 20 && (
-              <g transform="translate(200, 120)" opacity={Math.min(propellerSpeed / 100, 0.6)}>
-                {/* High pressure (downstream) */}
-                <ellipse cx="100" cy="0" rx="40" ry="60" fill="#22c55e" opacity="0.2" />
-                {/* Low pressure (upstream/suction side) */}
-                <ellipse cx="-20" cy="0" rx="50" ry="70" fill="#3b82f6" opacity="0.3" />
-              </g>
-            )}
-
-            {/* Propeller hub with metallic finish */}
-            <g transform={`translate(200, 120) rotate(${propellerAngle})`}>
-              {/* Hub shadow */}
-              <circle r="22" fill="#1e293b" opacity="0.5" transform="translate(2, 2)" />
-              {/* Hub body */}
-              <circle r="20" fill="url(#cavHubMetal)" stroke="#475569" strokeWidth="1" filter="url(#cavMetalShine)" />
-              {/* Hub highlight */}
-              <ellipse cx="-5" cy="-5" rx="8" ry="6" fill="#cbd5e1" opacity="0.4" />
-              {/* Center bolt */}
-              <circle r="5" fill="#334155" stroke="#1e293b" strokeWidth="1" />
-
-              {/* Premium blades with metallic gradient */}
-              {[0, 120, 240].map((angle, i) => (
-                <g key={i} transform={`rotate(${angle})`}>
-                  {/* Blade shadow */}
-                  <path
-                    d="M 15 -8 Q 60 -22 82 -5 Q 67 7 15 10 Z"
-                    fill="#0f172a"
-                    opacity="0.4"
-                    transform="translate(2, 2)"
-                  />
-                  {/* Blade body */}
-                  <path
-                    d="M 15 -8 Q 60 -20 80 -5 Q 65 5 15 8 Z"
-                    fill="url(#cavBladeMetal)"
-                    stroke="#64748b"
-                    strokeWidth="0.5"
-                    filter="url(#cavMetalShine)"
-                  />
-                  {/* Blade edge highlight */}
-                  <path
-                    d="M 20 -6 Q 55 -15 75 -5"
-                    fill="none"
-                    stroke="#e2e8f0"
-                    strokeWidth="1"
-                    opacity="0.5"
-                  />
-                  {/* Low pressure zone indicator with gradient */}
-                  {propellerSpeed > 30 && (
-                    <ellipse
-                      cx="50"
-                      cy="-14"
-                      rx={15 + propellerSpeed / 10}
-                      ry={6 + propellerSpeed / 25}
-                      fill="url(#cavLowPressure)"
-                      opacity={Math.min(propellerSpeed / 150, 0.8)}
-                    />
-                  )}
-                </g>
-              ))}
+            {/* Axes group */}
+            <g className="axes">
+              <line x1="60" y1="30" x2="60" y2="290" stroke="rgba(148, 163, 184, 0.5)" strokeWidth="1" />
+              <line x1="60" y1="290" x2="460" y2="290" stroke="rgba(148, 163, 184, 0.5)" strokeWidth="1" />
             </g>
 
-            {/* Cavitation bubbles with premium styling */}
-            {bubbles.map(b => (
-              <g key={b.id}>
-                {b.collapsing ? (
-                  <>
-                    {/* Collapsing bubble with glow */}
-                    <circle
-                      cx={b.x}
-                      cy={b.y}
-                      r={b.radius}
-                      fill="url(#cavPlayCollapse)"
-                      filter="url(#cavPlayCollapseGlow)"
-                    />
-                    {/* Shock ring */}
-                    <circle
-                      cx={b.x}
-                      cy={b.y}
-                      r={b.radius * 1.5}
-                      fill="none"
-                      stroke="#fbbf24"
-                      strokeWidth="1"
-                      opacity="0.5"
-                    />
-                  </>
-                ) : (
-                  <>
-                    {/* Growing bubble with glow */}
-                    <circle
-                      cx={b.x}
-                      cy={b.y}
-                      r={b.radius}
-                      fill="url(#cavPlayBubble)"
-                      filter="url(#cavPlayBubbleGlow)"
-                    />
-                    {/* Bubble highlight */}
-                    <ellipse
-                      cx={b.x - b.radius * 0.2}
-                      cy={b.y - b.radius * 0.2}
-                      rx={b.radius * 0.25}
-                      ry={b.radius * 0.15}
-                      fill="#fff"
-                      opacity="0.6"
-                    />
-                  </>
-                )}
-              </g>
-            ))}
+            {/* Y-axis labels */}
+            <g className="y-labels">
+              <text x="48" y="35" fill="#94a3b8" fontSize="11" textAnchor="end">100%</text>
+              <text x="48" y="165" fill="#94a3b8" fontSize="11" textAnchor="end">50%</text>
+              <text x="48" y="293" fill="#94a3b8" fontSize="11" textAnchor="end">0%</text>
+            </g>
 
-            {/* Damage indicator with gradient */}
-            {damageLevel > 0 && (
-              <g transform="translate(280, 15)">
-                <rect x="0" y="0" width="105" height="20" fill="#1e293b" rx="4" stroke="#334155" strokeWidth="1" />
-                <rect x="2" y="2" width={damageLevel} height="16" fill="url(#cavDamageBar)" rx="3" />
-              </g>
-            )}
+            {/* X-axis labels */}
+            <g className="x-labels">
+              <text x="60" y="310" fill="#94a3b8" fontSize="11" textAnchor="middle">0</text>
+              <text x="260" y="310" fill="#94a3b8" fontSize="11" textAnchor="middle">100</text>
+              <text x="460" y="310" fill="#94a3b8" fontSize="11" textAnchor="middle">200</text>
+            </g>
 
-            {/* SVG Labels for educational clarity */}
-            <text x="200" y="20" fill="#94a3b8" fontSize="12" textAnchor="middle" fontWeight="500">Propeller Blade</text>
-            <text x="200" y="225" fill="#60a5fa" fontSize="11" textAnchor="middle">Low pressure zone (cavitation)</text>
-            {propellerSpeed > 50 && (
-              <text x="300" y="180" fill="#fbbf24" fontSize="10" textAnchor="middle">Bubble collapse</text>
-            )}
-            <text x="50" y="230" fill="#64748b" fontSize="10" textAnchor="start">Water flow</text>
+            {/* Axis titles */}
+            <text x="10" y="80" fill="#94a3b8" fontSize="11" textAnchor="start" transform="rotate(-90, 10, 80)">Intensity</text>
+            <text x="260" y="330" fill="#94a3b8" fontSize="11" textAnchor="middle">Pressure (kPa)</text>
+
+            {/* Vapor pressure reference */}
+            <g className="reference">
+              <line x1={vaporPressureLine} y1="30" x2={vaporPressureLine} y2="290" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.7" />
+              <text x={vaporPressureLine + 5} y="58" fill="#ef4444" fontSize="11" textAnchor="start">Pv=2.3kPa</text>
+            </g>
+
+            {/* Data layer */}
+            <g className="data">
+              <path d={`${pathD} L ${curvePoints[curvePoints.length-1].x.toFixed(1)} 290 L 60 290 Z`} fill="url(#curveFill)" />
+              <path d={pathD} fill="none" stroke="url(#curveStroke)" strokeWidth="3" strokeLinecap="round" />
+            </g>
+
+            {/* Interactive marker */}
+            <g className="marker">
+              <circle cx={marker.x} cy={marker.y} r={8} fill={stateColor} filter="url(#glow)" stroke="#fff" strokeWidth={2}>
+                <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <text x={Math.min(marker.x + 14, 420)} y={Math.max(marker.y - 18, 48)} fill={stateColor} fontSize="11" fontWeight="600">
+                {marker.p.toFixed(1)}kPa {marker.intensity.toFixed(0)}%
+              </text>
+            </g>
+
+            {/* Zone indicators */}
+            <g className="zones">
+              <rect x="62" y="5" width={Math.max(0, vaporPressureLine - 64)} height="12" fill="#ef4444" opacity="0.2" rx="3" />
+              <text x={(62 + vaporPressureLine) / 2} y="14" fill="#ef4444" fontSize="11" textAnchor="middle">Danger</text>
+              <rect x={vaporPressureLine + 2} y="5" width={456 - vaporPressureLine} height="12" fill="#10b981" opacity="0.2" rx="3" />
+              <text x={(vaporPressureLine + 462) / 2} y="14" fill="#10b981" fontSize="11" textAnchor="middle">Safe</text>
+            </g>
           </svg>
-          {/* Labels outside SVG */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px 0', alignItems: 'center' }}>
-            <span style={{ color: colors.textPrimary, fontSize: typo.small, fontWeight: 600 }}>
-              Speed: {propellerSpeed} RPM
-            </span>
-            <span style={{
-              color: propellerSpeed > 70 ? colors.accent : propellerSpeed > 50 ? colors.warning : colors.success,
-              fontSize: typo.small,
-              fontWeight: 600
-            }}>
-              {propellerSpeed < 30 ? 'No cavitation' :
-               propellerSpeed < 70 ? 'Minor cavitation' :
-               'Severe cavitation!'}
-            </span>
-            {damageLevel > 0 && (
-              <span style={{ color: colors.accent, fontSize: typo.small, fontWeight: 600 }}>
-                Damage: {damageLevel.toFixed(0)}%
-              </span>
-            )}
+
+          {/* Current reading display */}
+          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', padding: '12px', marginTop: '8px', background: '#020617', borderRadius: '8px' }}>
+            <div>
+              <span style={{ color: '#cbd5e1', fontSize: '12px' }}>Current Pressure</span>
+              <div style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 700 }}>{marker.p.toFixed(1)} kPa</div>
+            </div>
+            <div>
+              <span style={{ color: '#cbd5e1', fontSize: '12px' }}>Cavitation Intensity</span>
+              <div style={{ color: stateColor, fontSize: '18px', fontWeight: 700 }}>{marker.intensity.toFixed(0)}%</div>
+            </div>
+            <div>
+              <span style={{ color: '#cbd5e1', fontSize: '12px' }}>Status vs Reference</span>
+              <div style={{ color: stateColor, fontSize: '14px', fontWeight: 600 }}>{stateLabel}</div>
+            </div>
+          </div>
+
+          {/* Slider */}
+          <div style={{ marginTop: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Pressure Level</span>
+              <span style={{ color: stateColor, fontSize: '14px' }}>{marker.p.toFixed(1)} kPa</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={pressure}
+              onChange={(e) => setPressure(Number(e.target.value))}
+              style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#cbd5e1' }}>
+              <span>Low (vacuum)</span>
+              <span style={{ color: '#f59e0b' }}>Vapor pressure threshold</span>
+              <span>High (safe)</span>
+            </div>
+          </div>
+
+          {/* Physics explanation */}
+          <div style={{ marginTop: '20px', padding: '16px', background: '#020617', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+            <p style={{ color: '#60a5fa', fontSize: '14px', fontWeight: 600, margin: '0 0 8px 0' }}>Key Physics Formula:</p>
+            <p style={{ color: '#cbd5e1', fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
+              Cavitation Number: \u03c3 = (P\u2080 \u2212 P\u1d65) \u00f7 (\u00bd \u00d7 \u03c1 \u00d7 V\u00b2)<br/>
+              When \u03c3 drops below the critical value, cavitation begins. Lower pressure = more bubbles = more damage.
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(249, 115, 22, 0.08)', borderRadius: '12px', borderLeft: '4px solid #f97316' }}>
+            <p style={{ color: '#f97316', fontSize: '14px', fontWeight: 600, margin: '0 0 8px 0' }}>Why This Matters (Real-World Impact):</p>
+            <p style={{ color: '#cbd5e1', fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
+              Ship propellers, pumps, and turbines suffer billions of dollars in cavitation damage annually. The relationship: Higher speed = Lower pressure = More cavitation = More damage.
+            </p>
           </div>
         </div>
 
-        {/* Controls */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: colors.text, fontSize: '14px', fontWeight: '600' }}>Propeller Speed</span>
-            <span style={{
-              color: propellerSpeed > 70 ? colors.accent : propellerSpeed > 50 ? colors.warning : colors.success,
-              fontSize: '14px'
-            }}>
-              {propellerSpeed} RPM
-            </span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={propellerSpeed}
-            onChange={(e) => setPropellerSpeed(Number(e.target.value))}
-            style={{
-              width: '100%',
-              accentColor: propellerSpeed > 70 ? colors.accent : propellerSpeed > 50 ? colors.warning : colors.success
-            }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textSecondary }}>
-            <span>Off</span>
-            <span>Safe zone</span>
-            <span style={{ color: colors.warning }}>Cavitation zone</span>
-          </div>
-        </div>
-
-        {/* Reset button */}
-        <button
-          onPointerDown={() => {
-            setDamageLevel(0);
-            setBubbles([]);
-          }}
-          style={{
-            padding: '10px 16px',
-            background: 'transparent',
-            color: colors.textSecondary,
-            border: `1px solid ${colors.textSecondary}`,
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '13px'
-          }}
-        >
-          Reset Damage
-        </button>
-
-        {/* Physics explanation with key terms defined */}
-        <div style={{
-          marginTop: '20px',
-          padding: '16px',
-          background: colors.background,
-          borderRadius: '12px',
-          border: `1px solid ${colors.bubble}30`
-        }}>
-          <p style={{ color: colors.bubble, fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0' }}>
-            Key Physics Terms:
-          </p>
-          <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
-            <strong>Vapor pressure:</strong> The pressure at which a liquid boils (2.3 kPa for water at 20°C).<br/>
-            <strong>Cavitation:</strong> Formation of vapor bubbles when local pressure drops below vapor pressure.<br/>
-            <strong>Implosion:</strong> Violent collapse of vapor bubbles when pressure recovers, reaching 5,000°C.
-          </p>
-        </div>
-
-        {/* Real-world relevance - why this matters */}
-        <div style={{
-          marginTop: '16px',
-          padding: '16px',
-          background: `${colors.accent}10`,
-          borderRadius: '12px',
-          borderLeft: `4px solid ${colors.accent}`
-        }}>
-          <p style={{ color: colors.accent, fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0' }}>
-            Why This Matters (Real-World Impact):
-          </p>
-          <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
-            Ship propellers, pumps, and turbines suffer billions of dollars in cavitation damage annually.
-            Understanding cavitation helps engineers design more efficient and durable equipment.
-            The relationship: Higher speed = Lower pressure = More cavitation = More damage.
-          </p>
-        </div>
+        {renderBottomBar(() => goToNextPhase())}
       </div>
+    );
+  };
 
-      {/* Observation guidance */}
-      <div style={{
-        marginTop: '16px',
-        padding: '12px',
-        background: `${colors.primary}15`,
-        borderRadius: '10px',
-        border: `1px solid ${colors.primary}30`
-      }}>
-        <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, textAlign: 'center' }}>
-          Observe how bubble formation and collapse changes with propeller speed. Increase speed to see cavitation damage!
-        </p>
-      </div>
-
-      {renderKeyTakeaway("Propeller cavitation occurs at high speeds when blade suction creates pressure below water's vapor pressure. Each bubble collapse chips away at the metal!")}
-
-      {renderBottomBar(() => goToNextPhase())}
-    </div>
-  );
-
-  // Review Phase
+  // REVIEW PHASE
   const renderReview = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("📚", "Cavitation Physics", "The complete picture")}
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ margin: 0, color: '#f8fafc', fontSize: '28px', fontWeight: 700 }}>Cavitation Physics Review</h1>
+        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>Understanding the complete picture</p>
+      </div>
 
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '20px'
-      }}>
+      <div style={{ background: '#0f172a', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
+        <p style={{ color: '#f8fafc', fontSize: '16px', lineHeight: 1.7, marginBottom: '20px' }}>
+          As you observed in the experiment, cavitation intensity increases dramatically when pressure drops below the vapor pressure threshold. Your prediction about the collapse conditions demonstrates the key principle: because the bubble collapse concentrates energy into a microscopic volume, it generates extreme temperatures.
+        </p>
+
         <div style={{ display: 'grid', gap: '16px' }}>
           {[
-            {
-              title: "1. Bubble Formation",
-              text: "When local pressure drops below vapor pressure (~2.3 kPa for water at 20°C), water 'boils' into vapor bubbles — even at room temperature!",
-              color: colors.bubble,
-              icon: "○"
-            },
-            {
-              title: "2. Bubble Growth",
-              text: "In the low-pressure zone, bubbles expand as more liquid vaporizes into them. Size can reach several millimeters.",
-              color: colors.primary,
-              icon: "◯"
-            },
-            {
-              title: "3. Violent Collapse",
-              text: "When bubbles move to higher pressure regions, they collapse in microseconds. Water rushes inward at extreme speeds.",
-              color: colors.warning,
-              icon: "⊙"
-            },
-            {
-              title: "4. Extreme Conditions",
-              text: "Collapse center: ~5,000°C, ~1,000 atm pressure, jets reaching 100+ m/s. This erodes even hardened steel!",
-              color: colors.collapse,
-              icon: "💥"
-            }
+            { title: "1. Bubble Formation", text: "When local pressure drops below vapor pressure (~2.3 kPa for water at 20\u00b0C), water 'boils' into vapor bubbles \u2014 this shows that cavitation is proportional to the pressure deficit.", color: '#60a5fa' },
+            { title: "2. Bubble Growth", text: "In the low-pressure zone, bubbles expand as more liquid vaporizes. The relationship is: Lower pressure = Larger bubbles = More stored energy.", color: '#3b82f6' },
+            { title: "3. Violent Collapse", text: "When bubbles move to higher pressure regions, they collapse in microseconds. The formula for collapse pressure is P_collapse \u221d (P_ambient \u2212 P_vapor) \u00d7 compression ratio.", color: '#f59e0b' },
+            { title: "4. Extreme Conditions", text: "The result: temperatures reaching ~5,000\u00b0C and pressures up to 1,000 atm. The equation E = \u00bd \u00d7 m \u00d7 v\u00b2 explains the kinetic energy of the inrushing liquid.", color: '#ef4444' }
           ].map((item, i) => (
-            <div key={i} style={{
-              padding: '16px',
-              background: `${item.color}10`,
-              borderRadius: '12px',
-              borderLeft: `4px solid ${item.color}`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '20px' }}>{item.icon}</span>
-                <p style={{ color: item.color, fontWeight: '600', margin: 0, fontSize: '15px' }}>
-                  {item.title}
-                </p>
-              </div>
-              <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: 1.5, paddingLeft: '30px' }}>
-                {item.text}
-              </p>
+            <div key={i} style={{ padding: '16px', background: `rgba(${item.color === '#60a5fa' ? '96,165,250' : item.color === '#3b82f6' ? '59,130,246' : item.color === '#f59e0b' ? '245,158,11' : '239,68,68'}, 0.08)`, borderRadius: '12px', borderLeft: `4px solid ${item.color}` }}>
+              <p style={{ color: item.color, fontWeight: 600, margin: '0 0 8px 0', fontSize: '15px' }}>{item.title}</p>
+              <p style={{ color: '#cbd5e1', margin: 0, fontSize: '14px', lineHeight: 1.5 }}>{item.text}</p>
             </div>
           ))}
         </div>
 
-        {/* Sonoluminescence note */}
-        <div style={{
-          marginTop: '20px',
-          padding: '16px',
-          background: `${colors.warning}15`,
-          borderRadius: '12px',
-          border: `1px solid ${colors.warning}30`
-        }}>
-          <p style={{ color: colors.warning, fontWeight: '600', margin: '0 0 8px 0', fontSize: '15px' }}>
-            ✨ Sonoluminescence: Light from Sound
-          </p>
-          <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: 1.6 }}>
-            Some collapsing bubbles emit brief flashes of light! The extreme compression heats gases to plasma temperatures,
-            causing them to glow. This mysterious phenomenon is still being studied.
+        <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+          <p style={{ color: '#f59e0b', fontWeight: 600, margin: '0 0 8px 0', fontSize: '15px' }}>Sonoluminescence: Light from Sound</p>
+          <p style={{ color: '#cbd5e1', margin: 0, fontSize: '14px', lineHeight: 1.6 }}>
+            Some collapsing bubbles emit brief flashes of light! The extreme compression heats gases to plasma temperatures, causing them to glow. This phenomenon demonstrates the equation E = k \u00d7 T\u2074 for thermal radiation.
           </p>
         </div>
 
-        {renderKeyTakeaway("Cavitation converts the kinetic energy of flow into extreme local conditions — temperatures rivaling the sun's surface, concentrated into points smaller than a pinhead.")}
+        <div style={{ padding: '16px 20px', background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(6,182,212,0.08))', borderLeft: '4px solid #3b82f6', borderRadius: '0 12px 12px 0', marginTop: '20px' }}>
+          <p style={{ margin: 0, color: '#f8fafc', lineHeight: 1.6, fontSize: '15px' }}>
+            Key insight: Cavitation converts kinetic energy of flow into extreme local conditions \u2014 temperatures rivaling the sun's surface, concentrated into points smaller than a pinhead. The observation confirms your prediction about collapse energy.
+          </p>
+        </div>
       </div>
 
       {renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
-  // Twist Predict Phase
+  // TWIST PREDICT
   const renderTwistPredict = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🔄", "Nature's Weapon", "The mantis shrimp's secret")}
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ margin: 0, color: '#f8fafc', fontSize: '28px', fontWeight: 700 }}>Nature's Weapon</h1>
+        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>The mantis shrimp's secret</p>
+      </div>
 
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '20px'
-      }}>
-        <p style={{ color: colors.text, fontSize: '17px', lineHeight: 1.6, marginBottom: '24px' }}>
-          The mantis shrimp punches so fast (23 m/s acceleration at 10,000 g) that it creates a cavitation bubble.
-          What happens when the bubble collapses?
+      <div style={{ background: '#0f172a', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
+        <p style={{ color: '#f8fafc', fontSize: '17px', lineHeight: 1.6, marginBottom: '24px' }}>
+          The mantis shrimp punches at 23 m/s with 10,000 g acceleration. This creates a cavitation bubble. Watch what happens next \u2014 a new twist on cavitation physics.
         </p>
 
-        <svg width="100%" height="140" viewBox="0 0 400 140" style={{ marginBottom: '20px' }}>
+        <svg width="100%" height="200" viewBox="0 0 500 200">
           <defs>
-            {/* Shrimp body gradient */}
-            <linearGradient id="cavShrimpBody" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="twpShrimpBody" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#fb7185" />
-              <stop offset="30%" stopColor="#f43f5e" />
-              <stop offset="70%" stopColor="#e11d48" />
               <stop offset="100%" stopColor="#be123c" />
             </linearGradient>
-            {/* Shrimp claw gradient */}
-            <linearGradient id="cavShrimpClaw" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fda4af" />
-              <stop offset="50%" stopColor="#fb7185" />
-              <stop offset="100%" stopColor="#f43f5e" />
-            </linearGradient>
-            {/* Snail shell gradient */}
-            <radialGradient id="cavSnailShell" cx="30%" cy="30%" r="70%">
+            <radialGradient id="twpSnail" cx="30%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#d6d3d1" />
-              <stop offset="30%" stopColor="#a8a29e" />
-              <stop offset="60%" stopColor="#78716c" />
               <stop offset="100%" stopColor="#57534e" />
             </radialGradient>
-            {/* Strike energy gradient */}
-            <linearGradient id="cavStrikeEnergy" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="twpStrike" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
-              <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.8" />
               <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
-              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.8" />
               <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
             </linearGradient>
-            {/* Question glow filter */}
-            <filter id="cavQuestionGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            {/* Strike arrow marker */}
-            <marker id="cavStrikeArrow" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
-              <polygon points="0 0, 12 4, 0 8" fill="#fbbf24" />
-            </marker>
           </defs>
+          <rect x="0" y="0" width="500" height="200" fill="#0c4a6e" opacity="0.4" rx="12" />
 
-          {/* Water background subtle */}
-          <rect x="0" y="0" width="400" height="140" fill="#0c4a6e" opacity="0.3" rx="8" />
-
-          {/* Shrimp claw */}
-          <g transform="translate(80, 70)">
-            {/* Body shadow */}
-            <ellipse cx="2" cy="2" rx="30" ry="15" fill="#1e293b" opacity="0.4" />
-            {/* Body */}
-            <ellipse cx="0" cy="0" rx="30" ry="15" fill="url(#cavShrimpBody)" stroke="#be123c" strokeWidth="1" />
-            {/* Body highlight */}
-            <ellipse cx="-8" cy="-5" rx="10" ry="5" fill="#fda4af" opacity="0.5" />
-            {/* Claw */}
-            <path d="M 25 0 L 70 -12 L 66 0 L 70 12 L 25 0 Z" fill="url(#cavShrimpClaw)" stroke="#f43f5e" strokeWidth="1" />
-            {/* Claw highlight */}
-            <path d="M 30 -2 L 60 -8" stroke="#fecdd3" strokeWidth="2" opacity="0.6" />
+          {/* Shrimp */}
+          <g transform="translate(100, 90)">
+            <ellipse cx="0" cy="0" rx="35" ry="18" fill="url(#twpShrimpBody)" stroke="#be123c" strokeWidth="1" />
+            <ellipse cx="-12" cy="-6" rx="12" ry="6" fill="#fda4af" opacity="0.5" />
+            <circle cx="-25" cy="-12" r="5" fill="#4ade80" />
+            <path d="M 25 0 L 80 -30 L 75 0 L 80 30 L 25 0 Z" fill="#fb7185" stroke="#e11d48" strokeWidth="1" />
           </g>
 
-          {/* Target snail */}
-          <g transform="translate(280, 70)">
-            {/* Shell shadow */}
-            <ellipse cx="3" cy="3" rx="35" ry="30" fill="#1e293b" opacity="0.4" />
-            {/* Shell body */}
-            <ellipse cx="0" cy="0" rx="35" ry="30" fill="url(#cavSnailShell)" stroke="#57534e" strokeWidth="2" />
-            {/* Shell spiral pattern */}
-            <path d="M 0 -15 Q 15 -10 10 0 Q 5 10 -5 5 Q -12 0 -8 -8" fill="none" stroke="#44403c" strokeWidth="2" opacity="0.5" />
-            {/* Shell highlight */}
-            <ellipse cx="-10" cy="-10" rx="12" ry="8" fill="#e7e5e4" opacity="0.4" />
-          </g>
-
-          {/* Strike energy beam */}
-          <line x1="125" y1="70" x2="230" y2="70" stroke="url(#cavStrikeEnergy)" strokeWidth="6" />
-          <line x1="130" y1="70" x2="225" y2="70" stroke="#fbbf24" strokeWidth="3" markerEnd="url(#cavStrikeArrow)" />
+          {/* Strike beam */}
+          <line x1="160" y1="90" x2="290" y2="90" stroke="url(#twpStrike)" strokeWidth="6" />
 
           {/* Speed lines */}
           {[0, 1, 2].map(i => (
-            <line key={i} x1={140 + i * 25} y1={60 - i * 5} x2={155 + i * 25} y2={60 - i * 5} stroke="#fbbf24" strokeWidth="2" opacity={0.5 - i * 0.1} />
-          ))}
-          {[0, 1, 2].map(i => (
-            <line key={i} x1={140 + i * 25} y1={80 + i * 5} x2={155 + i * 25} y2={80 + i * 5} stroke="#fbbf24" strokeWidth="2" opacity={0.5 - i * 0.1} />
+            <React.Fragment key={i}>
+              <line x1={170 + i * 30} y1={78 - i * 4} x2={185 + i * 30} y2={78 - i * 4} stroke="#fbbf24" strokeWidth="2" opacity={0.5 - i * 0.1} />
+              <line x1={170 + i * 30} y1={102 + i * 4} x2={185 + i * 30} y2={102 + i * 4} stroke="#fbbf24" strokeWidth="2" opacity={0.5 - i * 0.1} />
+            </React.Fragment>
           ))}
 
-          {/* Question mark with glow */}
-          <text x="200" y="115" fill="#06b6d4" fontSize="28" textAnchor="middle" fontWeight="bold" filter="url(#cavQuestionGlow)">?</text>
+          {/* Prey */}
+          <g transform="translate(350, 90)">
+            <ellipse cx="0" cy="0" rx="40" ry="35" fill="url(#twpSnail)" stroke="#57534e" strokeWidth="2" />
+            <path d="M 0 -30 Q 20 -15 10 0 Q 5 20 -5 10 Q -15 0 -8 -30" fill="none" stroke="#44403c" strokeWidth="2" opacity="0.5" />
+          </g>
+
+          {/* Question */}
+          <text x="250" y="170" fill="#06b6d4" fontSize="24" textAnchor="middle" fontWeight="bold">?</text>
+
+          {/* Labels */}
+          <text x="100" y="30" fill="#cbd5e1" fontSize="12" textAnchor="middle">Mantis Shrimp</text>
+          <text x="250" y="55" fill="#fbbf24" fontSize="12" textAnchor="middle">23 m/s Strike Speed</text>
+          <text x="350" y="30" fill="#cbd5e1" fontSize="12" textAnchor="middle">Prey (Snail)</text>
         </svg>
-        {/* Labels outside SVG */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 40px', marginBottom: '16px' }}>
-          <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Mantis shrimp claw</span>
-          <span style={{ color: colors.warning, fontSize: typo.small, fontWeight: 600 }}>23 m/s strike!</span>
-          <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Prey (snail)</span>
-        </div>
 
-        <p style={{ color: colors.text, fontSize: '18px', fontWeight: '600', marginBottom: '16px', textAlign: 'center' }}>
+        <p style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 600, marginTop: '16px', marginBottom: '16px', textAlign: 'center' }}>
           If the initial punch misses, what does the cavitation bubble collapse do?
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {[
-            { value: 'nothing', label: 'Nothing — bubbles are harmless', color: colors.textSecondary },
-            { value: 'second', label: 'Delivers a SECOND strike — the collapse hits the prey!', color: colors.success },
-            { value: 'defense', label: 'Creates a defensive shield', color: colors.primary },
-            { value: 'distraction', label: 'Just makes noise to distract', color: colors.secondary }
+            { value: 'nothing', label: 'Nothing \u2014 bubbles are harmless in biological systems' },
+            { value: 'second', label: 'Delivers a SECOND strike \u2014 the collapse hits the prey!' },
+            { value: 'defense', label: 'Creates a defensive bubble shield around the shrimp' },
+            { value: 'distraction', label: 'Just makes noise to distract and disorient prey' }
           ].map(option => (
             <button
               key={option.value}
-              onPointerDown={() => {
-                setTwistPrediction(option.value);
-                playSound('click');
-              }}
-              style={{
-                padding: '14px 18px',
-                fontSize: '14px',
-                background: twistPrediction === option.value ? `${option.color}20` : colors.background,
-                color: twistPrediction === option.value ? option.color : colors.textSecondary,
-                border: `2px solid ${twistPrediction === option.value ? option.color : '#333'}`,
-                borderRadius: '10px',
-                cursor: 'pointer',
-                textAlign: 'left'
-              }}
+              onClick={() => setTwistPrediction(option.value)}
+              onPointerDown={() => setTwistPrediction(option.value)}
+              style={{ padding: '14px 18px', fontSize: '14px', background: twistPrediction === option.value ? 'rgba(59, 130, 246, 0.15)' : '#020617', color: twistPrediction === option.value ? '#3b82f6' : '#cbd5e1', border: `2px solid ${twistPrediction === option.value ? '#3b82f6' : '#333'}`, borderRadius: '10px', cursor: 'pointer', textAlign: 'left' }}
             >
               {option.label}
             </button>
@@ -1649,44 +834,19 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
 
         {twistPrediction && !showTwistResult && (
           <button
-            onPointerDown={() => {
-              setShowTwistResult(true);
-              playSound(twistPrediction === 'second' ? 'success' : 'failure');
-            }}
-            style={{
-              marginTop: '20px',
-              padding: '14px 28px',
-              width: '100%',
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600'
-            }}
+            onClick={() => setShowTwistResult(true)}
+            onPointerDown={() => setShowTwistResult(true)}
+            style={{ marginTop: '20px', padding: '14px 28px', width: '100%', background: 'linear-gradient(135deg, #3b82f6, #06b6d4)', color: '#f8fafc', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', fontWeight: 600 }}
           >
             Lock In Prediction
           </button>
         )}
 
         {showTwistResult && (
-          <div style={{
-            marginTop: '20px',
-            padding: '20px',
-            background: twistPrediction === 'second' ? `${colors.success}20` : `${colors.accent}20`,
-            borderRadius: '12px',
-            border: `2px solid ${twistPrediction === 'second' ? colors.success : colors.accent}`
-          }}>
-            {twistPrediction === 'second' ? (
-              <p style={{ color: colors.success, margin: 0 }}>
-                <strong>✓ Exactly!</strong> The mantis shrimp evolved to weaponize cavitation! Even if the punch misses, the collapsing bubble delivers a second impact — a "phantom punch" that can stun or kill prey!
-              </p>
-            ) : (
-              <p style={{ color: colors.accent, margin: 0 }}>
-                <strong>Incredible answer!</strong> The bubble collapse acts as a second strike! The mantis shrimp evolved to weaponize cavitation — the collapsing bubble can crack shells even when the physical punch misses.
-              </p>
-            )}
+          <div style={{ marginTop: '20px', padding: '20px', background: twistPrediction === 'second' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(249, 115, 22, 0.15)', borderRadius: '12px', border: `2px solid ${twistPrediction === 'second' ? '#10b981' : '#f97316'}` }}>
+            <p style={{ color: twistPrediction === 'second' ? '#10b981' : '#f97316', margin: 0, lineHeight: 1.6 }}>
+              <strong>{twistPrediction === 'second' ? '\u2713 Exactly!' : 'Incredible answer!'}</strong> The mantis shrimp evolved to weaponize cavitation! Even if the punch misses, the collapsing bubble delivers a second impact \u2014 a "phantom punch" that can stun or kill prey!
+            </p>
           </div>
         )}
       </div>
@@ -1695,249 +855,119 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
     </div>
   );
 
-  // Twist Play Phase
+  // TWIST PLAY
   const renderTwistPlay = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🎮", "Mantis Shrimp Strike", "Watch the double impact")}
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ margin: 0, color: '#f8fafc', fontSize: '28px', fontWeight: 700 }}>Mantis Shrimp Strike</h1>
+        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>Watch the double impact</p>
+      </div>
 
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '20px'
-      }}>
-        {/* Strike animation */}
-        <div style={{ background: 'linear-gradient(180deg, #0c4a6e 0%, #1e3a5f 100%)', borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
-          <svg width="100%" height="200" viewBox="0 0 400 200">
-            <defs>
-              {/* Water gradient */}
-              <linearGradient id="cavTwistWater" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#0c4a6e" />
-                <stop offset="50%" stopColor="#0369a1" />
-                <stop offset="100%" stopColor="#0c4a6e" />
-              </linearGradient>
-              {/* Shrimp body gradient */}
-              <linearGradient id="cavTwistShrimpBody" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fb7185" />
-                <stop offset="40%" stopColor="#f43f5e" />
-                <stop offset="100%" stopColor="#be123c" />
-              </linearGradient>
-              {/* Shrimp claw gradient */}
-              <linearGradient id="cavTwistClaw" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#fda4af" />
-                <stop offset="50%" stopColor="#fb7185" />
-                <stop offset="100%" stopColor="#e11d48" />
-              </linearGradient>
-              {/* Snail gradient */}
-              <radialGradient id="cavTwistSnail" cx="30%" cy="30%" r="70%">
-                <stop offset="0%" stopColor="#d6d3d1" />
-                <stop offset="40%" stopColor="#a8a29e" />
-                <stop offset="100%" stopColor="#57534e" />
-              </radialGradient>
-              {/* Impact flash gradient */}
-              <radialGradient id="cavImpactFlash" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#fef3c7" />
-                <stop offset="40%" stopColor="#fbbf24" />
-                <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-              </radialGradient>
-              {/* Cavitation collapse gradient */}
-              <radialGradient id="cavTwistCollapse" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#fef3c7" />
-                <stop offset="30%" stopColor="#fbbf24" />
-                <stop offset="60%" stopColor="#f97316" />
-                <stop offset="100%" stopColor="#ef4444" />
-              </radialGradient>
-              {/* Eye glow */}
-              <radialGradient id="cavEyeGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#4ade80" />
-                <stop offset="60%" stopColor="#22c55e" />
-                <stop offset="100%" stopColor="#15803d" />
-              </radialGradient>
-              {/* Impact glow filter */}
-              <filter id="cavImpactGlow" x="-100%" y="-100%" width="300%" height="300%">
-                <feGaussianBlur stdDeviation="4" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-              {/* Cavitation glow filter */}
-              <filter id="cavTwistGlow" x="-100%" y="-100%" width="300%" height="300%">
-                <feGaussianBlur stdDeviation="5" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
+      <div style={{ background: '#0f172a', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
+        <svg width="100%" height="220" viewBox="0 0 500 220">
+          <defs>
+            <linearGradient id="tpWater" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0c4a6e" />
+              <stop offset="100%" stopColor="#0369a1" />
+            </linearGradient>
+            <linearGradient id="tpShrimpBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fb7185" />
+              <stop offset="100%" stopColor="#be123c" />
+            </linearGradient>
+            <radialGradient id="tpSnail" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#d6d3d1" />
+              <stop offset="100%" stopColor="#57534e" />
+            </radialGradient>
+            <radialGradient id="tpFlash" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="tpCollapse" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </radialGradient>
+            <filter id="tpGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          <rect x="0" y="0" width="500" height="220" fill="url(#tpWater)" rx="12" />
 
-            {/* Water background */}
-            <rect x="0" y="0" width="400" height="200" fill="url(#cavTwistWater)" rx="10" />
+          {/* Grid lines for reference */}
+          {[55, 110, 165].map(y => (
+            <line key={`tpg-${y}`} x1="20" y1={y} x2="480" y2={y} stroke="rgba(148,163,184,0.1)" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+          ))}
 
-            {/* Water caustics */}
-            <g opacity="0.1">
-              {[0, 1, 2].map(i => (
-                <ellipse key={i} cx={60 + i * 120} cy={25} rx={40} ry={12} fill="#7dd3fc">
-                  <animate attributeName="opacity" values="0.05;0.15;0.05" dur={`${2 + i * 0.4}s`} repeatCount="indefinite" />
-                </ellipse>
+          {/* Labels */}
+          <text x="120" y="25" fill="#cbd5e1" fontSize="12" textAnchor="middle">Mantis Shrimp</text>
+          <text x="370" y="25" fill="#cbd5e1" fontSize="12" textAnchor="middle">Prey Target</text>
+          <text x="250" y="210" fill="#cbd5e1" fontSize="12" textAnchor="middle">Cavitation Zone</text>
+
+          {/* Shrimp */}
+          <g transform={`translate(${shrimpStrike ? 170 : 100}, 110)`}>
+            <ellipse cx="-30" cy="0" rx="40" ry="20" fill="url(#tpShrimpBody)" stroke="#be123c" strokeWidth="1" />
+            <circle cx="-50" cy="-15" r="6" fill="#4ade80" />
+            <g transform={shrimpStrike ? 'translate(60, 0)' : ''}>
+              <path d="M 0 -10 L 60 -30 L 70 0 L 60 30 L 0 10 Z" fill="#fb7185" stroke="#e11d48" strokeWidth="1" />
+            </g>
+          </g>
+
+          {/* Prey */}
+          <g transform="translate(370, 110)">
+            <ellipse cx="0" cy="0" rx="40" ry="35" fill="url(#tpSnail)" stroke="#57534e" strokeWidth="2" />
+            <path d="M 0 -30 Q 20 -15 10 0 Q 5 25 -5 10 Q -15 0 -8 -30" fill="none" stroke="#44403c" strokeWidth="2" opacity="0.5" />
+            {showSecondBubble && (
+              <g>
+                <path d="M 15 -30 L 25 -10 L 20 10 L 30 30" stroke="#ef4444" strokeWidth="2" fill="none" />
+              </g>
+            )}
+          </g>
+
+          {/* Impact flash */}
+          {shrimpStrike && !showSecondBubble && (
+            <g transform="translate(280, 110)">
+              <circle r="20" fill="url(#tpFlash)" filter="url(#tpGlow)">
+                <animate attributeName="r" values="5;25" dur="0.15s" fill="freeze" />
+              </circle>
+            </g>
+          )}
+
+          {/* Cavitation collapse */}
+          {showSecondBubble && (
+            <g transform="translate(310, 110)">
+              <circle r="12" fill="url(#tpCollapse)" filter="url(#tpGlow)">
+                <animate attributeName="r" values="25;12" dur="0.3s" fill="freeze" />
+              </circle>
+              {[1, 2, 3].map(i => (
+                <circle key={i} r={12 * i} fill="none" stroke={i === 1 ? '#fbbf24' : '#ef4444'} strokeWidth={3 - i * 0.7} opacity={0.6 / i}>
+                  <animate attributeName="r" values={`${5*i};${35+10*i}`} dur="0.35s" fill="freeze" />
+                </circle>
               ))}
             </g>
+          )}
 
-            {/* Motion blur lines when striking */}
-            {shrimpStrike && (
-              <g opacity="0.6">
-                {[0, 1, 2, 3].map(i => (
-                  <line key={i} x1={90 + i * 15} y1={90 + (i % 2) * 20} x2={120 + i * 15} y2={90 + (i % 2) * 20}
-                    stroke="#fbbf24" strokeWidth="2" opacity={0.5 - i * 0.1} />
-                ))}
-              </g>
-            )}
-
-            {/* Mantis shrimp */}
-            <g transform={`translate(${shrimpStrike ? 140 : 80}, 100)`}>
-              {/* Body shadow */}
-              <ellipse cx="-28" cy="3" rx="40" ry="20" fill="#1e293b" opacity="0.4" />
-              {/* Body with gradient */}
-              <ellipse cx="-30" cy="0" rx="40" ry="20" fill="url(#cavTwistShrimpBody)" stroke="#be123c" strokeWidth="1" />
-              {/* Body highlight */}
-              <ellipse cx="-40" cy="-8" rx="15" ry="7" fill="#fda4af" opacity="0.5" />
-              {/* Eyes with glow */}
-              <circle cx="-50" cy="-15" r="8" fill="#1e293b" stroke="#0f172a" strokeWidth="1" />
-              <circle cx="-50" cy="-15" r="5" fill="url(#cavEyeGlow)" />
-              <circle cx="-51" cy="-16" r="2" fill="#fff" opacity="0.8" />
-              {/* Club/claw with gradient */}
-              <g transform={shrimpStrike ? 'translate(60, 0)' : ''}>
-                {/* Claw shadow */}
-                <path d="M 2 -8 L 62 -13 L 72 2 L 62 17 L 2 12 Z" fill="#1e293b" opacity="0.4" />
-                {/* Claw body */}
-                <path d="M 0 -10 L 60 -15 L 70 0 L 60 15 L 0 10 Z" fill="url(#cavTwistClaw)" stroke="#e11d48" strokeWidth="1.5" />
-                {/* Claw highlight */}
-                <path d="M 5 -6 L 55 -10" stroke="#fecdd3" strokeWidth="2" opacity="0.6" />
-              </g>
+          {/* Speed indicator */}
+          {shrimpStrike && (
+            <g transform="translate(200, 55)">
+              <rect x="0" y="0" width="100" height="24" rx="12" fill="#1e293b" opacity="0.8" />
+              <text x="50" y="16" fill="#fbbf24" fontSize="12" textAnchor="middle" fontWeight="600">23 m/s</text>
             </g>
-
-            {/* Prey (snail) */}
-            <g transform="translate(280, 100)">
-              {/* Shell shadow */}
-              <ellipse cx="3" cy="3" rx="35" ry="30" fill="#1e293b" opacity="0.4" />
-              {/* Shell with gradient */}
-              <ellipse cx="0" cy="0" rx="35" ry="30" fill="url(#cavTwistSnail)" stroke="#57534e" strokeWidth="2" />
-              {/* Shell spiral */}
-              <path d="M 0 -15 Q 15 -10 10 0 Q 5 10 -5 5 Q -12 0 -8 -8" fill="none" stroke="#44403c" strokeWidth="2" opacity="0.5" />
-              {/* Shell highlight */}
-              <ellipse cx="-10" cy="-10" rx="12" ry="8" fill="#e7e5e4" opacity="0.4" />
-              {/* Antenna */}
-              <path d="M -10 -20 Q 0 -35 10 -20" fill="none" stroke="#78716c" strokeWidth="2" />
-              {/* Crack effect when hit */}
-              {showSecondBubble && (
-                <g>
-                  <path d="M 15 -10 L 25 -5 L 20 5 L 30 10" stroke="#ef4444" strokeWidth="2" fill="none" />
-                  <path d="M 18 -15 L 22 -8" stroke="#ef4444" strokeWidth="1.5" fill="none" />
-                </g>
-              )}
-            </g>
-
-            {/* First impact flash */}
-            {shrimpStrike && !showSecondBubble && (
-              <g transform="translate(210, 100)">
-                <circle r="20" fill="url(#cavImpactFlash)" filter="url(#cavImpactGlow)">
-                  <animate attributeName="r" values="5;25" dur="0.15s" fill="freeze" />
-                </circle>
-                {/* Impact rays */}
-                {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
-                  <line key={angle}
-                    x1={Math.cos(angle * Math.PI / 180) * 10}
-                    y1={Math.sin(angle * Math.PI / 180) * 10}
-                    x2={Math.cos(angle * Math.PI / 180) * 30}
-                    y2={Math.sin(angle * Math.PI / 180) * 30}
-                    stroke="#fbbf24"
-                    strokeWidth="2"
-                    opacity="0.7"
-                  >
-                    <animate attributeName="opacity" values="0.8;0" dur="0.2s" fill="freeze" />
-                  </line>
-                ))}
-              </g>
-            )}
-
-            {/* Cavitation bubble formation and collapse */}
-            {showSecondBubble && (
-              <g transform="translate(235, 100)">
-                {/* Collapsing bubble with gradient */}
-                <circle r="8" fill="url(#cavTwistCollapse)" filter="url(#cavTwistGlow)">
-                  <animate attributeName="r" values="25;8" dur="0.3s" fill="freeze" />
-                </circle>
-                {/* Multiple shock waves */}
-                {[1, 2, 3].map(i => (
-                  <circle key={i} r={10 * i} fill="none" stroke={i === 1 ? '#fbbf24' : i === 2 ? '#f97316' : '#ef4444'} strokeWidth={3 - i * 0.7} opacity={0.7 / i}>
-                    <animate attributeName="r" values={`${5*i};${35+10*i}`} dur="0.35s" fill="freeze" />
-                    <animate attributeName="opacity" values={`${0.8/i};0`} dur="0.35s" fill="freeze" />
-                  </circle>
-                ))}
-                {/* Central flash */}
-                <circle r="3" fill="#fef3c7">
-                  <animate attributeName="r" values="5;0" dur="0.2s" fill="freeze" />
-                </circle>
-              </g>
-            )}
-
-            {/* Speed indicator */}
-            {shrimpStrike && (
-              <g transform="translate(100, 50)">
-                <rect x="0" y="0" width="100" height="24" rx="12" fill="#1e293b" opacity="0.8" />
-                <text x="50" y="16" fill="#fbbf24" fontSize="11" textAnchor="middle" fontWeight="600">
-                  23 m/s • 10,000 g
-                </text>
-              </g>
-            )}
-          </svg>
-          {/* Labels outside SVG */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 40px 0' }}>
-            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Mantis Shrimp</span>
-            {shrimpStrike && !showSecondBubble && (
-              <span style={{ color: colors.warning, fontSize: typo.body, fontWeight: 700 }}>PUNCH!</span>
-            )}
-            {showSecondBubble && (
-              <span style={{ color: colors.collapse, fontSize: typo.body, fontWeight: 700 }}>CAVITATION!</span>
-            )}
-            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>
-              Prey {showSecondBubble && <span style={{ color: colors.accent, fontWeight: 600 }}>CRACK!</span>}
-            </span>
-          </div>
-        </div>
+          )}
+        </svg>
 
         <button
+          onClick={triggerShrimpStrike}
           onPointerDown={triggerShrimpStrike}
           disabled={shrimpStrike}
-          style={{
-            width: '100%',
-            padding: '14px',
-            background: shrimpStrike ? '#444' : `linear-gradient(135deg, ${colors.accent}, ${colors.collapse})`,
-            color: colors.text,
-            border: 'none',
-            borderRadius: '10px',
-            cursor: shrimpStrike ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            fontWeight: '600'
-          }}
+          style={{ width: '100%', marginTop: '12px', padding: '14px', background: shrimpStrike ? '#444' : 'linear-gradient(135deg, #f97316, #ef4444)', color: '#f8fafc', border: 'none', borderRadius: '10px', cursor: shrimpStrike ? 'not-allowed' : 'pointer', fontSize: '16px', fontWeight: 600 }}
         >
-          🦐 Trigger Strike!
+          Trigger Strike!
         </button>
 
-        {/* Explanation */}
-        <div style={{
-          marginTop: '20px',
-          padding: '16px',
-          background: colors.background,
-          borderRadius: '12px'
-        }}>
-          <p style={{ color: colors.success, fontWeight: '600', margin: '0 0 8px 0' }}>
-            Double Impact Weapon:
-          </p>
-          <ol style={{ margin: 0, paddingLeft: '20px', color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8 }}>
+        <div style={{ marginTop: '20px', padding: '16px', background: '#020617', borderRadius: '12px' }}>
+          <p style={{ color: '#10b981', fontWeight: 600, margin: '0 0 8px 0' }}>Double Impact Weapon:</p>
+          <ol style={{ margin: 0, paddingLeft: '20px', color: '#cbd5e1', fontSize: '14px', lineHeight: 1.8 }}>
             <li><strong>Strike 1:</strong> Physical punch at 23 m/s</li>
             <li><strong>Cavitation:</strong> Low-pressure wake forms vapor bubble</li>
             <li><strong>Strike 2:</strong> Bubble collapse delivers second impact!</li>
@@ -1945,497 +975,213 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
         </div>
       </div>
 
-      {renderKeyTakeaway("The mantis shrimp evolved to weaponize cavitation — its strike is so fast that even the 'shadow' (collapsing bubble) can crack shells!")}
-
       {renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
-  // Twist Review Phase
+  // TWIST REVIEW
   const renderTwistReview = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🔬", "Biomimetic Inspiration", "Learning from nature")}
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ margin: 0, color: '#f8fafc', fontSize: '28px', fontWeight: 700 }}>Biomimetic Inspiration</h1>
+        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>Learning from nature</p>
+      </div>
 
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '20px'
-      }}>
-        <div style={{ display: 'grid', gap: '16px' }}>
-          <div style={{
-            padding: '20px',
-            background: colors.background,
-            borderRadius: '12px'
-          }}>
-            <p style={{ color: colors.accent, fontWeight: '600', margin: '0 0 8px 0' }}>
-              🦐 The Mantis Shrimp's Advantages
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
-              Fastest punch in the animal kingdom (23 m/s). Even if it misses, the cavitation bubble stuns prey.
-              Its club is made of a unique material that resists its own impact force!
-            </p>
+      <div style={{ background: '#0f172a', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
+        {[
+          { title: "The Mantis Shrimp's Advantages", text: "Fastest punch in the animal kingdom (23 m/s). Even if it misses, the cavitation bubble stuns prey. Its club is made of a unique material that resists its own impact force!", color: '#f97316' },
+          { title: "Research Applications", text: "Scientists study mantis shrimp to develop: impact-resistant body armor, underwater acoustic weapons, and materials that withstand extreme repeated stress.", color: '#3b82f6' },
+          { title: "Pistol Shrimp: The Sound Maker", text: "The pistol shrimp creates cavitation with its claw snap \u2014 producing a 210 decibel shockwave! Colonies are so loud they interfere with submarine sonar.", color: '#10b981' }
+        ].map((item, i) => (
+          <div key={i} style={{ padding: '20px', background: '#020617', borderRadius: '12px', marginBottom: i < 2 ? '16px' : 0 }}>
+            <p style={{ color: item.color, fontWeight: 600, margin: '0 0 8px 0' }}>{item.title}</p>
+            <p style={{ color: '#cbd5e1', fontSize: '14px', margin: 0, lineHeight: 1.6 }}>{item.text}</p>
           </div>
-
-          <div style={{
-            padding: '20px',
-            background: colors.background,
-            borderRadius: '12px'
-          }}>
-            <p style={{ color: colors.primary, fontWeight: '600', margin: '0 0 8px 0' }}>
-              🔬 Research Applications
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
-              Scientists study mantis shrimp to develop: impact-resistant body armor, underwater acoustic weapons,
-              and new materials that can withstand extreme repeated stress.
-            </p>
-          </div>
-
-          <div style={{
-            padding: '20px',
-            background: colors.background,
-            borderRadius: '12px'
-          }}>
-            <p style={{ color: colors.success, fontWeight: '600', margin: '0 0 8px 0' }}>
-              🐚 Pistol Shrimp: The Sound Maker
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
-              The pistol shrimp creates cavitation with its claw snap — producing a 210 decibel shockwave!
-              Colonies of snapping shrimp are so loud they can interfere with submarine sonar.
-            </p>
-          </div>
-        </div>
-
-        {renderKeyTakeaway("Nature discovered cavitation weapons millions of years ago. Now engineers study these animals to design better materials and tools.")}
+        ))}
       </div>
 
       {renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
-  // Transfer Phase
-  const renderTransfer = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🌍", "Real-World Applications", "Industry examples of cavitation physics")}
-
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '20px'
-      }}>
-        {/* Progress indicator for transfer phase */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
-          {applications.map((_, i) => (
-            <div key={i} style={{
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-              background: completedApps.has(i) ? colors.success : i === activeApp ? colors.primary : '#333',
-              transition: 'all 0.3s ease'
-            }} />
-          ))}
+  // TRANSFER PHASE
+  const renderTransfer = () => {
+    const app = applications[activeApp];
+    return (
+      <div style={{ padding: '24px' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h1 style={{ margin: 0, color: '#f8fafc', fontSize: '28px', fontWeight: 700 }}>Real-World Applications</h1>
+          <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>Industry examples of cavitation physics</p>
         </div>
 
-        <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
-          Application {activeApp + 1} of {applications.length} - Explore how companies and engineers use cavitation
-        </p>
+        <div style={{ background: '#0f172a', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
+          <p style={{ color: '#cbd5e1', fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+            Application {activeApp + 1} of {applications.length} \u2014 Explore how companies and engineers use cavitation
+          </p>
 
-        {/* App navigation */}
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          marginBottom: '20px',
-          overflowX: 'auto',
-          paddingBottom: '8px'
-        }}>
-          {applications.map((app, i) => (
-            <button
-              key={i}
-              onPointerDown={() => {
-                if (completedApps.has(i)) {
-                  setActiveApp(i);
-                  playSound('click');
-                }
-              }}
-              style={{
-                padding: '10px 16px',
-                background: activeApp === i ? app.color : completedApps.has(i) ? colors.background : '#1a1a1a',
-                color: activeApp === i ? '#fff' : completedApps.has(i) ? app.color : '#444',
-                border: `2px solid ${completedApps.has(i) ? app.color : '#333'}`,
-                borderRadius: '10px',
-                cursor: completedApps.has(i) ? 'pointer' : 'not-allowed',
-                whiteSpace: 'nowrap',
-                fontSize: '14px',
-                fontWeight: activeApp === i ? '600' : '400',
-                opacity: completedApps.has(i) ? 1 : 0.5
-              }}
-            >
-              {app.icon} {app.short}
-            </button>
-          ))}
-        </div>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
+            {applications.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => { if (completedApps.has(i)) setActiveApp(i); }}
+                onPointerDown={() => { if (completedApps.has(i)) setActiveApp(i); }}
+                style={{ padding: '10px 16px', background: activeApp === i ? a.color : completedApps.has(i) ? '#020617' : '#1a1a1a', color: activeApp === i ? '#fff' : completedApps.has(i) ? a.color : '#444', border: `2px solid ${completedApps.has(i) ? a.color : '#333'}`, borderRadius: '10px', cursor: completedApps.has(i) ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap', fontSize: '14px', fontWeight: activeApp === i ? 600 : 400, opacity: completedApps.has(i) ? 1 : 0.5 }}
+              >
+                {a.icon} {a.short}
+              </button>
+            ))}
+          </div>
 
-        {/* Active application content */}
-        {(() => {
-          const app = applications[activeApp];
-          return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            <span style={{ fontSize: '36px' }}>{app.icon}</span>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <span style={{ fontSize: '36px' }}>{app.icon}</span>
-                <div>
-                  <h3 style={{ margin: 0, color: app.color, fontSize: '22px' }}>{app.title}</h3>
-                  <p style={{ margin: 0, color: colors.textSecondary, fontSize: '14px' }}>{app.tagline}</p>
-                </div>
-              </div>
-
-              <p style={{ color: colors.text, fontSize: '15px', lineHeight: 1.6, marginBottom: '16px' }}>
-                {app.description}
-              </p>
-
-              <div style={{
-                padding: '16px',
-                background: `${app.color}15`,
-                borderRadius: '12px',
-                marginBottom: '16px'
-              }}>
-                <p style={{ color: app.color, fontWeight: '600', margin: '0 0 8px 0', fontSize: '14px' }}>
-                  🔗 Physics Connection:
-                </p>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: 1.5 }}>
-                  {app.connection}
-                </p>
-              </div>
-
-              <div style={{ marginBottom: '16px' }}>
-                <p style={{ color: colors.text, fontWeight: '600', margin: '0 0 8px 0', fontSize: '14px' }}>
-                  ⚙️ How It Works:
-                </p>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: 1.6 }}>
-                  {app.howItWorks}
-                </p>
-              </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-                gap: '12px',
-                marginBottom: '16px'
-              }}>
-                <div style={{ padding: '12px', background: colors.background, borderRadius: '10px' }}>
-                  <p style={{ color: app.color, fontWeight: '600', margin: '0 0 6px 0', fontSize: '13px' }}>📊 Key Stats:</p>
-                  <ul style={{ margin: 0, paddingLeft: '16px', color: colors.textSecondary, fontSize: '12px' }}>
-                    {app.stats.map((stat, i) => <li key={i}>{stat}</li>)}
-                  </ul>
-                </div>
-
-                <div style={{ padding: '12px', background: colors.background, borderRadius: '10px' }}>
-                  <p style={{ color: app.color, fontWeight: '600', margin: '0 0 6px 0', fontSize: '13px' }}>💡 Examples:</p>
-                  <ul style={{ margin: 0, paddingLeft: '16px', color: colors.textSecondary, fontSize: '12px' }}>
-                    {app.examples.slice(0, 3).map((ex, i) => <li key={i}>{ex}</li>)}
-                  </ul>
-                </div>
-              </div>
-
-              <div style={{
-                padding: '14px',
-                background: colors.background,
-                borderRadius: '10px',
-                borderLeft: `4px solid ${app.color}`
-              }}>
-                <p style={{ color: colors.text, fontWeight: '600', margin: '0 0 4px 0', fontSize: '13px' }}>
-                  🔮 Future Impact:
-                </p>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '13px', lineHeight: 1.5 }}>
-                  {app.futureImpact}
-                </p>
-              </div>
+              <h3 style={{ margin: 0, color: app.color, fontSize: '22px' }}>{app.title}</h3>
+              <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>{app.tagline}</p>
             </div>
-          );
-        })()}
+          </div>
 
-        {/* Got It / Continue button for current app */}
-        <button
-          onPointerDown={() => {
-            if (activeApp < applications.length - 1) {
-              const next = activeApp + 1;
-              setCompletedApps(prev => new Set([...prev, next]));
-              setActiveApp(next);
-              playSound('transition');
-            } else {
-              setCompletedApps(prev => new Set([...prev, activeApp]));
-            }
-          }}
-          style={{
-            marginTop: '20px',
-            padding: '12px 24px',
-            width: '100%',
-            background: activeApp < applications.length - 1
-              ? `linear-gradient(135deg, ${applications[activeApp + 1]?.color || colors.primary}, ${colors.secondary})`
-              : `linear-gradient(135deg, ${colors.success}, ${colors.primary})`,
-            color: '#fff',
-            border: 'none',
-            borderRadius: '10px',
-            cursor: 'pointer',
-            fontSize: '15px',
-            fontWeight: '600',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          {activeApp < applications.length - 1
-            ? `Got It! Next: ${applications[activeApp + 1].icon} ${applications[activeApp + 1].title} →`
-            : 'Got It! Continue →'}
-        </button>
+          <p style={{ color: '#f8fafc', fontSize: '15px', lineHeight: 1.6, marginBottom: '16px' }}>{app.description}</p>
 
-        {/* Take the Test button when all apps viewed */}
-        {completedApps.size === applications.length && (
+          <div style={{ padding: '16px', background: `rgba(${app.color === '#3B82F6' ? '59,130,246' : app.color === '#10B981' ? '16,185,129' : app.color === '#8B5CF6' ? '139,92,246' : '239,68,68'}, 0.1)`, borderRadius: '12px', marginBottom: '16px' }}>
+            <p style={{ color: app.color, fontWeight: 600, margin: '0 0 8px 0', fontSize: '14px' }}>Physics Connection:</p>
+            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '14px', lineHeight: 1.5 }}>{app.connection}</p>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <p style={{ color: '#f8fafc', fontWeight: 600, margin: '0 0 8px 0', fontSize: '14px' }}>How It Works:</p>
+            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '14px', lineHeight: 1.6 }}>{app.howItWorks}</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ padding: '12px', background: '#020617', borderRadius: '10px' }}>
+              <p style={{ color: app.color, fontWeight: 600, margin: '0 0 6px 0', fontSize: '13px' }}>Key Stats:</p>
+              <ul style={{ margin: 0, paddingLeft: '16px', color: '#cbd5e1', fontSize: '12px' }}>
+                {app.stats.map((stat, i) => <li key={i}>{stat.label}: {stat.value}</li>)}
+              </ul>
+            </div>
+            <div style={{ padding: '12px', background: '#020617', borderRadius: '10px' }}>
+              <p style={{ color: app.color, fontWeight: 600, margin: '0 0 6px 0', fontSize: '13px' }}>Examples:</p>
+              <ul style={{ margin: 0, paddingLeft: '16px', color: '#cbd5e1', fontSize: '12px' }}>
+                {app.examples.slice(0, 3).map((ex, i) => <li key={i}>{ex}</li>)}
+              </ul>
+            </div>
+          </div>
+
+          <div style={{ padding: '14px', background: '#020617', borderRadius: '10px', borderLeft: `4px solid ${app.color}` }}>
+            <p style={{ color: '#f8fafc', fontWeight: 600, margin: '0 0 4px 0', fontSize: '13px' }}>Future Impact:</p>
+            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '13px', lineHeight: 1.5 }}>{app.futureImpact}</p>
+          </div>
+
           <button
-            onPointerDown={() => goToNextPhase()}
-            style={{
-              marginTop: '12px',
-              padding: '14px 24px',
-              width: '100%',
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`,
-              color: '#fff',
-              border: 'none',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '700',
-              boxShadow: `0 4px 15px ${colors.primary}40`
+            onClick={() => {
+              if (activeApp < applications.length - 1) {
+                const next = activeApp + 1;
+                setCompletedApps(prev => new Set([...prev, next]));
+                setActiveApp(next);
+              } else {
+                setCompletedApps(prev => new Set([...prev, activeApp]));
+              }
             }}
+            onPointerDown={() => {
+              if (activeApp < applications.length - 1) {
+                const next = activeApp + 1;
+                setCompletedApps(prev => new Set([...prev, next]));
+                setActiveApp(next);
+              } else {
+                setCompletedApps(prev => new Set([...prev, activeApp]));
+              }
+            }}
+            style={{ marginTop: '20px', padding: '12px 24px', width: '100%', background: 'linear-gradient(135deg, #3b82f6, #06b6d4)', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 600 }}
           >
-            Take the Test →
+            {activeApp < applications.length - 1 ? `Got It! Next: ${applications[activeApp + 1].title}` : 'Got It!'}
           </button>
-        )}
+
+          {completedApps.size >= applications.length && (
+            <button
+              onClick={() => goToNextPhase()}
+              onPointerDown={() => goToNextPhase()}
+              style={{ marginTop: '12px', padding: '14px 24px', width: '100%', background: 'linear-gradient(135deg, #3b82f6, #f97316)', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '16px', fontWeight: 700 }}
+            >
+              Take the Test \u2192
+            </button>
+          )}
+        </div>
+
+        {renderBottomBar(() => goToNextPhase(), completedApps.size < applications.length)}
       </div>
+    );
+  };
 
-      {renderBottomBar(() => goToNextPhase(), completedApps.size < applications.length)}
-    </div>
-  );
-
-  // Test Phase
+  // TEST PHASE
   const renderTest = () => {
     const currentQuestion = testAnswers.length;
     const isComplete = currentQuestion >= testQuestions.length;
 
     return (
-      <div style={{ padding: isMobile ? '16px' : '24px' }}>
-        {renderProgressBar()}
-        {renderSectionHeader("📝", "Knowledge Check", `Q${Math.min(currentQuestion + 1, testQuestions.length)} of ${testQuestions.length}`)}
+      <div style={{ padding: '24px' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h1 style={{ margin: 0, color: '#f8fafc', fontSize: '28px', fontWeight: 700 }}>Knowledge Check</h1>
+          <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>Question {Math.min(currentQuestion + 1, testQuestions.length)} of {testQuestions.length}</p>
+        </div>
 
-        <div style={{
-          background: colors.card,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '20px'
-        }}>
-          {!isComplete && !showTestResults ? (
+        <div style={{ background: '#0f172a', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
+          {!isComplete ? (
             <>
-              {/* Question number prominently shown */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '16px'
-              }}>
-                <span style={{
-                  color: colors.primary,
-                  fontSize: '18px',
-                  fontWeight: '700'
-                }}>
-                  Question {currentQuestion + 1} of {testQuestions.length}
-                </span>
-                <span style={{
-                  color: colors.textMuted,
-                  fontSize: '14px'
-                }}>
-                  Q{currentQuestion + 1}/{testQuestions.length}
-                </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <span style={{ color: '#3b82f6', fontSize: '18px', fontWeight: 700 }}>Question {currentQuestion + 1} of {testQuestions.length}</span>
               </div>
 
-              <p style={{
-                color: colors.textPrimary,
-                fontSize: '17px',
-                lineHeight: 1.6,
-                marginBottom: '24px'
-              }}>
+              <p style={{ color: '#f8fafc', fontSize: '16px', lineHeight: 1.6, marginBottom: '24px' }}>
                 {testQuestions[currentQuestion].question}
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {testQuestions[currentQuestion].options.map((option, i) => {
-                  const isSelected = selectedTestAnswer === i;
-                  const showFeedbackColor = showAnswerFeedback && isSelected;
-                  const feedbackColor = option.correct ? colors.success : colors.accent;
-
-                  return (
-                    <button
-                      key={i}
-                      onPointerDown={() => handleTestAnswer(i)}
-                      disabled={showAnswerFeedback}
-                      style={{
-                        padding: '14px 18px',
-                        fontSize: '14px',
-                        background: showFeedbackColor
-                          ? `${feedbackColor}20`
-                          : isSelected
-                            ? `${colors.primary}20`
-                            : colors.background,
-                        color: showFeedbackColor
-                          ? feedbackColor
-                          : isSelected
-                            ? colors.primary
-                            : colors.textPrimary,
-                        border: `2px solid ${showFeedbackColor ? feedbackColor : isSelected ? colors.primary : '#333'}`,
-                        borderRadius: '10px',
-                        cursor: showAnswerFeedback ? 'not-allowed' : 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.2s ease',
-                        minHeight: '44px'
-                      }}
-                    >
-                      {showFeedbackColor && (
-                        <span style={{ marginRight: '8px' }}>
-                          {option.correct ? '✓' : '✗'}
-                        </span>
-                      )}
-                      {option.text}
-                    </button>
-                  );
-                })}
+                {testQuestions[currentQuestion].options.map((option, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleTestAnswer(i)}
+                    onPointerDown={() => handleTestAnswer(i)}
+                    style={{
+                      padding: '14px 18px',
+                      fontSize: '14px',
+                      background: '#020617',
+                      color: '#f8fafc',
+                      border: '2px solid #333',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      minHeight: '44px',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {option.text}
+                  </button>
+                ))}
               </div>
 
-              {/* Confirm button when answer is selected */}
-              {selectedTestAnswer !== null && !showAnswerFeedback && (
-                <button
-                  onPointerDown={() => handleTestAnswer(selectedTestAnswer)}
-                  style={{
-                    marginTop: '16px',
-                    padding: '12px 24px',
-                    width: '100%',
-                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    fontWeight: '600'
-                  }}
-                >
-                  Confirm Answer →
-                </button>
-              )}
-
-              {/* Feedback message */}
-              {showAnswerFeedback && (
-                <div style={{
-                  marginTop: '16px',
-                  padding: '12px 16px',
-                  background: testQuestions[currentQuestion]?.options[selectedTestAnswer!]?.correct
-                    ? `${colors.success}20`
-                    : `${colors.accent}20`,
-                  borderRadius: '10px',
-                  textAlign: 'center'
-                }}>
-                  <p style={{
-                    margin: 0,
-                    color: testQuestions[currentQuestion]?.options[selectedTestAnswer!]?.correct
-                      ? colors.success
-                      : colors.accent,
-                    fontWeight: '600'
-                  }}>
-                    {testQuestions[currentQuestion]?.options[selectedTestAnswer!]?.correct
-                      ? '✓ Correct! Well done.'
-                      : `✗ Not quite. The answer involves ${testQuestions[currentQuestion]?.options.find(o => o.correct)?.text?.split(' ').slice(0, 4).join(' ')}...`}
-                  </p>
-                </div>
-              )}
-
-              {/* Progress dots */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
                 {testQuestions.map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: '50%',
-                      background: i < currentQuestion
-                        ? (testQuestions[i].options[testAnswers[i]]?.correct ? colors.success : colors.accent)
-                        : i === currentQuestion
-                          ? colors.primary
-                          : '#333',
-                      transition: 'all 0.3s ease'
-                    }}
-                  />
+                  <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: i < currentQuestion ? (testQuestions[i].options[testAnswers[i]]?.correct ? '#10b981' : '#ef4444') : i === currentQuestion ? '#3b82f6' : '#333' }} />
                 ))}
               </div>
             </>
-          ) : !showTestResults ? (
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ color: colors.text, fontSize: '18px', marginBottom: '20px' }}>
-                Test complete! Ready to see your results?
-              </p>
-              <button
-                onPointerDown={() => {
-                  setShowTestResults(true);
-                  playSound('success');
-                }}
-                style={{
-                  padding: '14px 32px',
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-                  color: colors.text,
-                  border: 'none',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '600'
-                }}
-              >
-                Show Results
-              </button>
-            </div>
           ) : (
             <div>
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                <div style={{
-                  fontSize: '48px',
-                  fontWeight: '700',
-                  color: calculateScore() >= 7 ? colors.success : calculateScore() >= 5 ? colors.warning : colors.accent
-                }}>
+                <div style={{ fontSize: '48px', fontWeight: 700, color: calculateScore() >= 7 ? '#10b981' : calculateScore() >= 5 ? '#f59e0b' : '#ef4444' }}>
                   {calculateScore()}/{testQuestions.length}
                 </div>
-                <p style={{ color: colors.textSecondary, margin: 0 }}>
-                  {calculateScore() >= 8 ? "Cavitation Expert!" :
-                   calculateScore() >= 6 ? "Great understanding!" :
-                   "Keep studying bubble physics!"}
+                <p style={{ color: '#e2e8f0', margin: 0 }}>
+                  {calculateScore() >= 8 ? "Cavitation Expert!" : calculateScore() >= 6 ? "Great understanding!" : "Keep studying bubble physics!"}
                 </p>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {testQuestions.map((q, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      padding: '14px',
-                      background: colors.background,
-                      borderRadius: '10px',
-                      borderLeft: `4px solid ${q.options[testAnswers[i]]?.correct ? colors.success : colors.accent}`
-                    }}
-                  >
-                    <p style={{ color: colors.text, margin: '0 0 8px 0', fontSize: '13px', fontWeight: '500' }}>
-                      {i + 1}. {q.question}
-                    </p>
-                    <p style={{
-                      color: q.options[testAnswers[i]]?.correct ? colors.success : colors.accent,
-                      margin: '0 0 4px 0',
-                      fontSize: '12px'
-                    }}>
-                      Your answer: {q.options[testAnswers[i]]?.text}
-                      {q.options[testAnswers[i]]?.correct ? ' ✓' : ` ✗ (Correct: ${q.options.find(o => o.correct)?.text})`}
+                  <div key={i} style={{ padding: '14px', background: '#020617', borderRadius: '10px', borderLeft: `4px solid ${q.options[testAnswers[i]]?.correct ? '#10b981' : '#ef4444'}` }}>
+                    <p style={{ color: '#f8fafc', margin: '0 0 8px 0', fontSize: '13px', fontWeight: 500 }}>{i + 1}. {q.question}</p>
+                    <p style={{ color: q.options[testAnswers[i]]?.correct ? '#10b981' : '#ef4444', margin: 0, fontSize: '12px' }}>
+                      Your answer: {q.options[testAnswers[i]]?.text} {q.options[testAnswers[i]]?.correct ? '\u2713 Correct' : `\u2717 Incorrect (Correct: ${q.options.find(o => o.correct)?.text})`}
                     </p>
                   </div>
                 ))}
@@ -2444,120 +1190,50 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
           )}
         </div>
 
-        {showTestResults && renderBottomBar(() => goToNextPhase(), false, "Complete Journey")}
+        {isComplete && renderBottomBar(() => goToNextPhase(), false, "Complete Journey")}
       </div>
     );
   };
 
-  // Mastery Phase
+  // MASTERY PHASE
   const renderMastery = () => {
     const score = calculateScore();
-
     return (
-      <div style={{ padding: isMobile ? '16px' : '24px' }}>
-        {renderProgressBar()}
-
-        <div style={{
-          background: `linear-gradient(135deg, ${colors.bubble}20, ${colors.collapse}20)`,
-          borderRadius: '20px',
-          padding: '32px',
-          textAlign: 'center',
-          marginBottom: '20px',
-          border: `2px solid ${colors.primary}50`,
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          {/* Confetti effect */}
-          {score >= 7 && Array.from({ length: 20 }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                position: 'absolute',
-                width: '10px',
-                height: '10px',
-                background: [colors.primary, colors.secondary, colors.accent, colors.success, colors.bubble][i % 5],
-                borderRadius: i % 2 === 0 ? '50%' : '2px',
-                left: `${Math.random() * 100}%`,
-                top: '-20px',
-                animation: `fall ${2 + Math.random() * 2}s linear infinite`,
-                animationDelay: `${Math.random() * 2}s`,
-                opacity: 0.8
-              }}
-            />
-          ))}
-
+      <div style={{ padding: '24px' }}>
+        <div style={{ background: 'linear-gradient(135deg, rgba(96,165,250,0.15), rgba(239,68,68,0.15))', borderRadius: '20px', padding: '32px', textAlign: 'center', marginBottom: '20px', border: '2px solid rgba(59,130,246,0.3)' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>💥🎓</div>
+          <h1 style={{ color: '#f8fafc', margin: '0 0 8px 0', fontSize: '28px', fontWeight: 700 }}>Cavitation Master!</h1>
+          <p style={{ color: '#cbd5e1', margin: '0 0 24px 0', fontSize: '16px' }}>You understand the explosive physics of collapsing bubbles</p>
 
-          <h2 style={{ color: colors.text, margin: '0 0 8px 0', fontSize: '28px', fontWeight: '700' }}>
-            Cavitation Master!
-          </h2>
-
-          <p style={{ color: colors.textSecondary, margin: '0 0 24px 0', fontSize: '16px' }}>
-            You understand the explosive physics of collapsing bubbles
-          </p>
-
-          <div style={{
-            display: 'inline-block',
-            padding: '16px 32px',
-            background: colors.card,
-            borderRadius: '12px',
-            marginBottom: '24px'
-          }}>
-            <div style={{ color: colors.collapse, fontSize: '36px', fontWeight: '700' }}>
-              {score}/{testQuestions.length}
-            </div>
-            <div style={{ color: colors.textSecondary, fontSize: '14px' }}>Final Score</div>
+          <div style={{ display: 'inline-block', padding: '16px 32px', background: '#0f172a', borderRadius: '12px', marginBottom: '24px' }}>
+            <div style={{ color: '#ef4444', fontSize: '36px', fontWeight: 700 }}>{score}/{testQuestions.length}</div>
+            <div style={{ color: '#cbd5e1', fontSize: '14px' }}>Final Score</div>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-            gap: '16px',
-            textAlign: 'left'
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'left' }}>
             {[
-              { icon: "○", title: "Vapor Pressure", text: "Low pressure creates bubbles" },
-              { icon: "💥", title: "Violent Collapse", text: "5,000°C, 1,000 atm" },
-              { icon: "🦐", title: "Nature's Weapon", text: "Mantis shrimp uses it!" }
+              { title: "Vapor Pressure", text: "Low pressure creates bubbles" },
+              { title: "Violent Collapse", text: "5,000\u00b0C, 1,000 atm" },
+              { title: "Nature's Weapon", text: "Mantis shrimp uses it!" }
             ].map((item, i) => (
-              <div key={i} style={{
-                padding: '16px',
-                background: colors.card,
-                borderRadius: '12px'
-              }}>
-                <span style={{ fontSize: '24px' }}>{item.icon}</span>
-                <p style={{ color: colors.text, fontWeight: '600', margin: '8px 0 4px 0', fontSize: '14px' }}>
-                  {item.title}
-                </p>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '12px' }}>
-                  {item.text}
-                </p>
+              <div key={i} style={{ padding: '16px', background: '#0f172a', borderRadius: '12px' }}>
+                <p style={{ color: '#f8fafc', fontWeight: 600, margin: '0 0 4px 0', fontSize: '14px' }}>{item.title}</p>
+                <p style={{ color: '#cbd5e1', margin: 0, fontSize: '12px' }}>{item.text}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <style>{`
-          @keyframes fall {
-            to {
-              transform: translateY(500px) rotate(360deg);
-              opacity: 0;
-            }
-          }
-        `}</style>
-
-        {renderKeyTakeaway("From ship propellers to medical treatments, cavitation demonstrates how extreme physics can emerge from something as simple as a bubble!")}
-
-        <div style={{ marginTop: '24px', textAlign: 'center' }}>
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-            💥 You now understand one of fluid dynamics' most violent phenomena!
+        <div style={{ padding: '16px 20px', background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(6,182,212,0.08))', borderLeft: '4px solid #3b82f6', borderRadius: '0 12px 12px 0' }}>
+          <p style={{ margin: 0, color: '#f8fafc', lineHeight: 1.6, fontSize: '15px' }}>
+            From ship propellers to medical treatments, cavitation demonstrates how extreme physics can emerge from something as simple as a bubble!
           </p>
         </div>
       </div>
     );
   };
 
-  // Main render
+  // Main phase render
   const renderPhase = () => {
     switch (phase) {
       case 'hook': return renderHook();
@@ -2575,52 +1251,10 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
-
-      {/* Header - fixed position for navigation accessibility */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }} className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Cavitation</span>
-          <div className="flex items-center gap-1.5">
-            {PHASE_ORDER.map((p, i) => {
-              const currentIndex = PHASE_ORDER.indexOf(phase);
-              return (
-                <button
-                  key={p}
-                  aria-label={phaseLabels[p]}
-                  title={phaseLabels[p]}
-                  onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                  style={{
-                    cursor: 'pointer',
-                    borderRadius: '9999px',
-                    width: phase === p ? '24px' : '8px',
-                    height: '8px',
-                    transition: 'all 0.3s',
-                    background: phase === p ? '#60a5fa' : currentIndex > i ? '#10b981' : '#334155',
-                    minHeight: '44px',
-                    minWidth: '44px',
-                    padding: '18px 0'
-                  }}
-                />
-              );
-            })}
-          </div>
-          <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
-
-      {/* Main content - scrollable area with overflow */}
-      <div className="relative pt-16 pb-12" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
-        <div style={{
-          maxWidth: '800px',
-          margin: '0 auto',
-          padding: isMobile ? '8px' : '16px'
-        }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#f8fafc' }}>
+      {renderNavDots()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           {renderPhase()}
         </div>
       </div>

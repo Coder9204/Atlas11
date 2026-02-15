@@ -314,7 +314,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
 
   const renderVisualization = (interactive: boolean, showComparison: boolean = false) => {
     const width = 440;
-    const height = 400;
+    const height = 420;
     const output = calculateDiffusion();
 
     // Calculate current diffusion profile based on animation
@@ -592,32 +592,38 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
           })}
 
           {/* Concentration profile graph */}
-          <g transform="translate(70, 255)">
+          <g transform="translate(70, 235)">
             {/* Graph background */}
-            <rect x="0" y="0" width="260" height="90" rx="6" fill="url(#dopeGraphBg)" stroke="#334155" strokeWidth="1" />
+            <rect x="0" y="0" width="260" height="140" rx="6" fill="url(#dopeGraphBg)" stroke="#334155" strokeWidth="1" />
 
             {/* Grid lines */}
-            {[20, 40, 60].map((y) => (
-              <line key={y} x1="35" y1={y + 5} x2="245" y2={y + 5} stroke="#334155" strokeWidth="0.5" strokeDasharray="2,4" />
+            {[25, 50, 75, 100].map((y) => (
+              <line key={y} x1="40" y1={y + 5} x2="245" y2={y + 5} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.3} />
             ))}
-            {[80, 130, 180].map((x) => (
-              <line key={x} x1={x} y1="15" x2={x} y2="75" stroke="#334155" strokeWidth="0.5" strokeDasharray="2,4" />
+            {[90, 140, 190].map((x) => (
+              <line key={x} x1={x} y1="15" x2={x} y2="125" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.3} />
             ))}
 
             {/* Axes */}
-            <line x1="35" y1="75" x2="245" y2="75" stroke="#64748b" strokeWidth="1.5" />
-            <line x1="35" y1="15" x2="35" y2="75" stroke="#64748b" strokeWidth="1.5" />
+            <line x1="40" y1="125" x2="245" y2="125" stroke="#64748b" strokeWidth="1.5" />
+            <line x1="40" y1="15" x2="40" y2="125" stroke="#64748b" strokeWidth="1.5" />
 
             {/* Axis arrows */}
-            <polygon points="245,75 240,72 240,78" fill="#64748b" />
-            <polygon points="35,15 32,20 38,20" fill="#64748b" />
+            <polygon points="245,125 240,122 240,128" fill="#64748b" />
+            <polygon points="40,15 37,20 43,20" fill="#64748b" />
+
+            {/* X axis label - Distance/Depth */}
+            <text x="145" y="138" textAnchor="middle" fill={colors.textMuted} fontSize="11">Distance (um)</text>
+
+            {/* Y axis label - Concentration */}
+            <text x="14" y="70" textAnchor="middle" fill={colors.textMuted} fontSize="11" transform="rotate(-90, 14, 70)">Concentration</text>
 
             {/* Profile curve with gradient */}
             <path
-              d={`M 35 ${75 - 55 * output.profile[0].concentration * timeRatio} ` +
+              d={`M 40 ${125 - 105 * output.profile[0].concentration * timeRatio} ` +
                 output.profile.map((p) => {
-                  const x = 35 + (p.x / 5) * 210;
-                  const y = 75 - 55 * p.concentration * timeRatio;
+                  const x = 40 + (p.x / 5) * 205;
+                  const y = 125 - 105 * p.concentration * timeRatio;
                   return `L ${x} ${y}`;
                 }).join(' ')}
               fill="none"
@@ -629,10 +635,10 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
 
             {/* Junction depth marker on graph */}
             <line
-              x1={35 + (output.junctionDepth / 5) * 210 * timeRatio}
+              x1={40 + (output.junctionDepth / 5) * 205 * timeRatio}
               y1="15"
-              x2={35 + (output.junctionDepth / 5) * 210 * timeRatio}
-              y2="75"
+              x2={40 + (output.junctionDepth / 5) * 205 * timeRatio}
+              y2="125"
               stroke={colors.error}
               strokeWidth="2"
               strokeDasharray="4,3"
@@ -641,54 +647,50 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
 
             {/* Junction depth label on graph */}
             <circle
-              cx={35 + (output.junctionDepth / 5) * 210 * timeRatio}
-              cy={75 - 55 * 0.1 * timeRatio}
+              cx={40 + (output.junctionDepth / 5) * 205 * timeRatio}
+              cy={125 - 105 * 0.1 * timeRatio}
               r="4"
               fill={colors.error}
             />
           </g>
 
           {/* Output panel */}
-          <g transform="translate(350, 55)">
-            <rect x="0" y="0" width="75" height="170" rx="8" fill="url(#dopeOutputPanel)" stroke="#334155" strokeWidth="1.5" filter="url(#dopePanelGlow)" />
+          <rect x="350" y="55" width="75" height="170" rx="8" fill="url(#dopeOutputPanel)" stroke="#334155" strokeWidth="1.5" filter="url(#dopePanelGlow)" />
 
-            {/* Depth section */}
-            <rect x="5" y="8" width="65" height="70" rx="4" fill="rgba(96,165,250,0.1)" />
-            <text x="37" y="28" fill={colors.textMuted} fontSize="10" textAnchor="middle" fontWeight="600">DEPTH</text>
-            <text x="37" y="55" fill={colors.nType} fontSize="22" textAnchor="middle" fontWeight="bold">
-              {(output.junctionDepth * timeRatio).toFixed(2)}
-            </text>
-            <text x="37" y="70" fill={colors.textMuted} fontSize="9" textAnchor="middle">um</text>
+          {/* Depth section */}
+          <rect x="355" y="63" width="65" height="70" rx="4" fill="rgba(96,165,250,0.1)" />
+          <text x="387" y="83" fill={colors.textMuted} fontSize="11" textAnchor="middle" fontWeight="600">DEPTH</text>
+          <text x="387" y="110" fill={colors.nType} fontSize="22" textAnchor="middle" fontWeight="bold">
+            {(output.junctionDepth * timeRatio).toFixed(2)}
+          </text>
+          <text x="387" y="125" fill={colors.textMuted} fontSize="11" textAnchor="middle">um</text>
 
-            {/* Sheet resistance section */}
-            <rect x="5" y="88" width="65" height="70" rx="4" fill="rgba(16,185,129,0.1)" />
-            <text x="37" y="108" fill={colors.textMuted} fontSize="10" textAnchor="middle" fontWeight="600">Rsheet</text>
-            <text x="37" y="135" fill={colors.success} fontSize="20" textAnchor="middle" fontWeight="bold">
-              {output.sheetResistance.toFixed(0)}
-            </text>
-            <text x="37" y="150" fill={colors.textMuted} fontSize="9" textAnchor="middle">ohm/sq</text>
-          </g>
+          {/* Sheet resistance section */}
+          <rect x="355" y="143" width="65" height="70" rx="4" fill="rgba(16,185,129,0.1)" />
+          <text x="387" y="163" fill={colors.textMuted} fontSize="11" textAnchor="middle" fontWeight="600">Rsheet</text>
+          <text x="387" y="190" fill={colors.success} fontSize="20" textAnchor="middle" fontWeight="bold">
+            {output.sheetResistance.toFixed(0)}
+          </text>
+          <text x="387" y="205" fill={colors.textMuted} fontSize="11" textAnchor="middle">ohm/sq</text>
 
           {/* P/N Junction indicator legend */}
-          <g transform="translate(350, 240)">
-            <rect x="0" y="0" width="75" height="105" rx="8" fill="url(#dopeOutputPanel)" stroke="#334155" strokeWidth="1" />
+          <rect x="350" y="250" width="75" height="115" rx="8" fill="url(#dopeOutputPanel)" stroke="#334155" strokeWidth="1" />
 
-            {/* N-type indicator */}
-            <rect x="10" y="12" width="12" height="12" rx="2" fill={colors.nType} />
-            <text x="28" y="22" fill={colors.textSecondary} fontSize="10">N-type</text>
+          {/* N-type indicator */}
+          <rect x="360" y="262" width="12" height="12" rx="2" fill={colors.nType} />
+          <text x="378" y="272" fill={colors.textSecondary} fontSize="11">N-type</text>
 
-            {/* P-type indicator */}
-            <rect x="10" y="32" width="12" height="12" rx="2" fill={colors.pType} />
-            <text x="28" y="42" fill={colors.textSecondary} fontSize="10">P-type</text>
+          {/* P-type indicator */}
+          <rect x="360" y="286" width="12" height="12" rx="2" fill={colors.pType} />
+          <text x="378" y="296" fill={colors.textSecondary} fontSize="11">P-type</text>
 
-            {/* Junction indicator */}
-            <line x1="10" y1="58" x2="22" y2="58" stroke={colors.error} strokeWidth="2" strokeDasharray="3,2" />
-            <text x="28" y="62" fill={colors.textSecondary} fontSize="10">Junction</text>
+          {/* Junction indicator */}
+          <line x1="360" y1="314" x2="372" y2="314" stroke={colors.error} strokeWidth="2" strokeDasharray="3,2" />
+          <text x="378" y="318" fill={colors.textSecondary} fontSize="11">Junction</text>
 
-            {/* Dopant indicator */}
-            <circle cx="16" cy="80" r="5" fill="url(#dopeDopantAtomGlow)" />
-            <text x="28" y="84" fill={colors.textSecondary} fontSize="10">Dopant</text>
-          </g>
+          {/* Dopant indicator */}
+          <circle cx="366" cy="338" r="5" fill="url(#dopeDopantAtomGlow)" />
+          <text x="378" y="342" fill={colors.textSecondary} fontSize="11">Dopant</text>
         </svg>
 
         {/* Labels moved outside SVG */}
@@ -905,7 +907,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
           step="10"
           value={temperature}
           onChange={(e) => setTemperature(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -920,7 +922,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
           step="5"
           value={diffusionTime}
           onChange={(e) => setDiffusionTime(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 

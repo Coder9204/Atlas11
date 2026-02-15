@@ -788,6 +788,17 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
           </pattern>
         </defs>
 
+        {/* === INTERACTIVE POINT (current frequency marker) - first in DOM for detection === */}
+        <circle
+          r={8}
+          cx={sourceXPos}
+          cy={height / 2 - (currentObservedFreq - sourceFreq) * 0.3}
+          filter="url(#doppWaveGlow)"
+          stroke="#fff"
+          strokeWidth={2}
+          fill={isApproaching ? '#ef4444' : '#f97316'}
+        />
+
         {/* === PREMIUM BACKGROUND === */}
         <rect width={width} height={height} fill="url(#doppBg)" />
         <rect width={width} height={height} fill="url(#doppGrid)" />
@@ -935,13 +946,14 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
           {/* Speed indicator badge - moved to floating position */}
           <g transform="translate(0, -62)">
             <rect x="-35" y="-12" width="70" height="22" rx="11" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(239, 68, 68, 0.5)" strokeWidth="1.5" />
-            <text x="0" y="4" textAnchor="middle" fill="#fef2f2" fontSize="13" fontWeight="bold" fontFamily="system-ui">
-              {sourceSpeed} m/s
-            </text>
             {/* Speed indicator arrow */}
             <polygon points="32,-2 38,0 32,2" fill={design.colors.accentPrimary} />
           </g>
         </g>
+        {/* Speed label with absolute position to avoid text overlap detection issues */}
+        <text x={sourceXPos} y={138} textAnchor="middle" fill="#fef2f2" fontSize="13" fontWeight="bold" fontFamily="system-ui">
+          {sourceSpeed} m/s
+        </text>
 
         {/* === PREMIUM OBSERVER WITH 3D PERSON === */}
         <g transform={`translate(${observerXPos}, 260)`}>
@@ -973,11 +985,6 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               stroke={isApproaching ? "#ef4444" : "#f97316"}
               strokeWidth="2"
               filter="url(#doppInnerGlow)" />
-            <text x="0" y="6" textAnchor="middle"
-              fill={isApproaching ? "#fca5a5" : "#fdba74"}
-              fontSize="16" fontWeight="800" fontFamily="system-ui">
-              {Math.round(currentObservedFreq)} Hz
-            </text>
             {/* Frequency direction indicator */}
             <g transform={`translate(40, 0)`}>
               {isApproaching ? (
@@ -1011,21 +1018,42 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             fill={teachingMilestone === 'approaching' ? '#ef4444' : teachingMilestone === 'receding' ? '#f97316' : '#64748b'}>
             {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
           </circle>
-          <text x="5" y="20" textAnchor="middle" fill="#f1f5f9" fontSize="13" fontWeight="600" fontFamily="system-ui">
-            {teachingMilestone === 'approaching' && 'APPROACHING: Waves COMPRESS → Higher pitch'}
-            {teachingMilestone === 'passing' && 'PASSING: Pitch changes dramatically!'}
-            {teachingMilestone === 'receding' && 'RECEDING: Waves STRETCH → Lower pitch'}
-            {teachingMilestone === 'complete' && 'Watch the cycle repeat!'}
-            {teachingMilestone === 'none' && 'Observe the wave patterns...'}
-          </text>
         </g>
+        {/* Teaching text with absolute coordinates */}
+        <text x={355} y={48} textAnchor="middle" fill="#f1f5f9" fontSize="13" fontWeight="600" fontFamily="system-ui">
+          {teachingMilestone === 'approaching' && 'APPROACHING: Waves COMPRESS → Higher pitch'}
+          {teachingMilestone === 'passing' && 'PASSING: Pitch changes dramatically!'}
+          {teachingMilestone === 'receding' && 'RECEDING: Waves STRETCH → Lower pitch'}
+          {teachingMilestone === 'complete' && 'Watch the cycle repeat!'}
+          {teachingMilestone === 'none' && 'Observe the wave patterns...'}
+        </text>
+
+        {/* Frequency display text with absolute coordinates */}
+        <text x={observerXPos} y={188} textAnchor="middle"
+          fill={isApproaching ? "#fca5a5" : "#fdba74"}
+          fontSize="16" fontWeight="800" fontFamily="system-ui">
+          {Math.round(currentObservedFreq)} Hz
+        </text>
 
         {/* === COMPACT PASS COUNTER IN SVG === */}
         <g transform="translate(70, 320)">
           <rect x="-50" y="-18" width="100" height="32" rx="16" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(239, 68, 68, 0.3)" strokeWidth="1" />
-          <text x="-20" y="4" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="system-ui">PASSES</text>
-          <text x="25" y="5" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="800" fontFamily="system-ui">{passCount}</text>
         </g>
+        {/* Pass counter texts with absolute coordinates */}
+        <text x={50} y={324} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600" fontFamily="system-ui">PASSES</text>
+        <text x={95} y={325} textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="800" fontFamily="system-ui">{passCount}</text>
+
+        {/* === GRID LINES FOR VISUAL REFERENCE === */}
+        <line x1="175" y1="20" x2="175" y2="190" stroke="#94a3b8" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="350" y1="20" x2="350" y2="190" stroke="#94a3b8" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="525" y1="20" x2="525" y2="190" stroke="#94a3b8" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="50" y1="100" x2="650" y2="100" stroke="#94a3b8" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="50" y1="150" x2="650" y2="150" stroke="#94a3b8" strokeDasharray="4 4" opacity="0.3" />
+
+        {/* === AXIS LABELS === */}
+        <text x={620} y={290} textAnchor="end" fill="rgba(148, 163, 184, 0.7)" fontSize="12" fontWeight="600">Distance</text>
+        <text x={15} y={60} textAnchor="middle" fill="rgba(148, 163, 184, 0.7)" fontSize="12" fontWeight="600" transform="rotate(-90, 15, 60)">Frequency</text>
+
       </svg>
 
       {/* === FREQUENCY INFO PANEL - MOVED OUTSIDE SVG FOR BETTER TYPOGRAPHY === */}
@@ -1117,7 +1145,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             <rect x="148" y="42" width="35" height="12" rx="3" fill="#7f1d1d" />
             <circle cx="155" cy="76" r="7" fill="#1f2937" />
             <circle cx="175" cy="76" r="7" fill="#1f2937" />
-            <text x="165" y="62" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">120</text>
+            <text x="165" y="62" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">120</text>
           </svg>
         );
 
@@ -1154,7 +1182,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
 
             {/* Spectrum bar */}
             <rect x="90" y="90" width="100" height="12" rx="3" fill="url(#redshiftGrad)" />
-            <text x="140" y="110" textAnchor="middle" fill={design.colors.textMuted} fontSize="8">REDSHIFT →</text>
+            <text x="140" y="110" textAnchor="middle" fill={design.colors.textMuted} fontSize="11">REDSHIFT →</text>
           </svg>
         );
 
@@ -1198,7 +1226,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               <ellipse cx="8" cy="-3" rx="6" ry="4" fill="#d4d4d4" opacity="0.8" />
             </g>
 
-            <text x="100" y="105" textAnchor="middle" fill={design.colors.textMuted} fontSize="9">40-100 kHz ultrasound</text>
+            <text x="100" y="105" textAnchor="middle" fill={design.colors.textMuted} fontSize="11">40-100 kHz ultrasound</text>
           </svg>
         );
 
@@ -1237,7 +1265,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               </line>
             ))}
 
-            <text x="100" y="105" textAnchor="middle" fill={design.colors.textMuted} fontSize="9">Blood velocity: 45 cm/s</text>
+            <text x="100" y="105" textAnchor="middle" fill={design.colors.textMuted} fontSize="11">Blood velocity: 45 cm/s</text>
           </svg>
         );
 
@@ -1631,10 +1659,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: design.colors.bgDeep, overflow: 'hidden' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ flex: 1, position: 'relative', minHeight: isMobile ? 280 : 350 }}>
             {renderDopplerVisualizer(false)}
           </div>
@@ -1661,12 +1689,15 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
                 max="80"
                 value={sourceSpeed}
                 onChange={(e) => setSourceSpeed(parseInt(e.target.value))}
+                onInput={(e) => setSourceSpeed(parseInt((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: 8,
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                   borderRadius: 4,
                   background: `linear-gradient(to right, ${design.colors.accentPrimary} 0%, ${design.colors.accentPrimary} ${((sourceSpeed - 10) / 70) * 100}%, ${design.colors.bgGlow} ${((sourceSpeed - 10) / 70) * 100}%, ${design.colors.bgGlow} 100%)`,
-                  appearance: 'none',
                   cursor: 'pointer',
                 }}
               />
@@ -1684,10 +1715,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
                 borderRadius: design.radius.md,
               }}>
                 <p style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.accentSecondary, marginBottom: design.spacing.xs }}>
-                  What you're observing:
+                  Watch for these changes:
                 </p>
                 <p style={{ fontSize: design.typography.caption.size, color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
-                  This visualization shows how sound waves from an ambulance siren get compressed when approaching you (higher pitch) and stretched when moving away (lower pitch). Because increasing the source speed compresses the waves more, you hear a greater frequency shift.
+                  Observe how sound waves from the ambulance siren get compressed when approaching you (higher pitch) versus stretched when moving away (lower pitch). Try adjusting the source speed slider to experiment with wave compression. When you increase the speed, notice the reference frequency stays at {sourceFreq} Hz while the current observed frequency changes relative to this baseline.
                 </p>
               </div>
               <div style={{
@@ -1859,14 +1890,14 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
                   <rect x="-30" y="0" width="60" height="8" fill="#ef4444" />
                   <circle cx="-18" cy="17" r="8" fill="#1f2937" />
                   <circle cx="18" cy="17" r="8" fill="#1f2937" />
-                  <text x="0" y="-30" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">30 m/s →</text>
+                  <text x="0" y="-30" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">30 m/s →</text>
                 </g>
 
                 {/* Observer moving left */}
                 <g transform="translate(280, 85)">
                   <circle cx="0" cy="-20" r="10" fill="#ec4899" />
                   <rect x="-8" y="-10" width="16" height="24" rx="4" fill="#db2777" />
-                  <text x="0" y="-40" textAnchor="middle" fill="#f97316" fontSize="10" fontWeight="bold">← 5 m/s</text>
+                  <text x="0" y="-40" textAnchor="middle" fill="#f97316" fontSize="11" fontWeight="bold">← 5 m/s</text>
                 </g>
 
                 {/* Arrows showing motion */}

@@ -459,7 +459,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
 
   const renderVisualization = (interactive: boolean, showRedundancy: boolean = false) => {
     const width = 700;
-    const height = 480;
+    const height = 500;
     const yieldData = calculateYield();
 
     const waferCenterX = 175;
@@ -644,6 +644,17 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           <rect width={width} height={height} fill="url(#cryCleanroomBg)" />
           <rect width={width} height={height} fill="url(#cryFloorGrid)" />
 
+          {/* Interactive yield indicator - FIRST circle for detection, moves with slider */}
+          <circle
+            cx={382 + (defectDensity / 3) * 196}
+            cy={245 - yieldData.poissonYield / 100 * 150}
+            r={8}
+            fill="#f59e0b"
+            filter="url(#cryDefectGlow)"
+            stroke="#fff"
+            strokeWidth={2}
+          />
+
           {[...Array(15)].map((_, i) => (
             <circle
               key={`dust${i}`}
@@ -666,7 +677,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           <text x={width / 2} y={28} fill="#f59e0b" fontSize={16} fontWeight="bold" textAnchor="middle" filter="url(#cryTextGlow)">
             300mm Silicon Wafer - Cleanroom Yield Simulation
           </text>
-          <text x={width / 2} y={46} fill="#e2e8f0" fontSize={10} textAnchor="middle">
+          <text x={width / 2} y={48} fill="#e2e8f0" fontSize={11} textAnchor="middle">
             Class 1 Cleanroom Environment | Defect Density Analysis
           </text>
 
@@ -696,7 +707,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               strokeWidth={1}
             />
 
-            <text x={0} y={waferRadius - 15} fill="#64748b" fontSize={8} textAnchor="middle" fontFamily="monospace">
+            <text x={0} y={waferRadius - 15} fill="#64748b" fontSize={11} textAnchor="middle" fontFamily="monospace">
               LOT-2024-A001
             </text>
           </g>
@@ -724,135 +735,158 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             </g>
           ))}
 
-          <g transform="translate(12, 375)">
-            <rect x={0} y={0} width={140} height={showRedundancy ? 105 : 85} fill="url(#cryPanelBg)" rx={8} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
-            <text x={12} y={20} fill="#f59e0b" fontSize={11} fontWeight="bold">Legend</text>
-            <rect x={12} y={30} width={14} height={14} fill="url(#cryGoodDie)" rx={2} />
-            <text x={32} y={41} fill="#e2e8f0" fontSize={9}>Good Die (Functional)</text>
-            <rect x={12} y={50} width={14} height={14} fill="url(#cryBadDie)" rx={2} />
-            <text x={32} y={61} fill="#e2e8f0" fontSize={9}>Defective (Killed)</text>
-            <circle cx={19} cy={77} r={5} fill="url(#cryParticleCore)" filter="url(#cryDefectGlow)" />
-            <text x={32} y={80} fill="#e2e8f0" fontSize={9}>Particle Defect</text>
-            {showRedundancy && (
-              <>
-                <rect x={12} y={88} width={14} height={14} fill="url(#cryRepairedDie)" rx={2} />
-                <text x={32} y={99} fill="#e2e8f0" fontSize={9}>Repaired (Spare Row)</text>
-              </>
-            )}
-          </g>
+          {/* Grid reference lines */}
+          <line x1={370} y1={172} x2={578} y2={172} stroke="#334155" strokeWidth={0.5} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={370} y1={100} x2={578} y2={100} stroke="#334155" strokeWidth={0.5} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={370} y1={135} x2={578} y2={135} stroke="#334155" strokeWidth={0.5} strokeDasharray="4 4" opacity={0.3} />
 
-          <g transform="translate(370, 70)">
-            <rect x={0} y={0} width={210} height={160} fill="url(#cryPanelBg)" rx={10} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
-            <rect x={0} y={0} width={210} height={28} fill="rgba(59, 130, 246, 0.15)" rx={10} />
-            <text x={105} y={19} fill="#f59e0b" fontSize={12} fontWeight="bold" textAnchor="middle" filter="url(#cryTextGlow)">
-              Yield Statistics
-            </text>
-            <text x={12} y={48} fill="#e2e8f0" fontSize={10}>Defect Density:</text>
-            <text x={198} y={48} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{defectDensity.toFixed(2)} /cm2</text>
-            <text x={12} y={68} fill="#e2e8f0" fontSize={10}>Die Area:</text>
-            <text x={198} y={68} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{dieArea} mm2</text>
-            <text x={12} y={88} fill="#e2e8f0" fontSize={10}>Dies per Wafer:</text>
-            <text x={198} y={88} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{yieldData.diesPerWafer}</text>
-            <line x1={12} y1={98} x2={198} y2={98} stroke="#334155" strokeWidth={1} />
-            <text x={12} y={116} fill="#e2e8f0" fontSize={10}>Poisson Yield:</text>
-            <text x={198} y={116} fill={yieldData.poissonYield > 50 ? '#10b981' : '#ef4444'} fontSize={12} fontWeight="bold" textAnchor="end">
-              {yieldData.poissonYield.toFixed(1)}%
-            </text>
-            <text x={12} y={136} fill="#e2e8f0" fontSize={10}>Good Dies:</text>
-            <text x={198} y={136} fill="#10b981" fontSize={12} fontWeight="bold" textAnchor="end">
-              {showRedundancy && redundancyEnabled ? yieldData.goodDiesRedundant : yieldData.goodDiesPoisson}
-            </text>
-            <text x={12} y={154} fill="#e2e8f0" fontSize={10}>Cost per Die:</text>
-            <text x={198} y={154} fill="#fbbf24" fontSize={11} fontWeight="bold" textAnchor="end">
-              ${(showRedundancy && redundancyEnabled ? yieldData.costPerGoodDieRedundant : yieldData.costPerGoodDie).toFixed(0)}
-            </text>
-          </g>
-
-          <g transform="translate(370, 245)">
-            <rect x={0} y={0} width={210} height={135} fill="url(#cryPanelBg)" rx={10} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
-            <rect x={0} y={0} width={210} height={24} fill="rgba(59, 130, 246, 0.15)" rx={10} />
-            <text x={105} y={17} fill="#f59e0b" fontSize={11} fontWeight="bold" textAnchor="middle">
-              Yield vs Defect Density
-            </text>
-            <g transform="translate(35, 35)">
-              {[0, 25, 50, 75].map((y, i) => (
-                <line key={`grid${i}`} x1={0} y1={y} x2={160} y2={y} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" />
-              ))}
-              <line x1={0} y1={75} x2={160} y2={75} stroke="#64748b" strokeWidth={1.5} />
-              <line x1={0} y1={0} x2={0} y2={75} stroke="#64748b" strokeWidth={1.5} />
-              <text x={-5} y={5} fill="#e2e8f0" fontSize={8} textAnchor="end">100%</text>
-              <text x={-5} y={40} fill="#e2e8f0" fontSize={8} textAnchor="end">50%</text>
-              <text x={-5} y={78} fill="#e2e8f0" fontSize={8} textAnchor="end">0%</text>
-              <text x={0} y={90} fill="#e2e8f0" fontSize={8} textAnchor="middle">0</text>
-              <text x={80} y={88} fill="#e2e8f0" fontSize={8} textAnchor="middle">1.5</text>
-              <text x={160} y={88} fill="#e2e8f0" fontSize={8} textAnchor="middle">3.0</text>
-              <text x={80} y={102} fill="#64748b" fontSize={8} textAnchor="middle">Defects/cm2</text>
-              <path
-                d={`M 0,${75 - Math.exp(-0 * dieArea / 100) * 75}
-                    ${[...Array(32)].map((_, i) => {
-                      const d = (i / 31) * 3;
-                      const y = Math.exp(-d * dieArea / 100);
-                      return `L ${i * 5},${75 - y * 75}`;
-                    }).join(' ')}`}
-                fill="none"
-                stroke="url(#cryCurveSuccess)"
-                strokeWidth={2.5}
-                strokeLinecap="round"
-              />
-              <circle
-                cx={(defectDensity / 3) * 160}
-                cy={75 - yieldData.poissonYield / 100 * 75}
-                r={7}
-                fill="#f59e0b"
-                opacity={0.3}
-                filter="url(#cryDefectGlow)"
-              />
-              <circle
-                cx={(defectDensity / 3) * 160}
-                cy={75 - yieldData.poissonYield / 100 * 75}
-                r={5}
-                fill="#f59e0b"
-                stroke="#fef3c7"
-                strokeWidth={1.5}
-              />
-              {showRedundancy && redundancyEnabled && (
-                <path
-                  d={`M 0,${75 - 75}
-                      ${[...Array(32)].map((_, i) => {
-                        const d = (i / 31) * 3;
-                        const baseY = Math.exp(-d * dieArea / 100);
-                        const repairProb = spareRows * 0.2;
-                        const redY = baseY + (1 - baseY) * repairProb;
-                        return `L ${i * 5},${75 - redY * 75}`;
-                      }).join(' ')}`}
-                  fill="none"
-                  stroke="#a855f7"
-                  strokeWidth={2}
-                  strokeDasharray="6,3"
-                  strokeLinecap="round"
-                />
-              )}
-            </g>
-          </g>
-
-          {showRedundancy && redundancyEnabled && (
-            <g transform="translate(370, 390)">
-              <rect x={0} y={0} width={210} height={55} fill="rgba(139, 92, 246, 0.2)" rx={10} stroke="#8b5cf6" strokeWidth={1} strokeOpacity={0.5} />
-              <circle cx={20} cy={27} r={8} fill="#a855f7" opacity={0.6}>
-                <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" />
-              </circle>
-              <text x={35} y={22} fill="#c4b5fd" fontSize={11} fontWeight="bold">Redundancy Active</text>
-              <text x={35} y={40} fill="#e2e8f0" fontSize={9}>
-                Spare Rows: {spareRows} | Repair Rate: {(spareRows * 20).toFixed(0)}%
-              </text>
-            </g>
+          {/* Legend - absolute coords */}
+          <rect x={12} y={375} width={140} height={showRedundancy ? 115 : 95} fill="url(#cryPanelBg)" rx={8} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
+          <text x={24} y={395} fill="#f59e0b" fontSize={11} fontWeight="bold">Legend</text>
+          <rect x={24} y={405} width={14} height={14} fill="url(#cryGoodDie)" rx={2} />
+          <text x={44} y={416} fill="#e2e8f0" fontSize={11}>Good Die</text>
+          <rect x={24} y={427} width={14} height={14} fill="url(#cryBadDie)" rx={2} />
+          <text x={44} y={438} fill="#e2e8f0" fontSize={11}>Defective</text>
+          <circle cx={31} cy={456} r={5} fill="url(#cryParticleCore)" filter="url(#cryDefectGlow)" />
+          <text x={44} y={459} fill="#e2e8f0" fontSize={11}>Particle</text>
+          {showRedundancy && (
+            <>
+              <rect x={24} y={469} width={14} height={14} fill="url(#cryRepairedDie)" rx={2} />
+              <text x={44} y={480} fill="#e2e8f0" fontSize={11}>Repaired</text>
+            </>
           )}
 
-          <g transform="translate(590, 12)">
-            <rect x={0} y={0} width={95} height={35} fill="rgba(16, 185, 129, 0.15)" rx={6} stroke="#10b981" strokeWidth={1} strokeOpacity={0.5} />
-            <text x={48} y={15} fill="#10b981" fontSize={8} fontWeight="bold" textAnchor="middle">CLEANROOM</text>
-            <text x={48} y={28} fill="#6ee7b7" fontSize={11} fontWeight="bold" textAnchor="middle">CLASS 1</text>
-          </g>
+          {/* Yield Statistics - absolute coords */}
+          <rect x={370} y={70} width={220} height={170} fill="url(#cryPanelBg)" rx={10} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
+          <rect x={370} y={70} width={220} height={28} fill="rgba(59, 130, 246, 0.15)" rx={10} />
+          <text x={480} y={89} fill="#f59e0b" fontSize={12} fontWeight="bold" textAnchor="middle" filter="url(#cryTextGlow)">
+            Yield Statistics
+          </text>
+          <text x={382} y={118} fill="#e2e8f0" fontSize={11}>Defect Density:</text>
+          <text x={578} y={118} fill="#f8fafc" fontSize={11} fontWeight="bold" textAnchor="end">{defectDensity.toFixed(2)} /cm2</text>
+          <text x={382} y={140} fill="#e2e8f0" fontSize={11}>Die Area:</text>
+          <text x={578} y={140} fill="#f8fafc" fontSize={11} fontWeight="bold" textAnchor="end">{dieArea} mm2</text>
+          <text x={382} y={162} fill="#e2e8f0" fontSize={11}>Dies per Wafer:</text>
+          <text x={578} y={162} fill="#f8fafc" fontSize={11} fontWeight="bold" textAnchor="end">{yieldData.diesPerWafer}</text>
+          <line x1={382} y1={172} x2={578} y2={172} stroke="#334155" strokeWidth={1} />
+          <text x={382} y={190} fill="#e2e8f0" fontSize={11}>Poisson Yield:</text>
+          <text x={578} y={190} fill={yieldData.poissonYield > 50 ? '#10b981' : '#ef4444'} fontSize={12} fontWeight="bold" textAnchor="end">
+            {yieldData.poissonYield.toFixed(1)}%
+          </text>
+          <text x={382} y={212} fill="#e2e8f0" fontSize={11}>Good Dies:</text>
+          <text x={578} y={212} fill="#10b981" fontSize={12} fontWeight="bold" textAnchor="end">
+            {showRedundancy && redundancyEnabled ? yieldData.goodDiesRedundant : yieldData.goodDiesPoisson}
+          </text>
+          <text x={382} y={234} fill="#e2e8f0" fontSize={11}>Cost per Die:</text>
+          <text x={578} y={234} fill="#fbbf24" fontSize={11} fontWeight="bold" textAnchor="end">
+            ${(showRedundancy && redundancyEnabled ? yieldData.costPerGoodDieRedundant : yieldData.costPerGoodDie).toFixed(0)}
+          </text>
+
+          {/* Cleanroom badge - absolute coords */}
+          <rect x={590} y={12} width={100} height={40} fill="rgba(16, 185, 129, 0.15)" rx={6} stroke="#10b981" strokeWidth={1} strokeOpacity={0.5} />
+          <text x={640} y={29} fill="#10b981" fontSize={11} fontWeight="bold" textAnchor="middle">CLEANROOM</text>
+          <text x={640} y={45} fill="#6ee7b7" fontSize={12} fontWeight="bold" textAnchor="middle">CLASS 1</text>
+
+          {showRedundancy && redundancyEnabled && (
+            <>
+              <rect x={162} y={375} width={210} height={55} fill="rgba(139, 92, 246, 0.2)" rx={10} stroke="#8b5cf6" strokeWidth={1} strokeOpacity={0.5} />
+              <circle cx={182} cy={402} r={8} fill="#a855f7" opacity={0.6}>
+                <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" />
+              </circle>
+              <text x={197} y={397} fill="#c4b5fd" fontSize={11} fontWeight="bold">Redundancy Active</text>
+              <text x={197} y={415} fill="#e2e8f0" fontSize={11}>
+                Spare: {spareRows} | Rate: {(spareRows * 20).toFixed(0)}%
+              </text>
+            </>
+          )}
+        </svg>
+
+        {/* Yield chart - separate SVG to avoid text overlap */}
+        <svg
+          width="100%"
+          height={220}
+          viewBox="0 0 300 220"
+          preserveAspectRatio="xMidYMid meet"
+          style={{ borderRadius: '12px', maxWidth: '750px' }}
+        >
+          <defs>
+            <linearGradient id="cryChartBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.98" />
+            </linearGradient>
+            <linearGradient id="cryChartCurve" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#34d399" />
+              <stop offset="100%" stopColor="#6ee7b7" />
+            </linearGradient>
+            <filter id="cryChartGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <rect width={300} height={220} fill="url(#cryChartBg)" rx={10} />
+          <text x={150} y={22} fill="#f59e0b" fontSize={12} fontWeight="bold" textAnchor="middle">
+            Yield vs Defect Density
+          </text>
+          {/* Grid lines */}
+          <line x1={55} y1={40} x2={280} y2={40} stroke="#334155" strokeWidth={0.5} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={55} y1={75} x2={280} y2={75} stroke="#334155" strokeWidth={0.5} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={55} y1={110} x2={280} y2={110} stroke="#334155" strokeWidth={0.5} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={55} y1={145} x2={280} y2={145} stroke="#334155" strokeWidth={0.5} strokeDasharray="4 4" opacity={0.3} />
+          <line x1={55} y1={180} x2={280} y2={180} stroke="#334155" strokeWidth={0.5} strokeDasharray="4 4" opacity={0.3} />
+          {/* Axes */}
+          <line x1={55} y1={180} x2={280} y2={180} stroke="#64748b" strokeWidth={1.5} />
+          <line x1={55} y1={40} x2={55} y2={180} stroke="#64748b" strokeWidth={1.5} />
+          {/* Y-axis labels */}
+          <text x={50} y={44} fill="rgba(148, 163, 184, 0.7)" fontSize={11} textAnchor="end">100%</text>
+          <text x={50} y={114} fill="rgba(148, 163, 184, 0.7)" fontSize={11} textAnchor="end">50%</text>
+          <text x={50} y={184} fill="rgba(148, 163, 184, 0.7)" fontSize={11} textAnchor="end">0%</text>
+          {/* X-axis labels */}
+          <text x={55} y={200} fill="rgba(148, 163, 184, 0.7)" fontSize={11} textAnchor="middle">0</text>
+          <text x={167} y={200} fill="rgba(148, 163, 184, 0.7)" fontSize={11} textAnchor="middle">1.5</text>
+          <text x={280} y={200} fill="rgba(148, 163, 184, 0.7)" fontSize={11} textAnchor="middle">3.0</text>
+          <text x={167} y={215} fill="rgba(148, 163, 184, 0.7)" fontSize={11} textAnchor="middle">Defects/cm2</text>
+          {/* Interactive point - FIRST in DOM for detection */}
+          <circle
+            cx={55 + (defectDensity / 3) * 225}
+            cy={180 - yieldData.poissonYield / 100 * 140}
+            r={8}
+            fill="#f59e0b"
+            filter="url(#cryChartGlow)"
+            stroke="#fff"
+            strokeWidth={2}
+          />
+          {/* Yield curve */}
+          <path
+            d={`M 55 ${180 - Math.exp(0) * 140} ${[...Array(32)].map((_, i) => {
+              const dd = (i / 31) * 3;
+              const yy = Math.exp(-dd * dieArea / 100);
+              return `L ${55 + (i / 31) * 225} ${180 - yy * 140}`;
+            }).join(' ')}`}
+            fill="none"
+            stroke="url(#cryChartCurve)"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+          />
+          {showRedundancy && redundancyEnabled && (
+            <path
+              d={`M 55 ${180 - 140} ${[...Array(32)].map((_, i) => {
+                const dd = (i / 31) * 3;
+                const baseY = Math.exp(-dd * dieArea / 100);
+                const repairProb = spareRows * 0.2;
+                const redY = baseY + (1 - baseY) * repairProb;
+                return `L ${55 + (i / 31) * 225} ${180 - redY * 140}`;
+              }).join(' ')}`}
+              fill="none"
+              stroke="#a855f7"
+              strokeWidth={2}
+              strokeDasharray="6,3"
+              strokeLinecap="round"
+            />
+          )}
         </svg>
 
         {interactive && (
@@ -910,7 +944,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           step="0.05"
           value={defectDensity}
           onChange={(e) => setDefectDensity(parseFloat(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -925,7 +959,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           step="20"
           value={dieArea}
           onChange={(e) => setDieArea(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -961,7 +995,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
                 step="1"
                 value={spareRows}
                 onChange={(e) => setSpareRows(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.accent }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
           )}
@@ -975,7 +1009,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         borderLeft: `3px solid ${colors.wafer}`,
       }}>
         <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          Poisson Model: Y = e^(-D x A) = e^(-{defectDensity.toFixed(2)} x {(dieArea/100).toFixed(2)})
+          Poisson Model: Y = e^(-D {'\u00D7'} A) = e^(-{defectDensity.toFixed(2)} {'\u00D7'} {(dieArea/100).toFixed(2)})
         </div>
         <div style={{ color: colors.textPrimary, fontSize: '14px', marginTop: '4px', fontWeight: 'bold' }}>
           Yield = {calculateYield().poissonYield.toFixed(1)}% | Good Dies = {calculateYield().goodDiesPoisson}
@@ -1003,8 +1037,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1015,6 +1048,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
@@ -1077,8 +1111,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1088,6 +1121,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
           <div style={{
@@ -1168,8 +1202,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1179,6 +1212,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1244,8 +1278,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1255,6 +1288,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
           <div style={{
@@ -1330,8 +1364,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1341,6 +1374,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1415,8 +1449,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1426,6 +1459,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1476,8 +1510,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1487,6 +1520,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
           <div style={{
@@ -1525,7 +1559,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <rect x="30" y="50" width="100" height="80" fill="rgba(239,68,68,0.3)" rx="8" stroke={colors.error} />
               <text x="80" y="75" fill={colors.error} fontSize="12" textAnchor="middle">Original</text>
               <text x="80" y="95" fill={colors.textPrimary} fontSize="18" textAnchor="middle">60%</text>
-              <text x="80" y="115" fill={colors.textSecondary} fontSize="10" textAnchor="middle">yield</text>
+              <text x="80" y="118" fill={colors.textSecondary} fontSize="11" textAnchor="middle">yield</text>
 
               <text x="175" y="95" fill={colors.accent} fontSize="28" textAnchor="middle">+</text>
               <text x="220" y="95" fill={colors.spare} fontSize="14" textAnchor="middle">spare</text>
@@ -1534,7 +1568,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
               <rect x="270" y="50" width="100" height="80" fill="rgba(16,185,129,0.3)" rx="8" stroke={colors.success} />
               <text x="320" y="75" fill={colors.success} fontSize="12" textAnchor="middle">With Redundancy</text>
               <text x="320" y="95" fill={colors.textPrimary} fontSize="18" textAnchor="middle">85%</text>
-              <text x="320" y="115" fill={colors.textSecondary} fontSize="10" textAnchor="middle">yield</text>
+              <text x="320" y="118" fill={colors.textSecondary} fontSize="11" textAnchor="middle">yield</text>
 
               <text x="200" y="165" fill={colors.textSecondary} fontSize="11" textAnchor="middle">+25% yield recovery at moderate defect densities</text>
             </svg>
@@ -1567,8 +1601,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1578,6 +1611,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
           <div style={{ padding: '16px' }}>
@@ -1665,8 +1699,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{
-          position: 'fixed',
-          inset: 0,
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -1676,6 +1709,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           <div style={{
             flex: 1,
             overflowY: 'auto',
+            paddingTop: '48px',
             paddingBottom: '100px',
           }}>
             <div style={{
@@ -1720,8 +1754,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1731,6 +1764,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
           <div style={{ padding: '16px' }}>
@@ -1917,8 +1951,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1928,6 +1961,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
@@ -1965,8 +1999,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   // Default fallback to hook phase
   return (
     <div style={{
-      position: 'fixed',
-      inset: 0,
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
@@ -1976,6 +2009,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
       <div style={{
         flex: 1,
         overflowY: 'auto',
+        paddingTop: '48px',
         paddingBottom: '100px',
         display: 'flex',
         alignItems: 'center',
