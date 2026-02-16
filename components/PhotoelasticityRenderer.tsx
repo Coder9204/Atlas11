@@ -307,7 +307,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
     const height = 420;
     const beamWidth = 260;
     const beamHeight = isThick ? 60 : 32;
-    const beamY = height / 2 - 10; // Moved down slightly to use more vertical space
+    const beamY = height / 2 - 60; // Moved up to allow more vertical deflection
 
     // Generate stress fringe colors based on bend amount
     const generateFringes = () => {
@@ -367,7 +367,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
     const generateBeamPath = () => {
       const leftX = width / 2 - beamWidth / 2;
       const rightX = width / 2 + beamWidth / 2;
-      const bendY = bendAmount * 1.6; // Increased to use more vertical space (>25% of height)
+      const bendY = bendAmount * 2.5; // Increased to use more vertical space (>25% of height)
 
       return `M ${leftX} ${beamY}
               Q ${width / 2} ${beamY + bendY} ${rightX} ${beamY}
@@ -591,8 +591,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
               />
             ))}
             {/* Label */}
-            <text x="0" y="-23" fill="#3b82f6" fontSize="9" textAnchor="middle" fontWeight="700">POL 1</text>
-            <text x="0" y={beamHeight + 143} fill="#64748b" fontSize="7" textAnchor="middle">(H)</text>
+            <text x="0" y="-23" fill="#3b82f6" fontSize="9" textAnchor="middle" fontWeight="700">POL 1 (H)</text>
           </g>
 
           {/* === POLARIZED LIGHT BEAM === */}
@@ -602,7 +601,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           <g transform={`translate(${width / 2 - beamWidth / 2 - 25}, ${beamY + beamHeight / 2})`}>
             <rect x="-12" y="-25" width="24" height="50" rx="2" fill="url(#phoelPolarizerFrame)" />
             <rect x="-8" y="-20" width="16" height="40" fill="#0f172a" />
-            <text x="-30" y="5" fill="#64748b" fontSize="7" textAnchor="middle">CLAMP</text>
+            <text x="-35" y="5" fill="#64748b" fontSize="7" textAnchor="middle">CLAMP</text>
           </g>
 
           {/* === HORIZONTAL FORCE ARROWS (Compression) === */}
@@ -674,7 +673,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             {polarizerEnabled && bendAmount > 20 && (
               <ellipse
                 cx={width / 2}
-                cy={beamY + beamHeight / 2 + bendAmount * 0.8}
+                cy={beamY + beamHeight / 2 + bendAmount * 1.25}
                 rx={30 + bendAmount * 0.3}
                 ry={15 + bendAmount * 0.2}
                 fill="url(#phoelStressCenter)"
@@ -691,7 +690,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             {/* Interactive marker showing maximum deflection point - moves with bend */}
             <circle
               cx={width / 2}
-              cy={beamY + beamHeight / 2 + bendAmount * 1.6}
+              cy={beamY + beamHeight / 2 + bendAmount * 2.5}
               r="6"
               fill="#fbbf24"
               stroke="#fff"
@@ -700,7 +699,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             />
             <text
               x={width / 2 + 15}
-              y={beamY + beamHeight / 2 + bendAmount * 1.6 + 4}
+              y={beamY + beamHeight / 2 + bendAmount * 2.5 + 4}
               fill="#fbbf24"
               fontSize="10"
               fontWeight="bold"
@@ -711,7 +710,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             {/* Specimen label */}
             <text
               x={width / 2}
-              y={beamY + beamHeight + bendAmount * 1.6 + 30}
+              y={beamY + beamHeight + bendAmount * 2.5 + 35}
               fill="#94a3b8"
               fontSize="10"
               textAnchor="middle"
@@ -725,7 +724,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           <g transform={`translate(${width / 2 + beamWidth / 2 + 25}, ${beamY + beamHeight / 2})`}>
             <rect x="-12" y="-25" width="24" height="50" rx="2" fill="url(#phoelPolarizerFrame)" />
             <rect x="-8" y="-20" width="16" height="40" fill="#0f172a" />
-            <text x="30" y="5" fill="#64748b" fontSize="7" textAnchor="middle">CLAMP</text>
+            <text x="35" y="5" fill="#64748b" fontSize="7" textAnchor="middle">CLAMP</text>
           </g>
 
           {/* === TRANSMITTED LIGHT BEAM === */}
@@ -758,13 +757,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
               />
             ))}
             {/* Label */}
-            <text x="0" y="-23" fill={polarizerEnabled ? '#818cf8' : '#64748b'} fontSize="9" textAnchor="middle" fontWeight="700">POL 2</text>
-            <text x="0" y={beamHeight + 143} fill="#64748b" fontSize="7" textAnchor="middle">(V 90°)</text>
-            {/* Status indicator */}
-            <circle cx="0" cy={beamHeight + 158} r="4" fill={polarizerEnabled ? '#10b981' : '#ef4444'} />
-            <text x="0" y={beamHeight + 172} fill={polarizerEnabled ? '#10b981' : '#ef4444'} fontSize="6" textAnchor="middle">
-              {polarizerEnabled ? 'ON' : 'OFF'}
-            </text>
+            <text x="0" y="-23" fill={polarizerEnabled ? '#818cf8' : '#64748b'} fontSize="9" textAnchor="middle" fontWeight="700">POL 2 (V 90°)</text>
           </g>
 
           {/* === DETECTOR/SCREEN === */}
@@ -792,7 +785,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           </g>
 
           {/* === INFO PANEL === */}
-          <g transform={`translate(${width - 175}, 110)`}>
+          <g transform={`translate(${width - 175}, 15)`}>
             <rect x="0" y="0" width="160" height="65" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
             <text x="80" y="16" fill="#e2e8f0" fontSize="9" textAnchor="middle" fontWeight="700">STATUS</text>
             <line x1="10" y1="22" x2="150" y2="22" stroke="#334155" strokeWidth="1" />
@@ -807,22 +800,20 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           </g>
 
           {/* === LEGEND === */}
-          <g transform="translate(15, 110)">
-            <rect x="0" y="0" width="130" height="78" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
-            <text x="65" y="14" fill="#e2e8f0" fontSize="8" textAnchor="middle" fontWeight="700">STRESS LEVEL</text>
-            <line x1="8" y1="20" x2="122" y2="20" stroke="#334155" strokeWidth="1" />
-            {[
-              { color: '#3b82f6', label: 'Low' },
-              { color: '#10b981', label: 'Moderate' },
-              { color: '#fbbf24', label: 'High' },
-              { color: '#ef4444', label: 'Very High' },
-              { color: '#a855f7', label: 'Peak' },
-            ].map((item, i) => (
-              <g key={`legend-${i}`} transform={`translate(10, ${27 + i * 10.5})`}>
-                <rect x="0" y="0" width="10" height="7" rx="1" fill={item.color} />
-                <text x="16" y="6" fill="#94a3b8" fontSize="7">{item.label}</text>
-              </g>
-            ))}
+          <g>
+            <rect x="500" y="310" width="180" height="35" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+            <text x="590" y="323" fill="#e2e8f0" fontSize="8" textAnchor="middle" fontWeight="700">STRESS LEVEL</text>
+            <line x1="510" y1="327" x2="670" y2="327" stroke="#334155" strokeWidth="1" />
+            <g>
+              <rect x="512" y="332" width="8" height="6" rx="1" fill="#3b82f6" />
+              <text x="524" y="337" fill="#94a3b8" fontSize="7">Low</text>
+              <rect x="553" y="332" width="8" height="6" rx="1" fill="#10b981" />
+              <text x="565" y="337" fill="#94a3b8" fontSize="7">Mod</text>
+              <rect x="595" y="332" width="8" height="6" rx="1" fill="#fbbf24" />
+              <text x="607" y="337" fill="#94a3b8" fontSize="7">High</text>
+              <rect x="635" y="332" width="8" height="6" rx="1" fill="#ef4444" />
+              <text x="647" y="337" fill="#94a3b8" fontSize="7">Peak</text>
+            </g>
           </g>
 
           {/* === BOTTOM LABELS === */}
@@ -879,7 +870,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-          Applied Stress (Mechanical Deformation): {bendAmount}%
+          Mechanical Stress (Bending Force): {bendAmount}%
         </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ color: colors.textMuted, fontSize: '12px', minWidth: '60px' }}>Low (5%)</span>
@@ -925,8 +916,8 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>Can you see forces inside a solid?</h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>Revealing hidden stress with polarized light</p>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>Can you see forces inside a solid object using light?</h1>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>Revealing hidden stress patterns with polarized light and transparent materials</p>
           </div>
           {renderVisualization(true)}
           <div style={{ padding: '24px', textAlign: 'center' }}>
@@ -980,6 +971,28 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           </div>
           {renderVisualization(true)}
           {renderControls()}
+
+          {/* Before/After Comparison Display */}
+          <div style={{ margin: '16px', background: colors.bgCard, padding: '12px', borderRadius: '12px' }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', textAlign: 'center' }}>Comparison: Effect of Polarizers</h4>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 150px', maxWidth: '200px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', color: colors.textMuted, marginBottom: '4px', fontSize: '12px' }}>Without Polarizers</div>
+                <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '12px', border: '2px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Clear plastic visible</div>
+                  <div style={{ color: colors.error, fontSize: '11px', fontWeight: 'bold', marginTop: '4px' }}>No stress pattern</div>
+                </div>
+              </div>
+              <div style={{ flex: '1 1 150px', maxWidth: '200px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', color: colors.success, marginBottom: '4px', fontSize: '12px' }}>With Polarizers ON</div>
+                <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '12px', border: `2px solid ${colors.success}` }}>
+                  <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Rainbow fringes visible</div>
+                  <div style={{ color: colors.success, fontSize: '11px', fontWeight: 'bold', marginTop: '4px' }}>Stress revealed!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
             <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
@@ -1093,6 +1106,28 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
               Currently: {isThick ? 'THICK' : 'THIN'} Plastic - Click to Toggle
             </button>
           </div>
+
+          {/* Before/After Comparison Display for Thickness */}
+          <div style={{ margin: '16px', background: colors.bgCard, padding: '12px', borderRadius: '12px' }}>
+            <h4 style={{ color: colors.warning, marginBottom: '8px', textAlign: 'center' }}>Comparison: Effect of Thickness</h4>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 150px', maxWidth: '200px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', color: colors.textMuted, marginBottom: '4px', fontSize: '12px' }}>Thin Specimen</div>
+                <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '12px', border: '2px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Fewer fringes</div>
+                  <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 'bold', marginTop: '4px' }}>Less path length</div>
+                </div>
+              </div>
+              <div style={{ flex: '1 1 150px', maxWidth: '200px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', color: colors.warning, marginBottom: '4px', fontSize: '12px' }}>Thick Specimen</div>
+                <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '12px', border: `2px solid ${colors.warning}` }}>
+                  <div style={{ color: colors.textSecondary, fontSize: '11px' }}>More fringes</div>
+                  <div style={{ color: colors.warning, fontSize: '11px', fontWeight: 'bold', marginTop: '4px' }}>Greater rotation!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {renderControls()}
           <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.warning}` }}>
             <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>

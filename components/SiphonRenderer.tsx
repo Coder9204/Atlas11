@@ -1092,8 +1092,11 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
               {[0, 25, 50, 75, 100].map(h => (
                 <g key={h}>
                   <line x1="15" y1={200 - h * 1.5} x2="25" y2={200 - h * 1.5} stroke="#6b7280" strokeWidth="1" />
+                  <text x="8" y={200 - h * 1.5 + 4} fill="#6b7280" fontSize="10" textAnchor="end">{h}</text>
                 </g>
               ))}
+              {/* Y-axis label */}
+              <text x="10" y="20" fill="#9ca3af" fontSize="11" fontWeight="600" textAnchor="middle">Height</text>
 
               {/* Upper tank */}
               <g transform={`translate(80, ${200 - upperTankHeight - 50})`}>
@@ -2018,6 +2021,102 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         padding: '24px',
         marginBottom: '20px'
       }}>
+        {/* Visual diagram of pressure limit */}
+        <div style={{
+          background: colors.background,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '20px'
+        }}>
+          <h3 style={{ color: colors.text, fontSize: '16px', fontWeight: '600', margin: '0 0 12px 0' }}>Atmospheric Pressure Limit</h3>
+          <svg width="100%" height="280" viewBox="0 0 400 280" style={{ display: 'block' }}>
+            <defs>
+              <linearGradient id="twistReviewWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.85" />
+                <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.8" />
+              </linearGradient>
+              <linearGradient id="twistReviewTank" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#4b5563" />
+                <stop offset="50%" stopColor="#374151" />
+                <stop offset="100%" stopColor="#1f2937" />
+              </linearGradient>
+              <linearGradient id="twistReviewTube" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#6b7280" />
+                <stop offset="50%" stopColor="#9ca3af" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#6b7280" />
+              </linearGradient>
+            </defs>
+
+            {/* Ground level reference line */}
+            <line x1="50" y1="240" x2="350" y2="240" stroke="#4b5563" strokeWidth="3" strokeDasharray="5,5" />
+            <text x="360" y="244" fill="#6b7280" fontSize="10">Ground</text>
+
+            {/* Source tank */}
+            <rect x="80" y="200" width="70" height="60" fill="url(#twistReviewTank)" rx="4" stroke="#1f2937" strokeWidth="2" />
+            <rect x="83" y="215" width="64" height="42" fill="url(#twistReviewWater)" />
+            <text x="115" y="270" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Source</text>
+
+            {/* Destination tank */}
+            <rect x="250" y="210" width="70" height="50" fill="url(#twistReviewTank)" rx="4" stroke="#1f2937" strokeWidth="2" />
+            <rect x="253" y="240" width="64" height="17" fill="url(#twistReviewWater)" />
+            <text x="285" y="270" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Destination</text>
+
+            {/* Siphon tube - Working scenario (< 10m) */}
+            <path
+              d="M 145 220 Q 145 120 200 120 Q 255 120 255 230"
+              fill="none"
+              stroke="url(#twistReviewTube)"
+              strokeWidth="8"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 145 220 Q 145 120 200 120 Q 255 120 255 230"
+              fill="none"
+              stroke="#38bdf8"
+              strokeWidth="4"
+              strokeLinecap="round"
+              opacity="0.8"
+            />
+
+            {/* Height measurements */}
+            {/* 10m max height arrow */}
+            <line x1="370" y1="240" x2="370" y2="120" stroke={colors.warning} strokeWidth="2" />
+            <line x1="365" y1="240" x2="375" y2="240" stroke={colors.warning} strokeWidth="2" />
+            <line x1="365" y1="120" x2="375" y2="120" stroke={colors.warning} strokeWidth="2" />
+            <text x="378" y="180" fill={colors.warning} fontSize="12" fontWeight="600">10.3m</text>
+            <text x="378" y="195" fill={colors.warning} fontSize="9">MAX</text>
+
+            {/* Atmospheric pressure arrows pushing down */}
+            <path d="M 115 195 L 115 205" stroke={colors.primary} strokeWidth="2" markerEnd="url(#arrowhead1)" />
+            <path d="M 285 205 L 285 215" stroke={colors.primary} strokeWidth="2" markerEnd="url(#arrowhead2)" />
+            <text x="115" y="190" fill={colors.primary} fontSize="10" textAnchor="middle">P_atm</text>
+            <text x="285" y="200" fill={colors.primary} fontSize="10" textAnchor="middle">P_atm</text>
+
+            {/* Apex label */}
+            <text x="200" y="110" fill={colors.accent} fontSize="11" fontWeight="600" textAnchor="middle">Apex</text>
+            <circle cx="200" cy="120" r="4" fill={colors.accent} />
+
+            {/* Danger zone above 10m */}
+            <rect x="50" y="40" width="300" height="75" fill={colors.accent} opacity="0.1" stroke={colors.accent} strokeWidth="1" strokeDasharray="3,3" />
+            <text x="200" y="60" fill={colors.accent} fontSize="11" fontWeight="600" textAnchor="middle">⚠️ CAVITATION ZONE</text>
+            <text x="200" y="75" fill={colors.accent} fontSize="9" textAnchor="middle">Vacuum forms, siphon breaks</text>
+
+            {/* Arrow markers */}
+            <defs>
+              <marker id="arrowhead1" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                <polygon points="0 0, 10 5, 0 10" fill={colors.primary} />
+              </marker>
+              <marker id="arrowhead2" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                <polygon points="0 0, 10 5, 0 10" fill={colors.primary} />
+              </marker>
+            </defs>
+          </svg>
+          <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '8px 0 0 0', textAlign: 'center', lineHeight: 1.5 }}>
+            Atmospheric pressure can only support a water column up to 10.3 meters. Above this height, the pressure at the apex drops to vapor pressure and the siphon breaks.
+          </p>
+        </div>
+
         <div style={{ display: 'grid', gap: '16px' }}>
           <div style={{
             padding: '20px',
@@ -2532,7 +2631,11 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
             {phaseOrder.map((p, i) => (
               <div
                 key={p}
-                className={`h-2 rounded-full transition-all duration-300 ${
+                role="button"
+                tabIndex={0}
+                aria-label={phaseLabels[p]}
+                title={phaseLabels[p]}
+                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
                     : currentPhaseIndex > i

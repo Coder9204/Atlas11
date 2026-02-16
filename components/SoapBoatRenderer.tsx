@@ -2527,72 +2527,129 @@ export default function SoapBoatRenderer({
   const currentIndex = phaseOrder.indexOf(phase);
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{
+      height: '100vh',
+      overflow: 'hidden',
+      background: 'linear-gradient(180deg, #0a0f1a 0%, #0a1628 100%)',
+      display: 'flex',
+      flexDirection: 'column',
+      color: 'white',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+      position: 'relative'
+    }}>
       {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-3xl" />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: 0, left: '25%', width: 384, height: 384, background: 'rgba(59, 130, 246, 0.05)', borderRadius: '50%', filter: 'blur(60px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: 0, right: '25%', width: 384, height: 384, background: 'rgba(99, 102, 241, 0.05)', borderRadius: '50%', filter: 'blur(60px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 500, height: 500, background: 'rgba(6, 182, 212, 0.05)', borderRadius: '50%', filter: 'blur(60px)', pointerEvents: 'none' }} />
+
+      {/* Progress bar at top */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 4,
+        background: colors.bgCard,
+        zIndex: 100,
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${((currentIndex + 1) / phaseOrder.length) * 100}%`,
+          background: 'linear-gradient(90deg, #3b82f6, #06b6d4)',
+          transition: 'width 0.3s ease-out',
+        }} />
+      </div>
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Soap Boat</span>
-          <div className="flex items-center gap-1.5">
+      <div style={{
+        position: 'fixed',
+        top: 4,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(71, 85, 105, 0.5)'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 24px',
+          maxWidth: 1024,
+          margin: '0 auto'
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255, 255, 255, 0.8)', letterSpacing: '0.05em' }}>Soap Boat</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
-                    : currentIndex > i
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
+                onClick={(e) => { e.preventDefault(); goToPhase(p); }}
+                style={{
+                  height: 8,
+                  width: phase === p ? 24 : 8,
+                  borderRadius: 9999,
+                  background: phase === p ? '#60a5fa' : currentIndex > i ? '#10b981' : '#475569',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease-out',
+                  boxShadow: phase === p ? '0 0 12px rgba(96, 165, 250, 0.5)' : 'none',
+                  padding: 0
+                }}
                 title={p}
                 aria-label={`Go to ${p} phase`}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-blue-400">{phase.replace('_', ' ')}</span>
-        </div>
-        {/* Progress bar */}
-        <div className="w-full bg-slate-800/30 h-1">
-          <div
-            className="bg-blue-400 h-full transition-all duration-300"
-            style={{ width: `${((currentIndex + 1) / phaseOrder.length) * 100}%` }}
-            role="progressbar"
-            aria-valuenow={currentIndex + 1}
-            aria-valuemin={1}
-            aria-valuemax={phaseOrder.length}
-          />
+          <span style={{ fontSize: 14, fontWeight: 500, color: '#60a5fa' }}>{phase.replace('_', ' ')}</span>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-24" style={{ padding: isMobile ? '1rem' : '2rem', paddingTop: '5rem', paddingBottom: '6rem' }}>
+      {/* Main content - scrollable */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: 64, paddingBottom: 80 }}>
         <div style={{
           position: 'relative',
           zIndex: 10,
           maxWidth: 700,
           margin: '0 auto',
-          background: 'rgba(30, 41, 59, 0.3)',
-          backdropFilter: 'blur(12px)',
-          borderRadius: 20,
-          padding: isMobile ? '1.5rem' : '2rem',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)'
+          padding: isMobile ? '16px' : '24px'
         }}>
-          {renderPhase()}
+          <div style={{
+            background: 'rgba(30, 41, 59, 0.3)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: 20,
+            padding: isMobile ? '24px' : '32px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)'
+          }}>
+            {renderPhase()}
+          </div>
         </div>
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-t border-slate-800/50" style={{ padding: '16px' }}>
-        <div className="flex items-center justify-between max-w-4xl mx-auto" style={{ gap: '16px' }}>
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(12px)',
+        borderTop: '1px solid rgba(71, 85, 105, 0.5)',
+        padding: '16px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          maxWidth: 1024,
+          margin: '0 auto',
+          gap: 16
+        }}>
           <button
-            onPointerDown={() => {
+            onClick={() => {
               const prevIndex = currentIndex - 1;
               if (prevIndex >= 0) {
                 goToPhase(phaseOrder[prevIndex]);
@@ -2601,7 +2658,7 @@ export default function SoapBoatRenderer({
             disabled={currentIndex === 0}
             style={{
               padding: '12px 24px',
-              fontSize: '16px',
+              fontSize: 16,
               fontWeight: 600,
               background: currentIndex === 0 ? 'rgba(71, 85, 105, 0.5)' : 'rgba(59, 130, 246, 0.2)',
               color: currentIndex === 0 ? '#64748b' : '#3b82f6',
@@ -2609,35 +2666,37 @@ export default function SoapBoatRenderer({
               borderRadius: 12,
               cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
               opacity: currentIndex === 0 ? 0.5 : 1,
-              transition: 'all 0.2s'
+              transition: 'all 0.2s ease-out',
+              minHeight: 44
             }}
           >
             ← Back
           </button>
 
-          <div style={{ flex: 1, textAlign: 'center', color: '#94a3b8', fontSize: '14px', fontWeight: 500 }}>
+          <div style={{ flex: 1, textAlign: 'center', color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>
             {currentIndex + 1} / {phaseOrder.length}
           </div>
 
           <button
-            onPointerDown={() => {
+            onClick={() => {
               const nextIndex = currentIndex + 1;
               if (nextIndex < phaseOrder.length) {
                 goToPhase(phaseOrder[nextIndex]);
               }
             }}
-            disabled={currentIndex === phaseOrder.length - 1}
+            disabled={currentIndex === phaseOrder.length - 1 || (phase === 'test' && !testSubmitted)}
             style={{
               padding: '12px 24px',
-              fontSize: '16px',
+              fontSize: 16,
               fontWeight: 600,
-              background: currentIndex === phaseOrder.length - 1 ? 'rgba(71, 85, 105, 0.5)' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+              background: (currentIndex === phaseOrder.length - 1 || (phase === 'test' && !testSubmitted)) ? 'rgba(71, 85, 105, 0.5)' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
               color: 'white',
               border: 'none',
               borderRadius: 12,
-              cursor: currentIndex === phaseOrder.length - 1 ? 'not-allowed' : 'pointer',
-              opacity: currentIndex === phaseOrder.length - 1 ? 0.5 : 1,
-              transition: 'all 0.2s'
+              cursor: (currentIndex === phaseOrder.length - 1 || (phase === 'test' && !testSubmitted)) ? 'not-allowed' : 'pointer',
+              opacity: (currentIndex === phaseOrder.length - 1 || (phase === 'test' && !testSubmitted)) ? 0.5 : 1,
+              transition: 'all 0.2s ease-out',
+              minHeight: 44
             }}
           >
             Next →

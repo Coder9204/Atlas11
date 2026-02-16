@@ -1,11 +1,53 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-interface TerminalVelocityRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+// ============================================================================
+// TERMINAL VELOCITY RENDERER - Complete 10-Phase Premium Physics Game
+// Understanding terminal velocity through coffee filter experiments
+// ============================================================================
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
+
+interface TerminalVelocityRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
 
 const realWorldApps = [
   {
@@ -101,11 +143,31 @@ const colors = {
 };
 
 const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  onGameEvent,
+  gamePhase = 'hook',
 }) => {
+  const phase = gamePhase as 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+  // Event emitter helper
+  const emitEvent = useCallback((
+    eventType: GameEvent['eventType'],
+    details: Record<string, unknown> = {}
+  ) => {
+    if (onGameEvent) {
+      onGameEvent({
+        eventType,
+        gameType: 'Terminal Velocity',
+        gameTitle: 'Terminal Velocity',
+        details,
+        timestamp: Date.now(),
+      });
+    }
+  }, [onGameEvent]);
+
+  // Phase change tracking
+  useEffect(() => {
+    emitEvent('phase_changed', { phase });
+  }, [phase, emitEvent]);
   // Simulation state
   const [numFilters, setNumFilters] = useState(1);
   const [airDensity, setAirDensity] = useState(1.2); // kg/m^3
@@ -160,7 +222,9 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
     setIsDropped(true);
     lastTimeRef.current = performance.now();
     setVelocityHistory([{ t: 0, v: 0 }]);
-  }, [resetSimulation]);
+    emitEvent('button_clicked', { action: 'drop_filter', numFilters, airDensity, isCrumpled });
+    playSound('click');
+  }, [resetSimulation, emitEvent, numFilters, airDensity, isCrumpled]);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -371,6 +435,8 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
     setTestAnswers(newAnswers);
+    emitEvent('answer_submitted', { questionIndex, optionIndex });
+    playSound('click');
   };
 
   const submitTest = () => {
@@ -382,7 +448,13 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 8) {
+      emitEvent('correct_answer', { score, total: testQuestions.length });
+      playSound('success');
+    } else {
+      emitEvent('incorrect_answer', { score, total: testQuestions.length });
+      playSound('failure');
+    }
   };
 
   const renderVisualization = (interactive: boolean, showCrumple: boolean = false) => {
@@ -601,7 +673,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
           />
 
           {/* Height markers with better styling */}
-          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+          {[0, 2, 4, 6].map((i) => (
             <g key={`height-${i}`}>
               <line
                 x1="22"
@@ -612,10 +684,10 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
                 strokeWidth="2"
               />
               <text
-                x="15"
+                x="10"
                 y={39 + i * 45}
                 fill="white"
-                fontSize="11"
+                fontSize="10"
                 fontWeight="bold"
                 textAnchor="end"
                 style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
@@ -810,9 +882,9 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             {/* Graph title */}
             <text
               x={graphWidth / 2}
-              y="22"
+              y="15"
               fill="#f8fafc"
-              fontSize="13"
+              fontSize="12"
               textAnchor="middle"
               fontWeight="bold"
             >
@@ -876,18 +948,18 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
               x={graphWidth / 2 + 10}
               y={graphHeight + 5}
               fill="#94a3b8"
-              fontSize="11"
+              fontSize="10"
               textAnchor="middle"
             >
               Time (s)
             </text>
             <text
-              x="12"
+              x="8"
               y={(graphHeight - 15 + 30) / 2}
               fill="#94a3b8"
-              fontSize="11"
+              fontSize="10"
               textAnchor="middle"
-              transform={`rotate(-90, 12, ${(graphHeight - 15 + 30) / 2})`}
+              transform={`rotate(-90, 8, ${(graphHeight - 15 + 30) / 2})`}
             >
               v (m/s)
             </text>
@@ -940,9 +1012,9 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             )}
 
             {/* Y-axis values */}
-            <text x="28" y={graphHeight - 12} fill="#64748b" fontSize="11" textAnchor="end">0</text>
-            <text x="28" y="38" fill="#64748b" fontSize="11" textAnchor="end">{graphMaxV.toFixed(1)}</text>
-            <text x="28" y={(graphHeight - 15 + 30) / 2 + 5} fill="#64748b" fontSize="11" textAnchor="end">
+            <text x="30" y={graphHeight - 12} fill="#64748b" fontSize="9" textAnchor="end">0</text>
+            <text x="30" y="35" fill="#64748b" fontSize="9" textAnchor="end">{graphMaxV.toFixed(1)}</text>
+            <text x="30" y={(graphHeight - 15 + 30) / 2 + 5} fill="#64748b" fontSize="9" textAnchor="end">
               {(graphMaxV / 2).toFixed(1)}
             </text>
           </g>
@@ -965,9 +1037,9 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             <rect x="0" y="14" width={graphWidth} height="14" fill="#1e293b" />
             <text
               x={graphWidth / 2}
-              y="19"
+              y="18"
               fill="#f8fafc"
-              fontSize="11"
+              fontSize="10"
               textAnchor="middle"
               fontWeight="bold"
             >
@@ -975,31 +1047,31 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             </text>
 
             {/* Current velocity */}
-            <text x="15" y="50" fill="#94a3b8" fontSize="11">Current:</text>
-            <text x={graphWidth - 15} y="50" fill="#22c55e" fontSize="13" fontWeight="bold" textAnchor="end">
+            <text x="10" y="46" fill="#94a3b8" fontSize="9">Current:</text>
+            <text x={graphWidth - 10} y="46" fill="#22c55e" fontSize="11" fontWeight="bold" textAnchor="end">
               v = {velocity.toFixed(2)} m/s
             </text>
 
             {/* Terminal velocity */}
-            <text x="15" y="70" fill="#94a3b8" fontSize="11">Terminal:</text>
-            <text x={graphWidth - 15} y="70" fill="#a855f7" fontSize="13" fontWeight="bold" textAnchor="end">
+            <text x="10" y="66" fill="#94a3b8" fontSize="9">Terminal:</text>
+            <text x={graphWidth - 10} y="66" fill="#a855f7" fontSize="11" fontWeight="bold" textAnchor="end">
               vt = {terminalVelocity.toFixed(2)} m/s
             </text>
 
             {/* Time elapsed */}
-            <text x="15" y="90" fill="#94a3b8" fontSize="11">Time:</text>
-            <text x={graphWidth - 15} y="90" fill="#60a5fa" fontSize="13" fontWeight="bold" textAnchor="end">
+            <text x="10" y="86" fill="#94a3b8" fontSize="9">Time:</text>
+            <text x={graphWidth - 10} y="86" fill="#60a5fa" fontSize="11" fontWeight="bold" textAnchor="end">
               t = {time.toFixed(2)} s
             </text>
           </g>
 
           {/* ========== LEGEND ========== */}
-          <g transform={`translate(${width - graphWidth - 50}, ${height - 45})`}>
-            <rect x="0" y="0" width={graphWidth} height="38" fill="url(#tvelInfoPanelGradient)" rx="8" stroke="#334155" strokeWidth="1" />
-            <circle cx="20" cy="12" r="5" fill="url(#tvelGravityGradient)" />
-            <text x="32" y="16" fill="#f8fafc" fontSize="11">Weight (W = mg)</text>
-            <circle cx="20" cy="28" r="5" fill="url(#tvelDragGradient)" />
-            <text x="32" y="32" fill="#f8fafc" fontSize="11">Drag (Fd = 1/2 rho v^2 Cd A)</text>
+          <g transform={`translate(${width - graphWidth - 50}, ${height - 48})`}>
+            <rect x="0" y="0" width={graphWidth} height="42" fill="url(#tvelInfoPanelGradient)" rx="8" stroke="#334155" strokeWidth="1" />
+            <circle cx="12" cy="12" r="4" fill="url(#tvelGravityGradient)" />
+            <text x="20" y="15" fill="#f8fafc" fontSize="9">Weight (W = mg)</text>
+            <circle cx="12" cy="30" r="4" fill="url(#tvelDragGradient)" />
+            <text x="20" y="33" fill="#f8fafc" fontSize="9">Drag (Fd = ½ρv²CdA)</text>
           </g>
 
           {/* ========== DROP ZONE LABEL ========== */}
@@ -1067,7 +1139,12 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
           max="8"
           step="1"
           value={numFilters}
-          onChange={(e) => { setNumFilters(parseInt(e.target.value)); resetSimulation(); }}
+          onChange={(e) => {
+            const newValue = parseInt(e.target.value);
+            setNumFilters(newValue);
+            resetSimulation();
+            emitEvent('slider_changed', { slider: 'numFilters', value: newValue });
+          }}
           style={{
             width: '100%',
             height: '20px',
@@ -1091,7 +1168,12 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
           max="2.0"
           step="0.1"
           value={airDensity}
-          onChange={(e) => { setAirDensity(parseFloat(e.target.value)); resetSimulation(); }}
+          onChange={(e) => {
+            const newValue = parseFloat(e.target.value);
+            setAirDensity(newValue);
+            resetSimulation();
+            emitEvent('slider_changed', { slider: 'airDensity', value: newValue });
+          }}
           style={{
             width: '100%',
             height: '20px',
@@ -1117,7 +1199,12 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
           </label>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
-              onClick={() => { setIsCrumpled(false); resetSimulation(); }}
+              onClick={() => {
+                setIsCrumpled(false);
+                resetSimulation();
+                emitEvent('button_clicked', { action: 'set_shape', shape: 'flat' });
+                playSound('click');
+              }}
               style={{
                 flex: 1,
                 padding: '12px',
@@ -1131,7 +1218,12 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
               Flat (Open)
             </button>
             <button
-              onClick={() => { setIsCrumpled(true); resetSimulation(); }}
+              onClick={() => {
+                setIsCrumpled(true);
+                resetSimulation();
+                emitEvent('button_clicked', { action: 'set_shape', shape: 'crumpled' });
+                playSound('click');
+              }}
               style={{
                 flex: 1,
                 padding: '12px',
@@ -1164,6 +1256,11 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
     </div>
   );
 
+  const handlePhaseComplete = () => {
+    emitEvent('button_clicked', { action: 'phase_complete', phase });
+    playSound('transition');
+  };
+
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed',
@@ -1178,7 +1275,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
       zIndex: 1000,
     }}>
       <button
-        onClick={onPhaseComplete}
+        onClick={handlePhaseComplete}
         disabled={disabled && !canProceed}
         style={{
           padding: '12px 32px',
@@ -1275,7 +1372,11 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
               {predictions.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setPrediction(p.id)}
+                  onClick={() => {
+                    setPrediction(p.id);
+                    emitEvent('prediction_made', { prediction: p.id, phase: 'predict' });
+                    playSound('click');
+                  }}
                   style={{
                     padding: '16px',
                     borderRadius: '8px',
@@ -1368,6 +1469,69 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             </p>
           </div>
 
+          {/* Visual diagram showing force balance */}
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px' }}>
+            <svg width="100%" height="300" viewBox="0 0 600 300" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '600px' }}>
+              <defs>
+                <linearGradient id="reviewBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#1e3a5f" />
+                  <stop offset="100%" stopColor="#0f172a" />
+                </linearGradient>
+              </defs>
+              <rect width="600" height="300" fill="url(#reviewBg)" rx="12" />
+
+              {/* Title */}
+              <text x="300" y="30" fill="#a855f7" fontSize="18" fontWeight="bold" textAnchor="middle">
+                Terminal Velocity: Force Balance
+              </text>
+
+              {/* 1 Filter */}
+              <g transform="translate(150, 100)">
+                <text x="0" y="-35" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">1 Filter</text>
+                <ellipse cx="0" cy="0" rx="30" ry="8" fill="#d4a574" stroke="#92400e" strokeWidth="2" />
+                <line x1="0" y1="20" x2="0" y2="70" stroke="#ef4444" strokeWidth="4" markerEnd="url(#arrowRed)" />
+                <text x="0" y="95" fill="#ef4444" fontSize="12" textAnchor="middle">W = mg</text>
+                <line x1="0" y1="-20" x2="0" y2="-60" stroke="#3b82f6" strokeWidth="3" markerEnd="url(#arrowBlue)" />
+                <text x="0" y="-75" fill="#3b82f6" fontSize="12" textAnchor="middle">Drag</text>
+                <text x="0" y="115" fill="#10b981" fontSize="13" fontWeight="bold" textAnchor="middle">vt = v₀</text>
+              </g>
+
+              {/* 2 Filters */}
+              <g transform="translate(450, 100)">
+                <text x="0" y="-35" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">2 Filters</text>
+                <ellipse cx="0" cy="0" rx="30" ry="8" fill="#d4a574" stroke="#92400e" strokeWidth="2" />
+                <ellipse cx="0" cy="3" rx="29" ry="7" fill="#d4a574" stroke="#92400e" strokeWidth="1.5" opacity="0.8" />
+                <line x1="0" y1="20" x2="0" y2="85" stroke="#ef4444" strokeWidth="4" markerEnd="url(#arrowRed)" />
+                <text x="0" y="105" fill="#ef4444" fontSize="12" textAnchor="middle">W = 2mg</text>
+                <line x1="0" y1="-20" x2="0" y2="-73" stroke="#3b82f6" strokeWidth="4" markerEnd="url(#arrowBlue)" />
+                <text x="0" y="-85" fill="#3b82f6" fontSize="12" textAnchor="middle">Drag (2x)</text>
+                <text x="0" y="125" fill="#10b981" fontSize="13" fontWeight="bold" textAnchor="middle">vt = √2 · v₀</text>
+                <text x="0" y="145" fill="#94a3b8" fontSize="11" textAnchor="middle">(1.41x faster)</text>
+              </g>
+
+              {/* Arrow markers */}
+              <defs>
+                <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                  <polygon points="0,0 10,5 0,10" fill="#ef4444" />
+                </marker>
+                <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                  <polygon points="0,0 10,5 0,10" fill="#3b82f6" />
+                </marker>
+              </defs>
+
+              {/* Explanation */}
+              <text x="300" y="230" fill="#94a3b8" fontSize="12" textAnchor="middle">
+                At terminal velocity: Drag Force = Weight
+              </text>
+              <text x="300" y="250" fill="#94a3b8" fontSize="12" textAnchor="middle">
+                Double mass → Drag must double → vt increases by √2
+              </text>
+              <text x="300" y="270" fill="#a855f7" fontSize="11" fontWeight="bold" textAnchor="middle">
+                vt ∝ √m (not directly proportional to mass!)
+              </text>
+            </svg>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
@@ -1435,7 +1599,11 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
               {twistPredictions.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
+                  onClick={() => {
+                    setTwistPrediction(p.id);
+                    emitEvent('prediction_made', { prediction: p.id, phase: 'twist_predict' });
+                    playSound('click');
+                  }}
                   style={{
                     padding: '16px',
                     borderRadius: '8px',
@@ -1582,7 +1750,11 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
               </div>
               {!transferCompleted.has(index) ? (
                 <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                  onClick={() => {
+                    setTransferCompleted(new Set([...transferCompleted, index]));
+                    emitEvent('button_clicked', { action: 'reveal_answer', applicationIndex: index });
+                    playSound('click');
+                  }}
                   style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
                 >
                   Reveal Answer

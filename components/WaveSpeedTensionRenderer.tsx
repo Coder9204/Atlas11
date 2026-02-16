@@ -689,48 +689,50 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       );
     }
 
-    
+
     // INTRO
     if (phase === 'intro') {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 py-8" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 className="text-3xl font-black text-white mb-6 text-center">Understanding Wave Speed</h2>
-          <div className="space-y-6 w-full">
-            <div className="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <h3 className="text-xl font-bold text-amber-400 mb-3">The Physics</h3>
-              <p className="text-slate-300 leading-relaxed mb-4">
-                When you send a pulse down a rope, how fast does it travel? The answer depends on two key factors: how tightly the rope is stretched (tension) and how heavy the rope is per unit length (linear density).
-              </p>
-              <p className="text-slate-300 leading-relaxed">
-                Higher tension means the rope snaps back faster when disturbed, increasing wave speed. More mass means more inertia to overcome, decreasing wave speed.
-              </p>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+          <div className="flex flex-col items-center justify-center px-6 py-8" style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 className="text-3xl font-black text-white mb-6 text-center">Understanding Wave Speed</h2>
+            <div className="space-y-6 w-full">
+              <div className="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                <h3 className="text-xl font-bold text-amber-400 mb-3">The Physics</h3>
+                <p className="text-slate-300 leading-relaxed mb-4">
+                  When you send a pulse down a rope, how fast does it travel? The answer depends on two key factors: how tightly the rope is stretched (tension) and how heavy the rope is per unit length (linear density).
+                </p>
+                <p className="text-slate-300 leading-relaxed">
+                  Higher tension means the rope snaps back faster when disturbed, increasing wave speed. More mass means more inertia to overcome, decreasing wave speed.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
+                <p className="text-sm font-bold text-amber-400 mb-3">THE FORMULA</p>
+                <p className="text-3xl font-serif text-white mb-3">
+                  v = sqrt(T / u)
+                </p>
+                <p className="text-sm text-slate-400">
+                  <span className="text-amber-400 font-semibold">T</span> = tension force (N) | <span className="text-yellow-400 font-semibold">u</span> = linear density (kg/m)
+                </p>
+              </div>
+
+              <div className="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                <h3 className="text-xl font-bold text-emerald-400 mb-3">Real-World Impact</h3>
+                <p className="text-slate-300 leading-relaxed">
+                  This principle governs guitar strings producing perfect pitch, suspension bridge cables resisting oscillation, and seismic waves revealing Earth's interior structure.
+                </p>
+              </div>
             </div>
 
-            <div className="p-6 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
-              <p className="text-sm font-bold text-amber-400 mb-3">THE FORMULA</p>
-              <p className="text-3xl font-serif text-white mb-3">
-                v = sqrt(T / u)
-              </p>
-              <p className="text-sm text-slate-400">
-                <span className="text-amber-400 font-semibold">T</span> = tension force (N) | <span className="text-yellow-400 font-semibold">u</span> = linear density (kg/m)
-              </p>
-            </div>
-
-            <div className="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <h3 className="text-xl font-bold text-emerald-400 mb-3">Real-World Impact</h3>
-              <p className="text-slate-300 leading-relaxed">
-                This principle governs guitar strings producing perfect pitch, suspension bridge cables resisting oscillation, and seismic waves revealing Earth's interior structure.
-              </p>
-            </div>
+            <button
+              onClick={() => goToPhase('predict')}
+              className="mt-8 px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30"
+              style={{ zIndex: 10, minHeight: '44px', cursor: 'pointer' }}
+            >
+              Make Your Prediction
+            </button>
           </div>
-
-          <button
-            onClick={() => goToPhase('predict')}
-            className="mt-8 px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30"
-            style={{ zIndex: 10, minHeight: '44px', cursor: 'pointer' }}
-          >
-            Make Your Prediction
-          </button>
         </div>
       );
     }
@@ -745,60 +747,62 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       ];
 
       return (
-        <div className="flex flex-col min-h-[80vh] px-6 py-8">
-          <div className="max-w-xl mx-auto w-full">
-            <p className="text-xs font-bold text-amber-400 mb-2 uppercase tracking-widest">Predict</p>
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
-              Tight vs. Loose Rope?
-            </h2>
-            <p className="text-slate-400 mb-6">
-              You snap a pulse into a rope tied between two posts. What happens when you increase the rope's tension?
-            </p>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+          <div className="flex flex-col px-6 py-8">
+            <div className="max-w-xl mx-auto w-full">
+              <p className="text-xs font-bold text-amber-400 mb-2 uppercase tracking-widest">Predict</p>
+              <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
+                Tight vs. Loose Rope?
+              </h2>
+              <p className="text-slate-400 mb-6">
+                You snap a pulse into a rope tied between two posts. What happens when you increase the rope's tension?
+              </p>
 
-            <div className="flex flex-col gap-3 mb-8">
-              {options.map((opt) => (
+              <div className="flex flex-col gap-3 mb-8">
+                {options.map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      setPrediction(opt.id);
+                      emitEvent('prediction_made', { prediction: opt.id, label: opt.label });
+                    }}
+                    className={`flex items-center gap-4 p-5 rounded-xl border-2 text-left transition-all duration-300 ${
+                      prediction === opt.id
+                        ? 'border-amber-500 bg-amber-500/10 text-white'
+                        : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
+                    }`}
+                    style={{ zIndex: 10, minHeight: '44px' }}
+                  >
+                    <span className="text-2xl">{opt.icon}</span>
+                    <div>
+                      <p className="font-bold">{opt.label}</p>
+                      <p className="text-sm text-slate-400">{opt.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
+                <p className="text-xs font-bold text-amber-400 mb-2">💡 THINK ABOUT IT</p>
+                <p className="text-sm text-slate-400">
+                  Think about a guitar string. When you turn the tuning peg tighter, what happens to the note's pitch?
+                </p>
+              </div>
+
+              <div className="flex justify-end">
                 <button
-                  key={opt.id}
-                  onClick={() => {
-                    setPrediction(opt.id);
-                    emitEvent('prediction_made', { prediction: opt.id, label: opt.label });
-                  }}
-                  className={`flex items-center gap-4 p-5 rounded-xl border-2 text-left transition-all ${
-                    prediction === opt.id
-                      ? 'border-amber-500 bg-amber-500/10 text-white'
-                      : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
+                  onClick={() => { if (prediction) goToPhase('play'); }}
+                  disabled={!prediction}
+                  className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
+                    prediction
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
+                      : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
                   style={{ zIndex: 10, minHeight: '44px' }}
                 >
-                  <span className="text-2xl">{opt.icon}</span>
-                  <div>
-                    <p className="font-bold">{opt.label}</p>
-                    <p className="text-sm text-slate-400">{opt.desc}</p>
-                  </div>
+                  Test It
                 </button>
-              ))}
-            </div>
-
-            <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
-              <p className="text-xs font-bold text-amber-400 mb-2">💡 THINK ABOUT IT</p>
-              <p className="text-sm text-slate-400">
-                Think about a guitar string. When you turn the tuning peg tighter, what happens to the note's pitch?
-              </p>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => { if (prediction) goToPhase('play'); }}
-                disabled={!prediction}
-                className={`px-8 py-3 rounded-xl font-bold transition-all ${
-                  prediction
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
-                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                }`}
-                style={{ zIndex: 10, minHeight: '44px' }}
-              >
-                Test It
-              </button>
+              </div>
             </div>
           </div>
         </div>
@@ -808,13 +812,33 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // LAB (play)
     if (phase === 'play') {
       return (
-        <div className="flex flex-col min-h-[80vh]">
-          <div className="flex-1 flex items-center justify-center p-4 min-h-64">
-            {renderRopeVisualization(linearDensity)}
-          </div>
+        <div className="flex flex-col flex-1 overflow-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+          <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-64">
+            <div className="w-full max-w-3xl mb-6">
+              {renderRopeVisualization(linearDensity)}
+            </div>
 
-          <div className="p-6 bg-slate-900/80 border-t border-slate-800">
-            <div className="max-w-xl mx-auto">
+            <div className="w-full max-w-2xl p-6 rounded-xl bg-slate-800/30 border border-slate-700/50 mb-6">
+              <p className="text-xs font-bold text-amber-400 mb-2">👀 OBSERVE</p>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                Watch how changing tension affects the wave pulse travel time. Higher tension makes the rope "snap back" faster, increasing wave speed.
+              </p>
+            </div>
+
+            <div className="w-full max-w-2xl grid grid-cols-2 gap-4 mb-6">
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 transition-all duration-300">
+                <p className="text-xs font-bold text-amber-400 mb-1">CURRENT</p>
+                <p className="text-2xl font-black text-white">{waveSpeed.toFixed(1)} m/s</p>
+                <p className="text-xs text-slate-400">Wave Speed</p>
+              </div>
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 transition-all duration-300">
+                <p className="text-xs font-bold text-emerald-400 mb-1">TRAVEL TIME</p>
+                <p className="text-2xl font-black text-white">{(ropeLength / waveSpeed).toFixed(2)}s</p>
+                <p className="text-xs text-slate-400">For {ropeLength}m rope</p>
+              </div>
+            </div>
+
+            <div className="w-full max-w-2xl">
               <div className="flex justify-center mb-6">
                 <button
                   onClick={() => {
@@ -837,9 +861,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 </button>
               </div>
 
-              <div className="mb-4">
+              <div className="mb-4 w-full">
                 <div className="flex justify-between mb-2">
-                  <label className="text-sm text-slate-400 font-semibold">Adjust Tension</label>
+                  <label className="text-sm text-slate-400 font-semibold">Rope Tension (T) - How tightly the rope is stretched</label>
                   <span className="text-sm text-amber-400 font-bold">{tension} N</span>
                 </div>
                 <input
@@ -855,6 +879,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     setStopwatchTime(0);
                   }}
                   className="w-full accent-amber-500"
+                  style={{ width: '100%' }}
                 />
                 <div className="flex justify-between text-xs text-slate-600">
                   <span>10 N (loose)</span>
@@ -885,53 +910,55 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // REVIEW
     if (phase === 'review') {
       return (
-        <div className="flex flex-col min-h-[80vh] px-6 py-8">
-          <div className="max-w-2xl mx-auto w-full">
-            <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Understanding</p>
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
-              Why Does Tension Increase Speed?
-            </h2>
-            <p className="text-slate-400 mb-6">
-              {prediction === 'faster'
-                ? '✅ You predicted correctly! Higher tension means faster wave speed.'
-                : "Higher tension actually increases wave speed. Here's why:"}
-            </p>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+          <div className="flex flex-col px-6 py-8">
+            <div className="max-w-2xl mx-auto w-full">
+              <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Understanding</p>
+              <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
+                Why Does Tension Increase Speed?
+              </h2>
+              <p className="text-slate-400 mb-6">
+                {prediction === 'faster'
+                  ? '✅ You predicted correctly! Higher tension means faster wave speed.'
+                  : "Higher tension actually increases wave speed. Here's why:"}
+              </p>
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/30">
-                <div className="text-2xl mb-2">🎯</div>
-                <h4 className="text-sm font-bold text-amber-400 mb-1">Restoring Force</h4>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Higher tension means stronger restoring force. The rope "snaps back" faster when disturbed!
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/30 transition-all duration-300">
+                  <div className="text-2xl mb-2">🎯</div>
+                  <h4 className="text-sm font-bold text-amber-400 mb-1">Restoring Force</h4>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Higher tension means stronger restoring force. The rope "snaps back" faster when disturbed!
+                  </p>
+                </div>
+                <div className="p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 transition-all duration-300">
+                  <div className="text-2xl mb-2">⚡</div>
+                  <h4 className="text-sm font-bold text-emerald-400 mb-1">Faster Propagation</h4>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Wave speed increases with the square root of tension: v ∝ sqrt(T)
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-8 rounded-2xl bg-gradient-to-br from-amber-500/10 to-slate-800 border border-amber-500/20 text-center mb-8">
+                <p className="text-xs font-bold text-amber-400 mb-4 uppercase tracking-widest">The Wave Speed Formula</p>
+                <p className="text-3xl font-serif text-white mb-4">
+                  v = sqrt(<span className="text-amber-400">T</span> / <span className="text-yellow-400">u</span>)
+                </p>
+                <p className="text-sm text-slate-400">
+                  <span className="text-amber-400">T</span> = tension (N) | <span className="text-yellow-400">u</span> = mass per length (kg/m)
                 </p>
               </div>
-              <div className="p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-                <div className="text-2xl mb-2">⚡</div>
-                <h4 className="text-sm font-bold text-emerald-400 mb-1">Faster Propagation</h4>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Wave speed increases with the square root of tension: v ∝ sqrt(T)
-                </p>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => goToPhase('twist_predict')}
+                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg shadow-amber-500/30"
+                  style={{ zIndex: 10, minHeight: '44px' }}
+                >
+                  Explore Mass Effect
+                </button>
               </div>
-            </div>
-
-            <div className="p-8 rounded-2xl bg-gradient-to-br from-amber-500/10 to-slate-800 border border-amber-500/20 text-center mb-8">
-              <p className="text-xs font-bold text-amber-400 mb-4 uppercase tracking-widest">The Wave Speed Formula</p>
-              <p className="text-3xl font-serif text-white mb-4">
-                v = sqrt(<span className="text-amber-400">T</span> / <span className="text-yellow-400">u</span>)
-              </p>
-              <p className="text-sm text-slate-400">
-                <span className="text-amber-400">T</span> = tension (N) | <span className="text-yellow-400">u</span> = mass per length (kg/m)
-              </p>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => goToPhase('twist_predict')}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg shadow-amber-500/30"
-                style={{ zIndex: 10, minHeight: '44px' }}
-              >
-                Explore Mass Effect
-              </button>
             </div>
           </div>
         </div>
@@ -1010,13 +1037,33 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // TWIST LAB (twist_play)
     if (phase === 'twist_play') {
       return (
-        <div className="flex flex-col min-h-[80vh]">
-          <div className="flex-1 flex items-center justify-center p-4 min-h-64">
-            {renderRopeVisualization(twistLinearDensity)}
-          </div>
+        <div className="flex flex-col flex-1 overflow-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+          <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-64">
+            <div className="w-full max-w-3xl mb-6">
+              {renderRopeVisualization(twistLinearDensity)}
+            </div>
 
-          <div className="p-6 bg-slate-900/80 border-t border-slate-800">
-            <div className="max-w-xl mx-auto">
+            <div className="w-full max-w-2xl p-6 rounded-xl bg-slate-800/30 border border-slate-700/50 mb-6">
+              <p className="text-xs font-bold text-violet-400 mb-2">👀 OBSERVE</p>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                Notice how heavier ropes (higher mass density) carry waves more slowly. More inertia means the rope responds slower to disturbances.
+              </p>
+            </div>
+
+            <div className="w-full max-w-2xl grid grid-cols-2 gap-4 mb-6">
+              <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/30 transition-all duration-300">
+                <p className="text-xs font-bold text-violet-400 mb-1">CURRENT</p>
+                <p className="text-2xl font-black text-white">{twistWaveSpeed.toFixed(1)} m/s</p>
+                <p className="text-xs text-slate-400">Wave Speed</p>
+              </div>
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 transition-all duration-300">
+                <p className="text-xs font-bold text-emerald-400 mb-1">COMPARISON</p>
+                <p className="text-2xl font-black text-white">{((waveSpeed - twistWaveSpeed) / waveSpeed * 100).toFixed(0)}%</p>
+                <p className="text-xs text-slate-400">vs. lighter rope</p>
+              </div>
+            </div>
+
+            <div className="w-full max-w-2xl">
               <div className="flex justify-center mb-6">
                 <button
                   onClick={() => {
@@ -1039,9 +1086,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 </button>
               </div>
 
-              <div className="mb-4">
+              <div className="mb-4 w-full">
                 <div className="flex justify-between mb-2">
-                  <label className="text-sm text-slate-400 font-semibold">Adjust Mass Density</label>
+                  <label className="text-sm text-slate-400 font-semibold">Linear Mass Density (μ) - Mass per unit length of rope</label>
                   <span className="text-sm text-yellow-400 font-bold">{(twistLinearDensity * 1000).toFixed(1)} g/m</span>
                 </div>
                 <input
@@ -1057,6 +1104,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     setStopwatchTime(0);
                   }}
                   className="w-full accent-yellow-500"
+                  style={{ width: '100%' }}
                 />
                 <div className="flex justify-between text-xs text-slate-600">
                   <span>5 g/m (light)</span>
@@ -1143,7 +1191,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       const allAppsCompleted = completedApps.size === applications.length;
 
       return (
-        <div className="flex flex-col min-h-[80vh]">
+        <div className="flex flex-col flex-1">
           <div className="flex items-center justify-center gap-3 py-4 bg-slate-900/80 border-b border-slate-800">
             <span className="text-sm text-slate-400">
               Application {activeApp + 1} of {applications.length}
@@ -1167,13 +1215,12 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             {applications.map((a, idx) => {
               const isCompleted = completedApps.has(idx);
               const isCurrent = idx === activeApp;
-              const canAccess = isCompleted || idx === activeApp;
               return (
                 <button
                   key={a.id}
                   onClick={() => {
                     const now = Date.now();
-                    if (now - lastClickRef.current < 200 || !canAccess) return;
+                    if (now - lastClickRef.current < 200) return;
                     lastClickRef.current = now;
                     setActiveApp(idx);
                     emitEvent('app_explored', { appIndex: idx });
@@ -1183,9 +1230,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'bg-slate-800 text-white'
                       : isCompleted
                         ? 'bg-emerald-500/10 text-emerald-400'
-                        : 'text-slate-500 opacity-50 cursor-not-allowed'
+                        : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
                   }`}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, minHeight: '44px' }}
                 >
                   {a.icon} {isCompleted && !isCurrent ? '✓ ' : ''}{isMobile ? '' : a.title}
                 </button>
@@ -1193,72 +1240,74 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             })}
           </div>
 
-          <div className="flex-1 p-6 overflow-auto">
-            <div className="max-w-2xl mx-auto">
-              <div className="mb-6 rounded-xl overflow-hidden border border-slate-800">
-                {renderAppGraphic(app.id)}
-              </div>
-
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 rounded-xl bg-amber-500/20 flex items-center justify-center text-2xl">
-                  {app.icon}
+          <div className="flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+            <div className="p-6">
+              <div className="max-w-2xl mx-auto">
+                <div className="mb-6 rounded-xl overflow-hidden border border-slate-800">
+                  {renderAppGraphic(app.id)}
                 </div>
-                <div>
-                  <h3 className="text-xl font-black text-white">{app.title}</h3>
-                  <p className="text-sm text-slate-400">{app.description}</p>
+
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-14 h-14 rounded-xl bg-amber-500/20 flex items-center justify-center text-2xl">
+                    {app.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-white">{app.title}</h3>
+                    <p className="text-sm text-slate-400">{app.description}</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
-                <p className="text-xs font-bold text-amber-400 mb-2">🔬 THE PHYSICS</p>
-                <p className="text-sm text-slate-300 leading-relaxed">{app.physics}</p>
-              </div>
+                <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
+                  <p className="text-xs font-bold text-amber-400 mb-2">🔬 THE PHYSICS</p>
+                  <p className="text-sm text-slate-300 leading-relaxed">{app.physics}</p>
+                </div>
 
-              <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center mb-6">
-                <p className="text-xs font-bold text-amber-400 mb-2">KEY FORMULA</p>
-                <p className="text-lg font-mono text-white">{app.formula}</p>
-              </div>
+                <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center mb-6">
+                  <p className="text-xs font-bold text-amber-400 mb-2">KEY FORMULA</p>
+                  <p className="text-lg font-mono text-white">{app.formula}</p>
+                </div>
 
-              {!completedApps.has(activeApp) ? (
-                <button
-                  onClick={() => {
-                    const now = Date.now();
-                    if (now - lastClickRef.current < 200) return;
-                    lastClickRef.current = now;
-                    const newCompleted = new Set(completedApps);
-                    newCompleted.add(activeApp);
-                    setCompletedApps(newCompleted);
-                    emitEvent('app_explored', { app: app.title });
-                  }}
-                  className="w-full py-4 rounded-xl bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 font-semibold text-lg"
-                  style={{ zIndex: 10, minHeight: '44px' }}
-                >
-                  Got It
-                </button>
-              ) : (
-                activeApp < applications.length - 1 ? (
+                {!completedApps.has(activeApp) ? (
                   <button
                     onClick={() => {
                       const now = Date.now();
                       if (now - lastClickRef.current < 200) return;
                       lastClickRef.current = now;
-                      setActiveApp(activeApp + 1);
+                      const newCompleted = new Set(completedApps);
+                      newCompleted.add(activeApp);
+                      setCompletedApps(newCompleted);
+                      emitEvent('app_explored', { app: app.title });
                     }}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-lg"
+                    className="w-full py-4 rounded-xl bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 font-semibold text-lg transition-all duration-300"
                     style={{ zIndex: 10, minHeight: '44px' }}
                   >
-                    Next Application
+                    Got It
                   </button>
                 ) : (
-                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center">
-                    <span className="text-emerald-400 font-semibold">Completed</span>
-                  </div>
-                )
-              )}
+                  activeApp < applications.length - 1 ? (
+                    <button
+                      onClick={() => {
+                        const now = Date.now();
+                        if (now - lastClickRef.current < 200) return;
+                        lastClickRef.current = now;
+                        setActiveApp(activeApp + 1);
+                      }}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-lg transition-all duration-300"
+                      style={{ zIndex: 10, minHeight: '44px' }}
+                    >
+                      Next Application
+                    </button>
+                  ) : (
+                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center transition-all duration-300">
+                      <span className="text-emerald-400 font-semibold">Completed</span>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="p-4 bg-slate-900/80 border-t border-slate-800">
+          <div className="p-4 bg-slate-900/80 border-t border-slate-800" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }}>
             <div className="max-w-2xl mx-auto">
               {allAppsCompleted ? (
                 <div className="text-center">
@@ -1502,7 +1551,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div className="flex flex-col bg-[#0a0f1a] text-white relative overflow-hidden" style={{ minHeight: '100dvh' }}>
       {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
@@ -1535,7 +1584,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       </nav>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
+      <div className="relative flex-1 flex flex-col" style={{ paddingTop: '64px', paddingBottom: '80px' }}>{renderPhase()}</div>
     </div>
   );
 };

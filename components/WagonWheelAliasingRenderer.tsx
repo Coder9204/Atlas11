@@ -351,7 +351,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
 
   const renderVisualization = (interactive: boolean) => {
     const width = 700;
-    const height = 400;
+    const height = 500;
     const wheelRadius = 75;
     const apparentSpeed = getApparentSpeed();
 
@@ -538,14 +538,22 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           <rect width={width} height={height} fill="url(#wwaGridPattern)" />
 
           {/* Title area */}
-          <text x={width / 2} y={28} textAnchor="middle" fill={colors.accent} fontSize={18} fontWeight="bold" filter="url(#wwaTextGlow)">
-            Wagon Wheel Aliasing Demonstration
+          <text x={width / 2} y={25} textAnchor="middle" fill={colors.accent} fontSize={16} fontWeight="bold" filter="url(#wwaTextGlow)">
+            Wagon Wheel Aliasing
           </text>
 
+          {/* Formula display */}
+          <g transform={`translate(${width / 2}, 55)`}>
+            <rect x={-200} y={0} width={400} height={26} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+            <text x={0} y={17} textAnchor="middle" fill={colors.textPrimary} fontSize={10} fontFamily="monospace">
+              apparent_angle = (true_rotation / frame_rate) mod spoke_spacing
+            </text>
+          </g>
+
           {/* === TRUE WHEEL SECTION (Left) === */}
-          <g transform={`translate(160, 185)`}>
+          <g transform={`translate(160, 180)`}>
             {/* Section label */}
-            <text x={0} y={-wheelRadius - 25} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
+            <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontWeight="bold">
               TRUE WHEEL
             </text>
 
@@ -618,7 +626,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </g>
 
           {/* === CAMERA / SAMPLING VISUALIZATION (Center) === */}
-          <g transform={`translate(${width / 2}, 185)`}>
+          <g transform={`translate(${width / 2}, 180)`}>
             {/* Camera body */}
             <rect x={-25} y={-60} width={50} height={35} rx={6} fill="url(#wwaCameraBody)" stroke="#4b5563" strokeWidth={1.5} />
             <rect x={-20} y={-55} width={40} height={25} rx={4} fill="#0f172a" />
@@ -635,19 +643,19 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             </circle>
 
             {/* Frame rate display panel */}
-            <rect x={-50} y={-20} width={100} height={45} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
-            <text x={0} y={-3} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">
+            <rect x={-50} y={-15} width={100} height={40} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+            <text x={0} y={0} textAnchor="middle" fill={colors.accent} fontSize={10} fontWeight="bold">
               FRAME RATE
             </text>
-            <text x={0} y={15} textAnchor="middle" fill={colors.textPrimary} fontSize={15} fontWeight="bold">
+            <text x={0} y={18} textAnchor="middle" fill={colors.textPrimary} fontSize={15} fontWeight="bold">
               {frameRate} fps
             </text>
 
             {/* Sampling timeline visualization */}
-            <g transform="translate(0, 60)">
+            <g transform="translate(0, 70)">
               <rect x={-60} y={-8} width={120} height={38} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
-              <text x={0} y={5} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
-                SAMPLES PER SECOND
+              <text x={0} y={4} textAnchor="middle" fill={colors.textMuted} fontSize={9}>
+                SAMPLES/SEC
               </text>
               {/* Sampling ticks */}
               {Array.from({ length: Math.min(frameRate / 4, 12) }).map((_, i) => (
@@ -672,9 +680,9 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </g>
 
           {/* === SAMPLED/APPARENT WHEEL (Right) === */}
-          <g transform={`translate(540, 185)`}>
+          <g transform={`translate(540, 180)`}>
             {/* Section label */}
-            <text x={0} y={-wheelRadius - 25} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
+            <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontWeight="bold">
               SAMPLED WHEEL
             </text>
 
@@ -785,28 +793,72 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             />
           </g>
 
+          {/* === SPEED COMPARISON CHART === */}
+          <g transform={`translate(100, 330)`}>
+            <text x={0} y={-10} fill={colors.textMuted} fontSize={11} fontWeight="bold">Speed Comparison</text>
+
+            {/* Y-axis */}
+            <line x1={0} y1={0} x2={0} y2={120} stroke={colors.textMuted} strokeWidth={1} />
+            <text x={-8} y={5} textAnchor="end" fill={colors.textMuted} fontSize={9}>15</text>
+            <text x={-8} y={65} textAnchor="end" fill={colors.textMuted} fontSize={9}>7.5</text>
+            <text x={-8} y={125} textAnchor="end" fill={colors.textMuted} fontSize={9}>0</text>
+            <text x={-35} y={65} textAnchor="middle" fill={colors.textMuted} fontSize={9} transform={`rotate(-90, -35, 65)`}>r/s</text>
+
+            {/* X-axis */}
+            <line x1={0} y1={120} x2={500} y2={120} stroke={colors.textMuted} strokeWidth={1} />
+
+            {/* True speed bar */}
+            <rect x={50} y={120 - (rotationSpeed / 15) * 120} width={80} height={(rotationSpeed / 15) * 120} fill={colors.success} opacity={0.7} />
+            <text x={90} y={135} textAnchor="middle" fill={colors.textPrimary} fontSize={10}>True</text>
+
+            {/* Apparent speed bar (can be negative) */}
+            {apparentSpeed >= 0 ? (
+              <rect x={170} y={120 - (Math.abs(apparentSpeed) / 15) * 120} width={80} height={(Math.abs(apparentSpeed) / 15) * 120} fill={colors.error} opacity={0.7} />
+            ) : (
+              <>
+                <rect x={170} y={120} width={80} height={Math.min((Math.abs(apparentSpeed) / 15) * 120, 120)} fill={colors.warning} opacity={0.7} />
+                <text x={210} y={145} textAnchor="middle" fill={colors.warning} fontSize={9}>← backward</text>
+              </>
+            )}
+            <text x={210} y={135} textAnchor="middle" fill={colors.textPrimary} fontSize={10}>Apparent</text>
+
+            {/* Interactive marker on apparent speed bar */}
+            <circle
+              cx={210}
+              cy={apparentSpeed >= 0 ? 120 - (Math.abs(apparentSpeed) / 15) * 120 : 120}
+              r={6}
+              fill={colors.accent}
+              stroke="white"
+              strokeWidth={2}
+              filter="url(#wwaTextGlow)"
+            />
+          </g>
+
           {/* === BOTTOM INFO PANEL === */}
-          <g transform={`translate(${width / 2}, ${height - 30})`}>
-            <rect x={-280} y={-30} width={560} height={60} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
+          <g transform={`translate(${width / 2}, ${height - 35})`}>
+            <rect x={-300} y={-35} width={600} height={70} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
 
             {/* Left info: Spoke spacing */}
-            <g transform="translate(-200, -5)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11}>SPOKE SPACING</text>
-              <text x={0} y={18} textAnchor="middle" fill={colors.textSecondary} fontSize={13} fontWeight="bold">{(360 / numSpokes).toFixed(0)}deg</text>
+            <g transform="translate(-200, -10)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={10}>SPOKE</text>
+              <text x={0} y={12} textAnchor="middle" fill={colors.textMuted} fontSize={10}>SPACING</text>
+              <text x={0} y={30} textAnchor="middle" fill={colors.textSecondary} fontSize={13} fontWeight="bold">{(360 / numSpokes).toFixed(0)}deg</text>
             </g>
 
             {/* Center info: Movement per frame */}
-            <g transform="translate(0, -5)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11}>MOVEMENT/FRAME</text>
-              <text x={0} y={18} textAnchor="middle" fill={colors.accent} fontSize={13} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}deg</text>
+            <g transform="translate(0, -10)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={10}>MOVEMENT</text>
+              <text x={0} y={12} textAnchor="middle" fill={colors.textMuted} fontSize={10}>PER FRAME</text>
+              <text x={0} y={30} textAnchor="middle" fill={colors.accent} fontSize={13} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}deg</text>
             </g>
 
             {/* Right info: Aliased movement */}
-            <g transform="translate(200, -5)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11}>ALIASED SHIFT</text>
+            <g transform="translate(200, -10)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={10}>ALIASED</text>
+              <text x={0} y={12} textAnchor="middle" fill={colors.textMuted} fontSize={10}>SHIFT</text>
               <text
                 x={0}
-                y={18}
+                y={30}
                 textAnchor="middle"
                 fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
                 fontSize={13}
@@ -1207,6 +1259,30 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               <li>Change frame rate - aliasing changes!</li>
             </ul>
           </div>
+
+          {/* Before/After Comparison */}
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px' }}>📊 Before vs After Comparison</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', border: `2px solid ${colors.success}` }}>
+                <div style={{ color: colors.success, fontWeight: 'bold', marginBottom: '6px' }}>✓ True Motion</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                  Continuous rotation at {rotationSpeed.toFixed(1)} r/s
+                </div>
+              </div>
+              <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '8px', border: `2px solid ${colors.error}` }}>
+                <div style={{ color: colors.error, fontWeight: 'bold', marginBottom: '6px' }}>✗ Sampled Motion</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                  Appears as {Math.abs(getApparentSpeed()).toFixed(1)} r/s {getApparentSpeed() < 0 ? 'backward' : getApparentSpeed() > 0.1 ? 'forward' : 'frozen'}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review →')}
       </div>
@@ -1233,6 +1309,43 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             <p style={{ color: colors.textPrimary }}>
               The wheel can appear to spin backward, stop, or spin forward at the wrong speed!
             </p>
+          </div>
+
+          {/* Visual diagram showing aliasing concept */}
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px' }}>
+            <svg width="100%" height="300" viewBox="0 0 600 300" preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '600px' }}>
+              <defs>
+                <marker id="arrowhead-review" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <polygon points="0 0, 10 3, 0 6" fill={colors.accent} />
+                </marker>
+              </defs>
+              <text x={300} y={25} textAnchor="middle" fill={colors.accent} fontSize={14} fontWeight="bold">Aliasing Visualization</text>
+
+              {/* Time axis */}
+              <line x1={50} y1={150} x2={550} y2={150} stroke={colors.textMuted} strokeWidth={2} markerEnd="url(#arrowhead-review)" />
+              <text x={560} y={155} fill={colors.textMuted} fontSize={12}>time</text>
+
+              {/* Continuous motion wave */}
+              <path d="M 50 150 Q 90 100, 130 150 T 210 150 T 290 150 T 370 150 T 450 150 T 530 150"
+                    fill="none" stroke={colors.success} strokeWidth={2} strokeDasharray="none" />
+              <text x={50} y={90} fill={colors.success} fontSize={11}>True continuous motion</text>
+
+              {/* Sample points */}
+              {[130, 210, 290, 370, 450].map((x, i) => (
+                <circle key={i} cx={x} cy={150} r={5} fill={colors.error} stroke={colors.error} strokeWidth={2} />
+              ))}
+              <text x={300} y={180} textAnchor="middle" fill={colors.error} fontSize={11}>Camera samples (discrete)</text>
+
+              {/* Apparent backward motion */}
+              <path d="M 130 150 L 210 145 L 290 140 L 370 135 L 450 130"
+                    fill="none" stroke={colors.warning} strokeWidth={2} strokeDasharray="5,5" />
+              <text x={300} y={210} textAnchor="middle" fill={colors.warning} fontSize={11}>Apparent motion (aliased)</text>
+
+              {/* Frame markers */}
+              {[130, 210, 290, 370, 450].map((x, i) => (
+                <line key={i} x1={x} y1={155} x2={x} y2={165} stroke={colors.textMuted} strokeWidth={1} />
+              ))}
+            </svg>
           </div>
 
           <div style={{
@@ -1379,6 +1492,46 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             </p>
           </div>
 
+          {/* Visual diagram showing frame rate effect */}
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px' }}>
+            <svg width="100%" height="280" viewBox="0 0 600 280" preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '600px' }}>
+              <defs>
+                <marker id="arrowhead-twist" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <polygon points="0 0, 10 3, 0 6" fill={colors.warning} />
+                </marker>
+              </defs>
+              <text x={300} y={25} textAnchor="middle" fill={colors.warning} fontSize={14} fontWeight="bold">Frame Rate Impact</text>
+
+              {/* Same wheel speed, different sample rates */}
+              <g transform="translate(50, 70)">
+                <text x={0} y={-10} fill={colors.textPrimary} fontSize={12}>24 fps sampling:</text>
+                <circle cx={50} cy={30} r={3} fill={colors.accent} />
+                <circle cx={125} cy={30} r={3} fill={colors.accent} />
+                <circle cx={200} cy={30} r={3} fill={colors.accent} />
+                <circle cx={275} cy={30} r={3} fill={colors.accent} />
+                <path d="M 50 30 L 125 35 L 200 40 L 275 45" stroke={colors.error} strokeWidth={2} fill="none" strokeDasharray="3,3" />
+                <text x={350} y={35} fill={colors.error} fontSize={11}>Appears backward</text>
+              </g>
+
+              <g transform="translate(50, 150)">
+                <text x={0} y={-10} fill={colors.textPrimary} fontSize={12}>30 fps sampling:</text>
+                <circle cx={40} cy={30} r={3} fill={colors.accent} />
+                <circle cx={90} cy={30} r={3} fill={colors.accent} />
+                <circle cx={140} cy={30} r={3} fill={colors.accent} />
+                <circle cx={190} cy={30} r={3} fill={colors.accent} />
+                <circle cx={240} cy={30} r={3} fill={colors.accent} />
+                <path d="M 40 30 L 90 25 L 140 20 L 190 25 L 240 30" stroke={colors.success} strokeWidth={2} fill="none" strokeDasharray="3,3" />
+                <text x={350} y={35} fill={colors.success} fontSize={11}>Appears forward</text>
+              </g>
+
+              <g transform="translate(50, 230)">
+                <text x={180} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontStyle="italic">
+                  Same true rotation → Different perceived motion
+                </text>
+              </g>
+            </svg>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
@@ -1458,12 +1611,63 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>{testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}</h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
             </div>
+
+            {/* Answer review indicators */}
+            <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: '16px' }}>📊 Answer Review</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+                {testQuestions.map((q, qIndex) => {
+                  const userAnswer = testAnswers[qIndex];
+                  const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                  return (
+                    <div
+                      key={qIndex}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        background: isCorrect ? colors.success : colors.error,
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        border: `2px solid ${isCorrect ? colors.success : colors.error}`,
+                      }}
+                    >
+                      {isCorrect ? '✓' : '✗'}
+                    </div>
+                  );
+                })}
+              </div>
+              <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginTop: '12px' }}>
+                Question-by-question breakdown
+              </p>
+            </div>
+
             {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: isCorrect ? colors.success : colors.error,
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                    }}>
+                      {isCorrect ? '✓' : '✗'}
+                    </div>
+                    <p style={{ color: colors.textPrimary, fontWeight: 'bold', margin: 0 }}>{qIndex + 1}. {q.question}</p>
+                  </div>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
                       {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}

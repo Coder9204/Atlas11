@@ -79,8 +79,9 @@ const realWorldApps = [
 ];
 
 interface NetworkLatencyRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: number) => void;
+  onBack?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -129,12 +130,16 @@ const fiberDistances: Record<string, number> = {
   'Sydney-San Francisco': 12500,
 };
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
 const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
-  phase = 'hook',
+  gamePhase,
   onPhaseComplete,
+  onBack,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  const phase = (gamePhase as Phase) || 'hook';
   // Simulation state
   const [sourceCity, setSourceCity] = useState(0);
   const [destCity, setDestCity] = useState(1);
@@ -557,13 +562,19 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
           {/* Premium dark background */}
           <rect width={width} height={height} fill="url(#netlBgGradient)" />
 
-          {/* Subtle grid pattern */}
-          <g opacity="0.1">
+          {/* Grid pattern with tick marks */}
+          <g opacity="0.15">
             {Array.from({ length: 15 }).map((_, i) => (
-              <line key={`vgrid-${i}`} x1={i * 50} y1="0" x2={i * 50} y2={height} stroke="#64748b" strokeWidth="0.5" />
+              <g key={`vgrid-${i}`}>
+                <line x1={i * 50} y1="0" x2={i * 50} y2={height} stroke="#64748b" strokeWidth="0.5" />
+                <line x1={i * 50} y1={height - 5} x2={i * 50} y2={height} stroke="#64748b" strokeWidth="1.5" />
+              </g>
             ))}
             {Array.from({ length: 9 }).map((_, i) => (
-              <line key={`hgrid-${i}`} x1="0" y1={i * 50} x2={width} y2={i * 50} stroke="#64748b" strokeWidth="0.5" />
+              <g key={`hgrid-${i}`}>
+                <line x1="0" y1={i * 50} x2={width} y2={i * 50} stroke="#64748b" strokeWidth="0.5" />
+                <line x1="0" y1={i * 50} x2="5" y2={i * 50} stroke="#64748b" strokeWidth="1.5" />
+              </g>
             ))}
           </g>
 
@@ -838,6 +849,15 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
             <text x="18" y="80" fill="#94a3b8" fontSize="11">Process</text>
             <text x="95" y="80" textAnchor="end" fill="#8b5cf6" fontSize="11" fontWeight="bold">{routerProcessing.toFixed(1)}</text>
           </g>
+
+          {/* Formula display */}
+          <g transform="translate(20, 80)">
+            <rect x="-5" y="-5" width="180" height="65" rx="8" fill="rgba(15, 23, 42, 0.9)" stroke="#8b5cf6" strokeWidth="1" />
+            <text x="85" y="12" textAnchor="middle" fill="#8b5cf6" fontSize="10" fontWeight="bold">LATENCY FORMULA</text>
+            <text x="5" y="30" fill="#94a3b8" fontSize="9" fontFamily="monospace">RTT = 2×(d/c + B/bw + h×p)</text>
+            <text x="5" y="45" fill="#94a3b8" fontSize="8" fontFamily="monospace">d=dist, c=speed, B=bits</text>
+            <text x="5" y="57" fill="#94a3b8" fontSize="8" fontFamily="monospace">bw=bandwidth, h=hops</text>
+          </g>
         </svg>
 
         {interactive && (
@@ -994,7 +1014,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = false) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
@@ -1004,11 +1024,31 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
       background: colors.bgDark,
       borderTop: '1px solid rgba(255,255,255,0.1)',
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
       zIndex: 1000,
     }}>
+      {showBack && onBack ? (
+        <button
+          onClick={onBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: '1px solid rgba(255,255,255,0.2)',
+            background: 'transparent',
+            color: colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            fontSize: '16px',
+            WebkitTapHighlightColor: 'transparent',
+            minHeight: '44px',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+          }}
+        >
+          Back
+        </button>
+      ) : <div />}
       <button
-        onClick={onPhaseComplete}
+        onClick={() => onPhaseComplete?.(0)}
         disabled={disabled && !canProceed}
         style={{
           padding: '12px 32px',
@@ -1035,9 +1075,9 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>-</div>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📡</div>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Network Latency Physics
             </h1>
@@ -1045,8 +1085,6 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
               Why is there always some delay, even with fiber?
             </p>
           </div>
-
-          {renderVisualization(true)}
 
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{
@@ -1072,12 +1110,12 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
               borderLeft: `3px solid ${colors.accent}`,
             }}>
               <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Try different city pairs to see how distance affects minimum latency!
+                Discover how the speed of light creates fundamental limits in networked systems!
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Learning', true)}
       </div>
     );
   }
@@ -1086,7 +1124,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1122,6 +1160,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
                     textAlign: 'left',
                     fontSize: '14px',
                     WebkitTapHighlightColor: 'transparent',
+                    minHeight: '44px',
                   }}
                 >
                   {p.label}
@@ -1130,7 +1169,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(true, !!prediction, 'Test My Prediction', true)}
       </div>
     );
   }
@@ -1139,7 +1178,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Network Latency</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1149,6 +1188,25 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
           {renderVisualization(true)}
           {renderControls()}
+
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>What to Watch For - Observation Guide:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '8px' }}>
+              As you interact with the controls, <strong>observe carefully</strong> how each parameter affects the latency breakdown:
+            </p>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, paddingLeft: '20px', marginBottom: '12px' }}>
+              <li><strong>Watch</strong> how propagation delay (cyan) dominates for long routes like NY-Tokyo</li>
+              <li><strong>Notice</strong> serialization (orange) spike when you reduce bandwidth to 10 Mbps</li>
+              <li><strong>Observe</strong> processing delay (purple) grow linearly as you add router hops</li>
+              <li><strong>Compare</strong> short routes (NY-SF) vs long routes (London-Sydney) to see the difference</li>
+            </ul>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1167,7 +1225,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
               Latency physics determines why gamers obsess over ping, why high-frequency traders pay millions for proximity to exchanges,
               and why cloud providers build global data centers. The speed of light creates an absolute floor that shapes all networked systems.
             </p>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try - Watch & Observe:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try - Interactive Exploration:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Compare NY-London (~56ms) vs NY-Tokyo (~150ms) - notice how distance affects total RTT</li>
               <li>Set bandwidth to 10 Mbps - watch serialization increase dramatically in the breakdown</li>
@@ -1176,7 +1234,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(false, true, 'Continue to Review', true)}
       </div>
     );
   }
@@ -1310,7 +1368,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Speed of Light Limit</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1320,6 +1378,33 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
           {renderVisualization(true)}
           {renderControls()}
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: `1px solid ${colors.warning}`,
+          }}>
+            <h4 style={{ color: colors.warning, marginBottom: '12px' }}>Comparison: Theoretical vs Actual</h4>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ flex: 1, background: 'rgba(139, 92, 246, 0.2)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '4px' }}>THEORETICAL (at c in vacuum)</div>
+                <div style={{ color: colors.accent, fontSize: '20px', fontWeight: 'bold' }}>{theoreticalMin.toFixed(1)} ms</div>
+                <div style={{ color: colors.textMuted, fontSize: '10px', marginTop: '4px' }}>Absolute minimum</div>
+              </div>
+              <div style={{ flex: 1, background: 'rgba(245, 158, 11, 0.2)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '4px' }}>ACTUAL (fiber optic)</div>
+                <div style={{ color: colors.warning, fontSize: '20px', fontWeight: 'bold' }}>{(propagationDelay * 2).toFixed(1)} ms</div>
+                <div style={{ color: colors.textMuted, fontSize: '10px', marginTop: '4px' }}>2/3c in glass</div>
+              </div>
+            </div>
+            <div style={{ background: 'rgba(16, 185, 129, 0.2)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
+              <div style={{ color: colors.success, fontSize: '12px', fontWeight: 'bold' }}>
+                Difference: {((propagationDelay * 2) - theoreticalMin).toFixed(1)} ms penalty from fiber refractive index
+              </div>
+            </div>
+          </div>
 
           <div style={{
             background: 'rgba(245, 158, 11, 0.2)',
@@ -1338,7 +1423,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(false, true, 'See the Explanation', true)}
       </div>
     );
   }
@@ -1400,13 +1485,13 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
+              Real-World Applications & Industry Examples
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              How latency physics shapes global infrastructure
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+              How network engineers and companies apply latency physics principles in real-world systems
             </p>
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
               Complete all 4 applications to unlock the test

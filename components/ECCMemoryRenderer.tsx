@@ -841,18 +841,26 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
         <style>{keyframes}</style>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Hamming Code in Action
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Click any bit to simulate a cosmic ray flipping it. Watch how ECC detects and locates the error.
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Hamming Code in Action
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Click any bit to simulate a cosmic ray flipping it. Watch how ECC detects and locates the error.
+            </p>
 
           <div style={{
             background: colors.bgCard,
@@ -941,6 +949,44 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               </div>
             )}
 
+            {/* Real-time Calculated Values Display */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.small, color: colors.accent, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Real-Time Analysis
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                <div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Error Count</div>
+                  <div style={{ ...typo.h3, color: errorCount > 0 ? colors.error : colors.success }}>
+                    {errorCount}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Syndrome Value</div>
+                  <div style={{ ...typo.h3, color: colors.textPrimary }}>
+                    {syndrome}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Can Correct?</div>
+                  <div style={{ ...typo.h3, color: canCorrect ? colors.success : colors.error }}>
+                    {canCorrect ? 'Yes' : 'No'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Data Intact</div>
+                  <div style={{ ...typo.h3, color: dataIntact ? colors.success : colors.error }}>
+                    {dataIntact ? 'Yes' : 'No'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Controls */}
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
               {hasError && canCorrect && !correctionAnimating && (
@@ -984,12 +1030,13 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
             </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Math
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Math
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1250,18 +1297,26 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
         <style>{keyframes}</style>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Double Error Challenge
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Click TWO different bits to see what happens with multiple errors
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Double Error Challenge
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Click TWO different bits to see what happens with multiple errors
+            </p>
 
           <div style={{
             background: colors.bgCard,
@@ -1355,6 +1410,44 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
             </div>
           </div>
 
+          {/* Real-time Calculated Values Display */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.small, color: colors.warning, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Double Error Analysis
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              <div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Errors Introduced</div>
+                <div style={{ ...typo.h3, color: errorCount >= 2 ? colors.error : colors.warning }}>
+                  {errorCount} / 2
+                </div>
+              </div>
+              <div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Syndrome Value</div>
+                <div style={{ ...typo.h3, color: colors.textPrimary }}>
+                  {syndrome}
+                </div>
+              </div>
+              <div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Auto-Correctable?</div>
+                <div style={{ ...typo.h3, color: canCorrect ? colors.success : colors.error }}>
+                  {canCorrect ? 'Yes (≤1 error)' : 'No (2 errors)'}
+                </div>
+              </div>
+              <div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Data Status</div>
+                <div style={{ ...typo.h3, color: dataIntact ? colors.success : colors.error }}>
+                  {dataIntact ? 'Intact' : 'Corrupted'}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <button
             onClick={() => {
               playSound('success');
@@ -1366,6 +1459,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           >
             Learn About Memory Scrubbing
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1476,129 +1570,189 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
         <style>{keyframes}</style>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    OK
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      OK
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How ECC Helps:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                gap: '12px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
+            {/* Navigation buttons - within-phase and forward to test */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                {selectedApp > 0 && (
+                  <button
+                    onClick={() => {
+                      playSound('click');
+                      setSelectedApp(selectedApp - 1);
+                      const newCompleted = [...completedApps];
+                      newCompleted[selectedApp - 1] = true;
+                      setCompletedApps(newCompleted);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '12px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Previous App
+                  </button>
+                )}
+                {selectedApp < realWorldApps.length - 1 && (
+                  <button
+                    onClick={() => {
+                      playSound('click');
+                      setSelectedApp(selectedApp + 1);
+                      const newCompleted = [...completedApps];
+                      newCompleted[selectedApp + 1] = true;
+                      setCompletedApps(newCompleted);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '12px',
+                      border: `1px solid ${colors.accent}`,
+                      background: `${colors.accent}22`,
+                      color: colors.accent,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Next App
+                  </button>
+                )}
+              </div>
 
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How ECC Helps:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
+              {allAppsCompleted && (
+                <button
+                  onClick={() => { playSound('success'); nextPhase(); }}
+                  style={{ ...primaryButtonStyle, width: '100%' }}
+                >
+                  Take the Knowledge Test
+                </button>
+              )}
             </div>
           </div>
-
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
         </div>
 
         {renderNavDots()}

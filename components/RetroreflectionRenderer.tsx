@@ -568,7 +568,6 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
             {/* Label */}
             <text x="0" y="-42" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">LIGHT SOURCE</text>
-            <text x="0" y="50" textAnchor="middle" fill="#64748b" fontSize="11">Angle: {sourceAngle}°</text>
           </g>
 
           {/* === PREMIUM VIEWER/OBSERVER === */}
@@ -591,8 +590,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
             <path d="M -22 0 Q 0 18 22 0" fill="none" stroke="#94a3b8" strokeWidth="1" />
 
             {/* Label */}
-            <text x="0" y="30" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">OBSERVER</text>
-            <text x="0" y="42" textAnchor="middle" fill="#64748b" fontSize="11">(Near light source)</text>
+            <text x="0" y="-25" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">OBSERVER</text>
           </g>
 
           {/* === FLAT MIRROR SECTION === */}
@@ -944,7 +942,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
             <h1 style={{ color: colors.accent, fontSize: '36px', marginBottom: '12px', fontWeight: '800', lineHeight: 1.4 }}>How can light return to the source no matter the angle?</h1>
             <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', lineHeight: 1.7 }}>The magic geometry of retroreflectors</p>
@@ -969,7 +967,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', width: '100%', padding: '0 16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', width: '100%', padding: '0 16px', paddingBottom: '80px' }}>
           {renderVisualization(false)}
           <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '16px 0', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '700', lineHeight: 1.6 }}>What You're Looking At:</h3>
@@ -1013,7 +1011,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>Explore Retroreflection</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>Change the source angle and compare mirror vs retroreflector because this demonstrates how geometry determines light behavior</p>
@@ -1038,7 +1036,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     const wasCorrect = prediction === 'retro_source';
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
           <div style={{ background: wasCorrect ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.2))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2))', margin: '16px 0', padding: '24px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary, lineHeight: 1.7 }}>The retroreflector always sends light back toward its source because the three perpendicular reflections reverse all direction components!</p>
@@ -1060,7 +1058,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
           <div style={{ padding: '16px 0', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>The Twist</h2>
             <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>Standing next to a car at night with headlights on...</p>
@@ -1106,7 +1104,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>Test Driver Visibility</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>Compare what the driver sees from each surface type</p>
@@ -1127,7 +1125,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     const wasCorrect = twistPrediction === 'retro_bright';
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
           <div style={{ background: wasCorrect ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.2))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2))', margin: '16px 0', padding: '24px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary, lineHeight: 1.7 }}>The retroreflector appears much brighter from the driver's position because it returns light directly to the source!</p>
@@ -1149,10 +1147,10 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     const totalChars = transferApplications.reduce((sum, app) => sum + app.description.length + app.answer.length, 0);
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
           <div style={{ padding: '16px 0' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>Real-World Applications</h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', lineHeight: 1.7 }}>Retroreflection keeps us safe and enables precision measurement</p>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', lineHeight: 1.7 }}>Retroreflection keeps us safe and enables precision measurement in real-world industry applications</p>
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', margin: '16px 0' }}>
               {realWorldApps.map((app, idx) => (
                 app.stats.slice(0, 3).map((stat, statIdx) => (
@@ -1335,7 +1333,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
           <div style={{ padding: '24px 16px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '12px', fontWeight: '800', fontSize: '32px', lineHeight: 1.4 }}>Mastery Achieved!</h1>
@@ -1357,27 +1355,16 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     );
   }
 
-  // Default to hook phase if invalid phase provided
+  // Default fallback - unique from hook
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
         <div style={{ padding: '24px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
-          <h1 style={{ color: colors.accent, fontSize: '36px', marginBottom: '12px', fontWeight: '800', lineHeight: 1.4 }}>How can light return to the source no matter the angle?</h1>
-          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', lineHeight: 1.7 }}>The magic geometry of retroreflectors</p>
-        </div>
-        {renderVisualization(true)}
-        <div style={{ padding: '24px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', padding: '24px', borderRadius: '12px', marginBottom: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
-            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.8, fontWeight: '600' }}>
-              Bike reflectors, road signs, and even mirrors on the Moon all use a special trick: no matter what angle light comes from, it bounces straight back to the source.
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', lineHeight: 1.7 }}>
-              This is retroreflection - and it uses clever geometry, not magic.
-            </p>
-          </div>
+          <h1 style={{ color: colors.error, fontSize: '36px', marginBottom: '12px', fontWeight: '800', lineHeight: 1.4 }}>Invalid Phase</h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', lineHeight: 1.7 }}>Please select a valid game phase</p>
         </div>
       </div>
-      {renderBottomBar(false, true, 'Continue to Prediction')}
+      {renderBottomBar(false, true, 'Continue')}
     </div>
   );
 };

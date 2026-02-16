@@ -490,6 +490,16 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
           </filter>
         </defs>
 
+        {/* Grid lines for reference */}
+        <g opacity="0.15">
+          {[...Array(5)].map((_, i) => (
+            <line key={`h${i}`} x1="40" y1={50 + i * 50} x2={width - 40} y2={50 + i * 50} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4 4" />
+          ))}
+          {[...Array(6)].map((_, i) => (
+            <line key={`v${i}`} x1={40 + i * ((width - 80) / 5)} y1="50" x2={40 + i * ((width - 80) / 5)} y2={height - 30} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4 4" />
+          ))}
+        </g>
+
         {/* Title */}
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Hydraulic Force Multiplication
@@ -864,17 +874,32 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Hydraulic Force Lab
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust the piston areas and see how force gets multiplied!
-          </p>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '24px', paddingRight: '24px' }}>
+          <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Hydraulic Force Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Adjust the piston areas and see how force gets multiplied!
+            </p>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+                Watch for: How pressure stays constant while force multiplies. Notice how distance trades off with force. Click "Activate Hydraulics" to see the pistons move!
+              </p>
+            </div>
 
           {/* Main visualization */}
           <div style={{
@@ -1050,6 +1075,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
           >
             Understand the Physics
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1245,17 +1271,32 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Interactive Brake System
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Press the brake pedal and watch force multiply at EACH wheel!
-          </p>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '24px', paddingRight: '24px' }}>
+          <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Interactive Brake System
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Press the brake pedal and watch force multiply at EACH wheel!
+            </p>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.warning}11`,
+              border: `1px solid ${colors.warning}33`,
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0, fontWeight: 600 }}>
+                Watch for: How pressure transmits to both wheels simultaneously. Notice the calipers clamp as you increase pedal force. Each wheel gets the full multiplied force!
+              </p>
+            </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1317,6 +1358,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
           >
             Understand the Magic
           </button>
+          </div>
         </div>
 
         {renderNavDots()}

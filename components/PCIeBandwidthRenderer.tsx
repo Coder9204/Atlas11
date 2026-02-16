@@ -557,7 +557,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
       {/* PCIe Generation */}
       <div>
         <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          PCIe Generation
+          PCIe Generation (Per-Lane Bandwidth)
         </label>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {(['PCIe 3.0', 'PCIe 4.0', 'PCIe 5.0'] as const).map(gen => (
@@ -578,12 +578,17 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             </button>
           ))}
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+          <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>~1 GB/s</span>
+          <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>~2 GB/s</span>
+          <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>~4 GB/s</span>
+        </div>
       </div>
 
       {/* PCIe Lanes */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ ...typo.small, color: colors.textSecondary }}>PCIe Lanes</span>
+          <span style={{ ...typo.small, color: colors.textSecondary }}>PCIe Lanes (Parallel Data Channels)</span>
           <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>x{numLanes}</span>
         </div>
         <input
@@ -594,12 +599,16 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           onChange={(e) => { playSound('click'); setNumLanes(parseInt(e.target.value)); }}
           style={{ width: '100%', accentColor: colors.accent }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>x1</span>
+          <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>x16</span>
+        </div>
       </div>
 
       {/* Number of GPUs */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ ...typo.small, color: colors.textSecondary }}>Number of GPUs</span>
+          <span style={{ ...typo.small, color: colors.textSecondary }}>Number of GPUs (Parallel Workers)</span>
           <span style={{ ...typo.small, color: colors.gpu, fontWeight: 600 }}>{numGPUs}</span>
         </div>
         <input
@@ -610,12 +619,16 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           onChange={(e) => { playSound('click'); setNumGPUs(parseInt(e.target.value)); }}
           style={{ width: '100%', accentColor: colors.gpu }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>1 GPU</span>
+          <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>8 GPUs</span>
+        </div>
       </div>
 
       {/* Model Size */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ ...typo.small, color: colors.textSecondary }}>Model Size</span>
+          <span style={{ ...typo.small, color: colors.textSecondary }}>Model Size (Data to Transfer)</span>
           <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{modelSize} GB</span>
         </div>
         <input
@@ -626,6 +639,10 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           onChange={(e) => { playSound('click'); setModelSize(parseInt(e.target.value)); }}
           style={{ width: '100%', accentColor: colors.warning }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>1 GB</span>
+          <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>100 GB</span>
+        </div>
       </div>
 
       {/* NVLink Toggle */}
@@ -893,9 +910,23 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             PCIe Bandwidth Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Adjust settings to see how bandwidth affects multi-GPU scaling.
           </p>
+
+          {/* Observation Guidance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '14px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 500 }}>
+              Watch how scaling efficiency drops as you add more GPUs. Enable NVLink to see the difference!
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -904,11 +935,68 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            {/* Formula */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: '0 0 4px 0' }}>
+                Bandwidth Formula:
+              </p>
+              <p style={{ ...typo.body, color: colors.accent, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
+                Bandwidth = Per-Lane Speed × Number of Lanes
+              </p>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <PCIeVisualization />
             </div>
 
             {renderControls()}
+          </div>
+
+          {/* Comparison: Before vs After */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: '16px',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                Ideal Scaling (No Overhead)
+              </h4>
+              <p style={{ ...typo.h2, color: colors.textMuted, margin: '8px 0' }}>
+                {numGPUs.toFixed(1)}x
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                {numGPUs} GPUs would give {numGPUs}x speedup
+              </p>
+            </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `2px solid ${effectiveSpeedup >= numGPUs * 0.8 ? colors.success : colors.warning}`,
+            }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                Actual Scaling (With Overhead)
+              </h4>
+              <p style={{ ...typo.h2, color: effectiveSpeedup >= numGPUs * 0.8 ? colors.success : colors.warning, margin: '8px 0' }}>
+                {effectiveSpeedup.toFixed(2)}x
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                Communication overhead reduces gain
+              </p>
+            </div>
           </div>
 
           {/* Discovery prompt */}

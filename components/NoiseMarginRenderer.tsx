@@ -407,14 +407,21 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
     const margin = { top: 50, right: 70, bottom: 50, left: 70 };
     const chartHeight = height - margin.top - margin.bottom;
 
-    const localVih = customVdd * 0.6;
-    const localVil = customVdd * 0.3;
-    const localVoh = customVdd * 0.9;
-    const localVol = customVdd * 0.1;
+    // Ensure customVdd is valid and non-zero
+    const safeVdd = Math.max(0.1, customVdd || 1.0);
+
+    const localVih = safeVdd * 0.6;
+    const localVil = safeVdd * 0.3;
+    const localVoh = safeVdd * 0.9;
+    const localVol = safeVdd * 0.1;
     const localNmh = localVoh - localVih;
     const localNml = localVil - localVol;
 
-    const vToY = (v: number) => margin.top + chartHeight * (1 - v / customVdd);
+    const vToY = (v: number) => {
+      const ratio = v / safeVdd;
+      if (!isFinite(ratio)) return margin.top + chartHeight / 2;
+      return margin.top + chartHeight * (1 - ratio);
+    };
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
@@ -527,9 +534,9 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
         <g transform={`translate(${width - 55}, ${margin.top})`}>
           <rect x="0" y="0" width="50" height="60" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
           <text x="25" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="8">Margins</text>
-          <text x="25" y="30" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="700">{localNmh.toFixed(2)}V</text>
+          <text x="25" y="30" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="700">{isFinite(localNmh) ? localNmh.toFixed(2) : '0.00'}V</text>
           <text x="25" y="42" textAnchor="middle" fill={colors.textMuted} fontSize="8">NMH</text>
-          <text x="25" y="55" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="700">{localNml.toFixed(2)}V</text>
+          <text x="25" y="55" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="700">{isFinite(localNml) ? localNml.toFixed(2) : '0.00'}V</text>
         </g>
 
         {/* Signal with noise */}
@@ -850,6 +857,22 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
             Adjust input voltage and add noise to see how thresholds protect signals
           </p>
+
+          {/* Formula display */}
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.success}, ${colors.logicHigh})`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            textAlign: 'center',
+          }}>
+            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', marginBottom: '6px' }}>
+              Noise Margin Equations
+            </div>
+            <div style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+              NMH = VOH - VIH  |  NML = VIL - VOL
+            </div>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -1238,6 +1261,19 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             Lower the supply voltage and watch noise margins shrink
           </p>
 
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}22`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              <strong>What to watch:</strong> As you decrease VDD, observe how both NMH and NML shrink proportionally. Notice the forbidden zone size changes relative to the total voltage range.
+            </p>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1498,128 +1534,138 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How Noise Margin Connects:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Noise Margin Connects:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
           </div>
-
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
         </div>
 
         {renderNavDots()}

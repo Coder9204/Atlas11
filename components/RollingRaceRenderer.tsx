@@ -76,10 +76,10 @@ const realWorldApps = [
 ];
 
 interface RollingRaceRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: number) => void;
+  onBack?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -101,11 +101,14 @@ const colors = {
 };
 
 const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
-  phase,
+  gamePhase = 'hook',
   onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  onBack,
+  onGameEvent,
 }) => {
+  // Validate and default to hook if invalid
+  const validPhases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phase = (validPhases.includes(gamePhase || '') ? gamePhase : 'hook') as 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   // Simulation state
   const [rampAngle, setRampAngle] = useState(30);
   const [objectMass, setObjectMass] = useState(1);
@@ -307,7 +310,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'Which object wins a race down a ramp: solid cylinder or hollow hoop of the same mass and radius?',
+      question: 'You have two cylindrical objects with identical mass (1 kg) and radius (10 cm). One is solid metal throughout, the other is a hollow metal hoop. You release them simultaneously from the top of a 2-meter ramp. Which object wins a race down the ramp?',
       options: [
         { text: 'The hollow hoop - it has more surface area', correct: false },
         { text: 'The solid cylinder - less rotational inertia means faster rolling', correct: true },
@@ -413,7 +416,9 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (onGameEvent) {
+      onGameEvent({ type: 'test_completed', data: { score, total: testQuestions.length } });
+    }
   };
 
   // Calculate energy distributions for visualization
@@ -802,9 +807,9 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
               opacity={0.9}
             />
             {/* Coins inside (if twist mode) */}
-            {showTwist && coinsAdded && coinCount > 0 && (
+            {showTwist && (
               <g>
-                {Array.from({ length: Math.min(coinCount, 5) }).map((_, i) => (
+                {coinCount > 0 && Array.from({ length: Math.min(coinCount, 5) }).map((_, i) => (
                   <circle
                     key={i}
                     cx={(i - 2) * 5}
@@ -887,6 +892,16 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
               I = {winner === 'solid' || !raceFinished ? '1/2' : '1'} MR squared
             </text>
           </g>
+
+          {/* Coin count display in twist mode */}
+          {showTwist && (
+            <g transform={`translate(${width - 100}, 15)`}>
+              <rect x={0} y={0} width={85} height={20} rx={4} fill="rgba(245, 158, 11, 0.2)" stroke={colors.warning} strokeWidth={1} />
+              <text x={42} y={14} fill={colors.warning} fontSize={10} textAnchor="middle" fontWeight="bold">
+                Coins: {coinCount}
+              </text>
+            </g>
+          )}
 
           {/* Axis labels */}
           <text x={width / 2} y={height - 8} fill={colors.textMuted} fontSize={11} textAnchor="middle">
@@ -1044,8 +1059,15 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   const canGoNext = true; // Will be overridden by specific phase logic
 
   const handleBack = () => {
-    // This would need to be implemented by parent component
-    // For now, just a placeholder
+    if (onBack) {
+      onBack();
+    }
+  };
+
+  const handleNext = () => {
+    if (onPhaseComplete) {
+      onPhaseComplete(currentPhaseIndex);
+    }
   };
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
@@ -1101,7 +1123,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
         </button>
 
         <button
-          onClick={onPhaseComplete}
+          onClick={handleNext}
           disabled={disabled && !canProceed}
           style={{
             padding: '12px 32px',
@@ -1252,6 +1274,23 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
               <li>Notice: hoop uses 50% for rotation, cylinder only 33%</li>
             </ul>
           </div>
+
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.2)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.success}`,
+          }}>
+            <h4 style={{ color: colors.success, marginBottom: '8px' }}>Why This Matters:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+              Understanding how mass distribution affects rolling is critical for designing everything from
+              car wheels (lighter wheels mean better acceleration) to flywheels (heavier rims store more energy)
+              to figure skating (pulling arms in makes you spin faster). This principle explains why performance
+              cars use expensive lightweight wheels - every gram saved from the rim improves acceleration, braking,
+              and fuel efficiency more than saving weight from the car body!
+            </p>
+          </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review ->')}
       </div>
@@ -1319,6 +1358,40 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
               <p>Hoop: I = MR^2, KE_rot = (1/2)KE_total</p>
               <p>v = sqrt(2gh / (1 + I/MR^2))</p>
             </div>
+          </div>
+
+          {/* Visual diagram for review */}
+          <div style={{ margin: '16px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ borderRadius: '8px' }}>
+              <defs>
+                <linearGradient id="reviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0f172a" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
+              </defs>
+              <rect width="400" height="200" fill="url(#reviewBg)" />
+
+              {/* Solid cylinder cross-section */}
+              <g transform="translate(100, 100)">
+                <circle r="50" fill="url(#rraceSolidSphere)" />
+                <circle r="40" fill="rgba(59, 130, 246, 0.5)" />
+                <circle r="30" fill="rgba(59, 130, 246, 0.3)" />
+                <circle r="20" fill="rgba(59, 130, 246, 0.2)" />
+                <text y="80" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Solid: I = 1/2 MR²</text>
+              </g>
+
+              {/* Hollow hoop cross-section */}
+              <g transform="translate(300, 100)">
+                <circle r="50" fill="none" stroke={colors.hollowHoop} strokeWidth="8" />
+                <circle r="35" fill={colors.bgPrimary} />
+                <text y="80" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Hoop: I = MR²</text>
+              </g>
+
+              {/* Title */}
+              <text x="200" y="20" textAnchor="middle" fill={colors.accent} fontSize="14" fontWeight="bold">
+                Mass Distribution Comparison
+              </text>
+            </svg>
           </div>
         </div>
         {renderBottomBar(false, true, 'Next: A Twist! ->')}
@@ -1466,6 +1539,50 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
               </p>
             </div>
           </div>
+
+          {/* Visual diagram for twist review */}
+          <div style={{ margin: '16px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ borderRadius: '8px' }}>
+              <defs>
+                <linearGradient id="twistReviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0f172a" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
+              </defs>
+              <rect width="400" height="200" fill="url(#twistReviewBg)" />
+
+              {/* Empty hoop */}
+              <g transform="translate(100, 100)">
+                <circle r="40" fill="none" stroke={colors.hollowHoop} strokeWidth="6" />
+                <circle r="28" fill={colors.bgPrimary} />
+                <text y="70" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Empty Hoop</text>
+                <text y="85" textAnchor="middle" fill={colors.warning} fontSize="10">I/MR² = 1.0</text>
+              </g>
+
+              {/* Arrow */}
+              <g transform="translate(200, 100)">
+                <line x1="-30" y1="0" x2="30" y2="0" stroke={colors.accent} strokeWidth="2" />
+                <polygon points="30,0 25,-4 25,4" fill={colors.accent} />
+                <text y="-10" textAnchor="middle" fill={colors.warning} fontSize="10">Add coins</text>
+              </g>
+
+              {/* Hoop with coins */}
+              <g transform="translate(300, 100)">
+                <circle r="40" fill="none" stroke={colors.hollowHoop} strokeWidth="6" />
+                <circle r="28" fill={colors.bgPrimary} />
+                <circle cx="0" cy="0" r="4" fill="url(#rraceCoinGold)" />
+                <circle cx="-6" cy="0" r="3" fill="url(#rraceCoinGold)" />
+                <circle cx="6" cy="0" r="3" fill="url(#rraceCoinGold)" />
+                <text y="70" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Coins Added</text>
+                <text y="85" textAnchor="middle" fill={colors.success} fontSize="10">I/MR² &lt; 1.0</text>
+              </g>
+
+              {/* Title */}
+              <text x="200" y="20" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="bold">
+                Adding Mass at Center Reduces I/MR² Ratio
+              </text>
+            </svg>
+          </div>
         </div>
         {renderBottomBar(false, true, 'Apply This Knowledge ->')}
       </div>
@@ -1484,9 +1601,11 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
             <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               Rotational inertia affects everything that spins
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
+            <div style={{ color: colors.textMuted, fontSize: '13px', textAlign: 'center', marginBottom: '16px' }}>
+              <p>Speed ratio: solid cylinder is ~15% faster than hollow hoop</p>
+              <p>Energy split: solid uses 33% for rotation, hoop uses 50%</p>
+              <p>Complete all 4 applications to unlock the test</p>
+            </div>
           </div>
 
           {transferApplications.map((app, index) => (

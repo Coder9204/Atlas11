@@ -842,7 +842,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           </g>
 
           {/* Premium stats panel */}
-          <g transform={`translate(${width - 120}, 70)`}>
+          <g transform={`translate(${width - 120}, 140)`}>
             <rect
               x={0}
               y={0}
@@ -1003,7 +1003,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = false) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
@@ -1013,9 +1013,26 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
       zIndex: 1000,
     }}>
+      {showBack && (
+        <button
+          onClick={() => {}}
+          style={{
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`,
+            background: 'transparent',
+            color: colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            fontSize: '16px',
+          }}
+        >
+          Back
+        </button>
+      )}
       <button
         onClick={onPhaseComplete}
         disabled={disabled && !canProceed}
@@ -1028,6 +1045,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
+          marginLeft: showBack ? '0' : 'auto',
         }}
       >
         {buttonText}
@@ -1035,10 +1053,59 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     </div>
   );
 
+  // Navigation dots
+  const renderNavDots = (currentPhase: string) => {
+    const phases = [
+      { key: 'hook', label: 'explore', color: colors.accent },
+      { key: 'predict', label: 'predict', color: colors.warning },
+      { key: 'play', label: 'experiment', color: colors.spin },
+      { key: 'review', label: 'review', color: colors.success },
+      { key: 'twist_predict', label: 'twist', color: colors.warning },
+      { key: 'twist_play', label: 'experiment', color: colors.spin },
+      { key: 'twist_review', label: 'review', color: colors.success },
+      { key: 'transfer', label: 'apply', color: colors.precession },
+      { key: 'test', label: 'quiz', color: colors.accent },
+      { key: 'mastery', label: 'transfer', color: colors.success },
+    ];
+
+    const currentIndex = phases.findIndex(p => p.key === currentPhase);
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: '16px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        gap: '8px',
+        zIndex: 1000,
+        background: colors.bgDark,
+        padding: '8px 16px',
+        borderRadius: '20px',
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        {phases.map((p, i) => (
+          <div
+            key={p.key}
+            aria-label={p.label}
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: i === currentIndex ? p.color : 'rgba(148,163,184,0.7)',
+              transition: 'all 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots('hook')}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -1080,7 +1147,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction →')}
+        {renderBottomBar(false, true, 'Make a Prediction →', false)}
       </div>
     );
   }
@@ -1088,8 +1155,16 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots('predict')}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ padding: '24px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Make Your Prediction</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Think about what might happen before we test it
+            </p>
+          </div>
+
           {renderVisualization(false)}
 
           <div style={{
@@ -1098,7 +1173,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 What You're Looking At:</h3>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 The Scenario:</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
               A conical top balanced on its tip. Gravity pulls down on its center of mass,
               creating a torque that should tip it over. But when spinning...
@@ -1123,6 +1198,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   {p.label}
@@ -1131,7 +1207,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+        {renderBottomBar(true, !!prediction, 'Test My Prediction →', true)}
       </div>
     );
   }
@@ -1139,7 +1215,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots('play')}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the Sleeping Top</h2>
@@ -1149,6 +1226,33 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           </div>
 
           {renderVisualization(true)}
+
+          {/* Formula display */}
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.1)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+          }}>
+            <h4 style={{ color: colors.spin, marginBottom: '8px', fontSize: '14px' }}>⚡ Key Formula:</h4>
+            <div style={{
+              background: 'rgba(15, 23, 42, 0.6)',
+              padding: '12px',
+              borderRadius: '8px',
+              fontFamily: 'monospace',
+              fontSize: '16px',
+              color: colors.textPrimary,
+              textAlign: 'center',
+              marginBottom: '8px',
+            }}>
+              Ω<sub>prec</sub> = mgh / (Iω<sub>spin</sub>)
+            </div>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>
+              Precession rate is inversely proportional to spin rate
+            </p>
+          </div>
+
           {renderControls()}
 
           <div style={{
@@ -1165,8 +1269,29 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               <li>Watch how precession speeds up as spin slows down!</li>
             </ul>
           </div>
+
+          {/* Before/After comparison */}
+          <div style={{
+            background: 'rgba(168, 85, 247, 0.1)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(168, 85, 247, 0.3)',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px' }}>📊 Comparison:</h4>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1', minWidth: '140px', background: 'rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ color: colors.error, fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}>No Spin</div>
+                <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Falls immediately</div>
+              </div>
+              <div style={{ flex: '1', minWidth: '140px', background: 'rgba(16, 185, 129, 0.2)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ color: colors.success, fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}>Fast Spin</div>
+                <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Stable & precessing</div>
+              </div>
+            </div>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review →')}
+        {renderBottomBar(false, true, 'Continue to Review →', true)}
       </div>
     );
   }
@@ -1176,7 +1301,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     const wasCorrect = prediction === 'precess';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots('review')}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1184,6 +1310,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            transition: 'all 0.3s ease',
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
@@ -1219,7 +1346,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist! →')}
+        {renderBottomBar(false, true, 'Next: A Twist! →', true)}
       </div>
     );
   }
@@ -1227,7 +1354,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots('twist_predict')}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>🔄 The Twist</h2>
@@ -1269,6 +1397,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   {p.label}
@@ -1277,7 +1406,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction →')}
+        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction →', true)}
       </div>
     );
   }
@@ -1285,7 +1414,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots('twist_play')}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Spin Rate Effects</h2>
@@ -1311,7 +1441,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation →')}
+        {renderBottomBar(false, true, 'See the Explanation →', true)}
       </div>
     );
   }
@@ -1321,7 +1451,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     const wasCorrect = twistPrediction === 'faster_fall';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots('twist_review')}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1329,6 +1460,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            transition: 'all 0.3s ease',
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
@@ -1363,7 +1495,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge →')}
+        {renderBottomBar(false, true, 'Apply This Knowledge →', true)}
       </div>
     );
   }

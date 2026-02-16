@@ -610,7 +610,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
         <g transform={`translate(${width - 100}, 20)`}>
           <rect x="0" y="0" width="80" height="50" rx="8" fill="#111827" stroke="#374151" strokeWidth="1" />
           <text x="40" y="18" textAnchor="middle" fill="#9ca3af" fontSize="10">MATERIAL</text>
-          <text x="40" y="40" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold" textTransform="capitalize">
+          <text x="40" y="40" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold" style={{ textTransform: 'capitalize' }}>
             {material}
           </text>
         </g>
@@ -624,6 +624,40 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           <text x="70" y="20" textAnchor="middle" fill={heating ? '#f97316' : '#6b7280'} fontSize="11" fontWeight="bold">
             {heating ? 'ACTIVE' : 'STANDBY'}
           </text>
+        </g>
+
+        {/* Axis labels and grid lines */}
+        <g transform="translate(20, 80)">
+          {/* Y-axis */}
+          <line x1="0" y1="0" x2="0" y2="120" stroke="#374151" strokeWidth="1" />
+          <text x="-5" y="-5" fill="#9ca3af" fontSize="9" textAnchor="end">Temp (°C)</text>
+          {[0, 50, 100, 200, 400].map((t, i) => {
+            const y = 120 - (t / 400) * 120;
+            return (
+              <g key={i}>
+                <line x1="-3" y1={y} x2="0" y2={y} stroke="#9ca3af" strokeWidth="1" />
+                <text x="-5" y={y + 3} fill="#9ca3af" fontSize="8" textAnchor="end">{t}</text>
+                <line x1="0" y1={y} x2={isMobile ? 300 : 440} y2={y} stroke="#374151" strokeWidth="0.5" opacity="0.3" strokeDasharray="2,2" />
+              </g>
+            );
+          })}
+        </g>
+
+        {/* X-axis label */}
+        <text x={width / 2} y={height - 5} textAnchor="middle" fill="#9ca3af" fontSize="9">Time →</text>
+
+        {/* Current value highlight (glow on temperature display when heating) */}
+        {heating && temp > 50 && (
+          <circle cx="60" cy="45" r="30" fill="none" stroke={temp > 200 ? '#ef4444' : temp > 100 ? '#f97316' : '#fbbf24'} strokeWidth="2" opacity="0.6">
+            <animate attributeName="r" values="30;35;30" dur="1.5s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.6;0.3;0.6" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+        )}
+
+        {/* Formula display */}
+        <g transform={`translate(${width - 100}, ${height - 60})`}>
+          <text x="0" y="0" fill="#60a5fa" fontSize="11" fontWeight="bold">P = I²R</text>
+          <text x="0" y="12" fill="#9ca3af" fontSize="8">(Joule heating)</text>
         </g>
       </svg>
     );
@@ -1188,11 +1222,21 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1264,6 +1308,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
               Test Materials
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1284,11 +1329,21 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Material Comparison Lab
           </h2>
@@ -1372,6 +1427,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           >
             Understand Why
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1385,11 +1441,21 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Material Matters
           </h2>
@@ -1462,6 +1528,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           >
             See Real-World Applications
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1478,11 +1545,21 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1606,6 +1683,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
               Explore all 4 applications to continue ({completedApps.filter(c => c).length}/4)
             </p>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1621,11 +1699,21 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '80px',
+            paddingBottom: '100px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1665,6 +1753,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
                 Review and Try Again
               </button>
             )}
+            </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1677,11 +1766,21 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1829,6 +1928,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
                 Submit Test
               </button>
             )}
+          </div>
           </div>
         </div>
 

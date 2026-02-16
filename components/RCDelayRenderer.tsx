@@ -680,6 +680,64 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     </div>
   );
 
+  // Bottom navigation bar with Back/Next
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 50,
+      }}>
+        {canGoBack ? (
+          <button
+            onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 600,
+            }}
+          >
+            ← Back
+          </button>
+        ) : <div />}
+        {canGoNext && (
+          <button
+            onClick={() => nextPhase()}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: colors.accent,
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 600,
+            }}
+          >
+            Next →
+          </button>
+        )}
+      </nav>
+    );
+  };
+
   // Navigation dots
   const renderNavDots = () => (
     <div style={{

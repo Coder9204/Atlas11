@@ -372,7 +372,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
   }, []);
 
   // Sky Dome Visualization Component
-  const SkyDomeVisualization = ({ currentHaze = hazeLevel }: { currentHaze?: number }) => {
+  const SkyDomeVisualization = ({ currentHaze = hazeLevel, showAxes = false }: { currentHaze?: number; showAxes?: boolean }) => {
     const width = isMobile ? 320 : 480;
     const height = isMobile ? 280 : 360;
     const centerX = width / 2;
@@ -508,6 +508,18 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
           );
         })}
 
+        {/* Axis labels - X and Y when axes are shown */}
+        {showAxes && (
+          <>
+            <text x={centerX} y={height - 8} textAnchor="middle" fill={colors.textMuted} fontSize="10" fontWeight="500">
+              X-Axis (Azimuth)
+            </text>
+            <text x="12" y={centerY} textAnchor="middle" fill={colors.textMuted} fontSize="10" fontWeight="500" transform={`rotate(-90 12 ${centerY})`}>
+              Y-Axis (Elevation)
+            </text>
+          </>
+        )}
+
         {/* Stats panel */}
         <g transform={`translate(${width - 95}, 40)`}>
           <rect x="0" y="0" width="85" height="70" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
@@ -609,17 +621,8 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+    const hookContent = (
+      <>
         {renderProgressBar()}
 
         <div style={{
@@ -668,6 +671,25 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         </button>
 
         {renderNavDots()}
+      </>
+    );
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+          <div style={{
+            minHeight: '100vh',
+            background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            textAlign: 'center',
+          }}>
+            {hookContent}
+          </div>
+        </div>
       </div>
     );
   }
@@ -680,12 +702,8 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
       { id: 'c', text: 'Directly opposite the sun (antisolar point)' },
     ];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+    const predictContent = (
+      <>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -784,18 +802,33 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         </div>
 
         {renderNavDots()}
+      </>
+    );
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+          <div style={{
+            minHeight: '100vh',
+            background: colors.bgPrimary,
+            padding: '24px',
+          }}>
+            {predictContent}
+          </div>
+        </div>
       </div>
     );
   }
 
   // PLAY PHASE - Interactive Sky Polarization Simulator
   if (phase === 'play') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+    // Calculate max polarization at 90 degrees
+    const maxPolarizationPercent = Math.round(75 * (1 - hazeLevel / 100));
+    const currentAngleFromSun = 90; //示意值
+    const polarizationAtAngle = calculatePolarization(currentAngleFromSun, hazeLevel);
+
+    const playContent = (
+      <>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
@@ -813,8 +846,93 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SkyDomeVisualization />
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <SkyDomeVisualization showAxes={true} />
+            </div>
+
+            {/* Formula display near the graphic */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              border: `1px solid ${colors.accent}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                    Polarization Formula:
+                  </div>
+                  <div style={{
+                    fontFamily: 'monospace',
+                    fontSize: isMobile ? '13px' : '15px',
+                    color: colors.accent,
+                    fontWeight: 600,
+                  }}>
+                    P = P_max × sin²(θ)
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                    Real-time Calculation:
+                  </div>
+                  <div style={{ ...typo.body, color: colors.success, fontWeight: 700 }}>
+                    P_max = {maxPolarizationPercent}% at 90°
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.warning}11`,
+              border: `1px solid ${colors.warning}33`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <div style={{ ...typo.small, color: colors.warning, fontWeight: 600, marginBottom: '6px' }}>
+                What to Watch For:
+              </div>
+              <div style={{ ...typo.small, color: colors.textSecondary, lineHeight: '1.6' }}>
+                Notice how the dashed circle (90° from sun) shows the zone of maximum polarization. Watch the polarization vectors become longest and brightest in this zone. Rotate the polarizer and observe which vectors stay visible - this simulates looking through polarized sunglasses!
+              </div>
+            </div>
+
+            {/* Real-time calculated values displayed alongside graphic */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+              gap: '10px',
+              marginBottom: '16px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '6px',
+                padding: '10px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Sun Azimuth</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{sunAzimuth}°</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '6px',
+                padding: '10px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Sun Elevation</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{sunElevation}°</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '6px',
+                padding: '10px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Max Polarization</div>
+                <div style={{ ...typo.h3, color: colors.success }}>{maxPolarizationPercent}%</div>
+              </div>
             </div>
 
             {/* Sun Azimuth slider */}
@@ -908,6 +1026,20 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         </div>
 
         {renderNavDots()}
+      </>
+    );
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+          <div style={{
+            minHeight: '100vh',
+            background: colors.bgPrimary,
+            padding: '24px',
+          }}>
+            {playContent}
+          </div>
+        </div>
       </div>
     );
   }

@@ -463,10 +463,10 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
           <span className="text-sm font-semibold text-indigo-300">Rolling vs Sliding Friction</span>
           <span className="text-xs text-slate-400">{currentIndex + 1} of {phases.length}</span>
         </div>
-        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+        <div className="h-2 bg-slate-700 rounded-full overflow-hidden" style={{ position: 'fixed', width: '100%', transition: 'width 0.5s ease-out', top: 0, left: 0, zIndex: 1000, borderRadius: 0, height: '4px' }}>
           <div
             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${progress}%`, transition: 'width 0.5s ease-out' }}
           />
         </div>
         <div className="flex gap-1.5 mt-3">
@@ -474,12 +474,14 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             <button
               key={p}
               onClick={() => idx <= currentIndex && goToPhase(p)}
+              aria-label={`Phase ${idx + 1}: ${p}`}
+              title={`Phase ${idx + 1}: ${p}`}
               className={`h-2 flex-1 rounded-full transition-all duration-300 ${
                 idx < currentIndex ? 'bg-emerald-500' :
                 idx === currentIndex ? 'bg-indigo-500 shadow-lg shadow-indigo-500/50' :
                 'bg-slate-600'
               }`}
-              style={{ cursor: idx <= currentIndex ? 'pointer' : 'default' }}
+              style={{ cursor: idx <= currentIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }}
             />
           ))}
         </div>
@@ -531,77 +533,112 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
     return (
       <div className="space-y-6">
-        <svg width="100%" viewBox="0 0 600 400" className="bg-slate-800/50 rounded-xl border border-slate-700">
-          {/* Ground */}
-          <rect x="50" y="320" width="500" height="10" fill="#64748b" />
-          <text x="300" y="360" textAnchor="middle" fill="#94a3b8" fontSize="14" fontWeight="600">
-            Surface: {surfaceType === 'concrete' ? 'Concrete' : 'Ice'}
-          </text>
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-2">
+          <h3 className="text-lg font-bold text-center text-indigo-300 mb-2">Friction Force Comparison</h3>
+          <svg width="100%" viewBox="0 0 600 450" className="bg-slate-900/30 rounded-lg" preserveAspectRatio="xMidYMid meet">
+            {/* Grid lines */}
+            <g stroke="#475569" strokeWidth="0.5" opacity="0.3">
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                <line key={`h${i}`} x1="50" y1={80 + i * 30} x2="550" y2={80 + i * 30} />
+              ))}
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+                <line key={`v${i}`} x1={50 + i * 50} y1="80" x2={50 + i * 50} y2="320" />
+              ))}
+            </g>
 
-          {/* Sliding box (left) */}
-          <g>
-            <rect x="120" y="270" width="60" height="50" fill="#ef4444" stroke="#dc2626" strokeWidth="2" rx="4" />
-            <text x="150" y="300" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">BOX</text>
-            <text x="150" y="245" textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="bold">
-              SLIDING FRICTION (μ = {results.coeffs.sliding})
+            {/* Y-axis */}
+            <line x1="50" y1="80" x2="50" y2="330" stroke="#94a3b8" strokeWidth="2" />
+            <text x="35" y="85" textAnchor="end" fill="#94a3b8" fontSize="11">High</text>
+            <text x="35" y="205" textAnchor="end" fill="#94a3b8" fontSize="11">Medium</text>
+            <text x="35" y="325" textAnchor="end" fill="#94a3b8" fontSize="11">Low</text>
+            <text x="20" y="200" textAnchor="middle" fill="#cbd5e1" fontSize="13" fontWeight="600" transform="rotate(-90 20 200)">
+              Friction Force (N)
             </text>
-            <text x="150" y="230" textAnchor="middle" fill="#fca5a5" fontSize="12">
-              f = {results.slidingFriction.toFixed(1)} N
+
+            {/* X-axis */}
+            <line x1="50" y1="330" x2="550" y2="330" stroke="#94a3b8" strokeWidth="2" />
+            <text x="150" y="350" textAnchor="middle" fill="#94a3b8" fontSize="11">Sliding</text>
+            <text x="410" y="350" textAnchor="middle" fill="#94a3b8" fontSize="11">Rolling</text>
+            <text x="300" y="370" textAnchor="middle" fill="#cbd5e1" fontSize="13" fontWeight="600">
+              Friction Type
             </text>
-            {results.slidingAccel > 0 && (
-              <text x="150" y="375" textAnchor="middle" fill="#ef4444" fontSize="13" fontWeight="600">
-                a = {results.slidingAccel.toFixed(2)} m/s²
+
+            {/* Tick marks on Y-axis */}
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <line key={`tick${i}`} x1="45" y1={80 + i * 30} x2="50" y2={80 + i * 30} stroke="#94a3b8" strokeWidth="1.5" />
+            ))}
+
+            {/* Ground */}
+            <rect x="50" y="320" width="500" height="10" fill="#64748b" />
+            <text x="300" y="395" textAnchor="middle" fill="#94a3b8" fontSize="14" fontWeight="600">
+              Surface: {surfaceType === 'concrete' ? 'Concrete' : 'Ice'}
+            </text>
+
+            {/* Sliding box (left) */}
+            <g>
+              <rect x="120" y="270" width="60" height="50" fill="#ef4444" stroke="#dc2626" strokeWidth="2" rx="4" />
+              <text x="150" y="300" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">BOX</text>
+              <text x="150" y="245" textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="bold">
+                SLIDING FRICTION (μ = {results.coeffs.sliding})
               </text>
-            )}
-          </g>
-
-          {/* Rolling object (right) */}
-          <g>
-            <rect x="380" y="275" width="60" height="40" fill="#3b82f6" stroke="#2563eb" strokeWidth="2" rx="4" />
-            <circle cx="395" cy="320" r="10" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-            <circle cx="425" cy="320" r="10" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-            <text x="410" y="300" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">CART</text>
-            <text x="410" y="200" textAnchor="middle" fill="#10b981" fontSize="14" fontWeight="bold">
-              ROLLING FRICTION (μ = {results.coeffs.rolling})
-            </text>
-            <text x="410" y="215" textAnchor="middle" fill="#6ee7b7" fontSize="12">
-              f = {results.rollingFriction.toFixed(1)} N
-            </text>
-            {results.rollingAccel > 0 && (
-              <text x="410" y="375" textAnchor="middle" fill="#10b981" fontSize="13" fontWeight="600">
-                a = {results.rollingAccel.toFixed(2)} m/s²
+              <text x="150" y="230" textAnchor="middle" fill="#fca5a5" fontSize="12">
+                f = {results.slidingFriction.toFixed(1)} N
               </text>
+              {results.slidingAccel > 0 && (
+                <text x="150" y="410" textAnchor="middle" fill="#ef4444" fontSize="13" fontWeight="600">
+                  a = {results.slidingAccel.toFixed(2)} m/s²
+                </text>
+              )}
+            </g>
+
+            {/* Rolling object (right) */}
+            <g>
+              <rect x="380" y="275" width="60" height="40" fill="#3b82f6" stroke="#2563eb" strokeWidth="2" rx="4" />
+              <circle cx="395" cy="320" r="10" fill="#1f2937" stroke="#374151" strokeWidth="2" />
+              <circle cx="425" cy="320" r="10" fill="#1f2937" stroke="#374151" strokeWidth="2" />
+              <text x="410" y="300" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">CART</text>
+              <text x="410" y="200" textAnchor="middle" fill="#10b981" fontSize="14" fontWeight="bold">
+                ROLLING FRICTION (μ = {results.coeffs.rolling})
+              </text>
+              <text x="410" y="215" textAnchor="middle" fill="#6ee7b7" fontSize="12">
+                f = {results.rollingFriction.toFixed(1)} N
+              </text>
+              {results.rollingAccel > 0 && (
+                <text x="410" y="410" textAnchor="middle" fill="#10b981" fontSize="13" fontWeight="600">
+                  a = {results.rollingAccel.toFixed(2)} m/s²
+                </text>
+              )}
+            </g>
+
+            {/* Force arrows */}
+            {force > 0 && (
+              <>
+                <defs>
+                  <marker id="arrowhead-red" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#ef4444" />
+                  </marker>
+                  <marker id="arrowhead-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#10b981" />
+                  </marker>
+                </defs>
+                <line x1="70" y1="295" x2="115" y2="295" stroke="#ef4444" strokeWidth="3" markerEnd="url(#arrowhead-red)" />
+                <text x="75" y="285" fill="#ef4444" fontSize="12" fontWeight="600">F = {force} N</text>
+
+                <line x1="330" y1="295" x2="375" y2="295" stroke="#10b981" strokeWidth="3" markerEnd="url(#arrowhead-green)" />
+                <text x="335" y="285" fill="#10b981" fontSize="12" fontWeight="600">F = {force} N</text>
+              </>
             )}
-          </g>
 
-          {/* Force arrows */}
-          {force > 0 && (
-            <>
-              <defs>
-                <marker id="arrowhead-red" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                  <polygon points="0 0, 10 3, 0 6" fill="#ef4444" />
-                </marker>
-                <marker id="arrowhead-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                  <polygon points="0 0, 10 3, 0 6" fill="#10b981" />
-                </marker>
-              </defs>
-              <line x1="70" y1="295" x2="115" y2="295" stroke="#ef4444" strokeWidth="3" markerEnd="url(#arrowhead-red)" />
-              <text x="75" y="285" fill="#ef4444" fontSize="12" fontWeight="600">F = {force} N</text>
-
-              <line x1="330" y1="295" x2="375" y2="295" stroke="#10b981" strokeWidth="3" markerEnd="url(#arrowhead-green)" />
-              <text x="335" y="285" fill="#10b981" fontSize="12" fontWeight="600">F = {force} N</text>
-            </>
-          )}
-
-          {/* Comparison text */}
-          <text x="300" y="50" textAnchor="middle" fill="#e2e8f0" fontSize="18" fontWeight="bold">
-            Rolling friction is {(results.slidingFriction / results.rollingFriction).toFixed(0)}× lower!
-          </text>
-        </svg>
+            {/* Comparison text */}
+            <text x="300" y="50" textAnchor="middle" fill="#e2e8f0" fontSize="18" fontWeight="bold">
+              Rolling friction is {(results.slidingFriction / results.rollingFriction).toFixed(0)}× lower!
+            </text>
+          </svg>
+        </div>
 
         {showSliders && (
           <div className="space-y-4 bg-slate-800/30 p-6 rounded-xl border border-slate-700">
-            <div>
+            <div className="w-full">
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 Mass: {mass} kg
               </label>
@@ -615,16 +652,19 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
                   setMass(Number(e.target.value));
                   emitEvent('slider_changed', { parameter: 'mass', value: Number(e.target.value) });
                 }}
-                className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer"
                 style={{
+                  width: '100%',
                   touchAction: 'pan-y',
                   WebkitAppearance: 'none',
-                  MozAppearance: 'none'
+                  MozAppearance: 'none',
+                  accentColor: '#6366f1',
+                  transition: 'all 0.2s ease'
                 }}
               />
             </div>
 
-            <div>
+            <div className="w-full">
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 Applied Force: {force} N
               </label>
@@ -638,11 +678,14 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
                   setForce(Number(e.target.value));
                   emitEvent('slider_changed', { parameter: 'force', value: Number(e.target.value) });
                 }}
-                className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer"
                 style={{
+                  width: '100%',
                   touchAction: 'pan-y',
                   WebkitAppearance: 'none',
-                  MozAppearance: 'none'
+                  MozAppearance: 'none',
+                  accentColor: '#6366f1',
+                  transition: 'all 0.2s ease'
                 }}
               />
             </div>

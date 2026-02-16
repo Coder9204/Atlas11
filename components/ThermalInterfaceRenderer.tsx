@@ -808,180 +808,242 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Thermal Interface Simulator
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust TIM properties and see how they affect heat transfer
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Thermal Interface Simulator
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust TIM properties and see how they affect heat transfer
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ThermalVisualization />
-            </div>
-
-            {/* Sliders */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px' }}>
-              {/* TIM Thickness */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>TIM Thickness</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{timThickness.toFixed(2)}mm</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.02"
-                  max="0.5"
-                  step="0.02"
-                  value={timThickness}
-                  onChange={(e) => setTimThickness(parseFloat(e.target.value))}
-                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Thin (better)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Thick</span>
-                </div>
-              </div>
-
-              {/* Thermal Conductivity */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Conductivity</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{thermalConductivity} W/mK</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="80"
-                  step="1"
-                  value={thermalConductivity}
-                  onChange={(e) => setThermalConductivity(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Basic paste</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Liquid metal</span>
-                </div>
-              </div>
-
-              {/* Contact Pressure */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Contact Pressure</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{contactPressure} PSI</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="100"
-                  step="5"
-                  value={contactPressure}
-                  onChange={(e) => setContactPressure(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Low</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>High (better)</span>
-                </div>
-              </div>
-
-              {/* Surface Roughness */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Surface Roughness</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{surfaceRoughness.toFixed(1)} um</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.2"
-                  max="3.0"
-                  step="0.2"
-                  value={surfaceRoughness}
-                  onChange={(e) => setSurfaceRoughness(parseFloat(e.target.value))}
-                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Polished</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Rough</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Temperature stats */}
+            {/* Observation guidance */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-              marginTop: '24px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                borderTop: `3px solid ${getTempColor(thermalData.cpuTemp)}`,
-              }}>
-                <div style={{ ...typo.h3, color: getTempColor(thermalData.cpuTemp) }}>{thermalData.cpuTemp.toFixed(0)}C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>CPU Temp</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                borderTop: `3px solid ${colors.warning}`,
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{(thermalData.timResistance * 1000).toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>TIM R (mC/W)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                borderTop: `3px solid ${colors.success}`,
-              }}>
-                <div style={{ ...typo.h3, color: thermalData.efficiency > 80 ? colors.success : colors.warning }}>
-                  {thermalData.efficiency.toFixed(0)}%
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Discovery insight */}
-          {thermalData.cpuTemp < 70 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
-              textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Excellent thermal performance! The TIM is effectively filling gaps and conducting heat.
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Watch for:</strong> As you adjust thickness and conductivity, observe how CPU temperature changes. Thinner layers and higher conductivity reduce thermal resistance. Notice the heat flow animation speed increases with better heat transfer.
               </p>
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics →
-          </button>
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
+                Heat Transfer Visualization
+              </h3>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <ThermalVisualization />
+              </div>
+
+              {/* Formula near graphic */}
+              <div style={{
+                background: colors.bgSecondary,
+                padding: '12px',
+                borderRadius: '8px',
+                textAlign: 'center',
+                marginBottom: '16px',
+                fontFamily: 'monospace',
+              }}>
+                <span style={{ color: colors.accent, fontSize: isMobile ? '14px' : '18px' }}>R = t / (k × A)</span>
+              </div>
+
+              {/* Sliders */}
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px' }}>
+                {/* TIM Thickness */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>TIM Thickness</span>
+                    <span style={{
+                      ...typo.small,
+                      color: colors.accent,
+                      fontWeight: 600,
+                      textShadow: `0 0 10px ${colors.accentGlow}`,
+                      filter: `drop-shadow(0 0 8px ${colors.accentGlow})`,
+                    }}>{timThickness.toFixed(2)}mm</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.02"
+                    max="0.5"
+                    step="0.02"
+                    value={timThickness}
+                    onChange={(e) => setTimThickness(parseFloat(e.target.value))}
+                    style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', touchAction: 'none' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Thin (better)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Thick</span>
+                  </div>
+                </div>
+
+                {/* Thermal Conductivity */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Conductivity</span>
+                    <span style={{
+                      ...typo.small,
+                      color: colors.accent,
+                      fontWeight: 600,
+                      textShadow: `0 0 10px ${colors.accentGlow}`,
+                      filter: `drop-shadow(0 0 8px ${colors.accentGlow})`,
+                    }}>{thermalConductivity} W/mK</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="80"
+                    step="1"
+                    value={thermalConductivity}
+                    onChange={(e) => setThermalConductivity(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', touchAction: 'none' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Basic paste</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Liquid metal</span>
+                  </div>
+                </div>
+
+                {/* Contact Pressure */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Contact Pressure</span>
+                    <span style={{
+                      ...typo.small,
+                      color: colors.accent,
+                      fontWeight: 600,
+                      textShadow: `0 0 10px ${colors.accentGlow}`,
+                      filter: `drop-shadow(0 0 8px ${colors.accentGlow})`,
+                    }}>{contactPressure} PSI</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    step="5"
+                    value={contactPressure}
+                    onChange={(e) => setContactPressure(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', touchAction: 'none' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Low</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>High (better)</span>
+                  </div>
+                </div>
+
+                {/* Surface Roughness */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Surface Roughness</span>
+                    <span style={{
+                      ...typo.small,
+                      color: colors.accent,
+                      fontWeight: 600,
+                      textShadow: `0 0 10px ${colors.accentGlow}`,
+                      filter: `drop-shadow(0 0 8px ${colors.accentGlow})`,
+                    }}>{surfaceRoughness.toFixed(1)} um</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="3.0"
+                    step="0.2"
+                    value={surfaceRoughness}
+                    onChange={(e) => setSurfaceRoughness(parseFloat(e.target.value))}
+                    style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', touchAction: 'none' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Polished</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Rough</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Temperature stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginTop: '24px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  borderTop: `3px solid ${getTempColor(thermalData.cpuTemp)}`,
+                }}>
+                  <div style={{ ...typo.h3, color: getTempColor(thermalData.cpuTemp) }}>{thermalData.cpuTemp.toFixed(0)}C</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>CPU Temp</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  borderTop: `3px solid ${colors.warning}`,
+                }}>
+                  <div style={{ ...typo.h3, color: colors.warning }}>{(thermalData.timResistance * 1000).toFixed(1)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>TIM R (mC/W)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  borderTop: `3px solid ${colors.success}`,
+                }}>
+                  <div style={{ ...typo.h3, color: thermalData.efficiency > 80 ? colors.success : colors.warning }}>
+                    {thermalData.efficiency.toFixed(0)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Discovery insight */}
+            {thermalData.cpuTemp < 70 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  Excellent thermal performance! The TIM is effectively filling gaps and conducting heat.
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics →
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1220,124 +1282,149 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            TIM Material Comparison
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Select a material type to see its thermal performance
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              TIM Material Comparison
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Select a material type to see its thermal performance
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            {/* TIM Type selector */}
             <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '12px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
               marginBottom: '24px',
             }}>
-              {(Object.keys(timTypes) as Array<keyof typeof timTypes>).map(type => (
-                <button
-                  key={type}
-                  onClick={() => { playSound('click'); setSelectedTimType(type); }}
-                  style={{
-                    background: selectedTimType === type ? `${timTypes[type].color}22` : colors.bgSecondary,
-                    border: `2px solid ${selectedTimType === type ? timTypes[type].color : colors.border}`,
-                    borderRadius: '12px',
-                    padding: '16px 24px',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>{timTypes[type].icon}</div>
-                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{timTypes[type].name}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{timTypes[type].conductivity} W/mK</div>
-                </button>
-              ))}
-            </div>
-
-            {/* Material properties */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
-              gap: '16px',
-              marginBottom: '24px',
-            }}>
+              {/* TIM Type selector */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '12px',
+                marginBottom: '24px',
               }}>
-                <div style={{ ...typo.h3, color: currentTim.color }}>{currentTim.conductivity} W/mK</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Conductivity</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: currentTim.color }}>{currentTim.thickness}mm</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Typical Thickness</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: getTempColor(cpuTemp) }}>{cpuTemp.toFixed(0)}C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>CPU Temp @ 150W</div>
-              </div>
-            </div>
-
-            {/* Pros and Cons */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div style={{
-                background: `${colors.success}11`,
-                borderRadius: '8px',
-                padding: '16px',
-              }}>
-                <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px' }}>Pros</h4>
-                {currentTim.pros.map((pro, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <span style={{ color: colors.success }}>+</span>
-                    <span style={{ ...typo.small, color: colors.textSecondary }}>{pro}</span>
-                  </div>
+                {(Object.keys(timTypes) as Array<keyof typeof timTypes>).map(type => (
+                  <button
+                    key={type}
+                    onClick={() => { playSound('click'); setSelectedTimType(type); }}
+                    style={{
+                      background: selectedTimType === type ? `${timTypes[type].color}22` : colors.bgSecondary,
+                      border: `2px solid ${selectedTimType === type ? timTypes[type].color : colors.border}`,
+                      borderRadius: '12px',
+                      padding: '16px 24px',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>{timTypes[type].icon}</div>
+                    <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{timTypes[type].name}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{timTypes[type].conductivity} W/mK</div>
+                  </button>
                 ))}
               </div>
+
+              {/* Material properties */}
               <div style={{
-                background: `${colors.error}11`,
-                borderRadius: '8px',
-                padding: '16px',
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
+                gap: '16px',
+                marginBottom: '24px',
               }}>
-                <h4 style={{ ...typo.small, color: colors.error, marginBottom: '8px' }}>Cons</h4>
-                {currentTim.cons.map((con, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <span style={{ color: colors.error }}>-</span>
-                    <span style={{ ...typo.small, color: colors.textSecondary }}>{con}</span>
-                  </div>
-                ))}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    ...typo.h3,
+                    color: currentTim.color,
+                    textShadow: `0 0 10px ${currentTim.color}44`,
+                    filter: `drop-shadow(0 0 8px ${currentTim.color}44)`,
+                  }}>{currentTim.conductivity} W/mK</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Conductivity</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    ...typo.h3,
+                    color: currentTim.color,
+                    textShadow: `0 0 10px ${currentTim.color}44`,
+                    filter: `drop-shadow(0 0 8px ${currentTim.color}44)`,
+                  }}>{currentTim.thickness}mm</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Typical Thickness</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    ...typo.h3,
+                    color: getTempColor(cpuTemp),
+                    textShadow: `0 0 10px ${getTempColor(cpuTemp)}44`,
+                    filter: `drop-shadow(0 0 8px ${getTempColor(cpuTemp)}44)`,
+                  }}>{cpuTemp.toFixed(0)}C</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>CPU Temp @ 150W</div>
+                </div>
+              </div>
+
+              {/* Pros and Cons */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{
+                  background: `${colors.success}11`,
+                  borderRadius: '8px',
+                  padding: '16px',
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px' }}>Pros</h4>
+                  {currentTim.pros.map((pro, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <span style={{ color: colors.success }}>+</span>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>{pro}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{
+                  background: `${colors.error}11`,
+                  borderRadius: '8px',
+                  padding: '16px',
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.error, marginBottom: '8px' }}>Cons</h4>
+                  {currentTim.cons.map((con, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <span style={{ color: colors.error }}>-</span>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>{con}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Trade-offs →
+            </button>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Trade-offs →
-          </button>
         </div>
 
         {renderNavDots()}
@@ -1444,65 +1531,74 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
           {/* Selected app details */}
           <div style={{

@@ -475,37 +475,131 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
     transition: 'all 0.2s ease',
   };
 
-  // Coffee Cup Visualization
+  // Coffee Cup Visualization with Temperature Chart
   const CoffeeCupVisualization = () => {
     const steamIntensity = Math.max(0, (currentTemp - 50) / 40);
     const coffeeColor = currentTemp > 70 ? '#8B4513' : currentTemp > 50 ? '#A0522D' : '#5D3A1A';
 
     return (
-      <svg width={isMobile ? 280 : 360} height={isMobile ? 220 : 280} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={isMobile ? 280 : 360} height={isMobile ? 280 : 360} viewBox={isMobile ? "0 0 280 280" : "0 0 360 360"} style={{ background: colors.bgCard, borderRadius: '12px', width: '100%', maxWidth: '360px' }}>
+        <defs>
+          {/* Glow filter for highlighting current point */}
+          <filter id="currentPointGlow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
         {/* Title */}
-        <text x="50%" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          Coffee Cooling Simulation
+        <text x="50%" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Temperature vs Time
         </text>
 
-        {/* Cup body */}
-        <path
-          d={isMobile
-            ? "M80 80 L90 180 Q140 195 190 180 L200 80 Z"
-            : "M100 90 L115 220 Q180 240 245 220 L260 90 Z"
-          }
-          fill="#FFFFFF"
-          stroke="#E5E5E5"
-          strokeWidth="3"
-        />
+        {/* Temperature Chart Area */}
+        <g transform={isMobile ? "translate(20, 40)" : "translate(30, 40)"}>
+          {/* Grid lines for reference */}
+          {[0, 1, 2, 3, 4].map(i => (
+            <line
+              key={`grid-${i}`}
+              x1={0}
+              y1={i * 40}
+              x2={isMobile ? 240 : 300}
+              y2={i * 40}
+              stroke={colors.border}
+              strokeWidth="1"
+              strokeDasharray="4,4"
+              opacity="0.3"
+            />
+          ))}
 
-        {/* Coffee */}
-        <ellipse
-          cx={isMobile ? 140 : 180}
-          cy={isMobile ? 90 : 100}
-          rx={isMobile ? 55 : 75}
-          ry={isMobile ? 12 : 15}
-          fill={coffeeColor}
-        />
+          {/* Y-axis (Temperature) */}
+          <line x1="0" y1="0" x2="0" y2="160" stroke={colors.textSecondary} strokeWidth="2" />
+          <text x="-10" y="5" textAnchor="end" fill={colors.textPrimary} fontSize="10" fontWeight="600">90C</text>
+          <text x="-10" y="85" textAnchor="end" fill={colors.textPrimary} fontSize="10" fontWeight="600">55C</text>
+          <text x="-10" y="165" textAnchor="end" fill={colors.textPrimary} fontSize="10" fontWeight="600">20C</text>
+          <text x="-35" y="85" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="700" transform={`rotate(-90, -35, 85)`}>Temperature (C)</text>
+
+          {/* X-axis (Time) */}
+          <line x1="0" y1="160" x2={isMobile ? 240 : 300} y2="160" stroke={colors.textSecondary} strokeWidth="2" />
+          <text x="0" y="175" textAnchor="middle" fill={colors.textPrimary} fontSize="10">0</text>
+          <text x={isMobile ? 120 : 150} y="175" textAnchor="middle" fill={colors.textPrimary} fontSize="10">{isMobile ? 15 : 30}m</text>
+          <text x={isMobile ? 240 : 300} y="175" textAnchor="middle" fill={colors.textPrimary} fontSize="10">{isMobile ? 30 : 60}m</text>
+          <text x={isMobile ? 120 : 150} y="195" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="700">Time (minutes)</text>
+
+          {/* Exponential cooling curve (theoretical) */}
+          <path
+            d={(() => {
+              const width = isMobile ? 240 : 300;
+              const points: string[] = [];
+              for (let i = 0; i <= 50; i++) {
+                const t = (i / 50) * (isMobile ? 30 : 60);
+                const temp = roomTemp + (initialTemp - roomTemp) * Math.exp(-getEffectiveK() * t);
+                const x = (i / 50) * width;
+                const y = ((90 - temp) / (90 - 20)) * 160;
+                points.push(i === 0 ? `M${x},${y}` : `L${x},${y}`);
+              }
+              return points.join(' ');
+            })()}
+            fill="none"
+            stroke="#3B82F6"
+            strokeWidth="2"
+            opacity="0.6"
+          />
+
+          {/* Current temperature point (highlighted) */}
+          <circle
+            cx={((elapsedTime / (isMobile ? 30 : 60)) * (isMobile ? 240 : 300))}
+            cy={((90 - currentTemp) / (90 - 20)) * 160}
+            r="6"
+            fill={colors.error}
+            filter="url(#currentPointGlow)"
+          />
+          <circle
+            cx={((elapsedTime / (isMobile ? 30 : 60)) * (isMobile ? 240 : 300))}
+            cy={((90 - currentTemp) / (90 - 20)) * 160}
+            r="3"
+            fill="#FFFFFF"
+          />
+
+          {/* Reference line for room temperature (baseline) */}
+          <line
+            x1="0"
+            y1="160"
+            x2={isMobile ? 240 : 300}
+            y2="160"
+            stroke={colors.success}
+            strokeWidth="2"
+            strokeDasharray="6,3"
+          />
+          <text x={isMobile ? 200 : 260} y="155" fill={colors.success} fontSize="10" fontWeight="600">Room Temp</text>
+        </g>
+
+        {/* Formula display */}
+        <text x="50%" y={isMobile ? 240 : 245} textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="600" fontFamily="monospace">
+          dT/dt = -k(T - T_ambient)
+        </text>
+        <text x="50%" y={isMobile ? 255 : 260} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          k = {getEffectiveK().toFixed(4)}
+        </text>
+
+        {/* Cup body (small version in corner) */}
+        <g transform={isMobile ? "translate(220, 210)" : "translate(280, 265)"}>
+          <path
+            d="M0 0 L2 20 Q12 24 22 20 L24 0 Z"
+            fill="#FFFFFF"
+            stroke="#E5E5E5"
+            strokeWidth="1.5"
+          />
+          <ellipse
+            cx="12"
+            cy="2"
+            rx="11"
+            ry="3"
+            fill={coffeeColor}
+          />
 
         {/* Lid if enabled */}
         {hasLid && (

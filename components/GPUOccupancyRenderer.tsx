@@ -174,9 +174,9 @@ const realWorldApps = [
     title: 'Deep Learning Training',
     short: 'Optimizing neural network training',
     tagline: 'Maximize GPU utilization for faster AI',
-    description: 'Training large neural networks requires running thousands of parallel operations. GPU occupancy optimization ensures that matrix multiplications, convolutions, and activation functions fully utilize available compute resources, reducing training time from weeks to days.',
-    connection: 'Deep learning frameworks like PyTorch and TensorFlow carefully tune kernel launches to balance occupancy with register usage. Too many registers per thread reduces occupancy; too few causes register spilling. The sweet spot varies by operation type.',
-    howItWorks: 'Frameworks use autotuning to find optimal block sizes and register usage for each operation type and GPU architecture. Tensor cores in modern GPUs add another dimension, as they have different occupancy characteristics than regular CUDA cores.',
+    description: 'Training large neural networks requires running thousands of parallel operations simultaneously across GPU cores. GPU occupancy optimization ensures that matrix multiplications, convolutions, and activation functions fully utilize available compute resources, reducing training time from weeks to days. Modern language models with billions of parameters demand efficient parallelization to achieve practical training speeds.',
+    connection: 'Deep learning frameworks like PyTorch and TensorFlow carefully tune kernel launches to balance occupancy with register usage. Too many registers per thread reduces occupancy by limiting concurrent warps; too few causes register spilling to slower memory. The sweet spot varies by operation type—convolution layers behave differently than transformer attention mechanisms. Batch size and precision settings also affect optimal occupancy targets.',
+    howItWorks: 'Frameworks use autotuning to find optimal block sizes and register usage for each operation type and GPU architecture. Tensor cores in modern GPUs add another dimension, as they have different occupancy characteristics than regular CUDA cores. Libraries benchmark different configurations during warmup to select the fastest kernel variant for your specific model and hardware combination.',
     stats: [
       { value: '10-50x', label: 'Speedup vs CPU', icon: '🚀' },
       { value: '70-95%', label: 'Target occupancy', icon: '📊' },
@@ -192,9 +192,9 @@ const realWorldApps = [
     title: 'Real-Time Graphics Rendering',
     short: 'Smooth 120fps gaming and VR',
     tagline: 'Every millisecond counts for immersion',
-    description: 'Modern games render millions of pixels per frame with complex lighting, shadows, and effects. GPU occupancy determines how efficiently shaders execute, directly impacting frame rates and visual quality at high resolutions.',
-    connection: 'Game engines optimize shader occupancy by managing register pressure and shared memory usage. Ray tracing shaders often have lower occupancy due to divergent execution paths, requiring careful balancing with traditional rasterization workloads.',
-    howItWorks: 'Graphics APIs like DirectX 12 and Vulkan give developers fine-grained control over resource allocation. Shader compilers optimize for occupancy while preserving visual quality. Async compute allows mixing high and low occupancy workloads.',
+    description: 'Modern games render millions of pixels per frame with complex lighting, shadows, and photorealistic effects that demand massive parallel processing. GPU occupancy determines how efficiently pixel and compute shaders execute, directly impacting frame rates and visual quality at high resolutions like 4K. Virtual reality applications require consistent high frame rates to prevent motion sickness, making occupancy optimization critical for comfortable experiences.',
+    connection: 'Game engines optimize shader occupancy by carefully managing register pressure and shared memory usage across different shader stages. Ray tracing shaders often have lower occupancy due to divergent execution paths when rays scatter unpredictably, requiring careful balancing with traditional rasterization workloads. Post-processing effects like depth of field or motion blur can have very different resource profiles than geometry shaders.',
+    howItWorks: 'Graphics APIs like DirectX 12 and Vulkan give developers fine-grained control over resource allocation and shader compilation. Shader compilers optimize for occupancy while preserving visual quality by analyzing register dependencies and memory access patterns. Async compute allows mixing high and low occupancy workloads on the same GPU, enabling effects processing to overlap with geometry rendering for better utilization.',
     stats: [
       { value: '120fps', label: '8ms per frame', icon: '🖥️' },
       { value: '4K', label: '8M pixels/frame', icon: '📺' },
@@ -210,9 +210,9 @@ const realWorldApps = [
     title: 'Scientific Simulation',
     short: 'Molecular dynamics and climate modeling',
     tagline: 'Simulating reality at atomic scale',
-    description: 'Scientific simulations model physical phenomena using millions of interacting particles or grid cells. GPU occupancy optimization allows researchers to simulate larger systems or achieve finer resolution within computational budgets.',
-    connection: 'Particle simulations use shared memory for neighbor lists, limiting blocks per SM. Researchers trade occupancy for data locality - keeping particle data in fast shared memory reduces global memory accesses that would stall computation.',
-    howItWorks: 'Simulation codes use domain decomposition to assign spatial regions to thread blocks. Register usage is tuned for the number of interacting forces. Occupancy calculators help find optimal parameters for each GPU architecture.',
+    description: 'Scientific simulations model complex physical phenomena using millions of interacting particles or grid cells that evolve over time. GPU occupancy optimization allows researchers to simulate larger systems or achieve finer temporal and spatial resolution within fixed computational budgets. Applications range from protein folding for drug discovery to climate modeling that predicts global weather patterns decades into the future.',
+    connection: 'Particle simulations heavily use shared memory for neighbor lists and force calculations, which can limit the number of blocks per SM when each block needs substantial shared memory. Researchers carefully trade occupancy for data locality—keeping particle data in fast shared memory reduces global memory accesses that would otherwise stall computation and dominate runtime. Different force field calculations require different register counts.',
+    howItWorks: 'Simulation codes use spatial domain decomposition to assign physical regions to thread blocks, ensuring threads within a block work on nearby particles. Register usage is carefully tuned for the number of interacting forces being computed—simple Lennard-Jones potentials need fewer registers than complex polarizable force fields. Occupancy calculators help find optimal thread block sizes and shared memory allocations for each GPU architecture and simulation type.',
     stats: [
       { value: '10B+', label: 'Particles simulated', icon: '⚛️' },
       { value: '1000x', label: 'Speedup vs CPU', icon: '⚡' },
@@ -228,9 +228,9 @@ const realWorldApps = [
     title: 'Financial Computing',
     short: 'Risk analysis and trading',
     tagline: 'Microseconds mean millions',
-    description: 'Financial institutions use GPUs for Monte Carlo simulations, options pricing, and real-time risk analysis. High occupancy ensures that thousands of market scenarios are evaluated simultaneously, enabling faster and more accurate decisions.',
-    connection: 'Monte Carlo simulations are embarrassingly parallel - perfect for high occupancy. But complex derivatives pricing requires more registers for intermediate calculations, creating occupancy tradeoffs similar to scientific computing.',
-    howItWorks: 'Financial kernels generate random numbers, simulate market movements, and aggregate results. Register usage is minimized for random number generators to maximize occupancy. Reduction operations use shared memory efficiently.',
+    description: 'Financial institutions use GPUs for Monte Carlo simulations, complex derivatives pricing, and real-time portfolio risk analysis across thousands of positions. High GPU occupancy ensures that thousands of market scenarios are evaluated simultaneously with minimal latency, enabling faster and more accurate trading decisions. Algorithmic trading systems depend on this speed advantage where microseconds can mean millions in profit or loss.',
+    connection: 'Monte Carlo simulations are embarrassingly parallel—perfect for achieving high occupancy with minimal register usage per thread. But complex multi-asset derivatives pricing requires substantial registers for intermediate calculations and correlation matrices, creating occupancy tradeoffs similar to scientific computing. Value-at-Risk calculations need to balance scenario throughput against computational precision, affecting optimal kernel design.',
+    howItWorks: 'Financial kernels generate pseudo-random number sequences, simulate correlated market movements using sophisticated stochastic models, and aggregate results across scenarios. Register usage is carefully minimized for random number generators to maximize concurrent threads and occupancy. Reduction operations use shared memory efficiently to sum results across warps. Batching multiple simulations improves cache utilization and maintains high occupancy even with varying computational complexity.',
     stats: [
       { value: '1M+', label: 'Scenarios/second', icon: '📈' },
       { value: '<1ms', label: 'Pricing latency', icon: '⏰' },
@@ -446,9 +446,9 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         </defs>
 
         {/* Grid lines for reference */}
-        <line x1="20" y1="45" x2={width - 20} y2="45" stroke="rgba(255,255,255,0.06)" strokeDasharray="4,4" />
-        <line x1="20" y1={45 + warpHeight * 4} x2={width - 20} y2={45 + warpHeight * 4} stroke="rgba(255,255,255,0.06)" strokeDasharray="4,4" />
-        <line x1={20 + warpWidth * 4} y1="45" x2={20 + warpWidth * 4} y2={height - 70} stroke="rgba(255,255,255,0.06)" strokeDasharray="4,4" />
+        <line x1="20" y1="45" x2={width - 20} y2="45" stroke="#ffffff" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="20" y1={45 + warpHeight * 4} x2={width - 20} y2={45 + warpHeight * 4} stroke="#ffffff" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={20 + warpWidth * 4} y1="45" x2={20 + warpWidth * 4} y2={height - 70} stroke="#ffffff" strokeDasharray="4 4" opacity="0.3" />
 
         {/* Axis label */}
         <text x={width / 2} y={height - 55} fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="400">Warp Density / Thread Allocation</text>
@@ -462,9 +462,9 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
           opacity="0.15"
           strokeDasharray="6,3"
         />
-        {/* Data point indicators */}
-        <circle cx={width / 2 - 20} cy={height - 290} r="4" fill={colors.accent} opacity="0.3" />
-        <circle cx={width - 80} cy={height - 150} r="3" fill={colors.registerColor} opacity="0.25" />
+        {/* Interactive data point indicators */}
+        <circle cx={width / 2 - 20} cy={height - 290} r="8" fill={colors.accent} opacity="0.5" filter="url(#warpGlow)" />
+        <circle cx={width - 80} cy={height - 150} r="8" fill={colors.registerColor} opacity="0.4" filter="url(#warpGlow)" />
 
         {/* Title */}
         <text x={width / 2} y={25} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
@@ -605,32 +605,47 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
   );
 
   // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          data-navigation-dot="true"
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+  const renderNavDots = () => {
+    const dotLabels: Record<Phase, string> = {
+      hook: 'explore',
+      predict: 'experiment',
+      play: 'experiment',
+      review: 'experiment',
+      twist_predict: 'experiment',
+      twist_play: 'experiment',
+      twist_review: 'experiment',
+      transfer: 'apply',
+      test: 'quiz',
+      mastery: 'transfer'
+    };
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '8px',
+        padding: '16px 0',
+      }}>
+        {phaseOrder.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(p)}
+            data-navigation-dot="true"
+            style={{
+              width: phase === p ? '24px' : '8px',
+              height: '8px',
+              borderRadius: '4px',
+              border: 'none',
+              background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+            }}
+            aria-label={dotLabels[p]}
+          />
+        ))}
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -1065,7 +1080,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
                     cursor: 'pointer',
                     touchAction: 'pan-y' as const,
                     WebkitAppearance: 'none' as const,
-                    accentColor: colors.registerColor,
+                    accentColor: '#3b82f6',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1097,7 +1112,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
                     cursor: 'pointer',
                     touchAction: 'pan-y' as const,
                     WebkitAppearance: 'none' as const,
-                    accentColor: colors.accent,
+                    accentColor: '#3b82f6',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1441,10 +1456,12 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '24px',
+          paddingTop: '48px',
           paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
-          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Three Resource Limits
             </h2>
@@ -1496,7 +1513,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
                     cursor: 'pointer',
                     touchAction: 'pan-y' as const,
                     WebkitAppearance: 'none' as const,
-                    accentColor: colors.registerColor,
+                    accentColor: '#3b82f6',
                   }}
                 />
               </div>
@@ -1524,7 +1541,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
                     cursor: 'pointer',
                     touchAction: 'pan-y' as const,
                     WebkitAppearance: 'none' as const,
-                    accentColor: colors.sharedMemColor,
+                    accentColor: '#3b82f6',
                   }}
                 />
               </div>
@@ -1552,7 +1569,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
                     cursor: 'pointer',
                     touchAction: 'pan-y' as const,
                     WebkitAppearance: 'none' as const,
-                    accentColor: colors.accent,
+                    accentColor: '#3b82f6',
                   }}
                 />
               </div>
@@ -1728,10 +1745,12 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '24px',
+          paddingTop: '48px',
           paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
-          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>

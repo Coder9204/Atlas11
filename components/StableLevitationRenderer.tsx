@@ -411,10 +411,11 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
       );
     }
 
-    // Stability indicator dimensions
+    // Stability indicator dimensions - ensure well uses at least 25% of vertical space
     const stabilityWidth = 140;
     const stabilityHeight = 65;
-    const wellDepth = isStable ? 45 * (1 / ballMass) : 12;
+    const minWellDepth = stabilityHeight * 0.25; // At least 25% of height
+    const wellDepth = isStable ? Math.max(minWellDepth, 45 * (1 / ballMass)) : Math.max(minWellDepth * 0.5, 12);
     const ballIndicatorX = (ballOffset.x / 50) * (stabilityWidth / 2);
 
     return (
@@ -776,13 +777,13 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           )}
 
           {/* === STABILITY INDICATOR PANEL === */}
-          <g transform={`translate(${centerX - stabilityWidth / 2}, ${height - 85})`}>
+          <g transform={`translate(${centerX - stabilityWidth / 2}, ${height - 105})`}>
             {/* Panel background */}
             <rect
               x={-10}
               y={-20}
               width={stabilityWidth + 20}
-              height={stabilityHeight + 30}
+              height={stabilityHeight + 50}
               rx={10}
               fill="rgba(15, 23, 42, 0.9)"
               stroke={isStable ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}
@@ -792,6 +793,18 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             <text x={stabilityWidth / 2} y={-5} textAnchor="middle" fill={colors.textSecondary} fontSize={11} fontWeight="bold">
               STABILITY POTENTIAL WELL
             </text>
+            {/* Grid lines for reference */}
+            <line x1={0} y1={stabilityHeight / 2} x2={stabilityWidth} y2={stabilityHeight / 2} stroke="rgba(255,255,255,0.1)" strokeWidth={0.5} strokeDasharray="2 2" />
+            <line x1={stabilityWidth / 2} y1={0} x2={stabilityWidth / 2} y2={stabilityHeight} stroke="rgba(255,255,255,0.1)" strokeWidth={0.5} strokeDasharray="2 2" />
+            {/* Tick marks on X axis */}
+            <line x1={0} y1={stabilityHeight / 2 - 2} x2={0} y2={stabilityHeight / 2 + 2} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+            <line x1={stabilityWidth / 2} y1={stabilityHeight / 2 - 2} x2={stabilityWidth / 2} y2={stabilityHeight / 2 + 2} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+            <line x1={stabilityWidth} y1={stabilityHeight / 2 - 2} x2={stabilityWidth} y2={stabilityHeight / 2 + 2} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+            {/* Axis labels */}
+            <text x={0} y={stabilityHeight / 2 + 12} textAnchor="start" fill={colors.textMuted} fontSize={8}>-x</text>
+            <text x={stabilityWidth / 2} y={stabilityHeight / 2 + 12} textAnchor="middle" fill={colors.textMuted} fontSize={8}>0</text>
+            <text x={stabilityWidth} y={stabilityHeight / 2 + 12} textAnchor="end" fill={colors.textMuted} fontSize={8}>+x</text>
+            <text x={-5} y={stabilityHeight / 2} textAnchor="end" fill={colors.textMuted} fontSize={8}>E</text>
             {/* Well fill gradient */}
             <path
               d={`M 0 ${stabilityHeight / 2}
@@ -835,11 +848,11 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           {/* === LABELS AND INFO === */}
           {/* Top-left info panel */}
           <g>
-            <rect x={10} y={10} width={120} height={50} rx={8} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
+            <rect x={10} y={10} width={145} height={50} rx={8} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
             <text x={20} y={28} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
               Tilt: {tiltAngle.toFixed(0)}deg
             </text>
-            <text x={20} y={45} fill={colors.textSecondary} fontSize={11}>
+            <text x={20} y={48} fill={colors.textSecondary} fontSize={11}>
               Mass: {ballMass === 0.5 ? 'Light (foam)' : ballMass === 1 ? 'Normal (PP)' : 'Heavy (golf)'}
             </text>
           </g>
@@ -874,15 +887,22 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             </text>
           </g>
 
+          {/* Bernoulli Equation Formula */}
+          <g transform={`translate(${width - 150}, 55)`}>
+            <rect x={-5} y={-5} width={145} height={42} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(139, 92, 246, 0.4)" strokeWidth={1} />
+            <text x={2} y={10} fill={colors.accent} fontSize={10} fontWeight="bold">Bernoulli Equation:</text>
+            <text x={2} y={24} fill={colors.textPrimary} fontSize={11} fontFamily="monospace">P + ½ρv² = const</text>
+          </g>
+
           {/* Pressure legend when showing pressure */}
           {showPressure && (
-            <g transform={`translate(${width - 130}, ${height - 90})`}>
-              <rect x={-5} y={-5} width={125} height={50} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
-              <text x={55} y={10} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">PRESSURE ZONES</text>
-              <circle cx={10} cy={25} r={6} fill="url(#slevPressureLow)" />
-              <text x={22} y={28} fill={colors.pressure.low} fontSize={11}>Low (fast flow)</text>
-              <circle cx={10} cy={40} r={6} fill="url(#slevPressureHigh)" />
-              <text x={22} y={43} fill={colors.pressure.high} fontSize={11}>High (slow flow)</text>
+            <g transform={`translate(${width - 140}, ${height - 110})`}>
+              <rect x={-5} y={-5} width={135} height={65} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
+              <text x={62} y={10} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">PRESSURE ZONES</text>
+              <circle cx={10} cy={28} r={6} fill="url(#slevPressureLow)" />
+              <text x={22} y={32} fill={colors.pressure.low} fontSize={10}>Low (fast flow)</text>
+              <circle cx={10} cy={48} r={6} fill="url(#slevPressureHigh)" />
+              <text x={22} y={52} fill={colors.pressure.high} fontSize={10}>High (slow flow)</text>
             </g>
           )}
         </svg>

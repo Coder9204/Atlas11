@@ -435,6 +435,69 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
           {arraySize}x{arraySize} Systolic Array - Cycle {cycle}
         </text>
 
+        {/* Y-axis label */}
+        <text
+          x={padding - 50}
+          y={(height / 2)}
+          fill={colors.textSecondary}
+          fontSize="11"
+          fontWeight="600"
+          textAnchor="middle"
+          transform={`rotate(-90, ${padding - 50}, ${height / 2})`}
+        >
+          Row Index
+        </text>
+
+        {/* X-axis label */}
+        <text
+          x={(padding + 40 + (arraySize * (cellSize + gap)) / 2)}
+          y={height - 10}
+          fill={colors.textSecondary}
+          fontSize="11"
+          fontWeight="600"
+          textAnchor="middle"
+        >
+          Column Index
+        </text>
+
+        {/* Grid lines - vertical */}
+        {Array.from({ length: arraySize + 1 }).map((_, i) => {
+          const x = padding + 40 + i * (cellSize + gap) - gap / 2;
+          const y1 = padding + 50 - gap / 2;
+          const y2 = padding + 50 + arraySize * (cellSize + gap) - gap / 2;
+          return (
+            <line
+              key={`grid-v-${i}`}
+              x1={x}
+              y1={y1}
+              x2={x}
+              y2={y2}
+              stroke={`${colors.border}44`}
+              strokeWidth="1"
+              strokeDasharray="2,2"
+            />
+          );
+        })}
+
+        {/* Grid lines - horizontal */}
+        {Array.from({ length: arraySize + 1 }).map((_, i) => {
+          const y = padding + 50 + i * (cellSize + gap) - gap / 2;
+          const x1 = padding + 40 - gap / 2;
+          const x2 = padding + 40 + arraySize * (cellSize + gap) - gap / 2;
+          return (
+            <line
+              key={`grid-h-${i}`}
+              x1={x1}
+              y1={y}
+              x2={x2}
+              y2={y}
+              stroke={`${colors.border}44`}
+              strokeWidth="1"
+              strokeDasharray="2,2"
+            />
+          );
+        })}
+
         {/* Matrix A labels (left side, flowing right) */}
         <text x={padding - 25} y={padding + 30} fill={colors.dataA} fontSize="12" fontWeight="600" textAnchor="end">
           Matrix A
@@ -461,6 +524,17 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
                   </text>
                   {/* Arrow */}
                   <path d={`M${padding - 5} ${y} l-8 -5 v10 z`} fill={colors.dataA} opacity={0.7} />
+                  {/* Highlight glow for current value */}
+                  <circle
+                    cx={padding - 21}
+                    cy={y}
+                    r={16}
+                    fill="none"
+                    stroke={colors.dataA}
+                    strokeWidth="2"
+                    opacity="0.5"
+                    filter="url(#glow)"
+                  />
                 </g>
               )}
             </g>
@@ -493,6 +567,17 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
                   </text>
                   {/* Arrow */}
                   <path d={`M${x} ${padding + 46} l-5 -8 h10 z`} fill={colors.dataB} opacity={0.7} />
+                  {/* Highlight glow for current value */}
+                  <circle
+                    cx={x}
+                    cy={padding + 32}
+                    r={16}
+                    fill="none"
+                    stroke={colors.dataB}
+                    strokeWidth="2"
+                    opacity="0.5"
+                    filter="url(#glow)"
+                  />
                 </g>
               )}
             </g>
@@ -586,6 +671,17 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
           <rect x="0" y="18" width="12" height="12" rx="2" fill={`${colors.success}22`} stroke={colors.success} />
           <text x="18" y="28" fill={colors.textSecondary} fontSize="10">Complete</text>
         </g>
+
+        {/* Filter definitions for glow effect */}
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
 
         <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
       </svg>
@@ -836,35 +932,105 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
   // PLAY PHASE - Interactive Systolic Array
   if (phase === 'play') {
     const maxCycles = arraySize * 3 - 2;
+    const activePEs = Array.from({ length: arraySize }).flatMap((_, row) =>
+      Array.from({ length: arraySize }).map((_, col) => {
+        const state = getPEState(row, col, cycle);
+        return { row, col, state, active: state.active };
+      })
+    ).filter(pe => pe.active);
+    const totalComputing = activePEs.filter(pe => pe.state.computing).length;
+    const totalComplete = activePEs.filter(pe => {
+      const expected = getExpectedResult(pe.row, pe.col);
+      return pe.state.accumulator === expected && cycle >= arraySize + pe.row + pe.col - 1;
+    }).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '900px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Watch Data Flow Through the Array
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Matrix A flows right, Matrix B flows down. Each cell multiplies and accumulates.
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Watch Data Flow Through the Array
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Matrix A flows right, Matrix B flows down. Each cell multiplies and accumulates.
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            display: 'flex',
-            justifyContent: 'center',
-            overflowX: 'auto',
-          }}>
-            <SystolicArrayVisualization interactive={true} showAccumulators={true} />
-          </div>
+            {/* Formula display */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.accent, margin: 0, fontWeight: 600 }}>
+                C[i,j] = Σ(A[i,k] × B[k,j]) for k=0 to {arraySize - 1}
+              </p>
+            </div>
+
+            {/* Real-time stats */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.textPrimary }}>{cycle}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Current Cycle</div>
+              </div>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{totalComputing}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Computing Now</div>
+              </div>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.success }}>{totalComplete}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Completed</div>
+              </div>
+            </div>
+
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              display: 'flex',
+              justifyContent: 'center',
+              overflowX: 'auto',
+            }}>
+              <SystolicArrayVisualization interactive={true} showAccumulators={true} />
+            </div>
 
           {/* Playback controls */}
           <div style={{
@@ -1006,10 +1172,35 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Matrix multiplication complete! All 16 result values have been computed.
+                Matrix multiplication complete! All {arraySize * arraySize} result values have been computed.
               </p>
             </div>
           )}
+
+          {/* Comparison: Before vs After */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
+              Before vs After
+            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '20px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>Initial State (Cycle 0)</div>
+                <div style={{ ...typo.h3, color: colors.textSecondary }}>All zeros</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>No computation</div>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>Final State (Cycle {maxCycles})</div>
+                <div style={{ ...typo.h3, color: colors.success }}>{arraySize * arraySize} results</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>{arraySize * arraySize * arraySize} operations</div>
+              </div>
+            </div>
+          </div>
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
@@ -1017,9 +1208,23 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
           >
             Understand the Pattern
           </button>
+          </div>
         </div>
 
-        {renderNavDots()}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          padding: '16px',
+          zIndex: 10,
+        }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+            {renderNavDots()}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1192,21 +1397,91 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
       opsPerRead: (size * size * size) / (2 * size * size), // = N/2
     }));
 
+    const currentMetric = metrics.find(m => m.size === arraySize);
+    const activePEs = Array.from({ length: arraySize }).flatMap((_, row) =>
+      Array.from({ length: arraySize }).map((_, col) => {
+        const state = getPEState(row, col, cycle);
+        return { row, col, state, active: state.active };
+      })
+    ).filter(pe => pe.active);
+    const totalComputing = activePEs.filter(pe => pe.state.computing).length;
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Scaling Systolic Arrays
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how efficiency improves with larger arrays
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Scaling Systolic Arrays
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              See how efficiency improves with larger arrays
+            </p>
+
+            {/* Formula display */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.accent, margin: 0, fontWeight: 600 }}>
+                Efficiency = (N³ operations) / (2N² memory reads) = N/2
+              </p>
+            </div>
+
+            {/* Current array real-time stats */}
+            {currentMetric && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '24px',
+              }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{currentMetric.totalOps}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Total Ops</div>
+                </div>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{totalComputing}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Computing Now</div>
+                </div>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.success }}>{currentMetric.dataReuse}x</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Data Reuse</div>
+                </div>
+              </div>
+            )}
 
           {/* Array size selector */}
           <div style={{
@@ -1322,15 +1597,60 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
             </div>
           </div>
 
+          {/* Comparison: Small vs Large Arrays */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
+              Comparison: Small vs Large
+            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '20px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>2×2 Array</div>
+                <div style={{ ...typo.h3, color: colors.textSecondary }}>2x reuse</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>1.0 ops/read</div>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>4×4 Array</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>4x reuse</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>2.0 ops/read</div>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>128×128 TPU</div>
+                <div style={{ ...typo.h3, color: colors.success }}>128x reuse</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>64.0 ops/read</div>
+              </div>
+            </div>
+          </div>
+
           <button
             onClick={() => { playSound('success'); setArraySize(4); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
             Understand the Tradeoffs
           </button>
+          </div>
         </div>
 
-        {renderNavDots()}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          padding: '16px',
+          zIndex: 10,
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            {renderNavDots()}
+          </div>
+        </div>
       </div>
     );
   }

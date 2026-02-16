@@ -780,17 +780,32 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Explore Pressure Drop
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust pipe diameter and flow rate to see how pressure drop changes
-          </p>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          {/* Educational header with observation guidance */}
+          <div style={{
+            padding: '16px 24px',
+            background: colors.bgCard,
+            borderBottom: `1px solid ${colors.border}`,
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Watch how pressure drop changes as you adjust pipe diameter and flow rate. Notice that larger diameters dramatically reduce pressure drop,
+              while increasing flow rate causes the drop to rise quickly. Try to achieve the lowest pressure drop possible.
+            </p>
+          </div>
+
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Explore Pressure Drop
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust pipe diameter and flow rate to see how pressure drop changes
+            </p>
 
           {/* Main visualization */}
           <div style={{
@@ -799,6 +814,20 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             padding: '24px',
             marginBottom: '24px',
           }}>
+            {/* Formula display */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: '0 0 4px 0' }}>Darcy-Weisbach Equation</p>
+              <p style={{ ...typo.h3, color: colors.accent, fontFamily: 'monospace', margin: 0 }}>
+                ΔP = f × (L/D) × (ρV²/2)
+              </p>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <PipeVisualization />
             </div>
@@ -907,12 +936,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             </div>
           )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics →
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics →
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -926,11 +956,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Darcy-Weisbach Equation
           </h2>
@@ -1002,12 +1034,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             </ul>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Filter Effects →
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Explore Filter Effects →
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1146,17 +1179,32 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Complete System Pressure Drop
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Explore how all factors combine: diameter, length, roughness, and filter loading
-          </p>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          {/* Educational header with observation guidance */}
+          <div style={{
+            padding: '16px 24px',
+            background: colors.bgCard,
+            borderBottom: `1px solid ${colors.border}`,
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Experiment with all system parameters to understand their combined effects. Notice how filter loading adds to total pressure drop,
+              and how roughness multiplies the friction losses. Try different combinations to find the optimal balance.
+            </p>
+          </div>
+
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Complete System Pressure Drop
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Explore how all factors combine: diameter, length, roughness, and filter loading
+            </p>
 
           <div style={{
             background: colors.bgCard,
@@ -1320,12 +1368,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             )}
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand System Design →
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand System Design →
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1339,11 +1388,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             System Design Principles
           </h2>
@@ -1410,12 +1461,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications →
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications →
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}

@@ -891,133 +891,186 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            PDN Simulator
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust parameters to see how they affect voltage droop
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              PDN Simulator
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust parameters to see how they affect voltage droop
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <PDNVisualization />
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}22`,
+              border: `1px solid ${colors.accent}44`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+                Watch: As you increase current demand or inductance, observe the voltage droop waveform drop below the target line. More capacitance helps reduce the droop.
+              </p>
             </div>
 
-            {/* Current demand slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Current Demand</span>
-                <span style={{ ...typo.small, color: colors.power, fontWeight: 600 }}>{currentDemand} A</span>
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <PDNVisualization />
               </div>
-              <input
-                type="range"
-                min="20"
-                max="200"
-                step="10"
-                value={currentDemand}
-                onChange={(e) => setCurrentDemand(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.accent }}
-              />
-            </div>
 
-            {/* Capacitance slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Decoupling Capacitance</span>
-                <span style={{ ...typo.small, color: colors.capacitor, fontWeight: 600 }}>{decouplingCapacitance} uF</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="500"
-                step="20"
-                value={decouplingCapacitance}
-                onChange={(e) => setDecouplingCapacitance(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.accent }}
-              />
-            </div>
-
-            {/* Inductance slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Path Inductance</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pathInductance} pH</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="500"
-                step="20"
-                value={pathInductance}
-                onChange={(e) => setPathInductance(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.accent }}
-              />
-            </div>
-
-            {/* VRM distance slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>VRM Distance</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{vrDistance} mm</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="50"
-                step="5"
-                value={vrDistance}
-                onChange={(e) => setVrDistance(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.accent }}
-              />
-            </div>
-
-            {/* Status feedback */}
-            {pdn.droopPercentage > 5 && (
+              {/* Formula display */}
               <div style={{
-                background: `${colors.error}22`,
-                border: `1px solid ${colors.error}`,
+                background: `${colors.accent}11`,
+                border: `1px solid ${colors.accent}33`,
                 borderRadius: '8px',
                 padding: '12px',
-                marginBottom: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
               }}>
-                <p style={{ ...typo.small, color: colors.error, margin: 0 }}>
-                  Warning: Voltage droop exceeds 5%! Add more capacitance or reduce inductance.
+                <p style={{ ...typo.small, color: colors.accent, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
+                  V_droop = L × (di/dt) | Z_target = (0.05 × V_dd) / I_max
                 </p>
               </div>
-            )}
 
-            {pdn.droopPercentage <= 5 && (
-              <div style={{
-                background: `${colors.success}22`,
-                border: `1px solid ${colors.success}`,
-                borderRadius: '8px',
-                padding: '12px',
-                marginBottom: '16px',
-              }}>
-                <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
-                  Voltage droop within spec! The PDN can handle this load.
-                </p>
+              {/* Current demand slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Current Demand</span>
+                  <span style={{ ...typo.small, color: colors.power, fontWeight: 600 }}>{currentDemand} A</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="200"
+                  step="10"
+                  value={currentDemand}
+                  onChange={(e) => setCurrentDemand(parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.accent }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>20 A</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>200 A</span>
+                </div>
               </div>
-            )}
+
+              {/* Capacitance slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Decoupling Capacitance</span>
+                  <span style={{ ...typo.small, color: colors.capacitor, fontWeight: 600 }}>{decouplingCapacitance} uF</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="500"
+                  step="20"
+                  value={decouplingCapacitance}
+                  onChange={(e) => setDecouplingCapacitance(parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.accent }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>20 uF</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>500 uF</span>
+                </div>
+              </div>
+
+              {/* Inductance slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Path Inductance</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pathInductance} pH</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="500"
+                  step="20"
+                  value={pathInductance}
+                  onChange={(e) => setPathInductance(parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.accent }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>20 pH</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>500 pH</span>
+                </div>
+              </div>
+
+              {/* VRM distance slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>VRM Distance</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{vrDistance} mm</span>
+                </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="50"
+                  step="5"
+                  value={vrDistance}
+                  onChange={(e) => setVrDistance(parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.accent }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>5 mm</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>50 mm</span>
+                </div>
+              </div>
+
+              {/* Status feedback */}
+              {pdn.droopPercentage > 5 && (
+                <div style={{
+                  background: `${colors.error}22`,
+                  border: `1px solid ${colors.error}`,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '16px',
+                }}>
+                  <p style={{ ...typo.small, color: colors.error, margin: 0 }}>
+                    Warning: Voltage droop exceeds 5%! Add more capacitance or reduce inductance.
+                  </p>
+                </div>
+              )}
+
+              {pdn.droopPercentage <= 5 && (
+                <div style={{
+                  background: `${colors.success}22`,
+                  border: `1px solid ${colors.success}`,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '16px',
+                }}>
+                  <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+                    Voltage droop within spec! The PDN can handle this load.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics
+            </button>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
         </div>
 
         {renderNavDots()}
@@ -1214,117 +1267,158 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Parallel Power Pins
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how more pins reduce effective inductance
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Parallel Power Pins
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              See how more pins reduce effective inductance
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ParallelPinsVisualization />
-            </div>
-
-            {/* Number of pins slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Power Pins</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{numPowerPins}</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="100"
-                value={numPowerPins}
-                onChange={(e) => setNumPowerPins(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.accent }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>1 pin</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>100 pins</span>
-              </div>
-            </div>
-
-            {/* Pin inductance slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Inductance per Pin</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pinInductance} pH</span>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="500"
-                step="50"
-                value={pinInductance}
-                onChange={(e) => setPinInductance(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.accent }}
-              />
-            </div>
-
-            {/* Comparison display */}
+            {/* Observation guidance */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.error }}>
-                  {pinInductance} pH
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Single Pin Inductance</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>
-                  {pins.effectiveInductance.toFixed(1)} pH
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Effective with {numPowerPins} Pins</div>
-              </div>
-            </div>
-          </div>
-
-          {numPowerPins > 10 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}44`,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
-              textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                {numPowerPins} parallel pins reduce inductance by {((1 - 1/numPowerPins) * 100).toFixed(0)}%!
+              <p style={{ ...typo.small, color: colors.warning, margin: 0, fontWeight: 600 }}>
+                Watch: Increase the number of pins and observe how the effective inductance drops dramatically. The droop percentage should decrease as you add more parallel paths.
               </p>
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Solution
-          </button>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <ParallelPinsVisualization />
+              </div>
+
+              {/* Formula display */}
+              <div style={{
+                background: `${colors.accent}11`,
+                border: `1px solid ${colors.accent}33`,
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.small, color: colors.accent, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
+                  L_effective = L_pin / N | Droop = (L_eff × di/dt) / V_dd
+                </p>
+              </div>
+
+              {/* Number of pins slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Power Pins</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{numPowerPins}</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  value={numPowerPins}
+                  onChange={(e) => setNumPowerPins(parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.accent }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>1 pin</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>100 pins</span>
+                </div>
+              </div>
+
+              {/* Pin inductance slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Inductance per Pin</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pinInductance} pH</span>
+                </div>
+                <input
+                  type="range"
+                  min="50"
+                  max="500"
+                  step="50"
+                  value={pinInductance}
+                  onChange={(e) => setPinInductance(parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.accent }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>50 pH</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>500 pH</span>
+                </div>
+              </div>
+
+              {/* Comparison display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.error }}>
+                    {pinInductance} pH
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Single Pin Inductance</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.success }}>
+                    {pins.effectiveInductance.toFixed(1)} pH
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Effective with {numPowerPins} Pins</div>
+                </div>
+              </div>
+            </div>
+
+            {numPowerPins > 10 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  {numPowerPins} parallel pins reduce inductance by {((1 - 1/numPowerPins) * 100).toFixed(0)}%!
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Solution
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}

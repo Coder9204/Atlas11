@@ -572,7 +572,17 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
       return (
          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <svg viewBox="0 0 600 240" style={{ width: '100%', height: '100%', maxHeight: '240px' }}>
+            {/* Title for SVG */}
+            <h3 style={{
+               fontSize: typo.body,
+               fontWeight: 700,
+               color: design.colors.textPrimary,
+               marginBottom: '8px',
+               textAlign: 'center'
+            }}>
+               Wave Propagation Through {medium === 'solid' ? 'Solid Rock' : 'Liquid Medium'}
+            </h3>
+            <svg viewBox="0 0 600 240" style={{ width: '100%', height: '100%', maxHeight: '240px' }} preserveAspectRatio="xMidYMid meet">
                <defs>
                   {/* ========== PREMIUM GRADIENT DEFINITIONS ========== */}
 
@@ -705,6 +715,14 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                {Array.from({ length: 4 }).map((_, i) => (
                   <line key={`hgrid-${i}`} x1="40" y1={50 + i * 50} x2="560" y2={50 + i * 50} stroke="#27272a" strokeWidth="1" opacity="0.3" />
                ))}
+
+               {/* Axis labels */}
+               <text x="300" y="225" textAnchor="middle" style={{ fontSize: '11px', fill: design.colors.textTertiary, fontWeight: 600 }}>
+                  Distance (Wave Direction) →
+               </text>
+               <text x="25" y="115" textAnchor="middle" transform="rotate(-90, 25, 115)" style={{ fontSize: '11px', fill: design.colors.textTertiary, fontWeight: 600 }}>
+                  Amplitude
+               </text>
 
                {/* Medium container with premium styling */}
                <rect x="40" y="40" width="520" height="150" rx="12"
@@ -1005,6 +1023,48 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   </div>
                </div>
             )}
+
+            {/* Formula display */}
+            <div style={{
+               marginTop: '12px',
+               padding: '12px 16px',
+               borderRadius: design.radius.md,
+               background: design.colors.bgSecondary,
+               border: `1px solid ${design.colors.border}`,
+               textAlign: 'center',
+               maxWidth: '400px',
+               width: '100%'
+            }}>
+               <div style={{
+                  fontSize: typo.small,
+                  fontWeight: 700,
+                  color: design.colors.textTertiary,
+                  marginBottom: '4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+               }}>
+                  Wave Speed Formula
+               </div>
+               <div style={{
+                  fontSize: typo.body,
+                  fontWeight: 600,
+                  color: waveType === 'p' ? design.colors.pWave : design.colors.sWave,
+                  fontFamily: 'monospace'
+               }}>
+                  {waveType === 'p'
+                     ? 'v_p = √((K + 4μ/3) / ρ)'
+                     : 'v_s = √(μ / ρ)'}
+               </div>
+               <div style={{
+                  fontSize: typo.label,
+                  color: design.colors.textTertiary,
+                  marginTop: '4px'
+               }}>
+                  {waveType === 'p'
+                     ? 'K = bulk modulus, μ = shear modulus, ρ = density'
+                     : 'μ = shear modulus (≈0 in liquids), ρ = density'}
+               </div>
+            </div>
          </div>
       );
    };
@@ -1297,6 +1357,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            minHeight: '100vh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
@@ -1307,11 +1368,75 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   flex: 1,
                   padding: '16px',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   minHeight: '280px',
+                  overflowY: 'auto',
+                  paddingBottom: '80px',
+                  paddingTop: '44px'
                }}>
                   {renderWaveVisualization()}
+
+                  {/* Comparison display */}
+                  <div style={{
+                     marginTop: '20px',
+                     padding: '16px',
+                     borderRadius: design.radius.lg,
+                     background: design.colors.bgSecondary,
+                     border: `1px solid ${design.colors.border}`,
+                     maxWidth: '500px',
+                     width: '100%'
+                  }}>
+                     <div style={{
+                        fontSize: typo.small,
+                        fontWeight: 700,
+                        color: design.colors.textTertiary,
+                        marginBottom: '12px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                     }}>
+                        Wave Comparison
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{
+                           padding: '12px',
+                           borderRadius: design.radius.md,
+                           background: waveType === 'p' ? `${design.colors.pWave}20` : design.colors.bgTertiary,
+                           border: `2px solid ${waveType === 'p' ? design.colors.pWave : design.colors.border}`
+                        }}>
+                           <div style={{
+                              fontSize: typo.body,
+                              fontWeight: 700,
+                              color: design.colors.pWave,
+                              marginBottom: '4px'
+                           }}>
+                              P-Wave
+                           </div>
+                           <div style={{ fontSize: typo.small, color: design.colors.textSecondary }}>
+                              Compression • Faster • Works in all media
+                           </div>
+                        </div>
+                        <div style={{
+                           padding: '12px',
+                           borderRadius: design.radius.md,
+                           background: waveType === 's' ? `${design.colors.sWave}20` : design.colors.bgTertiary,
+                           border: `2px solid ${waveType === 's' ? design.colors.sWave : design.colors.border}`
+                        }}>
+                           <div style={{
+                              fontSize: typo.body,
+                              fontWeight: 700,
+                              color: design.colors.sWave,
+                              marginBottom: '4px'
+                           }}>
+                              S-Wave
+                           </div>
+                           <div style={{ fontSize: typo.small, color: design.colors.textSecondary }}>
+                              Shear • Slower • Solids only
+                           </div>
+                        </div>
+                     </div>
+                  </div>
                </div>
 
                {/* Controls */}

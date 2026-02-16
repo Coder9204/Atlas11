@@ -535,6 +535,42 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           Processor Thermal Simulation
         </text>
 
+        {/* Grid lines for visual reference */}
+        <g opacity="0.1">
+          {Array.from({ length: 6 }, (_, i) => (
+            <line
+              key={`h${i}`}
+              x1="20"
+              y1={50 + i * 50}
+              x2={width - 20}
+              y2={50 + i * 50}
+              stroke={colors.textMuted}
+              strokeWidth="1"
+            />
+          ))}
+          {Array.from({ length: 8 }, (_, i) => (
+            <line
+              key={`v${i}`}
+              x1={20 + i * 60}
+              y1="50"
+              x2={20 + i * 60}
+              y2={height - 90}
+              stroke={colors.textMuted}
+              strokeWidth="1"
+            />
+          ))}
+        </g>
+
+        {/* Y-axis label */}
+        <text x="10" y="60" fill={colors.textMuted} fontSize="10" transform={`rotate(-90, 10, 60)`}>
+          Temperature
+        </text>
+
+        {/* X-axis label */}
+        <text x={width/2} y={height - 5} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          Time
+        </text>
+
         {/* CPU Die */}
         <g transform={`translate(${width/2 - 60}, 50)`}>
           <rect x="0" y="0" width="120" height="80" rx="8" fill="url(#cpuGrad)" stroke={isThrottling ? colors.hot : colors.border} strokeWidth={isThrottling ? 3 : 1} filter={isThrottling ? "url(#glow)" : undefined} />
@@ -724,22 +760,31 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '120px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
+            </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             When a processor approaches dangerous temperatures (95-100C), what happens?
@@ -813,14 +858,15 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
             ))}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+            {prediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Test My Prediction
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -877,6 +923,10 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
                   cursor: 'pointer',
                 }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>10%</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>100%</span>
+              </div>
             </div>
 
             {/* Control buttons */}
@@ -988,11 +1038,20 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '120px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Thermal Throttling
           </h2>
@@ -1049,12 +1108,13 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
             </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover the Cooling Connection
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Discover the Cooling Connection
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1219,6 +1279,10 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
                 onChange={(e) => setWorkload(parseInt(e.target.value))}
                 style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>10%</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>100%</span>
+              </div>
             </div>
 
             {/* Cooling slider */}
@@ -1306,11 +1370,20 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '120px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Cooling Enables Performance
           </h2>
@@ -1377,12 +1450,13 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1399,22 +1473,31 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '120px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
             {realWorldApps.map((a, i) => (
               <button
                 key={i}
@@ -1513,14 +1596,15 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
             </div>
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1592,11 +1676,20 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '120px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1744,6 +1837,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
                 Submit Test
               </button>
             )}
+          </div>
           </div>
         </div>
 

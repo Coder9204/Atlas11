@@ -722,11 +722,20 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Water Hammer Simulator
           </h2>
@@ -888,6 +897,22 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
               )}
             </div>
 
+            {/* Formula */}
+            <div style={{
+              background: `${colors.accent}11`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: colors.accent, marginBottom: '4px' }}>
+                ΔP = ρ × c × Δv
+              </div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>
+                Joukowsky equation: Pressure rise = Density × Sound speed × Velocity change
+              </div>
+            </div>
+
             {/* Stats display */}
             <div style={{
               display: 'grid',
@@ -959,6 +984,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
               </button>
             </div>
           )}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1187,11 +1213,20 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Closure Speed Comparison
           </h2>
@@ -1364,6 +1399,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             </div>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1483,11 +1519,20 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1605,6 +1650,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
               Take the Knowledge Test
             </button>
           )}
+        </div>
         </div>
 
         {renderNavDots()}

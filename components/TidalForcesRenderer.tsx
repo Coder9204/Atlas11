@@ -412,6 +412,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <title>Tidal Forces Visualization - Differential Gravity</title>
         <defs>
           <radialGradient id="earthGrad" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#60a5fa" />
@@ -460,6 +461,10 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
             opacity={0.2 + (i % 4) * 0.15}
           />
         ))}
+
+        {/* Grid lines for reference */}
+        <line x1={earthCenterX} y1={20} x2={earthCenterX} y2={height - 20} stroke="#334155" strokeWidth="1" strokeDasharray="3,3" opacity="0.3" />
+        <line x1={20} y1={earthCenterY} x2={width - 20} y2={earthCenterY} stroke="#334155" strokeWidth="1" strokeDasharray="3,3" opacity="0.3" />
 
         {/* Orbit path */}
         <ellipse
@@ -637,6 +642,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <title>Tidal Locking Visualization</title>
         <defs>
           <radialGradient id="earthGrad2" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#60a5fa" />
@@ -668,6 +674,10 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
             opacity={0.2 + (i % 4) * 0.12}
           />
         ))}
+
+        {/* Grid lines */}
+        <line x1={earthCenterX} y1={15} x2={earthCenterX} y2={height - 15} stroke="#334155" strokeWidth="1" strokeDasharray="2,2" opacity="0.2" />
+        <line x1={15} y1={earthCenterY} x2={width - 15} y2={earthCenterY} stroke="#334155" strokeWidth="1" strokeDasharray="2,2" opacity="0.2" />
 
         {/* Orbital path */}
         <ellipse
@@ -1005,11 +1015,20 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Differential Gravity Simulator
           </h2>
@@ -1095,19 +1114,19 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
             }}>
               {showVectors && !showDifferential && (
                 <p style={{ ...typo.body, color: colors.accent, margin: 0 }}>
-                  <strong>Different pull strengths!</strong> Near side: pulled MORE than Earth&apos;s center.
-                  Far side: pulled LESS. This difference creates tidal forces.
+                  <strong>Observe the different pull strengths!</strong> Near side: pulled MORE than Earth&apos;s center.
+                  Far side: pulled LESS. Watch how this difference creates tidal forces.
                 </p>
               )}
               {showDifferential && (
                 <p style={{ ...typo.body, color: colors.ocean, margin: 0 }}>
-                  <strong>Tidal force = difference from center.</strong> Near side stretches toward Moon.
-                  Far side &quot;lags behind&quot; relative to center → stretches AWAY. Two bulges!
+                  <strong>Watch the net tidal force = difference from center.</strong> Near side stretches toward Moon.
+                  Far side &quot;lags behind&quot; relative to center → stretches AWAY. Notice the two bulges!
                 </p>
               )}
               {!showVectors && !showDifferential && (
                 <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                  Toggle the buttons above to see how differential gravity creates TWO tidal bulges!
+                  Toggle the buttons above to observe how differential gravity creates TWO tidal bulges! Try animating to see the comparison before and after.
                 </p>
               )}
             </div>

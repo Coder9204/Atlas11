@@ -392,7 +392,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
     const outcome = calculateOutcome();
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', width: '100%', height: 'auto' }}>
         <defs>
           <linearGradient id="shieldGradSafe" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#10B981" />
@@ -427,6 +427,16 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           AI Agent Security Simulation
         </text>
+
+        {/* Y-axis label */}
+        <text x="15" y={height/2} textAnchor="middle" fill={colors.textMuted} fontSize="10" transform={`rotate(-90, 15, ${height/2})`}>
+          Access Level
+        </text>
+
+        {/* Grid lines */}
+        <line x1="30" y1="50" x2={width-30} y2="50" stroke={colors.border} strokeWidth="1" strokeDasharray="2,2" opacity="0.3" />
+        <line x1="30" y1="120" x2={width-30} y2="120" stroke={colors.border} strokeWidth="1" strokeDasharray="2,2" opacity="0.3" />
+        <line x1="30" y1="190" x2={width-30} y2="190" stroke={colors.border} strokeWidth="1" strokeDasharray="2,2" opacity="0.3" />
 
         {/* Safe Zone boundary (if enabled) */}
         {showDefenses && hasSafeFolder && (
@@ -636,10 +646,19 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
     const defenseScore = permissionLevel * 30 + (contentTainting ? 40 : 0);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', width: '100%', height: 'auto' }}>
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Defense Configuration
         </text>
+
+        {/* Y-axis label */}
+        <text x="10" y={height/2} textAnchor="middle" fill={colors.textMuted} fontSize="9" transform={`rotate(-90, 10, ${height/2})`}>
+          Trust Level
+        </text>
+
+        {/* Grid lines */}
+        <line x1="30" y1="80" x2={width-30} y2="80" stroke={colors.border} strokeWidth="1" strokeDasharray="2,2" opacity="0.3" />
+        <line x1="30" y1="140" x2={width-30} y2="140" stroke={colors.border} strokeWidth="1" strokeDasharray="2,2" opacity="0.3" />
 
         {/* Permission graph visualization */}
         <g transform="translate(30, 50)">
@@ -952,32 +971,115 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
   // PLAY PHASE - Interactive Agent Simulator
   if (phase === 'play') {
+    const file = fileSystem.find(f => f.path === selectedFile);
+    const threatLevel = file?.type === 'malicious' ? 'HIGH' : file?.type === 'sensitive' ? 'MEDIUM' : 'LOW';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Prompt Injection Simulator
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Click on files to see how the agent responds to different content types.
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Prompt Injection Simulator
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Click on files to see how the agent responds to different content types.
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <AgentSecurityVisualization interactive={true} showDefenses={false} />
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+                🔍 What to watch: Notice how malicious files (red) can compromise the agent. The attack status changes when you select dangerous content.
+              </p>
             </div>
+
+            {/* Formula */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: 0, fontFamily: 'monospace' }}>
+                Risk = (Threat Level) × (1 - Defense Strength)
+              </p>
+            </div>
+
+            {/* Real-time calculated values */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Threat Level</div>
+                <div style={{ ...typo.h3, color: threatLevel === 'HIGH' ? colors.danger : threatLevel === 'MEDIUM' ? colors.warning : colors.safe }}>
+                  {threatLevel}
+                </div>
+              </div>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Defense</div>
+                <div style={{ ...typo.h3, color: colors.textSecondary }}>
+                  {hasSafeFolder ? 'Active' : 'None'}
+                </div>
+              </div>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Risk Score</div>
+                <div style={{ ...typo.h3, color: attackTriggered && !attackBlocked ? colors.danger : colors.safe }}>
+                  {attackTriggered && !attackBlocked ? '100%' : '0%'}
+                </div>
+              </div>
+            </div>
+
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <AgentSecurityVisualization interactive={true} showDefenses={false} />
+              </div>
 
             {/* File content preview */}
             {selectedFile && (
@@ -1059,12 +1161,13 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
             </div>
           )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Attack
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Attack
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1255,31 +1358,115 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
+    const defenseScore = (hasSafeFolder ? 100 : 0);
+    const file = fileSystem.find(f => f.path === selectedFile);
+    const threatLevel = file?.type === 'malicious' ? 'HIGH' : file?.type === 'sensitive' ? 'MEDIUM' : 'LOW';
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Defense Configuration
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Enable defenses and try the attack again
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Defense Configuration
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Enable defenses and try the attack again
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <AgentSecurityVisualization interactive={true} showDefenses={true} />
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.safe}11`,
+              border: `1px solid ${colors.safe}33`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.safe, margin: 0, fontWeight: 600 }}>
+                🔍 What to watch: Enable the safe folder defense, then try the injection attack. Notice how the system blocks access to files outside /work/ even when the AI is tricked.
+              </p>
             </div>
+
+            {/* Formula */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: 0, fontFamily: 'monospace' }}>
+                Defense Effectiveness = Safe Folder × (1 - Access Overlap)
+              </p>
+            </div>
+
+            {/* Real-time calculated values */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Defense Score</div>
+                <div style={{ ...typo.h3, color: defenseScore > 0 ? colors.safe : colors.danger }}>
+                  {defenseScore}%
+                </div>
+              </div>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Threat Level</div>
+                <div style={{ ...typo.h3, color: threatLevel === 'HIGH' ? colors.danger : threatLevel === 'MEDIUM' ? colors.warning : colors.safe }}>
+                  {threatLevel}
+                </div>
+              </div>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Status</div>
+                <div style={{ ...typo.h3, color: attackBlocked ? colors.safe : attackTriggered ? colors.danger : colors.textSecondary }}>
+                  {attackBlocked ? 'Blocked' : attackTriggered ? 'Breach' : 'Safe'}
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <AgentSecurityVisualization interactive={true} showDefenses={true} />
+              </div>
 
             {/* Safe folder toggle */}
             <div style={{ marginBottom: '20px' }}>
@@ -1369,12 +1556,13 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
             </div>
           )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%', background: `linear-gradient(135deg, ${colors.safe}, #059669)` }}
-          >
-            Understand Defense in Depth
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%', background: `linear-gradient(135deg, ${colors.safe}, #059669)` }}
+            >
+              Understand Defense in Depth
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1481,22 +1669,31 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Attack Surfaces
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Attack Surfaces
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
             {realWorldApps.map((a, i) => (
               <button
                 key={i}
@@ -1595,14 +1792,15 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
             </div>
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}

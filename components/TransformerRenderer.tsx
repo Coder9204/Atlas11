@@ -411,12 +411,25 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="activeGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
         {/* Title */}
         <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
           Transformer Circuit - {ac ? 'AC Input' : 'DC Input'}
         </text>
+
+        {/* Axis labels and grid */}
+        <text x="10" y="50" fill={colors.textMuted} fontSize="9">Voltage (V)</text>
+        <text x={width - 30} y={height - 10} fill={colors.textMuted} fontSize="9">Time</text>
+        <line x1="0" y1={height/2} x2={width} y2={height/2} stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 2" opacity="0.3" />
+        <line x1={width/2} y1="40" x2={width/2} y2={height - 70} stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 2" opacity="0.3" />
 
         {/* Iron Core */}
         <g transform={`translate(${width/2 - 80}, 45)`}>
@@ -692,11 +705,20 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -788,6 +810,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               Test My Prediction
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -801,11 +824,20 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Transformer Simulator
           </h2>
@@ -880,6 +912,21 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               />
             </div>
 
+            {/* Formula display */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Transformer Equation:</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '16px', color: colors.accent, fontWeight: 600 }}>
+                V₂/V₁ = N₂/N₁
+              </div>
+            </div>
+
             {/* Stats display */}
             <div style={{
               display: 'grid',
@@ -891,6 +938,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                 borderRadius: '8px',
                 padding: '12px',
                 textAlign: 'center',
+                filter: 'drop-shadow(0 0 8px rgba(245, 158, 11, 0.6))',
               }}>
                 <div style={{ ...typo.h3, color: colors.accent }}>{turnsRatio.toFixed(2)}:1</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Turns Ratio</div>
@@ -900,6 +948,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                 borderRadius: '8px',
                 padding: '12px',
                 textAlign: 'center',
+                filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.6))',
               }}>
                 <div style={{ ...typo.h3, color: colors.success }}>{outputVoltage.toFixed(0)}V</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Output Voltage</div>
@@ -913,6 +962,22 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                 <div style={{ ...typo.h3, color: turnsRatio > 1 ? '#4ade80' : '#fb923c' }}>{transformerType}</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Type</div>
               </div>
+            </div>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '14px',
+            marginBottom: '16px',
+          }}>
+            <div style={{ ...typo.small, color: colors.accent, fontWeight: 600, marginBottom: '4px' }}>
+              What to observe:
+            </div>
+            <div style={{ ...typo.small, color: colors.textSecondary }}>
+              Watch how changing the turns ratio affects output voltage. Notice the magnetic flux animation and how power is conserved (voltage up, current down).
             </div>
           </div>
 
@@ -938,6 +1003,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           >
             Understand the Physics
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -951,11 +1017,20 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Transformers
           </h2>
@@ -1058,6 +1133,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           >
             But What About DC?
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1077,11 +1153,20 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1155,6 +1240,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               See What Happens
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1168,11 +1254,20 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             AC vs DC: The Critical Difference
           </h2>
@@ -1194,6 +1289,21 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                 ac={twistMode === 'ac'}
                 animPhase={acPhase}
               />
+            </div>
+
+            {/* Formula display */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Transformer Equation:</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '16px', color: colors.accent, fontWeight: 600 }}>
+                V₂/V₁ = N₂/N₁
+              </div>
             </div>
 
             {/* AC/DC Toggle */}
@@ -1228,6 +1338,22 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               </button>
             </div>
 
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '14px',
+              marginBottom: '16px',
+            }}>
+              <div style={{ ...typo.small, color: colors.accent, fontWeight: 600, marginBottom: '4px' }}>
+                What to observe:
+              </div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>
+                Toggle between AC and DC. Watch the magnetic flux animation appear/disappear and observe the output voltage change. DC creates static flux with no induction!
+              </div>
+            </div>
+
             {/* Explanation */}
             <div style={{
               background: twistMode === 'ac' ? `${colors.success}22` : `${colors.error}22`,
@@ -1256,6 +1382,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           >
             Why This Matters
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1269,11 +1396,20 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why AC Won the War of Currents
           </h2>
@@ -1331,6 +1467,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           >
             See Real-World Applications
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1347,22 +1484,31 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
             {realWorldApps.map((a, i) => (
               <button
                 key={i}

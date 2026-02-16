@@ -404,7 +404,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
     const nearSideVisible = Math.cos((moonFacingAngle - orbitalAngle) * Math.PI / 180);
 
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="tidlEarthSurface" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#93c5fd" />
@@ -431,6 +431,11 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           </filter>
         </defs>
 
+        {/* Title */}
+        <text x={centerX} y={size * 0.05} textAnchor="middle" fill={colors.textPrimary} fontSize={size * 0.04} fontWeight="600">
+          Tidal Locking Orbital Diagram
+        </text>
+
         {/* Stars */}
         {[...Array(15)].map((_, i) => (
           <circle
@@ -440,6 +445,21 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             r={(i % 3) * 0.5 + 0.5}
             fill="white"
             opacity={0.3 + (i % 5) * 0.1}
+          />
+        ))}
+
+        {/* Grid lines - circular reference grid */}
+        {[0.5, 0.75, 1, 1.25].map((factor) => (
+          <circle
+            key={`grid-${factor}`}
+            cx={centerX}
+            cy={centerY}
+            r={orbitRadius * factor}
+            fill="none"
+            stroke={colors.border}
+            strokeWidth="0.5"
+            strokeDasharray="2 2"
+            opacity="0.2"
           />
         ))}
 
@@ -454,6 +474,12 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           strokeDasharray="8 4"
           opacity="0.4"
         />
+
+        {/* Y-axis label */}
+        <text x={centerX - 8} y={size * 0.12} textAnchor="end" fill={colors.textMuted} fontSize={size * 0.028}>Y</text>
+
+        {/* X-axis label */}
+        <text x={size * 0.92} y={centerY + 4} fill={colors.textMuted} fontSize={size * 0.028}>X</text>
 
         {/* Earth */}
         <circle cx={centerX} cy={centerY} r={earthRadius * 1.2} fill={colors.earth} opacity="0.2" filter="url(#tidlGlow)" />
@@ -734,136 +760,211 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
 
   // PLAY PHASE - Interactive Moon System Simulator
   if (phase === 'play') {
+    const currentOrbitalPeriod = 27.3; // days
+    const currentRotationPeriod = isTidallyLocked ? 27.3 : (27.3 / 4); // days
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Tidal Locking Lab
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            Toggle tidal locking on/off. Watch the yellow marker - does it always face Earth?
-          </p>
-          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px' }}>
-            Observe: Try toggling the lock off to see how different faces become visible when the Moon rotates faster than it orbits.
-          </p>
-
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MoonSystemVisualization size={isMobile ? 280 : 360} locked={isTidallyLocked} showBulge={showTidalBulge} />
-            </div>
-
-            {/* Control buttons */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
-              <button
-                onClick={() => { playSound('click'); setIsTidallyLocked(!isTidallyLocked); }}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: `2px solid ${isTidallyLocked ? colors.success : colors.warning}`,
-                  background: isTidallyLocked ? `${colors.success}22` : `${colors.warning}22`,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
-                  {isTidallyLocked ? 'Tidally Locked' : 'Not Locked'}
-                </div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>
-                  {isTidallyLocked ? 'Rotation = orbital period' : 'Rotation faster than orbit'}
-                </div>
-              </button>
-
-              <button
-                onClick={() => { playSound('click'); setShowTidalBulge(!showTidalBulge); }}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: `2px solid ${showTidalBulge ? colors.accent : colors.border}`,
-                  background: showTidalBulge ? `${colors.accent}22` : colors.bgSecondary,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
-                  Tidal Bulge: {showTidalBulge ? 'ON' : 'OFF'}
-                </div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>
-                  Moon stretched toward Earth
-                </div>
-              </button>
-            </div>
-
-            {/* Time speed slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Animation Speed</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{timeScale}x</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="3"
-                step="0.5"
-                value={timeScale}
-                onChange={(e) => setTimeScale(parseFloat(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-            </div>
-
-            {/* Play/Pause */}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <button
-                onClick={() => { playSound('click'); setIsAnimating(!isAnimating); }}
-                style={{
-                  padding: '12px 32px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isAnimating ? colors.error : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isAnimating ? 'Pause' : 'Play'}
-              </button>
-            </div>
-          </div>
-
-          {/* Discovery prompt */}
-          <div style={{
-            background: `${colors.success}22`,
-            border: `1px solid ${colors.success}`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-              <strong>Key Observation:</strong> When locked, the yellow marker always faces Earth even though the Moon IS rotating. The Moon rotates exactly once per orbit!
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Tidal Locking Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Toggle tidal locking on/off. Watch the yellow marker - does it always face Earth?
             </p>
-          </div>
+            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px' }}>
+              Observe: Try toggling the lock off to see how different faces become visible when the Moon rotates faster than it orbits.
+            </p>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <MoonSystemVisualization size={isMobile ? 280 : 360} locked={isTidallyLocked} showBulge={showTidalBulge} />
+              </div>
+
+              {/* Formula */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '16px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                  <strong>Tidal Locking Condition:</strong> T<sub>rotation</sub> = T<sub>orbital</sub>
+                </p>
+              </div>
+
+              {/* Real-time calculated values */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
+                marginBottom: '20px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                    Orbital Period
+                  </div>
+                  <div style={{ ...typo.h3, color: colors.accent }}>
+                    {currentOrbitalPeriod.toFixed(1)} days
+                  </div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                    Rotation Period
+                  </div>
+                  <div style={{ ...typo.h3, color: isTidallyLocked ? colors.success : colors.warning }}>
+                    {currentRotationPeriod.toFixed(1)} days
+                  </div>
+                </div>
+              </div>
+
+              {/* Control buttons */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                <button
+                  onClick={() => { playSound('click'); setIsTidallyLocked(!isTidallyLocked); }}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: `2px solid ${isTidallyLocked ? colors.success : colors.warning}`,
+                    background: isTidallyLocked ? `${colors.success}22` : `${colors.warning}22`,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
+                    {isTidallyLocked ? 'Tidally Locked' : 'Not Locked'}
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>
+                    {isTidallyLocked ? 'Rotation = orbital period' : 'Rotation faster than orbit'}
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => { playSound('click'); setShowTidalBulge(!showTidalBulge); }}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: `2px solid ${showTidalBulge ? colors.accent : colors.border}`,
+                    background: showTidalBulge ? `${colors.accent}22` : colors.bgSecondary,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
+                    Tidal Bulge: {showTidalBulge ? 'ON' : 'OFF'}
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>
+                    Moon stretched toward Earth
+                  </div>
+                </button>
+              </div>
+
+              {/* Time speed slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Animation Speed</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{timeScale}x</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="3"
+                  step="0.5"
+                  value={timeScale}
+                  onChange={(e) => setTimeScale(parseFloat(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>0.5x</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>3x</span>
+                </div>
+              </div>
+
+              {/* Play/Pause */}
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={() => { playSound('click'); setIsAnimating(!isAnimating); }}
+                  style={{
+                    padding: '12px 32px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isAnimating ? colors.error : colors.success,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isAnimating ? 'Pause' : 'Play'}
+                </button>
+              </div>
+            </div>
+
+            {/* Discovery prompt */}
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                <strong>Key Observation:</strong> When locked, the yellow marker always faces Earth even though the Moon IS rotating. The Moon rotates exactly once per orbit!
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics
+            </button>
+          </div>
         </div>
 
-        {renderNavDots()}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 24px',
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          zIndex: 10,
+        }}>
+          {renderNavDots()}
+        </div>
       </div>
     );
   }

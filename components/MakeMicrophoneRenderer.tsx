@@ -450,14 +450,14 @@ export default function MakeMicrophoneRenderer({
 
   const MicrophoneVisualization = () => {
     const width = isMobile ? 340 : 480;
-    const height = isMobile ? 280 : 320;
+    const height = isMobile ? 280 : 340;
     const diaphragmOffset = getDiaphragmPosition();
     const voltage = getOutputVoltage();
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           {micType === 'dynamic' ? 'Dynamic Microphone' : 'Condenser Microphone'}
         </text>
 
@@ -479,7 +479,7 @@ export default function MakeMicrophoneRenderer({
         {/* Microphone housing */}
         <rect x="140" y={height/2 - 50} width="100" height="100" fill="#374151" rx="10" />
 
-        {/* Diaphragm */}
+        {/* Diaphragm - with glow when active */}
         <ellipse
           cx="155"
           cy={height/2}
@@ -489,7 +489,17 @@ export default function MakeMicrophoneRenderer({
           stroke="#6B7280"
           strokeWidth="2"
           transform={`translate(${diaphragmOffset}, 0)`}
+          filter={Math.abs(diaphragmOffset) > 5 ? 'url(#diaphragmGlow)' : ''}
         />
+        <defs>
+          <filter id="diaphragmGlow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
         <text x="155" y={height/2 + 55} textAnchor="middle" fill="#9CA3AF" fontSize="11">
           Diaphragm
         </text>
@@ -554,6 +564,19 @@ export default function MakeMicrophoneRenderer({
             OUTPUT
           </text>
 
+          {/* Grid lines for reference */}
+          <line x1="10" y1="50" x2="90" y2="50" stroke="#374151" strokeWidth="1" strokeDasharray="2,2" />
+          <line x1="10" y1="35" x2="90" y2="35" stroke="#374151" strokeWidth="1" strokeDasharray="1,1" opacity="0.5" />
+          <line x1="10" y1="65" x2="90" y2="65" stroke="#374151" strokeWidth="1" strokeDasharray="1,1" opacity="0.5" />
+
+          {/* Y-axis labels */}
+          <text x="5" y="35" fill="#6B7280" fontSize="8">+</text>
+          <text x="5" y="53" fill="#6B7280" fontSize="8">0</text>
+          <text x="5" y="68" fill="#6B7280" fontSize="8">-</text>
+
+          {/* Time axis label */}
+          <text x="50" y="78" textAnchor="middle" fill="#6B7280" fontSize="8">Time</text>
+
           {/* Waveform display */}
           <path
             d={`M 10 50 ${Array.from({ length: 16 }, (_, i) =>
@@ -565,10 +588,15 @@ export default function MakeMicrophoneRenderer({
           />
 
           {/* Voltage readout */}
-          <text x="50" y="85" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">
+          <text x="50" y="92" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">
             {(Math.abs(voltage) * 10).toFixed(1)} mV
           </text>
         </g>
+
+        {/* Formula display */}
+        <text x={width/2} y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          {micType === 'dynamic' ? 'V = B × l × v (Faraday\'s Law)' : 'C = ε₀A/d (Capacitance)'}
+        </text>
       </svg>
     );
   };
@@ -896,166 +924,184 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
-        paddingBottom: '100px',
-        padding: '48px 24px 100px 24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Microphone Simulator
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Watch how sound becomes electricity. Adjust the controls to explore.
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Microphone Simulator
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Watch how sound becomes electricity. Adjust the controls to explore.
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MicrophoneVisualization />
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <MicrophoneVisualization />
+              </div>
+
+              {/* Sound Frequency slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Sound Frequency (pitch)</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{soundFrequency}x</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '40px' }}>1x</span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="4"
+                    step="0.5"
+                    value={soundFrequency}
+                    onChange={(e) => { setSoundFrequency(parseFloat(e.target.value)); handleExperiment(); }}
+                    style={{
+                      width: '100%',
+                      cursor: 'pointer',
+                      height: '20px',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6'
+                    } as React.CSSProperties}
+                  />
+                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '40px', textAlign: 'right' }}>4x</span>
+                </div>
+              </div>
+
+              {/* Sound Amplitude slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Sound Amplitude (loudness)</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundAmplitude * 100).toFixed(0)}%</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '40px' }}>20%</span>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1"
+                    step="0.1"
+                    value={soundAmplitude}
+                    onChange={(e) => { setSoundAmplitude(parseFloat(e.target.value)); handleExperiment(); }}
+                    style={{
+                      width: '100%',
+                      cursor: 'pointer',
+                      height: '20px',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6'
+                    } as React.CSSProperties}
+                  />
+                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '40px', textAlign: 'right' }}>100%</span>
+                </div>
+              </div>
+
+              {/* Microphone Type buttons */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Microphone Type:</div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => { setMicType('dynamic'); handleExperiment(); playSound('click'); }}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: micType === 'dynamic' ? colors.accent : colors.bgSecondary,
+                      color: micType === 'dynamic' ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Dynamic (Coil)
+                  </button>
+                  <button
+                    onClick={() => { setMicType('condenser'); handleExperiment(); playSound('click'); }}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: micType === 'condenser' ? colors.accent : colors.bgSecondary,
+                      color: micType === 'condenser' ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Condenser
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Sound Frequency slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Sound Frequency</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{soundFrequency}x</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="4"
-                step="0.5"
-                value={soundFrequency}
-                onChange={(e) => { setSoundFrequency(parseFloat(e.target.value)); handleExperiment(); }}
+            {/* Discovery prompt */}
+            <div style={{
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <h4 style={{ ...typo.h3, color: colors.warning, marginTop: 0, marginBottom: '12px' }}>What This Visualization Shows:</h4>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: '0 0 12px 0' }}>
+                Watch how sound pressure waves (left) cause the diaphragm to vibrate. This mechanical motion is converted to electrical voltage (right) through <strong>electromagnetic induction</strong> (dynamic mic) or <strong>capacitance changes</strong> (condenser mic).
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: '0 0 12px 0' }}>
+                <strong>When you increase frequency:</strong> The waves oscillate faster, creating more cycles per second. <strong>When you increase amplitude:</strong> The diaphragm moves further, generating stronger voltage.
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong>Why this matters:</strong> Every voice assistant, phone call, and recording studio relies on this acoustic-to-electric transduction. Understanding it explains why different microphone types suit different applications - condenser mics capture subtle details for studios, while rugged dynamic mics excel in live sound where durability matters.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const currentIndex = PHASES.indexOf(currentPhase);
+                  if (currentIndex > 0) {
+                    goToPhase(PHASES[currentIndex - 1]);
+                  }
+                }}
                 style={{
-                  width: '100%',
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
                   cursor: 'pointer',
-                  height: '20px',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6'
-                } as React.CSSProperties}
-              />
+                  fontWeight: 600,
+                }}
+              >
+                Back
+              </button>
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={hasExperimented ? { ...primaryButtonStyle, flex: 2 } : { ...disabledButtonStyle, flex: 2 }}
+                disabled={!hasExperimented}
+              >
+                {hasExperimented ? 'Next' : `Experiment ${3 - experimentCount} more times...`}
+              </button>
             </div>
-
-            {/* Sound Amplitude slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Sound Amplitude (Loudness)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundAmplitude * 100).toFixed(0)}%</span>
-              </div>
-              <input
-                type="range"
-                min="0.2"
-                max="1"
-                step="0.1"
-                value={soundAmplitude}
-                onChange={(e) => { setSoundAmplitude(parseFloat(e.target.value)); handleExperiment(); }}
-                style={{
-                  width: '100%',
-                  cursor: 'pointer',
-                  height: '20px',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6'
-                } as React.CSSProperties}
-              />
-            </div>
-
-            {/* Microphone Type buttons */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Microphone Type:</div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={() => { setMicType('dynamic'); handleExperiment(); }}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: micType === 'dynamic' ? colors.accent : colors.bgSecondary,
-                    color: micType === 'dynamic' ? 'white' : colors.textSecondary,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Dynamic (Coil)
-                </button>
-                <button
-                  onClick={() => { setMicType('condenser'); handleExperiment(); }}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: micType === 'condenser' ? colors.accent : colors.bgSecondary,
-                    color: micType === 'condenser' ? 'white' : colors.textSecondary,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Condenser
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Discovery prompt */}
-          <div style={{
-            background: `${colors.warning}22`,
-            border: `1px solid ${colors.warning}`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}>
-            <h4 style={{ ...typo.h3, color: colors.warning, marginTop: 0, marginBottom: '12px' }}>What This Visualization Shows:</h4>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: '0 0 12px 0' }}>
-              Watch how sound pressure waves (left) cause the diaphragm to vibrate. This mechanical motion is converted to electrical voltage (right) through <strong>electromagnetic induction</strong> (dynamic mic) or <strong>capacitance changes</strong> (condenser mic).
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: '0 0 12px 0' }}>
-              <strong>When you increase frequency:</strong> The waves oscillate faster, creating more cycles per second. <strong>When you increase amplitude:</strong> The diaphragm moves further, generating stronger voltage.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Why this matters:</strong> Every voice assistant, phone call, and recording studio relies on this acoustic-to-electric transduction. Understanding it explains why different microphone types suit different applications - condenser mics capture subtle details for studios, while rugged dynamic mics excel in live sound where durability matters.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              onClick={() => {
-                playSound('click');
-                const currentIndex = PHASES.indexOf(currentPhase);
-                if (currentIndex > 0) {
-                  goToPhase(PHASES[currentIndex - 1]);
-                }
-              }}
-              style={{
-                flex: 1,
-                padding: '14px',
-                borderRadius: '10px',
-                border: `1px solid ${colors.border}`,
-                background: 'transparent',
-                color: colors.textSecondary,
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              Back
-            </button>
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={hasExperimented ? { ...primaryButtonStyle, flex: 2 } : { ...disabledButtonStyle, flex: 2 }}
-              disabled={!hasExperimented}
-            >
-              {hasExperimented ? 'Next' : `Experiment ${3 - experimentCount} more times...`}
-            </button>
           </div>
         </div>
 
@@ -1237,86 +1283,96 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
-        paddingBottom: '100px',
-        padding: '48px 24px 100px 24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Speaker / Microphone: Same Device, Both Directions!
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Toggle between modes to see how the same physics works both ways.
-          </p>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SpeakerMicVisualization />
-            </div>
-
-            {/* Mode toggle buttons */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-              <button
-                onClick={() => { setSpeakerMode('speaker'); setHasExploredTwist(true); }}
-                style={{
-                  flex: 1,
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: speakerMode === 'speaker' ? '#3B82F6' : colors.bgSecondary,
-                  color: speakerMode === 'speaker' ? 'white' : colors.textSecondary,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                }}
-              >
-                As Speaker
-              </button>
-              <button
-                onClick={() => { setSpeakerMode('microphone'); setHasExploredTwist(true); }}
-                style={{
-                  flex: 1,
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: speakerMode === 'microphone' ? '#8B5CF6' : colors.bgSecondary,
-                  color: speakerMode === 'microphone' ? 'white' : colors.textSecondary,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                }}
-              >
-                As Microphone
-              </button>
-            </div>
-          </div>
-
-          <div style={{
-            background: `${colors.accent}22`,
-            border: `1px solid ${colors.accent}`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.body, color: colors.accent, margin: 0 }}>
-              <strong>Fun fact:</strong> Early intercoms used the same speaker for both talking and listening! The Green Bullet harmonica mic is actually a repurposed speaker element.
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Speaker / Microphone: Same Device, Both Directions!
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Toggle between modes to see how the same physics works both ways.
             </p>
-          </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={hasExploredTwist ? primaryButtonStyle : disabledButtonStyle}
-            disabled={!hasExploredTwist}
-          >
-            {hasExploredTwist ? 'Understand the Principle' : 'Try both modes...'}
-          </button>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <SpeakerMicVisualization />
+              </div>
+
+              {/* Mode toggle buttons */}
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+                <button
+                  onClick={() => { setSpeakerMode('speaker'); setHasExploredTwist(true); playSound('click'); }}
+                  style={{
+                    flex: 1,
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: speakerMode === 'speaker' ? '#3B82F6' : colors.bgSecondary,
+                    color: speakerMode === 'speaker' ? 'white' : colors.textSecondary,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  🔊 As Speaker
+                </button>
+                <button
+                  onClick={() => { setSpeakerMode('microphone'); setHasExploredTwist(true); playSound('click'); }}
+                  style={{
+                    flex: 1,
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: speakerMode === 'microphone' ? '#8B5CF6' : colors.bgSecondary,
+                    color: speakerMode === 'microphone' ? 'white' : colors.textSecondary,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  🎤 As Microphone
+                </button>
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}22`,
+              border: `1px solid ${colors.accent}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.accent, margin: 0 }}>
+                <strong>Fun fact:</strong> Early intercoms used the same speaker for both talking and listening! The Green Bullet harmonica mic is actually a repurposed speaker element.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={hasExploredTwist ? primaryButtonStyle : disabledButtonStyle}
+              disabled={!hasExploredTwist}
+            >
+              {hasExploredTwist ? 'Understand the Principle' : 'Try both modes...'}
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1425,129 +1481,137 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
-        paddingBottom: '100px',
-        padding: '48px 24px 100px 24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-
-                  </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>Microphone Physics in Action</p>
-              </div>
-            </div>
-
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
-
-            {/* Stats grid */}
+            {/* App selector */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '12px',
-              marginBottom: '16px',
+              marginBottom: '24px',
             }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
+                  </div>
+                </button>
               ))}
             </div>
 
-            {/* Companies */}
+            {/* Selected app details */}
             <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
             }}>
-              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Leading Companies:</div>
-              <div style={{ ...typo.small, color: colors.textPrimary }}>
-                {app.companies.join(' . ')}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>Microphone Physics in Action</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              {/* Stats grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Companies */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Leading Companies:</div>
+                <div style={{ ...typo.small, color: colors.textPrimary }}>
+                  {app.companies.join(' • ')}
+                </div>
               </div>
             </div>
-          </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}

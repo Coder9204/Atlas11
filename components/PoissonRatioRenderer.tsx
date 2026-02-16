@@ -390,6 +390,13 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             <stop offset="0%" stopColor={materialColors[material]} stopOpacity="1" />
             <stop offset="100%" stopColor={materialColors[material]} stopOpacity="0.7" />
           </linearGradient>
+          <filter id="glowFilter">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
         {/* Title */}
@@ -486,7 +493,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
         <g transform={`translate(${width - 130}, 50)`}>
           <rect x="0" y="0" width="115" height="90" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
           <text x="57" y="20" textAnchor="middle" fill={colors.textMuted} fontSize="10">Material Properties</text>
-          <text x="57" y="40" textAnchor="middle" fill={materialColors[material]} fontSize="14" fontWeight="700">
+          <text x="57" y="40" textAnchor="middle" fill={materialColors[material]} fontSize="14" fontWeight="700" filter="url(#glowFilter)">
             v = {nu}
           </text>
           <text x="57" y="58" textAnchor="middle" fill={colors.textMuted} fontSize="9">
@@ -528,6 +535,15 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <filter id="auxeticGlow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Normal vs Auxetic Material
         </text>
@@ -578,6 +594,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             stroke="#A78BFA"
             strokeWidth="2"
             rx="3"
+            filter="url(#auxeticGlow)"
           />
 
           {/* Re-entrant structure hint */}
@@ -896,11 +913,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Poisson&apos;s Ratio Simulator
           </h2>
@@ -1011,6 +1031,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             Understand the Physics
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1025,11 +1046,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Prediction result */}
           <div style={{
             background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
@@ -1116,6 +1140,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
           >
             But Wait - What About Negative Values?
           </button>
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1249,11 +1274,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Auxetic Materials
           </h2>
@@ -1326,6 +1354,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             Learn About Auxetic Applications
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1340,11 +1369,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Prediction result */}
           <div style={{
             background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
@@ -1432,6 +1464,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             See Real-World Applications
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1447,11 +1480,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>

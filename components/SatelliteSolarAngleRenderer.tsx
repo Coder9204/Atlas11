@@ -618,7 +618,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
   };
 
   // Power curve visualization
-  const PowerCurveVisualization = () => {
+  const PowerCurveVisualization = ({ showTitle = false }: { showTitle?: boolean } = {}) => {
     const width = isMobile ? 320 : 400;
     const height = isMobile ? 150 : 180;
     const padding = { top: 20, right: 20, bottom: 30, left: 50 };
@@ -664,8 +664,8 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
         <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + plotHeight} stroke={colors.textSecondary} />
 
         {/* Axis labels */}
-        <text x={padding.left + plotWidth / 2} y={height - 5} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Incidence Angle</text>
-        <text x={12} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="10" textAnchor="middle" transform={`rotate(-90, 12, ${padding.top + plotHeight / 2})`}>Power %</text>
+        <text x={padding.left + plotWidth / 2} y={height - 5} fill={colors.textSecondary} fontSize="10" textAnchor="middle">X: Incidence Angle (deg)</text>
+        <text x={12} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="10" textAnchor="middle" transform={`rotate(-90, 12, ${padding.top + plotHeight / 2})`}>Y: Power (%)</text>
 
         {/* Angle markers */}
         {[-90, -45, 0, 45, 90].map(angle => (
@@ -703,6 +703,13 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
         <text x={padding.left + plotWidth - 60} y={padding.top + 15} fill={colors.textSecondary} fontSize="11">
           P = P₀ × cos(θ)
         </text>
+
+        {/* Title if needed */}
+        {showTitle && (
+          <text x={padding.left + plotWidth / 2} y={12} fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="600">
+            Solar Power vs Incidence Angle
+          </text>
+        )}
       </svg>
     );
   };
@@ -952,25 +959,47 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Control the Solar Arrays
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust panel angle and orbit position to maximize power generation
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Control the Solar Arrays
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust panel angle and orbit position to maximize power generation
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
+            {/* Observation Guidance */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+                💡 Watch: Try tilting the panel away from the sun. Notice how power drops following the cosine curve below. Maximum power occurs when panels face directly toward the sun!
+              </p>
+            </div>
+
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <SatelliteVisualization showEclipse={false} />
             </div>
@@ -1109,8 +1138,11 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
             padding: '16px',
             marginBottom: '24px',
           }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
+              Power Output Curve
+            </h3>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <PowerCurveVisualization />
+              <PowerCurveVisualization showTitle={true} />
             </div>
           </div>
 
@@ -1130,12 +1162,13 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
             </div>
           )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Cosine Law →
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Cosine Law →
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1314,17 +1347,39 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Beta Angle and Eclipse Duration
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust the beta angle to see how orbital geometry affects power availability
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Beta Angle and Eclipse Duration
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust the beta angle to see how orbital geometry affects power availability
+            </p>
+
+            {/* Observation Guidance */}
+            <div style={{
+              background: `${colors.warning}11`,
+              border: `1px solid ${colors.warning}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0, fontWeight: 600 }}>
+                💡 Watch: As you decrease beta angle, the shadow zone grows larger. At 0°, the satellite passes through Earth's shadow for up to 40% of its orbit. At 90°, no eclipse occurs!
+              </p>
+            </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1468,12 +1523,13 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand Power System Design →
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand Power System Design →
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1580,22 +1636,31 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
             {realWorldApps.map((a, i) => (
               <button
                 key={i}
@@ -1694,14 +1759,15 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
             </div>
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test →
-            </button>
-          )}
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test →
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}

@@ -770,11 +770,20 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -873,6 +882,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -885,11 +895,20 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Friction Force Experiment
           </h2>
@@ -1006,6 +1025,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1018,11 +1038,20 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Friction
           </h2>
@@ -1090,6 +1119,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             Explore Different Surfaces
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1108,11 +1138,20 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1196,6 +1235,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1208,11 +1248,20 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Compare Different Surfaces
           </h2>
@@ -1342,6 +1391,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1354,11 +1404,20 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Understanding Material Friction
           </h2>
@@ -1431,6 +1490,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           >
             See Real-World Applications
           </button>
+        </div>
         </div>
 
         {renderNavDots()}

@@ -366,8 +366,8 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
     textSecondary: '#e2e8f0', // Improved contrast (was #9CA3AF)
     textMuted: '#e2e8f0', // Improved contrast (was #6B7280)
     border: '#2a2a3a',
-    zero: '#374151', // Gray for zeros
-    nonZero: '#8B5CF6', // Purple for non-zeros
+    zero: '#475569', // Gray for zeros (skipped/inactive)
+    nonZero: '#8B5CF6', // Purple for active computations
   };
 
   const typo = {
@@ -441,7 +441,10 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   const SparseMatrixVisualization = ({ interactive = false }) => {
     const cellSize = isMobile ? 28 : 36;
     const gap = 2;
-    const size = matrixSize * (cellSize + gap) + gap;
+    const margin = { top: 40, right: 40, bottom: 40, left: 40 };
+    const matrixDisplaySize = matrixSize * (cellSize + gap) + gap;
+    const size = matrixDisplaySize + margin.left + margin.right;
+    const height = matrixDisplaySize + margin.top + margin.bottom;
 
     return (
       <div style={{
@@ -459,13 +462,14 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         <svg
           width="100%"
           height="auto"
-          viewBox={`0 0 ${size} ${size}`}
+          viewBox={`0 0 ${size} ${height}`}
           style={{
             background: colors.bgSecondary,
             borderRadius: '8px',
             padding: '8px',
             maxWidth: `${size}px`,
           }}
+          preserveAspectRatio="xMidYMid meet"
         >
           {/* SVG filter for glow effect */}
           <defs>
@@ -476,27 +480,55 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
+            <linearGradient id="sparsity-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.zero} />
+              <stop offset="100%" stopColor={colors.nonZero} />
+            </linearGradient>
           </defs>
+
+          {/* Axis labels */}
+          <text
+            x={margin.left + matrixDisplaySize / 2}
+            y={margin.top - 15}
+            textAnchor="middle"
+            fill={colors.textSecondary}
+            fontSize="14px"
+            fontWeight="600"
+          >
+            Matrix Columns (features)
+          </text>
+          <text
+            x={margin.left - 15}
+            y={margin.top + matrixDisplaySize / 2}
+            textAnchor="middle"
+            fill={colors.textSecondary}
+            fontSize="14px"
+            fontWeight="600"
+            transform={`rotate(-90, ${margin.left - 15}, ${margin.top + matrixDisplaySize / 2})`}
+          >
+            Matrix Rows
+          </text>
 
           {/* Grid lines */}
           {Array.from({ length: matrixSize + 1 }).map((_, i) => {
-            const pos = gap + i * (cellSize + gap) - gap / 2;
+            const pos = margin.left + gap + i * (cellSize + gap) - gap / 2;
+            const posY = margin.top + gap + i * (cellSize + gap) - gap / 2;
             return (
               <g key={`grid-${i}`}>
                 <line
                   x1={pos}
-                  y1={0}
+                  y1={margin.top}
                   x2={pos}
-                  y2={size}
+                  y2={margin.top + matrixDisplaySize}
                   stroke={colors.border}
                   strokeDasharray="4 4"
                   opacity="0.3"
                 />
                 <line
-                  x1={0}
-                  y1={pos}
-                  x2={size}
-                  y2={pos}
+                  x1={margin.left}
+                  y1={posY}
+                  x2={margin.left + matrixDisplaySize}
+                  y2={posY}
                   stroke={colors.border}
                   strokeDasharray="4 4"
                   opacity="0.3"
@@ -509,8 +541,8 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             row.map((value, j) => {
               const isZero = value === 0;
               const isHighlighted = highlightedCell?.row === i && highlightedCell?.col === j;
-              const x = gap + j * (cellSize + gap);
-              const y = gap + i * (cellSize + gap);
+              const x = margin.left + gap + j * (cellSize + gap);
+              const y = margin.top + gap + i * (cellSize + gap);
 
               return (
                 <g key={`${i}-${j}`}>
@@ -593,6 +625,13 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   // Computation savings visualization
   const ComputationVisualization = () => {
     const barWidth = isMobile ? 200 : 300;
+    const barHeight = 200;
+    const margin = { top: 20, right: 20, bottom: 40, left: 60 };
+    const chartWidth = barWidth + margin.left + margin.right;
+    const chartHeight = barHeight + margin.top + margin.bottom;
+
+    const denseHeight = barHeight;
+    const sparseHeight = (savings.sparseOps / savings.denseOps) * barHeight;
 
     return (
       <div style={{
@@ -605,49 +644,127 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
           Computation Savings
         </h4>
 
-        {/* Operations comparison */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>Dense Operations</span>
-            <span style={{ ...typo.small, color: colors.error }}>{savings.denseOps.toLocaleString()}</span>
-          </div>
-          <div style={{
-            width: '100%',
-            height: '12px',
-            background: colors.bgSecondary,
-            borderRadius: '6px',
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              width: '100%',
-              height: '100%',
-              background: colors.error,
-              borderRadius: '6px',
-            }} />
-          </div>
-        </div>
+        {/* SVG Bar Chart */}
+        <svg
+          width="100%"
+          height="auto"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          style={{
+            maxWidth: `${chartWidth}px`,
+            margin: '0 auto',
+            display: 'block',
+          }}
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <defs>
+            <linearGradient id="dense-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.error} />
+              <stop offset="100%" stopColor="#DC2626" />
+            </linearGradient>
+            <linearGradient id="sparse-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.success} />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+          </defs>
 
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>Sparse Operations</span>
-            <span style={{ ...typo.small, color: colors.success }}>{savings.sparseOps.toLocaleString()}</span>
-          </div>
-          <div style={{
-            width: '100%',
-            height: '12px',
-            background: colors.bgSecondary,
-            borderRadius: '6px',
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              width: `${(savings.sparseOps / savings.denseOps) * 100}%`,
-              height: '100%',
-              background: colors.success,
-              borderRadius: '6px',
-              transition: 'width 0.3s',
-            }} />
-          </div>
-        </div>
+          {/* Y-axis */}
+          <line
+            x1={margin.left}
+            y1={margin.top}
+            x2={margin.left}
+            y2={margin.top + barHeight}
+            stroke={colors.border}
+            strokeWidth="2"
+          />
+
+          {/* X-axis */}
+          <line
+            x1={margin.left}
+            y1={margin.top + barHeight}
+            x2={chartWidth - margin.right}
+            y2={margin.top + barHeight}
+            stroke={colors.border}
+            strokeWidth="2"
+          />
+
+          {/* Y-axis label */}
+          <text
+            x={margin.left - 40}
+            y={margin.top + barHeight / 2}
+            textAnchor="middle"
+            fill={colors.textSecondary}
+            fontSize="12px"
+            transform={`rotate(-90, ${margin.left - 40}, ${margin.top + barHeight / 2})`}
+          >
+            Operations
+          </text>
+
+          {/* Grid lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map((frac, i) => {
+            const y = margin.top + barHeight - frac * barHeight;
+            return (
+              <g key={i}>
+                <line
+                  x1={margin.left}
+                  y1={y}
+                  x2={chartWidth - margin.right}
+                  y2={y}
+                  stroke={colors.border}
+                  strokeDasharray="4 4"
+                  opacity="0.3"
+                />
+                <text
+                  x={margin.left - 10}
+                  y={y + 4}
+                  textAnchor="end"
+                  fill={colors.textSecondary}
+                  fontSize="10px"
+                >
+                  {Math.round(frac * savings.denseOps).toLocaleString()}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Dense bar */}
+          <rect
+            x={margin.left + 20}
+            y={margin.top}
+            width={60}
+            height={denseHeight}
+            fill="url(#dense-gradient)"
+            rx="4"
+          />
+          <text
+            x={margin.left + 50}
+            y={margin.top + barHeight + 20}
+            textAnchor="middle"
+            fill={colors.textSecondary}
+            fontSize="12px"
+          >
+            Dense
+          </text>
+
+          {/* Sparse bar */}
+          <rect
+            x={margin.left + 100}
+            y={margin.top + barHeight - sparseHeight}
+            width={60}
+            height={sparseHeight}
+            fill="url(#sparse-gradient)"
+            rx="4"
+          />
+          <text
+            x={margin.left + 130}
+            y={margin.top + barHeight + 20}
+            textAnchor="middle"
+            fill={colors.textSecondary}
+            fontSize="12px"
+          >
+            Sparse
+          </text>
+        </svg>
+
 
         {/* Stats grid */}
         <div style={{
@@ -701,6 +818,26 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
       </div>
     );
   };
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: 'rgba(30, 41, 59, 0.8)',
+      zIndex: 1000,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
   // Navigation bar component
   const renderNavBar = () => (
@@ -1010,13 +1147,19 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+          paddingBottom: '80px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Explore Sparse Matrices
           </h2>
@@ -1185,6 +1328,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
           >
             Understand the Trade-offs →
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1398,13 +1542,19 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+          paddingBottom: '80px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Structured vs Unstructured Sparsity
           </h2>
@@ -1541,6 +1691,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
           >
             Understand Why →
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1638,13 +1789,19 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '84px',
+          paddingBottom: '80px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1762,6 +1919,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
               Take the Knowledge Test →
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}

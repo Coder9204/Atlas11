@@ -1103,8 +1103,29 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           )}
         </g>
 
+        {/* ========== AXES AND GRID ========== */}
+        {/* X-axis labels */}
+        <text x="30" y="415" fontSize="10" fill="#94a3b8" textAnchor="start">Source</text>
+        <text x="350" y="415" fontSize="10" fill="#94a3b8" textAnchor="middle">X-Position (mm)</text>
+        <text x="680" y="415" fontSize="10" fill="#94a3b8" textAnchor="end">Detector</text>
+
+        {/* Y-axis labels */}
+        <text x="15" y="50" fontSize="10" fill="#94a3b8" textAnchor="middle" transform="rotate(-90 15 50)">Vertical Height (mm)</text>
+        <text x="15" y="200" fontSize="10" fill="#94a3b8" textAnchor="middle" transform="rotate(-90 15 200)">Y-Position</text>
+
+        {/* Tick marks on axes */}
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+          <g key={`tick-${i}`}>
+            <line x1={30 + i * 110} y1="395" x2={30 + i * 110} y2="400" stroke="#64748b" strokeWidth="1" />
+            <line x1="25" y1={40 + i * 53} x2="30" y2={40 + i * 53} stroke="#64748b" strokeWidth="1" />
+          </g>
+        ))}
+
         {/* ========== LABELS AND ANNOTATIONS ========== */}
         {/* Title */}
+        <text x="350" y="20" fontSize="14" fill="#e2e8f0" textAnchor="middle" fontWeight="600" fontFamily="monospace">
+          Laser Speckle Formation Diagram
+        </text>
         <text x="350" y="385" fontSize="12" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
           Coherence: {useLaser ? `${coherenceLength}%` : 'N/A (Incoherent)'} | Surface Roughness: {surfaceRoughness}% | Viewpoint: {viewpointOffset}
         </text>
@@ -1408,6 +1429,25 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: '1.5' }}>
           σ = intensity std dev, ⟨I⟩ = mean intensity, λ = wavelength, θ = aperture angle
         </p>
+      </div>
+
+      {/* Comparison: Coherent vs Incoherent */}
+      <div style={{ background: 'rgba(139, 92, 246, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(139, 92, 246, 0.3)', marginBottom: '16px' }}>
+        <p style={{ color: '#8b5cf6', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>Comparison: Before vs After</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+            <p style={{ color: '#22c55e', fontWeight: 600, fontSize: '12px', marginBottom: '6px' }}>Coherent (Laser)</p>
+            <p style={{ color: '#e2e8f0', fontSize: '11px', lineHeight: '1.4' }}>
+              Fixed phase → Random interference → High contrast speckle
+            </p>
+          </div>
+          <div style={{ background: 'rgba(251, 191, 36, 0.1)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+            <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '12px', marginBottom: '6px' }}>Incoherent (LED)</p>
+            <p style={{ color: '#e2e8f0', fontSize: '11px', lineHeight: '1.4' }}>
+              Random phases → Averaging → Smooth uniform light
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Real-world relevance */}

@@ -1023,7 +1023,8 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
               </CanvasErrorBoundary>
 
               {/* SVG visualization - always present for tests */}
-              <svg width="100%" height="300" viewBox="0 0 400 300" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+              <svg width="100%" height="300" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                <title>Molecular Orbital Energy Diagram</title>
                 <defs>
                   <linearGradient id="bondingGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" style={{ stopColor: colors.success, stopOpacity: 1 }} />
@@ -1033,9 +1034,33 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                     <stop offset="0%" style={{ stopColor: colors.error, stopOpacity: 1 }} />
                     <stop offset="100%" style={{ stopColor: colors.error, stopOpacity: 0.5 }} />
                   </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
                 </defs>
+                {/* Y-axis - Energy levels */}
+                <line x1="50" y1="50" x2="50" y2="250" stroke={colors.textMuted} strokeWidth="2" />
+                <text x="25" y="40" fill={colors.textPrimary} fontSize="14" fontWeight="600">Energy</text>
+                <text x="15" y="80" fill={colors.textSecondary} fontSize="11">High</text>
+                <text x="20" y="150" fill={colors.textSecondary} fontSize="11">Med</text>
+                <text x="20" y="245" fill={colors.textSecondary} fontSize="11">Low</text>
+                {/* X-axis - Orbital type */}
+                <line x1="50" y1="250" x2="350" y2="250" stroke={colors.textMuted} strokeWidth="2" />
+                <text x="80" y="270" fill={colors.textSecondary} fontSize="11">AO Left</text>
+                <text x="180" y="270" fill={colors.textSecondary} fontSize="11">MO</text>
+                <text x="280" y="270" fill={colors.textSecondary} fontSize="11">AO Right</text>
+                {/* Grid lines */}
+                <line x1="50" y1="80" x2="350" y2="80" stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" opacity="0.3" />
+                <line x1="50" y1="150" x2="350" y2="150" stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" opacity="0.3" />
+                <line x1="50" y1="220" x2="350" y2="220" stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" opacity="0.3" />
+                {/* Formula */}
+                <text x="200" y="20" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="600">ψ(MO) = c₁φ₁ ± c₂φ₂</text>
                 {showBonding && (
-                  <g opacity="0.01">
+                  <g filter="url(#glow)">
                     <circle cx="150" cy="200" r="40" fill="url(#bondingGrad2)" opacity="0.7" />
                     <circle cx="250" cy="200" r="40" fill="url(#bondingGrad2)" opacity="0.7" />
                     <ellipse cx="200" cy="200" rx="80" ry="50" fill={colors.success} opacity="0.3" />
@@ -1043,22 +1068,72 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                   </g>
                 )}
                 {showAntibonding && (
-                  <g opacity="0.01">
+                  <g filter="url(#glow)">
                     <circle cx="150" cy="80" r="35" fill="url(#antibondingGrad2)" opacity="0.7" />
                     <circle cx="250" cy="80" r="35" fill="url(#antibondingGrad2)" opacity="0.7" />
                     <line x1="200" y1="50" x2="200" y2="110" stroke={colors.border} strokeWidth="2" strokeDasharray="5,5" />
                     <text x="200" y="40" textAnchor="middle" fill={colors.textPrimary} fontSize="14">Antibonding σ*</text>
                   </g>
                 )}
-                <circle cx="150" cy="150" r="8" fill={colors.border} opacity="0.01" />
-                <circle cx="250" cy="150" r="8" fill={colors.border} opacity="0.01" />
-                <path d={`M 150 150 L ${150 + (orbitalSeparation - 1.5) * 50} 150`} stroke={colors.accent} strokeWidth="2" opacity="0.01" />
-                <path d={`M 250 150 L ${250 - (orbitalSeparation - 1.5) * 50} 150`} stroke={colors.accent} strokeWidth="2" opacity="0.01" />
+                <circle cx="150" cy="150" r="8" fill={colors.border} />
+                <circle cx="250" cy="150" r="8" fill={colors.border} />
+                {orbitalSeparation !== null && !isNaN(orbitalSeparation) && isFinite(orbitalSeparation) && (
+                  <>
+                    <path d={`M 150 150 L ${Math.max(50, Math.min(350, 150 + (orbitalSeparation - 1.5) * 50))} 150`} stroke={colors.accent} strokeWidth="2" />
+                    <path d={`M 250 150 L ${Math.max(50, Math.min(350, 250 - (orbitalSeparation - 1.5) * 50))} 150`} stroke={colors.accent} strokeWidth="2" />
+                  </>
+                )}
               </svg>
             </div>
             <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
               Drag to rotate | Scroll to zoom
             </p>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, fontWeight: 600, marginBottom: '4px' }}>
+                What to observe:
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                Watch how the bonding orbital (green, lower energy) brings atoms together through constructive interference, while the antibonding orbital (red, higher energy) has a nodal plane that keeps atoms apart. As atomic separation changes, notice how orbital overlap affects bond stability.
+              </p>
+            </div>
+
+            {/* What this shows */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.success, fontWeight: 600, marginBottom: '4px' }}>
+                What this visualization shows:
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                This displays molecular orbitals formed from atomic orbital combination. The bonding MO (sigma) has electrons concentrated between nuclei, lowering energy and creating stability. The antibonding MO (sigma*) has a nodal plane between atoms, raising energy and destabilizing the bond.
+              </p>
+            </div>
+
+            {/* Why it matters */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, fontWeight: 600, marginBottom: '4px' }}>
+                Why this matters:
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                Understanding molecular orbitals is crucial for drug design, materials science, and quantum chemistry. It explains why some molecules form strong bonds while others don't exist at all. This same principle determines LED colors, solar cell efficiency, and how MRI contrast agents work.
+              </p>
+            </div>
 
             {/* Controls */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
@@ -1086,17 +1161,71 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
             <div style={{ marginTop: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Atomic Separation</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{orbitalSeparation.toFixed(1)}</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                  {orbitalSeparation != null && !isNaN(orbitalSeparation) && isFinite(orbitalSeparation)
+                    ? orbitalSeparation.toFixed(1)
+                    : '1.5'} Å
+                </span>
               </div>
-              <input
-                type="range"
-                min="0.8"
-                max="2.5"
-                step="0.1"
-                value={orbitalSeparation}
-                onChange={(e) => setOrbitalSeparation(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
-              />
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input
+                  type="range"
+                  min="0.8"
+                  max="2.5"
+                  step="0.1"
+                  value={orbitalSeparation}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val) && isFinite(val)) {
+                      setOrbitalSeparation(val);
+                      if (onGameEvent) {
+                        onGameEvent({
+                          eventType: 'slider_changed',
+                          gameType: 'molecular-orbitals',
+                          gameTitle: 'Molecular Orbitals',
+                          details: { separation: val },
+                          timestamp: Date.now()
+                        });
+                      }
+                    }
+                  }}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    minHeight: '20px',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    accentColor: colors.accent,
+                    touchAction: 'none',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                    background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((orbitalSeparation - 0.8) / (2.5 - 0.8)) * 100}%, ${colors.border} ${((orbitalSeparation - 0.8) / (2.5 - 0.8)) * 100}%, ${colors.border} 100%)`,
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>0.8 Å</span>
+                  <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>2.5 Å</span>
+                </div>
+              </div>
+              {/* Real-time feedback */}
+              <div style={{
+                marginTop: '12px',
+                padding: '8px 12px',
+                background: `${colors.accent}11`,
+                borderRadius: '6px',
+                border: `1px solid ${colors.accent}22`,
+                transition: 'all 0.2s ease',
+              }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {orbitalSeparation < 1.2
+                    ? '🔴 Very close: Strong orbital overlap, high electron repulsion'
+                    : orbitalSeparation < 1.8
+                    ? '🟢 Optimal range: Balanced bonding interaction'
+                    : '🔵 Far apart: Weak overlap, minimal bonding'}
+                </p>
+              </div>
             </div>
 
             {/* Info cards */}
@@ -1395,7 +1524,8 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
               </CanvasErrorBoundary>
 
               {/* SVG visualization - always present for tests */}
-              <svg width="100%" height="280" viewBox="0 0 400 280" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+              <svg width="100%" height="280" viewBox="0 0 400 280" preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                <title>Molecular Orbital Electron Configuration Diagram</title>
                 <defs>
                   <radialGradient id="o2Grad2" cx="50%" cy="50%">
                     <stop offset="0%" style={{ stopColor: '#ff6666', stopOpacity: 1 }} />
@@ -1405,22 +1535,47 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                     <stop offset="0%" style={{ stopColor: '#6666ff', stopOpacity: 1 }} />
                     <stop offset="100%" style={{ stopColor: '#0000ff', stopOpacity: 0.3 }} />
                   </radialGradient>
+                  <filter id="electronGlow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
                 </defs>
-                <g opacity="0.01">
+                {/* Y-axis - Energy */}
+                <line x1="40" y1="40" x2="40" y2="240" stroke={colors.textMuted} strokeWidth="2" />
+                <text x="20" y="30" fill={colors.textPrimary} fontSize="12" fontWeight="600">Energy</text>
+                <text x="10" y="60" fill={colors.textSecondary} fontSize="10">π*</text>
+                <text x="10" y="140" fill={colors.textSecondary} fontSize="10">σ</text>
+                <text x="10" y="220" fill={colors.textSecondary} fontSize="10">π</text>
+                {/* X-axis - Molecule type */}
+                <line x1="40" y1="240" x2="360" y2="240" stroke={colors.textMuted} strokeWidth="2" />
+                <text x="100" y="260" fill={colors.textSecondary} fontSize="11">Bond</text>
+                <text x="300" y="260" fill={colors.textSecondary} fontSize="11">Antibond</text>
+                {/* Grid lines */}
+                <line x1="40" y1="60" x2="360" y2="60" stroke={colors.border} strokeWidth="1" strokeDasharray="3,3" opacity="0.3" />
+                <line x1="40" y1="140" x2="360" y2="140" stroke={colors.border} strokeWidth="1" strokeDasharray="3,3" opacity="0.3" />
+                <line x1="40" y1="220" x2="360" y2="220" stroke={colors.border} strokeWidth="1" strokeDasharray="3,3" opacity="0.3" />
+                {/* Formula */}
+                <text x="200" y="20" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
+                  {selectedMolecule === 'O2' ? 'Bond Order = (10-6)/2 = 2' : 'Bond Order = (10-4)/2 = 3'}
+                </text>
+                <g filter="url(#electronGlow)">
                   <circle cx="150" cy="140" r="30" fill={selectedMolecule === 'O2' ? 'url(#o2Grad2)' : 'url(#n2Grad2)'} />
                   <circle cx="250" cy="140" r="30" fill={selectedMolecule === 'O2' ? 'url(#o2Grad2)' : 'url(#n2Grad2)'} />
                   <line x1="180" y1="140" x2="220" y2="140" stroke={colors.border} strokeWidth="4" />
                   {showElectrons && selectedMolecule === 'O2' && (
                     <>
-                      <circle cx="200" cy="90" r="6" fill="#ffff00" />
-                      <circle cx="200" cy="190" r="6" fill="#ffff00" />
-                      <text x="200" y="70" textAnchor="middle" fill={colors.warning} fontSize="12">Unpaired e-</text>
+                      <circle cx="200" cy="90" r="6" fill="#ffff00" filter="url(#electronGlow)" />
+                      <circle cx="200" cy="190" r="6" fill="#ffff00" filter="url(#electronGlow)" />
+                      <text x="200" y="70" textAnchor="middle" fill={colors.warning} fontSize="12">Unpaired e⁻</text>
                     </>
                   )}
                   {showElectrons && selectedMolecule === 'N2' && (
-                    <text x="200" y="90" textAnchor="middle" fill={colors.success} fontSize="12">All paired</text>
+                    <text x="200" y="90" textAnchor="middle" fill={colors.success} fontSize="12">All paired e⁻</text>
                   )}
-                  <text x="200" y="260" textAnchor="middle" fill={colors.textPrimary} fontSize="16">{selectedMolecule}</text>
+                  <text x="200" y="270" textAnchor="middle" fill={colors.textPrimary} fontSize="16">{selectedMolecule}</text>
                 </g>
               </svg>
             </div>

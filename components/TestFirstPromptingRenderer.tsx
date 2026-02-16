@@ -441,7 +441,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
     const metrics = calculateMetrics();
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="passGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.testPass} stopOpacity="0.8" />
@@ -464,6 +464,11 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
           </filter>
         </defs>
 
+        {/* Grid lines for visual reference */}
+        {[1, 2, 3, 4].map(i => (
+          <line key={`grid-${i}`} x1="15" y1={60 + i * 50} x2={width - 15} y2={60 + i * 50} stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
+        ))}
+
         {/* Title */}
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           TDD Workflow - Iteration {iteration}
@@ -471,6 +476,9 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
         <text x={width/2} y="45" textAnchor="middle" fill={testMode === 'test_first' ? colors.success : colors.warning} fontSize="12" fontWeight="500">
           {testMode === 'test_first' ? 'Test-First Approach' : 'Code-First Approach'}
         </text>
+
+        {/* Y-axis label */}
+        <text x="5" y="90" fill={colors.textMuted} fontSize="9" fontWeight="500">Tests</text>
 
         {/* Test Results Panel */}
         <g transform="translate(15, 60)">
@@ -598,7 +606,12 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
     const metrics = calculateMetrics();
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+        {/* Grid lines for reference */}
+        {[1, 2, 3].map(i => (
+          <line key={`grid-${i}`} x1="15" y1={45 + i * 60} x2={width - 15} y2={45 + i * 60} stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
+        ))}
+
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Property-Based Testing
         </text>
@@ -922,6 +935,19 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             Compare test-first vs code-first approaches over multiple iterations.
           </p>
 
+          {/* Formula/equation */}
+          <div style={{
+            background: `${colors.code}11`,
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '16px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.code, fontFamily: 'monospace', margin: 0 }}>
+              Convergence = f(tests_passed / total_tests, iterations)
+            </p>
+          </div>
+
           {/* Main visualization */}
           <div style={{
             background: colors.bgCard,
@@ -997,6 +1023,22 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
                 Reset
               </button>
             </div>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+              What to Watch For:
+            </h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Run multiple iterations and observe how the pass rate changes. Notice how test-first converges faster to 100% pass rate compared to code-first, which produces more chaotic results.
+            </p>
           </div>
 
           {/* Insight box */}
@@ -1234,6 +1276,19 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             See how properties generate thousands of test cases automatically
           </p>
 
+          {/* Formula for property testing */}
+          <div style={{
+            background: `${colors.coverage}11`,
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '16px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.coverage, fontFamily: 'monospace', margin: 0 }}>
+              for_all(a, b): property(a, b) → true
+            </p>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1297,6 +1352,22 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
                 />
               </div>
             )}
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+              What to Watch For:
+            </h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Toggle property tests on and off. Notice how the number of auto-generated test cases jumps from 8 manual tests to 1,000+ automated tests, dramatically increasing edge case coverage.
+            </p>
           </div>
 
           {/* Insight box */}

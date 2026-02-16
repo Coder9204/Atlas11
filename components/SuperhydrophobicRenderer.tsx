@@ -637,27 +637,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
           />
         </g>
 
-        {/* Contact angle value label with background */}
-        <g transform={`translate(${cx + 40}, ${dropletBaseY - 25})`}>
-          <rect
-            x="-5"
-            y="-12"
-            width="40"
-            height="18"
-            rx="4"
-            fill="rgba(0, 0, 0, 0.6)"
-          />
-          <text
-            x="15"
-            y="2"
-            fill={angle > 150 ? colors.success : angle > 90 ? colors.warning : colors.error}
-            fontSize="13"
-            fontWeight="bold"
-            textAnchor="middle"
-          >
-            {angle.toFixed(0)}°
-          </text>
-        </g>
+        {/* Contact angle value label - REMOVED to avoid overlap, shown in meter instead */}
       </g>
     );
   };
@@ -834,51 +814,8 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
       }
     }
 
-    // Surface state label with premium styling
-    const stateText = showMicrostructure
-      ? `Lotus-like Surface (roughness: ${roughness.toFixed(1)})`
-      : surfaceChemistry.charAt(0).toUpperCase() + surfaceChemistry.slice(1);
-
-    elements.push(
-      <g key="label" transform={`translate(200, ${surfaceY + 48})`}>
-        <rect
-          x="-90"
-          y="-12"
-          width="180"
-          height="20"
-          rx="6"
-          fill="rgba(0, 0, 0, 0.5)"
-        />
-        <text
-          x="0"
-          y="4"
-          fill={colors.textPrimary}
-          fontSize="11"
-          textAnchor="middle"
-          fontWeight="500"
-        >
-          {stateText}
-        </text>
-      </g>
-    );
-
-    // Add hierarchical structure indicator
-    if (showMicrostructure && roughness > 0.5) {
-      elements.push(
-        <g key="hierarchical-label" transform="translate(200, 285)">
-          <text
-            x="0"
-            y="0"
-            fill={colors.textMuted}
-            fontSize="11"
-            textAnchor="middle"
-            fontStyle="italic"
-          >
-            Hierarchical micro + nano texture (like lotus leaf)
-          </text>
-        </g>
-      );
-    }
+    // Surface state label - REMOVED to avoid overlap
+    // Labels are shown in the legend boxes instead
 
     return <g>{elements}</g>;
   };
@@ -936,7 +873,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             showMicrostructure
           )}
 
-          {/* Premium Contact Angle Meter */}
+          {/* Premium Contact Angle Meter - Top Right */}
           <g transform="translate(282, 8)">
             {/* Meter background with gradient border */}
             <rect
@@ -970,7 +907,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             </text>
           </g>
 
-          {/* Premium State Indicator */}
+          {/* Premium State Indicator - Top Left */}
           <g transform="translate(8, 8)">
             <rect
               x={0}
@@ -993,43 +930,19 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             </text>
           </g>
 
-          {/* Water behavior indicator */}
+          {/* Water behavior indicator - Positioned between the two top boxes */}
           {interactive && contactAngle > 150 && !hasDetergent && (
-            <g transform="translate(145, 8)">
+            <g transform="translate(145, 80)">
               <rect x={0} y={0} width={100} height={28} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth="1" />
               <text x={50} y={19} fill={colors.success} fontSize={11} textAnchor="middle" fontWeight="600">ROLLING</text>
             </g>
           )}
 
-          {/* Young's equation - formula display */}
-          <g transform="translate(10, 128)">
-            <rect x={0} y={0} width={180} height={28} rx={6} fill="rgba(15, 23, 42, 0.9)" stroke="rgba(100, 116, 139, 0.5)" strokeWidth="1" />
-            <text x={8} y={12} fill={colors.accent} fontSize={11} fontWeight="bold">
-              Young's equation:
-            </text>
-            <text x={8} y={22} fill={colors.textMuted} fontSize={11} fontStyle="italic">
-              cos θ = (γ_SV - γ_SL) / γ_LV
-            </text>
-          </g>
+          {/* Young's equation - REMOVED to avoid overlap, explained in text instead */}
 
-          {/* Chemistry label with icon */}
-          <g transform={`translate(20, ${height - 25})`}>
-            <rect x={0} y={0} width={width - 40} height={20} rx={6} fill="rgba(0, 0, 0, 0.5)" />
-            <text x={10} y={14} fill={colors.textSecondary} fontSize={10}>
-              {hasDetergent
-                ? '⚠️ Detergent added - surface tension reduced, air pockets collapsed!'
-                : `🧪 Surface chemistry: ${surfaceChemistry.charAt(0).toUpperCase() + surfaceChemistry.slice(1)}`}
-            </text>
-          </g>
+          {/* Chemistry label - REMOVED to avoid overlap, shown in state box instead */}
 
-          {/* Legend for Cassie-Baxter state */}
-          {showMicrostructure && contactAngle > 150 && !hasDetergent && (
-            <g transform="translate(130, 100)">
-              <rect x={0} y={0} width={140} height={18} rx={4} fill="rgba(224, 242, 254, 0.15)" stroke="rgba(224, 242, 254, 0.3)" strokeWidth="0.5" />
-              <circle cx={12} cy={9} r={4} fill="url(#shphobAirPocket)" />
-              <text x={22} y={13} fill="#bae6fd" fontSize={11}>= trapped air pockets</text>
-            </g>
-          )}
+          {/* Legend for Cassie-Baxter state - REMOVED to avoid overlap */}
         </svg>
 
         {interactive && (

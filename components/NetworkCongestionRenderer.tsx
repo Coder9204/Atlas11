@@ -572,12 +572,17 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
     const chartHeight = height - padding.top - padding.bottom;
 
     const maxLatency = Math.max(...latencyHistory, 10);
-    const points = latencyHistory.map((lat, i) => ({
-      x: padding.left + (i / 49) * chartWidth,
-      y: padding.top + chartHeight - (lat / maxLatency) * chartHeight,
-    }));
+    const points = latencyHistory.map((lat, i) => {
+      const x = padding.left + (i / 49) * chartWidth;
+      const y = padding.top + chartHeight - (lat / maxLatency) * chartHeight;
+      // Ensure no NaN values
+      return {
+        x: isFinite(x) ? x : padding.left,
+        y: isFinite(y) ? y : padding.top + chartHeight,
+      };
+    });
 
-    const pathD = points.length > 1
+    const pathD = points.length > 1 && points.every(p => isFinite(p.x) && isFinite(p.y))
       ? `M ${points[0].x} ${points[0].y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')
       : '';
 
@@ -596,6 +601,19 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           />
         ))}
 
+        {/* Y-axis tick marks */}
+        {[0, 0.25, 0.5, 0.75, 1].map(frac => (
+          <line
+            key={`tick-${frac}`}
+            x1={padding.left - 5}
+            y1={padding.top + frac * chartHeight}
+            x2={padding.left}
+            y2={padding.top + frac * chartHeight}
+            stroke={colors.textMuted}
+            strokeWidth="1"
+          />
+        ))}
+
         {/* Latency line */}
         {pathD && (
           <path
@@ -606,8 +624,30 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           />
         )}
 
+        {/* Highlight current value */}
+        {latencyHistory.length > 0 && (
+          <circle
+            cx={points[points.length - 1]?.x || padding.left}
+            cy={points[points.length - 1]?.y || padding.top + chartHeight}
+            r="4"
+            fill={colors.warning}
+            filter="url(#currentGlow)"
+          />
+        )}
+
+        {/* Glow filter */}
+        <defs>
+          <filter id="currentGlow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
         {/* P99 line */}
-        {p99Latency > 0 && (
+        {p99Latency > 0 && isFinite(p99Latency) && (
           <>
             <line
               x1={padding.left}
@@ -630,10 +670,13 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           </>
         )}
 
-        {/* Labels */}
+        {/* Y-axis labels */}
         <text x={padding.left - 5} y={padding.top + 5} fill={colors.textMuted} fontSize="9" textAnchor="end">{maxLatency.toFixed(0)}</text>
         <text x={padding.left - 5} y={height - padding.bottom} fill={colors.textMuted} fontSize="9" textAnchor="end">0</text>
-        <text x={width / 2} y={height - 5} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Latency (queue time units)</text>
+        <text x={padding.left / 2} y={height / 2} fill={colors.textSecondary} fontSize="10" textAnchor="middle" transform={`rotate(-90 ${padding.left / 2} ${height / 2})`}>Latency</text>
+
+        {/* X-axis label */}
+        <text x={width / 2} y={height - 5} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Time</text>
       </svg>
     );
   };
@@ -780,11 +823,20 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -877,6 +929,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
               Test My Prediction
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -890,17 +943,26 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Network Queue Simulator
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust traffic load and watch how queue depth and latency respond
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Network Queue Simulator
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust traffic load and watch how queue depth and latency respond
+            </p>
 
           {/* Main visualization */}
           <div style={{
@@ -909,8 +971,24 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
               <QueueVisualization />
+            </div>
+
+            {/* Formula display */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <span style={{ ...typo.small, color: colors.accent, fontFamily: 'monospace' }}>
+                Wait Time = 1 / (1 - Utilization)
+              </span>
+              <span style={{ ...typo.small, color: colors.textMuted, marginLeft: '12px' }}>
+                = 1 / (1 - {utilization.toFixed(2)}) = {isFinite(theoreticalLatency) ? theoreticalLatency.toFixed(1) : '∞'}
+              </span>
             </div>
 
             {/* Arrival rate slider */}
@@ -1077,6 +1155,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           >
             Understand the Physics
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1090,11 +1169,20 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The M/M/1 Queue: Why Latency Explodes
           </h2>
@@ -1162,6 +1250,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           >
             Explore Packet Size Effects
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1260,17 +1349,26 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Packet Size Comparison Lab
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Compare latency and jitter between small and large packets
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Packet Size Comparison Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Compare latency and jitter between small and large packets
+            </p>
 
           <div style={{
             background: colors.bgCard,
@@ -1278,8 +1376,21 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
               <QueueVisualization />
+            </div>
+
+            {/* Formula display */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <span style={{ ...typo.small, color: colors.accent, fontFamily: 'monospace' }}>
+                Latency Factor = {packetSize === 'large' ? '2x' : '1x'} × Queue Depth
+              </span>
             </div>
 
             {/* Packet size toggle */}
@@ -1440,6 +1551,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           >
             Understand the Tradeoffs
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1531,23 +1643,32 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
               <button
                 key={i}
                 onClick={() => {
@@ -1653,6 +1774,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
               Take the Knowledge Test
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
